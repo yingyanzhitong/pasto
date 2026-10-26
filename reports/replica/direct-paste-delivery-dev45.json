@@ -1,0 +1,54 @@
+{
+  "version": "0.8.0-dev.45",
+  "date": "2026-10-26",
+  "scope": "直接粘贴的有限修正、最新代码打包和定向GUI检查",
+  "build_snapshot": "reports/replica/concentrated-static-build73.json",
+  "source_sha256": {
+    "replica/Sources/PasteReplica/AppMain.swift": "392949a3cbdb4cb85a3e27cde54a6290aac5bee4db9f72f4101368ccb80eb88c",
+    "replica/Sources/PasteReplicaCore/OriginalSoundEffects.swift": "e34aab5bb12081c45cbfc14258620a3d6149d62bb09a1c868d15b756e0a93a98"
+  },
+  "changes": [
+    "固定每次请求的外部目标，隐藏面板后yieldActivation并协作激活，等待目标实际到前台后再发送。",
+    "按REA证据使用combinedSessionState及annotated-session通道，按下事件设置Command。",
+    "仅记录权限布尔、PID、错误码、键码和固定阶段；不记录剪贴板正文。",
+    "音效优先在安装包Contents/Resources选择SwiftPM资源Bundle，避免启动时先走开发目录；保留原Bundle.module开发回退。"
+  ],
+  "build_succeeded": true,
+  "input_count": 184,
+  "targeted_gui_checks_executed": true,
+  "permission_runtime_check_passed": true,
+  "panel_hide_observed": true,
+  "actual_cursor_insertion_verified": false,
+  "targeted_result": "辅助功能及事件投递权限均为true，面板隐藏并已记录发送阶段，但本次目标记录为其他应用，测试文档未插入。该次定向测试不通过；尚未证明用户场景修复。",
+  "limitations": [
+    "未将post调用返回或进程运行认作实际粘贴成功。",
+    "开发版采用ad-hoc签名，重编后授权记录可能需要刷新；未修改系统权限检查或弱化签名。",
+    "全局事件投递仍受实际焦点影响；本次操作未能隔离并验证正确目标。",
+    "未运行全量功能回归或MCP测试，完整父函数仍保留partial。"
+  ],
+  "new_complete_functions": 0,
+  "functional_regression_executed": false,
+  "mcp_tests_executed": false,
+  "delivery": {
+    "archive": "replica/dist/Pasto-0.8.0-dev.45-macos-arm64.zip",
+    "archive_sha256": "af0be43833417b601c72b2a289c03dbe04449efc1379d03b07ca0cef70335f90",
+    "archive_bytes": 2551530,
+    "architecture": "arm64",
+    "installed_app": "~/Applications/Pasto.app",
+    "codesign_deep_strict_verified": true,
+    "installed_packaged_and_unpacked_app_equal": true,
+    "source_inputs_checked": 184,
+    "generated_source_inputs_checked": 1,
+    "build_products_checked": 3,
+    "recompiled_during_packaging": false
+  },
+  "static_review": {
+    "existing_source_contracts_revalidated": 7,
+    "sdk_bindings_revalidated": 912,
+    "sdk_candidates_not_added": 52,
+    "code_complete": 1499,
+    "in_scope": 81125,
+    "partial": 304,
+    "pending": 79322
+  }
+}

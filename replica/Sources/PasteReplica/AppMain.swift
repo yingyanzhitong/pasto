@@ -1,6 +1,7 @@
 import AppKit
 import ApplicationServices
 import Combine
+import os
 import PasteReplicaCore
 
 @main
@@ -31,6 +32,7 @@ final class ReplicaAppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValid
     private var stackPasteRegistered = false
     private var statusItem: NSStatusItem!
     private var targetApplication: NSRunningApplication?
+    private let pasteLogger = Logger(subsystem: "com.yingyanzhitong.paste-replica", category: "direct-paste")
     private var activationObserver: NSObjectProtocol?
     private var refreshTimer: Timer?
     private var pausePreferencesObservation: AnyCancellable?
@@ -411,11 +413,15 @@ final class ReplicaAppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValid
     private func paste(ids: [UUID], plain: Bool, forceDirect: Bool = false) -> Bool {
         let generation = UUID()
         pasteGeneration = generation
+        let requestedTarget = targetApplication
+        let hasAccessibilityAccess = accessibilityService.f_100ae5e74()
+        pasteLogger.notice("request ax=\(hasAccessibilityAccess, privacy: .public) post=\(CGPreflightPostEventAccess(), privacy: .public) target=\(requestedTarget?.processIdentifier ?? -1, privacy: .public) front=\(NSWorkspace.shared.frontmostApplication?.processIdentifier ?? -1, privacy: .public)")
         var copyInsteadOfPaste = !(forceDirect || store.preferences.pasteToActiveApp)
         if pasteboard.name == NSPasteboard.general.name, !copyInsteadOfPaste,
-           !accessibilityService.f_100ae5e74() {
+           !hasAccessibilityAccess {
             NSApp.activate(ignoringOtherApps: true)
             let result = OriginalPasteToOtherAppsModal.run()
+            pasteLogger.notice("permission_result=\(result, privacy: .public)")
             if result == 2 {
                 NSApp.deactivate()
                 _ = OriginalEnableAccessibilityModal.run()
@@ -432,7 +438,12 @@ final class ReplicaAppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValid
         var restoreOptions: OriginalPasteboardRestore.Options = plain ? .plainText : []
         if store.preferences.alwaysPastePlainText { restoreOptions.insert(.plainTextAndLinks) }
         do { try store.writeToPasteboard(ids: ids, pasteboard: pasteboard, options: restoreOptions) }
-        catch { ui.presentError(error); return false }
+        catch {
+            pasteLogger.error("restore_failed code=\((error as NSError).code, privacy: .public)")
+            ui.presentError(error)
+            return false
+        }
+        pasteLogger.notice("restored copy_only=\(copyInsteadOfPaste, privacy: .public)")
         // Named pasteboards support isolated acceptance runs and never generate system keystrokes.
         guard pasteboard.name == NSPasteboard.general.name else {
             ui.hidePanel()
@@ -451,28 +462,43 @@ final class ReplicaAppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValid
             return true
         }
         ui.hidePanel()
-        guard let target = targetApplication, !target.isTerminated,
-              target.processIdentifier != ProcessInfo.processInfo.processIdentifier else { return false }
+        guard let target = requestedTarget, !target.isTerminated,
+              target.processIdentifier != ProcessInfo.processInfo.processIdentifier else {
+            pasteLogger.error("target_unavailable")
+            return false
+        }
         let changeCount = pasteboard.changeCount
-        target.activate(options: [])
+        NSApp.yieldActivation(to: target)
+        NSApp.deactivate()
+        let activationRequested = target.activate(from: .current, options: [])
+        pasteLogger.notice("activate target=\(target.processIdentifier, privacy: .public) accepted=\(activationRequested, privacy: .public)")
         let deadline = Date().addingTimeInterval(1)
         waitForTarget(target, deadline: deadline, generation: generation, changeCount: changeCount)
         return true
     }
 
     private func waitForTarget(_ target: NSRunningApplication, deadline: Date, generation: UUID, changeCount: Int) {
-        guard generation == pasteGeneration, !target.isTerminated, pasteboard.changeCount == changeCount else { return }
+        guard generation == pasteGeneration else { pasteLogger.notice("cancelled newer_request"); return }
+        guard !target.isTerminated else { pasteLogger.notice("cancelled target_terminated"); return }
+        guard pasteboard.changeCount == changeCount else { pasteLogger.notice("cancelled clipboard_changed"); return }
         if NSWorkspace.shared.frontmostApplication?.processIdentifier == target.processIdentifier {
             guard let keyCode = OriginalPasteKeyTranslation.pasteKeyCode(),
                   let source = CGEventSource(stateID: .combinedSessionState),
                   let down = CGEvent(keyboardEventSource: source, virtualKey: keyCode, keyDown: true),
-                  let up = CGEvent(keyboardEventSource: source, virtualKey: keyCode, keyDown: false) else { return }
-            down.flags = .maskCommand; up.flags = .maskCommand
-            down.postToPid(target.processIdentifier); up.postToPid(target.processIdentifier)
+                  let up = CGEvent(keyboardEventSource: source, virtualKey: keyCode, keyDown: false) else {
+                pasteLogger.error("event_creation_failed")
+                return
+            }
+            down.flags = .maskCommand
+            down.post(tap: .cgAnnotatedSessionEventTap)
+            up.post(tap: .cgAnnotatedSessionEventTap)
+            pasteLogger.notice("posted target=\(target.processIdentifier, privacy: .public) key=\(keyCode, privacy: .public)")
         } else if Date() < deadline {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { [weak self] in
                 self?.waitForTarget(target, deadline: deadline, generation: generation, changeCount: changeCount)
             }
+        } else {
+            pasteLogger.error("activation_timeout target=\(target.processIdentifier, privacy: .public) front=\(NSWorkspace.shared.frontmostApplication?.processIdentifier ?? -1, privacy: .public)")
         }
     }
 

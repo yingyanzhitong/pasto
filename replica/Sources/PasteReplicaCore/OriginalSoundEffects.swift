@@ -6,6 +6,11 @@ import Combine
 /// Original Copy/Paste audio is not distributed; Pop remains a distinct fallback.
 @MainActor
 public final class OriginalSoundEffects {
+    private static let resourceBundle: Bundle = {
+        if let url = Bundle.main.resourceURL?.appendingPathComponent("PasteReplica_PasteReplicaCore.bundle"),
+           let bundle = Bundle(url: url) { return bundle }
+        return Bundle.module
+    }()
     private let copySound: SystemSoundID?
     private let pasteSound: SystemSoundID?
     private var observations = Set<AnyCancellable>()
@@ -41,7 +46,7 @@ public final class OriginalSoundEffects {
 
     private static func loadSound(named name: String) -> SystemSoundID? {
         guard let url = Bundle.main.url(forResource: name, withExtension: "aiff")
-            ?? Bundle.module.url(forResource: name, withExtension: "aiff") else { return nil }
+            ?? resourceBundle.url(forResource: name, withExtension: "aiff") else { return nil }
         var sound: SystemSoundID = 0
         guard AudioServicesCreateSystemSoundID(url as CFURL, &sound) == noErr else { return nil }
         return sound

@@ -2,7 +2,7 @@
   "schema_version": 1,
   "kind": "static_code_migration",
   "function_id": "Paste:0x10004e8ec",
-  "reviewed_at": "2026-10-26T04:04:59.630232+00:00",
+  "reviewed_at": "2026-10-26T08:36:48.742936+00:00",
   "original_binary_sha256": "871f00354fbb1c165d858a98e6d19d6f43cb9d3f9f958b3e07c7f07eb5c19afb",
   "original_pseudocode": {
     "path": "decompiled/Paste/part-0028.c",
@@ -11,18 +11,18 @@
   "original_pseudocode_sha256": "1b45df6b5594863a3a5b951aac31ee60a4df263649ec66748fb18fd018e0b5cc",
   "source_sha256": {
     "replica/Sources/PasteReplicaCore/OriginalDiagnosticsAppActions.swift": "51b66a38645a00f634efdb623f74940f503c8c2c36862badc56b1267d2132cac",
-    "replica/Sources/PasteReplica/AppMain.swift": "001b79664f215af3dda1f8b97a498eb23d31d71f4fdff2f219dd3728df0e6124"
+    "replica/Sources/PasteReplica/AppMain.swift": "392949a3cbdb4cb85a3e27cde54a6290aac5bee4db9f72f4101368ccb80eb88c"
   },
   "build_succeeded": true,
   "build_command": "swift build --package-path replica -c release",
-  "compiled_app_binary_sha256": "1b5034720960b07cc375bf9d36b3fa5f7bbc2339b6bd68a37f34057c9a566763",
+  "compiled_app_binary_sha256": "bbcb842817a62ee45f67a6cfadf7f0e806105f50ad14f0cb9c7fa2811e227fc5",
   "compiled_product": "PasteReplica",
   "functional_regression_executed": false,
   "equivalence_verified": false,
   "implementation_origin": "existing_source_reused",
   "contract": "构造Process，executableURL=/bin/sh，参数-c与sleep 0.25 && open双引号包Bundle.main.bundleURL.path，try启动后无论成败均_exit(0)。",
   "review": "原完整REA及arm64 executable小字符串/bin/sh和大字符串sleep 0.25 && open 双引号包bundleURL.path已核；直接复用未改源码。实际仅原诊断确认启用分支调用，不在偏好恢复或普通启动时触发。try启动后无论成败_exit(0)保留；本轮绝不执行。",
-  "source_review": "原restart Process的executableURL、shell参数、try启动与_exit完整实现未改：构造Process，executableURL=/bin/sh，参数-c与sleep 0.25 && open双引号包Bundle.main.bundleURL.path，try启动后无论成败均_exit(0)。 build71已通过、源码/生成/产物摘要再核；此为有限旧合同重绑，不宣称完整copy/directpaste/窗口父等价，新增完整0。",
+  "source_review": "原restart有限合同保持：OriginalDiagnosticsAppActions helper逐字未改；AppMain f_10004e064诊断确认及OriginalDiagnosticsAppActions.f_10004e8ec()真实调用区块与dev44 HEAD逐字一致，仅确认启用诊断后进入。/bin/sh、sleep 0.25后open当前bundle、try?run及无论成败_exit(0)仍保留，绝不执行该动作。build73是本次实际快照；整AppMain其他directpaste/协作激活改动不改变这个有限地址合同。新增完整0，不声称完整directpaste/AX/窗口父等价。",
   "regression_policy": "全部范围内代码迁移完成后统一功能回归；本批无功能/单测/原版差分/UI/MCP执行。",
   "caller_review_refs": [
     {

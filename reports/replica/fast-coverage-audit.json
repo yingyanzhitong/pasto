@@ -1,7 +1,7 @@
 {
   "kind": "static_existing_feature_audit",
   "schema_version": 1,
-  "generated_at": "2026-10-26T05:47:33.871610+00:00",
+  "generated_at": "2026-10-26T08:36:58.126650+00:00",
   "policy": "按已有功能和调用链集中复核，只补真实缺口；本报告不修改逐地址台账，不将模块存在或候选匹配记为等价通过。",
   "functional_tests_executed": false,
   "mcp_tests_executed": false,
@@ -229,7 +229,7 @@
           "ledger_state": "partial"
         }
       ],
-      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
+      "reviewer": "dev45有限源码复核；定向GUI结果另见direct-paste-delivery-dev45.json，不增加完整地址"
     },
     {
       "id": "pinboard",
@@ -407,7 +407,7 @@
           "ledger_state": "partial"
         }
       ],
-      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
+      "reviewer": "dev45有限源码复核；定向GUI结果另见direct-paste-delivery-dev45.json，不增加完整地址"
     },
     {
       "id": "multiselect",
@@ -427,12 +427,12 @@
         {
           "path": "replica/Sources/PasteReplica/AppMain.swift",
           "symbol": "private func paste(ids:",
-          "line": 411
+          "line": 413
         },
         {
           "path": "replica/Sources/PasteReplica/AppMain.swift",
           "symbol": "private func waitForTarget(",
-          "line": 463
+          "line": 480
         },
         {
           "path": "replica/Sources/PasteReplica/UI/OriginalAccessibilityModals.swift",
@@ -496,18 +496,20 @@
         "dev28：新增完整纯值有序选择算法，Shift按相邻连续组与范围交集替换而非Set union，保定向range、独立anchor及滚动末端；原左右键空/越界不动。真实paste保数组顺序；assign保既有visible序未泛化。",
         "dev29：全选只更新anchor到ordered.last/空nil，滚动端保留；copy精确normalizedCmd优先0，再Cmd|配置plain3；quick条件XOR、plain组优先、允许0配置，先restore单item后选择当前index0，匹配越界仍consume/选首项但不写PB。",
         "dev37：真实viewport原生列表接按下/0.45秒旧index回调、任意拖动取消timer及严格3pt阈值；同一实际卡片局部去选择和透明度快照；二维groups有序zip(min)写入native session，保菜单/a11y/锚点并停用竞争SwiftUI手势。",
-        "dev39同源拖入鉴权和target分离，padding/gap不再直接拒绝整个session；实际windowX按30边缘15步长改clipx保y，继承周期callback不加timer，可见cell横向扩fullgap24后midpoint复用Store重排。"
+        "dev39同源拖入鉴权和target分离，padding/gap不再直接拒绝整个session；实际windowX按30边缘15步长改clipx保y，继承周期callback不加timer，可见cell横向扩fullgap24后midpoint复用Store重排。",
+        "dev45固定单次外部目标，按原annotated-session通道发送；最新构建已打包安装，定向权限检查通过。"
       ],
       "gaps": [
         "物理目标应用、权限拒绝、时序和原版全部快捷键分支仍待最终回归",
         "上述功能存在不代表原版所有selection/restore函数已满足；现有可用路径优先保留",
         "原完整权限视觉/图像/OS26 host、logger/DI、独立JSON错误/实体事务与跨应用运行矩阵仍partial，不能据新modal代码宣称原整个父等价。",
-        "Shift值算法与原生按压/拖拽有限路径已接；SwiftUI hosting实际像素同步、完整数据applier/键盘/辅助功能父和跨应用事件仍未运行验收。"
+        "Shift值算法与原生按压/拖拽有限路径已接；SwiftUI hosting实际像素同步、完整数据applier/键盘/辅助功能父和跨应用事件仍未运行验收。",
+        "dev45定向GUI未确认目标文档插入：目标记录为其他应用，测试文档未变化；不把隐藏面板或posted日志记为成功。详见direct-paste-delivery-dev45.json。"
       ],
       "reuse_candidates": [],
       "source_sha256": {
         "replica/Sources/PasteReplica/UI/ReplicaUIController.swift": "83ab337c6b97ff23106275d30103fc377772d6c9708f633e3961a3b3af33e3b4",
-        "replica/Sources/PasteReplica/AppMain.swift": "001b79664f215af3dda1f8b97a498eb23d31d71f4fdff2f219dd3728df0e6124",
+        "replica/Sources/PasteReplica/AppMain.swift": "392949a3cbdb4cb85a3e27cde54a6290aac5bee4db9f72f4101368ccb80eb88c",
         "replica/Sources/PasteReplica/UI/OriginalAccessibilityModals.swift": "e8d95210a6fd30bd203ec43e60ad0741e8559135fa27cc49a07c8c2bcc5fb447",
         "replica/Sources/PasteReplica/UI/ReplicaCardContextSelection.swift": "2a5b9aac7f579d6466a8f0c6feff24095609873c348ef99444f95f23aeb7615f",
         "replica/Sources/PasteReplicaCore/OriginalOrderedSelection.swift": "b3631aed0222167f88c16329c76483f807d20af3baaf3a90ab4d214e8d9cb9f8",
@@ -582,7 +584,7 @@
           "ledger_state": "partial"
         }
       ],
-      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
+      "reviewer": "dev45有限源码复核；定向GUI结果另见direct-paste-delivery-dev45.json，不增加完整地址"
     },
     {
       "id": "stack",
@@ -700,7 +702,7 @@
           "ledger_state": "verified"
         }
       ],
-      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
+      "reviewer": "dev45有限源码复核；定向GUI结果另见direct-paste-delivery-dev45.json，不增加完整地址"
     },
     {
       "id": "ocr",
@@ -850,7 +852,7 @@
           "ledger_state": "migrated"
         }
       ],
-      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
+      "reviewer": "dev45有限源码复核；定向GUI结果另见direct-paste-delivery-dev45.json，不增加完整地址"
     },
     {
       "id": "history-actions",
@@ -929,7 +931,7 @@
           "ledger_state": "pending"
         }
       ],
-      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
+      "reviewer": "dev45有限源码复核；定向GUI结果另见direct-paste-delivery-dev45.json，不增加完整地址"
     },
     {
       "id": "main-card-layout",
@@ -1465,7 +1467,7 @@
           "ledger_state": "partial"
         }
       ],
-      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
+      "reviewer": "dev45有限源码复核；定向GUI结果另见direct-paste-delivery-dev45.json，不增加完整地址"
     },
     {
       "id": "native-preview-window",
@@ -1528,7 +1530,7 @@
           "ledger_state": "migrated"
         }
       ],
-      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
+      "reviewer": "dev45有限源码复核；定向GUI结果另见direct-paste-delivery-dev45.json，不增加完整地址"
     },
     {
       "id": "preview-registry",
@@ -1647,7 +1649,7 @@
           "ledger_state": "partial"
         }
       ],
-      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
+      "reviewer": "dev45有限源码复核；定向GUI结果另见direct-paste-delivery-dev45.json，不增加完整地址"
     },
     {
       "id": "card-anchor-popover",
@@ -1789,7 +1791,7 @@
           "ledger_state": "partial"
         }
       ],
-      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
+      "reviewer": "dev45有限源码复核；定向GUI结果另见direct-paste-delivery-dev45.json，不增加完整地址"
     },
     {
       "id": "preview-title-rename",
@@ -1920,7 +1922,7 @@
           "ledger_state": "migrated"
         }
       ],
-      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
+      "reviewer": "dev45有限源码复核；定向GUI结果另见direct-paste-delivery-dev45.json，不增加完整地址"
     },
     {
       "id": "preview-header-actions",
@@ -2038,7 +2040,7 @@
           "ledger_state": "partial"
         }
       ],
-      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
+      "reviewer": "dev45有限源码复核；定向GUI结果另见direct-paste-delivery-dev45.json，不增加完整地址"
     },
     {
       "id": "preview-mode-transitions",
@@ -2141,7 +2143,7 @@
           "ledger_state": "partial"
         }
       ],
-      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
+      "reviewer": "dev45有限源码复核；定向GUI结果另见direct-paste-delivery-dev45.json，不增加完整地址"
     },
     {
       "id": "text-content-persistence",
@@ -2220,7 +2222,7 @@
           "ledger_state": "partial"
         }
       ],
-      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
+      "reviewer": "dev45有限源码复核；定向GUI结果另见direct-paste-delivery-dev45.json，不增加完整地址"
     },
     {
       "id": "text-attributed-normalization",
@@ -2370,7 +2372,7 @@
           "ledger_state": "migrated"
         }
       ],
-      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
+      "reviewer": "dev45有限源码复核；定向GUI结果另见direct-paste-delivery-dev45.json，不增加完整地址"
     },
     {
       "id": "text-formatting-traits",
@@ -2502,7 +2504,7 @@
           "ledger_state": "migrated"
         }
       ],
-      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
+      "reviewer": "dev45有限源码复核；定向GUI结果另见direct-paste-delivery-dev45.json，不增加完整地址"
     },
     {
       "id": "text-event-owner",
@@ -2599,7 +2601,7 @@
           "ledger_state": "partial"
         }
       ],
-      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
+      "reviewer": "dev45有限源码复核；定向GUI结果另见direct-paste-delivery-dev45.json，不增加完整地址"
     },
     {
       "id": "native-toolbar-factories",
@@ -2727,7 +2729,7 @@
           "ledger_state": "migrated"
         }
       ],
-      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
+      "reviewer": "dev45有限源码复核；定向GUI结果另见direct-paste-delivery-dev45.json，不增加完整地址"
     },
     {
       "id": "text-footer",
@@ -2862,7 +2864,7 @@
           "ledger_state": "migrated"
         }
       ],
-      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
+      "reviewer": "dev45有限源码复核；定向GUI结果另见direct-paste-delivery-dev45.json，不增加完整地址"
     },
     {
       "id": "preview-other-content",
@@ -3256,7 +3258,7 @@
           "ledger_state": "partial"
         }
       ],
-      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
+      "reviewer": "dev45有限源码复核；定向GUI结果另见direct-paste-delivery-dev45.json，不增加完整地址"
     },
     {
       "id": "preview-localization",
@@ -3417,7 +3419,7 @@
           "ledger_state": "migrated"
         }
       ],
-      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
+      "reviewer": "dev45有限源码复核；定向GUI结果另见direct-paste-delivery-dev45.json，不增加完整地址"
     },
     {
       "id": "screen-sharing-policy",
@@ -3552,7 +3554,7 @@
           "ledger_state": "migrated"
         }
       ],
-      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
+      "reviewer": "dev45有限源码复核；定向GUI结果另见direct-paste-delivery-dev45.json，不增加完整地址"
     },
     {
       "id": "helper-watchdog",
@@ -3592,7 +3594,7 @@
         {
           "path": "replica/Sources/PasteReplica/AppMain.swift",
           "symbol": "applicationWillTerminate",
-          "line": 493
+          "line": 519
         }
       ],
       "original_functions": [
@@ -3645,7 +3647,7 @@
       "source_sha256": {
         "replica/Sources/PasteReplicaHelper/HelperMain.swift": "60d98b18e87390fcc6c8de6a43b75d9505bfd74b822eb9e0fc6dc58bbfd47e12",
         "replica/Sources/PasteReplica/BackgroundService.swift": "a117f0cd7e8742e0bedd7c3cf52935bc343db072d8beae4f4ee7437e58ed63e7",
-        "replica/Sources/PasteReplica/AppMain.swift": "001b79664f215af3dda1f8b97a498eb23d31d71f4fdff2f219dd3728df0e6124"
+        "replica/Sources/PasteReplica/AppMain.swift": "392949a3cbdb4cb85a3e27cde54a6290aac5bee4db9f72f4101368ccb80eb88c"
       },
       "original_reference_status": [
         {
@@ -3761,7 +3763,7 @@
           "ledger_state": "migrated"
         }
       ],
-      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
+      "reviewer": "dev45有限源码复核；定向GUI结果另见direct-paste-delivery-dev45.json，不增加完整地址"
     },
     {
       "id": "helper-bootstrap",
@@ -3828,7 +3830,7 @@
           "ledger_state": "migrated"
         }
       ],
-      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
+      "reviewer": "dev45有限源码复核；定向GUI结果另见direct-paste-delivery-dev45.json，不增加完整地址"
     },
     {
       "id": "background-setting",
@@ -3881,7 +3883,7 @@
           "ledger_state": "partial"
         }
       ],
-      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
+      "reviewer": "dev45有限源码复核；定向GUI结果另见direct-paste-delivery-dev45.json，不增加完整地址"
     },
     {
       "id": "settings-overall",
@@ -3959,7 +3961,7 @@
         "replica/Sources/PasteReplicaCore/OriginalSettingsLocalization.swift": "f9c5663239b8fbd7251b0fdcce5c0d19bbfa2c620642d75bcb61073a37e028a5",
         "replica/Sources/PasteReplica/UI/OriginalAccessibilityRequestAction.swift": "22fbc993dae45d453bb2c6586a7823b3c633b2a22446c824cb75256b1e011ed0",
         "replica/Sources/PasteReplicaCore/OriginalAccessibilityService.swift": "e015554a40a64837f284fb9a0dc08a2639e8606b4e34b5930234cf1751e40073",
-        "replica/Sources/PasteReplicaCore/OriginalSoundEffects.swift": "9fea7bd27a0f354737883e390ecc1eb6cef885725a7f1768ea697c7d6471b79e"
+        "replica/Sources/PasteReplicaCore/OriginalSoundEffects.swift": "e34aab5bb12081c45cbfc14258620a3d6149d62bb09a1c868d15b756e0a93a98"
       },
       "original_reference_status": [
         {
@@ -4019,7 +4021,7 @@
           "ledger_state": "partial"
         }
       ],
-      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
+      "reviewer": "dev45有限源码复核；定向GUI结果另见direct-paste-delivery-dev45.json，不增加完整地址"
     },
     {
       "id": "capture.items",
@@ -4122,7 +4124,7 @@
           "ledger_state": "migrated"
         }
       ],
-      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
+      "reviewer": "dev45有限源码复核；定向GUI结果另见direct-paste-delivery-dev45.json，不增加完整地址"
     },
     {
       "id": "capture.content",
@@ -4306,7 +4308,7 @@
           "ledger_state": "migrated"
         }
       ],
-      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
+      "reviewer": "dev45有限源码复核；定向GUI结果另见direct-paste-delivery-dev45.json，不增加完整地址"
     },
     {
       "id": "capture.timers",
@@ -4393,7 +4395,7 @@
           "ledger_state": "migrated"
         }
       ],
-      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
+      "reviewer": "dev45有限源码复核；定向GUI结果另见direct-paste-delivery-dev45.json，不增加完整地址"
     },
     {
       "id": "capture.state",
@@ -4471,7 +4473,7 @@
           "ledger_state": "pending"
         }
       ],
-      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
+      "reviewer": "dev45有限源码复核；定向GUI结果另见direct-paste-delivery-dev45.json，不增加完整地址"
     },
     {
       "id": "capture.policy",
@@ -4506,17 +4508,17 @@
         {
           "path": "replica/Sources/PasteReplica/AppMain.swift",
           "symbol": "@objc private func pause(",
-          "line": 401
+          "line": 403
         },
         {
           "path": "replica/Sources/PasteReplica/AppMain.swift",
           "symbol": "configurePauseMonitoring",
-          "line": 132
+          "line": 134
         },
         {
           "path": "replica/Sources/PasteReplica/AppMain.swift",
           "symbol": "resumeTimedPause",
-          "line": 380
+          "line": 382
         },
         {
           "path": "replica/Sources/PasteReplica/UI/ReplicaCopiedOSD.swift",
@@ -4591,7 +4593,7 @@
         "replica/Sources/PasteReplicaCore/OriginalPasteboardPolicies.swift": "b85860e5fdc4be03afd7f4f69651f3ed1fc15c2c48d4a765fdcae5fdc8787dc7",
         "replica/Sources/PasteReplica/UI/ReplicaCopiedOSD.swift": "1900b2c3e23c1375502e8657701418d6ace46506df683e45d4d4c7cdad2e194c",
         "replica/Sources/PasteReplica/UI/ReplicaUIController.swift": "83ab337c6b97ff23106275d30103fc377772d6c9708f633e3961a3b3af33e3b4",
-        "replica/Sources/PasteReplica/AppMain.swift": "001b79664f215af3dda1f8b97a498eb23d31d71f4fdff2f219dd3728df0e6124"
+        "replica/Sources/PasteReplica/AppMain.swift": "392949a3cbdb4cb85a3e27cde54a6290aac5bee4db9f72f4101368ccb80eb88c"
       },
       "original_reference_status": [
         {
@@ -4616,7 +4618,7 @@
           "ledger_state": "migrated"
         }
       ],
-      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
+      "reviewer": "dev45有限源码复核；定向GUI结果另见direct-paste-delivery-dev45.json，不增加完整地址"
     },
     {
       "id": "capture.read_sync",
@@ -4692,7 +4694,7 @@
           "ledger_state": "partial"
         }
       ],
-      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
+      "reviewer": "dev45有限源码复核；定向GUI结果另见direct-paste-delivery-dev45.json，不增加完整地址"
     },
     {
       "id": "serialization.item_codable",
@@ -4873,7 +4875,7 @@
           "ledger_state": "migrated"
         }
       ],
-      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
+      "reviewer": "dev45有限源码复核；定向GUI结果另见direct-paste-delivery-dev45.json，不增加完整地址"
     },
     {
       "id": "serialization.keyed",
@@ -4947,7 +4949,7 @@
           "ledger_state": "partial"
         }
       ],
-      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
+      "reviewer": "dev45有限源码复核；定向GUI结果另见direct-paste-delivery-dev45.json，不增加完整地址"
     },
     {
       "id": "serialization.internal_codec",
@@ -5074,7 +5076,7 @@
           "ledger_state": "migrated"
         }
       ],
-      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
+      "reviewer": "dev45有限源码复核；定向GUI结果另见direct-paste-delivery-dev45.json，不增加完整地址"
     },
     {
       "id": "checksum.md5",
@@ -5135,7 +5137,7 @@
           "ledger_state": "migrated"
         }
       ],
-      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
+      "reviewer": "dev45有限源码复核；定向GUI结果另见direct-paste-delivery-dev45.json，不增加完整地址"
     },
     {
       "id": "checksum.strategy",
@@ -5208,7 +5210,7 @@
           "ledger_state": "partial"
         }
       ],
-      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
+      "reviewer": "dev45有限源码复核；定向GUI结果另见direct-paste-delivery-dev45.json，不增加完整地址"
     },
     {
       "id": "repo.dedup",
@@ -5275,7 +5277,7 @@
           "ledger_state": "partial"
         }
       ],
-      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
+      "reviewer": "dev45有限源码复核；定向GUI结果另见direct-paste-delivery-dev45.json，不增加完整地址"
     },
     {
       "id": "repo.metadata",
@@ -5375,7 +5377,7 @@
           "ledger_state": "pending"
         }
       ],
-      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
+      "reviewer": "dev45有限源码复核；定向GUI结果另见direct-paste-delivery-dev45.json，不增加完整地址"
     },
     {
       "id": "repo.transaction",
@@ -5425,7 +5427,7 @@
         {
           "path": "replica/Sources/PasteReplica/AppMain.swift",
           "symbol": "diagnosticsObservation = store.$preferences",
-          "line": 87
+          "line": 89
         },
         {
           "path": "replica/Sources/PasteReplica/UI/ReplicaUIController.swift",
@@ -5461,7 +5463,7 @@
         "replica/Sources/PasteReplicaCore/ClipboardStore.swift": "0d6dec116f8d99a4920928f2cfbdfc194cf19962abf0bd146976f1e1190e0476",
         "replica/Sources/PasteReplicaCore/Pasteboard.swift": "0f5ba3cb157a77612f9b1cbc447d835571d64858ddf82948d2d88f6a5b4fbca2",
         "replica/Sources/PasteReplicaCore/Models.swift": "67dd6d3ff6a1186e8bbabfcf65400da4ecb72b78e98ba1e7b26db5ed4de0aefa",
-        "replica/Sources/PasteReplica/AppMain.swift": "001b79664f215af3dda1f8b97a498eb23d31d71f4fdff2f219dd3728df0e6124",
+        "replica/Sources/PasteReplica/AppMain.swift": "392949a3cbdb4cb85a3e27cde54a6290aac5bee4db9f72f4101368ccb80eb88c",
         "replica/Sources/PasteReplica/UI/ReplicaUIController.swift": "83ab337c6b97ff23106275d30103fc377772d6c9708f633e3961a3b3af33e3b4"
       },
       "original_reference_status": [
@@ -5508,7 +5510,7 @@
           "ledger_state": "pending"
         }
       ],
-      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
+      "reviewer": "dev45有限源码复核；定向GUI结果另见direct-paste-delivery-dev45.json，不增加完整地址"
     },
     {
       "id": "repo.objc_exception",
@@ -5579,7 +5581,7 @@
           "ledger_state": "migrated"
         }
       ],
-      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
+      "reviewer": "dev45有限源码复核；定向GUI结果另见direct-paste-delivery-dev45.json，不增加完整地址"
     },
     {
       "id": "repo.capture_actions",
@@ -5604,7 +5606,7 @@
         {
           "path": "replica/Sources/PasteReplicaCore/OriginalSoundEffects.swift",
           "symbol": "ClipboardMonitor.didCaptureItemNotification",
-          "line": 17
+          "line": 22
         },
         {
           "path": "replica/Sources/PasteReplicaCore/ClipboardStore.swift",
@@ -5639,7 +5641,7 @@
       "source_sha256": {
         "replica/Sources/PasteReplicaCore/Pasteboard.swift": "0f5ba3cb157a77612f9b1cbc447d835571d64858ddf82948d2d88f6a5b4fbca2",
         "replica/Sources/PasteReplicaCore/ClipboardStore.swift": "0d6dec116f8d99a4920928f2cfbdfc194cf19962abf0bd146976f1e1190e0476",
-        "replica/Sources/PasteReplicaCore/OriginalSoundEffects.swift": "9fea7bd27a0f354737883e390ecc1eb6cef885725a7f1768ea697c7d6471b79e"
+        "replica/Sources/PasteReplicaCore/OriginalSoundEffects.swift": "e34aab5bb12081c45cbfc14258620a3d6149d62bb09a1c868d15b756e0a93a98"
       },
       "original_reference_status": [
         {
@@ -5685,7 +5687,7 @@
           "ledger_state": "partial"
         }
       ],
-      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
+      "reviewer": "dev45有限源码复核；定向GUI结果另见direct-paste-delivery-dev45.json，不增加完整地址"
     },
     {
       "id": "logging.named",
@@ -5795,7 +5797,7 @@
           "ledger_state": "migrated"
         }
       ],
-      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
+      "reviewer": "dev45有限源码复核；定向GUI结果另见direct-paste-delivery-dev45.json，不增加完整地址"
     },
     {
       "id": "logging.dispatch",
@@ -5983,7 +5985,7 @@
           "ledger_state": "migrated"
         }
       ],
-      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
+      "reviewer": "dev45有限源码复核；定向GUI结果另见direct-paste-delivery-dev45.json，不增加完整地址"
     },
     {
       "id": "diagnostics.controls",
@@ -6003,7 +6005,7 @@
         {
           "path": "replica/Sources/PasteReplica/AppMain.swift",
           "symbol": "diagnosticsObservation",
-          "line": 25
+          "line": 26
         }
       ],
       "original_functions": [
@@ -6022,7 +6024,7 @@
       "source_sha256": {
         "replica/Sources/PasteReplicaCore/OriginalDiagnosticsManager.swift": "afb071a98b036e3023f254c039ca1d85c4a975e79307aa3f3075b1caf21513ed",
         "replica/Sources/PasteReplicaCore/Models.swift": "67dd6d3ff6a1186e8bbabfcf65400da4ecb72b78e98ba1e7b26db5ed4de0aefa",
-        "replica/Sources/PasteReplica/AppMain.swift": "001b79664f215af3dda1f8b97a498eb23d31d71f4fdff2f219dd3728df0e6124"
+        "replica/Sources/PasteReplica/AppMain.swift": "392949a3cbdb4cb85a3e27cde54a6290aac5bee4db9f72f4101368ccb80eb88c"
       },
       "original_reference_status": [
         {
@@ -6047,7 +6049,7 @@
           "ledger_state": "pending"
         }
       ],
-      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
+      "reviewer": "dev45有限源码复核；定向GUI结果另见direct-paste-delivery-dev45.json，不增加完整地址"
     },
     {
       "id": "diagnostics.queries",
@@ -6104,7 +6106,7 @@
           "ledger_state": "partial"
         }
       ],
-      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
+      "reviewer": "dev45有限源码复核；定向GUI结果另见direct-paste-delivery-dev45.json，不增加完整地址"
     },
     {
       "id": "diagnostics.menu",
@@ -6114,7 +6116,7 @@
         {
           "path": "replica/Sources/PasteReplica/AppMain.swift",
           "symbol": "private func f_10004e064()",
-          "line": 315
+          "line": 317
         },
         {
           "path": "replica/Sources/PasteReplicaCore/OriginalDiagnosticsHistory.swift",
@@ -6171,7 +6173,7 @@
         "parent_partial_status_preserved": true
       },
       "source_sha256": {
-        "replica/Sources/PasteReplica/AppMain.swift": "001b79664f215af3dda1f8b97a498eb23d31d71f4fdff2f219dd3728df0e6124",
+        "replica/Sources/PasteReplica/AppMain.swift": "392949a3cbdb4cb85a3e27cde54a6290aac5bee4db9f72f4101368ccb80eb88c",
         "replica/Sources/PasteReplicaCore/OriginalDiagnosticsHistory.swift": "a2c917352e8d3d194f3528b7023994fdb3e393e7f81007ac5be6c77928f30b62",
         "replica/Sources/PasteReplicaCore/OriginalDiagnosticsAppActions.swift": "51b66a38645a00f634efdb623f74940f503c8c2c36862badc56b1267d2132cac",
         "replica/Sources/PasteReplica/UI/ReplicaCopiedOSD.swift": "1900b2c3e23c1375502e8657701418d6ace46506df683e45d4d4c7cdad2e194c"
@@ -6206,7 +6208,7 @@
           "ledger_state": "pending"
         }
       ],
-      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
+      "reviewer": "dev45有限源码复核；定向GUI结果另见direct-paste-delivery-dev45.json，不增加完整地址"
     },
     {
       "id": "diagnostics.restart",
@@ -6221,7 +6223,7 @@
         {
           "path": "replica/Sources/PasteReplica/AppMain.swift",
           "symbol": "OriginalDiagnosticsAppActions.f_10004e8ec()",
-          "line": 338
+          "line": 340
         }
       ],
       "original_functions": [
@@ -6238,7 +6240,7 @@
       ],
       "source_sha256": {
         "replica/Sources/PasteReplicaCore/OriginalDiagnosticsAppActions.swift": "51b66a38645a00f634efdb623f74940f503c8c2c36862badc56b1267d2132cac",
-        "replica/Sources/PasteReplica/AppMain.swift": "001b79664f215af3dda1f8b97a498eb23d31d71f4fdff2f219dd3728df0e6124"
+        "replica/Sources/PasteReplica/AppMain.swift": "392949a3cbdb4cb85a3e27cde54a6290aac5bee4db9f72f4101368ccb80eb88c"
       },
       "original_reference_status": [
         {
@@ -6249,7 +6251,7 @@
           "ledger_state": "migrated"
         }
       ],
-      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
+      "reviewer": "dev45有限源码复核；定向GUI结果另见direct-paste-delivery-dev45.json，不增加完整地址"
     },
     {
       "id": "restore.writer",
@@ -6302,7 +6304,7 @@
           "ledger_state": "migrated"
         }
       ],
-      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
+      "reviewer": "dev45有限源码复核；定向GUI结果另见direct-paste-delivery-dev45.json，不增加完整地址"
     },
     {
       "id": "restore.processor",
@@ -6445,7 +6447,7 @@
           "ledger_state": "partial"
         }
       ],
-      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
+      "reviewer": "dev45有限源码复核；定向GUI结果另见direct-paste-delivery-dev45.json，不增加完整地址"
     },
     {
       "id": "restore.history",
@@ -6490,7 +6492,7 @@
         {
           "path": "replica/Sources/PasteReplicaCore/OriginalSoundEffects.swift",
           "symbol": "store.didRestoreItem.sink",
-          "line": 25
+          "line": 30
         },
         {
           "path": "replica/Sources/PasteReplicaCore/OriginalSoundEffects.swift",
@@ -6531,7 +6533,7 @@
         "replica/Sources/PasteReplicaCore/OriginalPasteboardCaptureState.swift": "91f582575946ec8e4238d539ac477be694bb0adc1ce4f9a184747e43ba670f5f",
         "replica/Sources/PasteReplicaCore/OriginalPasteKeyTranslation.swift": "76118ad54378bc18b97d3f4560eca9032be38832c96d045d318f9335c9a68d12",
         "replica/Sources/PasteReplicaCore/Models.swift": "67dd6d3ff6a1186e8bbabfcf65400da4ecb72b78e98ba1e7b26db5ed4de0aefa",
-        "replica/Sources/PasteReplicaCore/OriginalSoundEffects.swift": "9fea7bd27a0f354737883e390ecc1eb6cef885725a7f1768ea697c7d6471b79e"
+        "replica/Sources/PasteReplicaCore/OriginalSoundEffects.swift": "e34aab5bb12081c45cbfc14258620a3d6149d62bb09a1c868d15b756e0a93a98"
       },
       "original_reference_status": [
         {
@@ -6563,7 +6565,7 @@
           "ledger_state": "partial"
         }
       ],
-      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
+      "reviewer": "dev45有限源码复核；定向GUI结果另见direct-paste-delivery-dev45.json，不增加完整地址"
     },
     {
       "id": "value-coding",
@@ -6648,7 +6650,7 @@
           "ledger_state": "migrated"
         }
       ],
-      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
+      "reviewer": "dev45有限源码复核；定向GUI结果另见direct-paste-delivery-dev45.json，不增加完整地址"
     },
     {
       "id": "key-translation",
@@ -6820,7 +6822,7 @@
           "ledger_state": "migrated"
         }
       ],
-      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
+      "reviewer": "dev45有限源码复核；定向GUI结果另见direct-paste-delivery-dev45.json，不增加完整地址"
     },
     {
       "id": "conflict-check",
@@ -6886,7 +6888,7 @@
           "ledger_state": "migrated"
         }
       ],
-      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
+      "reviewer": "dev45有限源码复核；定向GUI结果另见direct-paste-delivery-dev45.json，不增加完整地址"
     },
     {
       "id": "recorder-state",
@@ -7035,7 +7037,7 @@
           "ledger_state": "migrated"
         }
       ],
-      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
+      "reviewer": "dev45有限源码复核；定向GUI结果另见direct-paste-delivery-dev45.json，不增加完整地址"
     },
     {
       "id": "recorder-ui",
@@ -7197,7 +7199,7 @@
           "ledger_state": "migrated"
         }
       ],
-      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
+      "reviewer": "dev45有限源码复核；定向GUI结果另见direct-paste-delivery-dev45.json，不增加完整地址"
     },
     {
       "id": "error-localization",
@@ -7256,7 +7258,7 @@
           "ledger_state": "migrated"
         }
       ],
-      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
+      "reviewer": "dev45有限源码复核；定向GUI结果另见direct-paste-delivery-dev45.json，不增加完整地址"
     },
     {
       "id": "carbon-register",
@@ -7290,7 +7292,7 @@
         {
           "path": "replica/Sources/PasteReplica/AppMain.swift",
           "symbol": "ui.hotKeyRecordingChanged =",
-          "line": 106,
+          "line": 108,
           "sha256": "497effc01dba02153f298dc4d668a77315e5bfd98752c4a821d5a1ae600299f6"
         }
       ],
@@ -7321,7 +7323,7 @@
       "source_sha256": {
         "replica/Sources/PasteReplicaCore/OriginalGlobalShortcutMonitor.swift": "0ae87812c59edb65d973f77446ff78971c2c465d990df5b0c110dad76a8e0cae",
         "replica/Sources/PasteReplica/GlobalHotKey.swift": "e77cd9617f7a93b41f4c87c25f347f66e356583ea02530b2970d2c2f7b1314fc",
-        "replica/Sources/PasteReplica/AppMain.swift": "001b79664f215af3dda1f8b97a498eb23d31d71f4fdff2f219dd3728df0e6124"
+        "replica/Sources/PasteReplica/AppMain.swift": "392949a3cbdb4cb85a3e27cde54a6290aac5bee4db9f72f4101368ccb80eb88c"
       },
       "original_reference_status": [
         {
@@ -7395,7 +7397,7 @@
           "ledger_state": "migrated"
         }
       ],
-      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
+      "reviewer": "dev45有限源码复核；定向GUI结果另见direct-paste-delivery-dev45.json，不增加完整地址"
     },
     {
       "id": "monitor-lifetime",
@@ -7477,7 +7479,7 @@
           "ledger_state": "partial"
         }
       ],
-      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
+      "reviewer": "dev45有限源码复核；定向GUI结果另见direct-paste-delivery-dev45.json，不增加完整地址"
     },
     {
       "id": "validator-provider",
@@ -7551,7 +7553,7 @@
           "ledger_state": "migrated"
         }
       ],
-      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
+      "reviewer": "dev45有限源码复核；定向GUI结果另见direct-paste-delivery-dev45.json，不增加完整地址"
     },
     {
       "id": "dependency-cache",
@@ -7722,7 +7724,7 @@
           "ledger_state": "partial"
         }
       ],
-      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
+      "reviewer": "dev45有限源码复核；定向GUI结果另见direct-paste-delivery-dev45.json，不增加完整地址"
     },
     {
       "id": "initialized-config",
@@ -7813,7 +7815,7 @@
           "ledger_state": "migrated"
         }
       ],
-      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
+      "reviewer": "dev45有限源码复核；定向GUI结果另见direct-paste-delivery-dev45.json，不增加完整地址"
     },
     {
       "id": "telemetry-construction",
@@ -7882,7 +7884,7 @@
           "ledger_state": "pending"
         }
       ],
-      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
+      "reviewer": "dev45有限源码复核；定向GUI结果另见direct-paste-delivery-dev45.json，不增加完整地址"
     },
     {
       "id": "sentry-local-scope",
@@ -7993,7 +7995,7 @@
           "ledger_state": "pending"
         }
       ],
-      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
+      "reviewer": "dev45有限源码复核；定向GUI结果另见direct-paste-delivery-dev45.json，不增加完整地址"
     },
     {
       "id": "actor-destruction",
@@ -8046,7 +8048,7 @@
           "ledger_state": "pending"
         }
       ],
-      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
+      "reviewer": "dev45有限源码复核；定向GUI结果另见direct-paste-delivery-dev45.json，不增加完整地址"
     },
     {
       "id": "thin-wrapper-reuse",
@@ -8190,7 +8192,7 @@
           "ledger_state": "pending"
         }
       ],
-      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
+      "reviewer": "dev45有限源码复核；定向GUI结果另见direct-paste-delivery-dev45.json，不增加完整地址"
     },
     {
       "id": "coding-description",
@@ -8234,7 +8236,7 @@
           "ledger_state": "pending"
         }
       ],
-      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
+      "reviewer": "dev45有限源码复核；定向GUI结果另见direct-paste-delivery-dev45.json，不增加完整地址"
     },
     {
       "id": "native-dictionary-reuse",
@@ -8348,7 +8350,7 @@
           "ledger_state": "pending"
         }
       ],
-      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
+      "reviewer": "dev45有限源码复核；定向GUI结果另见direct-paste-delivery-dev45.json，不增加完整地址"
     },
     {
       "id": "unreviewed-generated",
@@ -9792,7 +9794,7 @@
           "ledger_state": "pending"
         }
       ],
-      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
+      "reviewer": "dev45有限源码复核；定向GUI结果另见direct-paste-delivery-dev45.json，不增加完整地址"
     },
     {
       "id": "native-image-text-selection",
@@ -9860,7 +9862,7 @@
           "ledger_state": "migrated"
         }
       ],
-      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
+      "reviewer": "dev45有限源码复核；定向GUI结果另见direct-paste-delivery-dev45.json，不增加完整地址"
     },
     {
       "id": "image-exif-analysis",
@@ -9945,7 +9947,7 @@
           "ledger_state": "partial"
         }
       ],
-      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
+      "reviewer": "dev45有限源码复核；定向GUI结果另见direct-paste-delivery-dev45.json，不增加完整地址"
     },
     {
       "id": "ocr-cache-responsibility",
@@ -10012,7 +10014,7 @@
           "ledger_state": "migrated"
         }
       ],
-      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
+      "reviewer": "dev45有限源码复核；定向GUI结果另见direct-paste-delivery-dev45.json，不增加完整地址"
     },
     {
       "id": "native-image-zoom-centering",
@@ -10327,7 +10329,7 @@
           "ledger_state": "migrated"
         }
       ],
-      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
+      "reviewer": "dev45有限源码复核；定向GUI结果另见direct-paste-delivery-dev45.json，不增加完整地址"
     }
   ],
   "findings": [

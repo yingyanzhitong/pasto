@@ -2,7 +2,7 @@
   "schema_version": 1,
   "kind": "static_code_migration",
   "function_id": "Paste:0x1001bdc08",
-  "reviewed_at": "2026-10-26T04:04:59.630232+00:00",
+  "reviewed_at": "2026-10-26T08:36:48.742936+00:00",
   "original_binary_sha256": "871f00354fbb1c165d858a98e6d19d6f43cb9d3f9f958b3e07c7f07eb5c19afb",
   "original_pseudocode": {
     "path": "decompiled/Paste/part-0148.c",
@@ -11,18 +11,18 @@
   "original_pseudocode_sha256": "2fc5fd02000e1f196dd9877871325f37a97db352b7d86ea76d4f4df3a5ca0380",
   "source_sha256": {
     "replica/Sources/PasteReplicaCore/OriginalPreviewLocalization.swift": "244b50defd5c3333575ca20076b697079dd5d4bbc03ab8fe93ec9bedf92ce543",
-    "replica/Sources/PasteReplica/AppMain.swift": "001b79664f215af3dda1f8b97a498eb23d31d71f4fdff2f219dd3728df0e6124"
+    "replica/Sources/PasteReplica/AppMain.swift": "392949a3cbdb4cb85a3e27cde54a6290aac5bee4db9f72f4101368ccb80eb88c"
   },
   "build_succeeded": true,
   "build_command": "swift build --package-path replica -c release",
-  "compiled_app_binary_sha256": "1b5034720960b07cc375bf9d36b3fa5f7bbc2339b6bd68a37f34057c9a566763",
+  "compiled_app_binary_sha256": "bbcb842817a62ee45f67a6cfadf7f0e806105f50ad14f0cb9c7fa2811e227fc5",
   "compiled_product": "PasteReplica",
   "functional_regression_executed": false,
   "equivalence_verified": false,
   "implementation_origin": "existing_source_reused",
   "contract": "原 LocalizedStringResource键diagnostics.start.message，table=Localizable/current locale/实际资源bundle；真实诊断确认alert消费。",
   "review": "直接复用此前已存在但缺诊断消费者的helper；完整原REA键及17locale全部逐值静态比对，诊断7key共119值无差异，不为计数重写资源或函数。",
-  "source_review": "AppMain诊断确认alert与原资源getter/Pasto品牌适配未改：原 LocalizedStringResource键diagnostics.start.message，table=Localizable/current locale/实际资源bundle；真实诊断确认alert消费。 build71已通过、源码/生成/产物摘要再核；此为有限旧合同重绑，不宣称完整copy/directpaste/窗口父等价，新增完整0。",
+  "source_review": "原LocalizedStringResource有限合同保持：原 LocalizedStringResource键diagnostics.start.message，table=Localizable/current locale/实际资源bundle；真实诊断确认alert消费。 对应OriginalPreviewLocalization源码摘要与旧证据一致，AppMain f_10004e064诊断alert的完整消费区块与dev44 HEAD逐字一致，既有Pasto品牌显示适配未扩改。build73是本次实际快照；仅AppMain其他区域变化使旧整文件摘要失效。新增完整0，不声称完整诊断/直接粘贴父等价或运行回归。",
   "regression_policy": "全部范围内代码迁移完成后统一功能回归；本批无功能/单测/原版差分/UI/MCP执行。",
   "caller_review_refs": [
     {
