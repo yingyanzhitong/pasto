@@ -93,7 +93,8 @@ def main():
     issues = []
     binary_assets = {
         "replica/Assets/PastoIcon.png": b"\x89PNG\r\n\x1a\n",
-        "replica/Assets/Pasto.icns": b"icns",
+        "replica/Assets/PastoAppIcon.icns": b"icns",
+        "replica/Assets/PastoIconForeground.png": b"\x89PNG\r\n\x1a\n",
         "docs/images/pasto-panel.png": b"\x89PNG\r\n\x1a\n",
         "docs/images/pasto-settings.png": b"\x89PNG\r\n\x1a\n",
     }

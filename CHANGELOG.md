@@ -1,5 +1,11 @@
 # 更新日志
 
+## 0.8.0-dev.50 - 2026-10-26
+
+- Release 安装包统一为 Universal DMG，包含 Pasto.app 和 Applications 快捷入口；制作后挂载核验内容、双架构与签名，发布校验和及来源清单。
+- 图标拆分为独立前景和标准背景，规范 1024px 画布、前景比例与透明边缘；系统 256px 渲染与原版外框均为 206px，重新生成全部 ICNS 表示并更新图标资源名。
+- 更新 DMG 安装与发布说明；保持 Intel/Apple Silicon、macOS 14+ 和用户数据兼容范围。
+
 ## 0.8.0-dev.49 - 2026-10-26
 
 - 增加 Intel（x86_64）与 Apple Silicon（arm64）的独立架构构建和 Universal 通用安装包，主程序、Helper 与 MCP 可执行文件均合并双架构后签名。

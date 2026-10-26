@@ -68,7 +68,7 @@ def remote_state(repo, tag, commit):
 
 
 def asset_names(version):
-    return ["Pasto-" + version + "-macos-universal.zip", "SHA256SUMS.txt", "release-manifest.json"]
+    return ["Pasto-" + version + "-macos-universal.dmg", "SHA256SUMS.txt", "release-manifest.json"]
 
 
 def check_existing(repo, version, tag, commit):
@@ -105,6 +105,19 @@ def verify_intel(version):
     verify_app(ROOT / "replica/dist/Pasto.app", version, ["x86_64"])
 
 
+def verify_dmg(archive, version):
+    with tempfile.TemporaryDirectory(prefix="pasto-release-mount-") as temporary:
+        mount = Path(temporary)
+        run(["hdiutil", "attach", "-readonly", "-nobrowse", "-mountpoint", str(mount), str(archive)])
+        try:
+            verify_app(mount / "Pasto.app", version, UNIVERSAL_ARCHITECTURES)
+            applications = mount / "Applications"
+            if not applications.is_symlink() or os.readlink(applications) != "/Applications":
+                raise ValueError("Disk image is missing the Applications shortcut")
+        finally:
+            run(["hdiutil", "detach", str(mount)])
+
+
 def package(version, tag, commit):
     if platform.system() != "Darwin":
         raise ValueError("Release requires a macOS runner")
@@ -114,12 +127,10 @@ def package(version, tag, commit):
     output = ROOT / "replica/dist/release"
     output.mkdir(exist_ok=False)
     archive = output / asset_names(version)[0]
-    run(["ditto", "-c", "-k", "--sequesterRsrc", "--keepParent", str(app), str(archive)])
-    with tempfile.TemporaryDirectory() as temporary:
-        run(["ditto", "-x", "-k", str(archive), temporary])
-        verify_app(Path(temporary) / "Pasto.app", version, UNIVERSAL_ARCHITECTURES)
+    run(["bash", "replica/scripts/build-dmg.sh", str(app), str(archive)])
+    verify_dmg(archive, version)
     manifest = {"version": version, "tag": tag, "commit": commit, "architectures": UNIVERSAL_ARCHITECTURES,
-                "archive": archive.name, "archive_sha256": sha(archive),
+                "archive": archive.name, "archive_sha256": sha(archive), "container": "dmg",
                 "codesign_verified": True, "notarized": False,
                 "functional_tests_executed": False, "application_executed": False}
     (output / "release-manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
@@ -136,6 +147,7 @@ def publish(repo, version, tag, commit):
     manifest = json.loads((output / "release-manifest.json").read_text())
     if (manifest["commit"] != commit or manifest["version"] != version or manifest.get("tag") != tag
             or manifest.get("architectures") != UNIVERSAL_ARCHITECTURES
+            or manifest.get("container") != "dmg"
             or manifest.get("archive") != names[0] or manifest.get("codesign_verified") is not True
             or manifest["archive_sha256"] != sha(output / names[0])):
         raise ValueError("Unverified or stale local release assets")
@@ -144,7 +156,8 @@ def publish(repo, version, tag, commit):
     remote_state(repo, tag, commit)
     notes = output / "notes.md"
     notes.write_text("Pasto " + version + "\n\nmacOS 14+ · Intel（x86_64）与 Apple Silicon（arm64）Universal 通用包。\n\n"
-                     "提供 ZIP、SHA256SUMS.txt 与构建来源清单。应用采用临时签名，未经 Apple 公证。\n"
+                     "提供 DMG 安装映像、SHA256SUMS.txt 与构建来源清单。将 Pasto.app 拖入 Applications 即可安装。\n"
+                     "应用采用临时签名，未经 Apple 公证。\n"
                      "此发布只验证编译、架构、版本与签名，没有执行应用或功能回归。\n\nCommit: " + commit + "\n")
     args = ["gh", "release", "create", tag, *[str(output / name) for name in names],
             "--repo", repo, "--draft", "--verify-tag", "--target", commit,

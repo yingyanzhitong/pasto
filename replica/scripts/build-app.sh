@@ -52,7 +52,7 @@ mkdir -p "$bundle/Contents/MacOS" "$bundle/Contents/Resources"
 install_executable Pasto "$bundle/Contents/MacOS/Pasto"
 install_executable pasto-mcp "$bundle/Contents/MacOS/pasto-mcp"
 codesign --force --sign - "$bundle/Contents/MacOS/pasto-mcp"
-cp "$replica_root/Assets/Pasto.icns" "$bundle/Contents/Resources/Pasto.icns"
+cp "$replica_root/Assets/PastoAppIcon.icns" "$bundle/Contents/Resources/PastoAppIcon.icns"
 ditto "$binary_root/Pasto_PastoCore.bundle" "$bundle/Contents/Resources/Pasto_PastoCore.bundle"
 helper="$bundle/Contents/Library/LoginItems/Pasto Helper.app"
 mkdir -p "$helper/Contents/MacOS"
@@ -82,7 +82,7 @@ cat > "$bundle/Contents/Info.plist" <<PLIST
 <key>CFBundleIdentifier</key><string>com.yingyanzhitong.paste-replica</string>
 <key>CFBundleName</key><string>Pasto</string>
 <key>CFBundleDisplayName</key><string>Pasto</string>
-<key>CFBundleIconFile</key><string>Pasto</string>
+<key>CFBundleIconFile</key><string>PastoAppIcon</string>
 <key>CFBundleExecutable</key><string>Pasto</string>
 <key>CFBundlePackageType</key><string>APPL</string>
 <key>CFBundleShortVersionString</key><string>$short_version</string>

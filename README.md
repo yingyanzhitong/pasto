@@ -38,9 +38,11 @@ Pasto 面向 **macOS 14+，支持 Intel（x86_64）和 Apple 芯片（arm64）**
 
 从 [Releases](https://github.com/yingyanzhitong/pasto/releases) 选择预发布版本并阅读该版本的限制说明。目前提供开发预览版。安装包采用临时签名，尚未经过 Apple 公证。
 
-下载 `Pasto-<版本号>-macos-universal.zip`：同一个 Universal 安装包包含 Intel 与 Apple 芯片版本，无需分别选择架构。历史版本的架构范围以该版本的发布说明为准。
+下载 `Pasto-<版本号>-macos-universal.dmg`：同一个 Universal 安装包包含 Intel 与 Apple 芯片版本，无需分别选择架构。历史版本的格式与架构范围以该版本的发布说明为准。
 
-解压后将 `Pasto.app` 放入应用程序目录。跨应用直接粘贴需要 macOS 辅助功能权限；授权成功不等于该功能已通过完整兼容性验证。
+打开 DMG，将窗口中的 `Pasto.app` 拖到旁边的 `Applications` 快捷入口。复制完成后，从应用程序目录启动 Pasto，再在 Finder 中推出安装磁盘映像；不要直接从磁盘映像运行日常使用的应用。
+
+跨应用直接粘贴需要 macOS 辅助功能权限；授权成功不等于该功能已通过完整兼容性验证。
 
 Pasto 在本机保存剪贴板内容。截图、日志和归档可能包含个人信息，分享前请检查。报告问题时优先用虚构文本和临时文件复现。
 
@@ -61,6 +63,14 @@ open replica/dist/Pasto.app
 bash replica/scripts/build-app.sh release universal
 ```
 
+制作本地 DMG 安装镜像：
+
+```sh
+bash replica/scripts/build-dmg.sh replica/dist/Pasto.app replica/dist/Pasto.dmg
+```
+
+也可运行 `npm run build:dmg` 完成通用应用构建和 DMG 制作。目标文件已存在时会拒绝覆盖。
+
 仅编译本机架构、不打包应用：
 
 ```sh
@@ -73,7 +83,7 @@ swift build --package-path replica -c release
 
 修改根目录 `package.json` 的 `version` 并推送到 `main`，GitHub Actions 会在版本变化时自动构建和发布。也支持推送对应的 `v<版本号>` 标签，或在 Actions 页面手动运行。
 
-工作流校验应用版本、Universal 包中的 `arm64` / `x86_64` 架构及签名，生成 `Pasto-<版本号>-macos-universal.zip`、`SHA256SUMS.txt` 和 `release-manifest.json`。上传校验成功后才公开 Release；`-dev.N` 版本标记为预发布。同一版本不覆盖其他提交的产物，失败不会发布正式 Release。
+工作流校验应用版本、Universal 包中的 `arm64` / `x86_64` 架构及签名，发布三个附件：`Pasto-<版本号>-macos-universal.dmg`、`SHA256SUMS.txt` 和 `release-manifest.json`。上传校验成功后才公开 Release；`-dev.N` 版本标记为预发布。同一版本不覆盖其他提交的产物，失败不会发布正式 Release。
 
 详见[发布工作流](.github/workflows/release.yml)。构建发布不代表功能回归通过。
 

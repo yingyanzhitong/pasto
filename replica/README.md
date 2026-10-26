@@ -17,7 +17,11 @@ open 'replica/dist/Pasto.app'
 bash replica/scripts/build-app.sh release universal
 ```
 
-Releases 使用同一个 `Pasto-<版本号>-macos-universal.zip`，其中主程序、登录项辅助程序和 `pasto-mcp` 应随包包含两种架构。架构构建与签名检查不等于功能回归；历史发布包仍以各自发布说明为准。
+构建后运行 `bash replica/scripts/build-dmg.sh replica/dist/Pasto.app replica/dist/Pasto.dmg` 制作安装镜像；或用 `npm run build:dmg` 执行完整流程。`npm run build:icon` 根据独立前景素材和标准画布重新生成应用图标。
+
+Releases 使用同一个 `Pasto-<版本号>-macos-universal.dmg`，其中主程序、登录项辅助程序和 `pasto-mcp` 应随包包含两种架构。打开 DMG 后，将 `Pasto.app` 拖到 `Applications` 快捷入口，复制完成后从应用程序目录启动，并在 Finder 中推出磁盘映像。Release 另附 `SHA256SUMS.txt` 和 `release-manifest.json`。
+
+安装包采用临时签名，尚未经过 Apple 公证。架构构建与签名检查不等于功能回归；历史发布包仍以各自发布说明为准。
 
 正常运行时在菜单栏显示剪贴板图标，点击打开历史。默认全局快捷键是 ⇧⌘V，Stack 是 ⇧⌘C；若原版占用，菜单栏提示状态，点击图标仍可使用。直接粘贴会还原目标应用，并且只在系统辅助功能权限可用时发送粘贴按键；权限不足时保留已拷贝内容并显示说明。
 

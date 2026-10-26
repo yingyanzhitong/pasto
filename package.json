@@ -1,6 +1,6 @@
 {
   "name": "pasto",
-  "version": "0.8.0-dev.49",
+  "version": "0.8.0-dev.50",
   "private": true,
   "description": "Pasto：免费、离线的原生 macOS 剪贴板工具",
   "scripts": {
@@ -9,6 +9,8 @@
     "build:app": "bash replica/scripts/build-app.sh",
     "test:core": "swift run --package-path replica pasto-core-tests",
     "test:mcp": "python3 replica/scripts/test-mcp.py",
-    "test:original": "python3 replica/scripts/test-original-functions.py"
+    "test:original": "python3 replica/scripts/test-original-functions.py",
+    "build:icon": "swift replica/scripts/build-icon.swift",
+    "build:dmg": "bash replica/scripts/build-app.sh release universal && bash replica/scripts/build-dmg.sh replica/dist/Pasto.app replica/dist/Pasto.dmg"
   }
 }

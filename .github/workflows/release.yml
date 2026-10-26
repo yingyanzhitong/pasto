@@ -71,7 +71,7 @@ jobs:
         run: >-
           python3 replica/scripts/release-ci.py check
           --version "$RELEASE_VERSION" --tag "$RELEASE_TAG" --commit "$RELEASE_COMMIT"
-      - name: Compile, verify, and archive the Universal app
+      - name: Compile, verify, and create the Universal DMG
         if: steps.existing.outputs.exists != 'true'
         run: >-
           python3 replica/scripts/release-ci.py package
