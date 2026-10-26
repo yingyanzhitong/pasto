@@ -300,7 +300,8 @@ final class ReplicaUIState: ObservableObject {
 }
 
 @MainActor
-private final class ReplicaPanel: NSPanel, NSWindowDelegate {
+final class ReplicaPanel: NSPanel, NSWindowDelegate {
+    weak var collectionFocusTarget: NSView?
     var keyHandler: ((NSEvent) -> Bool)?
     var didResignKey: (() -> Void)?
     var closeRequested: (() -> Void)?
@@ -309,7 +310,8 @@ private final class ReplicaPanel: NSPanel, NSWindowDelegate {
     override var canBecomeKey: Bool { true }
     override var canBecomeMain: Bool { true }
     override func makeFirstResponder(_ responder: NSResponder?) -> Bool {
-        super.makeFirstResponder(responder ?? initialFirstResponder ?? contentView)
+        let collection = collectionFocusTarget.flatMap { $0.window === self ? $0 : nil }
+        return super.makeFirstResponder(responder ?? collection ?? initialFirstResponder ?? contentView)
     }
     override func sendEvent(_ event: NSEvent) {
         if event.type == .keyDown, keyHandler?(event) == true { return }
@@ -351,7 +353,10 @@ final class ReplicaUIController {
     private var isPanelResizing = false
     private var panelTransitionGeneration = 0
     private var isPanelClosing = false
-    private var pendingResignKeyCloseSuppression = false
+    private var panelMouseMonitor: Any?
+    private var outsideMouseMonitor: Any?
+    private var panelDismissObservers: [NSObjectProtocol] = []
+    private var menuTrackingDepth = 0
     private weak var originalPanelScreen: NSScreen?
     private var settingsWindow: NSWindow?
     private var closedSearchTimer: Timer?
@@ -361,7 +366,7 @@ final class ReplicaUIController {
     private var itemWindows: [UUID: NSWindow] = [:]
     private let previewRegistry = OriginalPreviewWindowRegistry()
     private var previewAnchors: [UUID: WeakReplicaPreviewAnchor] = [:]
-    private lazy var previewPopover = makePreviewPopover()
+    private var previewPopover: OriginalPreviewPopover?
     var filterBrowserPopover: OriginalFilterBrowserPopover?
     private var preferenceObservation: AnyCancellable?
 
@@ -408,7 +413,10 @@ final class ReplicaUIController {
     }
 
     deinit {
-        MainActor.assumeIsolated { cancelClosedState() }
+        MainActor.assumeIsolated {
+            removePanelDismissMonitors()
+            cancelClosedState()
+        }
     }
 
     func showPanel() {
@@ -425,6 +433,7 @@ final class ReplicaUIController {
         panel.makeFirstResponder(nil)
         cancelClosedState()
         state.normalizeSelection()
+        installPanelDismissMonitors()
         panel.makeKeyAndOrderFront(nil)
         originalPanelScreen = screen
         content.superview?.clipsToBounds = true
@@ -445,16 +454,92 @@ final class ReplicaUIController {
     }
 
     private func panelDidResignKey() {
-        if pendingResignKeyCloseSuppression {
-            pendingResignKeyCloseSuppression = false
-            return
+        // AppKit may be transferring key status to an attached popover or sheet.
+        DispatchQueue.main.async { [weak self] in
+            guard let self, self.canDismissPanelForInteraction,
+                  !self.panel.isKeyWindow,
+                  !self.isPanelInteractionWindow(NSApp.keyWindow) else { return }
+            self.hidePanel()
         }
-        guard panel.sheets.isEmpty, NSApp.modalWindow == nil else { return }
-        hidePanel()
+    }
+
+    private var canDismissPanelForInteraction: Bool {
+        panel.isVisible && !isPanelClosing && menuTrackingDepth == 0
+            && panel.sheets.isEmpty && NSApp.modalWindow == nil
+    }
+
+    private func isPanelInteractionWindow(_ window: NSWindow?) -> Bool {
+        guard let window else { return false }
+        if window === previewPopover?.contentViewController?.viewIfLoaded?.window
+            || window === filterBrowserPopover?.contentViewController?.viewIfLoaded?.window { return true }
+        var ancestor: NSWindow? = window
+        while let current = ancestor {
+            if current === panel { return true }
+            ancestor = current.parent
+        }
+        return false
+    }
+
+    private func installPanelDismissMonitors() {
+        removePanelDismissMonitors()
+        let mouseDown: NSEvent.EventTypeMask = [.leftMouseDown, .rightMouseDown, .otherMouseDown]
+        panelMouseMonitor = NSEvent.addLocalMonitorForEvents(matching: mouseDown) { [weak self] event in
+            MainActor.assumeIsolated {
+                guard let self, self.canDismissPanelForInteraction,
+                      !self.isPanelInteractionWindow(event.window) else { return }
+                if event.window == nil && self.panel.frame.contains(NSEvent.mouseLocation) { return }
+                self.hidePanel()
+            }
+            return event
+        }
+        outsideMouseMonitor = NSEvent.addGlobalMonitorForEvents(matching: mouseDown) { [weak self] _ in
+            DispatchQueue.main.async { [weak self] in
+                guard let self, self.canDismissPanelForInteraction,
+                      !self.panel.frame.contains(NSEvent.mouseLocation) else { return }
+                self.hidePanel()
+            }
+        }
+        let center = NotificationCenter.default
+        panelDismissObservers.append(center.addObserver(forName: NSMenu.didBeginTrackingNotification,
+            object: nil, queue: .main) { [weak self] _ in
+                MainActor.assumeIsolated { self?.menuTrackingDepth += 1 }
+            })
+        panelDismissObservers.append(center.addObserver(forName: NSMenu.didEndTrackingNotification,
+            object: nil, queue: .main) { [weak self] _ in
+                MainActor.assumeIsolated {
+                    guard let self else { return }
+                    self.menuTrackingDepth = max(0, self.menuTrackingDepth - 1)
+                    guard self.menuTrackingDepth == 0 else { return }
+                    DispatchQueue.main.async { [weak self] in
+                        guard let self, self.canDismissPanelForInteraction,
+                              !self.panel.frame.contains(NSEvent.mouseLocation) else { return }
+                        if !NSApp.isActive || (!self.panel.isKeyWindow
+                            && !self.isPanelInteractionWindow(NSApp.keyWindow)) { self.hidePanel() }
+                    }
+                }
+            })
+        panelDismissObservers.append(center.addObserver(forName: NSApplication.didResignActiveNotification,
+            object: NSApp, queue: .main) { [weak self] _ in
+                MainActor.assumeIsolated {
+                    guard let self, self.canDismissPanelForInteraction else { return }
+                    self.hidePanel()
+                }
+            })
+    }
+
+    private func removePanelDismissMonitors() {
+        if let panelMouseMonitor { NSEvent.removeMonitor(panelMouseMonitor) }
+        if let outsideMouseMonitor { NSEvent.removeMonitor(outsideMouseMonitor) }
+        panelMouseMonitor = nil
+        outsideMouseMonitor = nil
+        for observer in panelDismissObservers { NotificationCenter.default.removeObserver(observer) }
+        panelDismissObservers.removeAll()
+        menuTrackingDepth = 0
     }
 
     func hidePanel() {
         guard panel.isVisible, !isPanelClosing, let content = panel.contentView else { return }
+        removePanelDismissMonitors()
         panelTransitionGeneration += 1
         let generation = panelTransitionGeneration
         if #available(macOS 26, *) {} else { panel.backgroundColor = .clear }
@@ -651,7 +736,9 @@ final class ReplicaUIController {
             return
         }
         if let anchor = previewAnchors[item.id]?.view, anchor.window != nil {
-            previewPopover.show(itemIdentity: AnyHashable(item.id), itemIdentifier: item.id.uuidString,
+            let popover = previewPopover ?? makePreviewPopover()
+            previewPopover = popover
+            popover.show(itemIdentity: AnyHashable(item.id), itemIdentifier: item.id.uuidString,
                 contentView: makePreviewContent(for: item), relativeTo: anchor)
             return
         }
@@ -905,6 +992,11 @@ final class ReplicaUIController {
     }
 
     private func handleKey(_ event: NSEvent) -> Bool {
+        if event.keyCode == 53 {
+            guard canDismissPanelForInteraction else { return false }
+            cancelSearchOrPanel()
+            return true
+        }
         let modifiers = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
         let command = modifiers.contains(.command)
         let shift = modifiers.contains(.shift)
@@ -940,9 +1032,6 @@ final class ReplicaUIController {
             }
         }
         switch event.keyCode {
-        case 53:
-            return OriginalSearchCommands.f_10004867c(selector: NSSelectorFromString("cancelOperation:"),
-                onEnter: nil, onCancel: { [self] in cancelSearchOrPanel() })
         case 36, 76:
             return OriginalSearchCommands.f_10004867c(selector: NSSelectorFromString("insertNewline:"),
                 onEnter: { [self] in pasteSelection(plainTextOnly: plain) }, onCancel: nil)
@@ -959,17 +1048,9 @@ final class ReplicaUIController {
     }
 
     func cancelSearchOrPanel() {
-        if !state.isSearchQueryEmpty {
-            state.query = ""
-            state.searchFilters = []
-            state.searchVisible = true
-            state.searchFocus = UUID()
-            state.normalizeSelection()
-        } else if state.searchVisible || panel.firstResponder is NSTextView {
-            state.query = ""
-            state.searchFilters = []
-            state.searchVisible = false
-            panel.makeFirstResponder(nil)
-        } else { hidePanel() }
+        guard canDismissPanelForInteraction else { return }
+        if filterBrowserPopover?.isShown == true { filterBrowserPopover?.close(); return }
+        if previewPopover?.isShown == true { previewPopover?.close(); return }
+        hidePanel()
     }
 }

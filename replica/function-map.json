@@ -4026,17 +4026,17 @@
       "migration_evidence": "reports/function-migration/Paste-0x100bf6108.json"
     },
     "Paste:0x100bf6114": {
-      "state": "migrated",
+      "state": "partial",
       "contract": "arm64 纯转发：ADRP/LDR 从导入指针槽读取目标并 BR x16；不修改参数寄存器、栈或返回地址。SDK 内部实现不计入此契约。",
-      "sdk_implementation": {
+      "implementation_origin": "existing_sdk_reused",
+      "review": "2026-10-26 build68：当前产物不再导入同一ControlActiveState.==符号；旧SDK完整跳板绑定失效，未把候选或编译器内联当已证明等价。",
+      "remaining": "需另建完整机器码/源码边界证据，或重新证明同一SDK入口；本轮不计完整覆盖。",
+      "migration_evidence": "reports/function-migration/Paste-0x100bf6114.json",
+      "historical_sdk_implementation": {
         "report": "reports/function-migration/sdk-import-reuse.json",
         "entry_key": "Paste:0x100bf6114",
         "symbol": "_$s7SwiftUI18ControlActiveStateO2eeoiySbAC_ACtFZ"
-      },
-      "implementation_origin": "existing_sdk_reused",
-      "review": "完整转发体、间接指针槽绑定、相同原始 SDK 符号/完整 dylib/load-kind/weak/arm64 ABI 已逐地址静态核实；没有新增空壳或实现引用。",
-      "remaining": "SDK/链接版本差异和所有运行期上下文留待全量迁移完成后统一功能回归。",
-      "migration_evidence": "reports/function-migration/Paste-0x100bf6114.json"
+      }
     },
     "Paste:0x100bf6120": {
       "state": "migrated",
@@ -28352,7 +28352,7 @@
       "remaining": "原f077838MainActor.isCurrentExecutor/reportUnexpectedExecutor副作用缺失；源码@MainActor不等于实际ObjC入口有检查。"
     },
     "Paste:0x1000778c0": {
-      "state": "migrated",
+      "state": "partial",
       "contract": "完整原nil→initial→content、nonnil直传与superBOOL返回合同。",
       "implementations": [
         {
@@ -28366,8 +28366,8 @@
         "line": 1020,
         "fragment_sha256": "8f621d4c7c1bf37f8623a19253e4f7848a473ee8b64be8bff109a01fc821ec82"
       },
-      "review": "最终build44成功151输入SHA一致，并完成真实ObjC入口/完整body边界与父类静态核对；不执行产品/功能/单测/UI/MCP。 dev24实际build45焦点完整入口AC874..AC948及同NSPanel父类再核；保留已满足旧实现，无新计数。 dev25最终46焦点IMP b7a18..b7aec与同NSPanel superclass合同再核，保现有完整资格。",
-      "remaining": "全部范围内代码迁移完成后统一功能回归；本批只有稳定编译和静态对照。",
+      "review": "2026-10-26：复核发现dev41增加collectionFocusTarget优先级，改变既有完整nil→initial→content合同；不再记完整迁移。保留真实焦点接线，等待完整原始焦点生产链证据。",
+      "remaining": "当前nil responder优先取同window的collectionFocusTarget；与原initialFirstResponder完整同一性尚未证明。",
       "migration_evidence": "reports/function-migration/Paste-0x1000778c0.json"
     },
     "Paste:0x1000187d0": {

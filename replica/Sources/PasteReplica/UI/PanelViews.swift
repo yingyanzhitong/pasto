@@ -7,7 +7,6 @@ import PasteReplicaCore
 struct ReplicaPanelView: View {
     @ObservedObject var state: ReplicaUIState
     @State private var searchFocused = false
-    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         GeometryReader { geometry in
@@ -32,8 +31,7 @@ struct ReplicaPanelView: View {
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(colorScheme == .dark ? Color(red: 0.13, green: 0.13, blue: 0.14)
-                        : Color(red: 250 / 255, green: 250 / 255, blue: 250 / 255))
+            .background(ReplicaPanelGlassBackground(cornerRadius: backgroundRadius))
             .clipShape(RoundedRectangle(cornerRadius: backgroundRadius, style: .continuous))
             .overlay(RoundedRectangle(cornerRadius: backgroundRadius).strokeBorder(.white.opacity(0.22), lineWidth: 1))
             .padding(.horizontal, backgroundInset).padding(.bottom, backgroundInset)
@@ -165,23 +163,34 @@ struct ReplicaPanelView: View {
     private var trailingControls: some View {
         HStack(spacing: 14) {
             Menu {
-                Button("新建文本", action: { state.controller?.newTextItem() })
-                Button("新建 Pinboard", action: { state.controller?.createPinboard() })
-                Button("Paste Stack", action: { state.controller?.showStack() })
+                Button {
+                    NSApp.sendAction(NSSelectorFromString("about:"), to: NSApp.delegate, from: nil)
+                } label: { Label("关于 Paste", systemImage: "info.circle") }
                 Divider()
-                Button(state.showDeleted ? "返回剪贴板" : "最近删除") {
-                    state.showDeleted.toggle()
-                    state.selection = []
-                    state.normalizeSelection()
+                Button { state.controller?.newTextItem() } label: {
+                    Label("新文本项", systemImage: "square.and.pencil")
                 }
-                Button("导入归档…", action: { state.controller?.importArchive() })
-                Button("导出归档…", action: { state.controller?.exportArchive() })
+                .keyboardShortcut("n", modifiers: .command)
+                Button { state.controller?.showSettings() } label: {
+                    Label("设置…", systemImage: "gear")
+                }
+                .keyboardShortcut(",", modifiers: .command)
                 Divider()
-                Button("设置…", action: { state.controller?.showSettings() })
-                if state.store.preferences.isMonitoringPaused {
-                    Button("继续 Paste", action: state.resumeMonitoring)
-                } else {
-                    Menu("暂停 Paste") {
+                Menu {
+                    Button {
+                        if let url = URL(string: "https://pasteapp.io/help") { NSWorkspace.shared.open(url) }
+                    } label: { Text("帮助中心") }
+                } label: { Label("帮助", systemImage: "questionmark.circle") }
+                Button {
+                    var components = URLComponents(string: "https://twitter.com/intent/tweet")
+                    components?.queryItems = [URLQueryItem(name: "text", value: "Paste")]
+                    if let url = components?.url { NSWorkspace.shared.open(url) }
+                } label: { Label("在 Twitter 上粘贴", systemImage: "at") }
+                Divider()
+                Menu {
+                    if state.store.preferences.isMonitoringPaused {
+                        Button("继续 Paste", action: state.resumeMonitoring)
+                    } else {
                         Button("暂停") { state.pauseMonitoring() }
                         ForEach([15, 30, 60, 180, 480], id: \.self) { minutes in
                             Button(minutes < 60 ? "暂停 \(minutes)分钟" : "暂停 \(minutes / 60)小时") {
@@ -189,7 +198,11 @@ struct ReplicaPanelView: View {
                             }
                         }
                     }
+                } label: { Label("暂停 Paste", systemImage: "pause.circle") }
+                Button { NSApp.terminate(nil) } label: {
+                    Label("退出 Paste", systemImage: "xmark.square")
                 }
+                .keyboardShortcut("q", modifiers: .command)
             } label: { Image(systemName: "ellipsis").frame(width: 16) }
             .menuStyle(.borderlessButton).menuIndicator(.hidden).fixedSize()
             .accessibilityLabel("更多操作")
@@ -223,6 +236,7 @@ struct ReplicaClipboardCard: View {
     let item: ClipboardItem
     let sideLength: CGFloat
     var selectionOverride: Bool? = nil
+    var dimmingOverride: Bool? = nil
     var nativeInteractions = false
     private var selected: Bool { state.selection.contains(item.id) }
     private var renderedSelected: Bool { selectionOverride ?? selected }
@@ -252,7 +266,7 @@ struct ReplicaClipboardCard: View {
         .background {
             if renderedSelected {
                 RoundedRectangle(cornerRadius: selectionCornerRadius, style: cardCornerStyle)
-                    .fill(activeState == .key ? Color.accentColor : .gray)
+                    .fill(Color(nsColor: selectionBackground))
                     .padding(-4)
             }
         }
@@ -332,6 +346,12 @@ struct ReplicaClipboardCard: View {
         }
         if let background = compactTextBackground { return Color(nsColor: background) }
         return Color(nsColor: .textBackgroundColor)
+    }
+
+    private var selectionBackground: NSColor {
+        let color = NSColor.controlAccentColor
+        return (dimmingOverride ?? (activeState != .key))
+            ? OriginalSelectionAppearance.f_100218b08(color) : color
     }
 
     private var compactTextMetadata: OriginalTextPreviewMetadata? {

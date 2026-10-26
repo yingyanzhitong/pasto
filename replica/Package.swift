@@ -15,7 +15,7 @@ let package = Package(
     targets: [
         .target(name: "PasteReplicaObjC", publicHeadersPath: "include"),
         .target(name: "PasteReplicaCore", dependencies: ["PasteReplicaObjC"], resources: [.process("Resources")]),
-        .executableTarget(name: "PasteReplica", dependencies: ["PasteReplicaCore"]),
+        .executableTarget(name: "PasteReplica", dependencies: ["PasteReplicaCore", "PasteReplicaObjC"]),
         .executableTarget(name: "PasteReplicaHelper"),
         .executableTarget(name: "PasteReplicaMCP", dependencies: ["PasteReplicaCore"]),
         .executableTarget(name: "PasteReplicaCoreTests", dependencies: ["PasteReplicaCore"], path: "Tests/PasteReplicaCoreTests")

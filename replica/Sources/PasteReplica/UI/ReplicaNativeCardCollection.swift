@@ -28,6 +28,16 @@ final class ReplicaNativeCollectionHost: NSView, NSDraggingSource {
     private let scrollView = ReplicaNativeHorizontalScrollView(frame: .zero)
     private let document = ReplicaNativeCardDocument(frame: .zero)
     private weak var state: ReplicaUIState?
+    private weak var focusPanel: ReplicaPanel?
+    private var collectionIsFirstResponder = false
+    private var dimmingMode: UInt8 = 0
+    fileprivate var isDimmed: Bool {
+        switch dimmingMode {
+        case 0: return !collectionIsFirstResponder
+        case 1: return false
+        default: return true
+        }
+    }
     private var items: [ClipboardItem] = []
     private var cardSide: CGFloat = 0
     private var cells: [Int: ReplicaNativeCardCell] = [:]
@@ -78,8 +88,39 @@ final class ReplicaNativeCollectionHost: NSView, NSDraggingSource {
         layoutCollection()
     }
 
+    override var acceptsFirstResponder: Bool { true }
+
+    override func becomeFirstResponder() -> Bool {
+        let success = super.becomeFirstResponder()
+        collectionIsFirstResponder = success
+        refreshCellRoots()
+        return success
+    }
+
+    override func resignFirstResponder() -> Bool {
+        let success = super.resignFirstResponder()
+        collectionIsFirstResponder = !success
+        refreshCellRoots()
+        return success
+    }
+
+    private func clearFocusTarget() {
+        guard let panel = focusPanel else { return }
+        if panel.collectionFocusTarget === self { panel.collectionFocusTarget = nil }
+        if panel.firstResponder === self { panel.makeFirstResponder(nil) }
+        focusPanel = nil
+    }
+
     override func viewDidMoveToWindow() {
         super.viewDidMoveToWindow()
+        if focusPanel !== window { clearFocusTarget() }
+        if let panel = window as? ReplicaPanel {
+            focusPanel = panel
+            panel.collectionFocusTarget = self
+            if panel.firstResponder === panel || panel.firstResponder === panel.contentView {
+                panel.makeFirstResponder(self)
+            }
+        }
         for observer in windowObservers { NotificationCenter.default.removeObserver(observer) }
         windowObservers.removeAll()
         if let window {
@@ -98,6 +139,7 @@ final class ReplicaNativeCollectionHost: NSView, NSDraggingSource {
     }
 
     func detachObservers() {
+        clearFocusTarget()
         if let boundsObserver { NotificationCenter.default.removeObserver(boundsObserver) }
         boundsObserver = nil
         for observer in windowObservers { NotificationCenter.default.removeObserver(observer) }
@@ -147,19 +189,19 @@ final class ReplicaNativeCollectionHost: NSView, NSDraggingSource {
                 cell = existing
             } else {
                 cells.removeValue(forKey: index)?.removeFromSuperview()
-                cell = ReplicaNativeCardCell(owner: self, state: state, item: item, side: cardSide)
+                cell = ReplicaNativeCardCell(owner: self, state: state, item: item, side: cardSide, index: index)
                 cells[index] = cell
                 document.addSubview(cell)
             }
             cell.frame = cardFrame(index)
-            cell.update(state: state, item: item, side: cardSide)
+            cell.update(state: state, item: item, side: cardSide, index: index)
         }
     }
 
     private func refreshCellRoots() {
         guard let state else { return }
         for (index, cell) in cells where items.indices.contains(index) && cell.itemID == items[index].id {
-            cell.update(state: state, item: items[index], side: cardSide)
+            cell.update(state: state, item: items[index], side: cardSide, index: index)
         }
     }
 
@@ -183,6 +225,7 @@ final class ReplicaNativeCollectionHost: NSView, NSDraggingSource {
             super.rightMouseDown(with: event)
             return
         }
+        window?.makeFirstResponder(self)
         let point = convert(event.locationInWindow, from: nil)
         guard let index = index(at: point), event.clickCount <= 2 else {
             state.deselectAll()
@@ -379,6 +422,8 @@ private final class ReplicaNativeCardCell: NSView, ReplicaNativeDragPreviewCell 
     private weak var state: ReplicaUIState?
     private var item: ClipboardItem
     private var side: CGFloat
+    private var absoluteIndex: Int
+    private let shortcutIndicator = OriginalCardShortcutIndicatorView(frame: .zero)
     private let hosting = NSHostingView<AnyView>(rootView: AnyView(EmptyView()))
     private var renderedSelection: Bool
     var itemID: UUID { item.id }
@@ -388,24 +433,32 @@ private final class ReplicaNativeCardCell: NSView, ReplicaNativeDragPreviewCell 
         set { renderedSelection = newValue; updateRoot() }
     }
 
-    init(owner: ReplicaNativeCollectionHost, state: ReplicaUIState, item: ClipboardItem, side: CGFloat) {
+    init(owner: ReplicaNativeCollectionHost, state: ReplicaUIState, item: ClipboardItem, side: CGFloat, index: Int) {
         self.owner = owner
         self.state = state
         self.item = item
         self.side = side
+        absoluteIndex = index
         renderedSelection = state.selection.contains(item.id)
         super.init(frame: .zero)
         wantsLayer = true
         addSubview(hosting)
+        addSubview(shortcutIndicator)
+        shortcutIndicator.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            shortcutIndicator.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -8),
+            shortcutIndicator.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -8)
+        ])
         updateRoot()
     }
 
     required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
 
-    func update(state: ReplicaUIState, item: ClipboardItem, side: CGFloat) {
+    func update(state: ReplicaUIState, item: ClipboardItem, side: CGFloat, index: Int) {
         self.state = state
         self.item = item
         self.side = side
+        absoluteIndex = index
         renderedSelection = state.selection.contains(item.id)
         hosting.frame = bounds
         updateRoot()
@@ -415,9 +468,26 @@ private final class ReplicaNativeCardCell: NSView, ReplicaNativeDragPreviewCell 
         guard let state else { return }
         let active: ControlActiveState = !NSApp.isActive ? .inactive : (window?.isKeyWindow == true ? .key : .active)
         hosting.rootView = AnyView(ReplicaClipboardCard(state: state, item: item, sideLength: side,
-            selectionOverride: renderedSelection, nativeInteractions: true)
+            selectionOverride: renderedSelection, dimmingOverride: owner?.isDimmed ?? true, nativeInteractions: true)
             .preferredColorScheme(state.preferredScheme)
             .environment(\.controlActiveState, active))
+        if item.kind == .color, let metadata = item.decodedColorPreviewMetadata {
+            let color = OriginalColorPreviewMetadataGenerator.color(metadata.code)
+            shortcutIndicator.appearance = NSAppearance(named:
+                OriginalPreviewTextColors.f_1002067d4(color) ? .aqua : .darkAqua)
+        } else if (item.kind == .text || item.kind == .richText),
+                  let metadata = item.decodedTextPreviewMetadata {
+            shortcutIndicator.appearance = OriginalCompactTextCardAppearance.appearance(
+                for: OriginalCompactTextCardAppearance.background(for: metadata.text))
+        } else {
+            shortcutIndicator.appearance = nil
+        }
+        let store = state.store
+        shortcutIndicator.configure(index: absoluteIndex < 9 ? absoluteIndex + 1 : nil,
+            isEnabled: !(owner?.isDimmed ?? true),
+            provider: { (plain: store.preferences.plainTextModifierRawValue,
+                         quick: store.preferences.quickPasteModifierRawValue) },
+            textColor: OriginalToolbarAppearance.secondaryForeground())
     }
 
     override func layout() {

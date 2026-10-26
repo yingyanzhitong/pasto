@@ -1,0 +1,64 @@
+{
+  "version": "0.8.0-dev.41",
+  "date": "2026-10-26",
+  "kind": "requested_panel_changes_static_review",
+  "build": {
+    "snapshot": "reports/replica/concentrated-static-build68.json",
+    "succeeded": true,
+    "inputs": 183,
+    "source_unchanged": true,
+    "log_number": 68
+  },
+  "changes": [
+    {
+      "request": "图1菜单改图2",
+      "implementation": "按截图顺序使用系统Menu、Label/SF Symbol、分隔线及CmdN/Cmd,/CmdQ；帮助子菜单仅帮助中心；关于复用现应用关于动作。",
+      "limitations": [
+        "未展开的帮助子菜单原内容不可由截图证明；Twitter为显式打开编辑页面的产品适配，不读取剪贴板或自动发送。"
+      ]
+    },
+    {
+      "request": "图3改图4液态玻璃",
+      "implementation": "移除外层纯色，公开NSGlassEffectView默认材质与26点圆角；旧系统NSVisualEffectView HUD behindWindow回退。保留卡片自身内容背景。",
+      "limitations": [
+        "未运行像素/视觉对照；受系统减少透明度和外观设置影响。"
+      ]
+    },
+    {
+      "request": "外点和Esc隐藏",
+      "implementation": "可见期间local/global mouseDown、失活与key状态处理；菜单tracking结束补判；主搜索/collection Esc一次hide；保留模态/预览层级，隐藏和析构移除监听。",
+      "limitations": [
+        "未运行用户交互回归，不能将静态路径检查称实测通过。"
+      ]
+    }
+  ],
+  "original_function_coverage": {
+    "total": 81134,
+    "scope_excluded": 9,
+    "complete": 1499,
+    "partial": 304,
+    "pending": 79322,
+    "new_complete": 0,
+    "complete_retired": 2
+  },
+  "functional_tests_executed": false,
+  "ui_tests_executed": false,
+  "mcp_tests_executed": false,
+  "installed_or_launched": false,
+  "references": [
+    "https://developer.apple.com/documentation/appkit/nsglasseffectview",
+    "https://pasteapp.io/help"
+  ],
+  "source_sha256": {
+    "replica/Package.swift": "83cdc17807ff174b61583d841491a654440317278c55a305b98c6b77203fc362",
+    "replica/Sources/PasteReplica/UI/PanelViews.swift": "d2a443f69be71321d6c0f93f70fbbb07478f7f2a95365087f5ae3717a86cda6c",
+    "replica/Sources/PasteReplica/UI/ReplicaUIController.swift": "93cb6470e46ed4fd4160728bf72b5d94b7ff7d00609ab0b44f8b83413fa19bca",
+    "replica/Sources/PasteReplica/UI/ReplicaNativeCardCollection.swift": "1d29490561572d9491cbae31598b80d3eff7a54642b8ace81ed3fb6d4ac543f1",
+    "replica/Sources/PasteReplica/UI/OriginalCardShortcutIndicator.swift": "afb57a85fae9ab133a3e41ac53b7e6414442bfb18ac02c54882c312574c7ba15",
+    "replica/Sources/PasteReplicaCore/OriginalSelectionAppearance.swift": "5872178f7e902aa92c57626c3a2201be08ee9fcda85d1d7b1b90e11baff84588",
+    "replica/Sources/PasteReplica/UI/ReplicaPanelGlassBackground.swift": "f89484407bf8248a47e242ae8de08954ce865ff71fd11f226c873c2a7329bc93",
+    "replica/Sources/PasteReplicaObjC/PRPanelGlassBackground.m": "79491f7a55dfd2dcaeb9c03099bce75c386b58c2229bc8d855d2a5fd0e875a04",
+    "replica/Sources/PasteReplicaObjC/include/PRPanelGlassBackground.h": "1e4f72b473bdeb1b90f82daa3e72dd0c75de072e06b9a15a21df0cf8ac818091",
+    "replica/Sources/PasteReplicaObjC/include/module.modulemap": "8f7edd9a34edf9a67e2ab135dd39dec0e5e31495be6116bf72c6ed32abe1223d"
+  }
+}

@@ -2,7 +2,7 @@
   "schema_version": 1,
   "kind": "static_code_migration",
   "function_id": "Paste:0x100047ea4",
-  "reviewed_at": "2026-10-23T18:26:11.272029+00:00",
+  "reviewed_at": "2026-10-26T03:28:50.807457+00:00",
   "original_binary_sha256": "871f00354fbb1c165d858a98e6d19d6f43cb9d3f9f958b3e07c7f07eb5c19afb",
   "original_pseudocode": {
     "path": "decompiled/Paste/part-0026.c",
@@ -11,20 +11,20 @@
   "original_pseudocode_sha256": "3f7bebec5c73403913510118c393fbc5fc848ad9f7c668a2fdd59e923bf39b13",
   "source_sha256": {
     "replica/Sources/PasteReplicaCore/OriginalSearchEditing.swift": "de4dbf21b72826fed9c0e9418c842eb8b0f1146a7d7aa9bfe22985af5d7ac73e",
-    "replica/Sources/PasteReplica/UI/PanelViews.swift": "9337255fa2e91a7fa62cf9fce09b81ffbfcaed182ade908630b86d5d789c4081",
+    "replica/Sources/PasteReplica/UI/PanelViews.swift": "d2a443f69be71321d6c0f93f70fbbb07478f7f2a95365087f5ae3717a86cda6c",
     "replica/Sources/PasteReplicaCore/OriginalSearchField.swift": "6a56456d5b45a28cacd291891380b97414e71c1eaf68bd1d9ee15c3ec1596600",
     "replica/Sources/PasteReplica/UI/SearchEditor.swift": "13ce2f341f2e7aad16ac8083f46575b20b060086cc5a66ebe6399d8740915107"
   },
   "build_succeeded": true,
   "build_command": "swift build --package-path replica -c release",
-  "compiled_app_binary_sha256": "1f3ce0f8e02a759ee2772e16ad080d9aedb89fe8737230638c1638ca43b92594",
+  "compiled_app_binary_sha256": "3202f5ec2cbd6868bffb1c1d613b2646cced57f9d8d8dd7284cd71c6d90c0142",
   "compiled_product": "PasteReplica",
   "functional_regression_executed": false,
   "equivalence_verified": false,
   "implementation_origin": "newly_migrated",
   "contract": "SearchField选择变化通知入口；主执行器隔离；回调不存在时不读取选区；存在时读取该SearchField关联输入文本视图的selectedRange并调用onSelectionChange。复刻由原生编辑器注入已创建的同一输入视图，不宣称已恢复尚待迁移的lazy inputView构造函数。",
   "review": "逐项复审：OriginalSearchEditing的恢复函数体不变；委托在OriginalSearchField创建并保持，Coordinator从field.editingDelegate获取同一对象绑定回调，取代原先桥内构造。构建证据待统一登记；未重跑功能测试。",
-  "source_review": "dev40/build66明确复审f_100047ea4, ReplicaSearchEditor, OriginalSearchEditing(textView:, field.editingDelegate：Panel仅kindunknown卡片改独立原生view、去unknown通用summary，另unknown&&!compact用完整previewwrapper；原SearchEditor/editingDelegate/query判断、cardGeometry.bodyTop/headerHeight/class与已实现颜色/text背景路径及消费者均保持。新helper无双padding且不改变这些旧有限合同；未运行。",
+  "source_review": "原生编辑器关联textview与选择变化可选回调未改；菜单/玻璃不替换编辑器。 release build68已通过；不声称运行或整个父对象验收。",
   "regression_policy": "全部范围内代码迁移完成后统一功能回归；本批无功能/单测/原版差分/UI/MCP执行。",
   "caller_review_refs": [
     {

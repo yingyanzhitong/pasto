@@ -2,7 +2,7 @@
   "schema_version": 1,
   "kind": "static_code_migration",
   "function_id": "Paste:0x1002ddcf0",
-  "reviewed_at": "2026-10-23T18:26:11.272029+00:00",
+  "reviewed_at": "2026-10-26T03:28:50.807457+00:00",
   "original_binary_sha256": "871f00354fbb1c165d858a98e6d19d6f43cb9d3f9f958b3e07c7f07eb5c19afb",
   "original_pseudocode": {
     "path": "decompiled/Paste/part-0237.c",
@@ -11,19 +11,19 @@
   "original_pseudocode_sha256": "09bdce56a949683f34ac8f5253af866467f40c216d4e1bbf42c9590dc2779c65",
   "source_sha256": {
     "replica/Sources/PasteReplicaCore/OriginalSearchQuery.swift": "4c828b16c6342387d375e6b5a3f24d28b37bbffa1c377e4cdb064ad27b5d1b28",
-    "replica/Sources/PasteReplica/UI/ReplicaUIController.swift": "83f115e2f1f7ba8f057de253dfb60e548a2ec16d035d55f8688e6a5f06c106e8",
-    "replica/Sources/PasteReplica/UI/PanelViews.swift": "9337255fa2e91a7fa62cf9fce09b81ffbfcaed182ade908630b86d5d789c4081"
+    "replica/Sources/PasteReplica/UI/ReplicaUIController.swift": "93cb6470e46ed4fd4160728bf72b5d94b7ff7d00609ab0b44f8b83413fa19bca",
+    "replica/Sources/PasteReplica/UI/PanelViews.swift": "d2a443f69be71321d6c0f93f70fbbb07478f7f2a95365087f5ae3717a86cda6c"
   },
   "build_succeeded": true,
   "build_command": "swift build --package-path replica -c release",
-  "compiled_app_binary_sha256": "1f3ce0f8e02a759ee2772e16ad080d9aedb89fe8737230638c1638ca43b92594",
+  "compiled_app_binary_sha256": "3202f5ec2cbd6868bffb1c1d613b2646cced57f9d8d8dd7284cd71c6d90c0142",
   "compiled_product": "PasteReplica",
   "functional_regression_executed": false,
   "equivalence_verified": false,
   "implementation_origin": "newly_migrated",
   "contract": "查询数组为空返回true；依次读取每个text或filter的字符串值，trimmingCharacters(.whitespaces)后非空立即false，否则继续；不把.whitespacesAndNewlines扩大为条件。",
   "review": "完整part0237+arm64 1002ddcf0..<1002dde30，全部value trim的短路allSatisfy直接恢复。实际搜索可见性和Esc条件消费，空白查询resign按原SearchBar f40054清全局empty模型；不标原父协调器完整。",
-  "source_review": "dev40/build66明确复审func f_1002ddcf0(, var isSearchQueryEmpty: Bool, !state.isSearchQueryEmpty：Panel仅kindunknown卡片改独立原生view、去unknown通用summary，另unknown&&!compact用完整previewwrapper；原SearchEditor/editingDelegate/query判断、cardGeometry.bodyTop/headerHeight/class与已实现颜色/text背景路径及消费者均保持。新helper无双padding且不改变这些旧有限合同；未运行。",
+  "source_review": "空查询按whitespaces判定及Panel !state.isSearchQueryEmpty读取未改。 release build68已通过；不声称运行或整个父对象验收。",
   "regression_policy": "全部范围内代码迁移完成后统一功能回归；本批无功能/单测/原版差分/UI/MCP执行。",
   "unchanged_declarations": [
     {
