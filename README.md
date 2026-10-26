@@ -38,7 +38,12 @@ Pasto 面向 **macOS 14+，支持 Intel（x86_64）和 Apple 芯片（arm64）**
 
 从 [Releases](https://github.com/yingyanzhitong/pasto/releases) 选择预发布版本并阅读该版本的限制说明。目前提供开发预览版。安装包采用临时签名，尚未经过 Apple 公证。
 
-下载 `Pasto-<版本号>-macos-universal.dmg`：同一个 Universal 安装包包含 Intel 与 Apple 芯片版本，无需分别选择架构。历史版本的格式与架构范围以该版本的发布说明为准。
+按 Mac 的芯片选择安装包，例如 `0.8.0-dev.51` 版本：
+
+- **Apple 芯片（arm64）**：`Pasto-0.8.0-dev.51-macos-arm64.dmg`
+- **Intel（x86_64）**：`Pasto-0.8.0-dev.51-macos-x86_64.dmg`
+
+可在“关于本机”中查看芯片或处理器。历史版本的格式与架构范围以该版本的发布说明为准。
 
 打开 DMG，将窗口中的 `Pasto.app` 拖到旁边的 `Applications` 快捷入口。复制完成后，从应用程序目录启动 Pasto，再在 Finder 中推出安装磁盘映像；不要直接从磁盘映像运行日常使用的应用。
 
@@ -57,19 +62,21 @@ bash replica/scripts/build-app.sh
 open replica/dist/Pasto.app
 ```
 
-默认按当前 Mac 的本机架构构建。构建脚本生成 `replica/dist/Pasto.app`，包含资源、登录项辅助程序及 MCP 可执行文件，并进行本地签名检查。生成同时包含两种架构的应用：
+默认按当前 Mac 的本机架构构建。构建脚本生成 `replica/dist/Pasto.app`，包含资源、登录项辅助程序及 MCP 可执行文件，并进行本地签名检查。
+
+一次构建 Apple 芯片和 Intel 两个独立 DMG：
 
 ```sh
-bash replica/scripts/build-app.sh release universal
+npm run build:dmg
 ```
 
-制作本地 DMG 安装镜像：
+该命令调用发布脚本 `release-ci.py package`，自动构建并打包两个架构。只为已有的本机应用制作 DMG：
 
 ```sh
 bash replica/scripts/build-dmg.sh replica/dist/Pasto.app replica/dist/Pasto.dmg
 ```
 
-也可运行 `npm run build:dmg` 完成通用应用构建和 DMG 制作。目标文件已存在时会拒绝覆盖。
+制作 DMG 时，目标文件已存在会拒绝覆盖。
 
 仅编译本机架构、不打包应用：
 
@@ -83,7 +90,9 @@ swift build --package-path replica -c release
 
 修改根目录 `package.json` 的 `version` 并推送到 `main`，GitHub Actions 会在版本变化时自动构建和发布。也支持推送对应的 `v<版本号>` 标签，或在 Actions 页面手动运行。
 
-工作流校验应用版本、Universal 包中的 `arm64` / `x86_64` 架构及签名，发布三个附件：`Pasto-<版本号>-macos-universal.dmg`、`SHA256SUMS.txt` 和 `release-manifest.json`。上传校验成功后才公开 Release；`-dev.N` 版本标记为预发布。同一版本不覆盖其他提交的产物，失败不会发布正式 Release。
+工作流分别校验两个安装包的版本、目标架构及签名，发布四个附件：`Pasto-<版本号>-macos-arm64.dmg`、`Pasto-<版本号>-macos-x86_64.dmg`、`SHA256SUMS.txt` 和 `release-manifest.json`。上传校验成功后才公开 Release；`-dev.N` 版本标记为预发布。同一版本不覆盖其他提交的产物，失败不会发布正式 Release。
+
+Release 页面中的 `Source code (zip)` 和 `Source code (tar.gz)` 是 GitHub 自动提供的标签源码下载链接，不是安装包，也不是此发布流程额外上传的附件。
 
 详见[发布工作流](.github/workflows/release.yml)。构建发布不代表功能回归通过。
 
@@ -91,7 +100,7 @@ swift build --package-path replica -c release
 
 Pasto 基于 **Paste 6.6.6** 的 REA / Ghidra 静态逆向证据独立重写；反编译伪代码不是可直接编译的原始 Swift 工程。本项目不隶属于或代表 Paste 原厂，不修改原版应用或其授权。
 
-现有原版机器码分析与地址证据来自 **arm64**。Pasto 提供 Universal 构建，不表示已反编译原版 x86_64，也不表示 Intel 与 Apple 芯片上的全功能回归均已通过。
+现有原版机器码分析与地址证据来自 **arm64**。Pasto 提供两个架构的独立安装包，不表示已反编译原版 x86_64，也不表示 Intel 与 Apple 芯片上的全功能回归均已通过。
 
 研究过程见 [逆向研究说明](docs/REVERSE_ENGINEERING.md)；当前证据与剩余差异见 [集中功能核对报告](reports/replica/fast-coverage-audit.md)。二进制地址数量、伪代码导出数量和已登记实现数均不能换算为产品完成百分比；构建、安装和单项操作成功也不等于完整交互验收。
 

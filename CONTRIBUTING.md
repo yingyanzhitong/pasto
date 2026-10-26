@@ -26,13 +26,13 @@
 swift build --package-path replica -c release
 ```
 
-该命令及默认应用构建均使用当前 Mac 的本机架构。Pasto 支持 macOS 14+ 的 Intel（x86_64）和 Apple 芯片（arm64）；需打包通用应用时使用：
+该命令及默认应用构建均使用当前 Mac 的本机架构。Pasto 支持 macOS 14+ 的 Intel（x86_64）和 Apple 芯片（arm64）；需构建两个架构的独立安装包时使用：
 
 ```sh
-bash replica/scripts/build-app.sh release universal
+npm run build:dmg
 ```
 
-发布安装介质为 `Pasto-<版本号>-macos-universal.dmg`，同时提供 `SHA256SUMS.txt` 和 `release-manifest.json`。检查安装说明时应使用“打开 DMG → 拖入 Applications → 复制完成后推出磁盘映像”的流程。当前临时签名不等于 Apple 公证，不应添加绕过系统安全保护的安装教程。
+该命令调用 `release-ci.py package`，发布介质分别为 `Pasto-<版本号>-macos-arm64.dmg` 和 `Pasto-<版本号>-macos-x86_64.dmg`，同时提供 `SHA256SUMS.txt` 和 `release-manifest.json`。GitHub 自动显示的 `Source code (zip)` / `Source code (tar.gz)` 是标签源码链接，流程不另上传源码包。检查安装说明时应使用“选择芯片对应 DMG → 打开 → 拖入 Applications → 复制完成后推出磁盘映像”的流程。当前临时签名不等于 Apple 公证，不应添加绕过系统安全保护的安装教程。
 
 涉及架构的修改应说明编译目标、运行机器和是否通过 Rosetta 执行。双架构编译或打包通过不代表两类机器上的功能已验证。原版逆向证据目前为 arm64；不要改写历史地址报告，或据此宣称已恢复原版 x86_64 实现。
 

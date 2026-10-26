@@ -1,9 +1,11 @@
 #!/bin/bash
 set -euo pipefail
-if [[ "$#" != 2 || "$1" != *.app || "$2" != *.dmg ]]; then
-  printf '%s\n' '用法：build-dmg.sh <已构建的 Pasto.app> <目标.dmg>' >&2
+if [[ "$#" -lt 2 || "$#" -gt 3 || "${1:-}" != *.app || "${2:-}" != *.dmg ]]; then
+  printf '%s\n' '用法：build-dmg.sh <已构建的 Pasto.app> <目标.dmg> [arm64|x86_64|universal]' >&2
   exit 1
 fi
+expected_architecture="${3:-auto}"
+case "$expected_architecture" in auto|arm64|x86_64|universal) ;; *) printf '%s\n' '目标架构必须为 arm64、x86_64 或 universal。' >&2; exit 1 ;; esac
 app="$(cd "$1" && pwd)"
 mkdir -p "$(dirname "$2")"
 output="$(cd "$(dirname "$2")" && pwd)/$(basename "$2")"
@@ -36,7 +38,7 @@ hdiutil verify "$work/Pasto.dmg"
 attached=1
 hdiutil attach "$work/Pasto.dmg" -readonly -nobrowse -mountpoint "$mount" -plist > "$work/attach.plist"
 codesign --verify --deep --strict "$mount/Pasto.app"
-python3 - "$app" "$mount" "$work/attach.plist" <<'PY'
+python3 - "$app" "$mount" "$work/attach.plist" "$expected_architecture" <<'PY'
 from pathlib import Path
 import hashlib
 import os
@@ -45,7 +47,8 @@ import stat
 import subprocess
 import sys
 
-source, mounted, attachment = map(Path, sys.argv[1:])
+source, mounted, attachment = map(Path, sys.argv[1:4])
+expected = sys.argv[4]
 app = mounted / "Pasto.app"
 if not (mounted / "Applications").is_symlink() or os.readlink(mounted / "Applications") != "/Applications":
     raise ValueError("Applications 快捷链接目标错误")
@@ -71,17 +74,26 @@ info = plistlib.loads((app / "Contents/Info.plist").read_bytes())
 source_info = plistlib.loads((source / "Contents/Info.plist").read_bytes())
 if info != source_info or info.get("CFBundleExecutable") != "Pasto" or info.get("CFBundleDisplayName") != "Pasto":
     raise ValueError("DMG 内应用元数据不匹配")
+allowed = {frozenset(["arm64"]), frozenset(["x86_64"]), frozenset(["arm64", "x86_64"])}
+expected_set = frozenset(["arm64", "x86_64"] if expected == "universal" else [expected])
+common_architectures = None
 for relative in ["Contents/MacOS/Pasto", "Contents/MacOS/pasto-mcp",
                  "Contents/Library/LoginItems/Pasto Helper.app/Contents/MacOS/PastoHelper"]:
     executable = app / relative
     architectures = subprocess.run(["lipo", "-archs", str(executable)],
                                    check=True, capture_output=True, text=True).stdout.split()
-    if len(architectures) != 2 or set(architectures) != {"arm64", "x86_64"}:
-        raise ValueError("DMG 必须包含恰好 arm64 和 x86_64 两个架构")
+    actual = frozenset(architectures)
+    if len(actual) != len(architectures) or actual not in allowed:
+        raise ValueError("可执行文件包含不支持或重复的架构")
+    if expected != "auto" and actual != expected_set:
+        raise ValueError("可执行文件架构与指定目标不一致")
+    if common_architectures is not None and actual != common_architectures:
+        raise ValueError("三个可执行文件必须具有完全相同的架构")
+    common_architectures = actual
     for architecture in architectures:
         subprocess.run(["codesign", "--verify", "--strict", "--architecture", architecture,
                         str(executable)], check=True)
-print("DMG 应用内容、Universal 架构、签名与 Applications 快捷链接校验通过")
+print("DMG 应用内容、架构、签名与 Applications 快捷链接校验通过：" + ", ".join(sorted(common_architectures)))
 PY
 hdiutil detach "$mount"
 attached=0

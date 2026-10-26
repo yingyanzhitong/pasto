@@ -11,15 +11,17 @@ bash replica/scripts/build-app.sh
 open 'replica/dist/Pasto.app'
 ```
 
-打包同时包含两种架构的 Universal 应用：
+一次构建并打包 Apple 芯片和 Intel 两个独立 DMG：
 
 ```sh
-bash replica/scripts/build-app.sh release universal
+npm run build:dmg
 ```
 
-构建后运行 `bash replica/scripts/build-dmg.sh replica/dist/Pasto.app replica/dist/Pasto.dmg` 制作安装镜像；或用 `npm run build:dmg` 执行完整流程。`npm run build:icon` 根据独立前景素材和标准画布重新生成应用图标。
+`npm run build:dmg` 调用 `release-ci.py package` 完成两个架构的构建和打包。只处理已有应用时，可运行 `bash replica/scripts/build-dmg.sh replica/dist/Pasto.app replica/dist/Pasto.dmg` 制作本机安装镜像。`npm run build:icon` 根据独立前景素材和标准画布重新生成应用图标。
 
-Releases 使用同一个 `Pasto-<版本号>-macos-universal.dmg`，其中主程序、登录项辅助程序和 `pasto-mcp` 应随包包含两种架构。打开 DMG 后，将 `Pasto.app` 拖到 `Applications` 快捷入口，复制完成后从应用程序目录启动，并在 Finder 中推出磁盘映像。Release 另附 `SHA256SUMS.txt` 和 `release-manifest.json`。
+Releases 按芯片分别提供 `Pasto-<版本号>-macos-arm64.dmg` 与 `Pasto-<版本号>-macos-x86_64.dmg`。例如 `0.8.0-dev.51` 的 Apple 芯片包为 `Pasto-0.8.0-dev.51-macos-arm64.dmg`，Intel 包为 `Pasto-0.8.0-dev.51-macos-x86_64.dmg`；每个包中的主程序、登录项辅助程序和 `pasto-mcp` 均应匹配其目标架构。打开对应 DMG 后，将 `Pasto.app` 拖到 `Applications` 快捷入口，复制完成后从应用程序目录启动，并在 Finder 中推出磁盘映像。Release 另附 `SHA256SUMS.txt` 和 `release-manifest.json`。
+
+页面上的 `Source code (zip)` / `Source code (tar.gz)` 是 GitHub 自动生成的标签源码链接，不是流程上传的安装附件。
 
 安装包采用临时签名，尚未经过 Apple 公证。架构构建与签名检查不等于功能回归；历史发布包仍以各自发布说明为准。
 
@@ -57,7 +59,7 @@ open -n 'replica/dist/Pasto.app' --args \
 
 ## 验证与差异
 
-当前原版 REA/Ghidra、机器码和逐地址证据来自 arm64，不能作为已分析原版 x86_64 的声明。Universal 构建复用独立实现源码；涉及 AppKit、Carbon、Vision、权限及跨应用粘贴的实际行为，仍需分别记录目标机器架构和操作结果。
+当前原版 REA/Ghidra、机器码和逐地址证据来自 arm64，不能作为已分析原版 x86_64 的声明。两个架构复用独立实现源码；涉及 AppKit、Carbon、Vision、权限及跨应用粘贴的实际行为，仍需分别记录目标机器架构和操作结果。
 
 按原版地址逐函数登记，见 [FUNCTION_IMPLEMENTATION.md](FUNCTION_IMPLEMENTATION.md)。0.7.0 曾有十三个函数通过 336 个原版机器码直接差分用例，这是历史快照；迁移期间相关源码变化后会降为 migrated，当前数量以台账为准，不重跑回归来维持旧标签。OCR 已保存词级置信度和位置框，但尚未完成原版图片文字选择交互及全部字符串索引分支对照。兼容识别入口保留原图尺寸；地址级入口可传显式最大尺寸，原版调用方的默认参数仍待确认。
 

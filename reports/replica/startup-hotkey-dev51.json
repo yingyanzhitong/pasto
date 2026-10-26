@@ -1,0 +1,25 @@
+{
+  "version": "0.8.0-dev.51",
+  "date": "2026-10-26",
+  "problem": "Installed dev.50 exits before responding to Command-Shift-V when a file-path card is rendered.",
+  "cause": "NSTextField hosted directly by NSViewRepresentable repeatedly invalidates width-dependent intrinsic constraints; local diagnostic counted 2865 updates on that label versus 2-4 on others.",
+  "fix": "Use an NSView container with frame-owned label layout, pure text measurement capped at two lines, and idempotent attributed-text updates.",
+  "source": "replica/Sources/Pasto/UI/OriginalHeadTruncatedLabel.swift",
+  "source_sha256": "02882527d847263c3370a82d555436d149fd9f9971392ba033967d32cdc9ae6b",
+  "targeted_local_verification": {
+    "macos": "26",
+    "architecture": "arm64",
+    "application_path": "/Applications/Pasto.app",
+    "launch_kept_running": true,
+    "command_shift_v_opens_panel": true,
+    "escape_hides_panel": true,
+    "command_shift_v_reopens_panel": true,
+    "outside_click_hide_verified": false
+  },
+  "ci_runtime_tests_executed": false,
+  "functional_regression_executed": false,
+  "mcp_tests_executed": false,
+  "new_complete_functions": 0,
+  "diagnostic_code_in_release": false,
+  "personal_clipboard_data_in_report": false
+}
