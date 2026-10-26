@@ -2,7 +2,7 @@
   "schema_version": 1,
   "kind": "static_code_migration",
   "function_id": "Paste:0x1003d8588",
-  "reviewed_at": "2026-10-26T03:28:50.807457+00:00",
+  "reviewed_at": "2026-10-26T03:47:01.971411+00:00",
   "original_binary_sha256": "871f00354fbb1c165d858a98e6d19d6f43cb9d3f9f958b3e07c7f07eb5c19afb",
   "original_pseudocode": {
     "path": "decompiled/Paste/part-0306.c",
@@ -11,18 +11,18 @@
   "original_pseudocode_sha256": "f3a94f212c10e31c12f3ce8a49f18b534c6c358d00f726d4b62dacbd0bfa5737",
   "source_sha256": {
     "replica/Sources/PasteReplicaCore/OriginalCardPresentation.swift": "acb4df601c1f35cf1e8767bc8a66140c99ec082c8c82f79acd49fc316a5d09cf",
-    "replica/Sources/PasteReplica/UI/PanelViews.swift": "d2a443f69be71321d6c0f93f70fbbb07478f7f2a95365087f5ae3717a86cda6c"
+    "replica/Sources/PasteReplica/UI/PanelViews.swift": "d9552057e37f115af25f969e570b24de247ebbb8db29e6d6c40d938d79570c70"
   },
   "build_succeeded": true,
   "build_command": "swift build --package-path replica -c release",
-  "compiled_app_binary_sha256": "3202f5ec2cbd6868bffb1c1d613b2646cced57f9d8d8dd7284cd71c6d90c0142",
+  "compiled_app_binary_sha256": "169babba7cffea75607e34d80e697419eef323a83d94d34eaf217cef1e2863ea",
   "compiled_product": "PasteReplica",
   "functional_regression_executed": false,
   "equivalence_verified": false,
   "implementation_origin": "newly_migrated",
   "contract": "Completepure3constraintvalues forrawUInt8sizeclass,fullsize andOSbool; actualbodyTop/HeaderHeightconsumer. Lockvalueexactreturned,nativeLockViewparentpartial.",
   "review": "Bound to final46 actual155inputs; finitecompletegeometrybody/table andactualcanonical/privacyconsumers. WholeUI/Config/ABIparentsnotpromoted.",
-  "source_review": "Card geometry与bodyTop/HeaderHeight consumer未改；本轮仅外层玻璃及selection背景，未改Card原尺寸算法。 release build68已通过；不声称运行或整个父对象验收。",
+  "source_review": "仅五处更多菜单品牌字串替换，逐一反向替换后整个PanelViews与dev41 HEAD逐字相同；该地址Core算法、原生编辑器/几何/查询实际调用及所有分支均未改。build69已重新编译通过，不增加完整计数，不声称运行回归。",
   "regression_policy": "全部范围内代码迁移完成后统一功能回归；本批无功能/单测/原版差分/UI/MCP执行。",
   "caller_review_refs": [
     {

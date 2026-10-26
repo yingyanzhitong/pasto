@@ -2,7 +2,7 @@
   "schema_version": 1,
   "kind": "static_code_migration",
   "function_id": "Paste:0x100048128",
-  "reviewed_at": "2026-10-26T03:28:50.807457+00:00",
+  "reviewed_at": "2026-10-26T03:47:01.971411+00:00",
   "original_binary_sha256": "871f00354fbb1c165d858a98e6d19d6f43cb9d3f9f958b3e07c7f07eb5c19afb",
   "original_pseudocode": {
     "path": "decompiled/Paste/part-0026.c",
@@ -11,20 +11,20 @@
   "original_pseudocode_sha256": "d87365857ebcdfd24bca9413937f4e8de378dd18b048b57c524dfefcdfb48c57",
   "source_sha256": {
     "replica/Sources/PasteReplicaCore/OriginalSearchEditing.swift": "de4dbf21b72826fed9c0e9418c842eb8b0f1146a7d7aa9bfe22985af5d7ac73e",
-    "replica/Sources/PasteReplica/UI/PanelViews.swift": "d2a443f69be71321d6c0f93f70fbbb07478f7f2a95365087f5ae3717a86cda6c",
+    "replica/Sources/PasteReplica/UI/PanelViews.swift": "d9552057e37f115af25f969e570b24de247ebbb8db29e6d6c40d938d79570c70",
     "replica/Sources/PasteReplicaCore/OriginalSearchField.swift": "6a56456d5b45a28cacd291891380b97414e71c1eaf68bd1d9ee15c3ec1596600",
     "replica/Sources/PasteReplica/UI/SearchEditor.swift": "13ce2f341f2e7aad16ac8083f46575b20b060086cc5a66ebe6399d8740915107"
   },
   "build_succeeded": true,
   "build_command": "swift build --package-path replica -c release",
-  "compiled_app_binary_sha256": "3202f5ec2cbd6868bffb1c1d613b2646cced57f9d8d8dd7284cd71c6d90c0142",
+  "compiled_app_binary_sha256": "169babba7cffea75607e34d80e697419eef323a83d94d34eaf217cef1e2863ea",
   "compiled_product": "PasteReplica",
   "functional_regression_executed": false,
   "equivalence_verified": false,
   "implementation_origin": "newly_migrated",
   "contract": "SearchField结束编辑通知入口；主执行器隔离，通知内容不被业务逻辑读取；可选onEndEditing存在则调用一次，不存在则不调用。由原生编辑器结束编辑通知调用。",
   "review": "逐项复审：OriginalSearchEditing的恢复函数体不变；委托在OriginalSearchField创建并保持，Coordinator从field.editingDelegate获取同一对象绑定回调，取代原先桥内构造。构建证据待统一登记；未重跑功能测试。",
-  "source_review": "原生结束编辑通知与可选回调未改。 release build68已通过；不声称运行或整个父对象验收。",
+  "source_review": "仅五处更多菜单品牌字串替换，逐一反向替换后整个PanelViews与dev41 HEAD逐字相同；该地址Core算法、原生编辑器/几何/查询实际调用及所有分支均未改。build69已重新编译通过，不增加完整计数，不声称运行回归。",
   "regression_policy": "全部范围内代码迁移完成后统一功能回归；本批无功能/单测/原版差分/UI/MCP执行。",
   "caller_review_refs": [
     {
