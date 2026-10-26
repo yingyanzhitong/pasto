@@ -7,10 +7,20 @@ import os
 from pathlib import Path
 import platform
 import plistlib
+import re
 import subprocess
 import tempfile
 
 ROOT = Path(__file__).resolve().parents[2]
+UNIVERSAL_ARCHITECTURES = ["arm64", "x86_64"]
+
+
+def bundle_version(version):
+    if not re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+(?:-dev\.[0-9]+)?", version):
+        raise ValueError("Unsupported release version")
+    pieces = version.split("-dev.")
+    build = pieces[0] if len(pieces) == 1 else ".".join(pieces[0].split(".")[:2] + [pieces[1]])
+    return pieces[0], build
 
 
 def run(args, **kwargs):
@@ -31,6 +41,7 @@ def api(endpoint, *options, optional=False):
 
 
 def validate_identity(version, tag, commit):
+    bundle_version(version)
     if json.loads((ROOT / "package.json").read_text())["version"] != version or tag != "v" + version:
         raise ValueError("Release identity does not match checked-out package.json")
     actual = run(["git", "rev-parse", "HEAD"], capture_output=True, text=True).stdout.strip()
@@ -57,7 +68,7 @@ def remote_state(repo, tag, commit):
 
 
 def asset_names(version):
-    return ["Pasto-" + version + "-macos-arm64.zip", "SHA256SUMS.txt", "release-manifest.json"]
+    return ["Pasto-" + version + "-macos-universal.zip", "SHA256SUMS.txt", "release-manifest.json"]
 
 
 def check_existing(repo, version, tag, commit):
@@ -72,32 +83,42 @@ def check_existing(repo, version, tag, commit):
     return ref, release
 
 
-def package(version, tag, commit):
-    if platform.system() != "Darwin" or platform.machine() != "arm64":
-        raise ValueError("Release requires a native macOS arm64 runner")
-    run(["bash", "replica/scripts/build-app.sh", "release"])
-    app = ROOT / "replica/dist/Pasto.app"
+def verify_app(app, version, architectures):
     info = plistlib.loads((app / "Contents/Info.plist").read_bytes())
-    pieces = version.split("-dev.")
-    expected_build = pieces[0] if len(pieces) == 1 else ".".join(pieces[0].split(".")[:2] + [pieces[1]])
+    short_version, expected_build = bundle_version(version)
     if (info.get("CFBundleExecutable") != "Pasto" or info.get("CFBundleDisplayName") != "Pasto"
-            or info.get("CFBundleShortVersionString") != pieces[0]
+            or info.get("CFBundleShortVersionString") != short_version
             or info.get("CFBundleVersion") != expected_build or info.get("PastoSourceVersion") != version):
         raise ValueError("Application bundle version/name mismatch")
     run(["codesign", "--verify", "--deep", "--strict", str(app)])
     executables = [app / "Contents/MacOS/Pasto", app / "Contents/MacOS/pasto-mcp",
                    app / "Contents/Library/LoginItems/Pasto Helper.app/Contents/MacOS/PastoHelper"]
     for executable in executables:
-        if run(["lipo", "-archs", str(executable)], capture_output=True, text=True).stdout.strip() != "arm64":
-            raise ValueError("Unexpected executable architecture")
+        actual = run(["lipo", "-archs", str(executable)], capture_output=True, text=True).stdout.split()
+        if len(actual) != len(architectures) or set(actual) != set(architectures):
+            raise ValueError("Unexpected executable architectures: " + str(executable) + " " + str(actual))
+
+
+def verify_intel(version):
+    if platform.system() != "Darwin" or platform.machine() != "x86_64":
+        raise ValueError("Intel verification requires a native macOS x86_64 runner")
+    verify_app(ROOT / "replica/dist/Pasto.app", version, ["x86_64"])
+
+
+def package(version, tag, commit):
+    if platform.system() != "Darwin":
+        raise ValueError("Release requires a macOS runner")
+    run(["bash", "replica/scripts/build-app.sh", "release", "universal"])
+    app = ROOT / "replica/dist/Pasto.app"
+    verify_app(app, version, UNIVERSAL_ARCHITECTURES)
     output = ROOT / "replica/dist/release"
     output.mkdir(exist_ok=False)
     archive = output / asset_names(version)[0]
     run(["ditto", "-c", "-k", "--sequesterRsrc", "--keepParent", str(app), str(archive)])
     with tempfile.TemporaryDirectory() as temporary:
         run(["ditto", "-x", "-k", str(archive), temporary])
-        run(["codesign", "--verify", "--deep", "--strict", str(Path(temporary) / "Pasto.app")])
-    manifest = {"version": version, "tag": tag, "commit": commit, "architecture": "arm64",
+        verify_app(Path(temporary) / "Pasto.app", version, UNIVERSAL_ARCHITECTURES)
+    manifest = {"version": version, "tag": tag, "commit": commit, "architectures": UNIVERSAL_ARCHITECTURES,
                 "archive": archive.name, "archive_sha256": sha(archive),
                 "codesign_verified": True, "notarized": False,
                 "functional_tests_executed": False, "application_executed": False}
@@ -113,13 +134,16 @@ def publish(repo, version, tag, commit):
     output = ROOT / "replica/dist/release"
     names = asset_names(version)
     manifest = json.loads((output / "release-manifest.json").read_text())
-    if manifest["commit"] != commit or manifest["version"] != version or manifest["archive_sha256"] != sha(output / names[0]):
+    if (manifest["commit"] != commit or manifest["version"] != version or manifest.get("tag") != tag
+            or manifest.get("architectures") != UNIVERSAL_ARCHITECTURES
+            or manifest.get("archive") != names[0] or manifest.get("codesign_verified") is not True
+            or manifest["archive_sha256"] != sha(output / names[0])):
         raise ValueError("Unverified or stale local release assets")
     if not ref:
         api("repos/" + repo + "/git/refs", "--method", "POST", "-f", "ref=refs/tags/" + tag, "-f", "sha=" + commit)
     remote_state(repo, tag, commit)
     notes = output / "notes.md"
-    notes.write_text("Pasto " + version + "\n\nmacOS 14+ · Apple Silicon（arm64）。\n\n"
+    notes.write_text("Pasto " + version + "\n\nmacOS 14+ · Intel（x86_64）与 Apple Silicon（arm64）Universal 通用包。\n\n"
                      "提供 ZIP、SHA256SUMS.txt 与构建来源清单。应用采用临时签名，未经 Apple 公证。\n"
                      "此发布只验证编译、架构、版本与签名，没有执行应用或功能回归。\n\nCommit: " + commit + "\n")
     args = ["gh", "release", "create", tag, *[str(output / name) for name in names],
@@ -140,12 +164,15 @@ def publish(repo, version, tag, commit):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("mode", choices=["check", "package", "publish"])
+    parser.add_argument("mode", choices=["check", "verify-intel", "package", "publish"])
     parser.add_argument("--version", required=True)
     parser.add_argument("--tag", required=True)
     parser.add_argument("--commit", required=True)
     args = parser.parse_args()
     validate_identity(args.version, args.tag, args.commit)
+    if args.mode == "verify-intel":
+        verify_intel(args.version)
+        return
     repo = os.environ["GITHUB_REPOSITORY"]
     if args.mode == "check":
         _, release = check_existing(repo, args.version, args.tag, args.commit)

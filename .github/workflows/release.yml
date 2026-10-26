@@ -25,8 +25,29 @@ jobs:
         name: Determine whether the package version changed
         run: python3 replica/scripts/release-plan.py
 
-  release:
+  intel:
     needs: plan
+    if: needs.plan.outputs.release == 'true'
+    runs-on: macos-15-intel
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ needs.plan.outputs.commit }}
+      - name: Compile the Intel app natively
+        run: bash replica/scripts/build-app.sh release x86_64
+      - name: Verify Intel versions, all executable architectures, and signatures
+        env:
+          RELEASE_VERSION: ${{ needs.plan.outputs.version }}
+          RELEASE_TAG: ${{ needs.plan.outputs.tag }}
+          RELEASE_COMMIT: ${{ needs.plan.outputs.commit }}
+        run: >-
+          python3 replica/scripts/release-ci.py verify-intel
+          --version "$RELEASE_VERSION" --tag "$RELEASE_TAG" --commit "$RELEASE_COMMIT"
+
+  release:
+    needs: [plan, intel]
     if: needs.plan.outputs.release == 'true'
     runs-on: macos-15
     timeout-minutes: 40
@@ -50,7 +71,7 @@ jobs:
         run: >-
           python3 replica/scripts/release-ci.py check
           --version "$RELEASE_VERSION" --tag "$RELEASE_TAG" --commit "$RELEASE_COMMIT"
-      - name: Compile, verify, and archive the arm64 app
+      - name: Compile, verify, and archive the Universal app
         if: steps.existing.outputs.exists != 'true'
         run: >-
           python3 replica/scripts/release-ci.py package

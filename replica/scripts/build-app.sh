@@ -2,6 +2,9 @@
 set -euo pipefail
 replica_root="$(cd "$(dirname "$0")/.." && pwd)"
 configuration="${1:-release}"
+architecture="${2:-native}"
+case "$configuration" in release|debug) ;; *) printf '%s\n' '配置必须为 release 或 debug。' >&2; exit 1 ;; esac
+case "$architecture" in native|arm64|x86_64|universal) ;; *) printf '%s\n' '架构必须为 native、arm64、x86_64 或 universal。' >&2; exit 1 ;; esac
 version="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["version"])' "$replica_root/../package.json")"
 if [[ ! "$version" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)(-dev\.([0-9]+))?$ ]]; then
   printf '%s\n' 'package.json version 必须为 major.minor.patch 或 major.minor.patch-dev.N。' >&2
@@ -12,20 +15,48 @@ build_version="$short_version"
 if [[ -n "${BASH_REMATCH[5]}" ]]; then
   build_version="${BASH_REMATCH[1]}.${BASH_REMATCH[2]}.${BASH_REMATCH[5]}"
 fi
-swift build --package-path "$replica_root" -c "$configuration" --jobs 2
-binary_root="$(swift build --package-path "$replica_root" -c "$configuration" --show-bin-path)"
+build_architecture() {
+  swift build --package-path "$replica_root" -c "$configuration" --jobs 2 \
+    --scratch-path "$replica_root/.build/architectures/$1" --arch "$1"
+}
+architecture_binary_root() {
+  swift build --package-path "$replica_root" -c "$configuration" \
+    --scratch-path "$replica_root/.build/architectures/$1" --arch "$1" --show-bin-path
+}
+if [[ "$architecture" == native ]]; then
+  swift build --package-path "$replica_root" -c "$configuration" --jobs 2
+  binary_root="$(swift build --package-path "$replica_root" -c "$configuration" --show-bin-path)"
+elif [[ "$architecture" == universal ]]; then
+  build_architecture arm64
+  build_architecture x86_64
+  binary_root="$(architecture_binary_root arm64)"
+  intel_binary_root="$(architecture_binary_root x86_64)"
+  diff -rq "$binary_root/Pasto_PastoCore.bundle" "$intel_binary_root/Pasto_PastoCore.bundle"
+else
+  build_architecture "$architecture"
+  binary_root="$(architecture_binary_root "$architecture")"
+fi
+install_executable() {
+  if [[ "$architecture" == universal ]]; then
+    lipo -create "$binary_root/$1" "$intel_binary_root/$1" -output "$2"
+    lipo "$2" -verify_arch arm64 x86_64
+  else
+    cp "$binary_root/$1" "$2"
+  fi
+}
 mkdir -p "$replica_root/dist"
 staging="$(mktemp -d "$replica_root/dist/.pasto-build.XXXXXX")"
 trap 'rm -rf "$staging"' EXIT
 bundle="$staging/Pasto.app"
 mkdir -p "$bundle/Contents/MacOS" "$bundle/Contents/Resources"
-cp "$binary_root/Pasto" "$bundle/Contents/MacOS/Pasto"
-cp "$binary_root/pasto-mcp" "$bundle/Contents/MacOS/pasto-mcp"
+install_executable Pasto "$bundle/Contents/MacOS/Pasto"
+install_executable pasto-mcp "$bundle/Contents/MacOS/pasto-mcp"
+codesign --force --sign - "$bundle/Contents/MacOS/pasto-mcp"
 cp "$replica_root/Assets/Pasto.icns" "$bundle/Contents/Resources/Pasto.icns"
 ditto "$binary_root/Pasto_PastoCore.bundle" "$bundle/Contents/Resources/Pasto_PastoCore.bundle"
 helper="$bundle/Contents/Library/LoginItems/Pasto Helper.app"
 mkdir -p "$helper/Contents/MacOS"
-cp "$binary_root/PastoHelper" "$helper/Contents/MacOS/PastoHelper"
+install_executable PastoHelper "$helper/Contents/MacOS/PastoHelper"
 cat > "$helper/Contents/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
