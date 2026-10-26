@@ -1,0 +1,62 @@
+name: Build and release Pasto
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      release: ${{ steps.version.outputs.release }}
+      version: ${{ steps.version.outputs.version }}
+      tag: ${{ steps.version.outputs.tag }}
+      commit: ${{ steps.version.outputs.commit }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - id: version
+        name: Determine whether the package version changed
+        run: python3 replica/scripts/release-plan.py
+
+  release:
+    needs: plan
+    if: needs.plan.outputs.release == 'true'
+    runs-on: macos-15
+    timeout-minutes: 40
+    permissions:
+      contents: write
+    concurrency:
+      group: pasto-release-${{ needs.plan.outputs.tag }}
+      cancel-in-progress: false
+    env:
+      GH_TOKEN: ${{ github.token }}
+      RELEASE_VERSION: ${{ needs.plan.outputs.version }}
+      RELEASE_TAG: ${{ needs.plan.outputs.tag }}
+      RELEASE_COMMIT: ${{ needs.plan.outputs.commit }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ needs.plan.outputs.commit }}
+      - id: existing
+        name: Reject conflicting tags and skip an already published release
+        run: >-
+          python3 replica/scripts/release-ci.py check
+          --version "$RELEASE_VERSION" --tag "$RELEASE_TAG" --commit "$RELEASE_COMMIT"
+      - name: Compile, verify, and archive the arm64 app
+        if: steps.existing.outputs.exists != 'true'
+        run: >-
+          python3 replica/scripts/release-ci.py package
+          --version "$RELEASE_VERSION" --tag "$RELEASE_TAG" --commit "$RELEASE_COMMIT"
+      - name: Upload verified assets as a draft, then publish
+        if: steps.existing.outputs.exists != 'true'
+        run: >-
+          python3 replica/scripts/release-ci.py publish
+          --version "$RELEASE_VERSION" --tag "$RELEASE_TAG" --commit "$RELEASE_COMMIT"

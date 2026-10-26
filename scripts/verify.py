@@ -94,6 +94,8 @@ def main():
     binary_assets = {
         "replica/Assets/PastoIcon.png": b"\x89PNG\r\n\x1a\n",
         "replica/Assets/Pasto.icns": b"icns",
+        "docs/images/pasto-panel.png": b"\x89PNG\r\n\x1a\n",
+        "docs/images/pasto-settings.png": b"\x89PNG\r\n\x1a\n",
     }
     binary_count = 0
     for path in files:
