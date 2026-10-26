@@ -2,27 +2,32 @@
   "schema_version": 1,
   "kind": "static_code_migration",
   "function_id": "Paste:0x1001f132c",
-  "reviewed_at": "2026-10-23T15:16:50.770208+00:00",
+  "reviewed_at": "2026-10-26T09:23:16.520451+00:00",
   "original_binary_sha256": "871f00354fbb1c165d858a98e6d19d6f43cb9d3f9f958b3e07c7f07eb5c19afb",
+  "source_sha256": {
+    "replica/Sources/PastoCore/OriginalShortcutRecorder.swift": "ba907c942f91fe336506e9a47576051f285bfce47ccd43315cb111aedbd237f2",
+    "replica/Sources/PastoCore/OriginalShortcutDependencies.swift": "73908ddfedcd38cb4f1f64a7a21d1499879bed195dfb13d70f1ebbbeb6ce5b51",
+    "replica/Sources/PastoCore/OriginalShortcutValidation.swift": "094cb536243bcfa19d37564a409c032728c4c5756e98b21b375858394ad2d5cc"
+  },
+  "build_succeeded": true,
+  "build_command": "bash replica/scripts/build-app.sh",
+  "compiled_app_binary_sha256": "abc3c0ed6ceece4e50ecc84fd174d2bd436794202fce166f7a709e96bbbde006",
+  "compiled_product": "Pasto",
+  "functional_regression_executed": false,
+  "equivalence_verified": false,
+  "contract": "录制回调完整分支：无修饰Delete清除/Escape取消；精确Cmd-W/Q经固定ANSI表匹配，结束录制为unassigned且放行；无显示键保存candidate；非法修饰beep且放行；validator失败恢复previous并发error；成功先onDetect后assigned；macOS15.0/15.1 Option-only提示。 非空显示键先resolve并释放validator，再判修饰键；合法后再次resolve并调用服务。",
+  "implementation_origin": "newly_migrated",
+  "source_review": "192文件精确可逆改名证明及原证据不变守卫通过；菜单/产品/资源路径/错误域和临时前缀例外已逐文件审阅。保持本地址已有有限契约，新模块build76编译及当前源码摘要绑定；详见reports/replica/pasto-brand-build76.json。不将本轮静态检查称为差分运行或完整父功能等价。",
+  "rename_audit": "reports/replica/pasto-brand-build76.json",
+  "build_snapshot": "reports/replica/concentrated-static-build76.json",
   "original_pseudocode": {
     "path": "decompiled/Paste/part-0160.c",
     "line": 324
   },
   "original_pseudocode_sha256": "1cc534a6532912c15daf105c57cafee53c6eb73744a51924aeb4447e3da5e08b",
-  "source_sha256": {
-    "replica/Sources/PasteReplicaCore/OriginalShortcutRecorder.swift": "ba907c942f91fe336506e9a47576051f285bfce47ccd43315cb111aedbd237f2",
-    "replica/Sources/PasteReplicaCore/OriginalShortcutDependencies.swift": "73908ddfedcd38cb4f1f64a7a21d1499879bed195dfb13d70f1ebbbeb6ce5b51",
-    "replica/Sources/PasteReplicaCore/OriginalShortcutValidation.swift": "094cb536243bcfa19d37564a409c032728c4c5756e98b21b375858394ad2d5cc"
-  },
-  "build_succeeded": true,
-  "build_command": "swift build --package-path replica -c release",
-  "compiled_app_binary_sha256": "24dcfc9f7c9d3a4f249b17158cef4da0282ca222dda0971955810395b885bf7f",
-  "compiled_product": "PasteReplica",
-  "functional_regression_executed": false,
-  "equivalence_verified": false,
-  "implementation_origin": "newly_migrated",
-  "contract": "录制回调完整分支：无修饰Delete清除/Escape取消；精确Cmd-W/Q经固定ANSI表匹配，结束录制为unassigned且放行；无显示键保存candidate；非法修饰beep且放行；validator失败恢复previous并发error；成功先onDetect后assigned；macOS15.0/15.1 Option-only提示。 非空显示键先resolve并释放validator，再判修饰键；合法后再次resolve并调用服务。",
-  "review": "逐分支核对part-0160.c与汇编，补全Published三态(previous/candidate)，纠正旧实现非法组合吞事件及布局相关Cmd-W/Q判断；NSButton→model真实监控调用，旧partial现可标完整。 第二次静态复审恢复完整Int键码域：原有UInt32调用通过兼容overload委托宽Int值；仅Carbon注册保留UInt32精确转换。全局回调显式retain保活，事件查找只提取action。 等待此轮统一构建后可提升。 本批复审后保留原恢复契约；真实入口改为直接SwiftUI StateObject组件，移除Native代理事件/窗口观察；当前候选待统一编译，不沿用旧文件摘要。 默认实际路径通过TaskLocal typed DI解析validator；失败Error原样保存而非改写为String或新Error，Option兼容错误仍独立构造；保留所有原版事件返回分支。 本轮汇编确认0x1001f15d8首次resolve在modifier判定前、0x1001f171c再次resolve才校验；现补非法键也触发首次factory/cache的副作用；具体无状态服务替代closure，两次解析均从真实事件路径调用。 进一步核对ValidationError类型descriptor0x100ca7548（单empty-case enum）及LocalizedError requirement0x100c33c60指向f1f12cc，Option成功后的警告现保留独立enum，errorDescription每次获取时本地化，不提前存String。",
-  "source_review": "已复审本批改动对现有入口的影响；未被替换的恢复函数体/调用契约保持，绑定当前稳定编译。",
-  "regression_policy": "全部范围内代码迁移完成后统一功能回归；本批无功能/单测/原版差分/UI/MCP执行。"
+  "previous_static_evidence": {
+    "revision": "18087b19fab91c1e5ec27e59a36a70eaf5bc05ba",
+    "path": "reports/function-migration/Paste-0x1001f132c.json",
+    "sha256": "4753724232c4cc63d2a1b8e7f03df1fbc2490f92b6acdd4f7d629d3072f4b0f1"
+  }
 }

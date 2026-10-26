@@ -2,32 +2,30 @@
   "schema_version": 1,
   "kind": "static_code_migration",
   "function_id": "Paste:0x100378ac0",
-  "reviewed_at": "2026-10-23T18:05:40.474101+00:00",
+  "reviewed_at": "2026-10-26T09:23:16.520451+00:00",
   "original_binary_sha256": "871f00354fbb1c165d858a98e6d19d6f43cb9d3f9f958b3e07c7f07eb5c19afb",
+  "source_sha256": {
+    "replica/Sources/PastoCore/Pasteboard.swift": "0f5ba3cb157a77612f9b1cbc447d835571d64858ddf82948d2d88f6a5b4fbca2"
+  },
+  "build_succeeded": true,
+  "build_command": "bash replica/scripts/build-app.sh",
+  "compiled_app_binary_sha256": "abc3c0ed6ceece4e50ecc84fd174d2bd436794202fce166f7a709e96bbbde006",
+  "compiled_product": "Pasto",
+  "functional_regression_executed": false,
+  "equivalence_verified": false,
+  "contract": "每次调用先记录 Start monitoring pasteboard 日志；若 poll timer 已存在直接返回；否则刷新当前 changeCount，创建默认 runloop 的 target/selector 重复 timer，interval=0.25、userInfo=nil、tolerance=0.025。",
+  "implementation_origin": "newly_migrated",
+  "source_review": "192文件精确可逆改名证明及原证据不变守卫通过；菜单/产品/资源路径/错误域和临时前缀例外已逐文件审阅。保持本地址已有有限契约，新模块build76编译及当前源码摘要绑定；详见reports/replica/pasto-brand-build76.json。不将本轮静态检查称为差分运行或完整父功能等价。",
+  "rename_audit": "reports/replica/pasto-brand-build76.json",
+  "build_snapshot": "reports/replica/concentrated-static-build76.json",
   "original_pseudocode": {
     "path": "decompiled/Paste/part-0281.c",
     "line": 268
   },
   "original_pseudocode_sha256": "fb5e3f8cf5ecee1a282744638732b3b9d4e90aed135bc53c114dae757860ece7",
-  "source_sha256": {
-    "replica/Sources/PasteReplicaCore/Pasteboard.swift": "0f5ba3cb157a77612f9b1cbc447d835571d64858ddf82948d2d88f6a5b4fbca2"
-  },
-  "build_succeeded": true,
-  "build_command": "swift build --package-path replica -c release",
-  "compiled_app_binary_sha256": "8ded736a226949c2e1f3f099b83466c8e14de42d0043e5c084f3aa99f0f3d8db",
-  "compiled_product": "PasteReplica",
-  "functional_regression_executed": false,
-  "equivalence_verified": false,
-  "implementation_origin": "newly_migrated",
-  "contract": "每次调用先记录 Start monitoring pasteboard 日志；若 poll timer 已存在直接返回；否则刷新当前 changeCount，创建默认 runloop 的 target/selector 重复 timer，interval=0.25、userInfo=nil、tolerance=0.025。",
-  "review": "原版 part-0281.c 0x100378ac0；机器码常量 0x3fd0000000000000 和 0x3f9999999999999a；二进制大字符串恢复 category=pasteboard.monitoring、日志 Start monitoring pasteboard。start 真实转入该函数；替换旧 0.4 秒/common runloop block timer，按原版原生 selector 触发已有 poll。poll/sync 算法本身尚未映射为完整迁移。 未执行编译或功能回归，等待主智能体统一编译建立静态证据。",
-  "source_review": "dev38/build63复审f_100378ac0有限契约：日志→timer已存在返回→刷新系统changeCount→默认runloop重复selectorTimer0.25/tolerance0.025保持，timer的target改为强timerproxy，proxy弱持manager以消除旧循环，实际selector仍Timer参数后调用既有handlePollTimer→poll；不把proxy对象身份当原typedcapturestate恢复，不声称任意线程析构安全。",
-  "regression_policy": "全部范围内代码迁移完成后统一功能回归；本批无功能/单测/原版差分/UI/MCP执行。",
-  "caller_review_refs": [
-    {
-      "path": "replica/Sources/PasteReplicaCore/Pasteboard.swift",
-      "symbol": "f_100378ac0",
-      "entire_source_unchanged": false
-    }
-  ]
+  "previous_static_evidence": {
+    "revision": "18087b19fab91c1e5ec27e59a36a70eaf5bc05ba",
+    "path": "reports/function-migration/Paste-0x100378ac0.json",
+    "sha256": "80efafe5bc12beb5b6e9dce642b6a11e51e38586c2d1d4b5d96e8d7aacfc394c"
+  }
 }

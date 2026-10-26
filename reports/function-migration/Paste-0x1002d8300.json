@@ -2,26 +2,31 @@
   "schema_version": 1,
   "kind": "static_code_migration",
   "function_id": "Paste:0x1002d8300",
-  "reviewed_at": "2026-10-23T15:16:51.758020+00:00",
+  "reviewed_at": "2026-10-26T09:23:16.520451+00:00",
   "original_binary_sha256": "871f00354fbb1c165d858a98e6d19d6f43cb9d3f9f958b3e07c7f07eb5c19afb",
+  "source_sha256": {
+    "replica/Sources/PastoCore/OriginalSearchDateRanges.swift": "91f2f941e01c03dc575e29edb80144c4e268174528e551deb72642b4a7743451",
+    "replica/Sources/Pasto/UI/FilterBrowser.swift": "8c075875b5bd64a16a0925c93aebebf70407ac7c9b88d544643393934aa29473"
+  },
+  "build_succeeded": true,
+  "build_command": "bash replica/scripts/build-app.sh",
+  "compiled_app_binary_sha256": "abc3c0ed6ceece4e50ecc84fd174d2bd436794202fce166f7a709e96bbbde006",
+  "compiled_product": "Pasto",
+  "functional_regression_executed": false,
+  "equivalence_verified": false,
+  "contract": "先Date()，当前日历同三components求本周起点为上界；另当前日历加weekOfYear -1为下界，严格递增半开范围。",
+  "implementation_origin": "newly_migrated",
+  "source_review": "192文件精确可逆改名证明及原证据不变守卫通过；菜单/产品/资源路径/错误域和临时前缀例外已逐文件审阅。保持本地址已有有限契约，新模块build76编译及当前源码摘要绑定；详见reports/replica/pasto-brand-build76.json。不将本轮静态检查称为差分运行或完整父功能等价。",
+  "rename_audit": "reports/replica/pasto-brand-build76.json",
+  "build_snapshot": "reports/replica/concentrated-static-build76.json",
   "original_pseudocode": {
     "path": "decompiled/Paste/part-0236.c",
     "line": 1238
   },
   "original_pseudocode_sha256": "ebccca0246aada2f44ce88f54bfc34fecb2ac0a1d313dc0898006cb62a4e6223",
-  "source_sha256": {
-    "replica/Sources/PasteReplicaCore/OriginalSearchDateRanges.swift": "91f2f941e01c03dc575e29edb80144c4e268174528e551deb72642b4a7743451",
-    "replica/Sources/PasteReplica/UI/FilterBrowser.swift": "5b2f8cfbb48eb59e4be7a04a90b8d57809c2de9a316d77e76a6c41e44f500af2"
-  },
-  "build_succeeded": true,
-  "build_command": "swift build --package-path replica -c release",
-  "compiled_app_binary_sha256": "24dcfc9f7c9d3a4f249b17158cef4da0282ca222dda0971955810395b885bf7f",
-  "compiled_product": "PasteReplica",
-  "functional_regression_executed": false,
-  "equivalence_verified": false,
-  "implementation_origin": "newly_migrated",
-  "contract": "先Date()，当前日历同三components求本周起点为上界；另当前日历加weekOfYear -1为下界，严格递增半开范围。",
-  "review": "REA part0236全函数、原arm64同日历组件/偏移/strict less与forced optional分支核；last30原8ab0/8b4c两次x2均x22，确认上下界同一startOfDay基准。原五英文title由8ce0小String常量直接恢复；原本地化资源无对应key，不自行替换标签。搜索chip保存实际范围，匹配item.updatedAt的上下界，不在每次渲染时重算相对天数。原完整索引/query父仍partial。",
-  "source_review": "已复审本批改动对现有入口的影响；未被替换的恢复函数体/调用契约保持，绑定当前稳定编译。",
-  "regression_policy": "全部范围内代码迁移完成后统一功能回归；本批无功能/单测/原版差分/UI/MCP执行。"
+  "previous_static_evidence": {
+    "revision": "18087b19fab91c1e5ec27e59a36a70eaf5bc05ba",
+    "path": "reports/function-migration/Paste-0x1002d8300.json",
+    "sha256": "39d55fc7a6c26e9b9ff56291181e6d74130e380f9e1a28a635e205759abcac3e"
+  }
 }

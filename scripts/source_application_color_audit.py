@@ -12,7 +12,7 @@ from paywall_scope_exclusion import bytes_at
 
 ROOT = Path(__file__).resolve().parents[1]
 REPORT = 'reports/replica/source-application-color-table.json'
-SOURCE = 'replica/Sources/PasteReplicaCore/OriginalSourceApplicationColors.swift'
+SOURCE = 'replica/Sources/PastoCore/OriginalSourceApplicationColors.swift'
 
 
 def snapshot():

@@ -2,193 +2,49 @@
   "schema_version": 1,
   "kind": "static_code_migration",
   "function_id": "Paste:0x1001daf54",
-  "reviewed_at": "2026-10-23T18:25:35.076647+00:00",
+  "reviewed_at": "2026-10-26T09:23:16.520451+00:00",
   "original_binary_sha256": "871f00354fbb1c165d858a98e6d19d6f43cb9d3f9f958b3e07c7f07eb5c19afb",
+  "source_sha256": {
+    "replica/Sources/PastoCore/OriginalUnavailablePreviewLocalization.swift": "fe4dbd6517e0dd813bff1a508d009a4a2a00a55d644134ebc9477ecb21d608be",
+    "replica/Sources/Pasto/UI/OriginalUnavailablePreviewContent.swift": "2e1dd8473f7b0aa146ee780fb03defb4729a6a87677031da00e50b31bae08afb",
+    "replica/Sources/PastoCore/Resources/cs.lproj/Localizable.strings": "b4273c4ce8ac7424b6cc1d95e24b7df45ed0372c46764b600eb08606d0be8387",
+    "replica/Sources/PastoCore/Resources/da.lproj/Localizable.strings": "10a9a064484369aad6438383e3fa495332ae1e6232a121cf5292c009ef0855b9",
+    "replica/Sources/PastoCore/Resources/de.lproj/Localizable.strings": "0ddcb353c81a7781ad6fa262334d9438af6b1c57626de85f8d5b63cfe0946a60",
+    "replica/Sources/PastoCore/Resources/en.lproj/Localizable.strings": "429c3ebeef0c261a9743f0948290237b10a17910163290b22e6580cdff71d367",
+    "replica/Sources/PastoCore/Resources/es.lproj/Localizable.strings": "ff3d2f835b28d0e1215b48a3bc90539ea75593c48f5509fe9b1882c32d7c11f3",
+    "replica/Sources/PastoCore/Resources/fr.lproj/Localizable.strings": "4148d8e4a1b7b9a55fcaa58f79cec2f5142cbe35766cf24f6b2409e9fededf14",
+    "replica/Sources/PastoCore/Resources/he.lproj/Localizable.strings": "1f5328a00da6cdc6335b5f74b180ebe91d8c85a01f14b6f8a21efd089e96393a",
+    "replica/Sources/PastoCore/Resources/it.lproj/Localizable.strings": "10d1c0d8a288c12b9963312f07c055f847e5c5c27bba13a5487e746d17b8fb8d",
+    "replica/Sources/PastoCore/Resources/ja.lproj/Localizable.strings": "875b2d25a1a7b52e1224d929bd3cf07d42b80ada29ba540aa5aab0e5f32e897d",
+    "replica/Sources/PastoCore/Resources/ko.lproj/Localizable.strings": "c4bb2cdba9d130fbc2443cdc5ac84485f444494c56526c4ee66c108e4510e7f7",
+    "replica/Sources/PastoCore/Resources/nl.lproj/Localizable.strings": "da08ffe70b07807eaa94a10ca20e17a50126bf20450c7f00e6748ed882c16335",
+    "replica/Sources/PastoCore/Resources/pl.lproj/Localizable.strings": "3b19a629622629e789d0c74359e3a7a0205286b05d93f4abc0a3fea0fa9918f8",
+    "replica/Sources/PastoCore/Resources/pt-BR.lproj/Localizable.strings": "2cecee1c131b62980022bec13481d9edf17da4be7649ccf955a18dd4b86d28c2",
+    "replica/Sources/PastoCore/Resources/pt-PT.lproj/Localizable.strings": "cd025cb2cc56b16c83a9b86076bd57ba0882968171c81b74da3fe3f280a3036c",
+    "replica/Sources/PastoCore/Resources/ru.lproj/Localizable.strings": "d0303fd246f5bf119adef3989ebf0381dbba175bc3ef5398b0254badc85e3c59",
+    "replica/Sources/PastoCore/Resources/zh-Hans.lproj/Localizable.strings": "e46dc399e751c47d19cfa4e2e740ccca1b878ead848fb531aba98f8ee329af4b",
+    "replica/Sources/PastoCore/Resources/zh-Hant.lproj/Localizable.strings": "a1079aed539ca812205d2f3c81dc17cdf5367a80ec933b15ff3342904f60511b",
+    "replica/Sources/Pasto/UI/OriginalUnavailableCompactContent.swift": "aa3a350b3aa3559b9e78db3eb5547a90b4ab73a5abf92e8763ac7340f5706d50"
+  },
+  "build_succeeded": true,
+  "build_command": "bash replica/scripts/build-app.sh",
+  "compiled_app_binary_sha256": "abc3c0ed6ceece4e50ecc84fd174d2bd436794202fce166f7a709e96bbbde006",
+  "compiled_product": "Pasto",
+  "functional_regression_executed": false,
+  "equivalence_verified": false,
+  "contract": "有限本地化资源访问器：精确键preview.unavailable.title、表Localizable、Locale.current、BundleDescription.atURL及nil comment；复用同一Foundation初始化ABI并供真实Unknown UI消费。独立app使用自有部署资源URL和17locale原值，不声称原Bundle加载器或URL对象身份恢复。",
+  "implementation_origin": "newly_migrated",
+  "source_review": "192文件精确可逆改名证明及原证据不变守卫通过；菜单/产品/资源路径/错误域和临时前缀例外已逐文件审阅。保持本地址已有有限契约，新模块build76编译及当前源码摘要绑定；详见reports/replica/pasto-brand-build76.json。不将本轮静态检查称为差分运行或完整父功能等价。",
+  "rename_audit": "reports/replica/pasto-brand-build76.json",
+  "build_snapshot": "reports/replica/concentrated-static-build76.json",
   "original_pseudocode": {
     "path": "decompiled/Paste/part-0153.c",
     "line": 374
   },
   "original_pseudocode_sha256": "f877e861894b1c2e59bb93d8e6abb14db1a3c859085fe6f9698aa527cdae99b3",
-  "source_sha256": {
-    "replica/Sources/PasteReplicaCore/OriginalUnavailablePreviewLocalization.swift": "5257cf10ab8d3def45091fff0ec2776130cc428e84ffbce54657ee0a4c2d4c93",
-    "replica/Sources/PasteReplica/UI/OriginalUnavailablePreviewContent.swift": "21a00de6c6215d5a37836483c9a673822ec835f20f7eb6c081bc91ae6fc402a5",
-    "replica/Sources/PasteReplicaCore/Resources/cs.lproj/Localizable.strings": "b4273c4ce8ac7424b6cc1d95e24b7df45ed0372c46764b600eb08606d0be8387",
-    "replica/Sources/PasteReplicaCore/Resources/da.lproj/Localizable.strings": "10a9a064484369aad6438383e3fa495332ae1e6232a121cf5292c009ef0855b9",
-    "replica/Sources/PasteReplicaCore/Resources/de.lproj/Localizable.strings": "0ddcb353c81a7781ad6fa262334d9438af6b1c57626de85f8d5b63cfe0946a60",
-    "replica/Sources/PasteReplicaCore/Resources/en.lproj/Localizable.strings": "429c3ebeef0c261a9743f0948290237b10a17910163290b22e6580cdff71d367",
-    "replica/Sources/PasteReplicaCore/Resources/es.lproj/Localizable.strings": "ff3d2f835b28d0e1215b48a3bc90539ea75593c48f5509fe9b1882c32d7c11f3",
-    "replica/Sources/PasteReplicaCore/Resources/fr.lproj/Localizable.strings": "4148d8e4a1b7b9a55fcaa58f79cec2f5142cbe35766cf24f6b2409e9fededf14",
-    "replica/Sources/PasteReplicaCore/Resources/he.lproj/Localizable.strings": "1f5328a00da6cdc6335b5f74b180ebe91d8c85a01f14b6f8a21efd089e96393a",
-    "replica/Sources/PasteReplicaCore/Resources/it.lproj/Localizable.strings": "10d1c0d8a288c12b9963312f07c055f847e5c5c27bba13a5487e746d17b8fb8d",
-    "replica/Sources/PasteReplicaCore/Resources/ja.lproj/Localizable.strings": "875b2d25a1a7b52e1224d929bd3cf07d42b80ada29ba540aa5aab0e5f32e897d",
-    "replica/Sources/PasteReplicaCore/Resources/ko.lproj/Localizable.strings": "c4bb2cdba9d130fbc2443cdc5ac84485f444494c56526c4ee66c108e4510e7f7",
-    "replica/Sources/PasteReplicaCore/Resources/nl.lproj/Localizable.strings": "da08ffe70b07807eaa94a10ca20e17a50126bf20450c7f00e6748ed882c16335",
-    "replica/Sources/PasteReplicaCore/Resources/pl.lproj/Localizable.strings": "3b19a629622629e789d0c74359e3a7a0205286b05d93f4abc0a3fea0fa9918f8",
-    "replica/Sources/PasteReplicaCore/Resources/pt-BR.lproj/Localizable.strings": "2cecee1c131b62980022bec13481d9edf17da4be7649ccf955a18dd4b86d28c2",
-    "replica/Sources/PasteReplicaCore/Resources/pt-PT.lproj/Localizable.strings": "cd025cb2cc56b16c83a9b86076bd57ba0882968171c81b74da3fe3f280a3036c",
-    "replica/Sources/PasteReplicaCore/Resources/ru.lproj/Localizable.strings": "d0303fd246f5bf119adef3989ebf0381dbba175bc3ef5398b0254badc85e3c59",
-    "replica/Sources/PasteReplicaCore/Resources/zh-Hans.lproj/Localizable.strings": "e46dc399e751c47d19cfa4e2e740ccca1b878ead848fb531aba98f8ee329af4b",
-    "replica/Sources/PasteReplicaCore/Resources/zh-Hant.lproj/Localizable.strings": "a1079aed539ca812205d2f3c81dc17cdf5367a80ec933b15ff3342904f60511b",
-    "replica/Sources/PasteReplica/UI/OriginalUnavailableCompactContent.swift": "d8eaf61ff4a66f3d00ba2a345eca565d48aa290708cf313c855ffe7ea1080610"
-  },
-  "build_succeeded": true,
-  "build_command": "swift build --package-path replica -c release",
-  "build_log": ".local/gap-build-66.log",
-  "compiled_app_binary_sha256": "1f3ce0f8e02a759ee2772e16ad080d9aedb89fe8737230638c1638ca43b92594",
-  "compiled_product": "PasteReplica",
-  "functional_regression_executed": false,
-  "equivalence_verified": false,
-  "implementation_origin": "newly_migrated",
-  "contract": "有限本地化资源访问器：精确键preview.unavailable.title、表Localizable、Locale.current、BundleDescription.atURL及nil comment；复用同一Foundation初始化ABI并供真实Unknown UI消费。独立app使用自有部署资源URL和17locale原值，不声称原Bundle加载器或URL对象身份恢复。",
-  "review": "原完整机器/伪码、当前28字节入口与共享完整factory、实际UI BL、17编译bundle源文件逐字一致均由独立PB静态peer复核。有限值合同使用既有Localization静态迁移规则；不把bundleloader/wholeUnknown父一并计入。",
-  "compiled_boundary": {
-    "start": "0x1001ac85c",
-    "end_exclusive": "0x1001ac878",
-    "size": 28,
-    "sha256": "2a9672ccb426e60bc4f102333f706e1fa18bc11384df78c073573cdcd30d2aa3"
-  },
-  "original_complete_machine": {
-    "start": "0x1001daf54",
-    "end_exclusive": "0x1001db0d4",
-    "size": 384,
-    "sha256": "3c410d40fd915fb3f21a1b8f2637a1d1abaa280f6f696eb23767e904494d0c25"
-  },
-  "shared_compiled_factory": {
-    "start": "0x1001ac6a8",
-    "end_exclusive": "0x1001ac85c",
-    "size": 436,
-    "sha256": "46b96a3958426515fb56895546aa860010824358de0d2b4d4b1c55edb046bbc9"
-  },
-  "initializer_abi_proof": {
-    "same_mangled_import_original_and_current": "_$s10Foundation23LocalizedStringResourceV_5table6locale6bundle7commentACSSAAE17LocalizationValueV_SSSgAA6LocaleVAC17BundleDescriptionOs06StaticC0VSgtcfC",
-    "value_arguments": "Both pass LocalizationValue(stringLiteral:exactkey), tableLocalizable SwiftString words, currentLocale, bundleDescription.atURL(bundle.bundleURL), commentnil (x5=0,x6=0,w7=0x100). Indirectreturnx8 remainsResource metadata ABI. Currentgettersforwardoriginalreturnbuffer unchanged tosharedfactory.",
-    "keys": "Currenttitle literal1001da020 length25, subtitle1001da040 length28; original100d9c090 length25/100d9c070 length28 matchfullUTF8key."
-  },
-  "compiled_locales": [
-    {
-      "source": "replica/Sources/PasteReplicaCore/Resources/cs.lproj/Localizable.strings",
-      "source_sha256": "b4273c4ce8ac7424b6cc1d95e24b7df45ed0372c46764b600eb08606d0be8387",
-      "compiled_resource": "replica/.build/arm64-apple-macosx/release/PasteReplica_PasteReplicaCore.bundle/cs.lproj/Localizable.strings",
-      "compiled_sha256": "b4273c4ce8ac7424b6cc1d95e24b7df45ed0372c46764b600eb08606d0be8387",
-      "compiled_equals_source": true
-    },
-    {
-      "source": "replica/Sources/PasteReplicaCore/Resources/da.lproj/Localizable.strings",
-      "source_sha256": "10a9a064484369aad6438383e3fa495332ae1e6232a121cf5292c009ef0855b9",
-      "compiled_resource": "replica/.build/arm64-apple-macosx/release/PasteReplica_PasteReplicaCore.bundle/da.lproj/Localizable.strings",
-      "compiled_sha256": "10a9a064484369aad6438383e3fa495332ae1e6232a121cf5292c009ef0855b9",
-      "compiled_equals_source": true
-    },
-    {
-      "source": "replica/Sources/PasteReplicaCore/Resources/de.lproj/Localizable.strings",
-      "source_sha256": "0ddcb353c81a7781ad6fa262334d9438af6b1c57626de85f8d5b63cfe0946a60",
-      "compiled_resource": "replica/.build/arm64-apple-macosx/release/PasteReplica_PasteReplicaCore.bundle/de.lproj/Localizable.strings",
-      "compiled_sha256": "0ddcb353c81a7781ad6fa262334d9438af6b1c57626de85f8d5b63cfe0946a60",
-      "compiled_equals_source": true
-    },
-    {
-      "source": "replica/Sources/PasteReplicaCore/Resources/en.lproj/Localizable.strings",
-      "source_sha256": "429c3ebeef0c261a9743f0948290237b10a17910163290b22e6580cdff71d367",
-      "compiled_resource": "replica/.build/arm64-apple-macosx/release/PasteReplica_PasteReplicaCore.bundle/en.lproj/Localizable.strings",
-      "compiled_sha256": "429c3ebeef0c261a9743f0948290237b10a17910163290b22e6580cdff71d367",
-      "compiled_equals_source": true
-    },
-    {
-      "source": "replica/Sources/PasteReplicaCore/Resources/es.lproj/Localizable.strings",
-      "source_sha256": "ff3d2f835b28d0e1215b48a3bc90539ea75593c48f5509fe9b1882c32d7c11f3",
-      "compiled_resource": "replica/.build/arm64-apple-macosx/release/PasteReplica_PasteReplicaCore.bundle/es.lproj/Localizable.strings",
-      "compiled_sha256": "ff3d2f835b28d0e1215b48a3bc90539ea75593c48f5509fe9b1882c32d7c11f3",
-      "compiled_equals_source": true
-    },
-    {
-      "source": "replica/Sources/PasteReplicaCore/Resources/fr.lproj/Localizable.strings",
-      "source_sha256": "4148d8e4a1b7b9a55fcaa58f79cec2f5142cbe35766cf24f6b2409e9fededf14",
-      "compiled_resource": "replica/.build/arm64-apple-macosx/release/PasteReplica_PasteReplicaCore.bundle/fr.lproj/Localizable.strings",
-      "compiled_sha256": "4148d8e4a1b7b9a55fcaa58f79cec2f5142cbe35766cf24f6b2409e9fededf14",
-      "compiled_equals_source": true
-    },
-    {
-      "source": "replica/Sources/PasteReplicaCore/Resources/he.lproj/Localizable.strings",
-      "source_sha256": "1f5328a00da6cdc6335b5f74b180ebe91d8c85a01f14b6f8a21efd089e96393a",
-      "compiled_resource": "replica/.build/arm64-apple-macosx/release/PasteReplica_PasteReplicaCore.bundle/he.lproj/Localizable.strings",
-      "compiled_sha256": "1f5328a00da6cdc6335b5f74b180ebe91d8c85a01f14b6f8a21efd089e96393a",
-      "compiled_equals_source": true
-    },
-    {
-      "source": "replica/Sources/PasteReplicaCore/Resources/it.lproj/Localizable.strings",
-      "source_sha256": "10d1c0d8a288c12b9963312f07c055f847e5c5c27bba13a5487e746d17b8fb8d",
-      "compiled_resource": "replica/.build/arm64-apple-macosx/release/PasteReplica_PasteReplicaCore.bundle/it.lproj/Localizable.strings",
-      "compiled_sha256": "10d1c0d8a288c12b9963312f07c055f847e5c5c27bba13a5487e746d17b8fb8d",
-      "compiled_equals_source": true
-    },
-    {
-      "source": "replica/Sources/PasteReplicaCore/Resources/ja.lproj/Localizable.strings",
-      "source_sha256": "875b2d25a1a7b52e1224d929bd3cf07d42b80ada29ba540aa5aab0e5f32e897d",
-      "compiled_resource": "replica/.build/arm64-apple-macosx/release/PasteReplica_PasteReplicaCore.bundle/ja.lproj/Localizable.strings",
-      "compiled_sha256": "875b2d25a1a7b52e1224d929bd3cf07d42b80ada29ba540aa5aab0e5f32e897d",
-      "compiled_equals_source": true
-    },
-    {
-      "source": "replica/Sources/PasteReplicaCore/Resources/ko.lproj/Localizable.strings",
-      "source_sha256": "c4bb2cdba9d130fbc2443cdc5ac84485f444494c56526c4ee66c108e4510e7f7",
-      "compiled_resource": "replica/.build/arm64-apple-macosx/release/PasteReplica_PasteReplicaCore.bundle/ko.lproj/Localizable.strings",
-      "compiled_sha256": "c4bb2cdba9d130fbc2443cdc5ac84485f444494c56526c4ee66c108e4510e7f7",
-      "compiled_equals_source": true
-    },
-    {
-      "source": "replica/Sources/PasteReplicaCore/Resources/nl.lproj/Localizable.strings",
-      "source_sha256": "da08ffe70b07807eaa94a10ca20e17a50126bf20450c7f00e6748ed882c16335",
-      "compiled_resource": "replica/.build/arm64-apple-macosx/release/PasteReplica_PasteReplicaCore.bundle/nl.lproj/Localizable.strings",
-      "compiled_sha256": "da08ffe70b07807eaa94a10ca20e17a50126bf20450c7f00e6748ed882c16335",
-      "compiled_equals_source": true
-    },
-    {
-      "source": "replica/Sources/PasteReplicaCore/Resources/pl.lproj/Localizable.strings",
-      "source_sha256": "3b19a629622629e789d0c74359e3a7a0205286b05d93f4abc0a3fea0fa9918f8",
-      "compiled_resource": "replica/.build/arm64-apple-macosx/release/PasteReplica_PasteReplicaCore.bundle/pl.lproj/Localizable.strings",
-      "compiled_sha256": "3b19a629622629e789d0c74359e3a7a0205286b05d93f4abc0a3fea0fa9918f8",
-      "compiled_equals_source": true
-    },
-    {
-      "source": "replica/Sources/PasteReplicaCore/Resources/pt-BR.lproj/Localizable.strings",
-      "source_sha256": "2cecee1c131b62980022bec13481d9edf17da4be7649ccf955a18dd4b86d28c2",
-      "compiled_resource": "replica/.build/arm64-apple-macosx/release/PasteReplica_PasteReplicaCore.bundle/pt-br.lproj/Localizable.strings",
-      "compiled_sha256": "2cecee1c131b62980022bec13481d9edf17da4be7649ccf955a18dd4b86d28c2",
-      "compiled_equals_source": true
-    },
-    {
-      "source": "replica/Sources/PasteReplicaCore/Resources/pt-PT.lproj/Localizable.strings",
-      "source_sha256": "cd025cb2cc56b16c83a9b86076bd57ba0882968171c81b74da3fe3f280a3036c",
-      "compiled_resource": "replica/.build/arm64-apple-macosx/release/PasteReplica_PasteReplicaCore.bundle/pt-pt.lproj/Localizable.strings",
-      "compiled_sha256": "cd025cb2cc56b16c83a9b86076bd57ba0882968171c81b74da3fe3f280a3036c",
-      "compiled_equals_source": true
-    },
-    {
-      "source": "replica/Sources/PasteReplicaCore/Resources/ru.lproj/Localizable.strings",
-      "source_sha256": "d0303fd246f5bf119adef3989ebf0381dbba175bc3ef5398b0254badc85e3c59",
-      "compiled_resource": "replica/.build/arm64-apple-macosx/release/PasteReplica_PasteReplicaCore.bundle/ru.lproj/Localizable.strings",
-      "compiled_sha256": "d0303fd246f5bf119adef3989ebf0381dbba175bc3ef5398b0254badc85e3c59",
-      "compiled_equals_source": true
-    },
-    {
-      "source": "replica/Sources/PasteReplicaCore/Resources/zh-Hans.lproj/Localizable.strings",
-      "source_sha256": "e46dc399e751c47d19cfa4e2e740ccca1b878ead848fb531aba98f8ee329af4b",
-      "compiled_resource": "replica/.build/arm64-apple-macosx/release/PasteReplica_PasteReplicaCore.bundle/zh-hans.lproj/Localizable.strings",
-      "compiled_sha256": "e46dc399e751c47d19cfa4e2e740ccca1b878ead848fb531aba98f8ee329af4b",
-      "compiled_equals_source": true
-    },
-    {
-      "source": "replica/Sources/PasteReplicaCore/Resources/zh-Hant.lproj/Localizable.strings",
-      "source_sha256": "a1079aed539ca812205d2f3c81dc17cdf5367a80ec933b15ff3342904f60511b",
-      "compiled_resource": "replica/.build/arm64-apple-macosx/release/PasteReplica_PasteReplicaCore.bundle/zh-hant.lproj/Localizable.strings",
-      "compiled_sha256": "a1079aed539ca812205d2f3c81dc17cdf5367a80ec933b15ff3342904f60511b",
-      "compiled_equals_source": true
-    }
-  ],
-  "bundle_deployment_adapter": {
-    "original": "Originalf1e73e4 getsoriginalmodulebundleURL thenconstructsBundleDescription.atURL. Itsentirebundleloaderf1ba118 is not migrated/recertifiedbythisreport.",
-    "current": "Same atURLdescriptionvaluekind; ownmainresource/PasteReplica_PasteReplicaCore.bundle elseBundle.module. Ownbundlecontains17exactmatchinglocale2keyvalues. IndependentapplicationdeploymentURL necessarilydifferent; thisadapter explicitlydocumented, notclaimedbitwiseoriginalBundle/URLidentity.",
-    "qualification": "WithinexistinglocalizationaccessorfiniteSourcevalue migration convention, replacementresourcebundleappropriateandABIclosed. If ledgerdefinitionrequiresoriginalBundleURLobjectidentityratherthanfunctionalindependentreplicabundle, retainpartialinstead; do notexpandcriteriaforcount."
-  },
-  "regression_policy": "全部范围内代码迁移后统一功能回归；本批只编译及静态对照，无单元/功能/UI/MCP执行。"
+  "previous_static_evidence": {
+    "revision": "18087b19fab91c1e5ec27e59a36a70eaf5bc05ba",
+    "path": "reports/function-migration/Paste-0x1001daf54.json",
+    "sha256": "583d8b56a5818364177a8a2d081b0c3326ede72140b1186bf1b14a385d0015d4"
+  }
 }

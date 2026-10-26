@@ -84,7 +84,7 @@ def client(binary, directory, initialize=True):
 
 def run(binary):
     checks = []
-    with tempfile.TemporaryDirectory(prefix="paste-replica-mcp-test-") as temporary:
+    with tempfile.TemporaryDirectory(prefix="pasto-mcp-test-") as temporary:
         directory = pathlib.Path(temporary) / "store"
         with client(binary, directory, initialize=False) as c:
             assert c.request("tools/list")["error"]["code"] == -32002
@@ -163,7 +163,7 @@ def run(binary):
             checks.append("two-step deletion preview; confirmed permanent deletion; board removal preserves historical item")
 
             c.invalid_tool("replica_copy_item", {"item_id": identity, "pasteboard_name": "general"})
-            copied = c.tool("replica_copy_item", {"item_id": identity, "pasteboard_name": "paste-replica-test-" + str(uuid.uuid4()), "plain_text_only": True})
+            copied = c.tool("replica_copy_item", {"item_id": identity, "pasteboard_name": "pasto-test-" + str(uuid.uuid4()), "plain_text_only": True})
             assert copied["copied"] is True and copied["system_clipboard_changed"] is False
             checks.append("general clipboard denied by default; explicit copy writes only unique private pasteboard")
 
@@ -247,7 +247,7 @@ def run(binary):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--binary", type=pathlib.Path, default=pathlib.Path(__file__).resolve().parents[1] / ".build/debug/paste-replica-mcp")
+    parser.add_argument("--binary", type=pathlib.Path, default=pathlib.Path(__file__).resolve().parents[1] / ".build/debug/pasto-mcp")
     parser.add_argument("--report", type=pathlib.Path)
     args = parser.parse_args()
     started = time.monotonic()

@@ -2,27 +2,32 @@
   "schema_version": 1,
   "kind": "static_code_migration",
   "function_id": "Paste:0x1003c89c8",
-  "reviewed_at": "2026-10-23T15:16:51.208817+00:00",
+  "reviewed_at": "2026-10-26T09:23:16.520451+00:00",
   "original_binary_sha256": "871f00354fbb1c165d858a98e6d19d6f43cb9d3f9f958b3e07c7f07eb5c19afb",
+  "source_sha256": {
+    "replica/Sources/PastoCore/OriginalPasteboardImageEncoding.swift": "2e4430ee0d8c7d8f88561457d37e8d50c0c756d83471facda099b7518a6a2dfe",
+    "replica/Sources/PastoCore/OriginalPasteboard.swift": "60f862d0779d4f580e89be5eafef96239c75287facd4602ba02b10ce232c7b61",
+    "replica/Sources/Pasto/UI/ReplicaImagePreviewContent.swift": "4ad25fb43ae663e0806b8d16f06c973c2ff480e2388589f2f1dc3ee6bf2dad37"
+  },
+  "build_succeeded": true,
+  "build_command": "bash replica/scripts/build-app.sh",
+  "compiled_app_binary_sha256": "abc3c0ed6ceece4e50ecc84fd174d2bd436794202fce166f7a709e96bbbde006",
+  "compiled_product": "Pasto",
+  "functional_regression_executed": false,
+  "equivalence_verified": false,
+  "contract": "取CGImage，缺失nil；构造NSBitmapImageRep，以rep.size.width/image.size.width为scale，把rep宽高都除该scale；representation PNG(raw4)、空properties，失败nil。",
+  "implementation_origin": "existing_source_reused",
+  "source_review": "192文件精确可逆改名证明及原证据不变守卫通过；菜单/产品/资源路径/错误域和临时前缀例外已逐文件审阅。保持本地址已有有限契约，新模块build76编译及当前源码摘要绑定；详见reports/replica/pasto-brand-build76.json。不将本轮静态检查称为差分运行或完整父功能等价。",
+  "rename_audit": "reports/replica/pasto-brand-build76.json",
+  "build_snapshot": "reports/replica/concentrated-static-build76.json",
   "original_pseudocode": {
     "path": "decompiled/Paste/part-0300.c",
     "line": 587
   },
   "original_pseudocode_sha256": "aecb29d7c4b2530b0124d6853961a8ef434241dd5f83ea05f71e2d6067330b01",
-  "source_sha256": {
-    "replica/Sources/PasteReplicaCore/OriginalPasteboardImageEncoding.swift": "2e4430ee0d8c7d8f88561457d37e8d50c0c756d83471facda099b7518a6a2dfe",
-    "replica/Sources/PasteReplicaCore/OriginalPasteboard.swift": "60f862d0779d4f580e89be5eafef96239c75287facd4602ba02b10ce232c7b61",
-    "replica/Sources/PasteReplica/UI/ReplicaImagePreviewContent.swift": "4b724f56be5d402049e2f4664e306886501f61ee29ba2e68573bc390e1baa8e2"
-  },
-  "build_succeeded": true,
-  "build_command": "swift build --package-path replica -c release",
-  "compiled_app_binary_sha256": "24dcfc9f7c9d3a4f249b17158cef4da0282ca222dda0971955810395b885bf7f",
-  "compiled_product": "PasteReplica",
-  "functional_regression_executed": false,
-  "equivalence_verified": false,
-  "implementation_origin": "existing_source_reused",
-  "contract": "取CGImage，缺失nil；构造NSBitmapImageRep，以rep.size.width/image.size.width为scale，把rep宽高都除该scale；representation PNG(raw4)、空properties，失败nil。",
-  "review": "原Core/OriginalPasteboardImageEncoding.swift已有完整同算法，且OriginalPasteboard.swift原写入路径已实际消费。本轮删除UI重复private实现，新增图片预览保存直接复用同一Core方法；保留Core定义及旧Pasteboard消费者引用，不覆盖既有迁移、不重复增加函数数。3c8a30..64原size比与PNG/raw4/空properties分支仍匹配。",
-  "source_review": "已复审本批改动对现有入口的影响；未被替换的恢复函数体/调用契约保持，绑定当前稳定编译。",
-  "regression_policy": "全部范围内代码迁移完成后统一功能回归；本批无功能/单测/原版差分/UI/MCP执行。"
+  "previous_static_evidence": {
+    "revision": "18087b19fab91c1e5ec27e59a36a70eaf5bc05ba",
+    "path": "reports/function-migration/Paste-0x1003c89c8.json",
+    "sha256": "62ef48bacb9de0e0cadf9033333ff98a060fa51864f469a49f87fa299049e791"
+  }
 }

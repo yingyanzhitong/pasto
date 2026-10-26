@@ -2,25 +2,30 @@
   "schema_version": 1,
   "kind": "static_code_migration",
   "function_id": "Paste:0x1001c7154",
-  "reviewed_at": "2026-10-23T15:16:51.932030+00:00",
+  "reviewed_at": "2026-10-26T09:23:16.520451+00:00",
   "original_binary_sha256": "871f00354fbb1c165d858a98e6d19d6f43cb9d3f9f958b3e07c7f07eb5c19afb",
+  "source_sha256": {
+    "replica/Sources/PastoCore/OriginalPreviewLocalization.swift": "822147a77e05ba31b0425cf0de5ca3d4267a0fb3c7f737c0d44f98deb1c566a7"
+  },
+  "build_succeeded": true,
+  "build_command": "bash replica/scripts/build-app.sh",
+  "compiled_app_binary_sha256": "abc3c0ed6ceece4e50ecc84fd174d2bd436794202fce166f7a709e96bbbde006",
+  "compiled_product": "Pasto",
+  "functional_regression_executed": false,
+  "equivalence_verified": false,
+  "contract": "原本地化资源helper item-type.unknown，Locale.current及bundle fallback，17locale原值，实际Header默认title消费。",
+  "implementation_origin": "newly_migrated_resource",
+  "source_review": "192文件精确可逆改名证明及原证据不变守卫通过；菜单/产品/资源路径/错误域和临时前缀例外已逐文件审阅。保持本地址已有有限契约，新模块build76编译及当前源码摘要绑定；详见reports/replica/pasto-brand-build76.json。不将本轮静态检查称为差分运行或完整父功能等价。",
+  "rename_audit": "reports/replica/pasto-brand-build76.json",
+  "build_snapshot": "reports/replica/concentrated-static-build76.json",
   "original_pseudocode": {
     "path": "decompiled/Paste/part-0149.c",
     "line": 1803
   },
   "original_pseudocode_sha256": "bec22ee21cfc0a9cf6e25ffb121f11087728dae53adbe390c3b8c0920d7b026c",
-  "source_sha256": {
-    "replica/Sources/PasteReplicaCore/OriginalPreviewLocalization.swift": "244b50defd5c3333575ca20076b697079dd5d4bbc03ab8fe93ec9bedf92ce543"
-  },
-  "build_succeeded": true,
-  "build_command": "swift build --package-path replica -c release",
-  "compiled_app_binary_sha256": "24dcfc9f7c9d3a4f249b17158cef4da0282ca222dda0971955810395b885bf7f",
-  "compiled_product": "PasteReplica",
-  "functional_regression_executed": false,
-  "equivalence_verified": false,
-  "implementation_origin": "newly_migrated_resource",
-  "contract": "原本地化资源helper item-type.unknown，Locale.current及bundle fallback，17locale原值，实际Header默认title消费。",
-  "review": "原REA/arm64与本地化资源静态对照及实际Header/OSD消费者已核；最终build37成功，140输入SHA一致并绑定产物。未执行产品/功能/单测/UI/MCP；typedmetadata/权限/原偏好与gesture父partial保留。",
-  "source_review": "已复审本批改动对现有入口的影响；未被替换的恢复函数体/调用契约保持，绑定当前稳定编译。",
-  "regression_policy": "全部范围内代码迁移完成后统一功能回归；本批无功能/单测/原版差分/UI/MCP执行。"
+  "previous_static_evidence": {
+    "revision": "18087b19fab91c1e5ec27e59a36a70eaf5bc05ba",
+    "path": "reports/function-migration/Paste-0x1001c7154.json",
+    "sha256": "951361206bc42f560974352f7ddb261f70a7e17d4725ad6e96a5a5787d292bb3"
+  }
 }

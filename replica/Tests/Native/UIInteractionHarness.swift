@@ -1,7 +1,7 @@
 import AppKit
 import Foundation
 import SwiftUI
-import PasteReplicaCore
+import PastoCore
 
 @main
 struct UIInteractionHarness {
@@ -9,7 +9,7 @@ struct UIInteractionHarness {
         _ = NSApplication.shared
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: directory) }
-        let board = NSPasteboard(name: .init("PasteReplicaUIHarness-\(UUID().uuidString)"))
+        let board = NSPasteboard(name: .init("PastoUIHarness-\(UUID().uuidString)"))
         defer { board.releaseGlobally() }
         let store = try ClipboardStore(directoryURL: directory)
         let first = try store.add(ClipboardItem(plainText: "FIRST fixture"))

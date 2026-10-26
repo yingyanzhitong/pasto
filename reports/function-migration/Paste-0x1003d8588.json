@@ -2,38 +2,31 @@
   "schema_version": 1,
   "kind": "static_code_migration",
   "function_id": "Paste:0x1003d8588",
-  "reviewed_at": "2026-10-26T03:54:27.502058+00:00",
+  "reviewed_at": "2026-10-26T09:23:16.520451+00:00",
   "original_binary_sha256": "871f00354fbb1c165d858a98e6d19d6f43cb9d3f9f958b3e07c7f07eb5c19afb",
+  "source_sha256": {
+    "replica/Sources/PastoCore/OriginalCardPresentation.swift": "acb4df601c1f35cf1e8767bc8a66140c99ec082c8c82f79acd49fc316a5d09cf",
+    "replica/Sources/Pasto/UI/PanelViews.swift": "b22b084825c21e5f0c380970c427f868751f644314fd0796b18895f1402a6c56"
+  },
+  "build_succeeded": true,
+  "build_command": "bash replica/scripts/build-app.sh",
+  "compiled_app_binary_sha256": "abc3c0ed6ceece4e50ecc84fd174d2bd436794202fce166f7a709e96bbbde006",
+  "compiled_product": "Pasto",
+  "functional_regression_executed": false,
+  "equivalence_verified": false,
+  "contract": "Completepure3constraintvalues forrawUInt8sizeclass,fullsize andOSbool; actualbodyTop/HeaderHeightconsumer. Lockvalueexactreturned,nativeLockViewparentpartial.",
+  "implementation_origin": "newly_migrated",
+  "source_review": "192文件精确可逆改名证明及原证据不变守卫通过；菜单/产品/资源路径/错误域和临时前缀例外已逐文件审阅。保持本地址已有有限契约，新模块build76编译及当前源码摘要绑定；详见reports/replica/pasto-brand-build76.json。不将本轮静态检查称为差分运行或完整父功能等价。",
+  "rename_audit": "reports/replica/pasto-brand-build76.json",
+  "build_snapshot": "reports/replica/concentrated-static-build76.json",
   "original_pseudocode": {
     "path": "decompiled/Paste/part-0306.c",
     "line": 387
   },
   "original_pseudocode_sha256": "f3a94f212c10e31c12f3ce8a49f18b534c6c358d00f726d4b62dacbd0bfa5737",
-  "source_sha256": {
-    "replica/Sources/PasteReplicaCore/OriginalCardPresentation.swift": "acb4df601c1f35cf1e8767bc8a66140c99ec082c8c82f79acd49fc316a5d09cf",
-    "replica/Sources/PasteReplica/UI/PanelViews.swift": "69407303d7c0e31095954300fd69305a36679b87072532c6881c509b77e9c088"
-  },
-  "build_succeeded": true,
-  "build_command": "swift build --package-path replica -c release",
-  "compiled_app_binary_sha256": "0bf5b26d383e4a81571aa563ca41e82cfbdb4b3df2d2e65173ea97400231ec3f",
-  "compiled_product": "PasteReplica",
-  "functional_regression_executed": false,
-  "equivalence_verified": false,
-  "implementation_origin": "newly_migrated",
-  "contract": "Completepure3constraintvalues forrawUInt8sizeclass,fullsize andOSbool; actualbodyTop/HeaderHeightconsumer. Lockvalueexactreturned,nativeLockViewparentpartial.",
-  "review": "Bound to final46 actual155inputs; finitecompletegeometrybody/table andactualcanonical/privacyconsumers. WholeUI/Config/ABIparentsnotpromoted.",
-  "source_review": "界面修改仅软件/Stack/归档名及明确品牌展示适配；该地址的Core实现与实际搜索、原生文本委托、选择、窗口Stack配置、几何或restartProcess消费算法未改，技术键/参数/分支保留。 原有限合同：Completepure3constraintvalues forrawUInt8sizeclass,fullsize andOSbool; actualbodyTop/HeaderHeightconsumer. Lockvalueexactreturned,nativeLockViewparentpartial. build70编译通过；无新增完整计数，未运行功能/UI/MCP回归。",
-  "regression_policy": "全部范围内代码迁移完成后统一功能回归；本批无功能/单测/原版差分/UI/MCP执行。",
-  "caller_review_refs": [
-    {
-      "path": "replica/Sources/PasteReplicaCore/OriginalCardPresentation.swift",
-      "symbol": "public func geometry(sizeClass: UInt8, modernOS: Bool) -> Geometry",
-      "entire_source_unchanged": true
-    },
-    {
-      "path": "replica/Sources/PasteReplica/UI/PanelViews.swift",
-      "symbol": ".padding(.top, cardGeometry?.bodyTop ?? headerHeight)",
-      "entire_source_unchanged": false
-    }
-  ]
+  "previous_static_evidence": {
+    "revision": "18087b19fab91c1e5ec27e59a36a70eaf5bc05ba",
+    "path": "reports/function-migration/Paste-0x1003d8588.json",
+    "sha256": "b842b2bb375bccc9e01e289ddea976aae593c6266e86106ad22b632424741434"
+  }
 }

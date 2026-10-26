@@ -2,26 +2,31 @@
   "schema_version": 1,
   "kind": "static_code_migration",
   "function_id": "Paste:0x1002d2b54",
-  "reviewed_at": "2026-10-23T15:16:51.844968+00:00",
+  "reviewed_at": "2026-10-26T09:23:16.520451+00:00",
   "original_binary_sha256": "871f00354fbb1c165d858a98e6d19d6f43cb9d3f9f958b3e07c7f07eb5c19afb",
+  "source_sha256": {
+    "replica/Sources/PastoObjC/PRObjCExceptionCatcher.m": "99b8ce9f229954f427517a16c4a976b6b1ad776873c0eb5a6856b6a82943af6e",
+    "replica/Sources/PastoCore/OriginalObjCExceptionBridge.swift": "cf3e9e3b016001d7d982a673e00e365d8b638693effe3c9c49f8c77b93102bc2"
+  },
+  "build_succeeded": true,
+  "build_command": "bash replica/scripts/build-app.sh",
+  "compiled_app_binary_sha256": "abc3c0ed6ceece4e50ecc84fd174d2bd436794202fce166f7a709e96bbbde006",
+  "compiled_product": "Pasto",
+  "functional_regression_executed": false,
+  "equivalence_verified": false,
+  "contract": "同步调用void block一次；正常返回nil；仅捕获NSException对象并返回原异常对象，不改名/reason，不吞其他异常类型。",
+  "implementation_origin": "newly_migrated",
+  "source_review": "192文件精确可逆改名证明及原证据不变守卫通过；菜单/产品/资源路径/错误域和临时前缀例外已逐文件审阅。保持本地址已有有限契约，新模块build76编译及当前源码摘要绑定；详见reports/replica/pasto-brand-build76.json。不将本轮静态检查称为差分运行或完整父功能等价。",
+  "rename_audit": "reports/replica/pasto-brand-build76.json",
+  "build_snapshot": "reports/replica/concentrated-static-build76.json",
   "original_pseudocode": {
     "path": "decompiled/Paste/part-0234.c",
     "line": 6
   },
   "original_pseudocode_sha256": "cfb1615a23a36693e5fd3fdbc7f485f28ad25c18753d2b99b486d22aa876f0f4",
-  "source_sha256": {
-    "replica/Sources/PasteReplicaObjC/PRObjCExceptionCatcher.m": "99b8ce9f229954f427517a16c4a976b6b1ad776873c0eb5a6856b6a82943af6e",
-    "replica/Sources/PasteReplicaCore/OriginalObjCExceptionBridge.swift": "83c6a0735223b544a2d156b9ea26f9aff8896ca6f16c4d8a6c39ae550ac39c88"
-  },
-  "build_succeeded": true,
-  "build_command": "swift build --package-path replica -c release",
-  "compiled_app_binary_sha256": "24dcfc9f7c9d3a4f249b17158cef4da0282ca222dda0971955810395b885bf7f",
-  "compiled_product": "PasteReplica",
-  "functional_regression_executed": false,
-  "equivalence_verified": false,
-  "implementation_origin": "newly_migrated",
-  "contract": "同步调用void block一次；正常返回nil；仅捕获NSException对象并返回原异常对象，不改名/reason，不吞其他异常类型。",
-  "review": "原part-0234.c遗漏landing pad；完整arm64 1002d2b54..1002d2ba8及LSDA100e0c530已重解：call+1c length8→landing+40/action1，filter1 type-entry100e0c544经PC相对间接slot100ea9af8真实dyld binding=_OBJC_EHTYPE_$_NSException；landing begin_catch→retain异常→end_catch→release block→autoreleaseReturnValue。新独立ObjC target用@try/@catch(NSException*)，不冒用Swift do/catch。 Final build41 complete body/ARC/metadata/NSException LSDA revalidated; no execution or new count. dev22稳定build42完整body/真实绑定静态重核，保留既有实现，不新增计数。 dev23最终build44完整当前边界/真实SDK绑定再次复核，保留现有完整资格，无新计数。 dev24稳定45完整当前body与真实bindings重核；保留现有满足项，不新增计数。 dev25稳定46完整当前body与真实bindings重核，保留已满足复用，不新增计数。",
-  "source_review": "本批新增或重审，依据对应领域续迁清单及稳定构建前后相同源码摘要。",
-  "regression_policy": "全部范围内代码迁移完成后统一功能回归；本批无功能/单测/原版差分/UI/MCP执行。"
+  "previous_static_evidence": {
+    "revision": "18087b19fab91c1e5ec27e59a36a70eaf5bc05ba",
+    "path": "reports/function-migration/Paste-0x1002d2b54.json",
+    "sha256": "14319401ef2264fce4544b1eac48fe8199038e7856c8b54997d7fb2ab175477d"
+  }
 }

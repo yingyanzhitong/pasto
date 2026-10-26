@@ -2,25 +2,30 @@
   "schema_version": 1,
   "kind": "static_code_migration",
   "function_id": "Paste:0x1001efac4",
-  "reviewed_at": "2026-10-23T15:16:51.249192+00:00",
+  "reviewed_at": "2026-10-26T09:23:16.520451+00:00",
   "original_binary_sha256": "871f00354fbb1c165d858a98e6d19d6f43cb9d3f9f958b3e07c7f07eb5c19afb",
+  "source_sha256": {
+    "replica/Sources/PastoCore/OriginalShortcutRecorderView.swift": "881691562e6378fbadd64502b3ec893c821a1e0a463f8b0c6a5ddbdef7dd6330"
+  },
+  "build_succeeded": true,
+  "build_command": "bash replica/scripts/build-app.sh",
+  "compiled_app_binary_sha256": "abc3c0ed6ceece4e50ecc84fd174d2bd436794202fce166f7a709e96bbbde006",
+  "compiled_product": "Pasto",
+  "functional_regression_executed": false,
+  "equivalence_verified": false,
+  "contract": "onDetect回调将完整可选快捷键值原样写回捕获的Binding，保留绑定自身Transaction语义。",
+  "implementation_origin": "existing_reused",
+  "source_review": "192文件精确可逆改名证明及原证据不变守卫通过；菜单/产品/资源路径/错误域和临时前缀例外已逐文件审阅。保持本地址已有有限契约，新模块build76编译及当前源码摘要绑定；详见reports/replica/pasto-brand-build76.json。不将本轮静态检查称为差分运行或完整父功能等价。",
+  "rename_audit": "reports/replica/pasto-brand-build76.json",
+  "build_snapshot": "reports/replica/concentrated-static-build76.json",
   "original_pseudocode": {
     "path": "decompiled/Paste/part-0159.c",
     "line": 874
   },
   "original_pseudocode_sha256": "8ebe91332d104404d97aa5c7e6b05436f4a1c5cc2f4ab2c6fe98b0dbe2d91e46",
-  "source_sha256": {
-    "replica/Sources/PasteReplicaCore/OriginalShortcutRecorderView.swift": "881691562e6378fbadd64502b3ec893c821a1e0a463f8b0c6a5ddbdef7dd6330"
-  },
-  "build_succeeded": true,
-  "build_command": "swift build --package-path replica -c release",
-  "compiled_app_binary_sha256": "24dcfc9f7c9d3a4f249b17158cef4da0282ca222dda0971955810395b885bf7f",
-  "compiled_product": "PasteReplica",
-  "functional_regression_executed": false,
-  "equivalence_verified": false,
-  "implementation_origin": "existing_reused",
-  "contract": "onDetect回调将完整可选快捷键值原样写回捕获的Binding，保留绑定自身Transaction语义。",
-  "review": "原版part-0159.c回调只构建可选值并Binding.set_wrappedValue；当前真实factory回调同样通过标准SwiftUI Binding setter，不窄化Int键码。 本轮只在body的App适配层加拒绝Binding回读观察；本文件public var body之前全部字节与HEAD一致，具名原函数体/原Binding onChange路径未改。新增观察复用f1ee19c，不作为新原函数。",
-  "source_review": "已复审本批改动对现有入口的影响；未被替换的恢复函数体/调用契约保持，绑定当前稳定编译。",
-  "regression_policy": "全部范围内代码迁移完成后统一功能回归；本批无功能/单测/原版差分/UI/MCP执行。"
+  "previous_static_evidence": {
+    "revision": "18087b19fab91c1e5ec27e59a36a70eaf5bc05ba",
+    "path": "reports/function-migration/Paste-0x1001efac4.json",
+    "sha256": "2996e1778120e750775b18380abd836e6f4865b8197720e27ae2a1f20659f0ac"
+  }
 }

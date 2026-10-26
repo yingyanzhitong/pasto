@@ -2,53 +2,32 @@
   "schema_version": 1,
   "kind": "static_code_migration",
   "function_id": "Paste:0x1002da16c",
-  "reviewed_at": "2026-10-26T04:04:59.630232+00:00",
+  "reviewed_at": "2026-10-26T09:23:16.520451+00:00",
   "original_binary_sha256": "871f00354fbb1c165d858a98e6d19d6f43cb9d3f9f958b3e07c7f07eb5c19afb",
+  "source_sha256": {
+    "replica/Sources/PastoCore/OriginalSearchQueryNormalization.swift": "fc2414e1395bb916246c9ef38509730c394e3d0feebbf0ca6dc9438f86409eb9",
+    "replica/Sources/Pasto/UI/ReplicaUIController.swift": "822412f790641b4467627b8ac645874332149975c4ae46b1e5dd54ad71f9700a",
+    "replica/Sources/Pasto/UI/SearchEditor.swift": "f1cd5ab79ccf03c3c95aaf8e2c0d49690438607afa3367cc72455398628c8b76"
+  },
+  "build_succeeded": true,
+  "build_command": "bash replica/scripts/build-app.sh",
+  "compiled_app_binary_sha256": "abc3c0ed6ceece4e50ecc84fd174d2bd436794202fce166f7a709e96bbbde006",
+  "compiled_product": "Pasto",
+  "functional_regression_executed": false,
+  "equivalence_verified": false,
+  "contract": "filter value以.whitespaces trim仅判空，保留raw值；按(tag,raw String)去重保首项顺序。以原始输入最后filter（包含空/重复）为分界，text按前/后保序分组。flag bit0=1丢trim为空text、否则保留，均不改raw、不合并、不去重。最终返回filters + afterLastFilterText + beforeOrNoFilterText。",
+  "implementation_origin": "newly_migrated",
+  "source_review": "192文件精确可逆改名证明及原证据不变守卫通过；菜单/产品/资源路径/错误域和临时前缀例外已逐文件审阅。保持本地址已有有限契约，新模块build76编译及当前源码摘要绑定；详见reports/replica/pasto-brand-build76.json。不将本轮静态检查称为差分运行或完整父功能等价。",
+  "rename_audit": "reports/replica/pasto-brand-build76.json",
+  "build_snapshot": "reports/replica/concentrated-static-build76.json",
   "original_pseudocode": {
     "path": "decompiled/Paste/part-0236.c",
     "line": 2587
   },
   "original_pseudocode_sha256": "2d60c3b531024ec7109c46f8686e0dc8799befd6e33162d6a3f138287116f739",
-  "source_sha256": {
-    "replica/Sources/PasteReplicaCore/OriginalSearchQueryNormalization.swift": "fc2414e1395bb916246c9ef38509730c394e3d0feebbf0ca6dc9438f86409eb9",
-    "replica/Sources/PasteReplica/UI/ReplicaUIController.swift": "83ab337c6b97ff23106275d30103fc377772d6c9708f633e3961a3b3af33e3b4",
-    "replica/Sources/PasteReplica/UI/SearchEditor.swift": "13ce2f341f2e7aad16ac8083f46575b20b060086cc5a66ebe6399d8740915107"
-  },
-  "build_succeeded": true,
-  "build_command": "swift build --package-path replica -c release",
-  "compiled_app_binary_sha256": "1b5034720960b07cc375bf9d36b3fa5f7bbc2339b6bd68a37f34057c9a566763",
-  "compiled_product": "PasteReplica",
-  "functional_regression_executed": false,
-  "equivalence_verified": false,
-  "implementation_origin": "newly_migrated",
-  "contract": "filter value以.whitespaces trim仅判空，保留raw值；按(tag,raw String)去重保首项顺序。以原始输入最后filter（包含空/重复）为分界，text按前/后保序分组。flag bit0=1丢trim为空text、否则保留，均不改raw、不合并、不去重。最终返回filters + afterLastFilterText + beforeOrNoFilterText。",
-  "review": "完整REA与arm64核实，尾部不能从伪代码未传参猜序：x29-b0=before→x21，x29-c0=after→x19；da56c index>last跳da634写-c0；da570写-b0；da71c base filters slot-b8→output slot-78；da724以x19首append，da734以x21次append，x20固定指output slot。原Set比较tag与原String，不trim后去重。 Root实际接UIController.searchQueryNodes fallback及SearchEditor.contents attributes runs；applySearchInput保存规范节点边界，不先拼串丢失前后分组。",
-  "source_review": "只修copy/paste派发、回调结果及postwrite关闭；此记录列明的Core实现和实际消费者未改：filter value以.whitespaces trim仅判空，保留raw值；按(tag,raw String)去重保首项顺序。以原始输入最后filter（包含空/重复）为分界，text按前/后保序分组。flag bit0=1丢trim为空text、否则保留，均不改raw、不合并、不去重。最终返回filters + afterLastFilterText + beforeOrNoFilterText。 build71已通过、源码/生成/产物摘要再核；此为有限旧合同重绑，不宣称完整copy/directpaste/窗口父等价，新增完整0。",
-  "regression_policy": "全部范围内代码迁移完成后统一功能回归；本批无功能/单测/原版差分/UI/MCP执行。",
-  "unchanged_declarations": [
-    {
-      "function_id": "Paste:0x1002da16c",
-      "path": "replica/Sources/PasteReplica/UI/ReplicaUIController.swift",
-      "reference": "OriginalSearchQueryNormalization.f_1002da16c(nodes, flag: 0)",
-      "declaration_sha256": "f0e3e4eaf91cd1dde9074074a5ff4cebc95aa5049fe0fbe2ee0b819a126bff25",
-      "source_declaration_unchanged": true
-    }
-  ],
-  "caller_review_refs": [
-    {
-      "path": "replica/Sources/PasteReplicaCore/OriginalSearchQueryNormalization.swift",
-      "symbol": "public static func f_1002da16c(",
-      "entire_source_unchanged": true
-    },
-    {
-      "path": "replica/Sources/PasteReplica/UI/ReplicaUIController.swift",
-      "symbol": "OriginalSearchQueryNormalization.f_1002da16c(nodes, flag: 0)",
-      "entire_source_unchanged": false
-    },
-    {
-      "path": "replica/Sources/PasteReplica/UI/SearchEditor.swift",
-      "symbol": "OriginalSearchQueryNormalization.f_1002da16c(nodes, flag: 0)",
-      "entire_source_unchanged": true
-    }
-  ]
+  "previous_static_evidence": {
+    "revision": "18087b19fab91c1e5ec27e59a36a70eaf5bc05ba",
+    "path": "reports/function-migration/Paste-0x1002da16c.json",
+    "sha256": "0926c95ae40802b2c9064d982720da189a5c8944307238833c5c67b8ad1caf82"
+  }
 }

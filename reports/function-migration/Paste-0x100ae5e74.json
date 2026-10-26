@@ -2,32 +2,30 @@
   "schema_version": 1,
   "kind": "static_code_migration",
   "function_id": "Paste:0x100ae5e74",
-  "reviewed_at": "2026-10-23T15:16:50.839440+00:00",
+  "reviewed_at": "2026-10-26T09:23:16.520451+00:00",
   "original_binary_sha256": "871f00354fbb1c165d858a98e6d19d6f43cb9d3f9f958b3e07c7f07eb5c19afb",
+  "source_sha256": {
+    "replica/Sources/PastoCore/OriginalAccessibilityService.swift": "e015554a40a64837f284fb9a0dc08a2639e8606b4e34b5930234cf1751e40073"
+  },
+  "build_succeeded": true,
+  "build_command": "bash replica/scripts/build-app.sh",
+  "compiled_app_binary_sha256": "abc3c0ed6ceece4e50ecc84fd174d2bd436794202fce166f7a709e96bbbde006",
+  "compiled_product": "Pasto",
+  "functional_regression_executed": false,
+  "equivalence_verified": false,
+  "contract": "AXIsProcessTrusted normalized Bool only; no request or DirectPaste preference setter.",
+  "implementation_origin": "existing_reused",
+  "source_review": "192文件精确可逆改名证明及原证据不变守卫通过；菜单/产品/资源路径/错误域和临时前缀例外已逐文件审阅。保持本地址已有有限契约，新模块build76编译及当前源码摘要绑定；详见reports/replica/pasto-brand-build76.json。不将本轮静态检查称为差分运行或完整父功能等价。",
+  "rename_audit": "reports/replica/pasto-brand-build76.json",
+  "build_snapshot": "reports/replica/concentrated-static-build76.json",
   "original_pseudocode": {
     "path": "decompiled/Paste/part-1008.c",
     "line": 90
   },
   "original_pseudocode_sha256": "930ecb583f04add5cc88d5d7fa17e84d3b5213446b33c22e19e710ff8b085839",
-  "source_sha256": {
-    "replica/Sources/PasteReplicaCore/OriginalAccessibilityService.swift": "e015554a40a64837f284fb9a0dc08a2639e8606b4e34b5930234cf1751e40073"
-  },
-  "build_succeeded": true,
-  "build_command": "swift build --package-path replica -c release",
-  "compiled_app_binary_sha256": "24dcfc9f7c9d3a4f249b17158cef4da0282ca222dda0971955810395b885bf7f",
-  "compiled_product": "PasteReplica",
-  "functional_regression_executed": false,
-  "equivalence_verified": false,
-  "implementation_origin": "existing_reused",
-  "contract": "AXIsProcessTrusted normalized Bool only; no request or DirectPaste preference setter.",
-  "review": "完整原getter AE5E74..AE5E90与当前FB718..FB734均28B，唯一调用同一AXIsProcessTrusted，随后cmp/cset规范化Bool；除bl重定位外完整指令字节相同，无self字段/DI/logger/请求UI读取。保留既有migrated资格，不新增完成数。 dev21调用方改为writer前AX门槛，纯getter完整28B及当前真实AX stub再次静态核实；保留已满足的既有迁移。 dev22稳定build42完整body/真实绑定静态重核，保留既有实现，不新增计数。 dev23最终build44完整当前边界/真实SDK绑定再次复核，保留现有完整资格，无新计数。 dev24稳定45完整当前body与真实bindings重核；保留现有满足项，不新增计数。 dev25稳定46完整当前body与真实bindings重核，保留已满足复用，不新增计数。",
-  "source_review": "本批新增或重审，依据对应领域续迁清单及稳定构建前后相同源码摘要。",
-  "regression_policy": "全部范围内代码迁移完成后统一功能回归；本批无功能/单测/原版差分/UI/MCP执行。",
-  "compiled_boundary": {
-    "start": "0x1001167b4",
-    "end_exclusive": "0x1001167d0",
-    "size": 28,
-    "sha256": "3012df0b4ea7571227a0ebeed691aa83c089318d1ac167aea1b94726b2569d54",
-    "binary_sha256": "24dcfc9f7c9d3a4f249b17158cef4da0282ca222dda0971955810395b885bf7f"
+  "previous_static_evidence": {
+    "revision": "18087b19fab91c1e5ec27e59a36a70eaf5bc05ba",
+    "path": "reports/function-migration/Paste-0x100ae5e74.json",
+    "sha256": "eff8aff7a09bbf91c873c59321ccaef71ab4f9985d2338485e1087e6d64a391a"
   }
 }

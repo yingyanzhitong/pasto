@@ -2,53 +2,32 @@
   "schema_version": 1,
   "kind": "static_code_migration",
   "function_id": "Paste:0x1002ddcf0",
-  "reviewed_at": "2026-10-26T04:04:59.630232+00:00",
+  "reviewed_at": "2026-10-26T09:23:16.520451+00:00",
   "original_binary_sha256": "871f00354fbb1c165d858a98e6d19d6f43cb9d3f9f958b3e07c7f07eb5c19afb",
+  "source_sha256": {
+    "replica/Sources/PastoCore/OriginalSearchQuery.swift": "4c828b16c6342387d375e6b5a3f24d28b37bbffa1c377e4cdb064ad27b5d1b28",
+    "replica/Sources/Pasto/UI/ReplicaUIController.swift": "822412f790641b4467627b8ac645874332149975c4ae46b1e5dd54ad71f9700a",
+    "replica/Sources/Pasto/UI/PanelViews.swift": "b22b084825c21e5f0c380970c427f868751f644314fd0796b18895f1402a6c56"
+  },
+  "build_succeeded": true,
+  "build_command": "bash replica/scripts/build-app.sh",
+  "compiled_app_binary_sha256": "abc3c0ed6ceece4e50ecc84fd174d2bd436794202fce166f7a709e96bbbde006",
+  "compiled_product": "Pasto",
+  "functional_regression_executed": false,
+  "equivalence_verified": false,
+  "contract": "查询数组为空返回true；依次读取每个text或filter的字符串值，trimmingCharacters(.whitespaces)后非空立即false，否则继续；不把.whitespacesAndNewlines扩大为条件。",
+  "implementation_origin": "newly_migrated",
+  "source_review": "192文件精确可逆改名证明及原证据不变守卫通过；菜单/产品/资源路径/错误域和临时前缀例外已逐文件审阅。保持本地址已有有限契约，新模块build76编译及当前源码摘要绑定；详见reports/replica/pasto-brand-build76.json。不将本轮静态检查称为差分运行或完整父功能等价。",
+  "rename_audit": "reports/replica/pasto-brand-build76.json",
+  "build_snapshot": "reports/replica/concentrated-static-build76.json",
   "original_pseudocode": {
     "path": "decompiled/Paste/part-0237.c",
     "line": 2520
   },
   "original_pseudocode_sha256": "09bdce56a949683f34ac8f5253af866467f40c216d4e1bbf42c9590dc2779c65",
-  "source_sha256": {
-    "replica/Sources/PasteReplicaCore/OriginalSearchQuery.swift": "4c828b16c6342387d375e6b5a3f24d28b37bbffa1c377e4cdb064ad27b5d1b28",
-    "replica/Sources/PasteReplica/UI/ReplicaUIController.swift": "83ab337c6b97ff23106275d30103fc377772d6c9708f633e3961a3b3af33e3b4",
-    "replica/Sources/PasteReplica/UI/PanelViews.swift": "69407303d7c0e31095954300fd69305a36679b87072532c6881c509b77e9c088"
-  },
-  "build_succeeded": true,
-  "build_command": "swift build --package-path replica -c release",
-  "compiled_app_binary_sha256": "1b5034720960b07cc375bf9d36b3fa5f7bbc2339b6bd68a37f34057c9a566763",
-  "compiled_product": "PasteReplica",
-  "functional_regression_executed": false,
-  "equivalence_verified": false,
-  "implementation_origin": "newly_migrated",
-  "contract": "查询数组为空返回true；依次读取每个text或filter的字符串值，trimmingCharacters(.whitespaces)后非空立即false，否则继续；不把.whitespacesAndNewlines扩大为条件。",
-  "review": "完整part0237+arm64 1002ddcf0..<1002dde30，全部value trim的短路allSatisfy直接恢复。实际搜索可见性和Esc条件消费，空白查询resign按原SearchBar f40054清全局empty模型；不标原父协调器完整。",
-  "source_review": "只修copy/paste派发、回调结果及postwrite关闭；此记录列明的Core实现和实际消费者未改：查询数组为空返回true；依次读取每个text或filter的字符串值，trimmingCharacters(.whitespaces)后非空立即false，否则继续；不把.whitespacesAndNewlines扩大为条件。 build71已通过、源码/生成/产物摘要再核；此为有限旧合同重绑，不宣称完整copy/directpaste/窗口父等价，新增完整0。",
-  "regression_policy": "全部范围内代码迁移完成后统一功能回归；本批无功能/单测/原版差分/UI/MCP执行。",
-  "unchanged_declarations": [
-    {
-      "function_id": "Paste:0x1002ddcf0",
-      "path": "replica/Sources/PasteReplica/UI/ReplicaUIController.swift",
-      "reference": "var isSearchQueryEmpty: Bool",
-      "declaration_sha256": "3dd000c3c7dfcab656c4add6b86490cf98021fee2123c63ecf4858884220f12e",
-      "source_declaration_unchanged": true
-    }
-  ],
-  "caller_review_refs": [
-    {
-      "path": "replica/Sources/PasteReplicaCore/OriginalSearchQuery.swift",
-      "symbol": "func f_1002ddcf0(",
-      "entire_source_unchanged": true
-    },
-    {
-      "path": "replica/Sources/PasteReplica/UI/ReplicaUIController.swift",
-      "symbol": "var isSearchQueryEmpty: Bool",
-      "entire_source_unchanged": false
-    },
-    {
-      "path": "replica/Sources/PasteReplica/UI/PanelViews.swift",
-      "symbol": "!state.isSearchQueryEmpty",
-      "entire_source_unchanged": false
-    }
-  ]
+  "previous_static_evidence": {
+    "revision": "18087b19fab91c1e5ec27e59a36a70eaf5bc05ba",
+    "path": "reports/function-migration/Paste-0x1002ddcf0.json",
+    "sha256": "365bc5b225340582b5b55f4581d9fa04f697440373fcf662c53400d11d8cb9d1"
+  }
 }

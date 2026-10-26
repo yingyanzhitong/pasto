@@ -12,7 +12,7 @@ if [[ -f "$original_binary" ]]; then
 else
   printf '%s\n' '{"skipped":true,"reason":"Original Paste binary unavailable; saved source-bound comparison reports are checked by the ledger"}' > "$report_root/original-functions.json"
 fi
-"$replica_root/.build/release/paste-replica-core-tests" > "$report_root/core.json"
+"$replica_root/.build/release/pasto-core-tests" > "$report_root/core.json"
 python3 "$repository_root/scripts/function_ledger.py" --record-contracts "$report_root/core.json" > "$report_root/function-ledger.json"
 python3 -m unittest discover -s "$repository_root/scripts/tests" > "$report_root/function-ledger-tests.log" 2>&1
 bash "$replica_root/scripts/test-hotkey.sh" "$report_root/hotkey.json"

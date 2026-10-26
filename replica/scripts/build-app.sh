@@ -12,23 +12,27 @@ build_version="$short_version"
 if [[ -n "${BASH_REMATCH[5]}" ]]; then
   build_version="${BASH_REMATCH[1]}.${BASH_REMATCH[2]}.${BASH_REMATCH[5]}"
 fi
-swift build --package-path "$replica_root" -c "$configuration"
+swift build --package-path "$replica_root" -c "$configuration" --jobs 2
 binary_root="$(swift build --package-path "$replica_root" -c "$configuration" --show-bin-path)"
-bundle="$replica_root/dist/Pasto.app"
+mkdir -p "$replica_root/dist"
+staging="$(mktemp -d "$replica_root/dist/.pasto-build.XXXXXX")"
+trap 'rm -rf "$staging"' EXIT
+bundle="$staging/Pasto.app"
 mkdir -p "$bundle/Contents/MacOS" "$bundle/Contents/Resources"
-cp "$binary_root/PasteReplica" "$bundle/Contents/MacOS/PasteReplica"
-cp "$binary_root/paste-replica-mcp" "$bundle/Contents/MacOS/paste-replica-mcp"
-ditto "$binary_root/PasteReplica_PasteReplicaCore.bundle" "$bundle/Contents/Resources/PasteReplica_PasteReplicaCore.bundle"
+cp "$binary_root/Pasto" "$bundle/Contents/MacOS/Pasto"
+cp "$binary_root/pasto-mcp" "$bundle/Contents/MacOS/pasto-mcp"
+cp "$replica_root/Assets/Pasto.icns" "$bundle/Contents/Resources/Pasto.icns"
+ditto "$binary_root/Pasto_PastoCore.bundle" "$bundle/Contents/Resources/Pasto_PastoCore.bundle"
 helper="$bundle/Contents/Library/LoginItems/Pasto Helper.app"
 mkdir -p "$helper/Contents/MacOS"
-cp "$binary_root/PasteReplicaHelper" "$helper/Contents/MacOS/PasteReplicaHelper"
+cp "$binary_root/PastoHelper" "$helper/Contents/MacOS/PastoHelper"
 cat > "$helper/Contents/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0"><dict>
 <key>CFBundleIdentifier</key><string>com.yingyanzhitong.paste-replica.helper</string>
 <key>CFBundleName</key><string>Pasto Helper</string>
-<key>CFBundleExecutable</key><string>PasteReplicaHelper</string>
+<key>CFBundleExecutable</key><string>PastoHelper</string>
 <key>CFBundlePackageType</key><string>APPL</string>
 <key>CFBundleShortVersionString</key><string>$short_version</string>
 <key>CFBundleVersion</key><string>$build_version</string>
@@ -47,7 +51,8 @@ cat > "$bundle/Contents/Info.plist" <<PLIST
 <key>CFBundleIdentifier</key><string>com.yingyanzhitong.paste-replica</string>
 <key>CFBundleName</key><string>Pasto</string>
 <key>CFBundleDisplayName</key><string>Pasto</string>
-<key>CFBundleExecutable</key><string>PasteReplica</string>
+<key>CFBundleIconFile</key><string>Pasto</string>
+<key>CFBundleExecutable</key><string>Pasto</string>
 <key>CFBundlePackageType</key><string>APPL</string>
 <key>CFBundleShortVersionString</key><string>$short_version</string>
 <key>CFBundleVersion</key><string>$build_version</string>
@@ -61,4 +66,10 @@ PLIST
 plutil -lint "$bundle/Contents/Info.plist"
 codesign --force --sign - "$bundle"
 codesign --verify --deep --strict "$bundle"
-printf '%s\n' "$bundle"
+if [[ -e "$replica_root/dist/Pasto.app" ]]; then
+  backup="$replica_root/../.local/app-bundle-backups/$(date +%Y%m%d-%H%M%S)"
+  mkdir -p "$backup"
+  mv "$replica_root/dist/Pasto.app" "$backup/Pasto.app"
+fi
+mv "$bundle" "$replica_root/dist/Pasto.app"
+printf '%s\n' "$replica_root/dist/Pasto.app"

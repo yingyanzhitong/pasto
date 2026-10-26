@@ -6,7 +6,7 @@ import MachO
 import ObjectiveC
 import UniformTypeIdentifiers
 import Vision
-import PasteReplicaCore
+import PastoCore
 
 // Recovered from arm64 stores/strides; do not substitute the Codable replica type.
 private struct OracleWord {

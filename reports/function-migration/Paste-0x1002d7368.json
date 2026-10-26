@@ -2,26 +2,31 @@
   "schema_version": 1,
   "kind": "static_code_migration",
   "function_id": "Paste:0x1002d7368",
-  "reviewed_at": "2026-10-23T15:16:51.800781+00:00",
+  "reviewed_at": "2026-10-26T09:23:16.520451+00:00",
   "original_binary_sha256": "871f00354fbb1c165d858a98e6d19d6f43cb9d3f9f958b3e07c7f07eb5c19afb",
+  "source_sha256": {
+    "replica/Sources/PastoCore/OriginalSearchDateEncoding.swift": "b46fe7fca447d1089bfc7c36676ecaf13a2d77c6d665eb5f42cb37ab5d00c5c6",
+    "replica/Sources/Pasto/UI/FilterBrowser.swift": "8c075875b5bd64a16a0925c93aebebf70407ac7c9b88d544643393934aa29473"
+  },
+  "build_succeeded": true,
+  "build_command": "bash replica/scripts/build-app.sh",
+  "compiled_app_binary_sha256": "abc3c0ed6ceece4e50ecc84fd174d2bd436794202fce166f7a709e96bbbde006",
+  "compiled_product": "Pasto",
+  "functional_regression_executed": false,
+  "equivalence_verified": false,
+  "contract": "日期Range下界epoch秒rounded(.down)、上界rounded(.up)，再分别Int转换保留非有限/越界trap；Int十进制以单ASCII空格拼接，返回tag3日期filter。本地址为4字节无条件直接分支至0x1002d9d2c，复用同一实际执行实现。",
+  "implementation_origin": "existing_source_reused",
+  "source_review": "192文件精确可逆改名证明及原证据不变守卫通过；菜单/产品/资源路径/错误域和临时前缀例外已逐文件审阅。保持本地址已有有限契约，新模块build76编译及当前源码摘要绑定；详见reports/replica/pasto-brand-build76.json。不将本轮静态检查称为差分运行或完整父功能等价。",
+  "rename_audit": "reports/replica/pasto-brand-build76.json",
+  "build_snapshot": "reports/replica/concentrated-static-build76.json",
   "original_pseudocode": {
     "path": "decompiled/Paste/part-0236.c",
     "line": 559
   },
   "original_pseudocode_sha256": "c5841e5881bb7265868a60f39ee64d4918314cd4e5eb434816b95424f9a65f72",
-  "source_sha256": {
-    "replica/Sources/PasteReplicaCore/OriginalSearchDateEncoding.swift": "b46fe7fca447d1089bfc7c36676ecaf13a2d77c6d665eb5f42cb37ab5d00c5c6",
-    "replica/Sources/PasteReplica/UI/FilterBrowser.swift": "5b2f8cfbb48eb59e4be7a04a90b8d57809c2de9a316d77e76a6c41e44f500af2"
-  },
-  "build_succeeded": true,
-  "build_command": "swift build --package-path replica -c release",
-  "compiled_app_binary_sha256": "24dcfc9f7c9d3a4f249b17158cef4da0282ca222dda0971955810395b885bf7f",
-  "compiled_product": "PasteReplica",
-  "functional_regression_executed": false,
-  "equivalence_verified": false,
-  "implementation_origin": "existing_source_reused",
-  "contract": "日期Range下界epoch秒rounded(.down)、上界rounded(.up)，再分别Int转换保留非有限/越界trap；Int十进制以单ASCII空格拼接，返回tag3日期filter。本地址为4字节无条件直接分支至0x1002d9d2c，复用同一实际执行实现。",
-  "review": "REA part0236伪代码将frintm/frintp丢成普通long cast；完整arm64 0x1002d9d2c..<0x1002d9e84明确lower FRINTM@9d4c、upper FRINTP@9da8，后FCVTZS与6个trap路径、tag3及ASCII空格。已核实际UI日期调用；不新增同名空壳。原日期反解析/展示和完整query模型仍另有缺口。 本批日期投影原样移至Selection.queryNode，主查询和属性编辑器共同消费；更新引用路径，无新增实现或计数。",
-  "source_review": "已复审本批改动对现有入口的影响；未被替换的恢复函数体/调用契约保持，绑定当前稳定编译。",
-  "regression_policy": "全部范围内代码迁移完成后统一功能回归；本批无功能/单测/原版差分/UI/MCP执行。"
+  "previous_static_evidence": {
+    "revision": "18087b19fab91c1e5ec27e59a36a70eaf5bc05ba",
+    "path": "reports/function-migration/Paste-0x1002d7368.json",
+    "sha256": "b830e3120d3dbdc701bc25ccb5dd0fb56d2c88a742b7add7da2a0ac9fb493975"
+  }
 }

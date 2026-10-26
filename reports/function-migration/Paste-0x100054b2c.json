@@ -2,25 +2,30 @@
   "schema_version": 1,
   "kind": "static_code_migration",
   "function_id": "Paste:0x100054b2c",
-  "reviewed_at": "2026-10-23T15:16:51.398560+00:00",
+  "reviewed_at": "2026-10-26T09:23:16.520451+00:00",
   "original_binary_sha256": "871f00354fbb1c165d858a98e6d19d6f43cb9d3f9f958b3e07c7f07eb5c19afb",
+  "source_sha256": {
+    "replica/Sources/PastoCore/OriginalSearchFilterSymbols.swift": "73a9ca9cb90529d7c46665ac1af0241f0310505e56704d441df4e94c816698ef"
+  },
+  "build_succeeded": true,
+  "build_command": "bash replica/scripts/build-app.sh",
+  "compiled_app_binary_sha256": "abc3c0ed6ceece4e50ecc84fd174d2bd436794202fce166f7a709e96bbbde006",
+  "compiled_product": "Pasto",
+  "functional_regression_executed": false,
+  "equivalence_verified": false,
+  "contract": "按UInt8 filter tag返回可选系统符号名：0 app.dashed；1对value.lowercased精确匹配link/image/color/text/file/unknown，未知用exclamationmark.triangle.fill；2 nil；3 calendar；4 macbook.and.iphone；其他circle.fill。",
+  "implementation_origin": "newly_migrated",
+  "source_review": "192文件精确可逆改名证明及原证据不变守卫通过；菜单/产品/资源路径/错误域和临时前缀例外已逐文件审阅。保持本地址已有有限契约，新模块build76编译及当前源码摘要绑定；详见reports/replica/pasto-brand-build76.json。不将本轮静态检查称为差分运行或完整父功能等价。",
+  "rename_audit": "reports/replica/pasto-brand-build76.json",
+  "build_snapshot": "reports/replica/concentrated-static-build76.json",
   "original_pseudocode": {
     "path": "decompiled/Paste/part-0030.c",
     "line": 46
   },
   "original_pseudocode_sha256": "4ec4a670c3877a8c900cbfac3c7834d8d69750a7b0901799cbf4ac02c6bcb9c8",
-  "source_sha256": {
-    "replica/Sources/PasteReplicaCore/OriginalSearchFilterSymbols.swift": "73a9ca9cb90529d7c46665ac1af0241f0310505e56704d441df4e94c816698ef"
-  },
-  "build_succeeded": true,
-  "build_command": "swift build --package-path replica -c release",
-  "compiled_app_binary_sha256": "24dcfc9f7c9d3a4f249b17158cef4da0282ca222dda0971955810395b885bf7f",
-  "compiled_product": "PasteReplica",
-  "functional_regression_executed": false,
-  "equivalence_verified": false,
-  "implementation_origin": "newly_migrated",
-  "contract": "按UInt8 filter tag返回可选系统符号名：0 app.dashed；1对value.lowercased精确匹配link/image/color/text/file/unknown，未知用exclamationmark.triangle.fill；2 nil；3 calendar；4 macbook.and.iphone；其他circle.fill。",
-  "review": "系统符号分支body保持；真实消费者迁至FilterBrowser.swift中的ReplicaFilterMatching.chip，原type:text包含RTF静态映射已核；完整图标/日期服务父层仍partial。",
-  "source_review": "已复审本批改动对现有入口的影响；未被替换的恢复函数体/调用契约保持，绑定当前稳定编译。",
-  "regression_policy": "全部范围内代码迁移完成后统一功能回归；本批无功能/单测/原版差分/UI/MCP执行。"
+  "previous_static_evidence": {
+    "revision": "18087b19fab91c1e5ec27e59a36a70eaf5bc05ba",
+    "path": "reports/function-migration/Paste-0x100054b2c.json",
+    "sha256": "39c983f7bcaf5f8eff100cb1603cc2a747aa8282793bc644dd78de28ce6e6b5f"
+  }
 }

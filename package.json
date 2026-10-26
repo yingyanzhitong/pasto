@@ -1,13 +1,13 @@
 {
-  "name": "paste-reverse-engineering",
-  "version": "0.8.0-dev.45",
+  "name": "pasto",
+  "version": "0.8.0-dev.46",
   "private": true,
   "description": "Pasto 原生剪贴板工具与 Paste 反编译研究",
   "scripts": {
     "inventory": "python3 scripts/inventory.py",
     "decompile": "python3 scripts/decompile.py",
     "build:app": "bash replica/scripts/build-app.sh",
-    "test:core": "swift run --package-path replica paste-replica-core-tests",
+    "test:core": "swift run --package-path replica pasto-core-tests",
     "test:mcp": "python3 replica/scripts/test-mcp.py",
     "test:original": "python3 replica/scripts/test-original-functions.py"
   }

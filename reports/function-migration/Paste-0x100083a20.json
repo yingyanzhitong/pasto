@@ -2,26 +2,31 @@
   "schema_version": 1,
   "kind": "static_code_migration",
   "function_id": "Paste:0x100083a20",
-  "reviewed_at": "2026-10-26T03:54:27.502058+00:00",
+  "reviewed_at": "2026-10-26T09:23:16.520451+00:00",
   "original_binary_sha256": "871f00354fbb1c165d858a98e6d19d6f43cb9d3f9f958b3e07c7f07eb5c19afb",
+  "source_sha256": {
+    "replica/Sources/PastoCore/OriginalStackTableController.swift": "bbd3276b4c9772cf92fcf68a59a3083c0f0f5569915cb56d83ce2b421419a717",
+    "replica/Sources/Pasto/UI/AuxiliaryViews.swift": "ec9b23b2cc595e8baed849fb74aa37c7e05ec74ff338547b1aa8e10a4ea4537d"
+  },
+  "build_succeeded": true,
+  "build_command": "bash replica/scripts/build-app.sh",
+  "compiled_app_binary_sha256": "abc3c0ed6ceece4e50ecc84fd174d2bd436794202fce166f7a709e96bbbde006",
+  "compiled_product": "Pasto",
+  "functional_regression_executed": false,
+  "equivalence_verified": false,
+  "contract": "通过惰性高度约束的animator把constant改为rowHeight乘clamp(snippets.count,1,10)，并立即激活约束；即使动画duration为零，constant也在之后的run-loop轮次提交。",
+  "implementation_origin": "existing_source_reused",
+  "source_review": "192文件精确可逆改名证明及原证据不变守卫通过；菜单/产品/资源路径/错误域和临时前缀例外已逐文件审阅。保持本地址已有有限契约，新模块build76编译及当前源码摘要绑定；详见reports/replica/pasto-brand-build76.json。不将本轮静态检查称为差分运行或完整父功能等价。",
+  "rename_audit": "reports/replica/pasto-brand-build76.json",
+  "build_snapshot": "reports/replica/concentrated-static-build76.json",
   "original_pseudocode": {
     "path": "decompiled/Paste/part-0043.c",
     "line": 1267
   },
   "original_pseudocode_sha256": "09b7ec41efa94f115ab747f33e6e48533244d1f722ea79762feb2c183b954981",
-  "source_sha256": {
-    "replica/Sources/PasteReplicaCore/OriginalStackTableController.swift": "bbd3276b4c9772cf92fcf68a59a3083c0f0f5569915cb56d83ce2b421419a717",
-    "replica/Sources/PasteReplica/UI/AuxiliaryViews.swift": "e2a11de77f3e8b90bb68c87cfbe966273ceed761a9446c8ce214cfec126927af"
-  },
-  "build_succeeded": true,
-  "build_command": "swift build --package-path replica -c release",
-  "compiled_app_binary_sha256": "0bf5b26d383e4a81571aa563ca41e82cfbdb4b3df2d2e65173ea97400231ec3f",
-  "compiled_product": "PasteReplica",
-  "functional_regression_executed": false,
-  "equivalence_verified": false,
-  "implementation_origin": "newly_migrated",
-  "contract": "通过惰性高度约束的animator把constant改为rowHeight乘clamp(snippets.count,1,10)，并立即激活约束；即使动画duration为零，constant也在之后的run-loop轮次提交。",
-  "review": " 本批逐项复审：Stack表格核心恢复函数体未改，设置界面同文件改动使旧整文件摘要失效；保留历史测试及差分，当前只登记编译静态迁移。",
-  "source_review": "Auxiliary仅品牌显示及新建合并sourceName字串改名；snippet表高度/动画、count及拒选方法、原Core实现逐字未改。 原有限合同：通过惰性高度约束的animator把constant改为rowHeight乘clamp(snippets.count,1,10)，并立即激活约束；即使动画duration为零，constant也在之后的run-loop轮次提交。 build70编译通过；无新增完整计数，未运行功能/UI/MCP回归。",
-  "regression_policy": "全部范围内代码迁移完成后统一功能回归；本批无功能/单测/原版差分/UI/MCP执行。"
+  "previous_static_evidence": {
+    "revision": "18087b19fab91c1e5ec27e59a36a70eaf5bc05ba",
+    "path": "reports/function-migration/Paste-0x100083a20.json",
+    "sha256": "5ac5d88ad143f914ac54fe30c16e05257822c0c5cc6d2626ece9cbd138a00dd6"
+  }
 }

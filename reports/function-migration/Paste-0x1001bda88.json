@@ -2,38 +2,31 @@
   "schema_version": 1,
   "kind": "static_code_migration",
   "function_id": "Paste:0x1001bda88",
-  "reviewed_at": "2026-10-26T08:36:48.742936+00:00",
+  "reviewed_at": "2026-10-26T09:23:16.520451+00:00",
   "original_binary_sha256": "871f00354fbb1c165d858a98e6d19d6f43cb9d3f9f958b3e07c7f07eb5c19afb",
+  "source_sha256": {
+    "replica/Sources/PastoCore/OriginalPreviewLocalization.swift": "822147a77e05ba31b0425cf0de5ca3d4267a0fb3c7f737c0d44f98deb1c566a7",
+    "replica/Sources/Pasto/AppMain.swift": "4a5c879fa5f9a457dea20719cdeb050d7280c101170ed6a64e33d85e7bcf7e3a"
+  },
+  "build_succeeded": true,
+  "build_command": "bash replica/scripts/build-app.sh",
+  "compiled_app_binary_sha256": "abc3c0ed6ceece4e50ecc84fd174d2bd436794202fce166f7a709e96bbbde006",
+  "compiled_product": "Pasto",
+  "functional_regression_executed": false,
+  "equivalence_verified": false,
+  "contract": "原 LocalizedStringResource键diagnostics.action.stop-and-copy-logs，table=Localizable/current locale/实际资源bundle；真实诊断确认alert消费。",
+  "implementation_origin": "existing_source_reused",
+  "source_review": "192文件精确可逆改名证明及原证据不变守卫通过；菜单/产品/资源路径/错误域和临时前缀例外已逐文件审阅。保持本地址已有有限契约，新模块build76编译及当前源码摘要绑定；详见reports/replica/pasto-brand-build76.json。不将本轮静态检查称为差分运行或完整父功能等价。",
+  "rename_audit": "reports/replica/pasto-brand-build76.json",
+  "build_snapshot": "reports/replica/concentrated-static-build76.json",
   "original_pseudocode": {
     "path": "decompiled/Paste/part-0148.c",
     "line": 6
   },
   "original_pseudocode_sha256": "9705b64572b0922403c0e7666b4647a25b9b9a1e0de0d0c4d4dae7371b965e7c",
-  "source_sha256": {
-    "replica/Sources/PasteReplicaCore/OriginalPreviewLocalization.swift": "244b50defd5c3333575ca20076b697079dd5d4bbc03ab8fe93ec9bedf92ce543",
-    "replica/Sources/PasteReplica/AppMain.swift": "392949a3cbdb4cb85a3e27cde54a6290aac5bee4db9f72f4101368ccb80eb88c"
-  },
-  "build_succeeded": true,
-  "build_command": "swift build --package-path replica -c release",
-  "compiled_app_binary_sha256": "bbcb842817a62ee45f67a6cfadf7f0e806105f50ad14f0cb9c7fa2811e227fc5",
-  "compiled_product": "PasteReplica",
-  "functional_regression_executed": false,
-  "equivalence_verified": false,
-  "implementation_origin": "existing_source_reused",
-  "contract": "原 LocalizedStringResource键diagnostics.action.stop-and-copy-logs，table=Localizable/current locale/实际资源bundle；真实诊断确认alert消费。",
-  "review": "直接复用此前已存在但缺诊断消费者的helper；完整原REA键及17locale全部逐值静态比对，诊断7key共119值无差异，不为计数重写资源或函数。",
-  "source_review": "原LocalizedStringResource有限合同保持：原 LocalizedStringResource键diagnostics.action.stop-and-copy-logs，table=Localizable/current locale/实际资源bundle；真实诊断确认alert消费。 对应OriginalPreviewLocalization源码摘要与旧证据一致，AppMain f_10004e064诊断alert的完整消费区块与dev44 HEAD逐字一致，既有Pasto品牌显示适配未扩改。build73是本次实际快照；仅AppMain其他区域变化使旧整文件摘要失效。新增完整0，不声称完整诊断/直接粘贴父等价或运行回归。",
-  "regression_policy": "全部范围内代码迁移完成后统一功能回归；本批无功能/单测/原版差分/UI/MCP执行。",
-  "caller_review_refs": [
-    {
-      "path": "replica/Sources/PasteReplicaCore/OriginalPreviewLocalization.swift",
-      "symbol": "func f_1001bda88()",
-      "entire_source_unchanged": true
-    },
-    {
-      "path": "replica/Sources/PasteReplica/AppMain.swift",
-      "symbol": "private func f_10004e064()",
-      "entire_source_unchanged": false
-    }
-  ]
+  "previous_static_evidence": {
+    "revision": "18087b19fab91c1e5ec27e59a36a70eaf5bc05ba",
+    "path": "reports/function-migration/Paste-0x1001bda88.json",
+    "sha256": "2395374e4e956a480dcc06d6faf4c797ae53f81d2c3ae7ce8c04c062315c5b58"
+  }
 }

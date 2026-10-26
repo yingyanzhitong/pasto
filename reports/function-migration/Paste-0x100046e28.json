@@ -2,26 +2,31 @@
   "schema_version": 1,
   "kind": "static_code_migration",
   "function_id": "Paste:0x100046e28",
-  "reviewed_at": "2026-10-23T15:16:51.919829+00:00",
+  "reviewed_at": "2026-10-26T09:23:16.520451+00:00",
   "original_binary_sha256": "871f00354fbb1c165d858a98e6d19d6f43cb9d3f9f958b3e07c7f07eb5c19afb",
+  "source_sha256": {
+    "replica/Sources/PastoCore/OriginalSearchSuggestionAnchor.swift": "2af28e89780d0e373331ea15588909cea7d99e1008e396717bb57b10b21436a7",
+    "replica/Sources/Pasto/UI/SearchEditor.swift": "f1cd5ab79ccf03c3c95aaf8e2c0d49690438607afa3367cc72455398628c8b76"
+  },
+  "build_succeeded": true,
+  "build_command": "bash replica/scripts/build-app.sh",
+  "compiled_app_binary_sha256": "abc3c0ed6ceece4e50ecc84fd174d2bd436794202fce166f7a709e96bbbde006",
+  "compiled_product": "Pasto",
+  "functional_regression_executed": false,
+  "equivalence_verified": false,
+  "contract": "NSTextLayoutManager接NSRange仅用location；从textContentManager.documentRange.location偏移得到location再取fragment，任一级缺失返回CGRect.zero。textLineFragments首个unsigned NSLocationInRange匹配，否则重新取first line；无line返回.zero。signed location-line.characterRange.location保留overflow trap，先max0再min(length)；index<length取locationForCharacter(at:).x，否则typographicBounds.width。rect.x=characterX+glyphOrigin.x；y=layoutFragmentFrame.minY+glyphOrigin.y；width/height=整line typographicBounds。无fragment.minX、无caret固定宽度、无range.length。",
+  "implementation_origin": "newly_migrated",
+  "source_review": "192文件精确可逆改名证明及原证据不变守卫通过；菜单/产品/资源路径/错误域和临时前缀例外已逐文件审阅。保持本地址已有有限契约，新模块build76编译及当前源码摘要绑定；详见reports/replica/pasto-brand-build76.json。不将本轮静态检查称为差分运行或完整父功能等价。",
+  "rename_audit": "reports/replica/pasto-brand-build76.json",
+  "build_snapshot": "reports/replica/concentrated-static-build76.json",
   "original_pseudocode": {
     "path": "decompiled/Paste/part-0026.c",
     "line": 182
   },
   "original_pseudocode_sha256": "385e3c301f3281ee75f661c38f13800d834976ecc8a4399a714e26fa9064f455",
-  "source_sha256": {
-    "replica/Sources/PasteReplicaCore/OriginalSearchSuggestionAnchor.swift": "2af28e89780d0e373331ea15588909cea7d99e1008e396717bb57b10b21436a7",
-    "replica/Sources/PasteReplica/UI/SearchEditor.swift": "13ce2f341f2e7aad16ac8083f46575b20b060086cc5a66ebe6399d8740915107"
-  },
-  "build_succeeded": true,
-  "build_command": "swift build --package-path replica -c release",
-  "compiled_app_binary_sha256": "24dcfc9f7c9d3a4f249b17158cef4da0282ca222dda0971955810395b885bf7f",
-  "compiled_product": "PasteReplica",
-  "functional_regression_executed": false,
-  "equivalence_verified": false,
-  "implementation_origin": "newly_migrated",
-  "contract": "NSTextLayoutManager接NSRange仅用location；从textContentManager.documentRange.location偏移得到location再取fragment，任一级缺失返回CGRect.zero。textLineFragments首个unsigned NSLocationInRange匹配，否则重新取first line；无line返回.zero。signed location-line.characterRange.location保留overflow trap，先max0再min(length)；index<length取locationForCharacter(at:).x，否则typographicBounds.width。rect.x=characterX+glyphOrigin.x；y=layoutFragmentFrame.minY+glyphOrigin.y；width/height=整line typographicBounds。无fragment.minX、无caret固定宽度、无range.length。",
-  "review": "完整arm64 46e28..<471b4；46f8c SUBS+LO/HS为unsigned membership；47070 SUBS/VS为有符号overflow，47078 BIC清负、47084 CSEL LT夹length；4709c B.GE决定character.x或bounds.width；470c0 glyphOrigin.x、470cc CGRectGetMinY、470dc glyphOrigin.y；47120..174返回四Double。SDK NSTextContentManager/NSTextLayoutManager/NSTextLineFragment头对应同系统组件，非自造字符宽度。",
-  "source_review": "已复审本批改动对现有入口的影响；未被替换的恢复函数体/调用契约保持，绑定当前稳定编译。",
-  "regression_policy": "全部范围内代码迁移完成后统一功能回归；本批无功能/单测/原版差分/UI/MCP执行。"
+  "previous_static_evidence": {
+    "revision": "18087b19fab91c1e5ec27e59a36a70eaf5bc05ba",
+    "path": "reports/function-migration/Paste-0x100046e28.json",
+    "sha256": "bbd0b01d036069bc13728c04136102dae0e402b497df52d6cd1d06bb537a6b03"
+  }
 }

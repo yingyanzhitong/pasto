@@ -2,26 +2,30 @@
   "schema_version": 1,
   "kind": "static_code_migration",
   "function_id": "Paste-Helper:0x100002614",
-  "reviewed_at": "2026-10-26T03:54:27.502058+00:00",
+  "reviewed_at": "2026-10-26T09:23:16.520451+00:00",
   "original_binary_sha256": "fb580e708dc53433f1f2efc7b2d49811361e174cbc752ce351cdf5871977638f",
+  "source_sha256": {
+    "replica/Sources/PastoHelper/HelperMain.swift": "60d98b18e87390fcc6c8de6a43b75d9505bfd74b822eb9e0fc6dc58bbfd47e12"
+  },
+  "build_succeeded": true,
+  "build_command": "bash replica/scripts/build-app.sh",
+  "compiled_app_binary_sha256": "c8b9aa18ac4d60af5f6b54c405a70b6aec2e43d2c98735b3f3369f732f2d8b0f",
+  "compiled_product": "PastoHelper",
+  "functional_regression_executed": false,
+  "equivalence_verified": false,
+  "contract": "每次检查先记录检查日志；isLaunching为true则日志后return；共享defaults不存在或pasteIsRunning为false则日志后return；主app已运行则日志后return；否则记录3秒后启动日志、设置isLaunching=true并派发弱捕获self的MainActor Task，sleep成功或抛错均继续执行延后进程复查。",
+  "implementation_origin": "newly_migrated",
+  "source_review": "192文件精确可逆改名证明及原证据不变守卫通过；菜单/产品/资源路径/错误域和临时前缀例外已逐文件审阅。保持本地址已有有限契约，新模块build76编译及当前源码摘要绑定；详见reports/replica/pasto-brand-build76.json。不将本轮静态检查称为差分运行或完整父功能等价。",
+  "rename_audit": "reports/replica/pasto-brand-build76.json",
+  "build_snapshot": "reports/replica/concentrated-static-build76.json",
   "original_pseudocode": {
     "path": "decompiled/Paste-Helper/part-0000.c",
     "line": 704
   },
   "original_pseudocode_sha256": "1b8d8318476ffee79279363b3728bd7243f9c619913a98a6bfa563bdfc2da011",
-  "source_sha256": {
-    "replica/Sources/PasteReplicaHelper/HelperMain.swift": "60d98b18e87390fcc6c8de6a43b75d9505bfd74b822eb9e0fc6dc58bbfd47e12"
-  },
-  "build_succeeded": true,
-  "build_command": "swift build --package-path replica -c release",
-  "compiled_app_binary_sha256": "e0aa4659e71de02027c371cf5830c6804ed7cdb74fc9ebea0e62d84e70a01627",
-  "compiled_product": "PasteReplicaHelper",
-  "functional_regression_executed": false,
-  "equivalence_verified": false,
-  "implementation_origin": "newly_migrated",
-  "contract": "每次检查先记录检查日志；isLaunching为true则日志后return；共享defaults不存在或pasteIsRunning为false则日志后return；主app已运行则日志后return；否则记录3秒后启动日志、设置isLaunching=true并派发弱捕获self的MainActor Task，sleep成功或抛错均继续执行延后进程复查。",
-  "review": "decompiled/Paste-Helper/part-0000.c:702 起。以持久 isLaunching 状态替换整个重试期间 pending 屏蔽；共享 suite 与键 isRunning 是复刻的本地会话命名，表示与原版 pasteIsRunning 相同语义；默认值读取失败为 false。 最终复审将 UserDefaults 实例改为每次取用重新按 suite 获取，原版 suite 创建失败分支只影响本次检查；不把首次 nil 永久缓存。已恢复原版日志正文，包括 not running 后的换行和三个句点。 静态复审纠正：Helper 0x100002790..0x1000027ac的MOV/MOVK精确构造pasteIsRunning，旧isRunning推断无效；启动日志读取和检查读取、主程序markRunning写入已同步改为原键。 复审后未发现额外未恢复业务分支：共享suite/主app bundleID及日志subsystem使用独立免费复刻身份，原版日志正文/求值顺序/布尔缺省/弱捕获/取消后继续语义保持；不主张原始Swift ABI或SDK版本等同。 本地build07日志显示9.99秒成功，最终有效性等待主智能体绑定当前源码/二进制摘要。",
-  "source_review": "Helper整文件仅两处主应用名称路径字串更改，其他函数的日志、状态键、进程匹配、计时/重试、weak/MainActor及completion分支均逐字未变。 原有限合同：每次检查先记录检查日志；isLaunching为true则日志后return；共享defaults不存在或pasteIsRunning为false则日志后return；主app已运行则日志后return；否则记录3秒后启动日志、设置isLaunching=true并派发弱捕获self的MainActor Task，sleep成功或抛错均继续执行延后进程复查。 build70编译通过；无新增完整计数，未运行功能/UI/MCP回归。",
-  "regression_policy": "全部范围内代码迁移完成后统一功能回归；本批无功能/单测/原版差分/UI/MCP执行。",
-  "static_review_risk": "并发 isLaunching guard、共享 false/nil、已运行、调度分支齐全；运行键采用现有独立会话 isRunning，未读取原厂 pasteIsRunning，避免跨应用状态耦合。"
+  "previous_static_evidence": {
+    "revision": "18087b19fab91c1e5ec27e59a36a70eaf5bc05ba",
+    "path": "reports/function-migration/Paste-Helper-0x100002614.json",
+    "sha256": "0af26c6910b89ad80c69d6379272b2bec8bfd08b79b5ebbcc4b5a6e93ea77654"
+  }
 }

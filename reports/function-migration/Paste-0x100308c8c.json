@@ -2,75 +2,30 @@
   "schema_version": 1,
   "kind": "static_code_migration",
   "function_id": "Paste:0x100308c8c",
-  "reviewed_at": "2026-10-23T16:46:17.166384+00:00",
+  "reviewed_at": "2026-10-26T09:23:16.520451+00:00",
   "original_binary_sha256": "871f00354fbb1c165d858a98e6d19d6f43cb9d3f9f958b3e07c7f07eb5c19afb",
+  "source_sha256": {
+    "replica/Sources/PastoCore/OriginalSourceApplicationColors.swift": "4fd75b6d9d2a3eb64e1d361b757e9134bdbb833487911e38b789ea2cad189662"
+  },
+  "build_succeeded": true,
+  "build_command": "bash replica/scripts/build-app.sh",
+  "compiled_app_binary_sha256": "abc3c0ed6ceece4e50ecc84fd174d2bd436794202fce166f7a709e96bbbde006",
+  "compiled_product": "Pasto",
+  "functional_regression_executed": false,
+  "equivalence_verified": false,
+  "contract": "NSColor转deviceRGB必须成功，四个初始零CGFloat输出槽经单次getRed:green:blue:alpha:读取；按A/R/G/B各乘255并执行带原非有限/<=-1/>=2^64 trap的UInt64截断转换，返回A<<24|R<<16|G<<8|B。",
+  "implementation_origin": "newly_migrated",
+  "source_review": "192文件精确可逆改名证明及原证据不变守卫通过；菜单/产品/资源路径/错误域和临时前缀例外已逐文件审阅。保持本地址已有有限契约，新模块build76编译及当前源码摘要绑定；详见reports/replica/pasto-brand-build76.json。不将本轮静态检查称为差分运行或完整父功能等价。",
+  "rename_audit": "reports/replica/pasto-brand-build76.json",
+  "build_snapshot": "reports/replica/concentrated-static-build76.json",
   "original_pseudocode": {
     "path": "decompiled/Paste/part-0251.c",
     "line": 615
   },
   "original_pseudocode_sha256": "d1db05169de193e26664ea4b0665f639eb4ef7f143dc15917f1e5a7fef899314",
-  "source_sha256": {
-    "replica/Sources/PasteReplicaCore/OriginalSourceApplicationColors.swift": "4fd75b6d9d2a3eb64e1d361b757e9134bdbb833487911e38b789ea2cad189662"
-  },
-  "build_succeeded": true,
-  "build_command": "swift build --package-path replica -c release",
-  "compiled_app_binary_sha256": "391a479532bdd5a41bcfc4b8884c1934cf7db5850d271cbd2080416020ba4ebe",
-  "compiled_product": "PasteReplica",
-  "compiled_boundary": {
-    "build": 56,
-    "source_sha256": {
-      "replica/Sources/PasteReplicaCore/OriginalSourceApplicationColors.swift": "4fd75b6d9d2a3eb64e1d361b757e9134bdbb833487911e38b789ea2cad189662"
-    },
-    "compiled_product": "PasteReplica",
-    "compiled_binary_sha256": "391a479532bdd5a41bcfc4b8884c1934cf7db5850d271cbd2080416020ba4ebe",
-    "public_symbol": "_$s16PasteReplicaCore31OriginalSourceApplicationColorsO7encodedys6UInt64VSo7NSColorCFZ",
-    "entry": {
-      "start": "0x10018a1e4",
-      "end_exclusive": "0x10018a1e8",
-      "size": 4,
-      "sha256": "788f1512f26f87f558ccda89030f23036527961be061f31e047ad5b93b8aafe2"
-    },
-    "tail_branch_target": "0x10018a1e8",
-    "complete_body": {
-      "start": "0x10018a1e8",
-      "end_exclusive": "0x10018a400",
-      "size": 536,
-      "sha256": "00c210fd0bdec2857d80a977277d062e452a407dd9f9f7d46d7acde0c359e21b"
-    },
-    "objc_selectors": {
-      "deviceRGBColorSpace": {
-        "slot": "0x100210bc8",
-        "raw": "0x100000001bd9ce",
-        "resolved": "0x1001bd9ce",
-        "selector": "deviceRGBColorSpace"
-      },
-      "colorUsingColorSpace:": {
-        "slot": "0x100210bd0",
-        "raw": "0x100000001bd1e7",
-        "resolved": "0x1001bd1e7",
-        "selector": "colorUsingColorSpace:"
-      },
-      "getRed:green:blue:alpha:": {
-        "slot": "0x100211720",
-        "raw": "0x100000001bdd69",
-        "resolved": "0x1001bdd69",
-        "selector": "getRed:green:blue:alpha:"
-      }
-    },
-    "static_body_review": {
-      "four_zero_slots": "18a25c/260",
-      "single_getRed_call": "18a264..280",
-      "channel_arithmetic": "18a28c..37c: A/R/G/B each*255; finite/greater-than-minus-one/less-than2^64 guards then fcvtzu",
-      "pack_return": "18a398..3c4 ARGBshift24/16/8/or; optimizer reorders pure fcvtzu instructions only after allguards",
-      "error_exits": "18a3c8..3f8 brk for each conversion guard and color conversion nil; 18a3fc stack canary failure"
-    },
-    "runtime_tests_executed": false,
-    "original_code_executed": false
-  },
-  "functional_regression_executed": false,
-  "equivalence_verified": false,
-  "implementation_origin": "newly_migrated",
-  "contract": "NSColor转deviceRGB必须成功，四个初始零CGFloat输出槽经单次getRed:green:blue:alpha:读取；按A/R/G/B各乘255并执行带原非有限/<=-1/>=2^64 trap的UInt64截断转换，返回A<<24|R<<16|G<<8|B。",
-  "review": "完整有限原体、系统selector、最终源码与实际编译入口/真实函数体已静态核，实际采集或Header调用；独立交叉审阅未发现该有限合同缺支路。",
-  "regression_policy": "只有编译和静态对照，全部迁移完成后统一功能回归；不宣称运行等价、原ABI或完整调用方父已满足。"
+  "previous_static_evidence": {
+    "revision": "18087b19fab91c1e5ec27e59a36a70eaf5bc05ba",
+    "path": "reports/function-migration/Paste-0x100308c8c.json",
+    "sha256": "ff977ccbf60026996b9c3bb45e0109916b2e5aa1026fb4dd053dee7bb3abb84e"
+  }
 }

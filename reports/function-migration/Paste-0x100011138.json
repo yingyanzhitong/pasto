@@ -2,47 +2,31 @@
   "schema_version": 1,
   "kind": "static_code_migration",
   "function_id": "Paste:0x100011138",
-  "reviewed_at": "2026-10-26T04:04:59.630232+00:00",
+  "reviewed_at": "2026-10-26T09:23:16.520451+00:00",
   "original_binary_sha256": "871f00354fbb1c165d858a98e6d19d6f43cb9d3f9f958b3e07c7f07eb5c19afb",
+  "source_sha256": {
+    "replica/Sources/PastoCore/OriginalStackFunctions.swift": "e408e508e9bc0bf2b7477ab142e29e4b1c1087daa63cd402c312f145e6cf16a4",
+    "replica/Sources/Pasto/UI/ReplicaUIController.swift": "822412f790641b4467627b8ac645874332149975c4ae46b1e5dd54ad71f9700a"
+  },
+  "build_succeeded": true,
+  "build_command": "bash replica/scripts/build-app.sh",
+  "compiled_app_binary_sha256": "abc3c0ed6ceece4e50ecc84fd174d2bd436794202fce166f7a709e96bbbde006",
+  "compiled_product": "Pasto",
+  "functional_regression_executed": false,
+  "equivalence_verified": false,
+  "contract": "Stack窗口控制器windowDidLoad调用super后，若window存在设置level25、collectionBehavior257、背景可移动及frameAutosaveName com.wiheads.paste.paste-stack-frame；nil窗口无操作。已接入实际Stack创建路径，并兼容旧复刻frame键读取。",
+  "implementation_origin": "existing_source_reused",
+  "source_review": "192文件精确可逆改名证明及原证据不变守卫通过；菜单/产品/资源路径/错误域和临时前缀例外已逐文件审阅。保持本地址已有有限契约，新模块build76编译及当前源码摘要绑定；详见reports/replica/pasto-brand-build76.json。不将本轮静态检查称为差分运行或完整父功能等价。",
+  "rename_audit": "reports/replica/pasto-brand-build76.json",
+  "build_snapshot": "reports/replica/concentrated-static-build76.json",
   "original_pseudocode": {
     "path": "decompiled/Paste/part-0007.c",
     "line": 480
   },
   "original_pseudocode_sha256": "77da370655b9c478cbddacfb55d1f9e840bfe558c043654171ca858e22a58383",
-  "source_sha256": {
-    "replica/Sources/PasteReplicaCore/OriginalStackFunctions.swift": "e408e508e9bc0bf2b7477ab142e29e4b1c1087daa63cd402c312f145e6cf16a4",
-    "replica/Sources/PasteReplica/UI/ReplicaUIController.swift": "83ab337c6b97ff23106275d30103fc377772d6c9708f633e3961a3b3af33e3b4"
-  },
-  "build_succeeded": true,
-  "build_command": "swift build --package-path replica -c release",
-  "compiled_app_binary_sha256": "1b5034720960b07cc375bf9d36b3fa5f7bbc2339b6bd68a37f34057c9a566763",
-  "compiled_product": "PasteReplica",
-  "functional_regression_executed": false,
-  "equivalence_verified": false,
-  "implementation_origin": "newly_migrated",
-  "contract": "Stack窗口控制器windowDidLoad调用super后，若window存在设置level25、collectionBehavior257、背景可移动及frameAutosaveName com.wiheads.paste.paste-stack-frame；nil窗口无操作。已接入实际Stack创建路径，并兼容旧复刻frame键读取。",
-  "review": "逐地址对照REA伪代码；文本修改路径另核对arm64分支、回调返回及UTF-16长度相加。已接入实际原生编辑器调用链并编译，编译成功不构成运行时等价证据。Swift公共类型/ARC代替原版私有对象布局和桥接ABI。",
-  "source_review": "只修copy/paste派发、回调结果及postwrite关闭；此记录列明的Core实现和实际消费者未改：Stack窗口控制器windowDidLoad调用super后，若window存在设置level25、collectionBehavior257、背景可移动及frameAutosaveName com.wiheads.paste.paste-stack-frame；nil窗口无操作。已接入实际Stack创建路径，并兼容旧复刻frame键读取。 build71已通过、源码/生成/产物摘要再核；此为有限旧合同重绑，不宣称完整copy/directpaste/窗口父等价，新增完整0。",
-  "regression_policy": "全部范围内代码迁移完成后统一功能回归；本批无功能/单测/原版差分/UI/MCP执行。",
-  "unchanged_declarations": [
-    {
-      "function_id": "Paste:0x100011138",
-      "path": "replica/Sources/PasteReplica/UI/ReplicaUIController.swift",
-      "reference": "f_100011138",
-      "declaration_sha256": "aca64bb731e1bf9a893d6ab010a16679dfb4db9569cf084624cf6af1115a08fc",
-      "source_declaration_unchanged": true
-    }
-  ],
-  "caller_review_refs": [
-    {
-      "path": "replica/Sources/PasteReplicaCore/OriginalStackFunctions.swift",
-      "symbol": "f_100011138",
-      "entire_source_unchanged": true
-    },
-    {
-      "path": "replica/Sources/PasteReplica/UI/ReplicaUIController.swift",
-      "symbol": "f_100011138",
-      "entire_source_unchanged": false
-    }
-  ]
+  "previous_static_evidence": {
+    "revision": "18087b19fab91c1e5ec27e59a36a70eaf5bc05ba",
+    "path": "reports/function-migration/Paste-0x100011138.json",
+    "sha256": "8daf5a2c2ab7266bdd4634e2755e0e24986752b5e2056683022c9af9cccbd797"
+  }
 }

@@ -23,11 +23,11 @@ def wait_for(check, process, timeout=12):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--app", type=pathlib.Path,
-                        default=pathlib.Path(__file__).resolve().parents[1] / "dist/Paste Replica.app")
+                        default=pathlib.Path(__file__).resolve().parents[1] / "dist/Pasto.app")
     parser.add_argument("--report", type=pathlib.Path)
     args = parser.parse_args()
-    executable = args.app.resolve() / "Contents/MacOS/PasteReplica"
-    with tempfile.TemporaryDirectory(prefix="paste-replica-app-test-") as temporary:
+    executable = args.app.resolve() / "Contents/MacOS/Pasto"
+    with tempfile.TemporaryDirectory(prefix="pasto-app-test-") as temporary:
         root = pathlib.Path(temporary)
         helper = root / "pasteboard-helper.swift"
         helper.write_text('''import AppKit

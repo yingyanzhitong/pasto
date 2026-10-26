@@ -2,35 +2,31 @@
   "schema_version": 1,
   "kind": "static_code_migration",
   "function_id": "Paste:0x1002ff9c8",
-  "reviewed_at": "2026-10-23T17:05:47.444400+00:00",
+  "reviewed_at": "2026-10-26T09:23:16.520451+00:00",
   "original_binary_sha256": "871f00354fbb1c165d858a98e6d19d6f43cb9d3f9f958b3e07c7f07eb5c19afb",
+  "source_sha256": {
+    "replica/Sources/PastoCore/OriginalObjCExceptionBridge.swift": "cf3e9e3b016001d7d982a673e00e365d8b638693effe3c9c49f8c77b93102bc2",
+    "replica/Sources/PastoCore/ClipboardStore.swift": "11b72a61204ccbfd26b5b3e72f1e68dec224e7213d8af94787655d54c51dc31c"
+  },
+  "build_succeeded": true,
+  "build_command": "bash replica/scripts/build-app.sh",
+  "compiled_app_binary_sha256": "abc3c0ed6ceece4e50ecc84fd174d2bd436794202fce166f7a709e96bbbde006",
+  "compiled_product": "Pasto",
+  "functional_regression_executed": false,
+  "equivalence_verified": false,
+  "contract": "同步执行throws Void操作，Result?初值nil，正常写.success(())，Swift Error写.failure且最终原样throw；优先把ObjC异常转换为保存name:String/reason:String?的独立Swift Error；无异常且Result未写则trap；operation不逃逸。",
+  "implementation_origin": "newly_migrated",
+  "source_review": "192文件精确可逆改名证明及原证据不变守卫通过；菜单/产品/资源路径/错误域和临时前缀例外已逐文件审阅。保持本地址已有有限契约，新模块build76编译及当前源码摘要绑定；详见reports/replica/pasto-brand-build76.json。不将本轮静态检查称为差分运行或完整父功能等价。",
+  "rename_audit": "reports/replica/pasto-brand-build76.json",
+  "build_snapshot": "reports/replica/concentrated-static-build76.json",
   "original_pseudocode": {
     "path": "decompiled/Paste/part-0249.c",
     "line": 929
   },
   "original_pseudocode_sha256": "a4a24d74878bc0d2b3702e504770dc329f2471783a133cdace88c700def24729",
-  "source_sha256": {
-    "replica/Sources/PasteReplicaCore/OriginalObjCExceptionBridge.swift": "83c6a0735223b544a2d156b9ea26f9aff8896ca6f16c4d8a6c39ae550ac39c88",
-    "replica/Sources/PasteReplicaCore/ClipboardStore.swift": "0d6dec116f8d99a4920928f2cfbdfc194cf19962abf0bd146976f1e1190e0476"
-  },
-  "build_succeeded": true,
-  "build_command": "swift build --package-path replica -c release",
-  "compiled_app_binary_sha256": "afff00ec2649141bd8342330d59e12d0015bf8731ad64e6a7ac1cf8816a77207",
-  "compiled_product": "PasteReplica",
-  "functional_regression_executed": false,
-  "equivalence_verified": false,
-  "implementation_origin": "newly_migrated",
-  "contract": "同步执行throws Void操作，Result?初值nil，正常写.success(())，Swift Error写.failure且最终原样throw；优先把ObjC异常转换为保存name:String/reason:String?的独立Swift Error；无异常且Result未写则trap；operation不逃逸。",
-  "review": "part-0249.c:927..1031完整体区分local_58=-1未写/1 failure/0 success，异常name/reason优先；新Void包装实际覆盖已有archive导出保存+JSON编码+写盘路径，非无人调用壳。",
-  "source_review": "dev33逐项复核既有方法与实际调用段：Stack/搜索/首响应者/选择/卡片几何/导出异常桥未被本轮Pinboard关系及Header改动替换。绑定build57；不新增实现或运行验收。",
-  "regression_policy": "全部范围内代码迁移完成后统一功能回归；本批无功能/单测/原版差分/UI/MCP执行。",
-  "unchanged_declarations": [
-    {
-      "function_id": "Paste:0x1002ff9c8",
-      "path": "replica/Sources/PasteReplicaCore/ClipboardStore.swift",
-      "reference": "exportArchive(to",
-      "declaration_sha256": "76cf7d24edbf03af43d109a8bebb2d5633cf40060a726e4b9a6bc11050bca2da",
-      "source_declaration_unchanged": true
-    }
-  ]
+  "previous_static_evidence": {
+    "revision": "18087b19fab91c1e5ec27e59a36a70eaf5bc05ba",
+    "path": "reports/function-migration/Paste-0x1002ff9c8.json",
+    "sha256": "93fea3d6502b565053cd02601a6982439e556d6b8127ba117532457676decfe2"
+  }
 }

@@ -2,38 +2,31 @@
   "schema_version": 1,
   "kind": "static_code_migration",
   "function_id": "Paste:0x10037e5e0",
-  "reviewed_at": "2026-10-23T18:05:40.474101+00:00",
+  "reviewed_at": "2026-10-26T09:23:16.520451+00:00",
   "original_binary_sha256": "871f00354fbb1c165d858a98e6d19d6f43cb9d3f9f958b3e07c7f07eb5c19afb",
+  "source_sha256": {
+    "replica/Sources/PastoCore/OriginalPasteboard.swift": "60f862d0779d4f580e89be5eafef96239c75287facd4602ba02b10ce232c7b61",
+    "replica/Sources/PastoCore/Pasteboard.swift": "0f5ba3cb157a77612f9b1cbc447d835571d64858ddf82948d2d88f6a5b4fbca2"
+  },
+  "build_succeeded": true,
+  "build_command": "bash replica/scripts/build-app.sh",
+  "compiled_app_binary_sha256": "abc3c0ed6ceece4e50ecc84fd174d2bd436794202fce166f7a709e96bbbde006",
+  "compiled_product": "Pasto",
+  "functional_regression_executed": false,
+  "equivalence_verified": false,
+  "contract": "查询指定类型的 Data 并桥接为 NSData；缺失返回 nil，保留零长度 Data。",
+  "implementation_origin": "newly_migrated",
+  "source_review": "192文件精确可逆改名证明及原证据不变守卫通过；菜单/产品/资源路径/错误域和临时前缀例外已逐文件审阅。保持本地址已有有限契约，新模块build76编译及当前源码摘要绑定；详见reports/replica/pasto-brand-build76.json。不将本轮静态检查称为差分运行或完整父功能等价。",
+  "rename_audit": "reports/replica/pasto-brand-build76.json",
+  "build_snapshot": "reports/replica/concentrated-static-build76.json",
   "original_pseudocode": {
     "path": "decompiled/Paste/part-0282.c",
     "line": 1556
   },
   "original_pseudocode_sha256": "0a07d50d252feb23a284c6b299545b557ba42f43396f6ddd9619ac32d05e4100",
-  "source_sha256": {
-    "replica/Sources/PasteReplicaCore/OriginalPasteboard.swift": "60f862d0779d4f580e89be5eafef96239c75287facd4602ba02b10ce232c7b61",
-    "replica/Sources/PasteReplicaCore/Pasteboard.swift": "0f5ba3cb157a77612f9b1cbc447d835571d64858ddf82948d2d88f6a5b4fbca2"
-  },
-  "build_succeeded": true,
-  "build_command": "swift build --package-path replica -c release",
-  "compiled_app_binary_sha256": "8ded736a226949c2e1f3f099b83466c8e14de42d0043e5c084f3aa99f0f3d8db",
-  "compiled_product": "PasteReplica",
-  "functional_regression_executed": false,
-  "equivalence_verified": false,
-  "implementation_origin": "newly_migrated",
-  "contract": "查询指定类型的 Data 并桥接为 NSData；缺失返回 nil，保留零长度 Data。",
-  "review": "核对 decompiled/Paste/part-0281.c 的 0x10037875c 或 part-0282.c 对应地址；文本循环另核对 arm64 0x10037c9a8–0x10037cc6c，确认四项优先级以及解码失败继续。低层已接入 capture/writeToPasteboard；外层内部载荷过滤、生成标记、错误处理保留为调用方策略，未将这些外层 API 整体映射为原版等价。没有执行编译或任何功能回归，等待主智能体统一编译后建立静态迁移证据。",
-  "source_review": "dev38/build63复审f_10037e5e0, writeToPasteboard：Core仅monitor新增weak TimerTarget、init defaults token0set、两timer的targetselector改proxy、deinit清delegate后现stop通知。独立peer五组反向替换后整文件SHA精确复原dev37；本条既有getter/store/decoder/restore/drag/stop/通知/日志契约未变，sync timer仍非重复0.3秒且proxy selector转既有handleSyncTimer。析构完整executor/DI仍partial，未新增本条完成。",
-  "regression_policy": "全部范围内代码迁移完成后统一功能回归；本批无功能/单测/原版差分/UI/MCP执行。",
-  "caller_review_refs": [
-    {
-      "path": "replica/Sources/PasteReplicaCore/OriginalPasteboard.swift",
-      "symbol": "f_10037e5e0",
-      "entire_source_unchanged": true
-    },
-    {
-      "path": "replica/Sources/PasteReplicaCore/Pasteboard.swift",
-      "symbol": "writeToPasteboard",
-      "entire_source_unchanged": false
-    }
-  ]
+  "previous_static_evidence": {
+    "revision": "18087b19fab91c1e5ec27e59a36a70eaf5bc05ba",
+    "path": "reports/function-migration/Paste-0x10037e5e0.json",
+    "sha256": "cb4f2a59b7d37708797109b41e4d3d00d700d6f6c902f2afb70d09f90fefec82"
+  }
 }

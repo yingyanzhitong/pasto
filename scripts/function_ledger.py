@@ -283,7 +283,7 @@ def main():
             references = review.get("implementations", []) + review.get("tests", [])
             results[key] = {"case": contract["case"], "passed": True,
                             "source_sha256": {ref["path"]: hashlib.sha256(relative_file(ROOT, ref["path"]).read_bytes()).hexdigest() for ref in references}}
-        binary = ROOT / "replica/.build/release/paste-replica-core-tests"
+        binary = ROOT / "replica/.build/release/pasto-core-tests"
         report = {"kind": "replica_contract_tests_only", "native_runner_sha256": hashlib.sha256(binary.read_bytes()).hexdigest(),
                   "core_test_count": core["test_count"], "original_binary_executed": False,
                   "function_equivalence_verified": False, "functions": results}

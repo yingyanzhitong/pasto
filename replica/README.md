@@ -17,7 +17,7 @@ open 'replica/dist/Pasto.app'
 
 ```sh
 open -n 'replica/dist/Pasto.app' --args \
-  --data-dir /tmp/paste-replica-demo \
+  --data-dir /tmp/pasto-demo \
   --fixture --no-monitor --no-global-hotkey \
   --pasteboard-name com.pastereplica.demo --show-panel
 ```
@@ -31,8 +31,8 @@ open -n 'replica/dist/Pasto.app' --args \
 ```json
 {
   "mcpServers": {
-    "paste-replica": {
-      "command": "/绝对路径/Pasto.app/Contents/MacOS/paste-replica-mcp",
+    "pasto": {
+      "command": "/绝对路径/Pasto.app/Contents/MacOS/pasto-mcp",
       "args": ["--data-dir", "/绝对路径/独立数据目录"]
     }
   }

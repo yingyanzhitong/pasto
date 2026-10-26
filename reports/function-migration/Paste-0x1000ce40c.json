@@ -2,26 +2,31 @@
   "schema_version": 1,
   "kind": "static_code_migration",
   "function_id": "Paste:0x1000ce40c",
-  "reviewed_at": "2026-10-23T15:16:51.508224+00:00",
+  "reviewed_at": "2026-10-26T09:23:16.520451+00:00",
   "original_binary_sha256": "871f00354fbb1c165d858a98e6d19d6f43cb9d3f9f958b3e07c7f07eb5c19afb",
+  "source_sha256": {
+    "replica/Sources/PastoCore/OriginalShortcutRecorder.swift": "ba907c942f91fe336506e9a47576051f285bfce47ccd43315cb111aedbd237f2",
+    "replica/Sources/PastoCore/OriginalShortcutDependencies.swift": "73908ddfedcd38cb4f1f64a7a21d1499879bed195dfb13d70f1ebbbeb6ce5b51"
+  },
+  "build_succeeded": true,
+  "build_command": "bash replica/scripts/build-app.sh",
+  "compiled_app_binary_sha256": "abc3c0ed6ceece4e50ecc84fd174d2bd436794202fce166f7a709e96bbbde006",
+  "compiled_product": "Pasto",
+  "functional_regression_executed": false,
+  "equivalence_verified": false,
+  "contract": "String-bearing ShortcutValidatorError的LocalizedError.errorDescription读取唯一message字段，返回非nil Optional<String>，以ARC保留String桥对象，无参数分支或其他副作用。",
+  "implementation_origin": "existing_reused",
+  "source_review": "192文件精确可逆改名证明及原证据不变守卫通过；菜单/产品/资源路径/错误域和临时前缀例外已逐文件审阅。保持本地址已有有限契约，新模块build76编译及当前源码摘要绑定；详见reports/replica/pasto-brand-build76.json。不将本轮静态检查称为差分运行或完整父功能等价。",
+  "rename_audit": "reports/replica/pasto-brand-build76.json",
+  "build_snapshot": "reports/replica/concentrated-static-build76.json",
   "original_pseudocode": {
     "path": "decompiled/Paste/part-0065.c",
     "line": 1098
   },
   "original_pseudocode_sha256": "fea7a9af37102c93673471c725d8723c67f888da7ef50febf80c8d2ddc3f44ba",
-  "source_sha256": {
-    "replica/Sources/PasteReplicaCore/OriginalShortcutRecorder.swift": "ba907c942f91fe336506e9a47576051f285bfce47ccd43315cb111aedbd237f2",
-    "replica/Sources/PasteReplicaCore/OriginalShortcutDependencies.swift": "73908ddfedcd38cb4f1f64a7a21d1499879bed195dfb13d70f1ebbbeb6ce5b51"
-  },
-  "build_succeeded": true,
-  "build_command": "swift build --package-path replica -c release",
-  "compiled_app_binary_sha256": "24dcfc9f7c9d3a4f249b17158cef4da0282ca222dda0971955810395b885bf7f",
-  "compiled_product": "PasteReplica",
-  "functional_regression_executed": false,
-  "equivalence_verified": false,
-  "implementation_origin": "existing_reused",
-  "contract": "String-bearing ShortcutValidatorError的LocalizedError.errorDescription读取唯一message字段，返回非nil Optional<String>，以ARC保留String桥对象，无参数分支或其他副作用。",
-  "review": "原版LocalizedError conformance descriptor0x100c337a8的errorDescription requirement位于0x100c337c8，其signed relative32解到f0ce40c；原函数取self前16字节并swift_bridgeObjectRetain后返回，无其他分支。当前真实validatorService构造错误并由Published Error送至SwiftUI .localizedDescription，复用既有getter即可，不增薄空壳。",
-  "source_review": "已复审本批改动对现有入口的影响；未被替换的恢复函数体/调用契约保持，绑定当前稳定编译。",
-  "regression_policy": "全部范围内代码迁移完成后统一功能回归；本批无功能/单测/原版差分/UI/MCP执行。"
+  "previous_static_evidence": {
+    "revision": "18087b19fab91c1e5ec27e59a36a70eaf5bc05ba",
+    "path": "reports/function-migration/Paste-0x1000ce40c.json",
+    "sha256": "c1822f8ce5cda8734061147c695cd0d298cccbe6dbd3809995bd496266c3856d"
+  }
 }

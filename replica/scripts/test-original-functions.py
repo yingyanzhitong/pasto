@@ -87,7 +87,7 @@ def main():
     run(["swift", "build", "--package-path", "replica", "-c", "release"], log)
     run(["xcrun", "clang", "-c", ROOT / SOURCES[2], "-o", work / "OracleABI.o"], log)
     run(["xcrun", "clang", "-fobjc-arc", "-c", ROOT / SOURCES[4], "-o", work / "OracleObjects.o"], log)
-    objects = sorted((ROOT / "replica/.build/release/PasteReplicaCore.build").glob("*.o"))
+    objects = sorted((ROOT / "replica/.build/release/PastoCore.build").glob("*.o"))
     if not objects:
         raise SystemExit("Missing replica core object files")
     runner = work / "function-oracle"

@@ -2,26 +2,30 @@
   "schema_version": 1,
   "kind": "static_code_migration",
   "function_id": "Paste-Helper:0x100004020",
-  "reviewed_at": "2026-10-26T03:54:27.502058+00:00",
+  "reviewed_at": "2026-10-26T09:23:16.520451+00:00",
   "original_binary_sha256": "fb580e708dc53433f1f2efc7b2d49811361e174cbc752ce351cdf5871977638f",
+  "source_sha256": {
+    "replica/Sources/PastoHelper/HelperMain.swift": "60d98b18e87390fcc6c8de6a43b75d9505bfd74b822eb9e0fc6dc58bbfd47e12"
+  },
+  "build_succeeded": true,
+  "build_command": "bash replica/scripts/build-app.sh",
+  "compiled_app_binary_sha256": "c8b9aa18ac4d60af5f6b54c405a70b6aec2e43d2c98735b3f3369f732f2d8b0f",
+  "compiled_product": "PastoHelper",
+  "functional_regression_executed": false,
+  "equivalence_verified": false,
+  "contract": "按上次失败算出的整数秒数使用 ContinuousClock 等待，再进入弱捕获重新检查的后续；支持睡眠错误的共同处理路径。",
+  "implementation_origin": "newly_migrated",
+  "source_review": "192文件精确可逆改名证明及原证据不变守卫通过；菜单/产品/资源路径/错误域和临时前缀例外已逐文件审阅。保持本地址已有有限契约，新模块build76编译及当前源码摘要绑定；详见reports/replica/pasto-brand-build76.json。不将本轮静态检查称为差分运行或完整父功能等价。",
+  "rename_audit": "reports/replica/pasto-brand-build76.json",
+  "build_snapshot": "reports/replica/concentrated-static-build76.json",
   "original_pseudocode": {
     "path": "decompiled/Paste-Helper/part-0000.c",
     "line": 1843
   },
   "original_pseudocode_sha256": "64d719160c93d9c5bb9494f4cbceaaa9411eb59299c7fa2927d0cd26693f45d7",
-  "source_sha256": {
-    "replica/Sources/PasteReplicaHelper/HelperMain.swift": "60d98b18e87390fcc6c8de6a43b75d9505bfd74b822eb9e0fc6dc58bbfd47e12"
-  },
-  "build_succeeded": true,
-  "build_command": "swift build --package-path replica -c release",
-  "compiled_app_binary_sha256": "e0aa4659e71de02027c371cf5830c6804ed7cdb74fc9ebea0e62d84e70a01627",
-  "compiled_product": "PasteReplicaHelper",
-  "functional_regression_executed": false,
-  "equivalence_verified": false,
-  "implementation_origin": "newly_migrated",
-  "contract": "按上次失败算出的整数秒数使用 ContinuousClock 等待，再进入弱捕获重新检查的后续；支持睡眠错误的共同处理路径。",
-  "review": "decompiled/Paste-Helper/part-0000.c:1841 起。原版将秒乘 1e18 得 attoseconds；复刻直接使用 Duration.seconds(retryDelay)，不把小时级等待缩成毫秒或改变时钟。",
-  "source_review": "Helper整文件仅两处主应用名称路径字串更改，其他函数的日志、状态键、进程匹配、计时/重试、weak/MainActor及completion分支均逐字未变。 原有限合同：按上次失败算出的整数秒数使用 ContinuousClock 等待，再进入弱捕获重新检查的后续；支持睡眠错误的共同处理路径。 build70编译通过；无新增完整计数，未运行功能/UI/MCP回归。",
-  "regression_policy": "全部范围内代码迁移完成后统一功能回归；本批无功能/单测/原版差分/UI/MCP执行。",
-  "static_review_risk": "Duration.seconds(Int) 对应原版秒 *1e18 的 Duration；底层 ContinuousClock sleep 使用 now.advanced(by:)，静态检查一致。"
+  "previous_static_evidence": {
+    "revision": "18087b19fab91c1e5ec27e59a36a70eaf5bc05ba",
+    "path": "reports/function-migration/Paste-Helper-0x100004020.json",
+    "sha256": "1abaa9dddb0c0ced662191b11868a784c3c5395bae0b9bfec7dabb26e46e9c28"
+  }
 }

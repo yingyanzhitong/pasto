@@ -2,26 +2,31 @@
   "schema_version": 1,
   "kind": "static_code_migration",
   "function_id": "Paste:0x1003e3eec",
-  "reviewed_at": "2026-10-23T15:16:51.851503+00:00",
+  "reviewed_at": "2026-10-26T09:23:16.520451+00:00",
   "original_binary_sha256": "871f00354fbb1c165d858a98e6d19d6f43cb9d3f9f958b3e07c7f07eb5c19afb",
+  "source_sha256": {
+    "replica/Sources/Pasto/UI/ReplicaFilePreviewContent.swift": "5377ce50fd4936a8b5d533827611028005a4ef1d675ce3e8ed1c33f40fe6ffc8",
+    "replica/Sources/Pasto/UI/ReplicaLinkPreviewContent.swift": "075062ace9ce70c3d7b51aa029629697697d1fdf9b03ecad473ffa6a9f4e04cf"
+  },
+  "build_succeeded": true,
+  "build_command": "bash replica/scripts/build-app.sh",
+  "compiled_app_binary_sha256": "abc3c0ed6ceece4e50ecc84fd174d2bd436794202fce166f7a709e96bbbde006",
+  "compiled_product": "Pasto",
+  "functional_regression_executed": false,
+  "equivalence_verified": false,
+  "contract": "原 PreferredSizeProviding 共同 witness：NSScreen.main 有值则 frame.width/height 各乘0.5，nil 则(0,0)。file/link两实际消费者直接复用此原叶子契约；不按重复消费者计多个函数。",
+  "implementation_origin": "newly_migrated",
+  "source_review": "192文件精确可逆改名证明及原证据不变守卫通过；菜单/产品/资源路径/错误域和临时前缀例外已逐文件审阅。保持本地址已有有限契约，新模块build76编译及当前源码摘要绑定；详见reports/replica/pasto-brand-build76.json。不将本轮静态检查称为差分运行或完整父功能等价。",
+  "rename_audit": "reports/replica/pasto-brand-build76.json",
+  "build_snapshot": "reports/replica/concentrated-static-build76.json",
   "original_pseudocode": {
     "path": "decompiled/Paste/part-0309.c",
     "line": 1661
   },
   "original_pseudocode_sha256": "8dc731fc4f41fbba87f29edba98668a72ed10dcbf925c8dfb6dde22f1f9194f0",
-  "source_sha256": {
-    "replica/Sources/PasteReplica/UI/ReplicaFilePreviewContent.swift": "e2bd5375e67f5e326d371bf4c07944358d2a47098469a078d8fd086925c2e5ec",
-    "replica/Sources/PasteReplica/UI/ReplicaLinkPreviewContent.swift": "1d9ad12dc1f5b46c40b8ee4f06ab8362693d22e0d099625cde7209f0bd62db37"
-  },
-  "build_succeeded": true,
-  "build_command": "swift build --package-path replica -c release",
-  "compiled_app_binary_sha256": "24dcfc9f7c9d3a4f249b17158cef4da0282ca222dda0971955810395b885bf7f",
-  "compiled_product": "PasteReplica",
-  "functional_regression_executed": false,
-  "equivalence_verified": false,
-  "implementation_origin": "newly_migrated",
-  "contract": "原 PreferredSizeProviding 共同 witness：NSScreen.main 有值则 frame.width/height 各乘0.5，nil 则(0,0)。file/link两实际消费者直接复用此原叶子契约；不按重复消费者计多个函数。",
-  "review": "原 REA、arm64 及真实 Swift conformance/witness 与 dyld 页链槽静态核对；实际 factory 消费。最终 build26 release 编译通过，128 输入构建前后 SHA 一致；绑定冻结源与产物摘要。未执行功能、单测、产品、原版动态、UI 或 MCP。父契约缺口继续 partial。",
-  "source_review": "已复审本批改动对现有入口的影响；未被替换的恢复函数体/调用契约保持，绑定当前稳定编译。",
-  "regression_policy": "全部范围内代码迁移完成后统一功能回归；本批无功能/单测/原版差分/UI/MCP执行。"
+  "previous_static_evidence": {
+    "revision": "18087b19fab91c1e5ec27e59a36a70eaf5bc05ba",
+    "path": "reports/function-migration/Paste-0x1003e3eec.json",
+    "sha256": "3b05747f2dd6f03dcb47f01fb1a6241d90a2697a94caf7b49e29eb44d911979f"
+  }
 }

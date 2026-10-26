@@ -86,7 +86,7 @@ import Foundation
 }
 ''')
         helper_source = root / "Helper.swift"
-        source = (source_root / "Sources/PasteReplicaHelper/HelperMain.swift").read_text()
+        source = (source_root / "Sources/PastoHelper/HelperMain.swift").read_text()
         source = source.replace('"com.yingyanzhitong.paste-replica.session"', json.dumps(suite))
         source = source.replace('"com.yingyanzhitong.paste-replica"', json.dumps(identity))
         helper_source.write_text(source)

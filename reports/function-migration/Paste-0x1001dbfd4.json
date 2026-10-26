@@ -2,25 +2,30 @@
   "schema_version": 1,
   "kind": "static_code_migration",
   "function_id": "Paste:0x1001dbfd4",
-  "reviewed_at": "2026-10-23T15:16:51.950231+00:00",
+  "reviewed_at": "2026-10-26T09:23:16.520451+00:00",
   "original_binary_sha256": "871f00354fbb1c165d858a98e6d19d6f43cb9d3f9f958b3e07c7f07eb5c19afb",
+  "source_sha256": {
+    "replica/Sources/PastoCore/OriginalSettingsLocalization.swift": "62f7b6d5767ce50f52f1138d76ca6544a0294368cc2b9f9bc65dc7ff2fabf67a"
+  },
+  "build_succeeded": true,
+  "build_command": "bash replica/scripts/build-app.sh",
+  "compiled_app_binary_sha256": "abc3c0ed6ceece4e50ecc84fd174d2bd436794202fce166f7a709e96bbbde006",
+  "compiled_product": "Pasto",
+  "functional_regression_executed": false,
+  "equivalence_verified": false,
+  "contract": "原Settings Localizable资源helper，Locale.current/独立资源bundle fallback；17locale原值及真实Settings label消费者。",
+  "implementation_origin": "newly_migrated_resource",
+  "source_review": "192文件精确可逆改名证明及原证据不变守卫通过；菜单/产品/资源路径/错误域和临时前缀例外已逐文件审阅。保持本地址已有有限契约，新模块build76编译及当前源码摘要绑定；详见reports/replica/pasto-brand-build76.json。不将本轮静态检查称为差分运行或完整父功能等价。",
+  "rename_audit": "reports/replica/pasto-brand-build76.json",
+  "build_snapshot": "reports/replica/concentrated-static-build76.json",
   "original_pseudocode": {
     "path": "decompiled/Paste/part-0153.c",
     "line": 880
   },
   "original_pseudocode_sha256": "949c702c0a86582f9f4a9b590c9ae83ab6a6fd69d3971d0cf2c31973ac670d04",
-  "source_sha256": {
-    "replica/Sources/PasteReplicaCore/OriginalSettingsLocalization.swift": "f9c5663239b8fbd7251b0fdcce5c0d19bbfa2c620642d75bcb61073a37e028a5"
-  },
-  "build_succeeded": true,
-  "build_command": "swift build --package-path replica -c release",
-  "compiled_app_binary_sha256": "24dcfc9f7c9d3a4f249b17158cef4da0282ca222dda0971955810395b885bf7f",
-  "compiled_product": "PasteReplica",
-  "functional_regression_executed": false,
-  "equivalence_verified": false,
-  "implementation_origin": "newly_migrated_resource",
-  "contract": "原Settings Localizable资源helper，Locale.current/独立资源bundle fallback；17locale原值及真实Settings label消费者。",
-  "review": "原Localizable key/17locale逐值与真实Settings消费者静态对照；最终build40成功145输入SHA一致并绑定。显式权限/声音默认兼容经peerreview；未运行产品/功能/单测/UI/MCP，不将原整Settings界面/状态/默认值升满。",
-  "source_review": "已复审本批改动对现有入口的影响；未被替换的恢复函数体/调用契约保持，绑定当前稳定编译。",
-  "regression_policy": "全部范围内代码迁移完成后统一功能回归；本批无功能/单测/原版差分/UI/MCP执行。"
+  "previous_static_evidence": {
+    "revision": "18087b19fab91c1e5ec27e59a36a70eaf5bc05ba",
+    "path": "reports/function-migration/Paste-0x1001dbfd4.json",
+    "sha256": "b24b669f213ae41b4bd073bf641bf5807caa7a34e846e31f27af532ca221ffe2"
+  }
 }

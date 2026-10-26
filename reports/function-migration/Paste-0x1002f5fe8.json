@@ -2,26 +2,31 @@
   "schema_version": 1,
   "kind": "static_code_migration",
   "function_id": "Paste:0x1002f5fe8",
-  "reviewed_at": "2026-10-23T15:16:51.895064+00:00",
+  "reviewed_at": "2026-10-26T09:23:16.520451+00:00",
   "original_binary_sha256": "871f00354fbb1c165d858a98e6d19d6f43cb9d3f9f958b3e07c7f07eb5c19afb",
+  "source_sha256": {
+    "replica/Sources/PastoCore/OriginalSearchInputHistory.swift": "7aa112d949aa2982759f8b3a164eb908a3259cccbcd889e19030773bd4bb88a8",
+    "replica/Sources/Pasto/UI/SearchEditor.swift": "f1cd5ab79ccf03c3c95aaf8e2c0d49690438607afa3367cc72455398628c8b76"
+  },
+  "build_succeeded": true,
+  "build_command": "bash replica/scripts/build-app.sh",
+  "compiled_app_binary_sha256": "abc3c0ed6ceece4e50ecc84fd174d2bd436794202fce166f7a709e96bbbde006",
+  "compiled_product": "Pasto",
+  "functional_regression_executed": false,
+  "equivalence_verified": false,
+  "contract": "invalidate并清timer；pending存在才push到undo并清pending；不改变current或redo。",
+  "implementation_origin": "newly_migrated",
+  "source_review": "192文件精确可逆改名证明及原证据不变守卫通过；菜单/产品/资源路径/错误域和临时前缀例外已逐文件审阅。保持本地址已有有限契约，新模块build76编译及当前源码摘要绑定；详见reports/replica/pasto-brand-build76.json。不将本轮静态检查称为差分运行或完整父功能等价。",
+  "rename_audit": "reports/replica/pasto-brand-build76.json",
+  "build_snapshot": "reports/replica/concentrated-static-build76.json",
   "original_pseudocode": {
     "path": "decompiled/Paste/part-0244.c",
     "line": 1831
   },
   "original_pseudocode_sha256": "2031522d01e3690a252559b5e495a14694d6829aef24f51d4125803a463d6571",
-  "source_sha256": {
-    "replica/Sources/PasteReplicaCore/OriginalSearchInputHistory.swift": "7aa112d949aa2982759f8b3a164eb908a3259cccbcd889e19030773bd4bb88a8",
-    "replica/Sources/PasteReplica/UI/SearchEditor.swift": "13ce2f341f2e7aad16ac8083f46575b20b060086cc5a66ebe6399d8740915107"
-  },
-  "build_succeeded": true,
-  "build_command": "swift build --package-path replica -c release",
-  "compiled_app_binary_sha256": "24dcfc9f7c9d3a4f249b17158cef4da0282ca222dda0971955810395b885bf7f",
-  "compiled_product": "PasteReplica",
-  "functional_regression_executed": false,
-  "equivalence_verified": false,
-  "implementation_origin": "newly_migrated",
-  "contract": "invalidate并清timer；pending存在才push到undo并清pending；不改变current或redo。",
-  "review": "完整原REA/arm64由image_dev8独立核出，Root实现并独立复审。真实SearchEditor提案/程序性节点输入/undo/redo/clear消费者已接；初始nodes=[]/selection0,0、实际0.4秒分组。保留原redo不flush、reset不改current等不对称边界。不将整个输入协调器或析构ABI计完成。",
-  "source_review": "已复审本批改动对现有入口的影响；未被替换的恢复函数体/调用契约保持，绑定当前稳定编译。",
-  "regression_policy": "全部范围内代码迁移完成后统一功能回归；本批无功能/单测/原版差分/UI/MCP执行。"
+  "previous_static_evidence": {
+    "revision": "18087b19fab91c1e5ec27e59a36a70eaf5bc05ba",
+    "path": "reports/function-migration/Paste-0x1002f5fe8.json",
+    "sha256": "3d1be291d5279cf1e6698ecd8e5caf0f7ef35be075cba35911fa8380f9b670dd"
+  }
 }

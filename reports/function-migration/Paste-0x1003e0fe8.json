@@ -2,25 +2,30 @@
   "schema_version": 1,
   "kind": "static_code_migration",
   "function_id": "Paste:0x1003e0fe8",
-  "reviewed_at": "2026-10-23T15:16:51.771187+00:00",
+  "reviewed_at": "2026-10-26T09:23:16.520451+00:00",
   "original_binary_sha256": "871f00354fbb1c165d858a98e6d19d6f43cb9d3f9f958b3e07c7f07eb5c19afb",
+  "source_sha256": {
+    "replica/Sources/Pasto/UI/ReplicaColorPreviewContent.swift": "ad43bd0e40c0193ce221f27464fdcc864ae422d3e58a381051b646889255e85c"
+  },
+  "build_succeeded": true,
+  "build_command": "bash replica/scripts/build-app.sh",
+  "compiled_app_binary_sha256": "abc3c0ed6ceece4e50ecc84fd174d2bd436794202fce166f7a709e96bbbde006",
+  "compiled_product": "Pasto",
+  "functional_regression_executed": false,
+  "equivalence_verified": false,
+  "contract": "惰性缓存NSColorPanel.shared；首次取值配置后返回，同一实例复用。",
+  "implementation_origin": "newly_migrated",
+  "source_review": "192文件精确可逆改名证明及原证据不变守卫通过；菜单/产品/资源路径/错误域和临时前缀例外已逐文件审阅。保持本地址已有有限契约，新模块build76编译及当前源码摘要绑定；详见reports/replica/pasto-brand-build76.json。不将本轮静态检查称为差分运行或完整父功能等价。",
+  "rename_audit": "reports/replica/pasto-brand-build76.json",
+  "build_snapshot": "reports/replica/concentrated-static-build76.json",
   "original_pseudocode": {
     "path": "decompiled/Paste/part-0308.c",
     "line": 1616
   },
   "original_pseudocode_sha256": "25cc8ea1b4dc6cc95eb45e980bd07485d3f2d18c7f6eef701aa810e8d4ae33e2",
-  "source_sha256": {
-    "replica/Sources/PasteReplica/UI/ReplicaColorPreviewContent.swift": "2d6bd2d25ed3d56897ba22d14ffbcda84f37348cdc15e06a2508fd09dabb7662"
-  },
-  "build_succeeded": true,
-  "build_command": "swift build --package-path replica -c release",
-  "compiled_app_binary_sha256": "24dcfc9f7c9d3a4f249b17158cef4da0282ca222dda0971955810395b885bf7f",
-  "compiled_product": "PasteReplica",
-  "functional_regression_executed": false,
-  "equivalence_verified": false,
-  "implementation_origin": "newly_migrated",
-  "contract": "惰性缓存NSColorPanel.shared；首次取值配置后返回，同一实例复用。",
-  "review": "原REA伪码、指定处arm64汇编/selector静态核对；实际接入共用factory。最终build24统一release通过10.15秒，120输入SHA前后一致；本批绑定当前冻结源码摘要，未运行产品或功能回归，完整父缺口仍保留partial。",
-  "source_review": "已复审本批改动对现有入口的影响；未被替换的恢复函数体/调用契约保持，绑定当前稳定编译。",
-  "regression_policy": "全部范围内代码迁移完成后统一功能回归；本批无功能/单测/原版差分/UI/MCP执行。"
+  "previous_static_evidence": {
+    "revision": "18087b19fab91c1e5ec27e59a36a70eaf5bc05ba",
+    "path": "reports/function-migration/Paste-0x1003e0fe8.json",
+    "sha256": "e7dd407fa04452921c0faa241087fab641f916d704fdc548cc9aab47bfc50a11"
+  }
 }

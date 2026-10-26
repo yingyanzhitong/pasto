@@ -20,10 +20,10 @@ import struct
 
 ARM64 = 0x0100000C
 APPLICATION_ROOT = Path('/Applications/Paste.app')
-TARGET_PRODUCTS = {'Paste': 'PasteReplica', 'Paste-Helper': 'PasteReplicaHelper'}
+TARGET_PRODUCTS = {'Paste': 'Pasto', 'Paste-Helper': 'PastoHelper'}
 PRODUCT_SOURCE_TARGETS = {
-    'PasteReplica': ('PasteReplica', 'PasteReplicaCore', 'PasteReplicaObjC'),
-    'PasteReplicaHelper': ('PasteReplicaHelper',),
+    'Pasto': ('Pasto', 'PastoCore', 'PastoObjC'),
+    'PastoHelper': ('PastoHelper',),
 }
 REPORT_PATH = 'reports/function-migration/sdk-import-reuse.json'
 HEADER = re.compile(r'^/\* Address: (0x[0-9a-f]+) \| .*? \*/$', re.MULTILINE)

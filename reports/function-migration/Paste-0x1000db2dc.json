@@ -2,25 +2,30 @@
   "schema_version": 1,
   "kind": "static_code_migration",
   "function_id": "Paste:0x1000db2dc",
-  "reviewed_at": "2026-10-23T15:16:51.409763+00:00",
+  "reviewed_at": "2026-10-26T09:23:16.520451+00:00",
   "original_binary_sha256": "871f00354fbb1c165d858a98e6d19d6f43cb9d3f9f958b3e07c7f07eb5c19afb",
+  "source_sha256": {
+    "replica/Sources/PastoCore/OriginalInitializedValue.swift": "bde8f2a1c9e4b6c74e9bb332ebff29dcbd3569d2459783a451661ff106d0e1c4"
+  },
+  "build_succeeded": true,
+  "build_command": "bash replica/scripts/build-app.sh",
+  "compiled_app_binary_sha256": "abc3c0ed6ceece4e50ecc84fd174d2bd436794202fce166f7a709e96bbbde006",
+  "compiled_product": "Pasto",
+  "functional_regression_executed": false,
+  "equivalence_verified": false,
+  "contract": "先经必有值getter（未设置按原路径失败），再Swift只读keypath提取member，保持原值和keypath求值语义。",
+  "implementation_origin": "newly_migrated",
+  "source_review": "192文件精确可逆改名证明及原证据不变守卫通过；菜单/产品/资源路径/错误域和临时前缀例外已逐文件审阅。保持本地址已有有限契约，新模块build76编译及当前源码摘要绑定；详见reports/replica/pasto-brand-build76.json。不将本轮静态检查称为差分运行或完整父功能等价。",
+  "rename_audit": "reports/replica/pasto-brand-build76.json",
+  "build_snapshot": "reports/replica/concentrated-static-build76.json",
   "original_pseudocode": {
     "path": "decompiled/Paste/part-0072.c",
     "line": 1052
   },
   "original_pseudocode_sha256": "6dd94b47ff6e4a9d6c861c24e8d964f45a626319dcaf234692458c25314be39f",
-  "source_sha256": {
-    "replica/Sources/PasteReplicaCore/OriginalInitializedValue.swift": "bde8f2a1c9e4b6c74e9bb332ebff29dcbd3569d2459783a451661ff106d0e1c4"
-  },
-  "build_succeeded": true,
-  "build_command": "swift build --package-path replica -c release",
-  "compiled_app_binary_sha256": "24dcfc9f7c9d3a4f249b17158cef4da0282ca222dda0971955810395b885bf7f",
-  "compiled_product": "PasteReplica",
-  "functional_regression_executed": false,
-  "equivalence_verified": false,
-  "implementation_origin": "newly_migrated",
-  "contract": "先经必有值getter（未设置按原路径失败），再Swift只读keypath提取member，保持原值和keypath求值语义。",
-  "review": "完整REA part-0072.c泛型Optional分支/虚表静态审阅；.local/di-initialized-value-messages-wave3.txt核实两后缀字节；OriginalShortcutTelemetry实际配置factory调用，非孤立计数API。析构和编译器分配wrapper未冒称完成。",
-  "source_review": "已复审本批改动对现有入口的影响；未被替换的恢复函数体/调用契约保持，绑定当前稳定编译。",
-  "regression_policy": "全部范围内代码迁移完成后统一功能回归；本批无功能/单测/原版差分/UI/MCP执行。"
+  "previous_static_evidence": {
+    "revision": "18087b19fab91c1e5ec27e59a36a70eaf5bc05ba",
+    "path": "reports/function-migration/Paste-0x1000db2dc.json",
+    "sha256": "7c4ea4003fe4d7dd27b2d108132f6f95bf433fb215571d51a6b3035974b24c5a"
+  }
 }

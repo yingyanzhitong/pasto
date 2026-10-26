@@ -2,22 +2,22 @@
 import PackageDescription
 
 let package = Package(
-    name: "PasteReplica",
+    name: "Pasto",
     defaultLocalization: "en",
     platforms: [.macOS(.v14)],
     products: [
-        .library(name: "PasteReplicaCore", targets: ["PasteReplicaCore"]),
-        .executable(name: "PasteReplica", targets: ["PasteReplica"]),
-        .executable(name: "PasteReplicaHelper", targets: ["PasteReplicaHelper"]),
-        .executable(name: "paste-replica-mcp", targets: ["PasteReplicaMCP"]),
-        .executable(name: "paste-replica-core-tests", targets: ["PasteReplicaCoreTests"])
+        .library(name: "PastoCore", targets: ["PastoCore"]),
+        .executable(name: "Pasto", targets: ["Pasto"]),
+        .executable(name: "PastoHelper", targets: ["PastoHelper"]),
+        .executable(name: "pasto-mcp", targets: ["PastoMCP"]),
+        .executable(name: "pasto-core-tests", targets: ["PastoCoreTests"])
     ],
     targets: [
-        .target(name: "PasteReplicaObjC", publicHeadersPath: "include"),
-        .target(name: "PasteReplicaCore", dependencies: ["PasteReplicaObjC"], resources: [.process("Resources")]),
-        .executableTarget(name: "PasteReplica", dependencies: ["PasteReplicaCore", "PasteReplicaObjC"]),
-        .executableTarget(name: "PasteReplicaHelper"),
-        .executableTarget(name: "PasteReplicaMCP", dependencies: ["PasteReplicaCore"]),
-        .executableTarget(name: "PasteReplicaCoreTests", dependencies: ["PasteReplicaCore"], path: "Tests/PasteReplicaCoreTests")
+        .target(name: "PastoObjC", publicHeadersPath: "include"),
+        .target(name: "PastoCore", dependencies: ["PastoObjC"], resources: [.process("Resources")]),
+        .executableTarget(name: "Pasto", dependencies: ["PastoCore", "PastoObjC"]),
+        .executableTarget(name: "PastoHelper"),
+        .executableTarget(name: "PastoMCP", dependencies: ["PastoCore"]),
+        .executableTarget(name: "PastoCoreTests", dependencies: ["PastoCore"], path: "Tests/PastoCoreTests")
     ]
 )

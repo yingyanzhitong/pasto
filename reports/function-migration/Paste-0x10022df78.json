@@ -2,26 +2,31 @@
   "schema_version": 1,
   "kind": "static_code_migration",
   "function_id": "Paste:0x10022df78",
-  "reviewed_at": "2026-10-26T04:04:59.630232+00:00",
+  "reviewed_at": "2026-10-26T09:23:16.520451+00:00",
   "original_binary_sha256": "871f00354fbb1c165d858a98e6d19d6f43cb9d3f9f958b3e07c7f07eb5c19afb",
+  "source_sha256": {
+    "replica/Sources/PastoCore/OriginalOrderedSelection.swift": "b3631aed0222167f88c16329c76483f807d20af3baaf3a90ab4d214e8d9cb9f8",
+    "replica/Sources/Pasto/UI/ReplicaUIController.swift": "822412f790641b4467627b8ac645874332149975c4ae46b1e5dd54ad71f9700a"
+  },
+  "build_succeeded": true,
+  "build_command": "bash replica/scripts/build-app.sh",
+  "compiled_app_binary_sha256": "abc3c0ed6ceece4e50ecc84fd174d2bd436794202fce166f7a709e96bbbde006",
+  "compiled_product": "Pasto",
+  "functional_regression_executed": false,
+  "equivalence_verified": false,
+  "contract": "有序selectedIndexes、只读itemCount、可空anchor：越界clicked不变；mode0单选并更新anchor；mode1保最后1项、删除后anchor=剩余最后项或追加clicked；其它mode在anchor非nil时按原数组相邻绝对差1分组，保与闭区间不相交的整组，再追加anchor朝clicked定向连续range，不改变anchor。",
+  "implementation_origin": "recovered_complete_value_algorithm_and_actual_consumer",
+  "source_review": "192文件精确可逆改名证明及原证据不变守卫通过；菜单/产品/资源路径/错误域和临时前缀例外已逐文件审阅。保持本地址已有有限契约，新模块build76编译及当前源码摘要绑定；详见reports/replica/pasto-brand-build76.json。不将本轮静态检查称为差分运行或完整父功能等价。",
+  "rename_audit": "reports/replica/pasto-brand-build76.json",
+  "build_snapshot": "reports/replica/concentrated-static-build76.json",
   "original_pseudocode": {
     "path": "decompiled/Paste/part-0190.c",
     "line": 1434
   },
   "original_pseudocode_sha256": "a23baf096ca61bb47cff4cb1b42f750293cfedfd2b0c0704d754988b7aac4bed",
-  "source_sha256": {
-    "replica/Sources/PasteReplicaCore/OriginalOrderedSelection.swift": "b3631aed0222167f88c16329c76483f807d20af3baaf3a90ab4d214e8d9cb9f8",
-    "replica/Sources/PasteReplica/UI/ReplicaUIController.swift": "83ab337c6b97ff23106275d30103fc377772d6c9708f633e3961a3b3af33e3b4"
-  },
-  "build_succeeded": true,
-  "build_command": "swift build --package-path replica -c release",
-  "compiled_app_binary_sha256": "1b5034720960b07cc375bf9d36b3fa5f7bbc2339b6bd68a37f34057c9a566763",
-  "compiled_product": "PasteReplica",
-  "functional_regression_executed": false,
-  "equivalence_verified": false,
-  "implementation_origin": "recovered_complete_value_algorithm_and_actual_consumer",
-  "contract": "有序selectedIndexes、只读itemCount、可空anchor：越界clicked不变；mode0单选并更新anchor；mode1保最后1项、删除后anchor=剩余最后项或追加clicked；其它mode在anchor非nil时按原数组相邻绝对差1分组，保与闭区间不相交的整组，再追加anchor朝clicked定向连续range，不改变anchor。",
-  "review": "完整原有限体、实际分组/disjoint/reverse/append辅助链及独立peer均静态核对；当前helper覆盖完整值合同并由真实鼠标/键盘入口消费。build51通过且161输入摘要一致；不冒原整个CollectionView、原生事件或运行ABI等价。",
-  "regression_policy": "全部范围内迁移完成后统一功能回归；本轮不运行产品或测试。",
-  "source_review": "只修copy/paste派发、回调结果及postwrite关闭；此记录列明的Core实现和实际消费者未改：有序selectedIndexes、只读itemCount、可空anchor：越界clicked不变；mode0单选并更新anchor；mode1保最后1项、删除后anchor=剩余最后项或追加clicked；其它mode在anchor非nil时按原数组相邻绝对差1分组，保与闭区间不相交的整组，再追加anchor朝clicked定向连续range，不改变anchor。 build71已通过、源码/生成/产物摘要再核；此为有限旧合同重绑，不宣称完整copy/directpaste/窗口父等价，新增完整0。"
+  "previous_static_evidence": {
+    "revision": "18087b19fab91c1e5ec27e59a36a70eaf5bc05ba",
+    "path": "reports/function-migration/Paste-0x10022df78.json",
+    "sha256": "469bb0c77788ea943436b9ae6ba629848c943c26b941f47727de12c8792aa6d0"
+  }
 }

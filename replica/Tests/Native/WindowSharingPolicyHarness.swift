@@ -1,6 +1,6 @@
 import AppKit
 import Foundation
-import PasteReplicaCore
+import PastoCore
 
 @main
 struct WindowSharingPolicyHarness {

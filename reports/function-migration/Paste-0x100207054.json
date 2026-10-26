@@ -2,25 +2,30 @@
   "schema_version": 1,
   "kind": "static_code_migration",
   "function_id": "Paste:0x100207054",
-  "reviewed_at": "2026-10-23T15:16:51.791154+00:00",
+  "reviewed_at": "2026-10-26T09:23:16.520451+00:00",
   "original_binary_sha256": "871f00354fbb1c165d858a98e6d19d6f43cb9d3f9f958b3e07c7f07eb5c19afb",
+  "source_sha256": {
+    "replica/Sources/Pasto/UI/ReplicaImagePreviewContent.swift": "4ad25fb43ae663e0806b8d16f06c973c2ff480e2388589f2f1dc3ee6bf2dad37"
+  },
+  "build_succeeded": true,
+  "build_command": "bash replica/scripts/build-app.sh",
+  "compiled_app_binary_sha256": "abc3c0ed6ceece4e50ecc84fd174d2bd436794202fce166f7a709e96bbbde006",
+  "compiled_product": "Pasto",
+  "functional_regression_executed": false,
+  "equivalence_verified": false,
+  "contract": "角度×pi/180；读取原size作为draw源rect；创建始终width=原height、height=原width的NSImage，lockFocus；可选current context插值raw3；以新画布中心平移、旋转、原size负中心平移的CTM绘制原图，copy/fraction1；unlockFocus返回新图。",
+  "implementation_origin": "newly_migrated",
+  "source_review": "192文件精确可逆改名证明及原证据不变守卫通过；菜单/产品/资源路径/错误域和临时前缀例外已逐文件审阅。保持本地址已有有限契约，新模块build76编译及当前源码摘要绑定；详见reports/replica/pasto-brand-build76.json。不将本轮静态检查称为差分运行或完整父功能等价。",
+  "rename_audit": "reports/replica/pasto-brand-build76.json",
+  "build_snapshot": "reports/replica/concentrated-static-build76.json",
   "original_pseudocode": {
     "path": "decompiled/Paste/part-0171.c",
     "line": 6
   },
   "original_pseudocode_sha256": "e13004cc54475a65795748e9926ec55192bc05ab1c8fb69c629096066e05ee79",
-  "source_sha256": {
-    "replica/Sources/PasteReplica/UI/ReplicaImagePreviewContent.swift": "4b724f56be5d402049e2f4664e306886501f61ee29ba2e68573bc390e1baa8e2"
-  },
-  "build_succeeded": true,
-  "build_command": "swift build --package-path replica -c release",
-  "compiled_app_binary_sha256": "24dcfc9f7c9d3a4f249b17158cef4da0282ca222dda0971955810395b885bf7f",
-  "compiled_product": "PasteReplica",
-  "functional_regression_executed": false,
-  "equivalence_verified": false,
-  "implementation_origin": "newly_migrated",
-  "contract": "角度×pi/180；读取原size作为draw源rect；创建始终width=原height、height=原width的NSImage，lockFocus；可选current context插值raw3；以新画布中心平移、旋转、原size负中心平移的CTM绘制原图，copy/fraction1；unlockFocus返回新图。",
-  "review": "part0171及207054..20729c汇编逐支核清，原代码没有角度条件。2070d4/0d8传入height,width；207240..260 fromRect原size，op1=.copy；复用AppKit绘图真实由rotateDisplayedImage调用。 本机CoreGraphics.swiftinterface725-726证明init(translationX:y:)调用MakeTranslation；741-742证明translatedBy调用CGAffineTransformTranslate。已改identity.translatedBy，严格复用原Translate(identity,newCenter)→Rotate→Translate primitive顺序，保留signed-zero/非有限分支。",
-  "source_review": "已复审本批改动对现有入口的影响；未被替换的恢复函数体/调用契约保持，绑定当前稳定编译。",
-  "regression_policy": "全部范围内代码迁移完成后统一功能回归；本批无功能/单测/原版差分/UI/MCP执行。"
+  "previous_static_evidence": {
+    "revision": "18087b19fab91c1e5ec27e59a36a70eaf5bc05ba",
+    "path": "reports/function-migration/Paste-0x100207054.json",
+    "sha256": "d980dad11d8a5be54ad085500ac7b37a758ad8f682147f55fd161d542838586a"
+  }
 }

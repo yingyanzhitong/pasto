@@ -2,26 +2,30 @@
   "schema_version": 1,
   "kind": "static_code_migration",
   "function_id": "Paste-Helper:0x100003314",
-  "reviewed_at": "2026-10-26T03:54:27.502058+00:00",
+  "reviewed_at": "2026-10-26T09:23:16.520451+00:00",
   "original_binary_sha256": "fb580e708dc53433f1f2efc7b2d49811361e174cbc752ce351cdf5871977638f",
+  "source_sha256": {
+    "replica/Sources/PastoHelper/HelperMain.swift": "60d98b18e87390fcc6c8de6a43b75d9505bfd74b822eb9e0fc6dc58bbfd47e12"
+  },
+  "build_succeeded": true,
+  "build_command": "bash replica/scripts/build-app.sh",
+  "compiled_app_binary_sha256": "c8b9aa18ac4d60af5f6b54c405a70b6aec2e43d2c98735b3f3369f732f2d8b0f",
+  "compiled_product": "PastoHelper",
+  "functional_regression_executed": false,
+  "equivalence_verified": false,
+  "contract": "三秒等待后弱捕获 Delegate 存活时重新检查主 App 进程；未运行则异步启动并处理结果，已运行则记录并返回；已运行分支不复位 isLaunching，也不再次读取共享运行标志。",
+  "implementation_origin": "newly_migrated",
+  "source_review": "192文件精确可逆改名证明及原证据不变守卫通过；菜单/产品/资源路径/错误域和临时前缀例外已逐文件审阅。保持本地址已有有限契约，新模块build76编译及当前源码摘要绑定；详见reports/replica/pasto-brand-build76.json。不将本轮静态检查称为差分运行或完整父功能等价。",
+  "rename_audit": "reports/replica/pasto-brand-build76.json",
+  "build_snapshot": "reports/replica/concentrated-static-build76.json",
   "original_pseudocode": {
     "path": "decompiled/Paste-Helper/part-0000.c",
     "line": 1276
   },
   "original_pseudocode_sha256": "b68d3276d13c7bac869af5518f78205887ab68af4b78843c98b9912d23b004d5",
-  "source_sha256": {
-    "replica/Sources/PasteReplicaHelper/HelperMain.swift": "60d98b18e87390fcc6c8de6a43b75d9505bfd74b822eb9e0fc6dc58bbfd47e12"
-  },
-  "build_succeeded": true,
-  "build_command": "swift build --package-path replica -c release",
-  "compiled_app_binary_sha256": "e0aa4659e71de02027c371cf5830c6804ed7cdb74fc9ebea0e62d84e70a01627",
-  "compiled_product": "PasteReplicaHelper",
-  "functional_regression_executed": false,
-  "equivalence_verified": false,
-  "implementation_origin": "newly_migrated",
-  "contract": "三秒等待后弱捕获 Delegate 存活时重新检查主 App 进程；未运行则异步启动并处理结果，已运行则记录并返回；已运行分支不复位 isLaunching，也不再次读取共享运行标志。",
-  "review": "decompiled/Paste-Helper/part-0000.c:1195 / 1274 起。两个 continuation 分别来自 sleep 成功/失败；恢复逻辑相同。原版已运行分支没有 isLaunching = false，已按原始分支保留；没有自行改写为改进后的恢复逻辑。 最终复审保留原版固定日志文字 Paste is already running；sleep 成功/错误共用同一后续函数，弱对象为空则不触发状态修改。",
-  "source_review": "Helper整文件仅两处主应用名称路径字串更改，其他函数的日志、状态键、进程匹配、计时/重试、weak/MainActor及completion分支均逐字未变。 原有限合同：三秒等待后弱捕获 Delegate 存活时重新检查主 App 进程；未运行则异步启动并处理结果，已运行则记录并返回；已运行分支不复位 isLaunching，也不再次读取共享运行标志。 build70编译通过；无新增完整计数，未运行功能/UI/MCP回归。",
-  "regression_policy": "全部范围内代码迁移完成后统一功能回归；本批无功能/单测/原版差分/UI/MCP执行。",
-  "static_review_risk": "sleep 抛错时仍执行与成功相同的进程检查；与 try? 共用实现，不默认退出。"
+  "previous_static_evidence": {
+    "revision": "18087b19fab91c1e5ec27e59a36a70eaf5bc05ba",
+    "path": "reports/function-migration/Paste-Helper-0x100003314.json",
+    "sha256": "e8beb20f5de0917aa2e3c3f9aba1e80cf7191f3d41fb590bc636af011f7d9431"
+  }
 }

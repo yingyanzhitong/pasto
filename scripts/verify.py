@@ -91,6 +91,11 @@ def main():
     ).decode().split("\0")
     files = [ROOT / name for name in sorted(set(names)) if name and (ROOT / name).is_file()]
     issues = []
+    binary_assets = {
+        "replica/Assets/PastoIcon.png": b"\x89PNG\r\n\x1a\n",
+        "replica/Assets/Pasto.icns": b"icns",
+    }
+    binary_count = 0
     for path in files:
         if path.name == ".DS_Store":
             continue
@@ -98,11 +103,19 @@ def main():
             issues.append(str(path.relative_to(ROOT)) + ": 不允许公开符号链接")
             continue
         data = path.read_bytes()
-        try:
-            text = data.decode("utf-8")
-        except UnicodeDecodeError:
-            issues.append(str(path.relative_to(ROOT)) + ": 非文本文件")
-            continue
+        asset_header = binary_assets.get(str(path.relative_to(ROOT)))
+        if asset_header is not None:
+            require(data.startswith(asset_header), str(path.relative_to(ROOT)) + ": 图标格式不符")
+            if asset_header == b"icns":
+                require(len(data) >= 8 and int.from_bytes(data[4:8], "big") == len(data), "ICNS 长度不符")
+            text = data.decode("latin-1")
+            binary_count += 1
+        else:
+            try:
+                text = data.decode("utf-8")
+            except UnicodeDecodeError:
+                issues.append(str(path.relative_to(ROOT)) + ": 非文本文件")
+                continue
         if any(re.search(pattern, text) for pattern in patterns) or any(s in text for s in secrets):
             issues.append(str(path.relative_to(ROOT)) + ": 疑似凭据")
     if issues:
@@ -113,7 +126,7 @@ def main():
     if (ROOT / "reports/function-implementation/summary.json").exists():
         function_ledger = json.loads(subprocess.check_output(
             [sys.executable, str(ROOT / "scripts/function_ledger.py"), "--check"], cwd=ROOT, text=True))
-    print(json.dumps({"verified": True, "public_text_files": len(files),
+    print(json.dumps({"verified": True, "public_text_files": len(files) - binary_count, "public_binary_assets": binary_count,
                       "known_secret_values_checked": len(secrets), "targets": totals,
                       "function_implementation_ledger": function_ledger}, indent=2))
 

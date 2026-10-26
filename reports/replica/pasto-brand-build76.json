@@ -1,0 +1,2430 @@
+{
+  "version": "0.8.0-dev.46",
+  "date": "2026-10-26",
+  "base_revision": "18087b19fab91c1e5ec27e59a36a70eaf5bc05ba",
+  "scope": "Pasto品牌命名、移除帮助/Twitter和新软件图标",
+  "build_snapshot": "reports/replica/concentrated-static-build76.json",
+  "exact_file_derivations": [
+    {
+      "old_path": "replica/Sources/PasteReplica/AppMain.swift",
+      "new_path": "replica/Sources/Pasto/AppMain.swift",
+      "before_sha256": "392949a3cbdb4cb85a3e27cde54a6290aac5bee4db9f72f4101368ccb80eb88c",
+      "after_sha256": "4a5c879fa5f9a457dea20719cdeb050d7280c101170ed6a64e33d85e7bcf7e3a",
+      "classification": "root_approved_nonlexical_or_compatibility_change_requires_contract_review",
+      "changes": [
+        {
+          "old": "PasteReplicaCore",
+          "new": "PastoCore",
+          "count": 1
+        },
+        {
+          "old": "PasteReplica",
+          "new": "Pasto",
+          "count": 4
+        },
+        {
+          "old": "            } else if arguments.contains(\"--fixture\") {\n                pasteboard = NSPasteboard(name: .init(\"paste-replica-fixture-\\(UUID().uuidString)\"))\n            }\n",
+          "new": "            } else if arguments.contains(\"--fixture\") {\n                pasteboard = NSPasteboard(name: .init(\"pasto-fixture-\\(UUID().uuidString)\"))\n            }\n",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "old_path": "replica/Sources/PasteReplica/BackgroundService.swift",
+      "new_path": "replica/Sources/Pasto/BackgroundService.swift",
+      "before_sha256": "a117f0cd7e8742e0bedd7c3cf52935bc343db072d8beae4f4ee7437e58ed63e7",
+      "after_sha256": "882176450c8acb852a8573f3ec3a953974ad3198df286ea4da8288835af7faa5",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": [
+        {
+          "old": "PasteReplicaCore",
+          "new": "PastoCore",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "old_path": "replica/Sources/PasteReplica/GlobalHotKey.swift",
+      "new_path": "replica/Sources/Pasto/GlobalHotKey.swift",
+      "before_sha256": "e77cd9617f7a93b41f4c87c25f347f66e356583ea02530b2970d2c2f7b1314fc",
+      "after_sha256": "4aa739f4ee733ce477b1b3c3b3754b2111299ef09be4339b0f4e629738f9acfb",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": [
+        {
+          "old": "PasteReplicaCore",
+          "new": "PastoCore",
+          "count": 3
+        }
+      ]
+    },
+    {
+      "old_path": "replica/Sources/PasteReplica/SourceAppColor.swift",
+      "new_path": "replica/Sources/Pasto/SourceAppColor.swift",
+      "before_sha256": "2759fa7ff01375e4a10281575457d239713444d334291fefef604e81b3f7eccb",
+      "after_sha256": "fc9c6a1b5dd5aec1998fa9a5b3149f7b8f7055b472473a80902bd9e546e89a74",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": [
+        {
+          "old": "PasteReplicaCore",
+          "new": "PastoCore",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "old_path": "replica/Sources/PasteReplica/UI/AuxiliaryViews.swift",
+      "new_path": "replica/Sources/Pasto/UI/AuxiliaryViews.swift",
+      "before_sha256": "e2a11de77f3e8b90bb68c87cfbe966273ceed761a9446c8ce214cfec126927af",
+      "after_sha256": "ec9b23b2cc595e8baed849fb74aa37c7e05ec74ff338547b1aa8e10a4ea4537d",
+      "classification": "root_approved_nonlexical_or_compatibility_change_requires_contract_review",
+      "changes": [
+        {
+          "old": "PasteReplicaCore",
+          "new": "PastoCore",
+          "count": 3
+        },
+        {
+          "old": "paste-replica-mcp",
+          "new": "pasto-mcp",
+          "count": 1
+        },
+        {
+          "old": "    private var mcpConfiguration: String {\n        let object: [String: Any] = [\"mcpServers\": [\"paste-replica\": [\n            \"command\": mcpExecutable.path, \"args\": [\"--data-dir\", state.store.directoryURL.path]\n",
+          "new": "    private var mcpConfiguration: String {\n        let object: [String: Any] = [\"mcpServers\": [\"pasto\": [\n            \"command\": mcpExecutable.path, \"args\": [\"--data-dir\", state.store.directoryURL.path]\n",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "old_path": "replica/Sources/PasteReplica/UI/FilterBrowser.swift",
+      "new_path": "replica/Sources/Pasto/UI/FilterBrowser.swift",
+      "before_sha256": "5b2f8cfbb48eb59e4be7a04a90b8d57809c2de9a316d77e76a6c41e44f500af2",
+      "after_sha256": "8c075875b5bd64a16a0925c93aebebf70407ac7c9b88d544643393934aa29473",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": [
+        {
+          "old": "PasteReplicaCore",
+          "new": "PastoCore",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "old_path": "replica/Sources/PasteReplica/UI/OriginalAccessibilityModals.swift",
+      "new_path": "replica/Sources/Pasto/UI/OriginalAccessibilityModals.swift",
+      "before_sha256": "e8d95210a6fd30bd203ec43e60ad0741e8559135fa27cc49a07c8c2bcc5fb447",
+      "after_sha256": "487740ec4f16e38e4c175eec49445273fb13d07c9e71f2669a68266fbd906d86",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": [
+        {
+          "old": "PasteReplicaCore",
+          "new": "PastoCore",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "old_path": "replica/Sources/PasteReplica/UI/OriginalAccessibilityRequestAction.swift",
+      "new_path": "replica/Sources/Pasto/UI/OriginalAccessibilityRequestAction.swift",
+      "before_sha256": "22fbc993dae45d453bb2c6586a7823b3c633b2a22446c824cb75256b1e011ed0",
+      "after_sha256": "22fbc993dae45d453bb2c6586a7823b3c633b2a22446c824cb75256b1e011ed0",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplica/UI/OriginalAdaptiveScalingImageView.swift",
+      "new_path": "replica/Sources/Pasto/UI/OriginalAdaptiveScalingImageView.swift",
+      "before_sha256": "0002845178a53c2617885f40fcfad92f679c1123a095340aa1037450914730d6",
+      "after_sha256": "0002845178a53c2617885f40fcfad92f679c1123a095340aa1037450914730d6",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplica/UI/OriginalCardShortcutIndicator.swift",
+      "new_path": "replica/Sources/Pasto/UI/OriginalCardShortcutIndicator.swift",
+      "before_sha256": "afb57a85fae9ab133a3e41ac53b7e6414442bfb18ac02c54882c312574c7ba15",
+      "after_sha256": "afb30541523231c5438a4a357d607d87aa67a0babd7ecd1fa839b204e08ff620",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": [
+        {
+          "old": "PasteReplicaCore",
+          "new": "PastoCore",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "old_path": "replica/Sources/PasteReplica/UI/OriginalCompactTextContent.swift",
+      "new_path": "replica/Sources/Pasto/UI/OriginalCompactTextContent.swift",
+      "before_sha256": "d3a103d45be2baeb86b650e9f821282f0b9df5719adc3bbdd64f8cd059695d19",
+      "after_sha256": "3f0e9a48a84507ddadbcf2c4c3fee02e166c5aee98ca0b6763286d22dc96a1d6",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": [
+        {
+          "old": "PasteReplicaCore",
+          "new": "PastoCore",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "old_path": "replica/Sources/PasteReplica/UI/OriginalCompactTextFooter.swift",
+      "new_path": "replica/Sources/Pasto/UI/OriginalCompactTextFooter.swift",
+      "before_sha256": "354bb3da875cf760e956b2251271b4f634f47e8a25b597caae501ca83172bc33",
+      "after_sha256": "cd31a6dd52715f0f376365665dabba599bd190358ba6b9d23d4f6d0b4c284d2b",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": [
+        {
+          "old": "PasteReplicaCore",
+          "new": "PastoCore",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "old_path": "replica/Sources/PasteReplica/UI/OriginalHeadTruncatedLabel.swift",
+      "new_path": "replica/Sources/Pasto/UI/OriginalHeadTruncatedLabel.swift",
+      "before_sha256": "ae8ac54e38c5a7b03d9f99d8afef169c5be0e41f29bec5faefa3d99bce5df160",
+      "after_sha256": "21e50f214bdcad8b0b40f1c84c80ffa702b1f0ab12ca0d837807089d4ca83843",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": [
+        {
+          "old": "PasteReplicaCore",
+          "new": "PastoCore",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "old_path": "replica/Sources/PasteReplica/UI/OriginalImageCheckerboardView.swift",
+      "new_path": "replica/Sources/Pasto/UI/OriginalImageCheckerboardView.swift",
+      "before_sha256": "33688d7bc85daf8236ba92017cee0828157202fc46f7c8be8e7f2663588bc51d",
+      "after_sha256": "956e55f5c723f031c762c58571098682af9a07055a4ded76af2be684941dd68e",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": [
+        {
+          "old": "PasteReplicaCore",
+          "new": "PastoCore",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "old_path": "replica/Sources/PasteReplica/UI/OriginalImageTextSelection.swift",
+      "new_path": "replica/Sources/Pasto/UI/OriginalImageTextSelection.swift",
+      "before_sha256": "0a85e22ff3ccde5a6601fad92286b616c399a88263b14af587eca0d2e3dcc74e",
+      "after_sha256": "930ceb4220aaba298f30eac0642bbcdebfab4d143390be8edd9d903515e1f21d",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": [
+        {
+          "old": "PasteReplicaCore",
+          "new": "PastoCore",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "old_path": "replica/Sources/PasteReplica/UI/OriginalLinkPreviewViewport.swift",
+      "new_path": "replica/Sources/Pasto/UI/OriginalLinkPreviewViewport.swift",
+      "before_sha256": "3f6bb0c25400a4a18a8b0ea0b484c3587f9b7d85fcb0707ae6364cdd943e9642",
+      "after_sha256": "b4df9cc96a0a5fc4aa881bb3785b18df24c96b6cf989a60c7ac9223af72bf7bd",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": [
+        {
+          "old": "PasteReplicaCore",
+          "new": "PastoCore",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "old_path": "replica/Sources/PasteReplica/UI/OriginalPinboardHeaderIcon.swift",
+      "new_path": "replica/Sources/Pasto/UI/OriginalPinboardHeaderIcon.swift",
+      "before_sha256": "c5aad86b7285c39fd31757919e9cf8d3cc5a29fae201a150132735c193a0c2db",
+      "after_sha256": "c5aad86b7285c39fd31757919e9cf8d3cc5a29fae201a150132735c193a0c2db",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplica/UI/OriginalReplicaPreviewAdapter.swift",
+      "new_path": "replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift",
+      "before_sha256": "7001263f00b2e981c1b93f3c9598b742a1279366d4ae7130237603feee3dd0f7",
+      "after_sha256": "82dbb3a6e43972531fc5a2859d90f87cde481e430571967fafdc1d8278d408d5",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": [
+        {
+          "old": "PasteReplicaCore",
+          "new": "PastoCore",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "old_path": "replica/Sources/PasteReplica/UI/OriginalUnavailableCompactContent.swift",
+      "new_path": "replica/Sources/Pasto/UI/OriginalUnavailableCompactContent.swift",
+      "before_sha256": "d8eaf61ff4a66f3d00ba2a345eca565d48aa290708cf313c855ffe7ea1080610",
+      "after_sha256": "aa3a350b3aa3559b9e78db3eb5547a90b4ab73a5abf92e8763ac7340f5706d50",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": [
+        {
+          "old": "PasteReplicaCore",
+          "new": "PastoCore",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "old_path": "replica/Sources/PasteReplica/UI/OriginalUnavailablePreviewContent.swift",
+      "new_path": "replica/Sources/Pasto/UI/OriginalUnavailablePreviewContent.swift",
+      "before_sha256": "21a00de6c6215d5a37836483c9a673822ec835f20f7eb6c081bc91ae6fc402a5",
+      "after_sha256": "2e1dd8473f7b0aa146ee780fb03defb4729a6a87677031da00e50b31bae08afb",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": [
+        {
+          "old": "PasteReplicaCore",
+          "new": "PastoCore",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "old_path": "replica/Sources/PasteReplica/UI/PanelViews.swift",
+      "new_path": "replica/Sources/Pasto/UI/PanelViews.swift",
+      "before_sha256": "69407303d7c0e31095954300fd69305a36679b87072532c6881c509b77e9c088",
+      "after_sha256": "b22b084825c21e5f0c380970c427f868751f644314fd0796b18895f1402a6c56",
+      "classification": "root_approved_nonlexical_or_compatibility_change_requires_contract_review",
+      "changes": [
+        {
+          "old": "PasteReplicaCore",
+          "new": "PastoCore",
+          "count": 1
+        },
+        {
+          "old": "                .keyboardShortcut(\",\", modifiers: .command)\n                Divider()\n                Menu {\n                    Button {\n                        if let url = URL(string: \"https://pasteapp.io/help\") { NSWorkspace.shared.open(url) }\n                    } label: { Text(\"帮助中心\") }\n                } label: { Label(\"帮助\", systemImage: \"questionmark.circle\") }\n                Button {\n                    var components = URLComponents(string: \"https://twitter.com/intent/tweet\")\n                    components?.queryItems = [URLQueryItem(name: \"text\", value: \"Pasto\")]\n                    if let url = components?.url { NSWorkspace.shared.open(url) }\n                } label: { Label(\"在 Twitter 上粘贴\", systemImage: \"at\") }\n                Divider()\n",
+          "new": "                .keyboardShortcut(\",\", modifiers: .command)\n                Divider()\n",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "old_path": "replica/Sources/PasteReplica/UI/PreviewAnchor.swift",
+      "new_path": "replica/Sources/Pasto/UI/PreviewAnchor.swift",
+      "before_sha256": "aa621221c95e877131ce3f53723be87730091482eeac479ec109daf66adaf923",
+      "after_sha256": "aa621221c95e877131ce3f53723be87730091482eeac479ec109daf66adaf923",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplica/UI/ReplicaBrand.swift",
+      "new_path": "replica/Sources/Pasto/UI/ReplicaBrand.swift",
+      "before_sha256": "17757bf65cc45d46160089c7f4379471045ee0209c517a7337d3ef8fcf55de23",
+      "after_sha256": "17757bf65cc45d46160089c7f4379471045ee0209c517a7337d3ef8fcf55de23",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplica/UI/ReplicaCanonicalCardContent.swift",
+      "new_path": "replica/Sources/Pasto/UI/ReplicaCanonicalCardContent.swift",
+      "before_sha256": "ae15319786af4a6becda29a55e849ddda42fe38e5a9de525900b57e182f0e24d",
+      "after_sha256": "77f4c7cde1b6d5241f65a0a8041a9e38b240dfab7847394bb0c7e30b0a45e7e3",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": [
+        {
+          "old": "PasteReplicaCore",
+          "new": "PastoCore",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "old_path": "replica/Sources/PasteReplica/UI/ReplicaCardContextSelection.swift",
+      "new_path": "replica/Sources/Pasto/UI/ReplicaCardContextSelection.swift",
+      "before_sha256": "2a5b9aac7f579d6466a8f0c6feff24095609873c348ef99444f95f23aeb7615f",
+      "after_sha256": "2a5b9aac7f579d6466a8f0c6feff24095609873c348ef99444f95f23aeb7615f",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplica/UI/ReplicaColorPreviewContent.swift",
+      "new_path": "replica/Sources/Pasto/UI/ReplicaColorPreviewContent.swift",
+      "before_sha256": "2d6bd2d25ed3d56897ba22d14ffbcda84f37348cdc15e06a2508fd09dabb7662",
+      "after_sha256": "ad43bd0e40c0193ce221f27464fdcc864ae422d3e58a381051b646889255e85c",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": [
+        {
+          "old": "PasteReplicaCore",
+          "new": "PastoCore",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "old_path": "replica/Sources/PasteReplica/UI/ReplicaCopiedOSD.swift",
+      "new_path": "replica/Sources/Pasto/UI/ReplicaCopiedOSD.swift",
+      "before_sha256": "1900b2c3e23c1375502e8657701418d6ace46506df683e45d4d4c7cdad2e194c",
+      "after_sha256": "d1b58b05ef6c37302cf6d6c1e0056ee0af55035422071d4c53ebe1583c84883d",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": [
+        {
+          "old": "PasteReplicaCore",
+          "new": "PastoCore",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "old_path": "replica/Sources/PasteReplica/UI/ReplicaFileCardImage.swift",
+      "new_path": "replica/Sources/Pasto/UI/ReplicaFileCardImage.swift",
+      "before_sha256": "92b5d106ab7f48bb8d9dddaa29fdc279ef09b4a02e34448879d34738f440bbd4",
+      "after_sha256": "92b5d106ab7f48bb8d9dddaa29fdc279ef09b4a02e34448879d34738f440bbd4",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplica/UI/ReplicaFilePreviewContent.swift",
+      "new_path": "replica/Sources/Pasto/UI/ReplicaFilePreviewContent.swift",
+      "before_sha256": "e2bd5375e67f5e326d371bf4c07944358d2a47098469a078d8fd086925c2e5ec",
+      "after_sha256": "5377ce50fd4936a8b5d533827611028005a4ef1d675ce3e8ed1c33f40fe6ffc8",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": [
+        {
+          "old": "PasteReplicaCore",
+          "new": "PastoCore",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "old_path": "replica/Sources/PasteReplica/UI/ReplicaImagePreviewContent.swift",
+      "new_path": "replica/Sources/Pasto/UI/ReplicaImagePreviewContent.swift",
+      "before_sha256": "4b724f56be5d402049e2f4664e306886501f61ee29ba2e68573bc390e1baa8e2",
+      "after_sha256": "4ad25fb43ae663e0806b8d16f06c973c2ff480e2388589f2f1dc3ee6bf2dad37",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": [
+        {
+          "old": "PasteReplicaCore",
+          "new": "PastoCore",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "old_path": "replica/Sources/PasteReplica/UI/ReplicaLinkMetadataContent.swift",
+      "new_path": "replica/Sources/Pasto/UI/ReplicaLinkMetadataContent.swift",
+      "before_sha256": "813a7d310752cf453c34aede27c56dc44f1d8cbccd611128277cfc2f96084784",
+      "after_sha256": "0a47517556c1c338b3035815126f000cff8e49b32d3e42f3bd80221acb9af21c",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": [
+        {
+          "old": "PasteReplicaCore",
+          "new": "PastoCore",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "old_path": "replica/Sources/PasteReplica/UI/ReplicaLinkPreviewContent.swift",
+      "new_path": "replica/Sources/Pasto/UI/ReplicaLinkPreviewContent.swift",
+      "before_sha256": "1d9ad12dc1f5b46c40b8ee4f06ab8362693d22e0d099625cde7209f0bd62db37",
+      "after_sha256": "075062ace9ce70c3d7b51aa029629697697d1fdf9b03ecad473ffa6a9f4e04cf",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": [
+        {
+          "old": "PasteReplicaCore",
+          "new": "PastoCore",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "old_path": "replica/Sources/PasteReplica/UI/ReplicaNativeCardCollection.swift",
+      "new_path": "replica/Sources/Pasto/UI/ReplicaNativeCardCollection.swift",
+      "before_sha256": "1d29490561572d9491cbae31598b80d3eff7a54642b8ace81ed3fb6d4ac543f1",
+      "after_sha256": "ef548843a77b2f8d03ccb4ebf9dd0ba1563c4c26674f7232a77dc57e07f91c55",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": [
+        {
+          "old": "PasteReplicaCore",
+          "new": "PastoCore",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "old_path": "replica/Sources/PasteReplica/UI/ReplicaNativeDragPreview.swift",
+      "new_path": "replica/Sources/Pasto/UI/ReplicaNativeDragPreview.swift",
+      "before_sha256": "0e5adbd506e11dee134c1e059adf4f3c7b27fd7e3cd7379be3c87bdc1fb391b7",
+      "after_sha256": "0e5adbd506e11dee134c1e059adf4f3c7b27fd7e3cd7379be3c87bdc1fb391b7",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplica/UI/ReplicaPanelContentView.swift",
+      "new_path": "replica/Sources/Pasto/UI/ReplicaPanelContentView.swift",
+      "before_sha256": "9ecc072f1f5324e922d9e44e1027c3756b0bc17216fb2c5e74b6ffbc598b96e2",
+      "after_sha256": "9ecc072f1f5324e922d9e44e1027c3756b0bc17216fb2c5e74b6ffbc598b96e2",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplica/UI/ReplicaPanelGlassBackground.swift",
+      "new_path": "replica/Sources/Pasto/UI/ReplicaPanelGlassBackground.swift",
+      "before_sha256": "f89484407bf8248a47e242ae8de08954ce865ff71fd11f226c873c2a7329bc93",
+      "after_sha256": "95b52f8030c95838d208905d2737b6deea301a6103080143ccf017f5a2ef43d2",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": [
+        {
+          "old": "PasteReplicaObjC",
+          "new": "PastoObjC",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "old_path": "replica/Sources/PasteReplica/UI/ReplicaPanelResizeHandle.swift",
+      "new_path": "replica/Sources/Pasto/UI/ReplicaPanelResizeHandle.swift",
+      "before_sha256": "f0461fe70bbcb486c89ef24d7d2d119b051cd5bbfb34279df06f72636f6bcbbe",
+      "after_sha256": "f0461fe70bbcb486c89ef24d7d2d119b051cd5bbfb34279df06f72636f6bcbbe",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplica/UI/ReplicaReadOnlyPreviewContent.swift",
+      "new_path": "replica/Sources/Pasto/UI/ReplicaReadOnlyPreviewContent.swift",
+      "before_sha256": "75c71b7c823ac6dfe3e59a033db183419afd55dca88b37941f4a35eb9021d36b",
+      "after_sha256": "ab74f0bb2754e477c3fc6a7a4f6bd5279b64f39a5f58fe9efb1694b0fe4da20c",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": [
+        {
+          "old": "PasteReplicaCore",
+          "new": "PastoCore",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "old_path": "replica/Sources/PasteReplica/UI/ReplicaSearchIndex.swift",
+      "new_path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+      "before_sha256": "e78958178276341efacbc2a1d240fbef049827fa836337e0ef1584cfa9dc5695",
+      "after_sha256": "bd3a1fd0e075f37fea4cfdec3b3e60980ceadc88248bd013d7c0e45f02b509fa",
+      "classification": "root_approved_nonlexical_or_compatibility_change_requires_contract_review",
+      "changes": [
+        {
+          "old": "PasteReplicaCore",
+          "new": "PastoCore",
+          "count": 1
+        },
+        {
+          "old": "PasteReplica",
+          "new": "Pasto",
+          "count": 1
+        },
+        {
+          "old": "        let hash = SHA256.hash(data: Data(directoryURL.standardizedFileURL.path.utf8))\n        domain = \"Pasto.\" + hash.map { String(format: \"%02x\", $0) }.joined()\n        index = CSSearchableIndex(name: domain)\n",
+          "new": "        let hash = SHA256.hash(data: Data(directoryURL.standardizedFileURL.path.utf8))\n        domain = \"PasteReplica.\" + hash.map { String(format: \"%02x\", $0) }.joined()\n        index = CSSearchableIndex(name: domain)\n",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "old_path": "replica/Sources/PasteReplica/UI/ReplicaSearchSuggestionSource.swift",
+      "new_path": "replica/Sources/Pasto/UI/ReplicaSearchSuggestionSource.swift",
+      "before_sha256": "3b8891d82227ab85f16852880b76bdb392be1f223e846d6fdbd06ded25dab24b",
+      "after_sha256": "12f29389631911a98c4a136758e1f268fd9639ba863088404b216ed48d3fddf2",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": [
+        {
+          "old": "PasteReplicaCore",
+          "new": "PastoCore",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "old_path": "replica/Sources/PasteReplica/UI/ReplicaSearchSuggestionsMenu.swift",
+      "new_path": "replica/Sources/Pasto/UI/ReplicaSearchSuggestionsMenu.swift",
+      "before_sha256": "2b46083f6752861703127b267caa380ee9abe901df87fe0bc859a700f02db23a",
+      "after_sha256": "94278a0022b8a6d148429c7c78d300fe83ffc17fe8aeb2cef535d5b9c278d1fc",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": [
+        {
+          "old": "PasteReplicaCore",
+          "new": "PastoCore",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "old_path": "replica/Sources/PasteReplica/UI/ReplicaUIController.swift",
+      "new_path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+      "before_sha256": "83ab337c6b97ff23106275d30103fc377772d6c9708f633e3961a3b3af33e3b4",
+      "after_sha256": "822412f790641b4467627b8ac645874332149975c4ae46b1e5dd54ad71f9700a",
+      "classification": "root_approved_nonlexical_or_compatibility_change_requires_contract_review",
+      "changes": [
+        {
+          "old": "PasteReplicaCore",
+          "new": "PastoCore",
+          "count": 1
+        },
+        {
+          "old": "PasteReplica",
+          "new": "Pasto",
+          "count": 4
+        },
+        {
+          "old": "            if !window.setFrameUsingName(OriginalStackWindowController.stackFrameAutosaveName),\n               !window.setFrameUsingName(\"PastoStack\") {\n                let frame = NSScreen.main?.visibleFrame ?? .init(x: 0, y: 0, width: 1200, height: 800)\n",
+          "new": "            if !window.setFrameUsingName(OriginalStackWindowController.stackFrameAutosaveName),\n               !window.setFrameUsingName(\"PasteReplicaStack\") {\n                let frame = NSScreen.main?.visibleFrame ?? .init(x: 0, y: 0, width: 1200, height: 800)\n",
+          "count": 1
+        },
+        {
+          "old": "        let namespace = SHA256.hash(data: Data(storePath.utf8)).map { String(format: \"%02x\", $0) }.joined()\n        panelFrameAutosaveName = \"PastoMainWindow_NSWindowFrameAutosaveName.\\(namespace)\"\n        sharingPolicy = WindowSharingPolicy(store: store)\n",
+          "new": "        let namespace = SHA256.hash(data: Data(storePath.utf8)).map { String(format: \"%02x\", $0) }.joined()\n        panelFrameAutosaveName = \"PasteReplicaMainWindow_NSWindowFrameAutosaveName.\\(namespace)\"\n        sharingPolicy = WindowSharingPolicy(store: store)\n",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "old_path": "replica/Sources/PasteReplica/UI/RichTextEditor.swift",
+      "new_path": "replica/Sources/Pasto/UI/RichTextEditor.swift",
+      "before_sha256": "75b46eaf2b06289118b91e7fb300ad4518fa66f45f0b4858223311e41b2ac89c",
+      "after_sha256": "7c4a91fd3876d2bd35277b1a2e0ce6e1ac5e4f6af0e8de346ac7a1ced149794d",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": [
+        {
+          "old": "PasteReplicaCore",
+          "new": "PastoCore",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "old_path": "replica/Sources/PasteReplica/UI/SearchEditor.swift",
+      "new_path": "replica/Sources/Pasto/UI/SearchEditor.swift",
+      "before_sha256": "13ce2f341f2e7aad16ac8083f46575b20b060086cc5a66ebe6399d8740915107",
+      "after_sha256": "f1cd5ab79ccf03c3c95aaf8e2c0d49690438607afa3367cc72455398628c8b76",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": [
+        {
+          "old": "PasteReplicaCore",
+          "new": "PastoCore",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "old_path": "replica/Sources/PasteReplica/UI/ShortcutRecorder.swift",
+      "new_path": "replica/Sources/Pasto/UI/ShortcutRecorder.swift",
+      "before_sha256": "b4a45eb62c0deb1c81d77c1d86b965262220d7d0b575fcacf659c7e40bd48016",
+      "after_sha256": "2aa3eccd3955064dc00e2d252b282f268f4c01bee026d846bcdb70a8c463ad90",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": [
+        {
+          "old": "PasteReplicaCore",
+          "new": "PastoCore",
+          "count": 3
+        }
+      ]
+    },
+    {
+      "old_path": "replica/Sources/PasteReplica/WindowSharingPolicy.swift",
+      "new_path": "replica/Sources/Pasto/WindowSharingPolicy.swift",
+      "before_sha256": "072433ef383fb8a58b6be171d3096af92cec573da60b0790de0f65db114571ce",
+      "after_sha256": "d1d69c1996b68c50240bfc952ea9bb9fc8c2f88185e3706daf7ad120af2705fc",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": [
+        {
+          "old": "PasteReplicaCore",
+          "new": "PastoCore",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/ClipboardStore.swift",
+      "new_path": "replica/Sources/PastoCore/ClipboardStore.swift",
+      "before_sha256": "0d6dec116f8d99a4920928f2cfbdfc194cf19962abf0bd146976f1e1190e0476",
+      "after_sha256": "11b72a61204ccbfd26b5b3e72f1e68dec224e7213d8af94787655d54c51dc31c",
+      "classification": "root_approved_nonlexical_or_compatibility_change_requires_contract_review",
+      "changes": [
+        {
+          "old": "PasteReplica",
+          "new": "Pasto",
+          "count": 1
+        },
+        {
+          "old": "    private func writeAtomically(_ data: Data, to url: URL) throws {\n        let temporary = url.deletingLastPathComponent().appendingPathComponent(\".paste-replica-\\(UUID().uuidString).tmp\")\n        guard FileManager.default.createFile(atPath: temporary.path, contents: nil,\n",
+          "new": "    private func writeAtomically(_ data: Data, to url: URL) throws {\n        let temporary = url.deletingLastPathComponent().appendingPathComponent(\".pasto-\\(UUID().uuidString).tmp\")\n        guard FileManager.default.createFile(atPath: temporary.path, contents: nil,\n",
+          "count": 1
+        },
+        {
+          "old": "        FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]\n            .appendingPathComponent(\"Pasto\", isDirectory: true)\n    }\n",
+          "new": "        FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]\n            .appendingPathComponent(\"PasteReplica\", isDirectory: true)\n    }\n",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/KeyboardShortcut.swift",
+      "new_path": "replica/Sources/PastoCore/KeyboardShortcut.swift",
+      "before_sha256": "eba51741928fc95619585980567b617d39f3c749564cddb5dff4bbd04bf189d6",
+      "after_sha256": "eba51741928fc95619585980567b617d39f3c749564cddb5dff4bbd04bf189d6",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/Models.swift",
+      "new_path": "replica/Sources/PastoCore/Models.swift",
+      "before_sha256": "67dd6d3ff6a1186e8bbabfcf65400da4ecb72b78e98ba1e7b26db5ed4de0aefa",
+      "after_sha256": "67dd6d3ff6a1186e8bbabfcf65400da4ecb72b78e98ba1e7b26db5ed4de0aefa",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/OCR.swift",
+      "new_path": "replica/Sources/PastoCore/OCR.swift",
+      "before_sha256": "862d26c538ee33b527297b973197d609136755e66ab887f5f8eea9d3fad08739",
+      "after_sha256": "862d26c538ee33b527297b973197d609136755e66ab887f5f8eea9d3fad08739",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/OriginalAccessibilityService.swift",
+      "new_path": "replica/Sources/PastoCore/OriginalAccessibilityService.swift",
+      "before_sha256": "e015554a40a64837f284fb9a0dc08a2639e8606b4e34b5930234cf1751e40073",
+      "after_sha256": "e015554a40a64837f284fb9a0dc08a2639e8606b4e34b5930234cf1751e40073",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/OriginalCardPresentation.swift",
+      "new_path": "replica/Sources/PastoCore/OriginalCardPresentation.swift",
+      "before_sha256": "acb4df601c1f35cf1e8767bc8a66140c99ec082c8c82f79acd49fc316a5d09cf",
+      "after_sha256": "acb4df601c1f35cf1e8767bc8a66140c99ec082c8c82f79acd49fc316a5d09cf",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/OriginalCollectionShortcutActions.swift",
+      "new_path": "replica/Sources/PastoCore/OriginalCollectionShortcutActions.swift",
+      "before_sha256": "01be6b33a11e469bcbbe4afe6b12ff4f3ee7ef64e7f4a7cc64d8ff654379f9fb",
+      "after_sha256": "01be6b33a11e469bcbbe4afe6b12ff4f3ee7ef64e7f4a7cc64d8ff654379f9fb",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/OriginalColorPreviewMetadata.swift",
+      "new_path": "replica/Sources/PastoCore/OriginalColorPreviewMetadata.swift",
+      "before_sha256": "b78c20f7a126322c3be604b7a26fc7d630384f31265969e4d17c5cf0887f60b2",
+      "after_sha256": "b78c20f7a126322c3be604b7a26fc7d630384f31265969e4d17c5cf0887f60b2",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/OriginalConfigurationFunctions.swift",
+      "new_path": "replica/Sources/PastoCore/OriginalConfigurationFunctions.swift",
+      "before_sha256": "d777c6848066ec198ca41739d0a785ece4df2000977cda19b230e3d4530fcb54",
+      "after_sha256": "d777c6848066ec198ca41739d0a785ece4df2000977cda19b230e3d4530fcb54",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/OriginalDependencies.swift",
+      "new_path": "replica/Sources/PastoCore/OriginalDependencies.swift",
+      "before_sha256": "6cccb9750822fd36e8e769bbaf820fc92232446bbde723089032b94a862619a8",
+      "after_sha256": "6cccb9750822fd36e8e769bbaf820fc92232446bbde723089032b94a862619a8",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/OriginalDiagnosticDispatcher.swift",
+      "new_path": "replica/Sources/PastoCore/OriginalDiagnosticDispatcher.swift",
+      "before_sha256": "7f7ca246acae9248a654db1af4973e8d48c272651a147fffc06cafaf2a103e9f",
+      "after_sha256": "7f7ca246acae9248a654db1af4973e8d48c272651a147fffc06cafaf2a103e9f",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/OriginalDiagnosticsAppActions.swift",
+      "new_path": "replica/Sources/PastoCore/OriginalDiagnosticsAppActions.swift",
+      "before_sha256": "51b66a38645a00f634efdb623f74940f503c8c2c36862badc56b1267d2132cac",
+      "after_sha256": "51b66a38645a00f634efdb623f74940f503c8c2c36862badc56b1267d2132cac",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/OriginalDiagnosticsHistory.swift",
+      "new_path": "replica/Sources/PastoCore/OriginalDiagnosticsHistory.swift",
+      "before_sha256": "a2c917352e8d3d194f3528b7023994fdb3e393e7f81007ac5be6c77928f30b62",
+      "after_sha256": "a2c917352e8d3d194f3528b7023994fdb3e393e7f81007ac5be6c77928f30b62",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/OriginalDiagnosticsManager.swift",
+      "new_path": "replica/Sources/PastoCore/OriginalDiagnosticsManager.swift",
+      "before_sha256": "afb071a98b036e3023f254c039ca1d85c4a975e79307aa3f3075b1caf21513ed",
+      "after_sha256": "afb071a98b036e3023f254c039ca1d85c4a975e79307aa3f3075b1caf21513ed",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/OriginalFilePreviewMetadata.swift",
+      "new_path": "replica/Sources/PastoCore/OriginalFilePreviewMetadata.swift",
+      "before_sha256": "abf5d495807ef79b7d857eff269f77de1d69c704eafac9130616c7664a6eebe0",
+      "after_sha256": "abf5d495807ef79b7d857eff269f77de1d69c704eafac9130616c7664a6eebe0",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/OriginalFilterBrowserPopover.swift",
+      "new_path": "replica/Sources/PastoCore/OriginalFilterBrowserPopover.swift",
+      "before_sha256": "f0476a5457e4326cfa241adc063afb2e0031627cb49fe8bdf226634f9731ae7f",
+      "after_sha256": "f0476a5457e4326cfa241adc063afb2e0031627cb49fe8bdf226634f9731ae7f",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/OriginalGlobalShortcutMonitor.swift",
+      "new_path": "replica/Sources/PastoCore/OriginalGlobalShortcutMonitor.swift",
+      "before_sha256": "0ae87812c59edb65d973f77446ff78971c2c465d990df5b0c110dad76a8e0cae",
+      "after_sha256": "277dc405a3e660b36ec808e301ccfa3fa48568c8291295e02dafe84e595325b4",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": [
+        {
+          "old": "PasteReplica",
+          "new": "Pasto",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/OriginalImagePreviewMetadata.swift",
+      "new_path": "replica/Sources/PastoCore/OriginalImagePreviewMetadata.swift",
+      "before_sha256": "90bfbfd6d413e25d446b47346935f15c53d80dc44028d6630d19331b06908ffa",
+      "after_sha256": "90bfbfd6d413e25d446b47346935f15c53d80dc44028d6630d19331b06908ffa",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/OriginalImagePreviewMetadataCodec.swift",
+      "new_path": "replica/Sources/PastoCore/OriginalImagePreviewMetadataCodec.swift",
+      "before_sha256": "1620a024a011c19294f16680ae2a8d6e92afac426d4ebbe1dd4e1fac1e364ca0",
+      "after_sha256": "1620a024a011c19294f16680ae2a8d6e92afac426d4ebbe1dd4e1fac1e364ca0",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/OriginalInitializedValue.swift",
+      "new_path": "replica/Sources/PastoCore/OriginalInitializedValue.swift",
+      "before_sha256": "bde8f2a1c9e4b6c74e9bb332ebff29dcbd3569d2459783a451661ff106d0e1c4",
+      "after_sha256": "bde8f2a1c9e4b6c74e9bb332ebff29dcbd3569d2459783a451661ff106d0e1c4",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/OriginalItemPreviewView.swift",
+      "new_path": "replica/Sources/PastoCore/OriginalItemPreviewView.swift",
+      "before_sha256": "09a402b919b028db132cec32108d3f36eca4106fb3c4ae8d641b6f65d5905c4d",
+      "after_sha256": "09a402b919b028db132cec32108d3f36eca4106fb3c4ae8d641b6f65d5905c4d",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/OriginalLayerBackedView.swift",
+      "new_path": "replica/Sources/PastoCore/OriginalLayerBackedView.swift",
+      "before_sha256": "87acffa7790cb38e5715cf6ce3d4474fffb3633d3deb15635743526f6342303c",
+      "after_sha256": "87acffa7790cb38e5715cf6ce3d4474fffb3633d3deb15635743526f6342303c",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/OriginalLinkDisplay.swift",
+      "new_path": "replica/Sources/PastoCore/OriginalLinkDisplay.swift",
+      "before_sha256": "22ddf146e091d4b1f9fb0315e95a8bfb527542b1e1f945c9c80a776e47302b20",
+      "after_sha256": "22ddf146e091d4b1f9fb0315e95a8bfb527542b1e1f945c9c80a776e47302b20",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/OriginalLinkPreviewMetadata.swift",
+      "new_path": "replica/Sources/PastoCore/OriginalLinkPreviewMetadata.swift",
+      "before_sha256": "cf30ef0714e8f3bfa31c11765ce3a0493b3228013c3d4096cc5c32e851c2be00",
+      "after_sha256": "cf30ef0714e8f3bfa31c11765ce3a0493b3228013c3d4096cc5c32e851c2be00",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/OriginalLocalDiagnostics.swift",
+      "new_path": "replica/Sources/PastoCore/OriginalLocalDiagnostics.swift",
+      "before_sha256": "95baca2d0ee25cb9ca5a7bcbc111a820bbe70d29feecf46e5d8cd0c1f6d5c911",
+      "after_sha256": "95baca2d0ee25cb9ca5a7bcbc111a820bbe70d29feecf46e5d8cd0c1f6d5c911",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/OriginalNativeDragPasteboardWriter.swift",
+      "new_path": "replica/Sources/PastoCore/OriginalNativeDragPasteboardWriter.swift",
+      "before_sha256": "db793abd1e9b2c3c6ddf5fbe94dcb55af21122e5c9751751d5032a5156a3c908",
+      "after_sha256": "db793abd1e9b2c3c6ddf5fbe94dcb55af21122e5c9751751d5032a5156a3c908",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/OriginalObjCExceptionBridge.swift",
+      "new_path": "replica/Sources/PastoCore/OriginalObjCExceptionBridge.swift",
+      "before_sha256": "83c6a0735223b544a2d156b9ea26f9aff8896ca6f16c4d8a6c39ae550ac39c88",
+      "after_sha256": "cf3e9e3b016001d7d982a673e00e365d8b638693effe3c9c49f8c77b93102bc2",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": [
+        {
+          "old": "PasteReplicaObjC",
+          "new": "PastoObjC",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/OriginalOrderedSelection.swift",
+      "new_path": "replica/Sources/PastoCore/OriginalOrderedSelection.swift",
+      "before_sha256": "b3631aed0222167f88c16329c76483f807d20af3baaf3a90ab4d214e8d9cb9f8",
+      "after_sha256": "b3631aed0222167f88c16329c76483f807d20af3baaf3a90ab4d214e8d9cb9f8",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/OriginalPasteKeyTranslation.swift",
+      "new_path": "replica/Sources/PastoCore/OriginalPasteKeyTranslation.swift",
+      "before_sha256": "76118ad54378bc18b97d3f4560eca9032be38832c96d045d318f9335c9a68d12",
+      "after_sha256": "76118ad54378bc18b97d3f4560eca9032be38832c96d045d318f9335c9a68d12",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/OriginalPasteboard.swift",
+      "new_path": "replica/Sources/PastoCore/OriginalPasteboard.swift",
+      "before_sha256": "60f862d0779d4f580e89be5eafef96239c75287facd4602ba02b10ce232c7b61",
+      "after_sha256": "60f862d0779d4f580e89be5eafef96239c75287facd4602ba02b10ce232c7b61",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/OriginalPasteboardArchive.swift",
+      "new_path": "replica/Sources/PastoCore/OriginalPasteboardArchive.swift",
+      "before_sha256": "52c2053221184f1fc32aa997c78a3ef90657610590f0aecf760e13b9e9139e12",
+      "after_sha256": "52c2053221184f1fc32aa997c78a3ef90657610590f0aecf760e13b9e9139e12",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/OriginalPasteboardCaptureState.swift",
+      "new_path": "replica/Sources/PastoCore/OriginalPasteboardCaptureState.swift",
+      "before_sha256": "91f582575946ec8e4238d539ac477be694bb0adc1ce4f9a184747e43ba670f5f",
+      "after_sha256": "91f582575946ec8e4238d539ac477be694bb0adc1ce4f9a184747e43ba670f5f",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/OriginalPasteboardChecksums.swift",
+      "new_path": "replica/Sources/PastoCore/OriginalPasteboardChecksums.swift",
+      "before_sha256": "91b10577b3103f2b5e4ad0879dce27b6ed53648531a0265d93d7d9f636fc611f",
+      "after_sha256": "91b10577b3103f2b5e4ad0879dce27b6ed53648531a0265d93d7d9f636fc611f",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/OriginalPasteboardClassification.swift",
+      "new_path": "replica/Sources/PastoCore/OriginalPasteboardClassification.swift",
+      "before_sha256": "120318efac6b9e47b12a415427c830d051338fcbe0257f6f6c6d5bbab6f30614",
+      "after_sha256": "120318efac6b9e47b12a415427c830d051338fcbe0257f6f6c6d5bbab6f30614",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/OriginalPasteboardDataCodec.swift",
+      "new_path": "replica/Sources/PastoCore/OriginalPasteboardDataCodec.swift",
+      "before_sha256": "3994f19683c261c6137c9a97f66f89d69b111e8731cc09acb42f6727980a786c",
+      "after_sha256": "3994f19683c261c6137c9a97f66f89d69b111e8731cc09acb42f6727980a786c",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/OriginalPasteboardImageEncoding.swift",
+      "new_path": "replica/Sources/PastoCore/OriginalPasteboardImageEncoding.swift",
+      "before_sha256": "2e4430ee0d8c7d8f88561457d37e8d50c0c756d83471facda099b7518a6a2dfe",
+      "after_sha256": "2e4430ee0d8c7d8f88561457d37e8d50c0c756d83471facda099b7518a6a2dfe",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/OriginalPasteboardImageRestore.swift",
+      "new_path": "replica/Sources/PastoCore/OriginalPasteboardImageRestore.swift",
+      "before_sha256": "4c2d234efaf5a3a2d64ce78515fb05e2683e47adfb2aa6b31920428b4cffa1b9",
+      "after_sha256": "4c2d234efaf5a3a2d64ce78515fb05e2683e47adfb2aa6b31920428b4cffa1b9",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/OriginalPasteboardPolicies.swift",
+      "new_path": "replica/Sources/PastoCore/OriginalPasteboardPolicies.swift",
+      "before_sha256": "b85860e5fdc4be03afd7f4f69651f3ed1fc15c2c48d4a765fdcae5fdc8787dc7",
+      "after_sha256": "b85860e5fdc4be03afd7f4f69651f3ed1fc15c2c48d4a765fdcae5fdc8787dc7",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/OriginalPasteboardRestore.swift",
+      "new_path": "replica/Sources/PastoCore/OriginalPasteboardRestore.swift",
+      "before_sha256": "bf309c94b15bb4db46acedc6ba535d1f060aa3a8d74257053a773cf7200dd2c6",
+      "after_sha256": "bf309c94b15bb4db46acedc6ba535d1f060aa3a8d74257053a773cf7200dd2c6",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/OriginalPinboardAttributes.swift",
+      "new_path": "replica/Sources/PastoCore/OriginalPinboardAttributes.swift",
+      "before_sha256": "d2a1be64643be5b1b6380b92b8787e09dcf9021b6d61b7a3c3f406f5d2293424",
+      "after_sha256": "d2a1be64643be5b1b6380b92b8787e09dcf9021b6d61b7a3c3f406f5d2293424",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/OriginalPinboardColor.swift",
+      "new_path": "replica/Sources/PastoCore/OriginalPinboardColor.swift",
+      "before_sha256": "cfc44a744f2d3769d70582fea50da409435cfd9dcfa7f9ba104719093dcaef8e",
+      "after_sha256": "cfc44a744f2d3769d70582fea50da409435cfd9dcfa7f9ba104719093dcaef8e",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/OriginalPreviewAttributedText.swift",
+      "new_path": "replica/Sources/PastoCore/OriginalPreviewAttributedText.swift",
+      "before_sha256": "f670c5a9d4120859b7c75cb646ae574472ce51bdb320143fb929b48ac6e586ed",
+      "after_sha256": "f670c5a9d4120859b7c75cb646ae574472ce51bdb320143fb929b48ac6e586ed",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/OriginalPreviewFooter.swift",
+      "new_path": "replica/Sources/PastoCore/OriginalPreviewFooter.swift",
+      "before_sha256": "97d14915cc4fa873a0d526a42f168ea5487864d0b8327e825bee18e28bd2e25c",
+      "after_sha256": "97d14915cc4fa873a0d526a42f168ea5487864d0b8327e825bee18e28bd2e25c",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/OriginalPreviewLocalization.swift",
+      "new_path": "replica/Sources/PastoCore/OriginalPreviewLocalization.swift",
+      "before_sha256": "244b50defd5c3333575ca20076b697079dd5d4bbc03ab8fe93ec9bedf92ce543",
+      "after_sha256": "822147a77e05ba31b0425cf0de5ca3d4267a0fb3c7f737c0d44f98deb1c566a7",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": [
+        {
+          "old": "PasteReplicaCore",
+          "new": "PastoCore",
+          "count": 1
+        },
+        {
+          "old": "PasteReplica",
+          "new": "Pasto",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/OriginalPreviewPopover.swift",
+      "new_path": "replica/Sources/PastoCore/OriginalPreviewPopover.swift",
+      "before_sha256": "352554008c692f89091bf3cb700b0cfee1b55768b5a709c3b4320951a154a46e",
+      "after_sha256": "352554008c692f89091bf3cb700b0cfee1b55768b5a709c3b4320951a154a46e",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/OriginalPreviewSharing.swift",
+      "new_path": "replica/Sources/PastoCore/OriginalPreviewSharing.swift",
+      "before_sha256": "64b2623f15994676d6798fbc4702a7046826279c56249ade36f9361eef46393c",
+      "after_sha256": "64b2623f15994676d6798fbc4702a7046826279c56249ade36f9361eef46393c",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/OriginalPreviewTextColors.swift",
+      "new_path": "replica/Sources/PastoCore/OriginalPreviewTextColors.swift",
+      "before_sha256": "06134570276933fc2be82f00033d2ba9c70aaf04d5e1e134e23fcfb830b3a881",
+      "after_sha256": "06134570276933fc2be82f00033d2ba9c70aaf04d5e1e134e23fcfb830b3a881",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/OriginalPreviewTextTraits.swift",
+      "new_path": "replica/Sources/PastoCore/OriginalPreviewTextTraits.swift",
+      "before_sha256": "819f073d5a5a633a4c7794fc0107e7bf3f015b68e74a1543d6edac7b29e31324",
+      "after_sha256": "819f073d5a5a633a4c7794fc0107e7bf3f015b68e74a1543d6edac7b29e31324",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/OriginalPreviewTitleLabel.swift",
+      "new_path": "replica/Sources/PastoCore/OriginalPreviewTitleLabel.swift",
+      "before_sha256": "84e3a33dbd575ad595cded72928d3d9b917ec1ece7eb258ba42ef3cf457bb0e2",
+      "after_sha256": "84e3a33dbd575ad595cded72928d3d9b917ec1ece7eb258ba42ef3cf457bb0e2",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/OriginalPreviewTitles.swift",
+      "new_path": "replica/Sources/PastoCore/OriginalPreviewTitles.swift",
+      "before_sha256": "bc8943d70501b6455fd200131f11b860d8d927efe4de4a5cf4fcd46908c7e681",
+      "after_sha256": "bc8943d70501b6455fd200131f11b860d8d927efe4de4a5cf4fcd46908c7e681",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/OriginalPreviewWindows.swift",
+      "new_path": "replica/Sources/PastoCore/OriginalPreviewWindows.swift",
+      "before_sha256": "4cc1f30d0de962162c6231a6207cc7623fc82e20f126f3ebc3edb326d5592c2d",
+      "after_sha256": "4cc1f30d0de962162c6231a6207cc7623fc82e20f126f3ebc3edb326d5592c2d",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/OriginalSearchAppearance.swift",
+      "new_path": "replica/Sources/PastoCore/OriginalSearchAppearance.swift",
+      "before_sha256": "0cfd7e194ce6f6b1f4118897810e35d0eafab317a68e6104e4bfbd11dbaeb5c4",
+      "after_sha256": "0cfd7e194ce6f6b1f4118897810e35d0eafab317a68e6104e4bfbd11dbaeb5c4",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/OriginalSearchCommands.swift",
+      "new_path": "replica/Sources/PastoCore/OriginalSearchCommands.swift",
+      "before_sha256": "cf7409e5f4bf47f0e1052ac3ae42c5af43812c37407bfc77eca62ba864ca1bf8",
+      "after_sha256": "cf7409e5f4bf47f0e1052ac3ae42c5af43812c37407bfc77eca62ba864ca1bf8",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/OriginalSearchDateEncoding.swift",
+      "new_path": "replica/Sources/PastoCore/OriginalSearchDateEncoding.swift",
+      "before_sha256": "b46fe7fca447d1089bfc7c36676ecaf13a2d77c6d665eb5f42cb37ab5d00c5c6",
+      "after_sha256": "b46fe7fca447d1089bfc7c36676ecaf13a2d77c6d665eb5f42cb37ab5d00c5c6",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/OriginalSearchDateRanges.swift",
+      "new_path": "replica/Sources/PastoCore/OriginalSearchDateRanges.swift",
+      "before_sha256": "91f2f941e01c03dc575e29edb80144c4e268174528e551deb72642b4a7743451",
+      "after_sha256": "91f2f941e01c03dc575e29edb80144c4e268174528e551deb72642b4a7743451",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/OriginalSearchEditing.swift",
+      "new_path": "replica/Sources/PastoCore/OriginalSearchEditing.swift",
+      "before_sha256": "de4dbf21b72826fed9c0e9418c842eb8b0f1146a7d7aa9bfe22985af5d7ac73e",
+      "after_sha256": "de4dbf21b72826fed9c0e9418c842eb8b0f1146a7d7aa9bfe22985af5d7ac73e",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/OriginalSearchField.swift",
+      "new_path": "replica/Sources/PastoCore/OriginalSearchField.swift",
+      "before_sha256": "6a56456d5b45a28cacd291891380b97414e71c1eaf68bd1d9ee15c3ec1596600",
+      "after_sha256": "6a56456d5b45a28cacd291891380b97414e71c1eaf68bd1d9ee15c3ec1596600",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/OriginalSearchFieldAnimation.swift",
+      "new_path": "replica/Sources/PastoCore/OriginalSearchFieldAnimation.swift",
+      "before_sha256": "5c415996232f8f009d56ca0e07976ac31bb502f2295b7401cda2c62b4f51cc49",
+      "after_sha256": "5c415996232f8f009d56ca0e07976ac31bb502f2295b7401cda2c62b4f51cc49",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/OriginalSearchFilterSymbols.swift",
+      "new_path": "replica/Sources/PastoCore/OriginalSearchFilterSymbols.swift",
+      "before_sha256": "73a9ca9cb90529d7c46665ac1af0241f0310505e56704d441df4e94c816698ef",
+      "after_sha256": "73a9ca9cb90529d7c46665ac1af0241f0310505e56704d441df4e94c816698ef",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/OriginalSearchFilterView.swift",
+      "new_path": "replica/Sources/PastoCore/OriginalSearchFilterView.swift",
+      "before_sha256": "4628dc1edfd81fa48b4442c4b7f05ec5eea3a6f8598038d3a1f9f9480c62f6aa",
+      "after_sha256": "4628dc1edfd81fa48b4442c4b7f05ec5eea3a6f8598038d3a1f9f9480c62f6aa",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/OriginalSearchInputContext.swift",
+      "new_path": "replica/Sources/PastoCore/OriginalSearchInputContext.swift",
+      "before_sha256": "073c80079e979d5cddc549c105aab901fdf8c9482d7b56cb535e098d9d942867",
+      "after_sha256": "073c80079e979d5cddc549c105aab901fdf8c9482d7b56cb535e098d9d942867",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/OriginalSearchInputHistory.swift",
+      "new_path": "replica/Sources/PastoCore/OriginalSearchInputHistory.swift",
+      "before_sha256": "7aa112d949aa2982759f8b3a164eb908a3259cccbcd889e19030773bd4bb88a8",
+      "after_sha256": "7aa112d949aa2982759f8b3a164eb908a3259cccbcd889e19030773bd4bb88a8",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/OriginalSearchInputView.swift",
+      "new_path": "replica/Sources/PastoCore/OriginalSearchInputView.swift",
+      "before_sha256": "bacd69180e56aaac3eebae4eca50daa594cd09a6a146da89654f37f04b860b28",
+      "after_sha256": "bacd69180e56aaac3eebae4eca50daa594cd09a6a146da89654f37f04b860b28",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/OriginalSearchLocalization.swift",
+      "new_path": "replica/Sources/PastoCore/OriginalSearchLocalization.swift",
+      "before_sha256": "679276f5a75ded17e592018993ce39b0867a9856a6c6e32ee0efce1a23a8de2d",
+      "after_sha256": "3bc5e87065b5c45dc8e358424aac32873c00d142faab21a9a2fc949cefc44019",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": [
+        {
+          "old": "PasteReplicaCore",
+          "new": "PastoCore",
+          "count": 1
+        },
+        {
+          "old": "PasteReplica",
+          "new": "Pasto",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/OriginalSearchMenu.swift",
+      "new_path": "replica/Sources/PastoCore/OriginalSearchMenu.swift",
+      "before_sha256": "af3962d55bbfae4c40a67d43872d7f30d8e0e9c34c049527f28f94cc5a62f5e9",
+      "after_sha256": "af3962d55bbfae4c40a67d43872d7f30d8e0e9c34c049527f28f94cc5a62f5e9",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/OriginalSearchQuery.swift",
+      "new_path": "replica/Sources/PastoCore/OriginalSearchQuery.swift",
+      "before_sha256": "4c828b16c6342387d375e6b5a3f24d28b37bbffa1c377e4cdb064ad27b5d1b28",
+      "after_sha256": "4c828b16c6342387d375e6b5a3f24d28b37bbffa1c377e4cdb064ad27b5d1b28",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/OriginalSearchQueryNormalization.swift",
+      "new_path": "replica/Sources/PastoCore/OriginalSearchQueryNormalization.swift",
+      "before_sha256": "fc2414e1395bb916246c9ef38509730c394e3d0feebbf0ca6dc9438f86409eb9",
+      "after_sha256": "fc2414e1395bb916246c9ef38509730c394e3d0feebbf0ca6dc9438f86409eb9",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/OriginalSearchSuggestionAnchor.swift",
+      "new_path": "replica/Sources/PastoCore/OriginalSearchSuggestionAnchor.swift",
+      "before_sha256": "2af28e89780d0e373331ea15588909cea7d99e1008e396717bb57b10b21436a7",
+      "after_sha256": "2af28e89780d0e373331ea15588909cea7d99e1008e396717bb57b10b21436a7",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/OriginalSearchSuggestions.swift",
+      "new_path": "replica/Sources/PastoCore/OriginalSearchSuggestions.swift",
+      "before_sha256": "d64f3d8306a0f563a0711de06af87ea375d609d0e6c640b4a7fb29965eeb6381",
+      "after_sha256": "d64f3d8306a0f563a0711de06af87ea375d609d0e6c640b4a7fb29965eeb6381",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/OriginalSearchTextScroller.swift",
+      "new_path": "replica/Sources/PastoCore/OriginalSearchTextScroller.swift",
+      "before_sha256": "69a73891f67209030ad401a2f64241a544c06c9c429522552d88e3e68a48b970",
+      "after_sha256": "69a73891f67209030ad401a2f64241a544c06c9c429522552d88e3e68a48b970",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/OriginalSearchTextTokens.swift",
+      "new_path": "replica/Sources/PastoCore/OriginalSearchTextTokens.swift",
+      "before_sha256": "ea0bef0b75186bf558f512cd15f5343e1251fb47a9e39791d320fd23248b143f",
+      "after_sha256": "ea0bef0b75186bf558f512cd15f5343e1251fb47a9e39791d320fd23248b143f",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/OriginalSearchTextValue.swift",
+      "new_path": "replica/Sources/PastoCore/OriginalSearchTextValue.swift",
+      "before_sha256": "4edef55597ad4d0a131adee7674cb682ec8c34f422fdef61f8e83dc62e8a2d9b",
+      "after_sha256": "4edef55597ad4d0a131adee7674cb682ec8c34f422fdef61f8e83dc62e8a2d9b",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/OriginalSearchTextView.swift",
+      "new_path": "replica/Sources/PastoCore/OriginalSearchTextView.swift",
+      "before_sha256": "516f59d8ed37513fbcac4ab13bdbc79526d58469d8c4478a28ecffa27efa9015",
+      "after_sha256": "516f59d8ed37513fbcac4ab13bdbc79526d58469d8c4478a28ecffa27efa9015",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/OriginalSelectionAppearance.swift",
+      "new_path": "replica/Sources/PastoCore/OriginalSelectionAppearance.swift",
+      "before_sha256": "5872178f7e902aa92c57626c3a2201be08ee9fcda85d1d7b1b90e11baff84588",
+      "after_sha256": "5872178f7e902aa92c57626c3a2201be08ee9fcda85d1d7b1b90e11baff84588",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/OriginalSettingsLocalization.swift",
+      "new_path": "replica/Sources/PastoCore/OriginalSettingsLocalization.swift",
+      "before_sha256": "f9c5663239b8fbd7251b0fdcce5c0d19bbfa2c620642d75bcb61073a37e028a5",
+      "after_sha256": "62f7b6d5767ce50f52f1138d76ca6544a0294368cc2b9f9bc65dc7ff2fabf67a",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": [
+        {
+          "old": "PasteReplicaCore",
+          "new": "PastoCore",
+          "count": 1
+        },
+        {
+          "old": "PasteReplica",
+          "new": "Pasto",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/OriginalSharedDependencyCache.swift",
+      "new_path": "replica/Sources/PastoCore/OriginalSharedDependencyCache.swift",
+      "before_sha256": "d83f199826f661090cdd74b9d05e185e295bf3570ba2f8e8dc868f9dac219cbf",
+      "after_sha256": "d83f199826f661090cdd74b9d05e185e295bf3570ba2f8e8dc868f9dac219cbf",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/OriginalShortcutCoding.swift",
+      "new_path": "replica/Sources/PastoCore/OriginalShortcutCoding.swift",
+      "before_sha256": "c55c3649e56566bab3b41e8f4ba2e6ef542e50e202ab87357219b62236883047",
+      "after_sha256": "c55c3649e56566bab3b41e8f4ba2e6ef542e50e202ab87357219b62236883047",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/OriginalShortcutControls.swift",
+      "new_path": "replica/Sources/PastoCore/OriginalShortcutControls.swift",
+      "before_sha256": "55ecfa91d843f2305044a1558079a89d6da119edc25f5a3d1f4e5b4ffe4d82a8",
+      "after_sha256": "55ecfa91d843f2305044a1558079a89d6da119edc25f5a3d1f4e5b4ffe4d82a8",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/OriginalShortcutDependencies.swift",
+      "new_path": "replica/Sources/PastoCore/OriginalShortcutDependencies.swift",
+      "before_sha256": "73908ddfedcd38cb4f1f64a7a21d1499879bed195dfb13d70f1ebbbeb6ce5b51",
+      "after_sha256": "73908ddfedcd38cb4f1f64a7a21d1499879bed195dfb13d70f1ebbbeb6ce5b51",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/OriginalShortcutFunctions.swift",
+      "new_path": "replica/Sources/PastoCore/OriginalShortcutFunctions.swift",
+      "before_sha256": "82c57689dfb20e2c4c02cd3c4ca72cf40ee7a3fd650b5fa832d79589761a9058",
+      "after_sha256": "82c57689dfb20e2c4c02cd3c4ca72cf40ee7a3fd650b5fa832d79589761a9058",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/OriginalShortcutMessages.swift",
+      "new_path": "replica/Sources/PastoCore/OriginalShortcutMessages.swift",
+      "before_sha256": "a359a587810f77d3306db57a0f8b17150dc6d075f1e698be9a1772b9eafa027a",
+      "after_sha256": "a359a587810f77d3306db57a0f8b17150dc6d075f1e698be9a1772b9eafa027a",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/OriginalShortcutRecorder.swift",
+      "new_path": "replica/Sources/PastoCore/OriginalShortcutRecorder.swift",
+      "before_sha256": "ba907c942f91fe336506e9a47576051f285bfce47ccd43315cb111aedbd237f2",
+      "after_sha256": "ba907c942f91fe336506e9a47576051f285bfce47ccd43315cb111aedbd237f2",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/OriginalShortcutRecorderView.swift",
+      "new_path": "replica/Sources/PastoCore/OriginalShortcutRecorderView.swift",
+      "before_sha256": "881691562e6378fbadd64502b3ec893c821a1e0a463f8b0c6a5ddbdef7dd6330",
+      "after_sha256": "881691562e6378fbadd64502b3ec893c821a1e0a463f8b0c6a5ddbdef7dd6330",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/OriginalShortcutTelemetry.swift",
+      "new_path": "replica/Sources/PastoCore/OriginalShortcutTelemetry.swift",
+      "before_sha256": "8873cf835f1611b85b91736a796b4335d3364b9bc9278ace5bc89b2bd43ef14c",
+      "after_sha256": "8873cf835f1611b85b91736a796b4335d3364b9bc9278ace5bc89b2bd43ef14c",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/OriginalShortcutValidation.swift",
+      "new_path": "replica/Sources/PastoCore/OriginalShortcutValidation.swift",
+      "before_sha256": "094cb536243bcfa19d37564a409c032728c4c5756e98b21b375858394ad2d5cc",
+      "after_sha256": "094cb536243bcfa19d37564a409c032728c4c5756e98b21b375858394ad2d5cc",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/OriginalSoundEffects.swift",
+      "new_path": "replica/Sources/PastoCore/OriginalSoundEffects.swift",
+      "before_sha256": "e34aab5bb12081c45cbfc14258620a3d6149d62bb09a1c868d15b756e0a93a98",
+      "after_sha256": "a452159a1b014ef158f3267ac4cf31501876b24fc89e44f0400f27b64b8b169a",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": [
+        {
+          "old": "PasteReplicaCore",
+          "new": "PastoCore",
+          "count": 1
+        },
+        {
+          "old": "PasteReplica",
+          "new": "Pasto",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/OriginalSourceApplication.swift",
+      "new_path": "replica/Sources/PastoCore/OriginalSourceApplication.swift",
+      "before_sha256": "f062fd4c806d1c155e84c80e6ba962500c2f2f195a2fee3b50fe5d864f06478b",
+      "after_sha256": "f062fd4c806d1c155e84c80e6ba962500c2f2f195a2fee3b50fe5d864f06478b",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/OriginalSourceApplicationColors.swift",
+      "new_path": "replica/Sources/PastoCore/OriginalSourceApplicationColors.swift",
+      "before_sha256": "4fd75b6d9d2a3eb64e1d361b757e9134bdbb833487911e38b789ea2cad189662",
+      "after_sha256": "4fd75b6d9d2a3eb64e1d361b757e9134bdbb833487911e38b789ea2cad189662",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/OriginalSourceApplicationImageColor.swift",
+      "new_path": "replica/Sources/PastoCore/OriginalSourceApplicationImageColor.swift",
+      "before_sha256": "c59f458b7f1ec31b2b66e1370aebce4482864299957d4efb9a61934ed8bdcd29",
+      "after_sha256": "c59f458b7f1ec31b2b66e1370aebce4482864299957d4efb9a61934ed8bdcd29",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/OriginalStackFunctions.swift",
+      "new_path": "replica/Sources/PastoCore/OriginalStackFunctions.swift",
+      "before_sha256": "e408e508e9bc0bf2b7477ab142e29e4b1c1087daa63cd402c312f145e6cf16a4",
+      "after_sha256": "e408e508e9bc0bf2b7477ab142e29e4b1c1087daa63cd402c312f145e6cf16a4",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/OriginalStackTableController.swift",
+      "new_path": "replica/Sources/PastoCore/OriginalStackTableController.swift",
+      "before_sha256": "bbd3276b4c9772cf92fcf68a59a3083c0f0f5569915cb56d83ce2b421419a717",
+      "after_sha256": "bbd3276b4c9772cf92fcf68a59a3083c0f0f5569915cb56d83ce2b421419a717",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/OriginalTextPreviewMetadata.swift",
+      "new_path": "replica/Sources/PastoCore/OriginalTextPreviewMetadata.swift",
+      "before_sha256": "7c09e2e2297ef070a792bf8a50e51ab162146d27b516d7e92ac3bd53df36b676",
+      "after_sha256": "7c09e2e2297ef070a792bf8a50e51ab162146d27b516d7e92ac3bd53df36b676",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/OriginalToolbarButton.swift",
+      "new_path": "replica/Sources/PastoCore/OriginalToolbarButton.swift",
+      "before_sha256": "f4c3920e5f5cd9f515bbe0cce530f4f8f6335b14450f75e471f0272e19412165",
+      "after_sha256": "f4c3920e5f5cd9f515bbe0cce530f4f8f6335b14450f75e471f0272e19412165",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/OriginalUnavailablePreviewLocalization.swift",
+      "new_path": "replica/Sources/PastoCore/OriginalUnavailablePreviewLocalization.swift",
+      "before_sha256": "5257cf10ab8d3def45091fff0ec2776130cc428e84ffbce54657ee0a4c2d4c93",
+      "after_sha256": "fe4dbd6517e0dd813bff1a508d009a4a2a00a55d644134ebc9477ecb21d608be",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": [
+        {
+          "old": "PasteReplicaCore",
+          "new": "PastoCore",
+          "count": 1
+        },
+        {
+          "old": "PasteReplica",
+          "new": "Pasto",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/OriginalViewAnimation.swift",
+      "new_path": "replica/Sources/PastoCore/OriginalViewAnimation.swift",
+      "before_sha256": "bafbd46ac9d4212f4d35dfc156c0d6958f8a185bce5985d23a4634e68fa081c5",
+      "after_sha256": "bafbd46ac9d4212f4d35dfc156c0d6958f8a185bce5985d23a4634e68fa081c5",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/Pasteboard.swift",
+      "new_path": "replica/Sources/PastoCore/Pasteboard.swift",
+      "before_sha256": "0f5ba3cb157a77612f9b1cbc447d835571d64858ddf82948d2d88f6a5b4fbca2",
+      "after_sha256": "0f5ba3cb157a77612f9b1cbc447d835571d64858ddf82948d2d88f6a5b4fbca2",
+      "classification": "root_approved_nonlexical_or_compatibility_change_requires_contract_review",
+      "changes": [
+        {
+          "old": "PasteReplica",
+          "new": "Pasto",
+          "count": 1
+        },
+        {
+          "old": "    private static let imageRestore = OriginalPasteboardImageRestore(\n        temporaryRoot: FileManager.default.temporaryDirectory.appendingPathComponent(\"Pasto\", isDirectory: true))\n\n",
+          "new": "    private static let imageRestore = OriginalPasteboardImageRestore(\n        temporaryRoot: FileManager.default.temporaryDirectory.appendingPathComponent(\"PasteReplica\", isDirectory: true))\n\n",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/Resources/cs.lproj/Localizable.strings",
+      "new_path": "replica/Sources/PastoCore/Resources/cs.lproj/Localizable.strings",
+      "before_sha256": "b4273c4ce8ac7424b6cc1d95e24b7df45ed0372c46764b600eb08606d0be8387",
+      "after_sha256": "b4273c4ce8ac7424b6cc1d95e24b7df45ed0372c46764b600eb08606d0be8387",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/Resources/cs.lproj/Localizable.stringsdict",
+      "new_path": "replica/Sources/PastoCore/Resources/cs.lproj/Localizable.stringsdict",
+      "before_sha256": "cad4a0663c716b0a571317b5d99b8855f3076469a39f1bfeb1ce05e4ae6f2a8a",
+      "after_sha256": "cad4a0663c716b0a571317b5d99b8855f3076469a39f1bfeb1ce05e4ae6f2a8a",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/Resources/da.lproj/Localizable.strings",
+      "new_path": "replica/Sources/PastoCore/Resources/da.lproj/Localizable.strings",
+      "before_sha256": "10a9a064484369aad6438383e3fa495332ae1e6232a121cf5292c009ef0855b9",
+      "after_sha256": "10a9a064484369aad6438383e3fa495332ae1e6232a121cf5292c009ef0855b9",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/Resources/da.lproj/Localizable.stringsdict",
+      "new_path": "replica/Sources/PastoCore/Resources/da.lproj/Localizable.stringsdict",
+      "before_sha256": "2fbe4e3d9ae3f2dadad058b3fe4375dd56a346ec26ec191e6f347b0333ea2b25",
+      "after_sha256": "2fbe4e3d9ae3f2dadad058b3fe4375dd56a346ec26ec191e6f347b0333ea2b25",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/Resources/de.lproj/Localizable.strings",
+      "new_path": "replica/Sources/PastoCore/Resources/de.lproj/Localizable.strings",
+      "before_sha256": "0ddcb353c81a7781ad6fa262334d9438af6b1c57626de85f8d5b63cfe0946a60",
+      "after_sha256": "0ddcb353c81a7781ad6fa262334d9438af6b1c57626de85f8d5b63cfe0946a60",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/Resources/de.lproj/Localizable.stringsdict",
+      "new_path": "replica/Sources/PastoCore/Resources/de.lproj/Localizable.stringsdict",
+      "before_sha256": "c6fc20ab4a366deb148f095d770cf6f90c94eb246ac497812103b4f5e8aa6b34",
+      "after_sha256": "c6fc20ab4a366deb148f095d770cf6f90c94eb246ac497812103b4f5e8aa6b34",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/Resources/en.lproj/Localizable.strings",
+      "new_path": "replica/Sources/PastoCore/Resources/en.lproj/Localizable.strings",
+      "before_sha256": "429c3ebeef0c261a9743f0948290237b10a17910163290b22e6580cdff71d367",
+      "after_sha256": "429c3ebeef0c261a9743f0948290237b10a17910163290b22e6580cdff71d367",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/Resources/en.lproj/Localizable.stringsdict",
+      "new_path": "replica/Sources/PastoCore/Resources/en.lproj/Localizable.stringsdict",
+      "before_sha256": "dc7911c873e852bd01252c685a5e9fce24c07ca7f8954054ab6b2c4374d04679",
+      "after_sha256": "dc7911c873e852bd01252c685a5e9fce24c07ca7f8954054ab6b2c4374d04679",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/Resources/es.lproj/Localizable.strings",
+      "new_path": "replica/Sources/PastoCore/Resources/es.lproj/Localizable.strings",
+      "before_sha256": "ff3d2f835b28d0e1215b48a3bc90539ea75593c48f5509fe9b1882c32d7c11f3",
+      "after_sha256": "ff3d2f835b28d0e1215b48a3bc90539ea75593c48f5509fe9b1882c32d7c11f3",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/Resources/es.lproj/Localizable.stringsdict",
+      "new_path": "replica/Sources/PastoCore/Resources/es.lproj/Localizable.stringsdict",
+      "before_sha256": "28a931243ce4f9259d411fbe579c3b8eb7c0a58711dabd344d31029ea1104c4f",
+      "after_sha256": "28a931243ce4f9259d411fbe579c3b8eb7c0a58711dabd344d31029ea1104c4f",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/Resources/fr.lproj/Localizable.strings",
+      "new_path": "replica/Sources/PastoCore/Resources/fr.lproj/Localizable.strings",
+      "before_sha256": "4148d8e4a1b7b9a55fcaa58f79cec2f5142cbe35766cf24f6b2409e9fededf14",
+      "after_sha256": "4148d8e4a1b7b9a55fcaa58f79cec2f5142cbe35766cf24f6b2409e9fededf14",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/Resources/fr.lproj/Localizable.stringsdict",
+      "new_path": "replica/Sources/PastoCore/Resources/fr.lproj/Localizable.stringsdict",
+      "before_sha256": "7e0acca552f31d51b5556ab38d664b14d359ec55c6c2f52ce54a3b1cfad3bb03",
+      "after_sha256": "7e0acca552f31d51b5556ab38d664b14d359ec55c6c2f52ce54a3b1cfad3bb03",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/Resources/he.lproj/Localizable.strings",
+      "new_path": "replica/Sources/PastoCore/Resources/he.lproj/Localizable.strings",
+      "before_sha256": "1f5328a00da6cdc6335b5f74b180ebe91d8c85a01f14b6f8a21efd089e96393a",
+      "after_sha256": "1f5328a00da6cdc6335b5f74b180ebe91d8c85a01f14b6f8a21efd089e96393a",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/Resources/he.lproj/Localizable.stringsdict",
+      "new_path": "replica/Sources/PastoCore/Resources/he.lproj/Localizable.stringsdict",
+      "before_sha256": "1c851445f2286d5959411ce7712152009f17a86f3121b597f8563f7a8955808e",
+      "after_sha256": "1c851445f2286d5959411ce7712152009f17a86f3121b597f8563f7a8955808e",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/Resources/it.lproj/Localizable.strings",
+      "new_path": "replica/Sources/PastoCore/Resources/it.lproj/Localizable.strings",
+      "before_sha256": "10d1c0d8a288c12b9963312f07c055f847e5c5c27bba13a5487e746d17b8fb8d",
+      "after_sha256": "10d1c0d8a288c12b9963312f07c055f847e5c5c27bba13a5487e746d17b8fb8d",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/Resources/it.lproj/Localizable.stringsdict",
+      "new_path": "replica/Sources/PastoCore/Resources/it.lproj/Localizable.stringsdict",
+      "before_sha256": "5b89c5b4fa16e1354a92f46c8070f428dd468e3367a63776a0f7b059db17d492",
+      "after_sha256": "5b89c5b4fa16e1354a92f46c8070f428dd468e3367a63776a0f7b059db17d492",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/Resources/ja.lproj/Localizable.strings",
+      "new_path": "replica/Sources/PastoCore/Resources/ja.lproj/Localizable.strings",
+      "before_sha256": "875b2d25a1a7b52e1224d929bd3cf07d42b80ada29ba540aa5aab0e5f32e897d",
+      "after_sha256": "875b2d25a1a7b52e1224d929bd3cf07d42b80ada29ba540aa5aab0e5f32e897d",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/Resources/ja.lproj/Localizable.stringsdict",
+      "new_path": "replica/Sources/PastoCore/Resources/ja.lproj/Localizable.stringsdict",
+      "before_sha256": "cbd651d369b6e4156ec091cc46b97a477273a7476f9082bb3f14b03d199e207d",
+      "after_sha256": "cbd651d369b6e4156ec091cc46b97a477273a7476f9082bb3f14b03d199e207d",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/Resources/ko.lproj/Localizable.strings",
+      "new_path": "replica/Sources/PastoCore/Resources/ko.lproj/Localizable.strings",
+      "before_sha256": "c4bb2cdba9d130fbc2443cdc5ac84485f444494c56526c4ee66c108e4510e7f7",
+      "after_sha256": "c4bb2cdba9d130fbc2443cdc5ac84485f444494c56526c4ee66c108e4510e7f7",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/Resources/ko.lproj/Localizable.stringsdict",
+      "new_path": "replica/Sources/PastoCore/Resources/ko.lproj/Localizable.stringsdict",
+      "before_sha256": "9a0b1198ca2e28753b38e4d9aa70e5ce026ebfe62308cb36bc45928029b71981",
+      "after_sha256": "9a0b1198ca2e28753b38e4d9aa70e5ce026ebfe62308cb36bc45928029b71981",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/Resources/nl.lproj/Localizable.strings",
+      "new_path": "replica/Sources/PastoCore/Resources/nl.lproj/Localizable.strings",
+      "before_sha256": "da08ffe70b07807eaa94a10ca20e17a50126bf20450c7f00e6748ed882c16335",
+      "after_sha256": "da08ffe70b07807eaa94a10ca20e17a50126bf20450c7f00e6748ed882c16335",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/Resources/nl.lproj/Localizable.stringsdict",
+      "new_path": "replica/Sources/PastoCore/Resources/nl.lproj/Localizable.stringsdict",
+      "before_sha256": "270356615bf42ba73be94323210365be1d6adfe845256517acd9b6cf343a7809",
+      "after_sha256": "270356615bf42ba73be94323210365be1d6adfe845256517acd9b6cf343a7809",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/Resources/pl.lproj/Localizable.strings",
+      "new_path": "replica/Sources/PastoCore/Resources/pl.lproj/Localizable.strings",
+      "before_sha256": "3b19a629622629e789d0c74359e3a7a0205286b05d93f4abc0a3fea0fa9918f8",
+      "after_sha256": "3b19a629622629e789d0c74359e3a7a0205286b05d93f4abc0a3fea0fa9918f8",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/Resources/pl.lproj/Localizable.stringsdict",
+      "new_path": "replica/Sources/PastoCore/Resources/pl.lproj/Localizable.stringsdict",
+      "before_sha256": "1c257470d804b04c12cab3de12ca8747cc1857bcef963c44e732a5614f5b4232",
+      "after_sha256": "1c257470d804b04c12cab3de12ca8747cc1857bcef963c44e732a5614f5b4232",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/Resources/pt-BR.lproj/Localizable.strings",
+      "new_path": "replica/Sources/PastoCore/Resources/pt-BR.lproj/Localizable.strings",
+      "before_sha256": "2cecee1c131b62980022bec13481d9edf17da4be7649ccf955a18dd4b86d28c2",
+      "after_sha256": "2cecee1c131b62980022bec13481d9edf17da4be7649ccf955a18dd4b86d28c2",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/Resources/pt-BR.lproj/Localizable.stringsdict",
+      "new_path": "replica/Sources/PastoCore/Resources/pt-BR.lproj/Localizable.stringsdict",
+      "before_sha256": "793057162eaa4cf343f9b8b1cbe83ec3aa4641d0812055b6c7fbbbcb4fb648f1",
+      "after_sha256": "793057162eaa4cf343f9b8b1cbe83ec3aa4641d0812055b6c7fbbbcb4fb648f1",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/Resources/pt-PT.lproj/Localizable.strings",
+      "new_path": "replica/Sources/PastoCore/Resources/pt-PT.lproj/Localizable.strings",
+      "before_sha256": "cd025cb2cc56b16c83a9b86076bd57ba0882968171c81b74da3fe3f280a3036c",
+      "after_sha256": "cd025cb2cc56b16c83a9b86076bd57ba0882968171c81b74da3fe3f280a3036c",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/Resources/pt-PT.lproj/Localizable.stringsdict",
+      "new_path": "replica/Sources/PastoCore/Resources/pt-PT.lproj/Localizable.stringsdict",
+      "before_sha256": "1b28f44dabcb27b6f00d3c8ac5c78b29c6b63510b1525d5cfb7d812cf3e1d399",
+      "after_sha256": "1b28f44dabcb27b6f00d3c8ac5c78b29c6b63510b1525d5cfb7d812cf3e1d399",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/Resources/ru.lproj/Localizable.strings",
+      "new_path": "replica/Sources/PastoCore/Resources/ru.lproj/Localizable.strings",
+      "before_sha256": "d0303fd246f5bf119adef3989ebf0381dbba175bc3ef5398b0254badc85e3c59",
+      "after_sha256": "d0303fd246f5bf119adef3989ebf0381dbba175bc3ef5398b0254badc85e3c59",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/Resources/ru.lproj/Localizable.stringsdict",
+      "new_path": "replica/Sources/PastoCore/Resources/ru.lproj/Localizable.stringsdict",
+      "before_sha256": "4195d7291edb5f78b23c95e44e06e52ae313e0ae4421b9ce28010d5df97bb6f4",
+      "after_sha256": "4195d7291edb5f78b23c95e44e06e52ae313e0ae4421b9ce28010d5df97bb6f4",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/Resources/zh-Hans.lproj/Localizable.strings",
+      "new_path": "replica/Sources/PastoCore/Resources/zh-Hans.lproj/Localizable.strings",
+      "before_sha256": "e46dc399e751c47d19cfa4e2e740ccca1b878ead848fb531aba98f8ee329af4b",
+      "after_sha256": "e46dc399e751c47d19cfa4e2e740ccca1b878ead848fb531aba98f8ee329af4b",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/Resources/zh-Hans.lproj/Localizable.stringsdict",
+      "new_path": "replica/Sources/PastoCore/Resources/zh-Hans.lproj/Localizable.stringsdict",
+      "before_sha256": "c1f7a75193a101959e60911f9014ab3ca0ef905a4e2105e9cba5133d1433e1ad",
+      "after_sha256": "c1f7a75193a101959e60911f9014ab3ca0ef905a4e2105e9cba5133d1433e1ad",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/Resources/zh-Hant.lproj/Localizable.strings",
+      "new_path": "replica/Sources/PastoCore/Resources/zh-Hant.lproj/Localizable.strings",
+      "before_sha256": "a1079aed539ca812205d2f3c81dc17cdf5367a80ec933b15ff3342904f60511b",
+      "after_sha256": "a1079aed539ca812205d2f3c81dc17cdf5367a80ec933b15ff3342904f60511b",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaCore/Resources/zh-Hant.lproj/Localizable.stringsdict",
+      "new_path": "replica/Sources/PastoCore/Resources/zh-Hant.lproj/Localizable.stringsdict",
+      "before_sha256": "8e8115b30d8b5f765fc5b94b485c028b6bf01510e888b2c568ad7978a48756d4",
+      "after_sha256": "8e8115b30d8b5f765fc5b94b485c028b6bf01510e888b2c568ad7978a48756d4",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaHelper/HelperMain.swift",
+      "new_path": "replica/Sources/PastoHelper/HelperMain.swift",
+      "before_sha256": "60d98b18e87390fcc6c8de6a43b75d9505bfd74b822eb9e0fc6dc58bbfd47e12",
+      "after_sha256": "60d98b18e87390fcc6c8de6a43b75d9505bfd74b822eb9e0fc6dc58bbfd47e12",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaMCP/PasteReplicaMCP.swift",
+      "new_path": "replica/Sources/PastoMCP/PastoMCP.swift",
+      "before_sha256": "1e91ac90ddd2b1d637807c926d72170628e4cca9536abf72d31104ccf4d8941f",
+      "after_sha256": "a24d10054a394ffc156f5f94c793df6851fdbcfd6a0366fed2a3090c926daef9",
+      "classification": "root_approved_nonlexical_or_compatibility_change_requires_contract_review",
+      "changes": [
+        {
+          "old": "PasteReplicaCore",
+          "new": "PastoCore",
+          "count": 1
+        },
+        {
+          "old": "PasteReplicaMCP",
+          "new": "PastoMCP",
+          "count": 1
+        },
+        {
+          "old": "paste-replica-mcp",
+          "new": "pasto-mcp",
+          "count": 3
+        },
+        {
+          "old": "                let value = ClipboardItem(title: String(content.prefix(80)), kind: detectKind(content), plainText: content,\n                                          sourceName: \"Paste Replica MCP\", pinboardIDs: boardID.map { [$0] } ?? [],\n                                          sourceDevice: \"此Mac\", isInHistory: boardID == nil)\n",
+          "new": "                let value = ClipboardItem(title: String(content.prefix(80)), kind: detectKind(content), plainText: content,\n                                          sourceName: \"Pasto MCP\", pinboardIDs: boardID.map { [$0] } ?? [],\n                                          sourceDevice: \"此Mac\", isInHistory: boardID == nil)\n",
+          "count": 1
+        },
+        {
+          "old": "                          \"capabilities\": [\"tools\": [\"listChanged\": false]],\n                          \"serverInfo\": [\"name\": \"paste-replica\", \"version\": \"0.1.0\"],\n                          \"instructions\": \"独立本地复刻。工具字段根据安装包静态证据重建，未宣称与原版完整 schema 或语义等价。replica_* 为明确扩展。create_item 不写剪贴板。\"]\n",
+          "new": "                          \"capabilities\": [\"tools\": [\"listChanged\": false]],\n                          \"serverInfo\": [\"name\": \"pasto\", \"version\": \"0.1.0\"],\n                          \"instructions\": \"独立本地复刻。工具字段根据安装包静态证据重建，未宣称与原版完整 schema 或语义等价。replica_* 为明确扩展。create_item 不写剪贴板。\"]\n",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaObjC/PRObjCExceptionCatcher.m",
+      "new_path": "replica/Sources/PastoObjC/PRObjCExceptionCatcher.m",
+      "before_sha256": "99b8ce9f229954f427517a16c4a976b6b1ad776873c0eb5a6856b6a82943af6e",
+      "after_sha256": "99b8ce9f229954f427517a16c4a976b6b1ad776873c0eb5a6856b6a82943af6e",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaObjC/PRPanelGlassBackground.m",
+      "new_path": "replica/Sources/PastoObjC/PRPanelGlassBackground.m",
+      "before_sha256": "79491f7a55dfd2dcaeb9c03099bce75c386b58c2229bc8d855d2a5fd0e875a04",
+      "after_sha256": "79491f7a55dfd2dcaeb9c03099bce75c386b58c2229bc8d855d2a5fd0e875a04",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaObjC/include/PRObjCExceptionCatcher.h",
+      "new_path": "replica/Sources/PastoObjC/include/PRObjCExceptionCatcher.h",
+      "before_sha256": "04b59d8c6afe6efa1496969e34c823ea16752e7c924d9f123a767acfe804a384",
+      "after_sha256": "04b59d8c6afe6efa1496969e34c823ea16752e7c924d9f123a767acfe804a384",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaObjC/include/PRPanelGlassBackground.h",
+      "new_path": "replica/Sources/PastoObjC/include/PRPanelGlassBackground.h",
+      "before_sha256": "1e4f72b473bdeb1b90f82daa3e72dd0c75de072e06b9a15a21df0cf8ac818091",
+      "after_sha256": "1e4f72b473bdeb1b90f82daa3e72dd0c75de072e06b9a15a21df0cf8ac818091",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Sources/PasteReplicaObjC/include/module.modulemap",
+      "new_path": "replica/Sources/PastoObjC/include/module.modulemap",
+      "before_sha256": "8f7edd9a34edf9a67e2ab135dd39dec0e5e31495be6116bf72c6ed32abe1223d",
+      "after_sha256": "a0b506be5b34eaa0b9594ece73f823634f8c5b3346b7d6535617a68ee63878b6",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": [
+        {
+          "old": "PasteReplicaObjC",
+          "new": "PastoObjC",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "old_path": "replica/Tests/HotKey/HotKeyHarness.swift",
+      "new_path": "replica/Tests/HotKey/HotKeyHarness.swift",
+      "before_sha256": "39b44c83c46b8fa98e31028d1980e5933cd4cbb7b569c1c3dd458fb10b9fb6d2",
+      "after_sha256": "39b44c83c46b8fa98e31028d1980e5933cd4cbb7b569c1c3dd458fb10b9fb6d2",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Tests/HotKey/ShortcutModelHarness.swift",
+      "new_path": "replica/Tests/HotKey/ShortcutModelHarness.swift",
+      "before_sha256": "19f3ffd97b1d74fc4256ef841241f7e37834a77a2fc2b4878d75ab3e5e89e799",
+      "after_sha256": "19f3ffd97b1d74fc4256ef841241f7e37834a77a2fc2b4878d75ab3e5e89e799",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Tests/Native/UIInteractionHarness.swift",
+      "new_path": "replica/Tests/Native/UIInteractionHarness.swift",
+      "before_sha256": "0c34453c2d29a471dabb94864766c1504bf53f0d78e09e1baa6832231f72ef73",
+      "after_sha256": "240424e20f71af1221fa52f65bc5378e60701e1e87c366a8414f299875a19089",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": [
+        {
+          "old": "PasteReplicaCore",
+          "new": "PastoCore",
+          "count": 1
+        },
+        {
+          "old": "PasteReplica",
+          "new": "Pasto",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "old_path": "replica/Tests/Native/WindowSharingPolicyHarness.swift",
+      "new_path": "replica/Tests/Native/WindowSharingPolicyHarness.swift",
+      "before_sha256": "43debaa4a459a8cceffe629408660b781593f2c07968ad6aee1d07f31fc0a444",
+      "after_sha256": "0451f5d7b6ad6c74e705fd3168ee95fd5cb7f21c0743f72261a22698c2cc0b33",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": [
+        {
+          "old": "PasteReplicaCore",
+          "new": "PastoCore",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "old_path": "replica/Tests/Original/FunctionOracle.swift",
+      "new_path": "replica/Tests/Original/FunctionOracle.swift",
+      "before_sha256": "bb5cb9a1da5e34c7b8cd399a5bddf66f5c6d0254e9a24307c6786945646fd253",
+      "after_sha256": "6c4f3919023a783a585c2d95cc059f2fc1ab4b36e2fb11f0d222c44dc2871a12",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": [
+        {
+          "old": "PasteReplicaCore",
+          "new": "PastoCore",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "old_path": "replica/Tests/Original/OracleABI.h",
+      "new_path": "replica/Tests/Original/OracleABI.h",
+      "before_sha256": "7f99dcf4ec4b9efdab97b73e01336fcf99868d648869e80542802a7cf93a678c",
+      "after_sha256": "7f99dcf4ec4b9efdab97b73e01336fcf99868d648869e80542802a7cf93a678c",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Tests/Original/OracleObjects.m",
+      "new_path": "replica/Tests/Original/OracleObjects.m",
+      "before_sha256": "c772fe14a12db1aca540afd9ebf2cd963a5b10fdd3083fc6595b37c84dbaa5d9",
+      "after_sha256": "c772fe14a12db1aca540afd9ebf2cd963a5b10fdd3083fc6595b37c84dbaa5d9",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Tests/PasteReplicaCoreTests/ClipboardStoreTests.swift",
+      "new_path": "replica/Tests/PastoCoreTests/ClipboardStoreTests.swift",
+      "before_sha256": "22d8b873d55e169dd3985e3cc600a449ddcad779c3cb4a8a500d7982f2c995de",
+      "after_sha256": "7de467d54209181bce099b6cc20d03cca55b1bab00c7ae26c36d646a328fd210",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": [
+        {
+          "old": "PasteReplicaCore",
+          "new": "PastoCore",
+          "count": 1
+        },
+        {
+          "old": "PasteReplica",
+          "new": "Pasto",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "old_path": "replica/Tests/PasteReplicaCoreTests/ValidationMain.swift",
+      "new_path": "replica/Tests/PastoCoreTests/ValidationMain.swift",
+      "before_sha256": "288285260e9743f9c70646b2ac2561eeb627d00f68fc4d948bde3a860a3f67ad",
+      "after_sha256": "288285260e9743f9c70646b2ac2561eeb627d00f68fc4d948bde3a860a3f67ad",
+      "classification": "lexical_rename_candidate_requires_runtime_string_review",
+      "changes": []
+    },
+    {
+      "old_path": "replica/Package.swift",
+      "new_path": "replica/Package.swift",
+      "before_sha256": "83cdc17807ff174b61583d841491a654440317278c55a305b98c6b77203fc362",
+      "after_sha256": "a965840bf97b7127d188cf624d30a9b0ac963dcc62d5216df1474d246b768aaa",
+      "classification": "package_or_tooling_exact_lexical_rename",
+      "changes": [
+        {
+          "old": "PasteReplicaCoreTests",
+          "new": "PastoCoreTests",
+          "count": 3
+        },
+        {
+          "old": "PasteReplicaHelper",
+          "new": "PastoHelper",
+          "count": 3
+        },
+        {
+          "old": "PasteReplicaObjC",
+          "new": "PastoObjC",
+          "count": 3
+        },
+        {
+          "old": "PasteReplicaCore",
+          "new": "PastoCore",
+          "count": 6
+        },
+        {
+          "old": "PasteReplicaMCP",
+          "new": "PastoMCP",
+          "count": 2
+        },
+        {
+          "old": "PasteReplica",
+          "new": "Pasto",
+          "count": 4
+        },
+        {
+          "old": "paste-replica-core-tests",
+          "new": "pasto-core-tests",
+          "count": 1
+        },
+        {
+          "old": "paste-replica-mcp",
+          "new": "pasto-mcp",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "old_path": "replica/scripts/test-helper-lifecycle.py",
+      "new_path": "replica/scripts/test-helper-lifecycle.py",
+      "before_sha256": "ed2abbd23669357c9f3b60596b609020279f8c4fe4afe617566da4b337433449",
+      "after_sha256": "2700061a04530ab56bd18aebb564edb9c822350c792baeb55dc15d5aed466d80",
+      "classification": "package_or_tooling_exact_lexical_rename",
+      "changes": [
+        {
+          "old": "PasteReplicaHelper",
+          "new": "PastoHelper",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "old_path": "replica/scripts/test-original-functions.py",
+      "new_path": "replica/scripts/test-original-functions.py",
+      "before_sha256": "bf69349d6e9986222cf191021cce7d592b4adfb9c13c293f2e69b6282d29c39d",
+      "after_sha256": "e99ed018b9758ae55f1afa906bfac1eb6674f272bcb7e98f902478d268854077",
+      "classification": "package_or_tooling_exact_lexical_rename",
+      "changes": [
+        {
+          "old": "PasteReplicaCore",
+          "new": "PastoCore",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "old_path": "replica/scripts/test-ui-interaction.sh",
+      "new_path": "replica/scripts/test-ui-interaction.sh",
+      "before_sha256": "e2b50ac942b58bd3289f6b371f0dbac579706cac3c86b78d58ab95d4f0339092",
+      "after_sha256": "b9146f821fc8c19ddfdbec88f5671f8bb3798e83a07801601a9660182e29f0cd",
+      "classification": "package_or_tooling_exact_lexical_rename",
+      "changes": [
+        {
+          "old": "PasteReplicaCore",
+          "new": "PastoCore",
+          "count": 1
+        },
+        {
+          "old": "PasteReplica",
+          "new": "Pasto",
+          "count": 4
+        }
+      ]
+    },
+    {
+      "old_path": "replica/scripts/test-window-policy.sh",
+      "new_path": "replica/scripts/test-window-policy.sh",
+      "before_sha256": "e8e589c00351f7734a5bdfe6a23e92c0a722fef8c3bca6c4091c26f6af84d342",
+      "after_sha256": "4706086b1b345473c789b5c48015c530e2056b1c57e8e04bdda005049bbd95b7",
+      "classification": "package_or_tooling_exact_lexical_rename",
+      "changes": [
+        {
+          "old": "PasteReplicaCore",
+          "new": "PastoCore",
+          "count": 1
+        },
+        {
+          "old": "PasteReplica",
+          "new": "Pasto",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "old_path": "replica/scripts/validate.sh",
+      "new_path": "replica/scripts/validate.sh",
+      "before_sha256": "c2fe85f51661683f9657e6ee3b81939ccb26941d87b646ce853b2922dea258b2",
+      "after_sha256": "6e9de821c02efa6b3b36e923ce6c9a078c4ae415cb2b6ac92fd307673ee6acef",
+      "classification": "package_or_tooling_exact_lexical_rename",
+      "changes": [
+        {
+          "old": "paste-replica-core-tests",
+          "new": "pasto-core-tests",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "old_path": "scripts/function_ledger.py",
+      "new_path": "scripts/function_ledger.py",
+      "before_sha256": "3ddba3120b1376f6179fca8612bb3aa947c27368bfc1bf2f53616c8742e01fa1",
+      "after_sha256": "9c71dbf7ba5543c7142e838ac0e47dd1fcc96607945adeb20e46a8b60321e5fe",
+      "classification": "package_or_tooling_exact_lexical_rename",
+      "changes": [
+        {
+          "old": "paste-replica-core-tests",
+          "new": "pasto-core-tests",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "old_path": "scripts/macho_imports.py",
+      "new_path": "scripts/macho_imports.py",
+      "before_sha256": "db7ec7acae49cb8e328f5fea8b9c05d3bc1fd357fe313a227e9aac6c9baa52b2",
+      "after_sha256": "92abd5616f5f7962e0a7b51bc8330ea624ebe1db07d483a3b9ba8c5f3949574b",
+      "classification": "package_or_tooling_exact_lexical_rename",
+      "changes": [
+        {
+          "old": "PasteReplicaHelper",
+          "new": "PastoHelper",
+          "count": 3
+        },
+        {
+          "old": "PasteReplicaObjC",
+          "new": "PastoObjC",
+          "count": 1
+        },
+        {
+          "old": "PasteReplicaCore",
+          "new": "PastoCore",
+          "count": 1
+        },
+        {
+          "old": "PasteReplica",
+          "new": "Pasto",
+          "count": 3
+        }
+      ]
+    },
+    {
+      "old_path": "scripts/source_application_color_audit.py",
+      "new_path": "scripts/source_application_color_audit.py",
+      "before_sha256": "46ca95d89d1a79641cf9361287c9d75741fc0eccd9b4dcf0676ac4ae4ddac3d4",
+      "after_sha256": "8d11039de1c74dbe25773e53398146af5648e3b4a4edcd747138db72af2ad718",
+      "classification": "package_or_tooling_exact_lexical_rename",
+      "changes": [
+        {
+          "old": "PasteReplicaCore",
+          "new": "PastoCore",
+          "count": 1
+        }
+      ]
+    }
+  ],
+  "original_evidence_sha256_unchanged": {
+    "decompiled/Paste-Helper/part-0000.c": "1b4272c69ac9af1b0429b41863e47594d12543e57149a5e4bca35115be6d730d",
+    "decompiled/Paste-Helper/part-0001.c": "71e9cbd4ab18264a6f3041b7dcab9d34445e4735219783bd00e0f69f26693933",
+    "decompiled/Paste-Helper/part-0002.c": "078deca4aee4ee2a6c7609efe3605a4ca38eebf947dc39f252595efec6a07f8c",
+    "decompiled/Paste/part-0002.c": "f663d84571dac14956b288f21c215abd0dbdf9a6566fd638bc4c335be746d56a",
+    "decompiled/Paste/part-0003.c": "27bcb54c47c8e9e30680ae4b8f56fbdbce800c80683522ff19b3ace8dc9ea19d",
+    "decompiled/Paste/part-0006.c": "ef865951a0668a3754fe887279c32830e52a089a296740bf62591fdc2ea0856b",
+    "decompiled/Paste/part-0007.c": "b77a9dc6ee03da6137adf344e07887724cf0376c03c25c0ec56dfc1bae174221",
+    "decompiled/Paste/part-0008.c": "a279fdb108c03d47b17ad852c54e0d0626904765b2dc71f5ad3984917c24feec",
+    "decompiled/Paste/part-0010.c": "4934e05cce71e1f175cb4e57095fd58a3304ab5602195f234a479f4fdceca331",
+    "decompiled/Paste/part-0013.c": "ce3d880d4426384767af4170e1edbe0a0a24157c0c3a8a3170355626300eb23f",
+    "decompiled/Paste/part-0016.c": "3785c019ffc79647ac073a899cb04b2673e858ceeb806f5e63c1d6abc94ec6ff",
+    "decompiled/Paste/part-0018.c": "6acb65b820b44ae853d63b6637346f45233933ee6e13d8fc8f7d05997fe5064a",
+    "decompiled/Paste/part-0020.c": "ff5af253204e6e9ec23bda4567bf140b13114853dc0f9de4e9b1c704c5057a87",
+    "decompiled/Paste/part-0023.c": "359cac28e1a203ff04a7d70f2ac0a9b69b3a099a7a28e90f2f95a489888a165f",
+    "decompiled/Paste/part-0024.c": "c746402042acafc8a3cf94895790f4db806ce9370e2b862bd52f5a210608a5c7",
+    "decompiled/Paste/part-0025.c": "0ae830677f9125810f1503c3e7c4adf996363a688c672660a2f39f55d1ad21f3",
+    "decompiled/Paste/part-0026.c": "8a94b9e43c4628690faa1c5a45a38bb52095c13a6dbd049d8c7a95e4920bfb9d",
+    "decompiled/Paste/part-0027.c": "b352b24af3e02d68094161af872feeb725b5760be58e6c0f70c4f21d3eaa8e09",
+    "decompiled/Paste/part-0028.c": "3c6e987b941be568a18c77fccfb4f303bf370e3b34f1d1ef17a07c4740f67562",
+    "decompiled/Paste/part-0029.c": "d4d3ac7ce5b3d383c53fb31a0bd1c2563aadb3d69ba83ca8d12ae78da5f593bb",
+    "decompiled/Paste/part-0030.c": "d101fa4201288216b5987b2be20e92fbfd83791b7e845e4434110f3454bfb405",
+    "decompiled/Paste/part-0031.c": "ac383d7f7b36f02b629c6822f90ebc97481c926acbdff807883ce08369bc7ac8",
+    "decompiled/Paste/part-0032.c": "967da760809b768711759af6b5ae37050922251e54cbd6e037079ad13a38cadf",
+    "decompiled/Paste/part-0035.c": "7f8ae6e21b92fc77d7b6ea1f6ccb91c645ef08635c5ca78fa624ff9df7ec3ee4",
+    "decompiled/Paste/part-0036.c": "8544f94cac07a1d84e814cc1d617fabfbb9b4f65a8c77bea9db31c66dd44307e",
+    "decompiled/Paste/part-0037.c": "706f7b31aa6d51b120e01b42ac117c562ff0ffeec431a55c6b74071698017512",
+    "decompiled/Paste/part-0039.c": "a051013c0148e53f3d00856fa58da92735972718fb0733c8825997d032a29f0a",
+    "decompiled/Paste/part-0040.c": "76446e324b8ccbbd1b8667d502bd46d8d86b795ba5bf97ea1dcbe0f040349d20",
+    "decompiled/Paste/part-0041.c": "b3bb30bb669e464487f31dbb390878f6da82334aed111876b83062799907cb9f",
+    "decompiled/Paste/part-0042.c": "e6b5f876ebd753dd024d4f26cab5606375b15125daad6e5760d3299a9e9e6214",
+    "decompiled/Paste/part-0043.c": "0386e3a568ac262b99ce519a8abfe11872d31b5fb4809db29209a7bd5fcfa99b",
+    "decompiled/Paste/part-0044.c": "f12062b74f9554b7a3a1aad577aed44ce25f679a3665a69e7702373568147470",
+    "decompiled/Paste/part-0045.c": "4d28bb01ff6dcfbfde6ca723fa274fe045f8abba652715a487d828441561ac1f",
+    "decompiled/Paste/part-0048.c": "3d56d089f8dfede5907ef765ba528c863e06e978486c14dc6e76c01bd220faad",
+    "decompiled/Paste/part-0052.c": "1920b202c11727dc45d4146422aa6c2082e2c88f6bc86abddb11e1a8b21393e0",
+    "decompiled/Paste/part-0053.c": "d56c411571d1b38b7a0425db4a50604f8962240c50028bce9e071acf34cfde09",
+    "decompiled/Paste/part-0057.c": "95338592e0b4130c49b4645c96f499ec2b0e32dfc601721d4fdee10f496be4b1",
+    "decompiled/Paste/part-0058.c": "722b200cf2f794ba875ba5e0d2247758f65a6536c95cc3fdc03d8050d107df47",
+    "decompiled/Paste/part-0065.c": "97fbe5e94e4e0de40862b471d988a2c8eec2b1e6f1c847279aee5e2ba3f06195",
+    "decompiled/Paste/part-0069.c": "c5a433d7d52f551df427ee79b0459a80890af6563ce9af3c1b88c636307e2785",
+    "decompiled/Paste/part-0070.c": "591c6bc2f40fa233a672ab70a6c063490fc3a9951b9e8a0877b84386e26c9eb5",
+    "decompiled/Paste/part-0071.c": "ef81bca05780085a4f225071654cbb04318b5e3a007a112c5772f57a6086c134",
+    "decompiled/Paste/part-0072.c": "c0cf4a26a8d5a82124c22dddfb8a48f4a3429fd94baa76c05f7bfcc28419d1a3",
+    "decompiled/Paste/part-0082.c": "203a027094b1a0f43390c4ef9b18c9bef35e45807c9dbea75b90b709c903c080",
+    "decompiled/Paste/part-0083.c": "42734cd9acfb12b729871a253ab83a85c724f222bc6fe50f805bb5e95c3e8391",
+    "decompiled/Paste/part-0084.c": "68c2d829613043fd50b9f90dfa66389c2e18535fdad46deb9bae4a7a3796aaaf",
+    "decompiled/Paste/part-0134.c": "6c108dcb9ac4395e4e2bf6da746be5462bd67f8d8f47234fbd9b36741760570c",
+    "decompiled/Paste/part-0148.c": "723da8f16398662e4c8b428af468eaf4e3a4e6ef9116af90c397dc0931d53011",
+    "decompiled/Paste/part-0149.c": "8e71709f9e9f40900711e547e085d1ac76460cc1c02ed4a60181c4c0e9da4e16",
+    "decompiled/Paste/part-0153.c": "18e1e1f44609dcfe7a70a6637f66418a704e1504d26d2f3ce2026f38e4809156",
+    "decompiled/Paste/part-0154.c": "f2917299ee1597a397b6c727090009058bd7dfc5b4670740d8cd8dc208196f38",
+    "decompiled/Paste/part-0155.c": "cf98b28176d129008bc0e555772295119dcef73c544edd891aa881c79b2de02c",
+    "decompiled/Paste/part-0156.c": "4d3b19d81e216e64c95c3ec006c9479f083b58e67affa4077c67ca4f86f52ebe",
+    "decompiled/Paste/part-0157.c": "5ed8f68f8cc57f912a5e04b423581886c01acd02662ef7f3a478c564f4d7b787",
+    "decompiled/Paste/part-0158.c": "9abdd3528efa1a4f7d0cb57ddb5947e1da7602163e7c485fb3eae653554077c1",
+    "decompiled/Paste/part-0159.c": "3ac5976b51108fe056121e99e8040eb6f2ee15cb3b4ae1fa60ca05d979d7db06",
+    "decompiled/Paste/part-0160.c": "72e5616fecef6bb9c5592f98fcd33203e828e607b07cd8b2d6f43d4d3c8a3b77",
+    "decompiled/Paste/part-0161.c": "ea7df71dddad4ebf94e7a516e0e29bae41569528a830da8641330aab3626a29d",
+    "decompiled/Paste/part-0166.c": "3022b021efaecc15f2f6646658618e7418ff186625b852b0cc54003985e8ce3b",
+    "decompiled/Paste/part-0167.c": "535d8bc698505330887e718253d5c6b947d5e5dd1f7abb6904ed5b97e5b50640",
+    "decompiled/Paste/part-0169.c": "ddac305bcce5d5b10c0285dc674f1839de5e9e7553b92dbacc11de6c6c019cee",
+    "decompiled/Paste/part-0170.c": "9f581ffa94931742e375d80a7ca7c6b686cc325ee5779800dc07e521158f00a7",
+    "decompiled/Paste/part-0171.c": "887e40a9c53727d1152894954995889a5c29dd54e5276433483f8752e42ec286",
+    "decompiled/Paste/part-0172.c": "0e1627ed5a23d7a79e6d923896ae418d78f5d336730c5311f734c70481f3264d",
+    "decompiled/Paste/part-0173.c": "10eb2e31245e2339f83aa8a0dd695a6395de2668ae22013d7598524b0ba9f6e4",
+    "decompiled/Paste/part-0174.c": "13c6f8f4c43b3c0c87d24598a694f4505fc72f7e30d6a7e491296512c9f51fd2",
+    "decompiled/Paste/part-0175.c": "284f8665187d48361517ebde4d62c38d9aec7f87baa48111891c8945ad939fb8",
+    "decompiled/Paste/part-0176.c": "b2defc0c97353b94fc02818b155daece3ac8b44c34518d098d78fefcc7ffc8d3",
+    "decompiled/Paste/part-0177.c": "b0421220bb543958e4be78f788864fc56f65ead545333e12ea155ddd4b4166b8",
+    "decompiled/Paste/part-0178.c": "a5658a2cf09c9c3fe7d2f1fe7c347ca53bc753914a51da00bd7818804427345d",
+    "decompiled/Paste/part-0180.c": "7b8fa7855469038065e9d8d8513f309a13580caa176e146c2e65ee508e558e07",
+    "decompiled/Paste/part-0181.c": "74295222b009f4c14ea095dad0de6ec56655f6674dde1090a1cdbe436f2e34ed",
+    "decompiled/Paste/part-0183.c": "f8aa3619be788909639b87d859128246b1e28b99a4461ce0ce99131343c773ac",
+    "decompiled/Paste/part-0184.c": "0d41b924caf829f6c0014a26084dd7552847bab273b7b717174d27beef0db57a",
+    "decompiled/Paste/part-0185.c": "133b8fa9e3d8ff66625cd08e692d51e77c5cf4e94f2bf5c78881e0fbb8fc7344",
+    "decompiled/Paste/part-0188.c": "0a5135f180503ecc943d86661099fc815922b5a0fe6995b72cf5bc5c8a712954",
+    "decompiled/Paste/part-0190.c": "b569ccc807f1033ea8405ef5ea184c5222899ed8e3d85f69b417f8400ac7fb4d",
+    "decompiled/Paste/part-0192.c": "fb2dbd7854116bf73668c76b7bce9d0f6b9a8b07f2a7a04bce7d6222e5560379",
+    "decompiled/Paste/part-0193.c": "2edc6f578250e86eae80c7bbae2f9c128f1ac810e19efc875ee4db93e2432a52",
+    "decompiled/Paste/part-0194.c": "77643f9b6f4e703967884fc35f804968e8668aaed2e249b1f7f85da16dff9164",
+    "decompiled/Paste/part-0195.c": "01278b23e435568ab0aac4a69d15385d1e14f873f1c0cf46a10ccf5ef803f225",
+    "decompiled/Paste/part-0196.c": "ba8220342d14ad08a2dcc034717b944fe59bfce3abd180a444864fb8915be2cd",
+    "decompiled/Paste/part-0197.c": "df3294f71998eec639ac72a217da2bd754ba7d4ac3dab70e087859f1d4aa4da9",
+    "decompiled/Paste/part-0231.c": "6cde12d42a1c5ed4a4605531cae3bfaa7befbb8024f8b788187619a3e56302b1",
+    "decompiled/Paste/part-0234.c": "c97a88da9b5410bb4076b5c5e74ba2ab92fbd1cc28818f114d6e0cbe7e03d572",
+    "decompiled/Paste/part-0235.c": "4a05a2268f77bf87cc442beaf6364ab03cb6d2749bfc0829185504c2106e1043",
+    "decompiled/Paste/part-0236.c": "8e1bd2c7524719c5f2b7c24997c2a83a23932f9148c8f05a8d4200bea177bb64",
+    "decompiled/Paste/part-0237.c": "967092b390007bac83f7731207493dc3e0cdd5594818bf196e39cb6972c7f145",
+    "decompiled/Paste/part-0238.c": "3fd2d8efd902e45bc70eb507173db0aa85c91da7a42eeeed0b88a2aa1ba75710",
+    "decompiled/Paste/part-0239.c": "d0ebae1365449c8f2af4eefc970ad7ecdd263ec64a84a57b6e05acbf85a6dd7f",
+    "decompiled/Paste/part-0240.c": "567823704105756cb583aa6554f48a7fe7c2e66e631bdfc4f88e109e0a104b86",
+    "decompiled/Paste/part-0244.c": "fc8cb91cf35e50c58a472874c37ab03e934344a8eeeab753547983aed593139b",
+    "decompiled/Paste/part-0245.c": "9f088da4a3e021814a1dcb958aad6036932caa5f48e72cba9722703c299691c6",
+    "decompiled/Paste/part-0246.c": "1ad7fc14c6b68442634439057fb0f7cc4277658d7fb49d75e360f0e27cbfebe6",
+    "decompiled/Paste/part-0248.c": "ae09c276577d34e8cb1e1c64dc5ad10765737edae0b24e4ff0bd6a51a3bf02c6",
+    "decompiled/Paste/part-0249.c": "b0a81b3fdb88918126adfc091fb465326a22c2ebb98277454563a0a77c6370ed",
+    "decompiled/Paste/part-0251.c": "bb850f3ed721e4e8a8991e45e6f4cfc53021a0b7ad287ded092a30f76a422f6e",
+    "decompiled/Paste/part-0253.c": "5fe6616f0a3dbf914747aefd647f76f8750fb58bfb36ddc4b268425fe1705b96",
+    "decompiled/Paste/part-0254.c": "3cf66c832f6574263ba502fde758a7f7cab9ef072f8921a7c58a83ed7cc65877",
+    "decompiled/Paste/part-0255.c": "4f55a449290b0f70596b153921798c0cec8a2019676a2a1a9057d99316b71bd1",
+    "decompiled/Paste/part-0256.c": "37bcacd2aa01af72f248650cf3126719bbeed9a9b1bbc5dc656e8170d00ff1b4",
+    "decompiled/Paste/part-0257.c": "3a834c51cba4af765acf3ac9aa4de9c6838d79d5da635b30726d030df24a8162",
+    "decompiled/Paste/part-0258.c": "846f2d119bc62ea6b23df5c78db7dc5d8a01c31d5d61aa8a1c821a4b3887d41d",
+    "decompiled/Paste/part-0259.c": "9376b615bc803548cf8ab29fc36c7436722d11b61d2007498c413ddbf2eef9da",
+    "decompiled/Paste/part-0261.c": "2d1c7162c429dadbdc8891137c796d27ee566653e1c5a4342db742cf434251fd",
+    "decompiled/Paste/part-0275.c": "124516881bb663710420ce338d85b6f9a065a0d95602d914b9bee0bc01ac499e",
+    "decompiled/Paste/part-0276.c": "201d0a0259d8e4567830cbc8c807b7c51b1a4f089c95f003c38ee744bfaf1d9b",
+    "decompiled/Paste/part-0279.c": "85e4fc9f5cd10d1a3f4d17c507a6526c5af88bf4064a247cc5657a3e8004d364",
+    "decompiled/Paste/part-0281.c": "263a428cb02dba29c110b47f38c55cbeee7d754ea9d39cf45e86c5657d53aad5",
+    "decompiled/Paste/part-0282.c": "5edd69f4ad7ce6ee9698a53a018cfc6f9ee5d321564e8ea6f1f1ca6b0d7ae1fe",
+    "decompiled/Paste/part-0283.c": "d0eca56a55d76c922a380fa95f464bc02a501a2298487d547ca53df2a74746d7",
+    "decompiled/Paste/part-0284.c": "e3472ec689e8ba02a6d9acb121c1470d74c95270a124bd08cbc5d824e08a77fb",
+    "decompiled/Paste/part-0294.c": "668a90c0122ac98edf792efdd45a7d5512b380d8fdeb30151693e72bbb94905c",
+    "decompiled/Paste/part-0295.c": "87653f82a15811ddbcd7305a0b8b6286b90d86306202a345bac62253687c58a9",
+    "decompiled/Paste/part-0296.c": "5095c4ce6c1370fb93c7195f29778d55c47c5431fc35cab06107fda654c37a10",
+    "decompiled/Paste/part-0297.c": "cbde1daed99ed7e2d743fe90c83da53745cce07595d5db2790df59573efa2d5f",
+    "decompiled/Paste/part-0299.c": "e309c10ad49415232ada0226bf810554b7387428e1afd8eeb2681fc9189b7ed7",
+    "decompiled/Paste/part-0300.c": "ef1e219441f2bdbfb5007b8948a87f8f52c8f29a12c8e6d51116e46585beed57",
+    "decompiled/Paste/part-0301.c": "fbb85165f2cc99adf8414574fe34c2b51307c5d92f5ba5ff1b4fce13e752f337",
+    "decompiled/Paste/part-0302.c": "8b06db2db93d2dba580a2de36d5ed63548890a61a7f8dae55d8c5904ba7b5787",
+    "decompiled/Paste/part-0303.c": "6f121b1f8bae39a3f70e6d8f38cba6fe224f49672db26cfcb67a3a6c5e4c7bd7",
+    "decompiled/Paste/part-0304.c": "50063eec0d630091d3c3bb54c91fa0e865bfa09ae2b6f9fe57edc7e5838f779e",
+    "decompiled/Paste/part-0306.c": "49adb41358956755cf125f1d23a95de33d0c531ce9f993e9a18492e5f5501f62",
+    "decompiled/Paste/part-0307.c": "d59e295cf3380007aec11a8b2e1fcdc4b7d136d0a3c000cb917d7da6d44f24d1",
+    "decompiled/Paste/part-0308.c": "5014aaa3a5960d50ed24c8b34ec74a4f082cfd8c06852e443653840b90d9946d",
+    "decompiled/Paste/part-0309.c": "ac86556386d0537c7f7c4c3a85bfadb68ad63038a74ecb83984b336a23c9a4c5",
+    "decompiled/Paste/part-0310.c": "aa0756a0d55f6906261a82592205c3d382389d09d1cfc3af16a2ab95c8796c8e",
+    "decompiled/Paste/part-0311.c": "d3a29501a835ef773f6d77e3bbed70bc1aeb5b7e015cf1ab7949bc7c3693adae",
+    "decompiled/Paste/part-0312.c": "5f4d0606edd811bd4226fa7cf703a8776e400dca73bc9a447a49d9dffc257bc8",
+    "decompiled/Paste/part-0313.c": "f2fb0b4b1ff6255011f386bd6129afaa9d1f96a00630f354efbef3f9fe80dbc1",
+    "decompiled/Paste/part-0315.c": "ced95a2f23aa1a886ad0cdd41f2126f730e75f4b0e604833b276088bdbac4ee1",
+    "decompiled/Paste/part-1007.c": "84be544d7e0f8d2d09cc535470e6d45aa2d20a45b1794bd7072810a370e942e8",
+    "decompiled/Paste/part-1008.c": "0454047ef80b0eba508ac402758f2820fef37992875817b69e1d2970c362f094",
+    "decompiled/Paste/part-1009.c": "069b27c5f166a4e95c9720375b8dcad35a1b195241bf18a6ca2df9efbe1586d4",
+    "decompiled/Paste/part-1166.c": "562cb236c12caef25ef1dfa8e2a61564576836d1384093877f3f8175c18eefd4",
+    "decompiled/Paste/part-1167.c": "843594bef97f40d8456e270e06c594ac6ea27fe107be2d0a290bb67bea05bb66",
+    "decompiled/Paste/part-1168.c": "4a7fe6603c09d33d956e7dc62bef83596abeb0310061145a4af53a5f1dd2b0ff",
+    "decompiled/Paste/part-1169.c": "cccd6a599d10cc617e8894087e06a46bf0efa1b38d18b1d2ad90c32d8851a129",
+    "decompiled/Paste/part-1170.c": "88a21c344ff5de87977807893bdc0ecf22ec7a8a3dd9c82ed96b4851c70c3478",
+    "decompiled/Paste/part-1171.c": "356962586caa4c47787804e3ebbd4d9d04429383924bbbf49a36387b0d912b47",
+    "decompiled/Paste/part-1172.c": "66f8060347a9bc961231cf555235847074a5f12c6ccd3e7230bbbb25084c8b9f",
+    "decompiled/Paste/part-1173.c": "408b763c40c3735814cf552f3e808d9c55777abd8d4de5b65e0ea956142906a3",
+    "decompiled/Paste/part-1174.c": "42aac89becb202ce5e7f27b866a46e90b25d48f91366e7cecde5dd4b284e8e4a",
+    "decompiled/Paste/part-1176.c": "946fd6cdb381925e4baf562f8ccbfc47ca44a62531993eff66bd296a74817cb5",
+    "decompiled/Paste/part-1177.c": "cf396ab76a5d78620f99fa09064de6d39ab2df28ee5ed17076a913e411470a2f",
+    "decompiled/Paste/part-1178.c": "fdff167a4452800699707224fa0bf6ac3810860839819b0661ed7069516cac52",
+    "decompiled/Paste/part-1179.c": "409871d107a04ca00dbc151401f878204a5c598da35605b52f83af2f432927e7",
+    "decompiled/Paste/part-1180.c": "7159bc643aa8c62651f1a7f43580a0051873009c402d1866c38a38ed04f6c293",
+    "decompiled/Paste/part-1181.c": "e0f8bcd6713f654c7d74285327180cb6d80a764e48f53ddb605927e6c7a136a9",
+    "decompiled/Paste/part-1182.c": "0b3dc11db868933088743e8c4defc5d5ce2dc95811bf8bc0cb289d772d1df94f",
+    "decompiled/Paste/part-1183.c": "c885c36dc376a27048d0bd3835d02d23f5fb52738efeaaeda15da35344af378c",
+    "decompiled/Paste/part-1185.c": "a033c62e7c1e6566bfa7753abe6b487945832d83344b1590e07e797ab3c1b80d",
+    "decompiled/Paste/part-1186.c": "f37f02fda03e5e2df13775e7e69ecf5960046a2964b82a98a84e25d73fbe5a6e",
+    "decompiled/Paste/part-1187.c": "4d33545a1aa64bf3af0d0c62cd127a42bfa97a21ad8964a82a4192a56c10a0be",
+    "decompiled/Paste/part-1188.c": "0f12000a19b0cc9e3469f427c1cb591812e301ceb3c5f236719f1bb6d0321495",
+    "decompiled/Paste/part-1189.c": "c1d0ef0df3d3a1f4974fb8c94a6d63e2c2a834b0c10ccdba97445303f64f72f5",
+    "decompiled/Paste/part-1190.c": "982806c4db34a283cab65c2b533e259e3c94969f378ddb56e05f14ece5132725",
+    "decompiled/Paste/part-1191.c": "85f77208ec304f4fb12690b5a41514c3277bfe38f2333b1dc67fd2c93e3fec39",
+    "decompiled/Paste/part-1192.c": "549bb9d681f50032c6c39d967d8cf1af80132416f5afcdafc9f0cf6f49fc8d74",
+    "decompiled/Paste/part-1193.c": "f936ec1fec76e004cce70ad1a23eef289bbeda986760e42fcf61bf5e4505ff25",
+    "decompiled/Paste/part-1194.c": "20d0b7e0b75aad119e21217e3713d8a719fdc2dfb2c342363f038ff68f7f50e1",
+    "decompiled/Paste/part-1195.c": "86dc50e9aee9aeefd893917c30bbc1ce8600d5509ece79f6b2c1fda86bbaae49",
+    "decompiled/Paste/part-1196.c": "941712ac7733e2ff10fb5eefe2682305288ee262cec84298ae70289d4882c39c",
+    "decompiled/Paste/part-1197.c": "7f496ec824d760307ade6454f1ca5b1b4f6ce9e3f0af25de6bbd50b17150902b",
+    "decompiled/Paste/part-1198.c": "51bb234a4eea23aee32ae76cb7e08fd83563f015812ebd17bf4664172e5f34fb",
+    "decompiled/Paste/part-1199.c": "6c77820bb2dbfae01f01f24b8f8ac5c8acddcb31810f792c70fd1f9333ccd78d",
+    "decompiled/Paste/part-1200.c": "2ffbc3e3882371b17172c2c18f25e7518ebffa57e358bf75918625e006735495",
+    "decompiled/Paste/part-1201.c": "3d44ea5d06b8356be831b2b4a201a63830f5cac58600096e717d720babcd6629",
+    "decompiled/Paste/part-1202.c": "c4d2de356e43eb27cf93c356e0da59d9204261da5f2020ed24280baec9b70f9f",
+    "decompiled/Paste/part-1203.c": "3266f9d6f02932fcd0d09119db1558c8a323428fdde28ff346da330e59cb48c5",
+    "decompiled/Paste/part-1204.c": "fb2949f8f2e07972aeefb60b99620d2ee1a22e0f664f89499f79f52e0fa2f7cb",
+    "decompiled/Paste/part-1206.c": "3bf96e41e05c56f8961b31b66b704f00046496f0f861592ae106444255c2fd47",
+    "decompiled/Paste/part-1207.c": "301f685530cdd1f6b4b3fbe5ec5ecf6ef89d2b53a90e9e05930a9046f02004c7",
+    "decompiled/Paste/part-1208.c": "c11302accaf8bf31dea2c6bbed6e321b4e0878d84cee660588149c4867e981b5",
+    "decompiled/Paste/part-1209.c": "e67d7100de805e3e284d1ec33b9f3c23eb3f8740e21bec429a6ebd864cac9b56",
+    "decompiled/Paste/part-1210.c": "52c71c7a0d0b3c254d5fcdf35c836f342dbd3a58f83882a3ff2ae523f0e0ca50",
+    "decompiled/Paste/part-1211.c": "f5393a1c48408842c872511458f2daf73d92bcf681ff9f5cbd7c148249e3d0d6",
+    "decompiled/Paste/part-1212.c": "c0e2c2887311a172e64957946284fdff3c18c27e70d2709ca3750da0bc05785a",
+    "decompiled/Paste/part-1213.c": "bedf05f24a32034396732a9d7d3d82b74b53710f2ea3189e2a9cb859fa3d576c",
+    "reports/Paste-Helper/function-index.json": "8f9ce065593edac2583d81837ebe8f0a512c273ea7766df384f595e4c97b6435",
+    "reports/Paste/function-index.json": "c44bd5174bf16b3e333279e32f48bcf25ec73085b3bd14ad94fedc5f934d78b6",
+    "reports/target-manifest.json": "3e70f023c56a46a256c6e64646e3ae220361a69ef75f20b6b8ebf495786b1ce0"
+  },
+  "original_function_ids_unchanged": true,
+  "module_product_mapping": {
+    "PasteReplicaCoreTests": "PastoCoreTests",
+    "PasteReplicaHelper": "PastoHelper",
+    "PasteReplicaObjC": "PastoObjC",
+    "PasteReplicaCore": "PastoCore",
+    "PasteReplicaMCP": "PastoMCP",
+    "PasteReplica": "Pasto"
+  },
+  "menu_removed": [
+    "帮助",
+    "在 Twitter 上粘贴"
+  ],
+  "icon": {
+    "png": "replica/Assets/PastoIcon.png",
+    "png_sha256": "ec1da1c85e638e5ae0261af0301cd511ec0cf3583918d70fd01cca769afbc31a",
+    "icns": "replica/Assets/Pasto.icns",
+    "icns_sha256": "7b177e0e5287c0d3d772269b4557401bfb927248a1b3f121ac3413500a12920e",
+    "raster_sizes": [
+      16,
+      32,
+      64,
+      128,
+      256,
+      512,
+      1024
+    ],
+    "transparent": true,
+    "source_pixel_size": [
+      1254,
+      1254
+    ]
+  },
+  "compatibility_retained": [
+    "旧用户Application Support/PasteReplica目录及原图像临时目录",
+    "Bundle ID、后台session suite、旧窗口frame及搜索索引域",
+    "系统paste/NSPasteboard API、原版类型语义和原始反编译/本地化资源"
+  ],
+  "source_contracts_statically_rebound": 587,
+  "sdk_bindings_revalidated": 912,
+  "sdk_candidates_not_added": 46,
+  "historical_test_claims_retired": [
+    {
+      "function_id": "Paste:0x1000114fc",
+      "before": "verified",
+      "after": "migrated",
+      "reason": "Root explicitly removes current tested-equivalence claim after import/source rename; retain old contract/equivalence evidence as historical; new build staticbody evidence only."
+    },
+    {
+      "function_id": "Paste:0x10008468c",
+      "before": "verified",
+      "after": "migrated",
+      "reason": "Root explicitly removes current tested-equivalence claim after import/source rename; retain old contract/equivalence evidence as historical; new build staticbody evidence only."
+    }
+  ],
+  "new_complete_functions": 0,
+  "functional_regression_executed": false,
+  "mcp_tests_executed": false,
+  "cursor_insertion_issue_still_unverified": true,
+  "exact_rename_operations_verified": 201,
+  "static_menu_check": {
+    "help_entry_absent": true,
+    "twitter_entry_absent": true,
+    "single_divider_between_settings_and_pause": true
+  },
+  "delivery": {
+    "version": "0.8.0-dev.46",
+    "snapshot": 76,
+    "archive": "replica/dist/Pasto-0.8.0-dev.46-macos-arm64.zip",
+    "archive_sha256": "b9c654c41011a1d62b34a818c0abfd51973f47fdc7f664fc8aa8849817a080b0",
+    "archive_bytes": 4563598,
+    "codesign_deep_strict_verified": true,
+    "data_or_preferences_modified_by_installer": false,
+    "running_process_not_restarted_after_final_archive": true,
+    "old_executable_absent": true,
+    "installed_packaged_and_unpacked_tree_equal": true,
+    "signed_code_matches_current_build_after_signature_normalization": true,
+    "executables_arm64": true
+  },
+  "publication_check": {
+    "public_text_files": 3259,
+    "public_binary_assets": 2,
+    "asset_scanner_checks": [
+      "reject malformed PNG",
+      "reject embedded synthetic credential",
+      "reject unlisted binary"
+    ],
+    "all_passed": true
+  }
+}

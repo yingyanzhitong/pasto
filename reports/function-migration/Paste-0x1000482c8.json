@@ -2,50 +2,33 @@
   "schema_version": 1,
   "kind": "static_code_migration",
   "function_id": "Paste:0x1000482c8",
-  "reviewed_at": "2026-10-26T03:54:27.502058+00:00",
+  "reviewed_at": "2026-10-26T09:23:16.520451+00:00",
   "original_binary_sha256": "871f00354fbb1c165d858a98e6d19d6f43cb9d3f9f958b3e07c7f07eb5c19afb",
+  "source_sha256": {
+    "replica/Sources/PastoCore/OriginalSearchEditing.swift": "de4dbf21b72826fed9c0e9418c842eb8b0f1146a7d7aa9bfe22985af5d7ac73e",
+    "replica/Sources/Pasto/UI/PanelViews.swift": "b22b084825c21e5f0c380970c427f868751f644314fd0796b18895f1402a6c56",
+    "replica/Sources/PastoCore/OriginalSearchField.swift": "6a56456d5b45a28cacd291891380b97414e71c1eaf68bd1d9ee15c3ec1596600",
+    "replica/Sources/Pasto/UI/SearchEditor.swift": "f1cd5ab79ccf03c3c95aaf8e2c0d49690438607afa3367cc72455398628c8b76"
+  },
+  "build_succeeded": true,
+  "build_command": "bash replica/scripts/build-app.sh",
+  "compiled_app_binary_sha256": "abc3c0ed6ceece4e50ecc84fd174d2bd436794202fce166f7a709e96bbbde006",
+  "compiled_product": "Pasto",
+  "functional_regression_executed": false,
+  "equivalence_verified": false,
+  "contract": "读取Swift字符串的首Unicode标量；空字符串返回nil，包含补充平面字符时返回完整码点。原版用低32位码点及第32位空值标记打包Optional，复刻采用Unicode.Scalar?并交给Swift处理本地/桥接字符串表示；在0x10004795c逐Character换行判定路径实际调用，不承诺Swift私有字符串ABI相同。",
+  "implementation_origin": "existing_source_reused",
+  "source_review": "192文件精确可逆改名证明及原证据不变守卫通过；菜单/产品/资源路径/错误域和临时前缀例外已逐文件审阅。保持本地址已有有限契约，新模块build76编译及当前源码摘要绑定；详见reports/replica/pasto-brand-build76.json。不将本轮静态检查称为差分运行或完整父功能等价。",
+  "rename_audit": "reports/replica/pasto-brand-build76.json",
+  "build_snapshot": "reports/replica/concentrated-static-build76.json",
   "original_pseudocode": {
     "path": "decompiled/Paste/part-0026.c",
     "line": 1124
   },
   "original_pseudocode_sha256": "e2e06b7c433fba402f364a4f8b3ca62c6bece12db0ebb48f4814448cae9a4c18",
-  "source_sha256": {
-    "replica/Sources/PasteReplicaCore/OriginalSearchEditing.swift": "de4dbf21b72826fed9c0e9418c842eb8b0f1146a7d7aa9bfe22985af5d7ac73e",
-    "replica/Sources/PasteReplica/UI/PanelViews.swift": "69407303d7c0e31095954300fd69305a36679b87072532c6881c509b77e9c088",
-    "replica/Sources/PasteReplicaCore/OriginalSearchField.swift": "6a56456d5b45a28cacd291891380b97414e71c1eaf68bd1d9ee15c3ec1596600",
-    "replica/Sources/PasteReplica/UI/SearchEditor.swift": "13ce2f341f2e7aad16ac8083f46575b20b060086cc5a66ebe6399d8740915107"
-  },
-  "build_succeeded": true,
-  "build_command": "swift build --package-path replica -c release",
-  "compiled_app_binary_sha256": "0bf5b26d383e4a81571aa563ca41e82cfbdb4b3df2d2e65173ea97400231ec3f",
-  "compiled_product": "PasteReplica",
-  "functional_regression_executed": false,
-  "equivalence_verified": false,
-  "implementation_origin": "newly_migrated",
-  "contract": "读取Swift字符串的首Unicode标量；空字符串返回nil，包含补充平面字符时返回完整码点。原版用低32位码点及第32位空值标记打包Optional，复刻采用Unicode.Scalar?并交给Swift处理本地/桥接字符串表示；在0x10004795c逐Character换行判定路径实际调用，不承诺Swift私有字符串ABI相同。",
-  "review": "逐项复审：OriginalSearchEditing的恢复函数体不变；委托在OriginalSearchField创建并保持，Coordinator从field.editingDelegate获取同一对象绑定回调，取代原先桥内构造。构建证据待统一登记；未重跑功能测试。",
-  "source_review": "界面修改仅软件/Stack/归档名及明确品牌展示适配；该地址的Core实现与实际搜索、原生文本委托、选择、窗口Stack配置、几何或restartProcess消费算法未改，技术键/参数/分支保留。 原有限合同：读取Swift字符串的首Unicode标量；空字符串返回nil，包含补充平面字符时返回完整码点。原版用低32位码点及第32位空值标记打包Optional，复刻采用Unicode.Scalar?并交给Swift处理本地/桥接字符串表示；在0x10004795c逐Character换行判定路径实际调用，不承诺Swift私有字符串ABI相同。 build70编译通过；无新增完整计数，未运行功能/UI/MCP回归。",
-  "regression_policy": "全部范围内代码迁移完成后统一功能回归；本批无功能/单测/原版差分/UI/MCP执行。",
-  "caller_review_refs": [
-    {
-      "path": "replica/Sources/PasteReplicaCore/OriginalSearchEditing.swift",
-      "symbol": "f_1000482c8",
-      "entire_source_unchanged": true
-    },
-    {
-      "path": "replica/Sources/PasteReplica/UI/PanelViews.swift",
-      "symbol": "ReplicaSearchEditor",
-      "entire_source_unchanged": false
-    },
-    {
-      "path": "replica/Sources/PasteReplicaCore/OriginalSearchField.swift",
-      "symbol": "OriginalSearchEditing(textView:",
-      "entire_source_unchanged": true
-    },
-    {
-      "path": "replica/Sources/PasteReplica/UI/SearchEditor.swift",
-      "symbol": "field.editingDelegate",
-      "entire_source_unchanged": true
-    }
-  ]
+  "previous_static_evidence": {
+    "revision": "18087b19fab91c1e5ec27e59a36a70eaf5bc05ba",
+    "path": "reports/function-migration/Paste-0x1000482c8.json",
+    "sha256": "12a8607c71d77f377e15ca471aab5537147316106f865357783f76a1b648e016"
+  }
 }

@@ -2,26 +2,30 @@
   "schema_version": 1,
   "kind": "static_code_migration",
   "function_id": "Paste:0x10004f7d4",
-  "reviewed_at": "2026-10-23T15:16:50.743534+00:00",
+  "reviewed_at": "2026-10-26T09:23:16.520451+00:00",
   "original_binary_sha256": "871f00354fbb1c165d858a98e6d19d6f43cb9d3f9f958b3e07c7f07eb5c19afb",
+  "source_sha256": {
+    "replica/Sources/Pasto/WindowSharingPolicy.swift": "d1d69c1996b68c50240bfc952ea9bb9fc8c2f88185e3706daf7ad120af2705fc"
+  },
+  "build_succeeded": true,
+  "build_command": "bash replica/scripts/build-app.sh",
+  "compiled_app_binary_sha256": "abc3c0ed6ceece4e50ecc84fd174d2bd436794202fce166f7a709e96bbbde006",
+  "compiled_product": "Pasto",
+  "functional_regression_executed": false,
+  "equivalence_verified": false,
+  "contract": "向默认通知中心注册 NSWindow.didBecomeKeyNotification 观察者，object 为 nil、队列为主队列，弱捕获隐私管理器，同步进入 MainActor 后应用 keyWindow 共享策略；保留观察令牌。",
+  "implementation_origin": "newly_migrated",
+  "source_review": "192文件精确可逆改名证明及原证据不变守卫通过；菜单/产品/资源路径/错误域和临时前缀例外已逐文件审阅。保持本地址已有有限契约，新模块build76编译及当前源码摘要绑定；详见reports/replica/pasto-brand-build76.json。不将本轮静态检查称为差分运行或完整父功能等价。",
+  "rename_audit": "reports/replica/pasto-brand-build76.json",
+  "build_snapshot": "reports/replica/concentrated-static-build76.json",
   "original_pseudocode": {
     "path": "decompiled/Paste/part-0028.c",
     "line": 876
   },
   "original_pseudocode_sha256": "3c24f231e114aa605d70d689d479641d8c78cf3bce8f8e0c4d3ed33f36e778e7",
-  "source_sha256": {
-    "replica/Sources/PasteReplica/WindowSharingPolicy.swift": "072433ef383fb8a58b6be171d3096af92cec573da60b0790de0f65db114571ce"
-  },
-  "build_succeeded": true,
-  "build_command": "swift build --package-path replica -c release",
-  "compiled_app_binary_sha256": "24dcfc9f7c9d3a4f249b17158cef4da0282ca222dda0971955810395b885bf7f",
-  "compiled_product": "PasteReplica",
-  "functional_regression_executed": false,
-  "equivalence_verified": false,
-  "implementation_origin": "newly_migrated",
-  "contract": "向默认通知中心注册 NSWindow.didBecomeKeyNotification 观察者，object 为 nil、队列为主队列，弱捕获隐私管理器，同步进入 MainActor 后应用 keyWindow 共享策略；保留观察令牌。",
-  "review": "decompiled/Paste/part-0028.c:880 起。回调链 0x10004fd44 → 0x10004fce4 → 0x1000582d0 为 MainActor 同步隔离断言，不是异步 Task；已改用 MainActor.assumeIsolated，避免下一轮 keyWindow 变化。现有 expose/update 兼容观察者保留。",
-  "source_review": "已复审本批改动对现有入口的影响；未被替换的恢复函数体/调用契约保持，绑定当前稳定编译。",
-  "regression_policy": "全部范围内代码迁移完成后统一功能回归；本批无功能/单测/原版差分/UI/MCP执行。",
-  "static_review_risk": "无新增已知函数内差异；实际非 MainActor 通知交付将触发隔离检查。原版与复刻均由主 OperationQueue 交付。"
+  "previous_static_evidence": {
+    "revision": "18087b19fab91c1e5ec27e59a36a70eaf5bc05ba",
+    "path": "reports/function-migration/Paste-0x10004f7d4.json",
+    "sha256": "5aea81e1cd80f2784399ea7e128896bb5e96f123fd8775cc689ac2e2393a9abe"
+  }
 }

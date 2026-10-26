@@ -2,27 +2,32 @@
   "schema_version": 1,
   "kind": "static_code_migration",
   "function_id": "Paste:0x1001ec200",
-  "reviewed_at": "2026-10-23T15:16:50.779823+00:00",
+  "reviewed_at": "2026-10-26T09:23:16.520451+00:00",
   "original_binary_sha256": "871f00354fbb1c165d858a98e6d19d6f43cb9d3f9f958b3e07c7f07eb5c19afb",
+  "source_sha256": {
+    "replica/Sources/PastoCore/OriginalShortcutValidation.swift": "094cb536243bcfa19d37564a409c032728c4c5756e98b21b375858394ad2d5cc",
+    "replica/Sources/PastoCore/OriginalShortcutMessages.swift": "a359a587810f77d3306db57a0f8b17150dc6d075f1e698be9a1772b9eafa027a",
+    "replica/Sources/PastoCore/OriginalShortcutRecorder.swift": "ba907c942f91fe336506e9a47576051f285bfce47ccd43315cb111aedbd237f2"
+  },
+  "build_succeeded": true,
+  "build_command": "bash replica/scripts/build-app.sh",
+  "compiled_app_binary_sha256": "abc3c0ed6ceece4e50ecc84fd174d2bd436794202fce166f7a709e96bbbde006",
+  "compiled_product": "Pasto",
+  "functional_regression_executed": false,
+  "equivalence_verified": false,
+  "contract": "深度优先递归检查菜单：先检查每项 submenu，再比较 item.keyEquivalent.lowercased 与候选菜单等效字符；原始 equivalent 若非候选原样字符串，则强制补 Shift，修饰位仅保留 0x1e0000；完全相符时返回含菜单标题的本地化错误，否则 nil 表示通过。",
+  "implementation_origin": "existing_reused",
+  "source_review": "192文件精确可逆改名证明及原证据不变守卫通过；菜单/产品/资源路径/错误域和临时前缀例外已逐文件审阅。保持本地址已有有限契约，新模块build76编译及当前源码摘要绑定；详见reports/replica/pasto-brand-build76.json。不将本轮静态检查称为差分运行或完整父功能等价。",
+  "rename_audit": "reports/replica/pasto-brand-build76.json",
+  "build_snapshot": "reports/replica/concentrated-static-build76.json",
   "original_pseudocode": {
     "path": "decompiled/Paste/part-0158.c",
     "line": 901
   },
   "original_pseudocode_sha256": "19cd1064cc2d319fefe38dbee4425bf0d59501b1809d519aa27c383fa587454e",
-  "source_sha256": {
-    "replica/Sources/PasteReplicaCore/OriginalShortcutValidation.swift": "094cb536243bcfa19d37564a409c032728c4c5756e98b21b375858394ad2d5cc",
-    "replica/Sources/PasteReplicaCore/OriginalShortcutMessages.swift": "a359a587810f77d3306db57a0f8b17150dc6d075f1e698be9a1772b9eafa027a",
-    "replica/Sources/PasteReplicaCore/OriginalShortcutRecorder.swift": "ba907c942f91fe336506e9a47576051f285bfce47ccd43315cb111aedbd237f2"
-  },
-  "build_succeeded": true,
-  "build_command": "swift build --package-path replica -c release",
-  "compiled_app_binary_sha256": "24dcfc9f7c9d3a4f249b17158cef4da0282ca222dda0971955810395b885bf7f",
-  "compiled_product": "PasteReplica",
-  "functional_regression_executed": false,
-  "equivalence_verified": false,
-  "implementation_origin": "existing_reused",
-  "contract": "深度优先递归检查菜单：先检查每项 submenu，再比较 item.keyEquivalent.lowercased 与候选菜单等效字符；原始 equivalent 若非候选原样字符串，则强制补 Shift，修饰位仅保留 0x1e0000；完全相符时返回含菜单标题的本地化错误，否则 nil 表示通过。",
-  "review": "part-0158.c:903…1180；核对 nil/空菜单、递归先后、候选字符转换、大小写差异隐含 Shift 的 0x1c0000|0x20000 路径、完整 raw modifier 等值比较。返回原版校验错误携带的本地化说明字符串（独立实现使用 String? 替代原版 Result/Swift Error ABI 容器）；17 个原版语言的消息模板只读核对并定义为独立 Swift 字符串。 本轮逐项复审：Core 原始契约不变；录制入口已改接三态 OriginalShortcutRecorder.f_1001f132c，Carbon 转换通过新注册对象真实使用；旧 ShortcutRecorderButton.record 引用已删除。isValidGlobal 现在严格复用原版谓词，不再额外排除 Escape/大于127键码/其他修饰位。 第二次静态复审恢复完整Int键码域：原有UInt32调用通过兼容overload委托宽Int值；仅Carbon注册保留UInt32精确转换。全局回调显式retain保活，事件查找只提取action。 等待此轮统一构建后可提升。 本批复审后保留原恢复契约；真实入口改为直接SwiftUI StateObject组件，移除Native代理事件/窗口观察；当前候选待统一编译，不沿用旧文件摘要。",
-  "source_review": "已复审本批改动对现有入口的影响；未被替换的恢复函数体/调用契约保持，绑定当前稳定编译。",
-  "regression_policy": "全部范围内代码迁移完成后统一功能回归；本批无功能/单测/原版差分/UI/MCP执行。"
+  "previous_static_evidence": {
+    "revision": "18087b19fab91c1e5ec27e59a36a70eaf5bc05ba",
+    "path": "reports/function-migration/Paste-0x1001ec200.json",
+    "sha256": "53a0ef71307d119b0c2848fac4b09de1693c7efb1619424b8ec317f26e77b448"
+  }
 }
