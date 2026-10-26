@@ -2,7 +2,7 @@
   "schema_version": 1,
   "kind": "static_code_migration",
   "function_id": "Paste:0x10022df78",
-  "reviewed_at": "2026-10-26T03:28:50.807457+00:00",
+  "reviewed_at": "2026-10-26T03:54:27.502058+00:00",
   "original_binary_sha256": "871f00354fbb1c165d858a98e6d19d6f43cb9d3f9f958b3e07c7f07eb5c19afb",
   "original_pseudocode": {
     "path": "decompiled/Paste/part-0190.c",
@@ -11,11 +11,11 @@
   "original_pseudocode_sha256": "a23baf096ca61bb47cff4cb1b42f750293cfedfd2b0c0704d754988b7aac4bed",
   "source_sha256": {
     "replica/Sources/PasteReplicaCore/OriginalOrderedSelection.swift": "b3631aed0222167f88c16329c76483f807d20af3baaf3a90ab4d214e8d9cb9f8",
-    "replica/Sources/PasteReplica/UI/ReplicaUIController.swift": "93cb6470e46ed4fd4160728bf72b5d94b7ff7d00609ab0b44f8b83413fa19bca"
+    "replica/Sources/PasteReplica/UI/ReplicaUIController.swift": "ec635e8c1fdfc13ce06ba6198c997c5e89ffc8e72157e2f64095f087b6d622c2"
   },
   "build_succeeded": true,
   "build_command": "swift build --package-path replica -c release",
-  "compiled_app_binary_sha256": "3202f5ec2cbd6868bffb1c1d613b2646cced57f9d8d8dd7284cd71c6d90c0142",
+  "compiled_app_binary_sha256": "0bf5b26d383e4a81571aa563ca41e82cfbdb4b3df2d2e65173ea97400231ec3f",
   "compiled_product": "PasteReplica",
   "functional_regression_executed": false,
   "equivalence_verified": false,
@@ -23,5 +23,5 @@
   "contract": "有序selectedIndexes、只读itemCount、可空anchor：越界clicked不变；mode0单选并更新anchor；mode1保最后1项、删除后anchor=剩余最后项或追加clicked；其它mode在anchor非nil时按原数组相邻绝对差1分组，保与闭区间不相交的整组，再追加anchor朝clicked定向连续range，不改变anchor。",
   "review": "完整原有限体、实际分组/disjoint/reverse/append辅助链及独立peer均静态核对；当前helper覆盖完整值合同并由真实鼠标/键盘入口消费。build51通过且161输入摘要一致；不冒原整个CollectionView、原生事件或运行ABI等价。",
   "regression_policy": "全部范围内迁移完成后统一功能回归；本轮不运行产品或测试。",
-  "source_review": "有序selectedIndexes/anchor与value.select(index,mode)调用未改；仅视觉dimming传入变更。 release build68已通过；不声称运行或整个父对象验收。"
+  "source_review": "界面修改仅软件/Stack/归档名及明确品牌展示适配；该地址的Core实现与实际搜索、原生文本委托、选择、窗口Stack配置、几何或restartProcess消费算法未改，技术键/参数/分支保留。 原有限合同：有序selectedIndexes、只读itemCount、可空anchor：越界clicked不变；mode0单选并更新anchor；mode1保最后1项、删除后anchor=剩余最后项或追加clicked；其它mode在anchor非nil时按原数组相邻绝对差1分组，保与闭区间不相交的整组，再追加anchor朝clicked定向连续range，不改变anchor。 build70编译通过；无新增完整计数，未运行功能/UI/MCP回归。"
 }

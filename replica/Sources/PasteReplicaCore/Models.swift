@@ -61,7 +61,7 @@ public struct ClipboardItem: Identifiable, Codable, Equatable, Sendable {
 
     public init(id: UUID = UUID(), createdAt: Date = Date(), updatedAt: Date? = nil,
                 title: String = "", kind: ClipboardKind = .text, plainText: String? = nil,
-                sourceName: String = "Paste Replica", sourceBundleID: String? = nil,
+                sourceName: String = "Pasto", sourceBundleID: String? = nil,
                 payloads: [String: Data] = [:], pinboardIDs: Set<UUID> = [], isDeleted: Bool = false,
                 sourceDevice: String = "此Mac", isInHistory: Bool = true,
                 imagePreviewMetadata: OriginalImagePreviewMetadata? = nil,

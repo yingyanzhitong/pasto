@@ -2,7 +2,7 @@
   "schema_version": 1,
   "kind": "static_code_migration",
   "function_id": "Paste-Helper:0x10000385c",
-  "reviewed_at": "2026-10-23T15:16:50.749349+00:00",
+  "reviewed_at": "2026-10-26T03:54:27.502058+00:00",
   "original_binary_sha256": "fb580e708dc53433f1f2efc7b2d49811361e174cbc752ce351cdf5871977638f",
   "original_pseudocode": {
     "path": "decompiled/Paste-Helper/part-0000.c",
@@ -10,18 +10,18 @@
   },
   "original_pseudocode_sha256": "655c53473a49c07703a8f9d43dbb8cf419364fe9c88a6593bb88dbdb4d93d16c",
   "source_sha256": {
-    "replica/Sources/PasteReplicaHelper/HelperMain.swift": "8d1b91412cf7fa0fd44b466266a894eca087f626cb91b0fca4f93d60ded63f45"
+    "replica/Sources/PasteReplicaHelper/HelperMain.swift": "60d98b18e87390fcc6c8de6a43b75d9505bfd74b822eb9e0fc6dc58bbfd47e12"
   },
   "build_succeeded": true,
   "build_command": "swift build --package-path replica -c release",
-  "compiled_app_binary_sha256": "22042441e294b84865fd18272857b42949833df6391732d90b06228851aa05e0",
+  "compiled_app_binary_sha256": "e0aa4659e71de02027c371cf5830c6804ed7cdb74fc9ebea0e62d84e70a01627",
   "compiled_product": "PasteReplicaHelper",
   "functional_regression_executed": false,
   "equivalence_verified": false,
   "implementation_origin": "newly_migrated",
   "contract": "启动前写入共享 pasteLaunchedByHelper 标志，解析主应用 URL，创建 OpenConfiguration 且 activates=false，记录路径后通过 NSWorkspace 异步启动。",
   "review": "decompiled/Paste-Helper/part-0000.c:1529 起，静态汇编 0x10000385c..0x100003950 恢复出未在旧证据记录的 pasteLaunchedByHelper 键。补上该本地写入；启动 await 由显式 checked continuation 包装接入。 最终复审日志正文恢复 Launching Paste at；URL.path 的默认日志 privacy 与原版 string 描述符 0x20（auto）一致，未强制改成 public。共享 defaults 每次现取，失败时跳过标志写入但继续启动。",
-  "source_review": "已复审本批改动对现有入口的影响；未被替换的恢复函数体/调用契约保持，绑定当前稳定编译。",
+  "source_review": "Helper整文件仅两处主应用名称路径字串更改，其他函数的日志、状态键、进程匹配、计时/重试、weak/MainActor及completion分支均逐字未变。 原有限合同：启动前写入共享 pasteLaunchedByHelper 标志，解析主应用 URL，创建 OpenConfiguration 且 activates=false，记录路径后通过 NSWorkspace 异步启动。 build70编译通过；无新增完整计数，未运行功能/UI/MCP回归。",
   "regression_policy": "全部范围内代码迁移完成后统一功能回归；本批无功能/单测/原版差分/UI/MCP执行。",
   "static_review_risk": "共享 pasteLaunchedByHelper 写入、路径解析、activates=false、异步 continuation 已接入；独立主 App 尚未消费该标志是未迁移调用方的缺口，不把该上游功能称为完成。"
 }

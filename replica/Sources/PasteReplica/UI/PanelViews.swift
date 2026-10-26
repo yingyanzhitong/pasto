@@ -165,7 +165,7 @@ struct ReplicaPanelView: View {
             Menu {
                 Button {
                     NSApp.sendAction(NSSelectorFromString("about:"), to: NSApp.delegate, from: nil)
-                } label: { Label("关于 Paste Replica", systemImage: "info.circle") }
+                } label: { Label("关于 Pasto", systemImage: "info.circle") }
                 Divider()
                 Button { state.controller?.newTextItem() } label: {
                     Label("新文本项", systemImage: "square.and.pencil")
@@ -183,13 +183,13 @@ struct ReplicaPanelView: View {
                 } label: { Label("帮助", systemImage: "questionmark.circle") }
                 Button {
                     var components = URLComponents(string: "https://twitter.com/intent/tweet")
-                    components?.queryItems = [URLQueryItem(name: "text", value: "Paste Replica")]
+                    components?.queryItems = [URLQueryItem(name: "text", value: "Pasto")]
                     if let url = components?.url { NSWorkspace.shared.open(url) }
                 } label: { Label("在 Twitter 上粘贴", systemImage: "at") }
                 Divider()
                 Menu {
                     if state.store.preferences.isMonitoringPaused {
-                        Button("继续 Paste Replica", action: state.resumeMonitoring)
+                        Button("继续 Pasto", action: state.resumeMonitoring)
                     } else {
                         Button("暂停") { state.pauseMonitoring() }
                         ForEach([15, 30, 60, 180, 480], id: \.self) { minutes in
@@ -198,9 +198,9 @@ struct ReplicaPanelView: View {
                             }
                         }
                     }
-                } label: { Label("暂停 Paste Replica", systemImage: "pause.circle") }
+                } label: { Label("暂停 Pasto", systemImage: "pause.circle") }
                 Button { NSApp.terminate(nil) } label: {
-                    Label("退出 Paste Replica", systemImage: "xmark.square")
+                    Label("退出 Pasto", systemImage: "xmark.square")
                 }
                 .keyboardShortcut("q", modifiers: .command)
             } label: { Image(systemName: "ellipsis").frame(width: 16) }
@@ -575,7 +575,7 @@ struct ReplicaClipboardCard: View {
                 }
                 Button("从所有 Pinboard 移除") { state.assignSelection(to: nil) }
             }
-            Button("添加到 Paste Stack") {
+            Button("添加到 Pasto Stack") {
                 for selected in state.selectedItems { state.addToStack(selected) }
                 state.controller?.showStack()
             }

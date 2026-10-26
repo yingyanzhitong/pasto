@@ -185,7 +185,7 @@ struct ReplicaEditorView: View {
                 let rtf = try document.content.data(from: NSRange(location: 0, length: document.content.length),
                                                      documentAttributes: [.documentType: NSAttributedString.DocumentType.rtf])
                 let new = ClipboardItem(title: String(document.content.string.prefix(80)),
-                                        kind: .richText, plainText: document.content.string, sourceName: "Paste Replica",
+                                        kind: .richText, plainText: document.content.string, sourceName: "Pasto",
                                         sourceBundleID: Bundle.main.bundleIdentifier,
                                         payloads: ["public.rtf": rtf, NSPasteboard.PasteboardType.string.rawValue: Data(document.content.string.utf8)])
                 let id = try state.store.add(new)
@@ -203,10 +203,10 @@ struct ReplicaStackView: View {
     var body: some View {
         VStack(spacing: 0) {
             ZStack {
-                Text("Paste Stack").font(.system(size: 12, weight: .medium))
+                Text("Pasto Stack").font(.system(size: 12, weight: .medium))
                 HStack {
                     Button { state.controller?.hideStack() } label: { Image(systemName: "xmark.circle.fill") }
-                        .accessibilityLabel("关闭 Paste Stack")
+                        .accessibilityLabel("关闭 Pasto Stack")
                     Spacer()
                     Button { state.reverseStack() } label: { Image(systemName: "arrow.up.arrow.down") }
                         .accessibilityLabel("反转 Stack 顺序")
@@ -387,8 +387,8 @@ struct ReplicaSettingsView: View {
     private var shortcuts: some View {
         Form {
             Section(OriginalSettingsLocalization.text("settings.shortcuts.title")) {
-                shortcutRecorder(OriginalSettingsLocalization.text("settings.shortcuts.activate-paste.title"), path: \.historyShortcut)
-                shortcutRecorder(OriginalSettingsLocalization.text("settings.shortcuts.activate-paste-stack.title"), path: \.stackShortcut)
+                shortcutRecorder(ReplicaBrand.replacingOriginalName(in: OriginalSettingsLocalization.text("settings.shortcuts.activate-paste.title")), path: \.historyShortcut)
+                shortcutRecorder(ReplicaBrand.replacingOriginalName(in: OriginalSettingsLocalization.text("settings.shortcuts.activate-paste-stack.title")), path: \.stackShortcut)
                 shortcutRecorder(OriginalSettingsLocalization.text("settings.shortcuts.next-pinboard.title"), path: \.nextPinboardShortcut)
                 shortcutRecorder(OriginalSettingsLocalization.text("settings.shortcuts.previous-pinboard.title"), path: \.previousPinboardShortcut)
                 Picker(OriginalSettingsLocalization.text("settings.shortcuts.quick-paste.title"), selection: preference(\.quickPasteModifierRawValue)) {
@@ -431,7 +431,7 @@ struct ReplicaSettingsView: View {
                 let paths: [WritableKeyPath<AppPreferences, PasteReplicaCore.KeyboardShortcut?>] = [
                     \.historyShortcut, \.stackShortcut, \.nextPinboardShortcut, \.previousPinboardShortcut]
                 if let value, paths.contains(where: { $0 != path && state.store.preferences[keyPath: $0] == value }) {
-                    shortcutError = "此快捷键已用于其他 Paste 命令。"
+                    shortcutError = "此快捷键已用于其他 Pasto 命令。"
                     return
                 }
                 shortcutError = ""

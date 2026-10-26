@@ -2,7 +2,7 @@
   "schema_version": 1,
   "kind": "static_code_migration",
   "function_id": "Paste-Helper:0x100001488",
-  "reviewed_at": "2026-10-23T15:16:50.747418+00:00",
+  "reviewed_at": "2026-10-26T03:54:27.502058+00:00",
   "original_binary_sha256": "fb580e708dc53433f1f2efc7b2d49811361e174cbc752ce351cdf5871977638f",
   "original_pseudocode": {
     "path": "decompiled/Paste-Helper/part-0000.c",
@@ -10,18 +10,18 @@
   },
   "original_pseudocode_sha256": "81eac5668399904419b81808cc24b841438b5343190762cbb6399aeee9ce8542",
   "source_sha256": {
-    "replica/Sources/PasteReplicaHelper/HelperMain.swift": "8d1b91412cf7fa0fd44b466266a894eca087f626cb91b0fca4f93d60ded63f45"
+    "replica/Sources/PasteReplicaHelper/HelperMain.swift": "60d98b18e87390fcc6c8de6a43b75d9505bfd74b822eb9e0fc6dc58bbfd47e12"
   },
   "build_succeeded": true,
   "build_command": "swift build --package-path replica -c release",
-  "compiled_app_binary_sha256": "22042441e294b84865fd18272857b42949833df6391732d90b06228851aa05e0",
+  "compiled_app_binary_sha256": "e0aa4659e71de02027c371cf5830c6804ed7cdb74fc9ebea0e62d84e70a01627",
   "compiled_product": "PasteReplicaHelper",
   "functional_regression_executed": false,
   "equivalence_verified": false,
   "implementation_origin": "newly_migrated",
   "contract": "启动后先记录Helper自身bundleURL；依次求取主app路径、共享defaults的pasteIsRunning布尔值（nil suite为false）、主app进程是否存在，再按原词记录这三项并启动runningApplications观察。",
   "review": "decompiled/Paste-Helper/part-0000.c:34 起；最终静态汇编确认 applicationURL、defaults 标志和进程状态应在相应日志判断之外求值，现均先求值后记录，避免 Logger lazy 插值在日志关闭时跳过查询。日志正文已恢复原版文字；Bool 默认 .truth 与原版 %{bool}d 对齐。URL 使用 CustomStringConvertible.description。仅产品 bundle/suite/subsystem 身份按独立复刻替换。 静态复审纠正：Helper 0x100002790..0x1000027ac的MOV/MOVK精确构造pasteIsRunning，旧isRunning推断无效；启动日志读取和检查读取、主程序markRunning写入已同步改为原键。 复审后未发现额外未恢复业务分支：共享suite/主app bundleID及日志subsystem使用独立免费复刻身份，原版日志正文/求值顺序/布尔缺省/弱捕获/取消后继续语义保持；不主张原始Swift ABI或SDK版本等同。 本地build07日志显示9.99秒成功，最终有效性等待主智能体绑定当前源码/二进制摘要。",
-  "source_review": "已复审本批改动对现有入口的影响；未被替换的恢复函数体/调用契约保持，绑定当前稳定编译。",
+  "source_review": "Helper整文件仅两处主应用名称路径字串更改，其他函数的日志、状态键、进程匹配、计时/重试、weak/MainActor及completion分支均逐字未变。 原有限合同：启动后先记录Helper自身bundleURL；依次求取主app路径、共享defaults的pasteIsRunning布尔值（nil suite为false）、主app进程是否存在，再按原词记录这三项并启动runningApplications观察。 build70编译通过；无新增完整计数，未运行功能/UI/MCP回归。",
   "regression_policy": "全部范围内代码迁移完成后统一功能回归；本批无功能/单测/原版差分/UI/MCP执行。",
   "static_review_risk": "仅 bundle/suite/subsystem 身份替换；日志求值顺序、正文、等级和 Bool 格式已核对。原版 suite 首次失败不永久缓存。"
 }

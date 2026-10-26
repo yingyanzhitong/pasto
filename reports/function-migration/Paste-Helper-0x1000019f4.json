@@ -2,7 +2,7 @@
   "schema_version": 1,
   "kind": "static_code_migration",
   "function_id": "Paste-Helper:0x1000019f4",
-  "reviewed_at": "2026-10-23T15:16:50.747649+00:00",
+  "reviewed_at": "2026-10-26T03:54:27.502058+00:00",
   "original_binary_sha256": "fb580e708dc53433f1f2efc7b2d49811361e174cbc752ce351cdf5871977638f",
   "original_pseudocode": {
     "path": "decompiled/Paste-Helper/part-0000.c",
@@ -10,18 +10,18 @@
   },
   "original_pseudocode_sha256": "368ca0bace958e54bb54b5e5f129d9d03905f3ee59dc87a67073eb3241a3913c",
   "source_sha256": {
-    "replica/Sources/PasteReplicaHelper/HelperMain.swift": "8d1b91412cf7fa0fd44b466266a894eca087f626cb91b0fca4f93d60ded63f45"
+    "replica/Sources/PasteReplicaHelper/HelperMain.swift": "60d98b18e87390fcc6c8de6a43b75d9505bfd74b822eb9e0fc6dc58bbfd47e12"
   },
   "build_succeeded": true,
   "build_command": "swift build --package-path replica -c release",
-  "compiled_app_binary_sha256": "22042441e294b84865fd18272857b42949833df6391732d90b06228851aa05e0",
+  "compiled_app_binary_sha256": "e0aa4659e71de02027c371cf5830c6804ed7cdb74fc9ebea0e62d84e70a01627",
   "compiled_product": "PasteReplicaHelper",
   "functional_regression_executed": false,
   "equivalence_verified": false,
   "implementation_origin": "newly_migrated",
   "contract": "从 Helper bundleURL 向上四层；尾部是主 App 名则直接返回，否则查 Launch Services 的主 bundle ID，仍找不到则使用 URL(fileURLWithPath:) 创建 Applications 后备路径。",
   "review": "decompiled/Paste-Helper/part-0000.c:202 起；静态 llvm-objdump 确认四层父目录和路径名比较。最终复审用 nm -m | swift-demangle 确认原版唯一导入构造器为 Foundation.URL.init(fileURLWithPath:)，已纠正早先误判的 URL(string:) 并保留后备 file URL 语义。主 App 名、bundle ID、Applications 路径替换成复刻身份，没有额外 Bundle 或文件存在校验。",
-  "source_review": "已复审本批改动对现有入口的影响；未被替换的恢复函数体/调用契约保持，绑定当前稳定编译。",
+  "source_review": "只将独立主应用外壳名及Applications后备名更新为Pasto.app；向上四层、尾名匹配、同一固定BundleID的LaunchServices查找及fileURL顺序和返回合同保持。此名称为独立产品部署身份适配。 原有限合同：从 Helper bundleURL 向上四层；尾部是主 App 名则直接返回，否则查 Launch Services 的主 bundle ID，仍找不到则使用 URL(fileURLWithPath:) 创建 Applications 后备路径。 build70编译通过；无新增完整计数，未运行功能/UI/MCP回归。",
   "regression_policy": "全部范围内代码迁移完成后统一功能回归；本批无功能/单测/原版差分/UI/MCP执行。",
   "static_review_risk": "后备已由误判的相对 URL 改回 file URL。产品文件名与 bundle ID 采用复刻身份；不保证任意重命名/未注册安装都能启动，此限制与原版同结构。"
 }

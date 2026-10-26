@@ -21,15 +21,15 @@ enum ReplicaCopiedOSD {
             formatter.dateFormat = "HH:mm"
             subtitle = String(localized: OriginalPreviewLocalization.f_1001e6c18(formatter.string(from: resumeDate)))
         } else if let paused = pauseStatus?() {
-            subtitle = String(localized: paused
-                ? OriginalPreviewLocalization.f_1001c5b38() : OriginalPreviewLocalization.f_1001c2888())
+            subtitle = ReplicaBrand.replacingOriginalName(in: String(localized: paused
+                ? OriginalPreviewLocalization.f_1001c5b38() : OriginalPreviewLocalization.f_1001c2888()))
         } else { subtitle = nil }
-        show(symbolName: "pause", title: String(localized: OriginalPreviewLocalization.f_1001c5838()),
+        show(symbolName: "pause", title: ReplicaBrand.replacingOriginalName(in: String(localized: OriginalPreviewLocalization.f_1001c5838())),
              subtitle: subtitle)
     }
 
     static func showResumed() {
-        show(symbolName: "arrow.clockwise", title: String(localized: OriginalPreviewLocalization.f_1001c59b8()))
+        show(symbolName: "arrow.clockwise", title: ReplicaBrand.replacingOriginalName(in: String(localized: OriginalPreviewLocalization.f_1001c59b8())))
     }
 
     private static func show(symbolName: String, title: String?, subtitle: String? = nil,

@@ -94,7 +94,7 @@ private struct PasteToOtherAppsContent: View {
             VStack(spacing: 8) {
                 Text(String(format: OriginalSettingsLocalization.text("accessibility-access.paste-to-other-apps.title"), appName))
                     .font(.title2.bold())
-                Text(OriginalSettingsLocalization.text("accessibility-access.paste-to-other-apps.description"))
+                Text(ReplicaBrand.replacingOriginalName(in: OriginalSettingsLocalization.text("accessibility-access.paste-to-other-apps.description")))
                     .font(.body)
             }
             .multilineTextAlignment(.center)
@@ -186,7 +186,7 @@ private struct EnableAccessibilityContent: View {
                     .padding(.bottom, 8)
                 Text(OriginalSettingsLocalization.text("accessibility-access.enable-accessibility-access.title"))
                     .font(.title.bold())
-                Text(OriginalSettingsLocalization.text("accessibility-access.enable-accessibility-access.subtitle"))
+                Text(ReplicaBrand.replacingOriginalName(in: OriginalSettingsLocalization.text("accessibility-access.enable-accessibility-access.subtitle")))
                     .font(.body)
                     .multilineTextAlignment(.center)
                 Button(action: model.request) {

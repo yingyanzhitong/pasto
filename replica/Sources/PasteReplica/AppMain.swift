@@ -194,17 +194,17 @@ final class ReplicaAppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValid
 
     private func setupMenus() {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
-        statusItem.button?.image = NSImage(systemSymbolName: "clipboard", accessibilityDescription: "Paste Replica")
+        statusItem.button?.image = NSImage(systemSymbolName: "clipboard", accessibilityDescription: "Pasto")
         statusItem.button?.target = self
         statusItem.button?.action = #selector(statusClicked(_:))
         statusItem.button?.sendAction(on: [.leftMouseUp, .rightMouseUp])
         let main = NSMenu()
-        let appMenu = NSMenu(title: "Paste Replica")
-        appMenu.addItem(menuItem("关于 Paste Replica", #selector(about(_:))))
+        let appMenu = NSMenu(title: "Pasto")
+        appMenu.addItem(menuItem("关于 Pasto", #selector(about(_:))))
         appMenu.addItem(menuItem("设置…", #selector(settings(_:)), key: ","))
         appMenu.addItem(menuItem(diagnosticsMenuTitle, #selector(toggleDiagnostics(_:))))
         appMenu.addItem(.separator())
-        appMenu.addItem(menuItem("退出 Paste Replica", #selector(quit(_:)), key: "q"))
+        appMenu.addItem(menuItem("退出 Pasto", #selector(quit(_:)), key: "q"))
         let app = NSMenuItem(); app.submenu = appMenu; main.addItem(app)
         let file = NSMenu(title: "文件")
         file.addItem(menuItem("新建文本…", #selector(newText(_:)), key: "n"))
@@ -222,7 +222,7 @@ final class ReplicaAppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValid
         let view = NSMenu(title: "显示")
         view.addItem(menuItem("剪贴板历史", #selector(togglePanel(_:))))
         view.addItem(menuItem("搜索", #selector(search(_:)), key: "f"))
-        view.addItem(menuItem("Paste Stack", #selector(stack(_:))))
+        view.addItem(menuItem("Pasto Stack", #selector(stack(_:))))
         let viewItem = NSMenuItem(title: "显示", action: nil, keyEquivalent: ""); viewItem.submenu = view; main.addItem(viewItem)
         NSApp.mainMenu = main
     }
@@ -238,9 +238,9 @@ final class ReplicaAppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValid
                 return status == noErr ? "\(title)：\(shortcut.displayName)" : "\(title)：\(shortcut.displayName) 无法注册（可能已被占用，错误 \(status)）"
             }
             ui.hotKeyStatusMessage = [message("历史", store.preferences.historyShortcut, hotKeyStatus),
-                                      message("Paste Stack", store.preferences.stackShortcut, stackHotKeyStatus)].joined(separator: "；")
+                                      message("Pasto Stack", store.preferences.stackShortcut, stackHotKeyStatus)].joined(separator: "；")
         }
-        statusItem.button?.toolTip = "Paste Replica · \(ui.hotKeyStatusMessage)"
+        statusItem.button?.toolTip = "Pasto · \(ui.hotKeyStatusMessage)"
     }
 
     private func configureGlobalHotKeys(force: Bool = false) {
@@ -270,7 +270,7 @@ final class ReplicaAppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValid
         stackPasteRegistered = false
         if enabled {
             stackPasteRegistered = stackPasteHotKey.register(keyCode: 9, modifiers: .command, identifier: 3) == noErr
-            if !stackPasteRegistered { ui.hotKeyStatusMessage = "Paste Stack 的 ⌘V 无法注册，请使用项目菜单粘贴。" }
+            if !stackPasteRegistered { ui.hotKeyStatusMessage = "Pasto Stack 的 ⌘V 无法注册，请使用项目菜单粘贴。" }
         }
     }
 
@@ -287,7 +287,7 @@ final class ReplicaAppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValid
                 menu.addItem(notice)
             }
             if stackHotKeyStatus != noErr {
-                menu.addItem(NSMenuItem(title: "Paste Stack 快捷键无法注册", action: nil, keyEquivalent: ""))
+                menu.addItem(NSMenuItem(title: "Pasto Stack 快捷键无法注册", action: nil, keyEquivalent: ""))
             }
             menu.addItem(.separator())
             menu.addItem(menuItem("退出", #selector(quit(_:))))
@@ -318,10 +318,10 @@ final class ReplicaAppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValid
         let alert = NSAlert()
         alert.messageText = String(localized: wasEnabled
             ? OriginalPreviewLocalization.f_1001be088() : OriginalPreviewLocalization.f_1001bdd88())
-        alert.informativeText = String(localized: wasEnabled
-            ? OriginalPreviewLocalization.f_1001bdf08() : OriginalPreviewLocalization.f_1001bdc08())
-        alert.addButton(withTitle: String(localized: wasEnabled
-            ? OriginalPreviewLocalization.f_1001bda88() : OriginalPreviewLocalization.f_1001c3188()))
+        alert.informativeText = ReplicaBrand.replacingOriginalName(in: String(localized: wasEnabled
+            ? OriginalPreviewLocalization.f_1001bdf08() : OriginalPreviewLocalization.f_1001bdc08()))
+        alert.addButton(withTitle: ReplicaBrand.replacingOriginalName(in: String(localized: wasEnabled
+            ? OriginalPreviewLocalization.f_1001bda88() : OriginalPreviewLocalization.f_1001c3188())))
         alert.addButton(withTitle: String(localized: OriginalPreviewLocalization.f_1001c0788()))
         NSApp.activate(ignoringOtherApps: true)
         guard alert.runModal() == .alertFirstButtonReturn else { return }
@@ -356,7 +356,7 @@ final class ReplicaAppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValid
     @objc private func exportArchive(_ sender: Any?) { ui.exportArchive() }
     @objc private func quit(_ sender: Any?) { NSApp.terminate(nil) }
     @objc private func about(_ sender: Any?) {
-        NSApp.orderFrontStandardAboutPanel(options: [.applicationName: "Paste Replica",
+        NSApp.orderFrontStandardAboutPanel(options: [.applicationName: "Pasto",
                                                      .applicationVersion: Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "开发版本",
                                                      .credits: NSAttributedString(string: "原生剪贴板历史与 Pinboard 工具")])
     }
@@ -473,7 +473,7 @@ final class ReplicaAppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValid
 
     private func seedFixture() throws {
         let board = try store.createPinboard(name: "实用链接", colorHex: "5575D9")
-        _ = try store.add(ClipboardItem(title: "欢迎使用 Paste Replica", plainText: "拷贝内容，随时找回。\n搜索、预览、编辑，整理到 Pinboard。", sourceName: "文本编辑", sourceBundleID: "com.apple.TextEdit"))
+        _ = try store.add(ClipboardItem(title: "欢迎使用 Pasto", plainText: "拷贝内容，随时找回。\n搜索、预览、编辑，整理到 Pinboard。", sourceName: "文本编辑", sourceBundleID: "com.apple.TextEdit"))
         _ = try store.add(ClipboardItem(title: "REA", kind: .link, plainText: "https://github.com/morluto/rea", sourceName: "Safari", sourceBundleID: "com.apple.Safari", pinboardIDs: [board.id]))
         _ = try store.add(ClipboardItem(title: "品牌颜色", kind: .color, plainText: "#5575D9", sourceName: "设计工具"))
         _ = try store.add(ClipboardItem(title: "会议记录", plainText: "今天的计划\n1. 整理灵感\n2. 完成设计\n3. 分享成果", sourceName: "备忘录", sourceBundleID: "com.apple.Notes"))

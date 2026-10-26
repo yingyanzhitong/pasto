@@ -2,7 +2,7 @@
   "schema_version": 1,
   "kind": "static_code_migration",
   "function_id": "Paste:0x100048058",
-  "reviewed_at": "2026-10-26T03:47:01.971411+00:00",
+  "reviewed_at": "2026-10-26T03:54:27.502058+00:00",
   "original_binary_sha256": "871f00354fbb1c165d858a98e6d19d6f43cb9d3f9f958b3e07c7f07eb5c19afb",
   "original_pseudocode": {
     "path": "decompiled/Paste/part-0026.c",
@@ -11,21 +11,21 @@
   "original_pseudocode_sha256": "62e5c3edb17185a398801cd9ac8b773a87e927ed6c5f5613ca217e17ea97e6e2",
   "source_sha256": {
     "replica/Sources/PasteReplicaCore/OriginalSearchEditing.swift": "de4dbf21b72826fed9c0e9418c842eb8b0f1146a7d7aa9bfe22985af5d7ac73e",
-    "replica/Sources/PasteReplica/UI/PanelViews.swift": "d9552057e37f115af25f969e570b24de247ebbb8db29e6d6c40d938d79570c70",
+    "replica/Sources/PasteReplica/UI/PanelViews.swift": "69407303d7c0e31095954300fd69305a36679b87072532c6881c509b77e9c088",
     "replica/Sources/PasteReplicaCore/OriginalSearchCommands.swift": "cf7409e5f4bf47f0e1052ac3ae42c5af43812c37407bfc77eca62ba864ca1bf8",
     "replica/Sources/PasteReplicaCore/OriginalSearchField.swift": "6a56456d5b45a28cacd291891380b97414e71c1eaf68bd1d9ee15c3ec1596600",
     "replica/Sources/PasteReplica/UI/SearchEditor.swift": "13ce2f341f2e7aad16ac8083f46575b20b060086cc5a66ebe6399d8740915107"
   },
   "build_succeeded": true,
   "build_command": "swift build --package-path replica -c release",
-  "compiled_app_binary_sha256": "169babba7cffea75607e34d80e697419eef323a83d94d34eaf217cef1e2863ea",
+  "compiled_app_binary_sha256": "0bf5b26d383e4a81571aa563ca41e82cfbdb4b3df2d2e65173ea97400231ec3f",
   "compiled_product": "PasteReplica",
   "functional_regression_executed": false,
   "equivalence_verified": false,
   "implementation_origin": "newly_migrated",
   "contract": "SearchField doCommandBySelector的Objective-C选择器入口；主执行器隔离，将命令Selector委托0x10004867c，并返回同一布尔结果；由实际NSTextViewDelegate命令路径调用。",
   "review": "逐项复审：OriginalSearchEditing的恢复函数体不变；委托在OriginalSearchField创建并保持，Coordinator从field.editingDelegate获取同一对象绑定回调，取代原先桥内构造。构建证据待统一登记；未重跑功能测试。",
-  "source_review": "仅五处更多菜单品牌字串替换，逐一反向替换后整个PanelViews与dev41 HEAD逐字相同；该地址Core算法、原生编辑器/几何/查询实际调用及所有分支均未改。build69已重新编译通过，不增加完整计数，不声称运行回归。",
+  "source_review": "界面修改仅软件/Stack/归档名及明确品牌展示适配；该地址的Core实现与实际搜索、原生文本委托、选择、窗口Stack配置、几何或restartProcess消费算法未改，技术键/参数/分支保留。 原有限合同：SearchField doCommandBySelector的Objective-C选择器入口；主执行器隔离，将命令Selector委托0x10004867c，并返回同一布尔结果；由实际NSTextViewDelegate命令路径调用。 build70编译通过；无新增完整计数，未运行功能/UI/MCP回归。",
   "regression_policy": "全部范围内代码迁移完成后统一功能回归；本批无功能/单测/原版差分/UI/MCP执行。",
   "caller_review_refs": [
     {

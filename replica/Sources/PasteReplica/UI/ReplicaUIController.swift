@@ -382,7 +382,7 @@ final class ReplicaUIController {
                                  backing: .buffered, defer: false)
         self.panel = panel
         panel.identifier = NSUserInterfaceItemIdentifier("paste-replica-panel")
-        panel.title = "Paste Replica"
+        panel.title = "Pasto"
         panel.isOpaque = false
         panel.backgroundColor = .clear
         panel.hasShadow = false
@@ -617,7 +617,7 @@ final class ReplicaUIController {
         if stackWindow == nil {
             let window = ReplicaStackPanel(contentRect: .init(x: 0, y: 0, width: 264, height: 76),
                                            styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: false)
-            window.title = "Paste Stack"
+            window.title = "Pasto Stack"
             window.isReleasedWhenClosed = false
             window.isOpaque = false; window.backgroundColor = .clear; window.hasShadow = true
             window.contentView = NSHostingView(rootView: ReplicaStackView(state: state))
@@ -838,7 +838,7 @@ final class ReplicaUIController {
         let chooser = NSSavePanel()
         sharingPolicy.apply(to: chooser)
         chooser.title = "导出剪贴板归档"
-        chooser.nameFieldStringValue = "PasteReplica-archive.json"
+        chooser.nameFieldStringValue = "Pasto-archive.json"
         chooser.allowedContentTypes = [.json]
         if chooser.runModal() == .OK, let url = chooser.url {
             state.perform { try store.exportArchive(to: url) }

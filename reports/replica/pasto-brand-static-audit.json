@@ -1,0 +1,47 @@
+{
+  "version": "0.8.0-dev.43",
+  "date": "2026-10-26",
+  "product_name": "Pasto",
+  "user_instruction_file": "AGENTS.md",
+  "brand_scope": [
+    "应用/菜单/关于/窗口/Stack/快捷键/分享默认文字/默认归档名",
+    "明确品牌的权限、诊断及暂停恢复提示在UI层适配",
+    "新创建的独立内容来源名",
+    "Pasto.app及Pasto Helper.app"
+  ],
+  "compatibility_preserved": [
+    "com.yingyanzhitong.paste-replica及helper Bundle ID",
+    "Application Support/PasteReplica与session/defaults/autosave keys",
+    "SPM模块/可执行/resource bundle与归档及剪贴板协议标识",
+    "原版反编译函数、原始本地化和历史证据",
+    "用户历史内容与其他应用名称不做字符串替换"
+  ],
+  "build_succeeded": true,
+  "build_snapshot": "reports/replica/concentrated-static-build70.json",
+  "source_count": 184,
+  "source_sha256": {
+    "AGENTS.md": "e1b977db35812412d990b3ed393b906164c8dda7d08e8d30bbb9453f2d8a338a",
+    "replica/scripts/build-app.sh": "7a0fedac7130413e861f126a5f90eacdae0604d8db18c89360a129dce6750727",
+    "replica/Sources/PasteReplica/UI/ReplicaBrand.swift": "17757bf65cc45d46160089c7f4379471045ee0209c517a7337d3ef8fcf55de23",
+    "replica/Sources/PasteReplica/AppMain.swift": "99adfabf27e199870bd59fb4a89693506e68e35fb34774e80ecbd162b406a426",
+    "replica/Sources/PasteReplica/UI/PanelViews.swift": "69407303d7c0e31095954300fd69305a36679b87072532c6881c509b77e9c088",
+    "replica/Sources/PasteReplica/UI/ReplicaUIController.swift": "ec635e8c1fdfc13ce06ba6198c997c5e89ffc8e72157e2f64095f087b6d622c2",
+    "replica/Sources/PasteReplica/UI/AuxiliaryViews.swift": "e2a11de77f3e8b90bb68c87cfbe966273ceed761a9446c8ce214cfec126927af",
+    "replica/Sources/PasteReplica/UI/OriginalAccessibilityModals.swift": "e8d95210a6fd30bd203ec43e60ad0741e8559135fa27cc49a07c8c2bcc5fb447",
+    "replica/Sources/PasteReplica/UI/ReplicaCopiedOSD.swift": "1900b2c3e23c1375502e8657701418d6ace46506df683e45d4d4c7cdad2e194c",
+    "replica/Sources/PasteReplicaHelper/HelperMain.swift": "60d98b18e87390fcc6c8de6a43b75d9505bfd74b822eb9e0fc6dc58bbfd47e12",
+    "replica/Sources/PasteReplicaCore/Models.swift": "67dd6d3ff6a1186e8bbabfcf65400da4ecb72b78e98ba1e7b26db5ed4de0aefa",
+    "replica/Sources/PasteReplicaCore/OriginalDiagnosticsHistory.swift": "a2c917352e8d3d194f3528b7023994fdb3e393e7f81007ac5be6c77928f30b62"
+  },
+  "new_complete_functions": 0,
+  "complete_function_coverage": 1499,
+  "source_contracts_revalidated": 53,
+  "sdk_bindings_revalidated": 912,
+  "functional_regression_executed": false,
+  "mcp_tests_executed": false,
+  "limitations": [
+    "编译、签名、安装和进程启动不等于视觉、交互及完整函数等价验收",
+    "旧历史中保存的真实来源或用户内容仍保留其原名称",
+    "原品牌文案仅在明确的UI品牌入口适配，不能修改原资源来伪造证据"
+  ]
+}

@@ -2,7 +2,7 @@
   "schema_version": 1,
   "kind": "static_code_migration",
   "function_id": "Paste:0x1002f45b0",
-  "reviewed_at": "2026-10-26T03:28:50.807457+00:00",
+  "reviewed_at": "2026-10-26T03:54:27.502058+00:00",
   "original_binary_sha256": "871f00354fbb1c165d858a98e6d19d6f43cb9d3f9f958b3e07c7f07eb5c19afb",
   "original_pseudocode": {
     "path": "decompiled/Paste/part-0244.c",
@@ -12,18 +12,18 @@
   "source_sha256": {
     "replica/Sources/PasteReplicaCore/OriginalSearchQuery.swift": "4c828b16c6342387d375e6b5a3f24d28b37bbffa1c377e4cdb064ad27b5d1b28",
     "replica/Sources/PasteReplica/UI/ReplicaSearchIndex.swift": "e78958178276341efacbc2a1d240fbef049827fa836337e0ef1584cfa9dc5695",
-    "replica/Sources/PasteReplica/UI/ReplicaUIController.swift": "93cb6470e46ed4fd4160728bf72b5d94b7ff7d00609ab0b44f8b83413fa19bca"
+    "replica/Sources/PasteReplica/UI/ReplicaUIController.swift": "ec635e8c1fdfc13ce06ba6198c997c5e89ffc8e72157e2f64095f087b6d622c2"
   },
   "build_succeeded": true,
   "build_command": "swift build --package-path replica -c release",
-  "compiled_app_binary_sha256": "3202f5ec2cbd6868bffb1c1d613b2646cced57f9d8d8dd7284cd71c6d90c0142",
+  "compiled_app_binary_sha256": "0bf5b26d383e4a81571aa563ca41e82cfbdb4b3df2d2e65173ea97400231ec3f",
   "compiled_product": "PasteReplica",
   "functional_regression_executed": false,
   "equivalence_verified": false,
   "implementation_origin": "newly_migrated",
   "contract": "自由文本节点分别trim(.whitespaces)并去空后单空格join，转义后在title/textContent以及OS26.4+contentDescription形成=\"value*\"cwdt OR组；非text节点按原UInt8 tag分组，组内有效predicate为OR，多于1加括号，组间与自由文本组AND。无有效项返回空串。",
   "review": "完整part0244两函数静态复核：不是旧contains或多词unordered AND；保留原末尾*及cwdt而不臆解词元标志。String escaping顺序、单项/多项括号、原OS门控与ISO formatter直接对照。实际CSSearchQuery(queryString:queryContext:)及.results异步消费本构造结果。字典组迭代同原未定义排序，不人为按字母排序。未执行原版/复刻查询。",
-  "source_review": "Core查询OR/AND分组与实际索引调用、Controller refreshSearch均未改。 release build68已通过；不声称运行或整个父对象验收。",
+  "source_review": "界面修改仅软件/Stack/归档名及明确品牌展示适配；该地址的Core实现与实际搜索、原生文本委托、选择、窗口Stack配置、几何或restartProcess消费算法未改，技术键/参数/分支保留。 原有限合同：自由文本节点分别trim(.whitespaces)并去空后单空格join，转义后在title/textContent以及OS26.4+contentDescription形成=\"value*\"cwdt OR组；非text节点按原UInt8 tag分组，组内有效predicate为OR，多于1加括号，组间与自由文本组AND。无有效项返回空串。 build70编译通过；无新增完整计数，未运行功能/UI/MCP回归。",
   "regression_policy": "全部范围内代码迁移完成后统一功能回归；本批无功能/单测/原版差分/UI/MCP执行。",
   "unchanged_declarations": [
     {

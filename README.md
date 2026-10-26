@@ -1,10 +1,10 @@
-# Paste 原生复刻与反编译研究
+# Pasto 原生剪贴板与反编译研究
 
-`replica/` 现包含可编译运行的 Swift/AppKit/SwiftUI 菜单栏应用 **Paste Replica**，以及独立的 stdio MCP 服务。原版参考为本机 Paste 6.6.6，复刻使用独立应用标识和数据目录。
+`replica/` 现包含可编译运行的 Swift/AppKit/SwiftUI 菜单栏应用 **Pasto**，以及独立的 stdio MCP 服务。原版参考为本机 Paste 6.6.6，复刻使用独立应用标识和数据目录。
 
 ```sh
 bash replica/scripts/build-app.sh
-open 'replica/dist/Paste Replica.app'
+open 'replica/dist/Pasto.app'
 ```
 
 需要 macOS 14+、Apple Silicon 与 Swift Command Line Tools。本机已用 Swift 6.0.3、macOS 26.2 实际构建；0.7.0 历史交付曾运行，当前迁移快照仅编译及静态核对。构建只依赖系统框架，不需要下载第三方 Swift 包。

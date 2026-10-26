@@ -46,12 +46,12 @@ final class HelperDelegate: NSObject, NSApplicationDelegate {
     private func applicationURL() -> URL {
         var enclosing = Bundle.main.bundleURL
         for _ in 0..<4 { enclosing.deleteLastPathComponent() }
-        if enclosing.lastPathComponent == "Paste Replica.app" { return enclosing }
+        if enclosing.lastPathComponent == "Pasto.app" { return enclosing }
         if let registered = NSWorkspace.shared.urlForApplication(withBundleIdentifier: mainID) {
             return registered
         }
         // Static import resolution identifies URL.init(fileURLWithPath:), not URL(string:).
-        return URL(fileURLWithPath: "/Applications/Paste Replica.app")
+        return URL(fileURLWithPath: "/Applications/Pasto.app")
     }
 
     /// Paste Helper 0x100001db0; the KVO publisher includes its initial value.

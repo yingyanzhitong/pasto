@@ -2,7 +2,7 @@
   "schema_version": 1,
   "kind": "static_code_migration",
   "function_id": "Paste:0x100083a20",
-  "reviewed_at": "2026-10-23T16:26:01.147118+00:00",
+  "reviewed_at": "2026-10-26T03:54:27.502058+00:00",
   "original_binary_sha256": "871f00354fbb1c165d858a98e6d19d6f43cb9d3f9f958b3e07c7f07eb5c19afb",
   "original_pseudocode": {
     "path": "decompiled/Paste/part-0043.c",
@@ -11,17 +11,17 @@
   "original_pseudocode_sha256": "09b7ec41efa94f115ab747f33e6e48533244d1f722ea79762feb2c183b954981",
   "source_sha256": {
     "replica/Sources/PasteReplicaCore/OriginalStackTableController.swift": "bbd3276b4c9772cf92fcf68a59a3083c0f0f5569915cb56d83ce2b421419a717",
-    "replica/Sources/PasteReplica/UI/AuxiliaryViews.swift": "a65ed038204e1a37e21ad041a81e9de8218ac0790dce6e4a5ed695d5cce669a6"
+    "replica/Sources/PasteReplica/UI/AuxiliaryViews.swift": "e2a11de77f3e8b90bb68c87cfbe966273ceed761a9446c8ce214cfec126927af"
   },
   "build_succeeded": true,
   "build_command": "swift build --package-path replica -c release",
-  "compiled_app_binary_sha256": "24d03e58202ea2930b5bf302202a1920f4550c8b82550459fcb5d045ed9d7bbb",
+  "compiled_app_binary_sha256": "0bf5b26d383e4a81571aa563ca41e82cfbdb4b3df2d2e65173ea97400231ec3f",
   "compiled_product": "PasteReplica",
   "functional_regression_executed": false,
   "equivalence_verified": false,
   "implementation_origin": "newly_migrated",
   "contract": "通过惰性高度约束的animator把constant改为rowHeight乘clamp(snippets.count,1,10)，并立即激活约束；即使动画duration为零，constant也在之后的run-loop轮次提交。",
   "review": " 本批逐项复审：Stack表格核心恢复函数体未改，设置界面同文件改动使旧整文件摘要失效；保留历史测试及差分，当前只登记编译静态迁移。",
-  "source_review": "dev31集中源码复核：现有格式读取/写入/编解码、搜索编辑器、Stack与图片文字消费及age谓词实现保留；捕获仅增可选来源快照参数及add透传，不改变原多格式转换/校验合同。Header图标读取与独立Store共享模型不据此提升原父函数。绑定build54。",
+  "source_review": "Auxiliary仅品牌显示及新建合并sourceName字串改名；snippet表高度/动画、count及拒选方法、原Core实现逐字未改。 原有限合同：通过惰性高度约束的animator把constant改为rowHeight乘clamp(snippets.count,1,10)，并立即激活约束；即使动画duration为零，constant也在之后的run-loop轮次提交。 build70编译通过；无新增完整计数，未运行功能/UI/MCP回归。",
   "regression_policy": "全部范围内代码迁移完成后统一功能回归；本批无功能/单测/原版差分/UI/MCP执行。"
 }

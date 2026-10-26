@@ -2,7 +2,7 @@
   "schema_version": 1,
   "kind": "static_code_migration",
   "function_id": "Paste:0x1002da16c",
-  "reviewed_at": "2026-10-26T03:28:50.807457+00:00",
+  "reviewed_at": "2026-10-26T03:54:27.502058+00:00",
   "original_binary_sha256": "871f00354fbb1c165d858a98e6d19d6f43cb9d3f9f958b3e07c7f07eb5c19afb",
   "original_pseudocode": {
     "path": "decompiled/Paste/part-0236.c",
@@ -11,19 +11,19 @@
   "original_pseudocode_sha256": "2d60c3b531024ec7109c46f8686e0dc8799befd6e33162d6a3f138287116f739",
   "source_sha256": {
     "replica/Sources/PasteReplicaCore/OriginalSearchQueryNormalization.swift": "fc2414e1395bb916246c9ef38509730c394e3d0feebbf0ca6dc9438f86409eb9",
-    "replica/Sources/PasteReplica/UI/ReplicaUIController.swift": "93cb6470e46ed4fd4160728bf72b5d94b7ff7d00609ab0b44f8b83413fa19bca",
+    "replica/Sources/PasteReplica/UI/ReplicaUIController.swift": "ec635e8c1fdfc13ce06ba6198c997c5e89ffc8e72157e2f64095f087b6d622c2",
     "replica/Sources/PasteReplica/UI/SearchEditor.swift": "13ce2f341f2e7aad16ac8083f46575b20b060086cc5a66ebe6399d8740915107"
   },
   "build_succeeded": true,
   "build_command": "swift build --package-path replica -c release",
-  "compiled_app_binary_sha256": "3202f5ec2cbd6868bffb1c1d613b2646cced57f9d8d8dd7284cd71c6d90c0142",
+  "compiled_app_binary_sha256": "0bf5b26d383e4a81571aa563ca41e82cfbdb4b3df2d2e65173ea97400231ec3f",
   "compiled_product": "PasteReplica",
   "functional_regression_executed": false,
   "equivalence_verified": false,
   "implementation_origin": "newly_migrated",
   "contract": "filter value以.whitespaces trim仅判空，保留raw值；按(tag,raw String)去重保首项顺序。以原始输入最后filter（包含空/重复）为分界，text按前/后保序分组。flag bit0=1丢trim为空text、否则保留，均不改raw、不合并、不去重。最终返回filters + afterLastFilterText + beforeOrNoFilterText。",
   "review": "完整REA与arm64核实，尾部不能从伪代码未传参猜序：x29-b0=before→x21，x29-c0=after→x19；da56c index>last跳da634写-c0；da570写-b0；da71c base filters slot-b8→output slot-78；da724以x19首append，da734以x21次append，x20固定指output slot。原Set比较tag与原String，不trim后去重。 Root实际接UIController.searchQueryNodes fallback及SearchEditor.contents attributes runs；applySearchInput保存规范节点边界，不先拼串丢失前后分组。",
-  "source_review": "filter保raw值去重与文本分组、Controller/SearchEditor flag0规范化调用未改。 release build68已通过；不声称运行或整个父对象验收。",
+  "source_review": "界面修改仅软件/Stack/归档名及明确品牌展示适配；该地址的Core实现与实际搜索、原生文本委托、选择、窗口Stack配置、几何或restartProcess消费算法未改，技术键/参数/分支保留。 原有限合同：filter value以.whitespaces trim仅判空，保留raw值；按(tag,raw String)去重保首项顺序。以原始输入最后filter（包含空/重复）为分界，text按前/后保序分组。flag bit0=1丢trim为空text、否则保留，均不改raw、不合并、不去重。最终返回filters + afterLastFilterText + beforeOrNoFilterText。 build70编译通过；无新增完整计数，未运行功能/UI/MCP回归。",
   "regression_policy": "全部范围内代码迁移完成后统一功能回归；本批无功能/单测/原版差分/UI/MCP执行。",
   "unchanged_declarations": [
     {

@@ -2,7 +2,7 @@
   "schema_version": 1,
   "kind": "static_code_migration",
   "function_id": "Paste:0x1002f8760",
-  "reviewed_at": "2026-10-26T03:28:50.807457+00:00",
+  "reviewed_at": "2026-10-26T03:54:27.502058+00:00",
   "original_binary_sha256": "871f00354fbb1c165d858a98e6d19d6f43cb9d3f9f958b3e07c7f07eb5c19afb",
   "original_pseudocode": {
     "path": "decompiled/Paste/part-0245.c",
@@ -11,18 +11,18 @@
   "original_pseudocode_sha256": "bb18adf154a3797071050ec78ea3e60aafd4b261a59d5c44c76404563fe34238",
   "source_sha256": {
     "replica/Sources/PasteReplicaCore/OriginalSearchTextTokens.swift": "ea0bef0b75186bf558f512cd15f5343e1251fb47a9e39791d320fd23248b143f",
-    "replica/Sources/PasteReplica/UI/ReplicaUIController.swift": "93cb6470e46ed4fd4160728bf72b5d94b7ff7d00609ab0b44f8b83413fa19bca"
+    "replica/Sources/PasteReplica/UI/ReplicaUIController.swift": "ec635e8c1fdfc13ce06ba6198c997c5e89ffc8e72157e2f64095f087b6d622c2"
   },
   "build_succeeded": true,
   "build_command": "swift build --package-path replica -c release",
-  "compiled_app_binary_sha256": "3202f5ec2cbd6868bffb1c1d613b2646cced57f9d8d8dd7284cd71c6d90c0142",
+  "compiled_app_binary_sha256": "0bf5b26d383e4a81571aa563ca41e82cfbdb4b3df2d2e65173ea97400231ec3f",
   "compiled_product": "PasteReplica",
   "functional_regression_executed": false,
   "equivalence_verified": false,
   "implementation_origin": "newly_migrated",
   "contract": "非空buffer先把无metadata U+FFFC替换ASCII空格，按Character.isWhitespace是否相同划分连续run（空白run也保留），逐run append .text到既有node数组；最后原buffer.removeAll(keepingCapacity:true)。空buffer不改变node数组。",
   "review": "完整REA part0245及arm64 1002f8760..<1002f89f4核对。原按Unicode Character.isWhitespace分组而非String.split ASCII空格；原保留空白run，后继query builder再trim/drop；实际主UI原String不被改写，只有查询投影分段。",
-  "source_review": "buffer逐run空白分组、append与清空，Controller实际调用未改。 release build68已通过；不声称运行或整个父对象验收。",
+  "source_review": "界面修改仅软件/Stack/归档名及明确品牌展示适配；该地址的Core实现与实际搜索、原生文本委托、选择、窗口Stack配置、几何或restartProcess消费算法未改，技术键/参数/分支保留。 原有限合同：非空buffer先把无metadata U+FFFC替换ASCII空格，按Character.isWhitespace是否相同划分连续run（空白run也保留），逐run append .text到既有node数组；最后原buffer.removeAll(keepingCapacity:true)。空buffer不改变node数组。 build70编译通过；无新增完整计数，未运行功能/UI/MCP回归。",
   "regression_policy": "全部范围内代码迁移完成后统一功能回归；本批无功能/单测/原版差分/UI/MCP执行。",
   "unchanged_declarations": [
     {

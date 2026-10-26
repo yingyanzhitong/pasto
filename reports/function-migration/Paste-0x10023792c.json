@@ -2,7 +2,7 @@
   "schema_version": 1,
   "kind": "static_code_migration",
   "function_id": "Paste:0x10023792c",
-  "reviewed_at": "2026-10-23T15:16:51.862710+00:00",
+  "reviewed_at": "2026-10-26T03:54:27.502058+00:00",
   "original_binary_sha256": "871f00354fbb1c165d858a98e6d19d6f43cb9d3f9f958b3e07c7f07eb5c19afb",
   "original_pseudocode": {
     "path": "decompiled/Paste/part-0193.c",
@@ -10,17 +10,17 @@
   },
   "original_pseudocode_sha256": "d4a15eb21a76e7db575e6ce9b8228e2b53be9afc4d6dc1b781767fe0d870246a",
   "source_sha256": {
-    "replica/Sources/PasteReplica/UI/ReplicaCopiedOSD.swift": "f435b9bc2af4c37f19e74b5a36b88eba7d94a93ed2628ea3ad1292676a5ab8f4"
+    "replica/Sources/PasteReplica/UI/ReplicaCopiedOSD.swift": "1900b2c3e23c1375502e8657701418d6ace46506df683e45d4d4c7cdad2e194c"
   },
   "build_succeeded": true,
   "build_command": "swift build --package-path replica -c release",
-  "compiled_app_binary_sha256": "24dcfc9f7c9d3a4f249b17158cef4da0282ca222dda0971955810395b885bf7f",
+  "compiled_app_binary_sha256": "0bf5b26d383e4a81571aa563ca41e82cfbdb4b3df2d2e65173ea97400231ec3f",
   "compiled_product": "PasteReplica",
   "functional_regression_executed": false,
   "equivalence_verified": false,
   "implementation_origin": "newly_migrated",
   "contract": "实际 OSD 消退动画 closure 调用 window.animator().alphaValue=0。",
   "review": "原 REA 与指定 arm64 原窗口/布局/延时/动画/成功分支静态核对；真实诊断停止及本地 copy 成功消费者已接。最终 build27 release 编译通过，130 输入 SHA 构建前后一致；绑定冻结源/产物摘要。无产品、功能、单测、UI、原版动态或 MCP 执行；完整父契约继续 partial。",
-  "source_review": "已复审本批改动对现有入口的影响；未被替换的恢复函数体/调用契约保持，绑定当前稳定编译。",
+  "source_review": "OSD仅暂停/恢复品牌文字在展示层适配；checkmark/pause符号、原消退动画参数、alpha及orderOut时序函数逐字未改。 原有限合同：实际 OSD 消退动画 closure 调用 window.animator().alphaValue=0。 build70编译通过；无新增完整计数，未运行功能/UI/MCP回归。",
   "regression_policy": "全部范围内代码迁移完成后统一功能回归；本批无功能/单测/原版差分/UI/MCP执行。"
 }

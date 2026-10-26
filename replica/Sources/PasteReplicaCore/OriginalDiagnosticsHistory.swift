@@ -7,7 +7,7 @@ extension OriginalDiagnosticsManager {
         guard let file = f_1002feb60() else { return nil }
         let item = OriginalPasteboardItem()
         item.f_10037c4a8(file.absoluteString, forType: UTType.fileURL.identifier)
-        guard let id = try store.capture(pasteboard: pasteboard, sourceName: "Paste Replica",
+        guard let id = try store.capture(pasteboard: pasteboard, sourceName: "Pasto",
                                          sourceBundleID: Bundle.main.bundleIdentifier,
                                          snapshot: [item], respectMonitoringPolicy: false) else {
             throw OriginalPasteboardItemCreationError.emptyContent

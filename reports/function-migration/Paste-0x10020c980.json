@@ -2,7 +2,7 @@
   "schema_version": 1,
   "kind": "static_code_migration",
   "function_id": "Paste:0x10020c980",
-  "reviewed_at": "2026-10-23T15:16:51.859769+00:00",
+  "reviewed_at": "2026-10-26T03:54:27.502058+00:00",
   "original_binary_sha256": "871f00354fbb1c165d858a98e6d19d6f43cb9d3f9f958b3e07c7f07eb5c19afb",
   "original_pseudocode": {
     "path": "decompiled/Paste/part-0174.c",
@@ -10,17 +10,17 @@
   },
   "original_pseudocode_sha256": "045cf5e6bfd099a45c2e5dca18afc8176084363fbfdf7ea1a4374775f1ca59a3",
   "source_sha256": {
-    "replica/Sources/PasteReplica/UI/ReplicaCopiedOSD.swift": "f435b9bc2af4c37f19e74b5a36b88eba7d94a93ed2628ea3ad1292676a5ab8f4"
+    "replica/Sources/PasteReplica/UI/ReplicaCopiedOSD.swift": "1900b2c3e23c1375502e8657701418d6ace46506df683e45d4d4c7cdad2e194c"
   },
   "build_succeeded": true,
   "build_command": "swift build --package-path replica -c release",
-  "compiled_app_binary_sha256": "24dcfc9f7c9d3a4f249b17158cef4da0282ca222dda0971955810395b885bf7f",
+  "compiled_app_binary_sha256": "0bf5b26d383e4a81571aa563ca41e82cfbdb4b3df2d2e65173ea97400231ec3f",
   "compiled_product": "PasteReplica",
   "functional_regression_executed": false,
   "equivalence_verified": false,
   "implementation_origin": "existing_source_reused",
   "contract": "原符号名 getter 返回 checkmark，实际 copied 图像直接消费该原值。",
   "review": "原REA/arm64常量、日期formatter与真实本地暂停/恢复/复制消费者静态核对；最终build28 release编译通过，131输入SHA构建前后一致，绑定冻结源与产物。仅原子级可证合同作candidate；原定时器/自动恢复/OSD可选action等完整父仍partial。无产品、功能、单测、原版动态、UI或MCP执行。",
-  "source_review": "已复审本批改动对现有入口的影响；未被替换的恢复函数体/调用契约保持，绑定当前稳定编译。",
+  "source_review": "OSD仅暂停/恢复品牌文字在展示层适配；checkmark/pause符号、原消退动画参数、alpha及orderOut时序函数逐字未改。 原有限合同：原符号名 getter 返回 checkmark，实际 copied 图像直接消费该原值。 build70编译通过；无新增完整计数，未运行功能/UI/MCP回归。",
   "regression_policy": "全部范围内代码迁移完成后统一功能回归；本批无功能/单测/原版差分/UI/MCP执行。"
 }

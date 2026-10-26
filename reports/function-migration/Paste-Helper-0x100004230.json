@@ -2,7 +2,7 @@
   "schema_version": 1,
   "kind": "static_code_migration",
   "function_id": "Paste-Helper:0x100004230",
-  "reviewed_at": "2026-10-23T15:16:50.750720+00:00",
+  "reviewed_at": "2026-10-26T03:54:27.502058+00:00",
   "original_binary_sha256": "fb580e708dc53433f1f2efc7b2d49811361e174cbc752ce351cdf5871977638f",
   "original_pseudocode": {
     "path": "decompiled/Paste-Helper/part-0000.c",
@@ -10,18 +10,18 @@
   },
   "original_pseudocode_sha256": "c9b80b73478ea016318f797b511ca45d1c6defeaa8fc6b719368c3b37ae818c2",
   "source_sha256": {
-    "replica/Sources/PasteReplicaHelper/HelperMain.swift": "8d1b91412cf7fa0fd44b466266a894eca087f626cb91b0fca4f93d60ded63f45"
+    "replica/Sources/PasteReplicaHelper/HelperMain.swift": "60d98b18e87390fcc6c8de6a43b75d9505bfd74b822eb9e0fc6dc58bbfd47e12"
   },
   "build_succeeded": true,
   "build_command": "swift build --package-path replica -c release",
-  "compiled_app_binary_sha256": "22042441e294b84865fd18272857b42949833df6391732d90b06228851aa05e0",
+  "compiled_app_binary_sha256": "e0aa4659e71de02027c371cf5830c6804ed7cdb74fc9ebea0e62d84e70a01627",
   "compiled_product": "PasteReplicaHelper",
   "functional_regression_executed": false,
   "equivalence_verified": false,
   "implementation_origin": "newly_migrated",
   "contract": "NSWorkspace completion 的 error 非空时优先 resume throwing；无 error 时 application 必须非空，否则 trap；正常 application 则 resume returning，一次完成 checked continuation。",
   "review": "decompiled/Paste-Helper/part-0000.c:1961 起。原版 nil/nil 触发 SoftwareBreakpoint；复刻 preconditionFailure 保留同样的不接受无结果回调契约。没有把 nil/nil 当作成功或默认 false。",
-  "source_review": "已复审本批改动对现有入口的影响；未被替换的恢复函数体/调用契约保持，绑定当前稳定编译。",
+  "source_review": "Helper整文件仅两处主应用名称路径字串更改，其他函数的日志、状态键、进程匹配、计时/重试、weak/MainActor及completion分支均逐字未变。 原有限合同：NSWorkspace completion 的 error 非空时优先 resume throwing；无 error 时 application 必须非空，否则 trap；正常 application 则 resume returning，一次完成 checked continuation。 build70编译通过；无新增完整计数，未运行功能/UI/MCP回归。",
   "regression_policy": "全部范围内代码迁移完成后统一功能回归；本批无功能/单测/原版差分/UI/MCP执行。",
   "static_review_risk": "error 与 app 同时非空时错误优先；nil/nil 仍 trap；未增加超时/自动重试/假成功。checked continuation 仍防重复 resume。"
 }

@@ -1,7 +1,7 @@
 {
   "kind": "static_existing_feature_audit",
   "schema_version": 1,
-  "generated_at": "2026-10-26T03:47:53.622555+00:00",
+  "generated_at": "2026-10-26T03:55:30.681204+00:00",
   "policy": "按已有功能和调用链集中复核，只补真实缺口；本报告不修改逐地址台账，不将模块存在或候选匹配记为等价通过。",
   "functional_tests_executed": false,
   "mcp_tests_executed": false,
@@ -175,7 +175,7 @@
       "source_sha256": {
         "replica/Sources/PasteReplicaCore/ClipboardStore.swift": "0d6dec116f8d99a4920928f2cfbdfc194cf19962abf0bd146976f1e1190e0476",
         "replica/Sources/PasteReplica/UI/FilterBrowser.swift": "5b2f8cfbb48eb59e4be7a04a90b8d57809c2de9a316d77e76a6c41e44f500af2",
-        "replica/Sources/PasteReplica/UI/ReplicaUIController.swift": "93cb6470e46ed4fd4160728bf72b5d94b7ff7d00609ab0b44f8b83413fa19bca",
+        "replica/Sources/PasteReplica/UI/ReplicaUIController.swift": "ec635e8c1fdfc13ce06ba6198c997c5e89ffc8e72157e2f64095f087b6d622c2",
         "replica/Sources/PasteReplica/UI/SearchEditor.swift": "13ce2f341f2e7aad16ac8083f46575b20b060086cc5a66ebe6399d8740915107",
         "replica/Sources/PasteReplicaCore/OriginalFilterBrowserPopover.swift": "f0476a5457e4326cfa241adc063afb2e0031627cb49fe8bdf226634f9731ae7f",
         "replica/Sources/PasteReplicaCore/OriginalSearchDateRanges.swift": "91f2f941e01c03dc575e29edb80144c4e268174528e551deb72642b4a7743451",
@@ -190,7 +190,7 @@
         "replica/Sources/PasteReplicaCore/OriginalSearchSuggestionAnchor.swift": "2af28e89780d0e373331ea15588909cea7d99e1008e396717bb57b10b21436a7",
         "replica/Sources/PasteReplica/UI/ReplicaSearchSuggestionsMenu.swift": "2b46083f6752861703127b267caa380ee9abe901df87fe0bc859a700f02db23a",
         "replica/Sources/PasteReplica/UI/ReplicaSearchSuggestionSource.swift": "3b8891d82227ab85f16852880b76bdb392be1f223e846d6fdbd06ded25dab24b",
-        "replica/Sources/PasteReplicaCore/Models.swift": "1ecb672f4fee301b617d4ce96b24502b406da6552a0323f614937657a4eb9f70"
+        "replica/Sources/PasteReplicaCore/Models.swift": "67dd6d3ff6a1186e8bbabfcf65400da4ecb72b78e98ba1e7b26db5ed4de0aefa"
       },
       "original_reference_status": [
         {
@@ -229,7 +229,7 @@
           "ledger_state": "partial"
         }
       ],
-      "reviewer": "dev42仅品牌五字符串变更，其余集中静态结论沿用dev41"
+      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
     },
     {
       "id": "pinboard",
@@ -339,8 +339,8 @@
       "reuse_candidates": [],
       "source_sha256": {
         "replica/Sources/PasteReplicaCore/ClipboardStore.swift": "0d6dec116f8d99a4920928f2cfbdfc194cf19962abf0bd146976f1e1190e0476",
-        "replica/Sources/PasteReplica/UI/ReplicaUIController.swift": "93cb6470e46ed4fd4160728bf72b5d94b7ff7d00609ab0b44f8b83413fa19bca",
-        "replica/Sources/PasteReplica/UI/PanelViews.swift": "d9552057e37f115af25f969e570b24de247ebbb8db29e6d6c40d938d79570c70",
+        "replica/Sources/PasteReplica/UI/ReplicaUIController.swift": "ec635e8c1fdfc13ce06ba6198c997c5e89ffc8e72157e2f64095f087b6d622c2",
+        "replica/Sources/PasteReplica/UI/PanelViews.swift": "69407303d7c0e31095954300fd69305a36679b87072532c6881c509b77e9c088",
         "replica/Sources/PasteReplicaCore/OriginalPinboardColor.swift": "cfc44a744f2d3769d70582fea50da409435cfd9dcfa7f9ba104719093dcaef8e",
         "replica/Sources/PasteReplicaCore/OriginalPinboardAttributes.swift": "d2a1be64643be5b1b6380b92b8787e09dcf9021b6d61b7a3c3f406f5d2293424",
         "replica/Sources/PasteReplica/UI/OriginalPinboardHeaderIcon.swift": "c5aad86b7285c39fd31757919e9cf8d3cc5a29fae201a150132735c193a0c2db",
@@ -407,7 +407,7 @@
           "ledger_state": "partial"
         }
       ],
-      "reviewer": "dev42仅品牌五字符串变更，其余集中静态结论沿用dev41"
+      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
     },
     {
       "id": "multiselect",
@@ -506,9 +506,9 @@
       ],
       "reuse_candidates": [],
       "source_sha256": {
-        "replica/Sources/PasteReplica/UI/ReplicaUIController.swift": "93cb6470e46ed4fd4160728bf72b5d94b7ff7d00609ab0b44f8b83413fa19bca",
-        "replica/Sources/PasteReplica/AppMain.swift": "b308daaf3a16487a70df8f99c94786b0cbff2260675e2080f20896a2f7db3b18",
-        "replica/Sources/PasteReplica/UI/OriginalAccessibilityModals.swift": "4a229ac0d1f720eca435b010cc7c2f3da45ea970f991861762fb2d078527fed5",
+        "replica/Sources/PasteReplica/UI/ReplicaUIController.swift": "ec635e8c1fdfc13ce06ba6198c997c5e89ffc8e72157e2f64095f087b6d622c2",
+        "replica/Sources/PasteReplica/AppMain.swift": "99adfabf27e199870bd59fb4a89693506e68e35fb34774e80ecbd162b406a426",
+        "replica/Sources/PasteReplica/UI/OriginalAccessibilityModals.swift": "e8d95210a6fd30bd203ec43e60ad0741e8559135fa27cc49a07c8c2bcc5fb447",
         "replica/Sources/PasteReplica/UI/ReplicaCardContextSelection.swift": "2a5b9aac7f579d6466a8f0c6feff24095609873c348ef99444f95f23aeb7615f",
         "replica/Sources/PasteReplicaCore/OriginalOrderedSelection.swift": "b3631aed0222167f88c16329c76483f807d20af3baaf3a90ab4d214e8d9cb9f8",
         "replica/Sources/PasteReplicaCore/OriginalCollectionShortcutActions.swift": "01be6b33a11e469bcbbe4afe6b12ff4f3ee7ef64e7f4a7cc64d8ff654379f9fb",
@@ -582,7 +582,7 @@
           "ledger_state": "partial"
         }
       ],
-      "reviewer": "dev42仅品牌五字符串变更，其余集中静态结论沿用dev41"
+      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
     },
     {
       "id": "stack",
@@ -637,8 +637,8 @@
       ],
       "reuse_candidates": [],
       "source_sha256": {
-        "replica/Sources/PasteReplica/UI/ReplicaUIController.swift": "93cb6470e46ed4fd4160728bf72b5d94b7ff7d00609ab0b44f8b83413fa19bca",
-        "replica/Sources/PasteReplica/UI/AuxiliaryViews.swift": "a65ed038204e1a37e21ad041a81e9de8218ac0790dce6e4a5ed695d5cce669a6",
+        "replica/Sources/PasteReplica/UI/ReplicaUIController.swift": "ec635e8c1fdfc13ce06ba6198c997c5e89ffc8e72157e2f64095f087b6d622c2",
+        "replica/Sources/PasteReplica/UI/AuxiliaryViews.swift": "e2a11de77f3e8b90bb68c87cfbe966273ceed761a9446c8ce214cfec126927af",
         "replica/Sources/PasteReplicaCore/OriginalStackTableController.swift": "bbd3276b4c9772cf92fcf68a59a3083c0f0f5569915cb56d83ce2b421419a717",
         "replica/Sources/PasteReplicaCore/OriginalStackFunctions.swift": "e408e508e9bc0bf2b7477ab142e29e4b1c1087daa63cd402c312f145e6cf16a4"
       },
@@ -700,7 +700,7 @@
           "ledger_state": "verified"
         }
       ],
-      "reviewer": "dev42仅品牌五字符串变更，其余集中静态结论沿用dev41"
+      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
     },
     {
       "id": "ocr",
@@ -811,14 +811,14 @@
       "reuse_candidates": [],
       "source_sha256": {
         "replica/Sources/PasteReplicaCore/OCR.swift": "862d26c538ee33b527297b973197d609136755e66ab887f5f8eea9d3fad08739",
-        "replica/Sources/PasteReplica/UI/PanelViews.swift": "d9552057e37f115af25f969e570b24de247ebbb8db29e6d6c40d938d79570c70",
+        "replica/Sources/PasteReplica/UI/PanelViews.swift": "69407303d7c0e31095954300fd69305a36679b87072532c6881c509b77e9c088",
         "replica/Sources/PasteReplica/UI/OriginalImageTextSelection.swift": "0a85e22ff3ccde5a6601fad92286b616c399a88263b14af587eca0d2e3dcc74e",
         "replica/Sources/PasteReplica/UI/OriginalReplicaPreviewAdapter.swift": "7001263f00b2e981c1b93f3c9598b742a1279366d4ae7130237603feee3dd0f7",
         "replica/Sources/PasteReplica/UI/ReplicaImagePreviewContent.swift": "4b724f56be5d402049e2f4664e306886501f61ee29ba2e68573bc390e1baa8e2",
         "replica/Sources/PasteReplicaCore/ClipboardStore.swift": "0d6dec116f8d99a4920928f2cfbdfc194cf19962abf0bd146976f1e1190e0476",
         "replica/Sources/PasteReplica/UI/ReplicaSearchIndex.swift": "e78958178276341efacbc2a1d240fbef049827fa836337e0ef1584cfa9dc5695",
         "replica/Sources/PasteReplicaCore/OriginalImagePreviewMetadata.swift": "90bfbfd6d413e25d446b47346935f15c53d80dc44028d6630d19331b06908ffa",
-        "replica/Sources/PasteReplicaCore/Models.swift": "1ecb672f4fee301b617d4ce96b24502b406da6552a0323f614937657a4eb9f70"
+        "replica/Sources/PasteReplicaCore/Models.swift": "67dd6d3ff6a1186e8bbabfcf65400da4ecb72b78e98ba1e7b26db5ed4de0aefa"
       },
       "original_reference_status": [
         {
@@ -850,7 +850,7 @@
           "ledger_state": "migrated"
         }
       ],
-      "reviewer": "dev42仅品牌五字符串变更，其余集中静态结论沿用dev41"
+      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
     },
     {
       "id": "history-actions",
@@ -904,7 +904,7 @@
       "reuse_candidates": [],
       "source_sha256": {
         "replica/Sources/PasteReplicaCore/ClipboardStore.swift": "0d6dec116f8d99a4920928f2cfbdfc194cf19962abf0bd146976f1e1190e0476",
-        "replica/Sources/PasteReplica/UI/PanelViews.swift": "d9552057e37f115af25f969e570b24de247ebbb8db29e6d6c40d938d79570c70"
+        "replica/Sources/PasteReplica/UI/PanelViews.swift": "69407303d7c0e31095954300fd69305a36679b87072532c6881c509b77e9c088"
       },
       "original_reference_status": [
         {
@@ -929,7 +929,7 @@
           "ledger_state": "pending"
         }
       ],
-      "reviewer": "dev42仅品牌五字符串变更，其余集中静态结论沿用dev41"
+      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
     },
     {
       "id": "main-card-layout",
@@ -1238,15 +1238,15 @@
       ],
       "reuse_candidates": [],
       "source_sha256": {
-        "replica/Sources/PasteReplica/UI/PanelViews.swift": "d9552057e37f115af25f969e570b24de247ebbb8db29e6d6c40d938d79570c70",
-        "replica/Sources/PasteReplica/UI/ReplicaUIController.swift": "93cb6470e46ed4fd4160728bf72b5d94b7ff7d00609ab0b44f8b83413fa19bca",
+        "replica/Sources/PasteReplica/UI/PanelViews.swift": "69407303d7c0e31095954300fd69305a36679b87072532c6881c509b77e9c088",
+        "replica/Sources/PasteReplica/UI/ReplicaUIController.swift": "ec635e8c1fdfc13ce06ba6198c997c5e89ffc8e72157e2f64095f087b6d622c2",
         "replica/Sources/PasteReplicaCore/OriginalTextPreviewMetadata.swift": "7c09e2e2297ef070a792bf8a50e51ab162146d27b516d7e92ac3bd53df36b676",
         "replica/Sources/PasteReplicaCore/OriginalImagePreviewMetadataCodec.swift": "1620a024a011c19294f16680ae2a8d6e92afac426d4ebbe1dd4e1fac1e364ca0",
         "replica/Sources/PasteReplica/UI/ReplicaLinkMetadataContent.swift": "813a7d310752cf453c34aede27c56dc44f1d8cbccd611128277cfc2f96084784",
         "replica/Sources/PasteReplica/UI/ReplicaPanelResizeHandle.swift": "f0461fe70bbcb486c89ef24d7d2d119b051cd5bbfb34279df06f72636f6bcbbe",
         "replica/Sources/PasteReplicaCore/OriginalCardPresentation.swift": "acb4df601c1f35cf1e8767bc8a66140c99ec082c8c82f79acd49fc316a5d09cf",
         "replica/Sources/PasteReplica/UI/ReplicaCanonicalCardContent.swift": "ae15319786af4a6becda29a55e849ddda42fe38e5a9de525900b57e182f0e24d",
-        "replica/Sources/PasteReplica/UI/AuxiliaryViews.swift": "a65ed038204e1a37e21ad041a81e9de8218ac0790dce6e4a5ed695d5cce669a6",
+        "replica/Sources/PasteReplica/UI/AuxiliaryViews.swift": "e2a11de77f3e8b90bb68c87cfbe966273ceed761a9446c8ce214cfec126927af",
         "replica/Sources/PasteReplica/UI/OriginalAdaptiveScalingImageView.swift": "0002845178a53c2617885f40fcfad92f679c1123a095340aa1037450914730d6",
         "replica/Sources/PasteReplica/UI/OriginalHeadTruncatedLabel.swift": "ae8ac54e38c5a7b03d9f99d8afef169c5be0e41f29bec5faefa3d99bce5df160",
         "replica/Sources/PasteReplica/UI/ReplicaPanelContentView.swift": "9ecc072f1f5324e922d9e44e1027c3756b0bc17216fb2c5e74b6ffbc598b96e2",
@@ -1463,7 +1463,7 @@
           "ledger_state": "partial"
         }
       ],
-      "reviewer": "dev42仅品牌五字符串变更，其余集中静态结论沿用dev41"
+      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
     },
     {
       "id": "native-preview-window",
@@ -1501,7 +1501,7 @@
       },
       "source_sha256": {
         "replica/Sources/PasteReplicaCore/OriginalPreviewWindows.swift": "4cc1f30d0de962162c6231a6207cc7623fc82e20f126f3ebc3edb326d5592c2d",
-        "replica/Sources/PasteReplica/UI/ReplicaUIController.swift": "93cb6470e46ed4fd4160728bf72b5d94b7ff7d00609ab0b44f8b83413fa19bca"
+        "replica/Sources/PasteReplica/UI/ReplicaUIController.swift": "ec635e8c1fdfc13ce06ba6198c997c5e89ffc8e72157e2f64095f087b6d622c2"
       },
       "original_reference_status": [
         {
@@ -1526,7 +1526,7 @@
           "ledger_state": "migrated"
         }
       ],
-      "reviewer": "dev42仅品牌五字符串变更，其余集中静态结论沿用dev41"
+      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
     },
     {
       "id": "preview-registry",
@@ -1578,7 +1578,7 @@
       },
       "source_sha256": {
         "replica/Sources/PasteReplicaCore/OriginalPreviewWindows.swift": "4cc1f30d0de962162c6231a6207cc7623fc82e20f126f3ebc3edb326d5592c2d",
-        "replica/Sources/PasteReplica/UI/ReplicaUIController.swift": "93cb6470e46ed4fd4160728bf72b5d94b7ff7d00609ab0b44f8b83413fa19bca"
+        "replica/Sources/PasteReplica/UI/ReplicaUIController.swift": "ec635e8c1fdfc13ce06ba6198c997c5e89ffc8e72157e2f64095f087b6d622c2"
       },
       "original_reference_status": [
         {
@@ -1645,7 +1645,7 @@
           "ledger_state": "partial"
         }
       ],
-      "reviewer": "dev42仅品牌五字符串变更，其余集中静态结论沿用dev41"
+      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
     },
     {
       "id": "card-anchor-popover",
@@ -1725,7 +1725,7 @@
       },
       "source_sha256": {
         "replica/Sources/PasteReplica/UI/PreviewAnchor.swift": "aa621221c95e877131ce3f53723be87730091482eeac479ec109daf66adaf923",
-        "replica/Sources/PasteReplica/UI/ReplicaUIController.swift": "93cb6470e46ed4fd4160728bf72b5d94b7ff7d00609ab0b44f8b83413fa19bca",
+        "replica/Sources/PasteReplica/UI/ReplicaUIController.swift": "ec635e8c1fdfc13ce06ba6198c997c5e89ffc8e72157e2f64095f087b6d622c2",
         "replica/Sources/PasteReplicaCore/OriginalPreviewPopover.swift": "352554008c692f89091bf3cb700b0cfee1b55768b5a709c3b4320951a154a46e",
         "replica/Sources/PasteReplica/UI/OriginalReplicaPreviewAdapter.swift": "7001263f00b2e981c1b93f3c9598b742a1279366d4ae7130237603feee3dd0f7"
       },
@@ -1787,7 +1787,7 @@
           "ledger_state": "partial"
         }
       ],
-      "reviewer": "dev42仅品牌五字符串变更，其余集中静态结论沿用dev41"
+      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
     },
     {
       "id": "preview-title-rename",
@@ -1918,7 +1918,7 @@
           "ledger_state": "migrated"
         }
       ],
-      "reviewer": "dev42仅品牌五字符串变更，其余集中静态结论沿用dev41"
+      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
     },
     {
       "id": "preview-header-actions",
@@ -2036,7 +2036,7 @@
           "ledger_state": "partial"
         }
       ],
-      "reviewer": "dev42仅品牌五字符串变更，其余集中静态结论沿用dev41"
+      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
     },
     {
       "id": "preview-mode-transitions",
@@ -2139,7 +2139,7 @@
           "ledger_state": "partial"
         }
       ],
-      "reviewer": "dev42仅品牌五字符串变更，其余集中静态结论沿用dev41"
+      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
     },
     {
       "id": "text-content-persistence",
@@ -2218,7 +2218,7 @@
           "ledger_state": "partial"
         }
       ],
-      "reviewer": "dev42仅品牌五字符串变更，其余集中静态结论沿用dev41"
+      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
     },
     {
       "id": "text-attributed-normalization",
@@ -2368,7 +2368,7 @@
           "ledger_state": "migrated"
         }
       ],
-      "reviewer": "dev42仅品牌五字符串变更，其余集中静态结论沿用dev41"
+      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
     },
     {
       "id": "text-formatting-traits",
@@ -2500,7 +2500,7 @@
           "ledger_state": "migrated"
         }
       ],
-      "reviewer": "dev42仅品牌五字符串变更，其余集中静态结论沿用dev41"
+      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
     },
     {
       "id": "text-event-owner",
@@ -2597,7 +2597,7 @@
           "ledger_state": "partial"
         }
       ],
-      "reviewer": "dev42仅品牌五字符串变更，其余集中静态结论沿用dev41"
+      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
     },
     {
       "id": "native-toolbar-factories",
@@ -2725,7 +2725,7 @@
           "ledger_state": "migrated"
         }
       ],
-      "reviewer": "dev42仅品牌五字符串变更，其余集中静态结论沿用dev41"
+      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
     },
     {
       "id": "text-footer",
@@ -2860,7 +2860,7 @@
           "ledger_state": "migrated"
         }
       ],
-      "reviewer": "dev42仅品牌五字符串变更，其余集中静态结论沿用dev41"
+      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
     },
     {
       "id": "preview-other-content",
@@ -3173,22 +3173,22 @@
         "parent_partial_status_preserved": true
       },
       "source_sha256": {
-        "replica/Sources/PasteReplica/UI/ReplicaUIController.swift": "93cb6470e46ed4fd4160728bf72b5d94b7ff7d00609ab0b44f8b83413fa19bca",
+        "replica/Sources/PasteReplica/UI/ReplicaUIController.swift": "ec635e8c1fdfc13ce06ba6198c997c5e89ffc8e72157e2f64095f087b6d622c2",
         "replica/Sources/PasteReplica/UI/OriginalReplicaPreviewAdapter.swift": "7001263f00b2e981c1b93f3c9598b742a1279366d4ae7130237603feee3dd0f7",
         "replica/Sources/PasteReplica/UI/ReplicaReadOnlyPreviewContent.swift": "75c71b7c823ac6dfe3e59a033db183419afd55dca88b37941f4a35eb9021d36b",
-        "replica/Sources/PasteReplica/UI/AuxiliaryViews.swift": "a65ed038204e1a37e21ad041a81e9de8218ac0790dce6e4a5ed695d5cce669a6",
+        "replica/Sources/PasteReplica/UI/AuxiliaryViews.swift": "e2a11de77f3e8b90bb68c87cfbe966273ceed761a9446c8ce214cfec126927af",
         "replica/Sources/PasteReplica/UI/OriginalImageTextSelection.swift": "0a85e22ff3ccde5a6601fad92286b616c399a88263b14af587eca0d2e3dcc74e",
         "replica/Sources/PasteReplica/UI/ReplicaImagePreviewContent.swift": "4b724f56be5d402049e2f4664e306886501f61ee29ba2e68573bc390e1baa8e2",
         "replica/Sources/PasteReplica/UI/ReplicaColorPreviewContent.swift": "2d6bd2d25ed3d56897ba22d14ffbcda84f37348cdc15e06a2508fd09dabb7662",
         "replica/Sources/PasteReplica/UI/ReplicaLinkPreviewContent.swift": "1d9ad12dc1f5b46c40b8ee4f06ab8362693d22e0d099625cde7209f0bd62db37",
         "replica/Sources/PasteReplica/UI/ReplicaFilePreviewContent.swift": "e2bd5375e67f5e326d371bf4c07944358d2a47098469a078d8fd086925c2e5ec",
         "replica/Sources/PasteReplicaCore/OriginalFilePreviewMetadata.swift": "abf5d495807ef79b7d857eff269f77de1d69c704eafac9130616c7664a6eebe0",
-        "replica/Sources/PasteReplicaCore/Models.swift": "1ecb672f4fee301b617d4ce96b24502b406da6552a0323f614937657a4eb9f70",
+        "replica/Sources/PasteReplicaCore/Models.swift": "67dd6d3ff6a1186e8bbabfcf65400da4ecb72b78e98ba1e7b26db5ed4de0aefa",
         "replica/Sources/PasteReplicaCore/OriginalImagePreviewMetadataCodec.swift": "1620a024a011c19294f16680ae2a8d6e92afac426d4ebbe1dd4e1fac1e364ca0",
         "replica/Sources/PasteReplicaCore/OriginalColorPreviewMetadata.swift": "b78c20f7a126322c3be604b7a26fc7d630384f31265969e4d17c5cf0887f60b2",
         "replica/Sources/PasteReplicaCore/OriginalLinkPreviewMetadata.swift": "cf30ef0714e8f3bfa31c11765ce3a0493b3228013c3d4096cc5c32e851c2be00",
         "replica/Sources/PasteReplicaCore/ClipboardStore.swift": "0d6dec116f8d99a4920928f2cfbdfc194cf19962abf0bd146976f1e1190e0476",
-        "replica/Sources/PasteReplica/UI/PanelViews.swift": "d9552057e37f115af25f969e570b24de247ebbb8db29e6d6c40d938d79570c70",
+        "replica/Sources/PasteReplica/UI/PanelViews.swift": "69407303d7c0e31095954300fd69305a36679b87072532c6881c509b77e9c088",
         "replica/Sources/PasteReplica/UI/ReplicaLinkMetadataContent.swift": "813a7d310752cf453c34aede27c56dc44f1d8cbccd611128277cfc2f96084784",
         "replica/Sources/PasteReplicaCore/OriginalLinkDisplay.swift": "22ddf146e091d4b1f9fb0315e95a8bfb527542b1e1f945c9c80a776e47302b20",
         "replica/Sources/PasteReplica/UI/OriginalCompactTextFooter.swift": "354bb3da875cf760e956b2251271b4f634f47e8a25b597caae501ca83172bc33",
@@ -3254,7 +3254,7 @@
           "ledger_state": "partial"
         }
       ],
-      "reviewer": "dev42仅品牌五字符串变更，其余集中静态结论沿用dev41"
+      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
     },
     {
       "id": "preview-localization",
@@ -3415,7 +3415,7 @@
           "ledger_state": "migrated"
         }
       ],
-      "reviewer": "dev42仅品牌五字符串变更，其余集中静态结论沿用dev41"
+      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
     },
     {
       "id": "screen-sharing-policy",
@@ -3476,7 +3476,7 @@
       "source_sha256": {
         "replica/Sources/PasteReplica/WindowSharingPolicy.swift": "072433ef383fb8a58b6be171d3096af92cec573da60b0790de0f65db114571ce",
         "replica/Sources/PasteReplicaCore/OriginalConfigurationFunctions.swift": "d777c6848066ec198ca41739d0a785ece4df2000977cda19b230e3d4530fcb54",
-        "replica/Sources/PasteReplica/UI/ReplicaUIController.swift": "93cb6470e46ed4fd4160728bf72b5d94b7ff7d00609ab0b44f8b83413fa19bca"
+        "replica/Sources/PasteReplica/UI/ReplicaUIController.swift": "ec635e8c1fdfc13ce06ba6198c997c5e89ffc8e72157e2f64095f087b6d622c2"
       },
       "original_reference_status": [
         {
@@ -3550,7 +3550,7 @@
           "ledger_state": "migrated"
         }
       ],
-      "reviewer": "dev42仅品牌五字符串变更，其余集中静态结论沿用dev41"
+      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
     },
     {
       "id": "helper-watchdog",
@@ -3641,9 +3641,9 @@
         "Paste-Helper:0x100004c34": "migrated"
       },
       "source_sha256": {
-        "replica/Sources/PasteReplicaHelper/HelperMain.swift": "8d1b91412cf7fa0fd44b466266a894eca087f626cb91b0fca4f93d60ded63f45",
+        "replica/Sources/PasteReplicaHelper/HelperMain.swift": "60d98b18e87390fcc6c8de6a43b75d9505bfd74b822eb9e0fc6dc58bbfd47e12",
         "replica/Sources/PasteReplica/BackgroundService.swift": "a117f0cd7e8742e0bedd7c3cf52935bc343db072d8beae4f4ee7437e58ed63e7",
-        "replica/Sources/PasteReplica/AppMain.swift": "b308daaf3a16487a70df8f99c94786b0cbff2260675e2080f20896a2f7db3b18"
+        "replica/Sources/PasteReplica/AppMain.swift": "99adfabf27e199870bd59fb4a89693506e68e35fb34774e80ecbd162b406a426"
       },
       "original_reference_status": [
         {
@@ -3759,7 +3759,7 @@
           "ledger_state": "migrated"
         }
       ],
-      "reviewer": "dev42仅品牌五字符串变更，其余集中静态结论沿用dev41"
+      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
     },
     {
       "id": "helper-bootstrap",
@@ -3801,7 +3801,7 @@
         "Paste-Helper:0x1000020b4": "migrated"
       },
       "source_sha256": {
-        "replica/Sources/PasteReplicaHelper/HelperMain.swift": "8d1b91412cf7fa0fd44b466266a894eca087f626cb91b0fca4f93d60ded63f45"
+        "replica/Sources/PasteReplicaHelper/HelperMain.swift": "60d98b18e87390fcc6c8de6a43b75d9505bfd74b822eb9e0fc6dc58bbfd47e12"
       },
       "original_reference_status": [
         {
@@ -3826,7 +3826,7 @@
           "ledger_state": "migrated"
         }
       ],
-      "reviewer": "dev42仅品牌五字符串变更，其余集中静态结论沿用dev41"
+      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
     },
     {
       "id": "background-setting",
@@ -3868,7 +3868,7 @@
       },
       "source_sha256": {
         "replica/Sources/PasteReplica/BackgroundService.swift": "a117f0cd7e8742e0bedd7c3cf52935bc343db072d8beae4f4ee7437e58ed63e7",
-        "replica/Sources/PasteReplica/UI/AuxiliaryViews.swift": "a65ed038204e1a37e21ad041a81e9de8218ac0790dce6e4a5ed695d5cce669a6"
+        "replica/Sources/PasteReplica/UI/AuxiliaryViews.swift": "e2a11de77f3e8b90bb68c87cfbe966273ceed761a9446c8ce214cfec126927af"
       },
       "original_reference_status": [
         {
@@ -3879,7 +3879,7 @@
           "ledger_state": "partial"
         }
       ],
-      "reviewer": "dev42仅品牌五字符串变更，其余集中静态结论沿用dev41"
+      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
     },
     {
       "id": "settings-overall",
@@ -3951,8 +3951,8 @@
         "Paste:0x1000adc6c": "partial"
       },
       "source_sha256": {
-        "replica/Sources/PasteReplica/UI/AuxiliaryViews.swift": "a65ed038204e1a37e21ad041a81e9de8218ac0790dce6e4a5ed695d5cce669a6",
-        "replica/Sources/PasteReplicaCore/Models.swift": "1ecb672f4fee301b617d4ce96b24502b406da6552a0323f614937657a4eb9f70",
+        "replica/Sources/PasteReplica/UI/AuxiliaryViews.swift": "e2a11de77f3e8b90bb68c87cfbe966273ceed761a9446c8ce214cfec126927af",
+        "replica/Sources/PasteReplicaCore/Models.swift": "67dd6d3ff6a1186e8bbabfcf65400da4ecb72b78e98ba1e7b26db5ed4de0aefa",
         "replica/Sources/PasteReplicaCore/ClipboardStore.swift": "0d6dec116f8d99a4920928f2cfbdfc194cf19962abf0bd146976f1e1190e0476",
         "replica/Sources/PasteReplicaCore/OriginalSettingsLocalization.swift": "f9c5663239b8fbd7251b0fdcce5c0d19bbfa2c620642d75bcb61073a37e028a5",
         "replica/Sources/PasteReplica/UI/OriginalAccessibilityRequestAction.swift": "22fbc993dae45d453bb2c6586a7823b3c633b2a22446c824cb75256b1e011ed0",
@@ -4017,7 +4017,7 @@
           "ledger_state": "partial"
         }
       ],
-      "reviewer": "dev42仅品牌五字符串变更，其余集中静态结论沿用dev41"
+      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
     },
     {
       "id": "capture.items",
@@ -4120,7 +4120,7 @@
           "ledger_state": "migrated"
         }
       ],
-      "reviewer": "dev42仅品牌五字符串变更，其余集中静态结论沿用dev41"
+      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
     },
     {
       "id": "capture.content",
@@ -4304,7 +4304,7 @@
           "ledger_state": "migrated"
         }
       ],
-      "reviewer": "dev42仅品牌五字符串变更，其余集中静态结论沿用dev41"
+      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
     },
     {
       "id": "capture.timers",
@@ -4391,7 +4391,7 @@
           "ledger_state": "migrated"
         }
       ],
-      "reviewer": "dev42仅品牌五字符串变更，其余集中静态结论沿用dev41"
+      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
     },
     {
       "id": "capture.state",
@@ -4469,7 +4469,7 @@
           "ledger_state": "pending"
         }
       ],
-      "reviewer": "dev42仅品牌五字符串变更，其余集中静态结论沿用dev41"
+      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
     },
     {
       "id": "capture.policy",
@@ -4587,9 +4587,9 @@
       },
       "source_sha256": {
         "replica/Sources/PasteReplicaCore/OriginalPasteboardPolicies.swift": "b85860e5fdc4be03afd7f4f69651f3ed1fc15c2c48d4a765fdcae5fdc8787dc7",
-        "replica/Sources/PasteReplica/UI/ReplicaCopiedOSD.swift": "f435b9bc2af4c37f19e74b5a36b88eba7d94a93ed2628ea3ad1292676a5ab8f4",
-        "replica/Sources/PasteReplica/UI/ReplicaUIController.swift": "93cb6470e46ed4fd4160728bf72b5d94b7ff7d00609ab0b44f8b83413fa19bca",
-        "replica/Sources/PasteReplica/AppMain.swift": "b308daaf3a16487a70df8f99c94786b0cbff2260675e2080f20896a2f7db3b18"
+        "replica/Sources/PasteReplica/UI/ReplicaCopiedOSD.swift": "1900b2c3e23c1375502e8657701418d6ace46506df683e45d4d4c7cdad2e194c",
+        "replica/Sources/PasteReplica/UI/ReplicaUIController.swift": "ec635e8c1fdfc13ce06ba6198c997c5e89ffc8e72157e2f64095f087b6d622c2",
+        "replica/Sources/PasteReplica/AppMain.swift": "99adfabf27e199870bd59fb4a89693506e68e35fb34774e80ecbd162b406a426"
       },
       "original_reference_status": [
         {
@@ -4614,7 +4614,7 @@
           "ledger_state": "migrated"
         }
       ],
-      "reviewer": "dev42仅品牌五字符串变更，其余集中静态结论沿用dev41"
+      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
     },
     {
       "id": "capture.read_sync",
@@ -4690,7 +4690,7 @@
           "ledger_state": "partial"
         }
       ],
-      "reviewer": "dev42仅品牌五字符串变更，其余集中静态结论沿用dev41"
+      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
     },
     {
       "id": "serialization.item_codable",
@@ -4871,7 +4871,7 @@
           "ledger_state": "migrated"
         }
       ],
-      "reviewer": "dev42仅品牌五字符串变更，其余集中静态结论沿用dev41"
+      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
     },
     {
       "id": "serialization.keyed",
@@ -4945,7 +4945,7 @@
           "ledger_state": "partial"
         }
       ],
-      "reviewer": "dev42仅品牌五字符串变更，其余集中静态结论沿用dev41"
+      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
     },
     {
       "id": "serialization.internal_codec",
@@ -5072,7 +5072,7 @@
           "ledger_state": "migrated"
         }
       ],
-      "reviewer": "dev42仅品牌五字符串变更，其余集中静态结论沿用dev41"
+      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
     },
     {
       "id": "checksum.md5",
@@ -5133,7 +5133,7 @@
           "ledger_state": "migrated"
         }
       ],
-      "reviewer": "dev42仅品牌五字符串变更，其余集中静态结论沿用dev41"
+      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
     },
     {
       "id": "checksum.strategy",
@@ -5206,7 +5206,7 @@
           "ledger_state": "partial"
         }
       ],
-      "reviewer": "dev42仅品牌五字符串变更，其余集中静态结论沿用dev41"
+      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
     },
     {
       "id": "repo.dedup",
@@ -5273,7 +5273,7 @@
           "ledger_state": "partial"
         }
       ],
-      "reviewer": "dev42仅品牌五字符串变更，其余集中静态结论沿用dev41"
+      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
     },
     {
       "id": "repo.metadata",
@@ -5373,7 +5373,7 @@
           "ledger_state": "pending"
         }
       ],
-      "reviewer": "dev42仅品牌五字符串变更，其余集中静态结论沿用dev41"
+      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
     },
     {
       "id": "repo.transaction",
@@ -5458,9 +5458,9 @@
       "source_sha256": {
         "replica/Sources/PasteReplicaCore/ClipboardStore.swift": "0d6dec116f8d99a4920928f2cfbdfc194cf19962abf0bd146976f1e1190e0476",
         "replica/Sources/PasteReplicaCore/Pasteboard.swift": "0f5ba3cb157a77612f9b1cbc447d835571d64858ddf82948d2d88f6a5b4fbca2",
-        "replica/Sources/PasteReplicaCore/Models.swift": "1ecb672f4fee301b617d4ce96b24502b406da6552a0323f614937657a4eb9f70",
-        "replica/Sources/PasteReplica/AppMain.swift": "b308daaf3a16487a70df8f99c94786b0cbff2260675e2080f20896a2f7db3b18",
-        "replica/Sources/PasteReplica/UI/ReplicaUIController.swift": "93cb6470e46ed4fd4160728bf72b5d94b7ff7d00609ab0b44f8b83413fa19bca"
+        "replica/Sources/PasteReplicaCore/Models.swift": "67dd6d3ff6a1186e8bbabfcf65400da4ecb72b78e98ba1e7b26db5ed4de0aefa",
+        "replica/Sources/PasteReplica/AppMain.swift": "99adfabf27e199870bd59fb4a89693506e68e35fb34774e80ecbd162b406a426",
+        "replica/Sources/PasteReplica/UI/ReplicaUIController.swift": "ec635e8c1fdfc13ce06ba6198c997c5e89ffc8e72157e2f64095f087b6d622c2"
       },
       "original_reference_status": [
         {
@@ -5506,7 +5506,7 @@
           "ledger_state": "pending"
         }
       ],
-      "reviewer": "dev42仅品牌五字符串变更，其余集中静态结论沿用dev41"
+      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
     },
     {
       "id": "repo.objc_exception",
@@ -5577,7 +5577,7 @@
           "ledger_state": "migrated"
         }
       ],
-      "reviewer": "dev42仅品牌五字符串变更，其余集中静态结论沿用dev41"
+      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
     },
     {
       "id": "repo.capture_actions",
@@ -5683,7 +5683,7 @@
           "ledger_state": "partial"
         }
       ],
-      "reviewer": "dev42仅品牌五字符串变更，其余集中静态结论沿用dev41"
+      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
     },
     {
       "id": "logging.named",
@@ -5793,7 +5793,7 @@
           "ledger_state": "migrated"
         }
       ],
-      "reviewer": "dev42仅品牌五字符串变更，其余集中静态结论沿用dev41"
+      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
     },
     {
       "id": "logging.dispatch",
@@ -5981,7 +5981,7 @@
           "ledger_state": "migrated"
         }
       ],
-      "reviewer": "dev42仅品牌五字符串变更，其余集中静态结论沿用dev41"
+      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
     },
     {
       "id": "diagnostics.controls",
@@ -6019,8 +6019,8 @@
       "reuse_candidates": [],
       "source_sha256": {
         "replica/Sources/PasteReplicaCore/OriginalDiagnosticsManager.swift": "afb071a98b036e3023f254c039ca1d85c4a975e79307aa3f3075b1caf21513ed",
-        "replica/Sources/PasteReplicaCore/Models.swift": "1ecb672f4fee301b617d4ce96b24502b406da6552a0323f614937657a4eb9f70",
-        "replica/Sources/PasteReplica/AppMain.swift": "b308daaf3a16487a70df8f99c94786b0cbff2260675e2080f20896a2f7db3b18"
+        "replica/Sources/PasteReplicaCore/Models.swift": "67dd6d3ff6a1186e8bbabfcf65400da4ecb72b78e98ba1e7b26db5ed4de0aefa",
+        "replica/Sources/PasteReplica/AppMain.swift": "99adfabf27e199870bd59fb4a89693506e68e35fb34774e80ecbd162b406a426"
       },
       "original_reference_status": [
         {
@@ -6045,7 +6045,7 @@
           "ledger_state": "pending"
         }
       ],
-      "reviewer": "dev42仅品牌五字符串变更，其余集中静态结论沿用dev41"
+      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
     },
     {
       "id": "diagnostics.queries",
@@ -6084,7 +6084,7 @@
       ],
       "source_sha256": {
         "replica/Sources/PasteReplicaCore/OriginalDiagnosticsManager.swift": "afb071a98b036e3023f254c039ca1d85c4a975e79307aa3f3075b1caf21513ed",
-        "replica/Sources/PasteReplicaCore/OriginalDiagnosticsHistory.swift": "7551155957a7e0821fd955efd19ccc127d742c26ce7aae60f904757a4a02e464"
+        "replica/Sources/PasteReplicaCore/OriginalDiagnosticsHistory.swift": "a2c917352e8d3d194f3528b7023994fdb3e393e7f81007ac5be6c77928f30b62"
       },
       "original_reference_status": [
         {
@@ -6102,7 +6102,7 @@
           "ledger_state": "partial"
         }
       ],
-      "reviewer": "dev42仅品牌五字符串变更，其余集中静态结论沿用dev41"
+      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
     },
     {
       "id": "diagnostics.menu",
@@ -6169,10 +6169,10 @@
         "parent_partial_status_preserved": true
       },
       "source_sha256": {
-        "replica/Sources/PasteReplica/AppMain.swift": "b308daaf3a16487a70df8f99c94786b0cbff2260675e2080f20896a2f7db3b18",
-        "replica/Sources/PasteReplicaCore/OriginalDiagnosticsHistory.swift": "7551155957a7e0821fd955efd19ccc127d742c26ce7aae60f904757a4a02e464",
+        "replica/Sources/PasteReplica/AppMain.swift": "99adfabf27e199870bd59fb4a89693506e68e35fb34774e80ecbd162b406a426",
+        "replica/Sources/PasteReplicaCore/OriginalDiagnosticsHistory.swift": "a2c917352e8d3d194f3528b7023994fdb3e393e7f81007ac5be6c77928f30b62",
         "replica/Sources/PasteReplicaCore/OriginalDiagnosticsAppActions.swift": "51b66a38645a00f634efdb623f74940f503c8c2c36862badc56b1267d2132cac",
-        "replica/Sources/PasteReplica/UI/ReplicaCopiedOSD.swift": "f435b9bc2af4c37f19e74b5a36b88eba7d94a93ed2628ea3ad1292676a5ab8f4"
+        "replica/Sources/PasteReplica/UI/ReplicaCopiedOSD.swift": "1900b2c3e23c1375502e8657701418d6ace46506df683e45d4d4c7cdad2e194c"
       },
       "original_reference_status": [
         {
@@ -6204,7 +6204,7 @@
           "ledger_state": "pending"
         }
       ],
-      "reviewer": "dev42仅品牌五字符串变更，其余集中静态结论沿用dev41"
+      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
     },
     {
       "id": "diagnostics.restart",
@@ -6236,7 +6236,7 @@
       ],
       "source_sha256": {
         "replica/Sources/PasteReplicaCore/OriginalDiagnosticsAppActions.swift": "51b66a38645a00f634efdb623f74940f503c8c2c36862badc56b1267d2132cac",
-        "replica/Sources/PasteReplica/AppMain.swift": "b308daaf3a16487a70df8f99c94786b0cbff2260675e2080f20896a2f7db3b18"
+        "replica/Sources/PasteReplica/AppMain.swift": "99adfabf27e199870bd59fb4a89693506e68e35fb34774e80ecbd162b406a426"
       },
       "original_reference_status": [
         {
@@ -6247,7 +6247,7 @@
           "ledger_state": "migrated"
         }
       ],
-      "reviewer": "dev42仅品牌五字符串变更，其余集中静态结论沿用dev41"
+      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
     },
     {
       "id": "restore.writer",
@@ -6300,7 +6300,7 @@
           "ledger_state": "migrated"
         }
       ],
-      "reviewer": "dev42仅品牌五字符串变更，其余集中静态结论沿用dev41"
+      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
     },
     {
       "id": "restore.processor",
@@ -6443,7 +6443,7 @@
           "ledger_state": "partial"
         }
       ],
-      "reviewer": "dev42仅品牌五字符串变更，其余集中静态结论沿用dev41"
+      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
     },
     {
       "id": "restore.history",
@@ -6528,7 +6528,7 @@
         "replica/Sources/PasteReplicaCore/ClipboardStore.swift": "0d6dec116f8d99a4920928f2cfbdfc194cf19962abf0bd146976f1e1190e0476",
         "replica/Sources/PasteReplicaCore/OriginalPasteboardCaptureState.swift": "91f582575946ec8e4238d539ac477be694bb0adc1ce4f9a184747e43ba670f5f",
         "replica/Sources/PasteReplicaCore/OriginalPasteKeyTranslation.swift": "76118ad54378bc18b97d3f4560eca9032be38832c96d045d318f9335c9a68d12",
-        "replica/Sources/PasteReplicaCore/Models.swift": "1ecb672f4fee301b617d4ce96b24502b406da6552a0323f614937657a4eb9f70",
+        "replica/Sources/PasteReplicaCore/Models.swift": "67dd6d3ff6a1186e8bbabfcf65400da4ecb72b78e98ba1e7b26db5ed4de0aefa",
         "replica/Sources/PasteReplicaCore/OriginalSoundEffects.swift": "9fea7bd27a0f354737883e390ecc1eb6cef885725a7f1768ea697c7d6471b79e"
       },
       "original_reference_status": [
@@ -6561,7 +6561,7 @@
           "ledger_state": "partial"
         }
       ],
-      "reviewer": "dev42仅品牌五字符串变更，其余集中静态结论沿用dev41"
+      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
     },
     {
       "id": "value-coding",
@@ -6646,7 +6646,7 @@
           "ledger_state": "migrated"
         }
       ],
-      "reviewer": "dev42仅品牌五字符串变更，其余集中静态结论沿用dev41"
+      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
     },
     {
       "id": "key-translation",
@@ -6818,7 +6818,7 @@
           "ledger_state": "migrated"
         }
       ],
-      "reviewer": "dev42仅品牌五字符串变更，其余集中静态结论沿用dev41"
+      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
     },
     {
       "id": "conflict-check",
@@ -6884,7 +6884,7 @@
           "ledger_state": "migrated"
         }
       ],
-      "reviewer": "dev42仅品牌五字符串变更，其余集中静态结论沿用dev41"
+      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
     },
     {
       "id": "recorder-state",
@@ -7033,7 +7033,7 @@
           "ledger_state": "migrated"
         }
       ],
-      "reviewer": "dev42仅品牌五字符串变更，其余集中静态结论沿用dev41"
+      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
     },
     {
       "id": "recorder-ui",
@@ -7195,7 +7195,7 @@
           "ledger_state": "migrated"
         }
       ],
-      "reviewer": "dev42仅品牌五字符串变更，其余集中静态结论沿用dev41"
+      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
     },
     {
       "id": "error-localization",
@@ -7254,7 +7254,7 @@
           "ledger_state": "migrated"
         }
       ],
-      "reviewer": "dev42仅品牌五字符串变更，其余集中静态结论沿用dev41"
+      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
     },
     {
       "id": "carbon-register",
@@ -7319,7 +7319,7 @@
       "source_sha256": {
         "replica/Sources/PasteReplicaCore/OriginalGlobalShortcutMonitor.swift": "0ae87812c59edb65d973f77446ff78971c2c465d990df5b0c110dad76a8e0cae",
         "replica/Sources/PasteReplica/GlobalHotKey.swift": "e77cd9617f7a93b41f4c87c25f347f66e356583ea02530b2970d2c2f7b1314fc",
-        "replica/Sources/PasteReplica/AppMain.swift": "b308daaf3a16487a70df8f99c94786b0cbff2260675e2080f20896a2f7db3b18"
+        "replica/Sources/PasteReplica/AppMain.swift": "99adfabf27e199870bd59fb4a89693506e68e35fb34774e80ecbd162b406a426"
       },
       "original_reference_status": [
         {
@@ -7393,7 +7393,7 @@
           "ledger_state": "migrated"
         }
       ],
-      "reviewer": "dev42仅品牌五字符串变更，其余集中静态结论沿用dev41"
+      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
     },
     {
       "id": "monitor-lifetime",
@@ -7475,7 +7475,7 @@
           "ledger_state": "partial"
         }
       ],
-      "reviewer": "dev42仅品牌五字符串变更，其余集中静态结论沿用dev41"
+      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
     },
     {
       "id": "validator-provider",
@@ -7549,7 +7549,7 @@
           "ledger_state": "migrated"
         }
       ],
-      "reviewer": "dev42仅品牌五字符串变更，其余集中静态结论沿用dev41"
+      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
     },
     {
       "id": "dependency-cache",
@@ -7720,7 +7720,7 @@
           "ledger_state": "partial"
         }
       ],
-      "reviewer": "dev42仅品牌五字符串变更，其余集中静态结论沿用dev41"
+      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
     },
     {
       "id": "initialized-config",
@@ -7811,7 +7811,7 @@
           "ledger_state": "migrated"
         }
       ],
-      "reviewer": "dev42仅品牌五字符串变更，其余集中静态结论沿用dev41"
+      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
     },
     {
       "id": "telemetry-construction",
@@ -7880,7 +7880,7 @@
           "ledger_state": "pending"
         }
       ],
-      "reviewer": "dev42仅品牌五字符串变更，其余集中静态结论沿用dev41"
+      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
     },
     {
       "id": "sentry-local-scope",
@@ -7991,7 +7991,7 @@
           "ledger_state": "pending"
         }
       ],
-      "reviewer": "dev42仅品牌五字符串变更，其余集中静态结论沿用dev41"
+      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
     },
     {
       "id": "actor-destruction",
@@ -8044,7 +8044,7 @@
           "ledger_state": "pending"
         }
       ],
-      "reviewer": "dev42仅品牌五字符串变更，其余集中静态结论沿用dev41"
+      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
     },
     {
       "id": "thin-wrapper-reuse",
@@ -8188,7 +8188,7 @@
           "ledger_state": "pending"
         }
       ],
-      "reviewer": "dev42仅品牌五字符串变更，其余集中静态结论沿用dev41"
+      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
     },
     {
       "id": "coding-description",
@@ -8232,7 +8232,7 @@
           "ledger_state": "pending"
         }
       ],
-      "reviewer": "dev42仅品牌五字符串变更，其余集中静态结论沿用dev41"
+      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
     },
     {
       "id": "native-dictionary-reuse",
@@ -8346,7 +8346,7 @@
           "ledger_state": "pending"
         }
       ],
-      "reviewer": "dev42仅品牌五字符串变更，其余集中静态结论沿用dev41"
+      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
     },
     {
       "id": "unreviewed-generated",
@@ -9790,7 +9790,7 @@
           "ledger_state": "pending"
         }
       ],
-      "reviewer": "dev42仅品牌五字符串变更，其余集中静态结论沿用dev41"
+      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
     },
     {
       "id": "native-image-text-selection",
@@ -9838,7 +9838,7 @@
       "reuse_candidates": [],
       "source_sha256": {
         "replica/Sources/PasteReplica/UI/OriginalImageTextSelection.swift": "0a85e22ff3ccde5a6601fad92286b616c399a88263b14af587eca0d2e3dcc74e",
-        "replica/Sources/PasteReplica/UI/AuxiliaryViews.swift": "a65ed038204e1a37e21ad041a81e9de8218ac0790dce6e4a5ed695d5cce669a6",
+        "replica/Sources/PasteReplica/UI/AuxiliaryViews.swift": "e2a11de77f3e8b90bb68c87cfbe966273ceed761a9446c8ce214cfec126927af",
         "replica/Sources/PasteReplica/UI/OriginalReplicaPreviewAdapter.swift": "7001263f00b2e981c1b93f3c9598b742a1279366d4ae7130237603feee3dd0f7",
         "replica/Sources/PasteReplica/UI/ReplicaImagePreviewContent.swift": "4b724f56be5d402049e2f4664e306886501f61ee29ba2e68573bc390e1baa8e2"
       },
@@ -9858,7 +9858,7 @@
           "ledger_state": "migrated"
         }
       ],
-      "reviewer": "dev42仅品牌五字符串变更，其余集中静态结论沿用dev41"
+      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
     },
     {
       "id": "image-exif-analysis",
@@ -9943,7 +9943,7 @@
           "ledger_state": "partial"
         }
       ],
-      "reviewer": "dev42仅品牌五字符串变更，其余集中静态结论沿用dev41"
+      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
     },
     {
       "id": "ocr-cache-responsibility",
@@ -10010,7 +10010,7 @@
           "ledger_state": "migrated"
         }
       ],
-      "reviewer": "dev42仅品牌五字符串变更，其余集中静态结论沿用dev41"
+      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
     },
     {
       "id": "native-image-zoom-centering",
@@ -10152,7 +10152,7 @@
         "replica/Sources/PasteReplica/UI/OriginalImageCheckerboardView.swift": "33688d7bc85daf8236ba92017cee0828157202fc46f7c8be8e7f2663588bc51d",
         "replica/Sources/PasteReplicaCore/OriginalImagePreviewMetadata.swift": "90bfbfd6d413e25d446b47346935f15c53d80dc44028d6630d19331b06908ffa",
         "replica/Sources/PasteReplicaCore/ClipboardStore.swift": "0d6dec116f8d99a4920928f2cfbdfc194cf19962abf0bd146976f1e1190e0476",
-        "replica/Sources/PasteReplicaCore/Models.swift": "1ecb672f4fee301b617d4ce96b24502b406da6552a0323f614937657a4eb9f70",
+        "replica/Sources/PasteReplicaCore/Models.swift": "67dd6d3ff6a1186e8bbabfcf65400da4ecb72b78e98ba1e7b26db5ed4de0aefa",
         "replica/Sources/PasteReplicaCore/OriginalImagePreviewMetadataCodec.swift": "1620a024a011c19294f16680ae2a8d6e92afac426d4ebbe1dd4e1fac1e364ca0"
       },
       "original_reference_status": [
@@ -10325,7 +10325,7 @@
           "ledger_state": "migrated"
         }
       ],
-      "reviewer": "dev42仅品牌五字符串变更，其余集中静态结论沿用dev41"
+      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
     }
   ],
   "findings": [

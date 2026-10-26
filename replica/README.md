@@ -1,4 +1,4 @@
-# Paste Replica
+# Pasto
 
 独立 Swift 原生实现。主面板参考 Paste 6.6.6；静态函数、MCP 参数及部分行为由 REA/Ghidra 证据核对。应用不载入原版私有历史数据库。
 
@@ -6,7 +6,7 @@
 
 ```sh
 bash replica/scripts/build-app.sh
-open 'replica/dist/Paste Replica.app'
+open 'replica/dist/Pasto.app'
 ```
 
 正常运行时在菜单栏显示剪贴板图标，点击打开历史。默认全局快捷键是 ⇧⌘V，Stack 是 ⇧⌘C；若原版占用，菜单栏提示状态，点击图标仍可使用。直接粘贴会还原目标应用，并且只在系统辅助功能权限可用时发送粘贴按键；权限不足时保留已拷贝内容并显示说明。
@@ -16,7 +16,7 @@ open 'replica/dist/Paste Replica.app'
 ## 隔离演示
 
 ```sh
-open -n 'replica/dist/Paste Replica.app' --args \
+open -n 'replica/dist/Pasto.app' --args \
   --data-dir /tmp/paste-replica-demo \
   --fixture --no-monitor --no-global-hotkey \
   --pasteboard-name com.pastereplica.demo --show-panel
@@ -32,7 +32,7 @@ open -n 'replica/dist/Paste Replica.app' --args \
 {
   "mcpServers": {
     "paste-replica": {
-      "command": "/绝对路径/Paste Replica.app/Contents/MacOS/paste-replica-mcp",
+      "command": "/绝对路径/Pasto.app/Contents/MacOS/paste-replica-mcp",
       "args": ["--data-dir", "/绝对路径/独立数据目录"]
     }
   }

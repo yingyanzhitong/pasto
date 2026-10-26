@@ -2,7 +2,7 @@
   "schema_version": 1,
   "kind": "static_code_migration",
   "function_id": "Paste:0x10004e8ec",
-  "reviewed_at": "2026-10-23T15:50:32.776832+00:00",
+  "reviewed_at": "2026-10-26T03:54:27.502058+00:00",
   "original_binary_sha256": "871f00354fbb1c165d858a98e6d19d6f43cb9d3f9f958b3e07c7f07eb5c19afb",
   "original_pseudocode": {
     "path": "decompiled/Paste/part-0028.c",
@@ -11,18 +11,18 @@
   "original_pseudocode_sha256": "1b45df6b5594863a3a5b951aac31ee60a4df263649ec66748fb18fd018e0b5cc",
   "source_sha256": {
     "replica/Sources/PasteReplicaCore/OriginalDiagnosticsAppActions.swift": "51b66a38645a00f634efdb623f74940f503c8c2c36862badc56b1267d2132cac",
-    "replica/Sources/PasteReplica/AppMain.swift": "b308daaf3a16487a70df8f99c94786b0cbff2260675e2080f20896a2f7db3b18"
+    "replica/Sources/PasteReplica/AppMain.swift": "99adfabf27e199870bd59fb4a89693506e68e35fb34774e80ecbd162b406a426"
   },
   "build_succeeded": true,
   "build_command": "swift build --package-path replica -c release",
-  "compiled_app_binary_sha256": "cffddfcf7bb53d8bb29eaf4af782ebc6047acf2491cc030525e565483950abd9",
+  "compiled_app_binary_sha256": "0bf5b26d383e4a81571aa563ca41e82cfbdb4b3df2d2e65173ea97400231ec3f",
   "compiled_product": "PasteReplica",
   "functional_regression_executed": false,
   "equivalence_verified": false,
   "implementation_origin": "existing_source_reused",
   "contract": "构造Process，executableURL=/bin/sh，参数-c与sleep 0.25 && open双引号包Bundle.main.bundleURL.path，try启动后无论成败均_exit(0)。",
   "review": "原完整REA及arm64 executable小字符串/bin/sh和大字符串sleep 0.25 && open 双引号包bundleURL.path已核；直接复用未改源码。实际仅原诊断确认启用分支调用，不在偏好恢复或普通启动时触发。try启动后无论成败_exit(0)保留；本轮绝不执行。",
-  "source_review": "build51集中审阅：既有搜索、权限、焦点与几何helper保留；仅已证选择算法、modifier消费者与files图像布局修正。真实调用继续存在，稳定编译后刷新关联源码绑定，未运行产品或等价测试。",
+  "source_review": "界面修改仅软件/Stack/归档名及明确品牌展示适配；该地址的Core实现与实际搜索、原生文本委托、选择、窗口Stack配置、几何或restartProcess消费算法未改，技术键/参数/分支保留。 原有限合同：构造Process，executableURL=/bin/sh，参数-c与sleep 0.25 && open双引号包Bundle.main.bundleURL.path，try启动后无论成败均_exit(0)。 build70编译通过；无新增完整计数，未运行功能/UI/MCP回归。",
   "regression_policy": "全部范围内代码迁移完成后统一功能回归；本批无功能/单测/原版差分/UI/MCP执行。",
   "caller_review_refs": [
     {
