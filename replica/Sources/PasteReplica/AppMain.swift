@@ -95,8 +95,8 @@ final class ReplicaAppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValid
             if arguments.contains("--fixture"), store.items.isEmpty { try seedFixture() }
             ui = ReplicaUIController(store: store)
             ui.pasteboard = pasteboard
-            ui.pasteHandler = { [weak self] id, plain in self?.paste(id: id, plain: plain) }
-            ui.pasteItemsHandler = { [weak self] ids, plain in self?.paste(ids: ids, plain: plain) }
+            ui.pasteHandler = { [weak self] id, plain in self?.paste(id: id, plain: plain) ?? false }
+            ui.pasteItemsHandler = { [weak self] ids, plain in self?.paste(ids: ids, plain: plain) ?? false }
             ui.copiedItemsHandler = {
                 ReplicaCopiedOSD.showCopied()
                 NSApp.deactivate()
@@ -403,8 +403,8 @@ final class ReplicaAppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValid
         else { ui.state.pauseMonitoring() }
     }
 
-    private func paste(id: UUID, plain: Bool) {
-        _ = paste(ids: [id], plain: plain)
+    private func paste(id: UUID, plain: Bool) -> Bool {
+        paste(ids: [id], plain: plain)
     }
 
     @discardableResult
@@ -434,7 +434,10 @@ final class ReplicaAppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValid
         do { try store.writeToPasteboard(ids: ids, pasteboard: pasteboard, options: restoreOptions) }
         catch { ui.presentError(error); return false }
         // Named pasteboards support isolated acceptance runs and never generate system keystrokes.
-        guard pasteboard.name == NSPasteboard.general.name else { return true }
+        guard pasteboard.name == NSPasteboard.general.name else {
+            ui.hidePanel()
+            return true
+        }
         guard !copyInsteadOfPaste else {
             ReplicaCopiedOSD.showCopied(enableDirectPaste: { [weak self] in
                 guard let self else { return }
@@ -444,8 +447,10 @@ final class ReplicaAppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValid
                 }
             })
             NSApp.deactivate()
+            ui.hidePanel()
             return true
         }
+        ui.hidePanel()
         guard let target = targetApplication, !target.isTerminated,
               target.processIdentifier != ProcessInfo.processInfo.processIdentifier else { return false }
         let changeCount = pasteboard.changeCount

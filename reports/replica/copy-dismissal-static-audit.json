@@ -1,0 +1,130 @@
+{
+  "version": "0.8.0-dev.44",
+  "date": "2026-10-26",
+  "scope": "卡片拷贝与双击成功后面板关闭的有限静态修正",
+  "original_binary_sha256": "871f00354fbb1c165d858a98e6d19d6f43cb9d3f9f958b3e07c7f07eb5c19afb",
+  "original_complete_body_boundaries": [
+    {
+      "start": "0x100065ed8",
+      "end_exclusive": "0x100066068",
+      "size": 400,
+      "sha256": "19130169fd9cd08ebb00c081f30ce914763070cfc1d2a4af6c2f8d54f02a78f8"
+    },
+    {
+      "start": "0x1003b936c",
+      "end_exclusive": "0x1003b9490",
+      "size": 292,
+      "sha256": "b096043093745c05931dd39f38fac19f65cc14f419b22e7b679e11a589e0aa35"
+    },
+    {
+      "start": "0x1003b9490",
+      "end_exclusive": "0x1003b9a78",
+      "size": 1512,
+      "sha256": "c95dfae8bd80b4a5e00b2c389dc7dfe6e4cc37b8bd9ecdcf27295aff6da38d95"
+    },
+    {
+      "start": "0x100066068",
+      "end_exclusive": "0x100066570",
+      "size": 1288,
+      "sha256": "ee146970e5f912d90c83e256c37a9221d6a5b69bd096cc8636d42ac0fc8f76a6"
+    },
+    {
+      "start": "0x100066570",
+      "end_exclusive": "0x100066728",
+      "size": 440,
+      "sha256": "5887a8450f057284dddef8c555a93521fe6eb53db117db72813ae9269d63fee8"
+    },
+    {
+      "start": "0x100075a6c",
+      "end_exclusive": "0x100075d4c",
+      "size": 736,
+      "sha256": "28f3ded891a0c0db1fbb8af12c568bdd5d90fdbe5ced319473edd580d2c92aed"
+    },
+    {
+      "start": "0x10037a144",
+      "end_exclusive": "0x10037a698",
+      "size": 1364,
+      "sha256": "b9c90a0341f5119537e734c07f6052d08922a36ffc0fdf94108fb8cebf46f221"
+    },
+    {
+      "start": "0x10037875c",
+      "end_exclusive": "0x100378ac0",
+      "size": 868,
+      "sha256": "6d225aa4f7730847f32693f46451ad2ead463a8023311c4821b2dd3adb659f09"
+    },
+    {
+      "start": "0x100077e48",
+      "end_exclusive": "0x100077e58",
+      "size": 16,
+      "sha256": "f7e78a959d9753a6d6fcd375b0ba210899618cab83442831a14fedecb95d0987"
+    },
+    {
+      "start": "0x100077e68",
+      "end_exclusive": "0x100077fe0",
+      "size": 376,
+      "sha256": "75ee53d20160e440306224b4cd95b0044949ed49612a75c8d667a9269debd326"
+    },
+    {
+      "start": "0x10001a77c",
+      "end_exclusive": "0x10001a784",
+      "size": 8,
+      "sha256": "a7d22b621c064a04a025f722d8274ec5a099788c8054d882c5a14592a698e6d8"
+    },
+    {
+      "start": "0x100018c84",
+      "end_exclusive": "0x100018da8",
+      "size": 292,
+      "sha256": "e14d0809fab9f4331bcd91eacf06abd59aa265f8f6304b923fc3d45ba89bdd5c"
+    },
+    {
+      "start": "0x100019a84",
+      "end_exclusive": "0x100019d44",
+      "size": 704,
+      "sha256": "87770d705ce613bb07e331f343ee1da75f92b33723598c59f6eca43af6f4988f"
+    }
+  ],
+  "original_chains": {
+    "copy": "f65ed8→f3b936c返回true→f3b9490(mode1事件上报，不是改选区)→f20b084 Copied OSD→NSApp.deactivate→f77e48/f77e68→f1a77c→f18c84 sheet/modal/suppression guard→f19a84 guarded close。false分支仅beep，不deactivate。",
+    "double_click": "f75a6c从clicked item与完整raw flags子集选项进入f66068；copy-only fallback f66570成功OSD后deactivate，直接粘贴AX允许分支即使原writer Bool false也经过deactivate。",
+    "key": "实际原键盘匹配为⌘C及⌘|配置plain的精确签名，不新增未经原证据支持的Control-C别名。"
+  },
+  "changes": [
+    "copy guard非空，try writer返回后依次复制反馈/失活和显式guarded hide，弥补非激活面板漏失活通知；不改变选区。",
+    "Panel新增标准copy:响应桥，文本编辑器优先响应自己的copy。",
+    "UI paste callbacks保留Bool且不在调用前统一隐藏；AppMain restore成功后分别处理named board、copy-only与direct路径的关闭。",
+    "原native双击单项选择、raw flags、copy/quick精确修饰键及Core writer全保持。"
+  ],
+  "build_succeeded": true,
+  "snapshot": "reports/replica/concentrated-static-build71.json",
+  "input_count": 184,
+  "source_sha256": {
+    "replica/Sources/PasteReplica/AppMain.swift": "001b79664f215af3dda1f8b97a498eb23d31d71f4fdff2f219dd3728df0e6124",
+    "replica/Sources/PasteReplica/UI/ReplicaUIController.swift": "83ab337c6b97ff23106275d30103fc377772d6c9708f633e3961a3b3af33e3b4",
+    "replica/Sources/PasteReplica/UI/ReplicaNativeCardCollection.swift": "1d29490561572d9491cbae31598b80d3eff7a54642b8ace81ed3fb6d4ac543f1",
+    "replica/Sources/PasteReplicaCore/OriginalCollectionShortcutActions.swift": "01be6b33a11e469bcbbe4afe6b12ff4f3ee7ef64e7f4a7cc64d8ff654379f9fb",
+    "replica/Sources/PasteReplicaCore/OriginalPasteboardRestore.swift": "bf309c94b15bb4db46acedc6ba535d1f060aa3a8d74257053a773cf7200dd2c6"
+  },
+  "source_contracts_revalidated": 18,
+  "sdk_bindings_revalidated": 912,
+  "new_complete_functions": 0,
+  "functional_regression_executed": false,
+  "ui_tests_executed": false,
+  "mcp_tests_executed": false,
+  "remaining": [
+    "原Bool含license/restore gate，不能与独立Swift写入throw或writeObjects成功简单等同；不声明所有错误分支完整等价。",
+    "Swift异常不执行新显式hide，但晚发生的异常可能已写入部分剪贴板数据。",
+    "权限raw2路径的deactivate仍可能收起面板；direct目标无效可能在剪贴板成功及hide后返回false，不能从false推出面板可见。",
+    "原modal/sheet完整生产上下文、目标激活/1秒等待超时反馈及真实跨应用插入成功尚未完成验收。",
+    "显式关闭复用现有0.2秒/generation协调器，是独立实现的稳定性适配，不声称原copy方法本体直接close或完整父已恢复。"
+  ],
+  "double_click_configuration": {
+    "original_force_direct": false,
+    "original_policy": "paste-items配置或force为true才检查AX并进入direct；两者都false走copy-only。普通双击原force=0不改变。",
+    "observed_local_preference_before": false,
+    "local_preference_corrected_by_user_request": true,
+    "source_default_was_already_true": true,
+    "default_or_user_history_rewritten": false,
+    "actual_insertion_verified": false,
+    "keys_sent_during_configuration": false
+  }
+}

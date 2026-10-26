@@ -305,8 +305,10 @@ final class ReplicaPanel: NSPanel, NSWindowDelegate {
     var keyHandler: ((NSEvent) -> Bool)?
     var didResignKey: (() -> Void)?
     var closeRequested: (() -> Void)?
+    var copyRequested: (() -> Void)?
     func windowDidResignKey(_ notification: Notification) { didResignKey?() }
     override func performClose(_ sender: Any?) { closeRequested?() }
+    @objc func copy(_ sender: Any?) { copyRequested?() }
     override var canBecomeKey: Bool { true }
     override var canBecomeMain: Bool { true }
     override func makeFirstResponder(_ responder: NSResponder?) -> Bool {
@@ -336,8 +338,8 @@ final class ReplicaUIController {
     let store: ClipboardStore
     let state: ReplicaUIState
     let panel: NSPanel
-    var pasteHandler: ((UUID, Bool) -> Void)?
-    var pasteItemsHandler: (([UUID], Bool) -> Void)?
+    var pasteHandler: ((UUID, Bool) -> Bool)?
+    var pasteItemsHandler: (([UUID], Bool) -> Bool)?
     var copiedItemsHandler: (() -> Void)?
     var pasteboard: NSPasteboard = .general
     var hotKeyConfigurationChanged: (() -> Void)?
@@ -402,6 +404,7 @@ final class ReplicaUIController {
         panel.delegate = panel
         panel.didResignKey = { [weak self] in self?.panelDidResignKey() }
         panel.closeRequested = { [weak self] in self?.hidePanel() }
+        panel.copyRequested = { [weak self] in self?.copySelection(plainTextOnly: false) }
         restorePanelFrame()
         installPanelResizeHandle()
         state.controller = self
@@ -695,9 +698,12 @@ final class ReplicaUIController {
     }
 
     func copy(ids: [UUID], plainTextOnly: Bool) {
+        guard !ids.isEmpty else { return }
         state.perform {
             try store.writeToPasteboard(ids: ids, pasteboard: pasteboard, plainTextOnly: plainTextOnly)
             copiedItemsHandler?()
+            // Deactivation may not emit a new notification for a nonactivating panel.
+            hidePanel()
         }
     }
 
@@ -716,18 +722,14 @@ final class ReplicaUIController {
     func paste(ids: [UUID], plainTextOnly: Bool) -> Bool {
         guard !ids.isEmpty else { return false }
         if let pasteItemsHandler {
-            hidePanel()
-            pasteItemsHandler(ids, plainTextOnly)
-            return true
+            return pasteItemsHandler(ids, plainTextOnly)
         }
         guard ids.count == 1, let id = ids.first, let pasteHandler else {
             presentError(NSError(domain: "PasteReplica", code: 1,
                                  userInfo: [NSLocalizedDescriptionKey: "粘贴服务尚未就绪，请使用“拷贝”后粘贴。 "]))
             return false
         }
-        hidePanel()
-        pasteHandler(id, plainTextOnly)
-        return true
+        return pasteHandler(id, plainTextOnly)
     }
 
     func showPreview(item: ClipboardItem) {

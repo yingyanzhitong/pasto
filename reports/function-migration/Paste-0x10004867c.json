@@ -2,7 +2,7 @@
   "schema_version": 1,
   "kind": "static_code_migration",
   "function_id": "Paste:0x10004867c",
-  "reviewed_at": "2026-10-26T03:54:27.502058+00:00",
+  "reviewed_at": "2026-10-26T04:04:59.630232+00:00",
   "original_binary_sha256": "871f00354fbb1c165d858a98e6d19d6f43cb9d3f9f958b3e07c7f07eb5c19afb",
   "original_pseudocode": {
     "path": "decompiled/Paste/part-0026.c",
@@ -11,18 +11,18 @@
   "original_pseudocode_sha256": "075d766168e8afe04fb5b865ac69ec0f9c80cb1bd1e73933dba623bf34b1a085",
   "source_sha256": {
     "replica/Sources/PasteReplicaCore/OriginalSearchCommands.swift": "cf7409e5f4bf47f0e1052ac3ae42c5af43812c37407bfc77eca62ba864ca1bf8",
-    "replica/Sources/PasteReplica/UI/ReplicaUIController.swift": "ec635e8c1fdfc13ce06ba6198c997c5e89ffc8e72157e2f64095f087b6d622c2"
+    "replica/Sources/PasteReplica/UI/ReplicaUIController.swift": "83ab337c6b97ff23106275d30103fc377772d6c9708f633e3961a3b3af33e3b4"
   },
   "build_succeeded": true,
   "build_command": "swift build --package-path replica -c release",
-  "compiled_app_binary_sha256": "0bf5b26d383e4a81571aa563ca41e82cfbdb4b3df2d2e65173ea97400231ec3f",
+  "compiled_app_binary_sha256": "1b5034720960b07cc375bf9d36b3fa5f7bbc2339b6bd68a37f34057c9a566763",
   "compiled_product": "PasteReplica",
   "functional_regression_executed": false,
   "equivalence_verified": false,
   "implementation_origin": "newly_migrated",
   "contract": "处理SearchField的两个Selector：insertNewline:调用可选onEnter并返回true，cancelOperation:调用可选onCancel并返回true；即使回调为nil也返回true，其余命令返回false。原版回调存于x20上下文，复刻通过显式闭包参数传递。已接入主面板Enter/Escape实际事件路径。",
   "review": "逐地址对照REA伪代码；文本修改路径另核对arm64分支、回调返回及UTF-16长度相加。已接入实际原生编辑器调用链并编译，编译成功不构成运行时等价证据。Swift公共类型/ARC代替原版私有对象布局和桥接ABI。",
-  "source_review": "界面修改仅软件/Stack/归档名及明确品牌展示适配；该地址的Core实现与实际搜索、原生文本委托、选择、窗口Stack配置、几何或restartProcess消费算法未改，技术键/参数/分支保留。 原有限合同：处理SearchField的两个Selector：insertNewline:调用可选onEnter并返回true，cancelOperation:调用可选onCancel并返回true；即使回调为nil也返回true，其余命令返回false。原版回调存于x20上下文，复刻通过显式闭包参数传递。已接入主面板Enter/Escape实际事件路径。 build70编译通过；无新增完整计数，未运行功能/UI/MCP回归。",
+  "source_review": "Core命令Selector到回调分支和现SearchEditor桥接未改；Enter仍调用pasteSelection，只有外部restore Bool及关闭时机修复，不扩大该primitive契约：处理SearchField的两个Selector：insertNewline:调用可选onEnter并返回true，cancelOperation:调用可选onCancel并返回true；即使回调为nil也返回true，其余命令返回false。原版回调存于x20上下文，复刻通过显式闭包参数传递。已接入主面板Enter/Escape实际事件路径。 build71已通过、源码/生成/产物摘要再核；此为有限旧合同重绑，不宣称完整copy/directpaste/窗口父等价，新增完整0。",
   "regression_policy": "全部范围内代码迁移完成后统一功能回归；本批无功能/单测/原版差分/UI/MCP执行。",
   "unchanged_declarations": [
     {

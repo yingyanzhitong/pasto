@@ -1,7 +1,7 @@
 {
   "kind": "static_existing_feature_audit",
   "schema_version": 1,
-  "generated_at": "2026-10-26T03:55:30.681204+00:00",
+  "generated_at": "2026-10-26T05:47:33.871610+00:00",
   "policy": "按已有功能和调用链集中复核，只补真实缺口；本报告不修改逐地址台账，不将模块存在或候选匹配记为等价通过。",
   "functional_tests_executed": false,
   "mcp_tests_executed": false,
@@ -175,7 +175,7 @@
       "source_sha256": {
         "replica/Sources/PasteReplicaCore/ClipboardStore.swift": "0d6dec116f8d99a4920928f2cfbdfc194cf19962abf0bd146976f1e1190e0476",
         "replica/Sources/PasteReplica/UI/FilterBrowser.swift": "5b2f8cfbb48eb59e4be7a04a90b8d57809c2de9a316d77e76a6c41e44f500af2",
-        "replica/Sources/PasteReplica/UI/ReplicaUIController.swift": "ec635e8c1fdfc13ce06ba6198c997c5e89ffc8e72157e2f64095f087b6d622c2",
+        "replica/Sources/PasteReplica/UI/ReplicaUIController.swift": "83ab337c6b97ff23106275d30103fc377772d6c9708f633e3961a3b3af33e3b4",
         "replica/Sources/PasteReplica/UI/SearchEditor.swift": "13ce2f341f2e7aad16ac8083f46575b20b060086cc5a66ebe6399d8740915107",
         "replica/Sources/PasteReplicaCore/OriginalFilterBrowserPopover.swift": "f0476a5457e4326cfa241adc063afb2e0031627cb49fe8bdf226634f9731ae7f",
         "replica/Sources/PasteReplicaCore/OriginalSearchDateRanges.swift": "91f2f941e01c03dc575e29edb80144c4e268174528e551deb72642b4a7743451",
@@ -229,7 +229,7 @@
           "ledger_state": "partial"
         }
       ],
-      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
+      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
     },
     {
       "id": "pinboard",
@@ -339,7 +339,7 @@
       "reuse_candidates": [],
       "source_sha256": {
         "replica/Sources/PasteReplicaCore/ClipboardStore.swift": "0d6dec116f8d99a4920928f2cfbdfc194cf19962abf0bd146976f1e1190e0476",
-        "replica/Sources/PasteReplica/UI/ReplicaUIController.swift": "ec635e8c1fdfc13ce06ba6198c997c5e89ffc8e72157e2f64095f087b6d622c2",
+        "replica/Sources/PasteReplica/UI/ReplicaUIController.swift": "83ab337c6b97ff23106275d30103fc377772d6c9708f633e3961a3b3af33e3b4",
         "replica/Sources/PasteReplica/UI/PanelViews.swift": "69407303d7c0e31095954300fd69305a36679b87072532c6881c509b77e9c088",
         "replica/Sources/PasteReplicaCore/OriginalPinboardColor.swift": "cfc44a744f2d3769d70582fea50da409435cfd9dcfa7f9ba104719093dcaef8e",
         "replica/Sources/PasteReplicaCore/OriginalPinboardAttributes.swift": "d2a1be64643be5b1b6380b92b8787e09dcf9021b6d61b7a3c3f406f5d2293424",
@@ -407,7 +407,7 @@
           "ledger_state": "partial"
         }
       ],
-      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
+      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
     },
     {
       "id": "multiselect",
@@ -422,7 +422,7 @@
         {
           "path": "replica/Sources/PasteReplica/UI/ReplicaUIController.swift",
           "symbol": "func pasteSelection(",
-          "line": 704
+          "line": 710
         },
         {
           "path": "replica/Sources/PasteReplica/AppMain.swift",
@@ -432,7 +432,7 @@
         {
           "path": "replica/Sources/PasteReplica/AppMain.swift",
           "symbol": "private func waitForTarget(",
-          "line": 458
+          "line": 463
         },
         {
           "path": "replica/Sources/PasteReplica/UI/OriginalAccessibilityModals.swift",
@@ -506,8 +506,8 @@
       ],
       "reuse_candidates": [],
       "source_sha256": {
-        "replica/Sources/PasteReplica/UI/ReplicaUIController.swift": "ec635e8c1fdfc13ce06ba6198c997c5e89ffc8e72157e2f64095f087b6d622c2",
-        "replica/Sources/PasteReplica/AppMain.swift": "99adfabf27e199870bd59fb4a89693506e68e35fb34774e80ecbd162b406a426",
+        "replica/Sources/PasteReplica/UI/ReplicaUIController.swift": "83ab337c6b97ff23106275d30103fc377772d6c9708f633e3961a3b3af33e3b4",
+        "replica/Sources/PasteReplica/AppMain.swift": "001b79664f215af3dda1f8b97a498eb23d31d71f4fdff2f219dd3728df0e6124",
         "replica/Sources/PasteReplica/UI/OriginalAccessibilityModals.swift": "e8d95210a6fd30bd203ec43e60ad0741e8559135fa27cc49a07c8c2bcc5fb447",
         "replica/Sources/PasteReplica/UI/ReplicaCardContextSelection.swift": "2a5b9aac7f579d6466a8f0c6feff24095609873c348ef99444f95f23aeb7615f",
         "replica/Sources/PasteReplicaCore/OriginalOrderedSelection.swift": "b3631aed0222167f88c16329c76483f807d20af3baaf3a90ab4d214e8d9cb9f8",
@@ -582,7 +582,7 @@
           "ledger_state": "partial"
         }
       ],
-      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
+      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
     },
     {
       "id": "stack",
@@ -592,12 +592,12 @@
         {
           "path": "replica/Sources/PasteReplica/UI/ReplicaUIController.swift",
           "symbol": "func showStack()",
-          "line": 616
+          "line": 619
         },
         {
           "path": "replica/Sources/PasteReplica/UI/ReplicaUIController.swift",
           "symbol": "func consumeStackHead()",
-          "line": 655
+          "line": 658
         },
         {
           "path": "replica/Sources/PasteReplica/UI/AuxiliaryViews.swift",
@@ -637,7 +637,7 @@
       ],
       "reuse_candidates": [],
       "source_sha256": {
-        "replica/Sources/PasteReplica/UI/ReplicaUIController.swift": "ec635e8c1fdfc13ce06ba6198c997c5e89ffc8e72157e2f64095f087b6d622c2",
+        "replica/Sources/PasteReplica/UI/ReplicaUIController.swift": "83ab337c6b97ff23106275d30103fc377772d6c9708f633e3961a3b3af33e3b4",
         "replica/Sources/PasteReplica/UI/AuxiliaryViews.swift": "e2a11de77f3e8b90bb68c87cfbe966273ceed761a9446c8ce214cfec126927af",
         "replica/Sources/PasteReplicaCore/OriginalStackTableController.swift": "bbd3276b4c9772cf92fcf68a59a3083c0f0f5569915cb56d83ce2b421419a717",
         "replica/Sources/PasteReplicaCore/OriginalStackFunctions.swift": "e408e508e9bc0bf2b7477ab142e29e4b1c1087daa63cd402c312f145e6cf16a4"
@@ -700,7 +700,7 @@
           "ledger_state": "verified"
         }
       ],
-      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
+      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
     },
     {
       "id": "ocr",
@@ -850,7 +850,7 @@
           "ledger_state": "migrated"
         }
       ],
-      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
+      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
     },
     {
       "id": "history-actions",
@@ -929,7 +929,7 @@
           "ledger_state": "pending"
         }
       ],
-      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
+      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
     },
     {
       "id": "main-card-layout",
@@ -954,7 +954,7 @@
         {
           "path": "replica/Sources/PasteReplica/UI/ReplicaUIController.swift",
           "symbol": "func showPanel(",
-          "line": 422
+          "line": 425
         },
         {
           "path": "replica/Sources/PasteReplicaCore/OriginalTextPreviewMetadata.swift",
@@ -969,7 +969,7 @@
         {
           "path": "replica/Sources/PasteReplica/UI/ReplicaUIController.swift",
           "symbol": "override func makeFirstResponder(_ responder: NSResponder?) -> Bool",
-          "line": 312
+          "line": 314
         },
         {
           "path": "replica/Sources/PasteReplica/UI/ReplicaLinkMetadataContent.swift",
@@ -1226,7 +1226,8 @@
         "dev38紧凑text/rich改原生NSTextField(labelWithAttributedString:)：无限行、natural对齐、现有bodyfont/primarycolor，保原段落属性与500UTF16样本；顶padding类3为0否则10，无新增7行上限。原生横向scroll补竖向整数wheel轴转发和两方向elasticity。",
         "dev39真实文本Footer底部overlay：gradient32+opaque18/类3为0，总50/32；原callout/secondary/countInt32资源，类3隐藏，去text通用pin/count横排。canonical样本复用原plain/dominant背景算法及alpha<1动态回退，field/footer/background/Header主题颜色实际消费。",
         "dev40 Unknown紧凑卡片/完整preview两独立native树：公开SFtriangle原fallback，compact原OS32/48symbol、callout、0/10与shortcut19高guide锚点；full60图/双label/stack4和16/左右48/centerY；17locale追加两原文案，原值逐字保。只kindunknown调用，不将其他typedmetadata损坏自动变unknown。",
-        "面板整体原生玻璃，截图菜单顺序/图标/快捷键及主面板外点/Esc隐藏静态路径已接。"
+        "面板整体原生玻璃，截图菜单顺序/图标/快捷键及主面板外点/Esc隐藏静态路径已接。",
+        "复制写入返回后显式汇入既有关闭协调器；双击不再在restore结果前统一预关闭。"
       ],
       "gaps": [
         "原AppKit绘制/gradient/材质、锁图标及完整CompactHeader/native对象与SwiftUI差异仍未回归。",
@@ -1234,12 +1235,13 @@
         "共享图色链已接，普通Header app色/palette已恢复；legacy owner/attrs兼容、unknown-app像素、CoreData/KVO/事务及提前取色时序仍partial，旧缺字段为明确兼容。未运行功能回归。",
         "Link外层Hosting组合/原progress转场、Header原对象生命周期与unknownasset、原collection完整applier/动画/autoscroll父仍partial；原生输入与session已接，未运行功能回归。",
         "紧凑文本footer/主题静态目标已接，完整cell外观继承/VM/动画/复用和像素仍partial；primary额外margin/动画和插入光标仍未补。",
-        "已按截图接入原生玻璃、菜单与外点/Esc隐藏；未运行视觉及交互验收，原生命周期等价仍partial。"
+        "已按截图接入原生玻璃、菜单与外点/Esc隐藏；未运行视觉及交互验收，原生命周期等价仍partial。",
+        "复制/双击正常链已静态修正，权限与原license Bool/Swift异常、目标激活超时和真实交互仍未统一验收。"
       ],
       "reuse_candidates": [],
       "source_sha256": {
         "replica/Sources/PasteReplica/UI/PanelViews.swift": "69407303d7c0e31095954300fd69305a36679b87072532c6881c509b77e9c088",
-        "replica/Sources/PasteReplica/UI/ReplicaUIController.swift": "ec635e8c1fdfc13ce06ba6198c997c5e89ffc8e72157e2f64095f087b6d622c2",
+        "replica/Sources/PasteReplica/UI/ReplicaUIController.swift": "83ab337c6b97ff23106275d30103fc377772d6c9708f633e3961a3b3af33e3b4",
         "replica/Sources/PasteReplicaCore/OriginalTextPreviewMetadata.swift": "7c09e2e2297ef070a792bf8a50e51ab162146d27b516d7e92ac3bd53df36b676",
         "replica/Sources/PasteReplicaCore/OriginalImagePreviewMetadataCodec.swift": "1620a024a011c19294f16680ae2a8d6e92afac426d4ebbe1dd4e1fac1e364ca0",
         "replica/Sources/PasteReplica/UI/ReplicaLinkMetadataContent.swift": "813a7d310752cf453c34aede27c56dc44f1d8cbccd611128277cfc2f96084784",
@@ -1463,7 +1465,7 @@
           "ledger_state": "partial"
         }
       ],
-      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
+      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
     },
     {
       "id": "native-preview-window",
@@ -1478,7 +1480,7 @@
         {
           "path": "replica/Sources/PasteReplica/UI/ReplicaUIController.swift",
           "symbol": "showPreview",
-          "line": 733
+          "line": 735
         }
       ],
       "original_functions": [
@@ -1501,7 +1503,7 @@
       },
       "source_sha256": {
         "replica/Sources/PasteReplicaCore/OriginalPreviewWindows.swift": "4cc1f30d0de962162c6231a6207cc7623fc82e20f126f3ebc3edb326d5592c2d",
-        "replica/Sources/PasteReplica/UI/ReplicaUIController.swift": "ec635e8c1fdfc13ce06ba6198c997c5e89ffc8e72157e2f64095f087b6d622c2"
+        "replica/Sources/PasteReplica/UI/ReplicaUIController.swift": "83ab337c6b97ff23106275d30103fc377772d6c9708f633e3961a3b3af33e3b4"
       },
       "original_reference_status": [
         {
@@ -1526,7 +1528,7 @@
           "ledger_state": "migrated"
         }
       ],
-      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
+      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
     },
     {
       "id": "preview-registry",
@@ -1541,7 +1543,7 @@
         {
           "path": "replica/Sources/PasteReplica/UI/ReplicaUIController.swift",
           "symbol": "showPreview",
-          "line": 733
+          "line": 735
         }
       ],
       "original_functions": [
@@ -1578,7 +1580,7 @@
       },
       "source_sha256": {
         "replica/Sources/PasteReplicaCore/OriginalPreviewWindows.swift": "4cc1f30d0de962162c6231a6207cc7623fc82e20f126f3ebc3edb326d5592c2d",
-        "replica/Sources/PasteReplica/UI/ReplicaUIController.swift": "ec635e8c1fdfc13ce06ba6198c997c5e89ffc8e72157e2f64095f087b6d622c2"
+        "replica/Sources/PasteReplica/UI/ReplicaUIController.swift": "83ab337c6b97ff23106275d30103fc377772d6c9708f633e3961a3b3af33e3b4"
       },
       "original_reference_status": [
         {
@@ -1645,7 +1647,7 @@
           "ledger_state": "partial"
         }
       ],
-      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
+      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
     },
     {
       "id": "card-anchor-popover",
@@ -1660,7 +1662,7 @@
         {
           "path": "replica/Sources/PasteReplica/UI/ReplicaUIController.swift",
           "symbol": "makePreviewPopover",
-          "line": 739
+          "line": 741
         },
         {
           "path": "replica/Sources/PasteReplicaCore/OriginalPreviewPopover.swift",
@@ -1725,7 +1727,7 @@
       },
       "source_sha256": {
         "replica/Sources/PasteReplica/UI/PreviewAnchor.swift": "aa621221c95e877131ce3f53723be87730091482eeac479ec109daf66adaf923",
-        "replica/Sources/PasteReplica/UI/ReplicaUIController.swift": "ec635e8c1fdfc13ce06ba6198c997c5e89ffc8e72157e2f64095f087b6d622c2",
+        "replica/Sources/PasteReplica/UI/ReplicaUIController.swift": "83ab337c6b97ff23106275d30103fc377772d6c9708f633e3961a3b3af33e3b4",
         "replica/Sources/PasteReplicaCore/OriginalPreviewPopover.swift": "352554008c692f89091bf3cb700b0cfee1b55768b5a709c3b4320951a154a46e",
         "replica/Sources/PasteReplica/UI/OriginalReplicaPreviewAdapter.swift": "7001263f00b2e981c1b93f3c9598b742a1279366d4ae7130237603feee3dd0f7"
       },
@@ -1787,7 +1789,7 @@
           "ledger_state": "partial"
         }
       ],
-      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
+      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
     },
     {
       "id": "preview-title-rename",
@@ -1918,7 +1920,7 @@
           "ledger_state": "migrated"
         }
       ],
-      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
+      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
     },
     {
       "id": "preview-header-actions",
@@ -2036,7 +2038,7 @@
           "ledger_state": "partial"
         }
       ],
-      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
+      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
     },
     {
       "id": "preview-mode-transitions",
@@ -2139,7 +2141,7 @@
           "ledger_state": "partial"
         }
       ],
-      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
+      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
     },
     {
       "id": "text-content-persistence",
@@ -2218,7 +2220,7 @@
           "ledger_state": "partial"
         }
       ],
-      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
+      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
     },
     {
       "id": "text-attributed-normalization",
@@ -2368,7 +2370,7 @@
           "ledger_state": "migrated"
         }
       ],
-      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
+      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
     },
     {
       "id": "text-formatting-traits",
@@ -2500,7 +2502,7 @@
           "ledger_state": "migrated"
         }
       ],
-      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
+      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
     },
     {
       "id": "text-event-owner",
@@ -2597,7 +2599,7 @@
           "ledger_state": "partial"
         }
       ],
-      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
+      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
     },
     {
       "id": "native-toolbar-factories",
@@ -2725,7 +2727,7 @@
           "ledger_state": "migrated"
         }
       ],
-      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
+      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
     },
     {
       "id": "text-footer",
@@ -2860,7 +2862,7 @@
           "ledger_state": "migrated"
         }
       ],
-      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
+      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
     },
     {
       "id": "preview-other-content",
@@ -2871,7 +2873,7 @@
           "path": "replica/Sources/PasteReplica/UI/ReplicaUIController.swift",
           "symbol": "makePreviewContent",
           "sha256": "7f7ba09e89fb546270f68232ddb9112dbfb45da35205208368b7b8a40bedf2ac",
-          "line": 742
+          "line": 744
         },
         {
           "path": "replica/Sources/PasteReplica/UI/OriginalReplicaPreviewAdapter.swift",
@@ -3173,7 +3175,7 @@
         "parent_partial_status_preserved": true
       },
       "source_sha256": {
-        "replica/Sources/PasteReplica/UI/ReplicaUIController.swift": "ec635e8c1fdfc13ce06ba6198c997c5e89ffc8e72157e2f64095f087b6d622c2",
+        "replica/Sources/PasteReplica/UI/ReplicaUIController.swift": "83ab337c6b97ff23106275d30103fc377772d6c9708f633e3961a3b3af33e3b4",
         "replica/Sources/PasteReplica/UI/OriginalReplicaPreviewAdapter.swift": "7001263f00b2e981c1b93f3c9598b742a1279366d4ae7130237603feee3dd0f7",
         "replica/Sources/PasteReplica/UI/ReplicaReadOnlyPreviewContent.swift": "75c71b7c823ac6dfe3e59a033db183419afd55dca88b37941f4a35eb9021d36b",
         "replica/Sources/PasteReplica/UI/AuxiliaryViews.swift": "e2a11de77f3e8b90bb68c87cfbe966273ceed761a9446c8ce214cfec126927af",
@@ -3254,7 +3256,7 @@
           "ledger_state": "partial"
         }
       ],
-      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
+      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
     },
     {
       "id": "preview-localization",
@@ -3415,7 +3417,7 @@
           "ledger_state": "migrated"
         }
       ],
-      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
+      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
     },
     {
       "id": "screen-sharing-policy",
@@ -3435,7 +3437,7 @@
         {
           "path": "replica/Sources/PasteReplica/UI/ReplicaUIController.swift",
           "symbol": "makePreviewPopover",
-          "line": 739
+          "line": 741
         }
       ],
       "original_functions": [
@@ -3476,7 +3478,7 @@
       "source_sha256": {
         "replica/Sources/PasteReplica/WindowSharingPolicy.swift": "072433ef383fb8a58b6be171d3096af92cec573da60b0790de0f65db114571ce",
         "replica/Sources/PasteReplicaCore/OriginalConfigurationFunctions.swift": "d777c6848066ec198ca41739d0a785ece4df2000977cda19b230e3d4530fcb54",
-        "replica/Sources/PasteReplica/UI/ReplicaUIController.swift": "ec635e8c1fdfc13ce06ba6198c997c5e89ffc8e72157e2f64095f087b6d622c2"
+        "replica/Sources/PasteReplica/UI/ReplicaUIController.swift": "83ab337c6b97ff23106275d30103fc377772d6c9708f633e3961a3b3af33e3b4"
       },
       "original_reference_status": [
         {
@@ -3550,7 +3552,7 @@
           "ledger_state": "migrated"
         }
       ],
-      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
+      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
     },
     {
       "id": "helper-watchdog",
@@ -3590,7 +3592,7 @@
         {
           "path": "replica/Sources/PasteReplica/AppMain.swift",
           "symbol": "applicationWillTerminate",
-          "line": 488
+          "line": 493
         }
       ],
       "original_functions": [
@@ -3643,7 +3645,7 @@
       "source_sha256": {
         "replica/Sources/PasteReplicaHelper/HelperMain.swift": "60d98b18e87390fcc6c8de6a43b75d9505bfd74b822eb9e0fc6dc58bbfd47e12",
         "replica/Sources/PasteReplica/BackgroundService.swift": "a117f0cd7e8742e0bedd7c3cf52935bc343db072d8beae4f4ee7437e58ed63e7",
-        "replica/Sources/PasteReplica/AppMain.swift": "99adfabf27e199870bd59fb4a89693506e68e35fb34774e80ecbd162b406a426"
+        "replica/Sources/PasteReplica/AppMain.swift": "001b79664f215af3dda1f8b97a498eb23d31d71f4fdff2f219dd3728df0e6124"
       },
       "original_reference_status": [
         {
@@ -3759,7 +3761,7 @@
           "ledger_state": "migrated"
         }
       ],
-      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
+      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
     },
     {
       "id": "helper-bootstrap",
@@ -3826,7 +3828,7 @@
           "ledger_state": "migrated"
         }
       ],
-      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
+      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
     },
     {
       "id": "background-setting",
@@ -3879,7 +3881,7 @@
           "ledger_state": "partial"
         }
       ],
-      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
+      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
     },
     {
       "id": "settings-overall",
@@ -4017,7 +4019,7 @@
           "ledger_state": "partial"
         }
       ],
-      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
+      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
     },
     {
       "id": "capture.items",
@@ -4120,7 +4122,7 @@
           "ledger_state": "migrated"
         }
       ],
-      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
+      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
     },
     {
       "id": "capture.content",
@@ -4304,7 +4306,7 @@
           "ledger_state": "migrated"
         }
       ],
-      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
+      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
     },
     {
       "id": "capture.timers",
@@ -4391,7 +4393,7 @@
           "ledger_state": "migrated"
         }
       ],
-      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
+      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
     },
     {
       "id": "capture.state",
@@ -4469,7 +4471,7 @@
           "ledger_state": "pending"
         }
       ],
-      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
+      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
     },
     {
       "id": "capture.policy",
@@ -4588,8 +4590,8 @@
       "source_sha256": {
         "replica/Sources/PasteReplicaCore/OriginalPasteboardPolicies.swift": "b85860e5fdc4be03afd7f4f69651f3ed1fc15c2c48d4a765fdcae5fdc8787dc7",
         "replica/Sources/PasteReplica/UI/ReplicaCopiedOSD.swift": "1900b2c3e23c1375502e8657701418d6ace46506df683e45d4d4c7cdad2e194c",
-        "replica/Sources/PasteReplica/UI/ReplicaUIController.swift": "ec635e8c1fdfc13ce06ba6198c997c5e89ffc8e72157e2f64095f087b6d622c2",
-        "replica/Sources/PasteReplica/AppMain.swift": "99adfabf27e199870bd59fb4a89693506e68e35fb34774e80ecbd162b406a426"
+        "replica/Sources/PasteReplica/UI/ReplicaUIController.swift": "83ab337c6b97ff23106275d30103fc377772d6c9708f633e3961a3b3af33e3b4",
+        "replica/Sources/PasteReplica/AppMain.swift": "001b79664f215af3dda1f8b97a498eb23d31d71f4fdff2f219dd3728df0e6124"
       },
       "original_reference_status": [
         {
@@ -4614,7 +4616,7 @@
           "ledger_state": "migrated"
         }
       ],
-      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
+      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
     },
     {
       "id": "capture.read_sync",
@@ -4690,7 +4692,7 @@
           "ledger_state": "partial"
         }
       ],
-      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
+      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
     },
     {
       "id": "serialization.item_codable",
@@ -4871,7 +4873,7 @@
           "ledger_state": "migrated"
         }
       ],
-      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
+      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
     },
     {
       "id": "serialization.keyed",
@@ -4945,7 +4947,7 @@
           "ledger_state": "partial"
         }
       ],
-      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
+      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
     },
     {
       "id": "serialization.internal_codec",
@@ -5072,7 +5074,7 @@
           "ledger_state": "migrated"
         }
       ],
-      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
+      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
     },
     {
       "id": "checksum.md5",
@@ -5133,7 +5135,7 @@
           "ledger_state": "migrated"
         }
       ],
-      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
+      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
     },
     {
       "id": "checksum.strategy",
@@ -5206,7 +5208,7 @@
           "ledger_state": "partial"
         }
       ],
-      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
+      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
     },
     {
       "id": "repo.dedup",
@@ -5273,7 +5275,7 @@
           "ledger_state": "partial"
         }
       ],
-      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
+      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
     },
     {
       "id": "repo.metadata",
@@ -5373,7 +5375,7 @@
           "ledger_state": "pending"
         }
       ],
-      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
+      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
     },
     {
       "id": "repo.transaction",
@@ -5459,8 +5461,8 @@
         "replica/Sources/PasteReplicaCore/ClipboardStore.swift": "0d6dec116f8d99a4920928f2cfbdfc194cf19962abf0bd146976f1e1190e0476",
         "replica/Sources/PasteReplicaCore/Pasteboard.swift": "0f5ba3cb157a77612f9b1cbc447d835571d64858ddf82948d2d88f6a5b4fbca2",
         "replica/Sources/PasteReplicaCore/Models.swift": "67dd6d3ff6a1186e8bbabfcf65400da4ecb72b78e98ba1e7b26db5ed4de0aefa",
-        "replica/Sources/PasteReplica/AppMain.swift": "99adfabf27e199870bd59fb4a89693506e68e35fb34774e80ecbd162b406a426",
-        "replica/Sources/PasteReplica/UI/ReplicaUIController.swift": "ec635e8c1fdfc13ce06ba6198c997c5e89ffc8e72157e2f64095f087b6d622c2"
+        "replica/Sources/PasteReplica/AppMain.swift": "001b79664f215af3dda1f8b97a498eb23d31d71f4fdff2f219dd3728df0e6124",
+        "replica/Sources/PasteReplica/UI/ReplicaUIController.swift": "83ab337c6b97ff23106275d30103fc377772d6c9708f633e3961a3b3af33e3b4"
       },
       "original_reference_status": [
         {
@@ -5506,7 +5508,7 @@
           "ledger_state": "pending"
         }
       ],
-      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
+      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
     },
     {
       "id": "repo.objc_exception",
@@ -5577,7 +5579,7 @@
           "ledger_state": "migrated"
         }
       ],
-      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
+      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
     },
     {
       "id": "repo.capture_actions",
@@ -5683,7 +5685,7 @@
           "ledger_state": "partial"
         }
       ],
-      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
+      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
     },
     {
       "id": "logging.named",
@@ -5793,7 +5795,7 @@
           "ledger_state": "migrated"
         }
       ],
-      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
+      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
     },
     {
       "id": "logging.dispatch",
@@ -5981,7 +5983,7 @@
           "ledger_state": "migrated"
         }
       ],
-      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
+      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
     },
     {
       "id": "diagnostics.controls",
@@ -6020,7 +6022,7 @@
       "source_sha256": {
         "replica/Sources/PasteReplicaCore/OriginalDiagnosticsManager.swift": "afb071a98b036e3023f254c039ca1d85c4a975e79307aa3f3075b1caf21513ed",
         "replica/Sources/PasteReplicaCore/Models.swift": "67dd6d3ff6a1186e8bbabfcf65400da4ecb72b78e98ba1e7b26db5ed4de0aefa",
-        "replica/Sources/PasteReplica/AppMain.swift": "99adfabf27e199870bd59fb4a89693506e68e35fb34774e80ecbd162b406a426"
+        "replica/Sources/PasteReplica/AppMain.swift": "001b79664f215af3dda1f8b97a498eb23d31d71f4fdff2f219dd3728df0e6124"
       },
       "original_reference_status": [
         {
@@ -6045,7 +6047,7 @@
           "ledger_state": "pending"
         }
       ],
-      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
+      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
     },
     {
       "id": "diagnostics.queries",
@@ -6102,7 +6104,7 @@
           "ledger_state": "partial"
         }
       ],
-      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
+      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
     },
     {
       "id": "diagnostics.menu",
@@ -6169,7 +6171,7 @@
         "parent_partial_status_preserved": true
       },
       "source_sha256": {
-        "replica/Sources/PasteReplica/AppMain.swift": "99adfabf27e199870bd59fb4a89693506e68e35fb34774e80ecbd162b406a426",
+        "replica/Sources/PasteReplica/AppMain.swift": "001b79664f215af3dda1f8b97a498eb23d31d71f4fdff2f219dd3728df0e6124",
         "replica/Sources/PasteReplicaCore/OriginalDiagnosticsHistory.swift": "a2c917352e8d3d194f3528b7023994fdb3e393e7f81007ac5be6c77928f30b62",
         "replica/Sources/PasteReplicaCore/OriginalDiagnosticsAppActions.swift": "51b66a38645a00f634efdb623f74940f503c8c2c36862badc56b1267d2132cac",
         "replica/Sources/PasteReplica/UI/ReplicaCopiedOSD.swift": "1900b2c3e23c1375502e8657701418d6ace46506df683e45d4d4c7cdad2e194c"
@@ -6204,7 +6206,7 @@
           "ledger_state": "pending"
         }
       ],
-      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
+      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
     },
     {
       "id": "diagnostics.restart",
@@ -6236,7 +6238,7 @@
       ],
       "source_sha256": {
         "replica/Sources/PasteReplicaCore/OriginalDiagnosticsAppActions.swift": "51b66a38645a00f634efdb623f74940f503c8c2c36862badc56b1267d2132cac",
-        "replica/Sources/PasteReplica/AppMain.swift": "99adfabf27e199870bd59fb4a89693506e68e35fb34774e80ecbd162b406a426"
+        "replica/Sources/PasteReplica/AppMain.swift": "001b79664f215af3dda1f8b97a498eb23d31d71f4fdff2f219dd3728df0e6124"
       },
       "original_reference_status": [
         {
@@ -6247,7 +6249,7 @@
           "ledger_state": "migrated"
         }
       ],
-      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
+      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
     },
     {
       "id": "restore.writer",
@@ -6300,7 +6302,7 @@
           "ledger_state": "migrated"
         }
       ],
-      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
+      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
     },
     {
       "id": "restore.processor",
@@ -6443,7 +6445,7 @@
           "ledger_state": "partial"
         }
       ],
-      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
+      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
     },
     {
       "id": "restore.history",
@@ -6561,7 +6563,7 @@
           "ledger_state": "partial"
         }
       ],
-      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
+      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
     },
     {
       "id": "value-coding",
@@ -6646,7 +6648,7 @@
           "ledger_state": "migrated"
         }
       ],
-      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
+      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
     },
     {
       "id": "key-translation",
@@ -6818,7 +6820,7 @@
           "ledger_state": "migrated"
         }
       ],
-      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
+      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
     },
     {
       "id": "conflict-check",
@@ -6884,7 +6886,7 @@
           "ledger_state": "migrated"
         }
       ],
-      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
+      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
     },
     {
       "id": "recorder-state",
@@ -7033,7 +7035,7 @@
           "ledger_state": "migrated"
         }
       ],
-      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
+      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
     },
     {
       "id": "recorder-ui",
@@ -7195,7 +7197,7 @@
           "ledger_state": "migrated"
         }
       ],
-      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
+      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
     },
     {
       "id": "error-localization",
@@ -7254,7 +7256,7 @@
           "ledger_state": "migrated"
         }
       ],
-      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
+      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
     },
     {
       "id": "carbon-register",
@@ -7319,7 +7321,7 @@
       "source_sha256": {
         "replica/Sources/PasteReplicaCore/OriginalGlobalShortcutMonitor.swift": "0ae87812c59edb65d973f77446ff78971c2c465d990df5b0c110dad76a8e0cae",
         "replica/Sources/PasteReplica/GlobalHotKey.swift": "e77cd9617f7a93b41f4c87c25f347f66e356583ea02530b2970d2c2f7b1314fc",
-        "replica/Sources/PasteReplica/AppMain.swift": "99adfabf27e199870bd59fb4a89693506e68e35fb34774e80ecbd162b406a426"
+        "replica/Sources/PasteReplica/AppMain.swift": "001b79664f215af3dda1f8b97a498eb23d31d71f4fdff2f219dd3728df0e6124"
       },
       "original_reference_status": [
         {
@@ -7393,7 +7395,7 @@
           "ledger_state": "migrated"
         }
       ],
-      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
+      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
     },
     {
       "id": "monitor-lifetime",
@@ -7475,7 +7477,7 @@
           "ledger_state": "partial"
         }
       ],
-      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
+      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
     },
     {
       "id": "validator-provider",
@@ -7549,7 +7551,7 @@
           "ledger_state": "migrated"
         }
       ],
-      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
+      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
     },
     {
       "id": "dependency-cache",
@@ -7720,7 +7722,7 @@
           "ledger_state": "partial"
         }
       ],
-      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
+      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
     },
     {
       "id": "initialized-config",
@@ -7811,7 +7813,7 @@
           "ledger_state": "migrated"
         }
       ],
-      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
+      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
     },
     {
       "id": "telemetry-construction",
@@ -7880,7 +7882,7 @@
           "ledger_state": "pending"
         }
       ],
-      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
+      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
     },
     {
       "id": "sentry-local-scope",
@@ -7991,7 +7993,7 @@
           "ledger_state": "pending"
         }
       ],
-      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
+      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
     },
     {
       "id": "actor-destruction",
@@ -8044,7 +8046,7 @@
           "ledger_state": "pending"
         }
       ],
-      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
+      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
     },
     {
       "id": "thin-wrapper-reuse",
@@ -8188,7 +8190,7 @@
           "ledger_state": "pending"
         }
       ],
-      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
+      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
     },
     {
       "id": "coding-description",
@@ -8232,7 +8234,7 @@
           "ledger_state": "pending"
         }
       ],
-      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
+      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
     },
     {
       "id": "native-dictionary-reuse",
@@ -8346,7 +8348,7 @@
           "ledger_state": "pending"
         }
       ],
-      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
+      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
     },
     {
       "id": "unreviewed-generated",
@@ -9790,7 +9792,7 @@
           "ledger_state": "pending"
         }
       ],
-      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
+      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
     },
     {
       "id": "native-image-text-selection",
@@ -9858,7 +9860,7 @@
           "ledger_state": "migrated"
         }
       ],
-      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
+      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
     },
     {
       "id": "image-exif-analysis",
@@ -9943,7 +9945,7 @@
           "ledger_state": "partial"
         }
       ],
-      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
+      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
     },
     {
       "id": "ocr-cache-responsibility",
@@ -10010,7 +10012,7 @@
           "ledger_state": "migrated"
         }
       ],
-      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
+      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
     },
     {
       "id": "native-image-zoom-centering",
@@ -10325,7 +10327,7 @@
           "ledger_state": "migrated"
         }
       ],
-      "reviewer": "dev43 Pasto品牌与部署身份静态重审，其余有限行为结论沿用"
+      "reviewer": "dev44复制/双击关闭有限静态核对，保留原功能未验收边界"
     }
   ],
   "findings": [
