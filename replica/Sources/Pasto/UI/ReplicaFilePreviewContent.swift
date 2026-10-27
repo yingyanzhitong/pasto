@@ -17,7 +17,8 @@ final class ReplicaFilePreviewContent: NSView {
     private weak var state: ReplicaUIState?
     private let itemID: UUID
     private let quickLookView = ReplicaFileQuickLookView(frame: .zero, style: .normal)!
-    private let multipleFilesView = NSImageView()
+    private var storedMultipleFilesView: NSImageView?
+    private var multipleFilesView: NSImageView { f_1003e2f54() }
     private let metadata = NSStackView()
     private let metadataLabel = NSTextField()
     private var itemObservation: AnyCancellable?
@@ -27,11 +28,6 @@ final class ReplicaFilePreviewContent: NSView {
         self.state = state
         itemID = item.id
         super.init(frame: .zero)
-        multipleFilesView.imageAlignment = .alignCenter
-        multipleFilesView.imageScaling = .scaleProportionallyDown
-        let image = NSImage(named: NSImage.multipleDocumentsName)?.copy() as? NSImage
-        image?.size = .init(width: 160, height: 160)
-        multipleFilesView.image = image
         for view in [multipleFilesView, quickLookView] {
             view.translatesAutoresizingMaskIntoConstraints = false
             addSubview(view)
@@ -73,6 +69,18 @@ final class ReplicaFilePreviewContent: NSView {
     }
 
     required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
+
+    private func f_1003e2f54() -> NSImageView {
+        if let storedMultipleFilesView { return storedMultipleFilesView }
+        let view = NSImageView()
+        view.imageAlignment = .alignCenter
+        view.imageScaling = .scaleProportionallyDown
+        let image = NSImage(named: NSImage.multipleDocumentsName)
+        image?.size = .init(width: 160, height: 160)
+        view.image = image
+        storedMultipleFilesView = view
+        return view
+    }
 
     private func update(_ item: ClipboardItem) {
         let fileMetadata = item.decodedFilePreviewMetadata

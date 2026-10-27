@@ -402,6 +402,11 @@ public final class ClipboardStore: ObservableObject {
 
     @discardableResult
     public func add(_ item: ClipboardItem, sourceApplication: SourceApplicationRecord? = nil) throws -> UUID {
+        try addWithInsertionResult(item, sourceApplication: sourceApplication).id
+    }
+
+    func addWithInsertionResult(_ item: ClipboardItem,
+                                sourceApplication: SourceApplicationRecord? = nil) throws -> (id: UUID, isNew: Bool) {
         var item = Self.withPreviewMetadata(item, binaryPropertyList: preferences.useBinaryPlist, preferQuickLookThumbnails: preferences.fileQuickLookThumbnailsEnabled, generateMissingContentPreview: true)
         if let sourceApplication { item.sourceApplicationBundleID = sourceApplication.bundleIdentifier }
         let checksum = try? Self.knownPasteboardChecksum(from: item.payloads)
@@ -452,11 +457,11 @@ public final class ClipboardStore: ObservableObject {
                         state.items[i].pinboardIDs.formUnion(item.pinboardIDs)
                     }
                 }
-                return state.items[i].id
+                return (state.items[i].id, false)
             }
             state.items.removeAll { $0.id == item.id }
             state.items.append(item)
-            return item.id
+            return (item.id, true)
         }
     }
 

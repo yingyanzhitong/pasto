@@ -1,0 +1,782 @@
+{
+  "scope": "Per-address finite Source contract review after insertionBool fix; no map/ledger/public changes",
+  "counts": {
+    "replica/Sources/PastoCore/Pasteboard.swift": 36,
+    "replica/Sources/PastoCore/ClipboardStore.swift": 1
+  },
+  "unique_functions": 37,
+  "whole_file_reverse_proof": {
+    "files": [
+      {
+        "path": "replica/Sources/PastoCore/ClipboardStore.swift",
+        "before_sha256": "11b72a61204ccbfd26b5b3e72f1e68dec224e7213d8af94787655d54c51dc31c",
+        "after_sha256": "bee6a27510252cd9d79d3f70d00e68fc5562b1513e4708607af1809e90f8f851",
+        "surgical_reverse_whole_bytes_equal": true
+      },
+      {
+        "path": "replica/Sources/PastoCore/Pasteboard.swift",
+        "before_sha256": "0f5ba3cb157a77612f9b1cbc447d835571d64858ddf82948d2d88f6a5b4fbca2",
+        "after_sha256": "c0e5d62afd41caa4a1b556a07dbb4396d2fd5e81b42c46cbf424c1cc1ab6ee19",
+        "surgical_reverse_whole_bytes_equal": true
+      }
+    ]
+  },
+  "capture_wrapper_contract": "Public capture has unchanged signature/defaults and returns try internalCaptureResult?.id. Internal body executes same policy/read/strip/decode/classify/add/OCR sequence, with only transaction-return tuple replacing UUID; imageOCR runs after mutate before resultreturn, as previously. Nil/error behavior retained; f37b034 now receives actual committed insertionBool rather than an outside snapshot inference. onCapture(id) remains before f37b034 returns; successful f37ae9c thenUndoClear→conditionalDidCreate→DidCapture unchanged.",
+  "decisions": [
+    {
+      "id": "Paste:0x10037875c",
+      "prior_state": "migrated",
+      "contract": "按输入项顺序建立 NSPasteboardItem；按每项有序 types 遍历，仅对 dataByType 存在的 Data 调用 setData；保留空项和空输入，统一 clearContents 后 writeObjects，最后更新接收者 lastChangeCount。原版不检查写入返回值；复刻只将返回值另存供既有上层错误策略读取。",
+      "affected_refs": [
+        {
+          "path": "replica/Sources/PastoCore/Pasteboard.swift",
+          "symbol": "writeToPasteboard"
+        }
+      ],
+      "specific_retention_reason": "writeToPasteboard(ids:options:) implementation and writer order unchanged; new insertion result never enters restore path. Primary OriginalPasteboardWriter body unchanged.",
+      "unchanged_primary_refs": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPasteboard.swift",
+          "sha256": "60f862d0779d4f580e89be5eafef96239c75287facd4602ba02b10ce232c7b61",
+          "symbol": "f_10037875c",
+          "symbol_present": true
+        }
+      ],
+      "decision": "retain finite Source contract; no downgrade required by this edit; old compiled whole-file hash not silently rebound",
+      "remaining_boundary": "Final linked app/compiled metadata/SDK bindings require Root final build review; Core-target compilation is not runtime or wholeparent parity."
+    },
+    {
+      "id": "Paste:0x10037c4a8",
+      "prior_state": "migrated",
+      "contract": "将字符串以 UTF-8 且不允许有损转换编码，始终向 types 追加类型（允许重复），编码成功覆盖 dataByType，编码失败删除该键。",
+      "affected_refs": [
+        {
+          "path": "replica/Sources/PastoCore/Pasteboard.swift",
+          "symbol": "capture"
+        }
+      ],
+      "specific_retention_reason": "OriginalPasteboardItem UTF8 setter unchanged; public capture delegates into moved identical preparation body. Same f37e6b0/String path and type writes before storage.",
+      "unchanged_primary_refs": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPasteboard.swift",
+          "sha256": "60f862d0779d4f580e89be5eafef96239c75287facd4602ba02b10ce232c7b61",
+          "symbol": "f_10037c4a8",
+          "symbol_present": true
+        }
+      ],
+      "decision": "retain finite Source contract; no downgrade required by this edit; old compiled whole-file hash not silently rebound",
+      "remaining_boundary": "Final linked app/compiled metadata/SDK bindings require Root final build review; Core-target compilation is not runtime or wholeparent parity."
+    },
+    {
+      "id": "Paste:0x10037c6d4",
+      "prior_state": "migrated",
+      "contract": "构造空 PasteboardItem，通过字符串设置路径添加 UTType.utf8PlainText 表示，返回该对象。",
+      "affected_refs": [
+        {
+          "path": "replica/Sources/PastoCore/Pasteboard.swift",
+          "symbol": "writeToPasteboard"
+        }
+      ],
+      "specific_retention_reason": "Empty-item/plain UTF8 constructor and restore consumers unchanged; no insertion-result branch in it.",
+      "unchanged_primary_refs": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPasteboard.swift",
+          "sha256": "60f862d0779d4f580e89be5eafef96239c75287facd4602ba02b10ce232c7b61",
+          "symbol": "f_10037c6d4",
+          "symbol_present": true
+        }
+      ],
+      "decision": "retain finite Source contract; no downgrade required by this edit; old compiled whole-file hash not silently rebound",
+      "remaining_boundary": "Final linked app/compiled metadata/SDK bindings require Root final build review; Core-target compilation is not runtime or wholeparent parity."
+    },
+    {
+      "id": "Paste:0x10037c9a8",
+      "prior_state": "migrated",
+      "contract": "依次按 UTType.plainText、utf8PlainText、text、url 查询 Data 并严格 UTF-8 解码；缺失或非法编码继续下一项；空字符串为有效结果；全失败返回 nil。",
+      "affected_refs": [
+        {
+          "path": "replica/Sources/PastoCore/Pasteboard.swift",
+          "symbol": "capture"
+        }
+      ],
+      "specific_retention_reason": "captureWithInsertionResult keeps identical first-valid-text extraction sequence and empty-string semantics; primary getter unchanged.",
+      "unchanged_primary_refs": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPasteboard.swift",
+          "sha256": "60f862d0779d4f580e89be5eafef96239c75287facd4602ba02b10ce232c7b61",
+          "symbol": "f_10037c9a8",
+          "symbol_present": true
+        }
+      ],
+      "decision": "retain finite Source contract; no downgrade required by this edit; old compiled whole-file hash not silently rebound",
+      "remaining_boundary": "Final linked app/compiled metadata/SDK bindings require Root final build review; Core-target compilation is not runtime or wholeparent parity."
+    },
+    {
+      "id": "Paste:0x10037cc6c",
+      "prior_state": "migrated",
+      "contract": "读取 public.file-url 的 UTF-8 字符串，缺失或非法编码返回 nil，否则以 Foundation URL(string:) 解析并保留其可选失败结果。",
+      "affected_refs": [
+        {
+          "path": "replica/Sources/PastoCore/Pasteboard.swift",
+          "symbol": "capture"
+        }
+      ],
+      "specific_retention_reason": "File-string projection still calls same URL getter in same capturedItems order; primary Foundation parsing unchanged.",
+      "unchanged_primary_refs": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPasteboard.swift",
+          "sha256": "60f862d0779d4f580e89be5eafef96239c75287facd4602ba02b10ce232c7b61",
+          "symbol": "f_10037cc6c",
+          "symbol_present": true
+        }
+      ],
+      "decision": "retain finite Source contract; no downgrade required by this edit; old compiled whole-file hash not silently rebound",
+      "remaining_boundary": "Final linked app/compiled metadata/SDK bindings require Root final build review; Core-target compilation is not runtime or wholeparent parity."
+    },
+    {
+      "id": "Paste:0x10037d5c4",
+      "prior_state": "migrated",
+      "contract": "依 png、jpeg、heic、tiff、icns 固定优先级返回 dataByType 中首个存在的 Data（包含空 Data），均缺失时返回 nil。",
+      "affected_refs": [
+        {
+          "path": "replica/Sources/PastoCore/Pasteboard.swift",
+          "symbol": "capture"
+        }
+      ],
+      "specific_retention_reason": "Image getter priority/data treatment unchanged; checksum/previews still run before locked add-result decision.",
+      "unchanged_primary_refs": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPasteboard.swift",
+          "sha256": "60f862d0779d4f580e89be5eafef96239c75287facd4602ba02b10ce232c7b61",
+          "symbol": "f_10037d5c4",
+          "symbol_present": true
+        }
+      ],
+      "decision": "retain finite Source contract; no downgrade required by this edit; old compiled whole-file hash not silently rebound",
+      "remaining_boundary": "Final linked app/compiled metadata/SDK bindings require Root final build review; Core-target compilation is not runtime or wholeparent parity."
+    },
+    {
+      "id": "Paste:0x10037d810",
+      "prior_state": "migrated",
+      "contract": "以给定原始类型字符串查询 dataByType，存在返回对应 Data（含空 Data），不存在返回 nil。",
+      "affected_refs": [
+        {
+          "path": "replica/Sources/PastoCore/Pasteboard.swift",
+          "symbol": "capture"
+        }
+      ],
+      "specific_retention_reason": "Ordered payload extraction still queries same item data for same type, including emptyData; no write changed.",
+      "unchanged_primary_refs": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPasteboard.swift",
+          "sha256": "60f862d0779d4f580e89be5eafef96239c75287facd4602ba02b10ce232c7b61",
+          "symbol": "f_10037d810",
+          "symbol_present": true
+        }
+      ],
+      "decision": "retain finite Source contract; no downgrade required by this edit; old compiled whole-file hash not silently rebound",
+      "remaining_boundary": "Final linked app/compiled metadata/SDK bindings require Root final build review; Core-target compilation is not runtime or wholeparent parity."
+    },
+    {
+      "id": "Paste:0x10037d8c8",
+      "prior_state": "migrated",
+      "contract": "每次调用向 types 追加给定类型，不去重；非 nil Data 覆盖字典值，nil 删除字典值但不移除 types 项。",
+      "affected_refs": [
+        {
+          "path": "replica/Sources/PastoCore/Pasteboard.swift",
+          "symbol": "capture"
+        }
+      ],
+      "specific_retention_reason": "Capturing missing Data and restoring saved representations still uses same append+nil removal setter; tuple result only after capture prep.",
+      "unchanged_primary_refs": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPasteboard.swift",
+          "sha256": "60f862d0779d4f580e89be5eafef96239c75287facd4602ba02b10ce232c7b61",
+          "symbol": "f_10037d8c8",
+          "symbol_present": true
+        }
+      ],
+      "decision": "retain finite Source contract; no downgrade required by this edit; old compiled whole-file hash not silently rebound",
+      "remaining_boundary": "Final linked app/compiled metadata/SDK bindings require Root final build review; Core-target compilation is not runtime or wholeparent parity."
+    },
+    {
+      "id": "Paste:0x10037da6c",
+      "prior_state": "migrated",
+      "contract": "返回有序 types 的 Swift 数组值，保留顺序及重复，调用者修改结果不改变对象内部列表。",
+      "affected_refs": [
+        {
+          "path": "replica/Sources/PastoCore/Pasteboard.swift",
+          "symbol": "capture"
+        }
+      ],
+      "specific_retention_reason": "Orderedtypes iteration/metadata encoding unchanged within moved capture preparation; primary orderedvalue getter unchanged.",
+      "unchanged_primary_refs": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPasteboard.swift",
+          "sha256": "60f862d0779d4f580e89be5eafef96239c75287facd4602ba02b10ce232c7b61",
+          "symbol": "f_10037da6c",
+          "symbol_present": true
+        }
+      ],
+      "decision": "retain finite Source contract; no downgrade required by this edit; old compiled whole-file hash not silently rebound",
+      "remaining_boundary": "Final linked app/compiled metadata/SDK bindings require Root final build review; Core-target compilation is not runtime or wholeparent parity."
+    },
+    {
+      "id": "Paste:0x10037dab0",
+      "prior_state": "migrated",
+      "contract": "从 types 稳定删除所有等于给定类型的条目，同时删除 dataByType 对应键；不存在时不改变内容。",
+      "affected_refs": [
+        {
+          "path": "replica/Sources/PastoCore/Pasteboard.swift",
+          "symbol": "capture"
+        }
+      ],
+      "specific_retention_reason": "Capture internal-analysis-type stripping loop unchanged before serialization/store; primary stable removal body unchanged.",
+      "unchanged_primary_refs": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPasteboard.swift",
+          "sha256": "60f862d0779d4f580e89be5eafef96239c75287facd4602ba02b10ce232c7b61",
+          "symbol": "f_10037dab0",
+          "symbol_present": true
+        }
+      ],
+      "decision": "retain finite Source contract; no downgrade required by this edit; old compiled whole-file hash not silently rebound",
+      "remaining_boundary": "Final linked app/compiled metadata/SDK bindings require Root final build review; Core-target compilation is not runtime or wholeparent parity."
+    },
+    {
+      "id": "Paste:0x10037e4b8",
+      "prior_state": "migrated",
+      "contract": "查询指定类型的 Data，存在则严格 UTF-8 解码，缺失或非法 UTF-8 返回 nil，空 Data 得到空字符串。",
+      "affected_refs": [
+        {
+          "path": "replica/Sources/PastoCore/Pasteboard.swift",
+          "symbol": "capture"
+        }
+      ],
+      "specific_retention_reason": "FileURL string extraction call in moved capture body unchanged; strictUTF8 optional getter itself unchanged.",
+      "unchanged_primary_refs": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPasteboard.swift",
+          "sha256": "60f862d0779d4f580e89be5eafef96239c75287facd4602ba02b10ce232c7b61",
+          "symbol": "f_10037e4b8",
+          "symbol_present": true
+        }
+      ],
+      "decision": "retain finite Source contract; no downgrade required by this edit; old compiled whole-file hash not silently rebound",
+      "remaining_boundary": "Final linked app/compiled metadata/SDK bindings require Root final build review; Core-target compilation is not runtime or wholeparent parity."
+    },
+    {
+      "id": "Paste:0x10037e5e0",
+      "prior_state": "migrated",
+      "contract": "查询指定类型的 Data 并桥接为 NSData；缺失返回 nil，保留零长度 Data。",
+      "affected_refs": [
+        {
+          "path": "replica/Sources/PastoCore/Pasteboard.swift",
+          "symbol": "writeToPasteboard"
+        }
+      ],
+      "specific_retention_reason": "Data-to-NSData helper/restore writer consumer unchanged; no relation to insertionBool.",
+      "unchanged_primary_refs": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPasteboard.swift",
+          "sha256": "60f862d0779d4f580e89be5eafef96239c75287facd4602ba02b10ce232c7b61",
+          "symbol": "f_10037e5e0",
+          "symbol_present": true
+        }
+      ],
+      "decision": "retain finite Source contract; no downgrade required by this edit; old compiled whole-file hash not silently rebound",
+      "remaining_boundary": "Final linked app/compiled metadata/SDK bindings require Root final build review; Core-target compilation is not runtime or wholeparent parity."
+    },
+    {
+      "id": "Paste:0x100378ac0",
+      "prior_state": "migrated",
+      "contract": "每次调用先记录 Start monitoring pasteboard 日志；若 poll timer 已存在直接返回；否则刷新当前 changeCount，创建默认 runloop 的 target/selector 重复 timer，interval=0.25、userInfo=nil、tolerance=0.025。",
+      "affected_refs": [
+        {
+          "path": "replica/Sources/PastoCore/Pasteboard.swift",
+          "symbol": "f_100378ac0"
+        }
+      ],
+      "specific_retention_reason": "Polling start method body/timerTarget/0.25/tolerance0.025 unchanged within Pasteboard.swift reverseproof.",
+      "unchanged_primary_refs": [],
+      "decision": "retain finite Source contract; no downgrade required by this edit; old compiled whole-file hash not silently rebound",
+      "remaining_boundary": "Final linked app/compiled metadata/SDK bindings require Root final build review; Core-target compilation is not runtime or wholeparent parity."
+    },
+    {
+      "id": "Paste:0x100378bc8",
+      "prior_state": "migrated",
+      "contract": "每次调用先记录 Stop monitoring pasteboard 日志，分别对非 nil poll timer 和本地 sync timer 调用 invalidate，随后将两个 timer 槽置 nil。",
+      "affected_refs": [
+        {
+          "path": "replica/Sources/PastoCore/Pasteboard.swift",
+          "symbol": "f_100378bc8"
+        }
+      ],
+      "specific_retention_reason": "Stop method invalidation/order/nil assignments unchanged; no new monitor lifetime fields.",
+      "unchanged_primary_refs": [],
+      "decision": "retain finite Source contract; no downgrade required by this edit; old compiled whole-file hash not silently rebound",
+      "remaining_boundary": "Final linked app/compiled metadata/SDK bindings require Root final build review; Core-target compilation is not runtime or wholeparent parity."
+    },
+    {
+      "id": "Paste:0x10037a028",
+      "prior_state": "migrated",
+      "contract": "变化检测：changeCount相等无副作用返回；变化则记录原文日志，重新读取changeCount作为基线，invalidate旧syncTimer，建立0.3秒、nil userInfo、target/selector默认runloop的一次性syncTimer。",
+      "affected_refs": [
+        {
+          "path": "replica/Sources/PastoCore/Pasteboard.swift",
+          "symbol": "f_10037a028"
+        }
+      ],
+      "specific_retention_reason": "ChangeCount check/reread and0.3sync timer body unchanged; transaction Bool comes only later didRead→capture.",
+      "unchanged_primary_refs": [],
+      "decision": "retain finite Source contract; no downgrade required by this edit; old compiled whole-file hash not silently rebound",
+      "remaining_boundary": "Final linked app/compiled metadata/SDK bindings require Root final build review; Core-target compilation is not runtime or wholeparent parity."
+    },
+    {
+      "id": "Paste:0x10037ce0c",
+      "prior_state": "migrated",
+      "contract": "优先public.url严格UTF8→URL(string:)直接返回；失败再取普通文本，按#、urlQueryAllowed、urlFragmentAllowed并集百分号编码；只有URL初始化成功且scheme/host均非nil返回，否则nil。",
+      "affected_refs": [
+        {
+          "path": "replica/Sources/PastoCore/Pasteboard.swift",
+          "symbol": "capture"
+        }
+      ],
+      "specific_retention_reason": "Primary URL plain/projection helper unchanged; moved capture keeps types/plain content order and existing classification dependencies.",
+      "unchanged_primary_refs": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPasteboard.swift",
+          "sha256": "60f862d0779d4f580e89be5eafef96239c75287facd4602ba02b10ce232c7b61",
+          "symbol": "f_10037ce0c",
+          "symbol_present": true
+        }
+      ],
+      "decision": "retain finite Source contract; no downgrade required by this edit; old compiled whole-file hash not silently rebound",
+      "remaining_boundary": "Final linked app/compiled metadata/SDK bindings require Root final build review; Core-target compilation is not runtime or wholeparent parity."
+    },
+    {
+      "id": "Paste:0x10037d210",
+      "prior_state": "migrated",
+      "contract": "public.url-name对应Data严格UTF8解码；缺失/无效UTF8为nil，空Data为空串。",
+      "affected_refs": [
+        {
+          "path": "replica/Sources/PastoCore/Pasteboard.swift",
+          "symbol": "capture"
+        }
+      ],
+      "specific_retention_reason": "Primary URL-name strictUTF8 accessor unchanged; no link metadata prep source changed.",
+      "unchanged_primary_refs": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPasteboard.swift",
+          "sha256": "60f862d0779d4f580e89be5eafef96239c75287facd4602ba02b10ce232c7b61",
+          "symbol": "f_10037d210",
+          "symbol_present": true
+        }
+      ],
+      "decision": "retain finite Source contract; no downgrade required by this edit; old compiled whole-file hash not silently rebound",
+      "remaining_boundary": "Final linked app/compiled metadata/SDK bindings require Root final build review; Core-target compilation is not runtime or wholeparent parity."
+    },
+    {
+      "id": "Paste:0x10037cd68",
+      "prior_state": "migrated",
+      "contract": "按原版图像Data getter优先级取首个存在Data，然后仅对该Data尝试NSImage(data:)，返回图像或nil；不在同一项失败后尝试后续图像格式。",
+      "affected_refs": [
+        {
+          "path": "replica/Sources/PastoCore/Pasteboard.swift",
+          "symbol": "pasteboardImage"
+        }
+      ],
+      "specific_retention_reason": "pasteboardImage helper and selected firstimage Data behavior unchanged; not inside modifiedcapture return branch.",
+      "unchanged_primary_refs": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPasteboard.swift",
+          "sha256": "60f862d0779d4f580e89be5eafef96239c75287facd4602ba02b10ce232c7b61",
+          "symbol": "f_10037cd68",
+          "symbol_present": true
+        }
+      ],
+      "decision": "retain finite Source contract; no downgrade required by this edit; old compiled whole-file hash not silently rebound",
+      "remaining_boundary": "Final linked app/compiled metadata/SDK bindings require Root final build review; Core-target compilation is not runtime or wholeparent parity."
+    },
+    {
+      "id": "Paste:0x10037e6b0",
+      "prior_state": "migrated",
+      "contract": "Any写入器依次尝试Data/String/NSAttributedString/URL/NSImage：Data原样、String UTF8、富文本.string UTF8、URL.absoluteString UTF8、图像经原版PNG转换；支持分支始终追加type，nil转换删data；其他对象无动作。",
+      "affected_refs": [
+        {
+          "path": "replica/Sources/PastoCore/Pasteboard.swift",
+          "symbol": "capture"
+        }
+      ],
+      "specific_retention_reason": "Raw NSPasteboardItem adaptation still calls Any setter in same order; primary Data/String/AttributedString/URL/Image paths unchanged.",
+      "unchanged_primary_refs": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPasteboard.swift",
+          "sha256": "60f862d0779d4f580e89be5eafef96239c75287facd4602ba02b10ce232c7b61",
+          "symbol": "f_10037e6b0",
+          "symbol_present": true
+        }
+      ],
+      "decision": "retain finite Source contract; no downgrade required by this edit; old compiled whole-file hash not silently rebound",
+      "remaining_boundary": "Final linked app/compiled metadata/SDK bindings require Root final build review; Core-target compilation is not runtime or wholeparent parity."
+    },
+    {
+      "id": "Paste:0x10037aaf4",
+      "prior_state": "migrated",
+      "contract": "从注入的UserDefaults读取pasteboardSyncCount整数并返回，不写入、不截断。",
+      "affected_refs": [
+        {
+          "path": "replica/Sources/PastoCore/Pasteboard.swift",
+          "symbol": "f_10037aaf4"
+        }
+      ],
+      "specific_retention_reason": "Sync count injectedUserDefaults getter unchanged. New creationBool never substitutes synchronizationcount/token.",
+      "unchanged_primary_refs": [],
+      "decision": "retain finite Source contract; no downgrade required by this edit; old compiled whole-file hash not silently rebound",
+      "remaining_boundary": "Final linked app/compiled metadata/SDK bindings require Root final build review; Core-target compilation is not runtime or wholeparent parity."
+    },
+    {
+      "id": "Paste:0x10037ad4c",
+      "prior_state": "migrated",
+      "contract": "保持管理对象所属captureState在action期间存活，调用动作，再post pasteboardHistoryManagerDidChangeStatus object=管理对象。",
+      "affected_refs": [
+        {
+          "path": "replica/Sources/PastoCore/Pasteboard.swift",
+          "symbol": "f_10037ad4c"
+        }
+      ],
+      "specific_retention_reason": "withExtendedLifetime(action) then statusnotification unchanged; capture createflag only influences separate DidCreate existing consumer.",
+      "unchanged_primary_refs": [],
+      "decision": "retain finite Source contract; no downgrade required by this edit; old compiled whole-file hash not silently rebound",
+      "remaining_boundary": "Final linked app/compiled metadata/SDK bindings require Root final build review; Core-target compilation is not runtime or wholeparent parity."
+    },
+    {
+      "id": "Paste:0x10037ad40",
+      "prior_state": "migrated",
+      "contract": "将原版start monitoring动作100378ac0交给状态变更包装器10037ad4c执行。",
+      "affected_refs": [
+        {
+          "path": "replica/Sources/PastoCore/Pasteboard.swift",
+          "symbol": "f_10037ad40"
+        }
+      ],
+      "specific_retention_reason": "Start wrapper forwards unchanged action to f37ad4c; no new API semantics.",
+      "unchanged_primary_refs": [],
+      "decision": "retain finite Source contract; no downgrade required by this edit; old compiled whole-file hash not silently rebound",
+      "remaining_boundary": "Final linked app/compiled metadata/SDK bindings require Root final build review; Core-target compilation is not runtime or wholeparent parity."
+    },
+    {
+      "id": "Paste:0x10037ad14",
+      "prior_state": "migrated",
+      "contract": "将原版stop monitoring动作100378bc8交给状态变更包装器10037ad4c执行。",
+      "affected_refs": [
+        {
+          "path": "replica/Sources/PastoCore/Pasteboard.swift",
+          "symbol": "f_10037ad14"
+        }
+      ],
+      "specific_retention_reason": "Stop wrapper forwards unchanged action to f37ad4c; no new API semantics.",
+      "unchanged_primary_refs": [],
+      "decision": "retain finite Source contract; no downgrade required by this edit; old compiled whole-file hash not silently rebound",
+      "remaining_boundary": "Final linked app/compiled metadata/SDK bindings require Root final build review; Core-target compilation is not runtime or wholeparent parity."
+    },
+    {
+      "id": "Paste:0x10037c4a4",
+      "prior_state": "migrated",
+      "contract": "历史管理器UndoManager keypath getter转发至f2fad30共享provider。",
+      "affected_refs": [
+        {
+          "path": "replica/Sources/PastoCore/Pasteboard.swift",
+          "symbol": "f_10037c4a4"
+        }
+      ],
+      "specific_retention_reason": "Shared Undo dependency keypath getter unchanged; successfulcapture still clearsUndo in same f37ae9c after f37b034 returns.",
+      "unchanged_primary_refs": [],
+      "decision": "retain finite Source contract; no downgrade required by this edit; old compiled whole-file hash not silently rebound",
+      "remaining_boundary": "Final linked app/compiled metadata/SDK bindings require Root final build review; Core-target compilation is not runtime or wholeparent parity."
+    },
+    {
+      "id": "Paste:0x1002fad30",
+      "prior_state": "migrated",
+      "contract": "按PasteCore/DI+PasteCore.swift文件54:19共享UndoManager，使用f2fd5e4工厂。",
+      "affected_refs": [
+        {
+          "path": "replica/Sources/PastoCore/Pasteboard.swift",
+          "symbol": "f_1002fad30"
+        }
+      ],
+      "specific_retention_reason": "SharedUndo DI file54:19/provider function unchanged. New helper does not create separateUndo manager.",
+      "unchanged_primary_refs": [],
+      "decision": "retain finite Source contract; no downgrade required by this edit; old compiled whole-file hash not silently rebound",
+      "remaining_boundary": "Final linked app/compiled metadata/SDK bindings require Root final build review; Core-target compilation is not runtime or wholeparent parity."
+    },
+    {
+      "id": "Paste:0x1002fd5e4",
+      "prior_state": "migrated",
+      "contract": "分配并init原生NSUndoManager，返回新实例。",
+      "affected_refs": [
+        {
+          "path": "replica/Sources/PastoCore/Pasteboard.swift",
+          "symbol": "f_1002fd5e4"
+        }
+      ],
+      "specific_retention_reason": "NativeUndoManager allocation factory unchanged; no changedstate or branch.",
+      "unchanged_primary_refs": [],
+      "decision": "retain finite Source contract; no downgrade required by this edit; old compiled whole-file hash not silently rebound",
+      "remaining_boundary": "Final linked app/compiled metadata/SDK bindings require Root final build review; Core-target compilation is not runtime or wholeparent parity."
+    },
+    {
+      "id": "Paste:0x1003195f4",
+      "prior_state": "migrated",
+      "contract": "数据按字节匹配prefix；空prefix为true，data短于prefix或任一字节不同为false。",
+      "affected_refs": [
+        {
+          "path": "replica/Sources/PastoCore/Pasteboard.swift",
+          "symbol": "originalPasteboardItems"
+        }
+      ],
+      "specific_retention_reason": "Prefix checking primary codec body and originalPasteboardItems consumer unchanged; capture serialization layout unchanged.",
+      "unchanged_primary_refs": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPasteboardDataCodec.swift",
+          "sha256": "3994f19683c261c6137c9a97f66f89d69b111e8731cc09acb42f6727980a786c",
+          "symbol": "f_1003195f4",
+          "symbol_present": true
+        }
+      ],
+      "decision": "retain finite Source contract; no downgrade required by this edit; old compiled whole-file hash not silently rebound",
+      "remaining_boundary": "Final linked app/compiled metadata/SDK bindings require Root final build review; Core-target compilation is not runtime or wholeparent parity."
+    },
+    {
+      "id": "Paste:0x10031a870",
+      "prior_state": "migrated",
+      "contract": "Data首有效范围字节；空Data为nil，slice使用真实startIndex。",
+      "affected_refs": [
+        {
+          "path": "replica/Sources/PastoCore/Pasteboard.swift",
+          "symbol": "originalPasteboardItems"
+        }
+      ],
+      "specific_retention_reason": "Datafirst getter primary/source decoder selection unchanged; insertiontuple never affects rawbytes.",
+      "unchanged_primary_refs": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPasteboardDataCodec.swift",
+          "sha256": "3994f19683c261c6137c9a97f66f89d69b111e8731cc09acb42f6727980a786c",
+          "symbol": "f_10031a870",
+          "symbol_present": true
+        }
+      ],
+      "decision": "retain finite Source contract; no downgrade required by this edit; old compiled whole-file hash not silently rebound",
+      "remaining_boundary": "Final linked app/compiled metadata/SDK bindings require Root final build review; Core-target compilation is not runtime or wholeparent parity."
+    },
+    {
+      "id": "Paste:0x10030f5c8",
+      "prior_state": "migrated",
+      "contract": "压缩输出buffer恰为输入Data.count；Apple compression_encode_buffer指定algorithm且scratch=nil；结果为0/nil输入时nil，成功复制真实长度，不扩容不重试。",
+      "affected_refs": [
+        {
+          "path": "replica/Sources/PastoCore/Pasteboard.swift",
+          "symbol": "capture"
+        }
+      ],
+      "specific_retention_reason": "Compression buffer length/algorithm/error behavior primary unchanged; movedcapture uses sameuseBinaryPlist anddata encode call beforeadd.",
+      "unchanged_primary_refs": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPasteboardDataCodec.swift",
+          "sha256": "3994f19683c261c6137c9a97f66f89d69b111e8731cc09acb42f6727980a786c",
+          "symbol": "f_10030f5c8",
+          "symbol_present": true
+        }
+      ],
+      "decision": "retain finite Source contract; no downgrade required by this edit; old compiled whole-file hash not silently rebound",
+      "remaining_boundary": "Final linked app/compiled metadata/SDK bindings require Root final build review; Core-target compilation is not runtime or wholeparent parity."
+    },
+    {
+      "id": "Paste:0x10030f6e8",
+      "prior_state": "migrated",
+      "contract": "空Data返回非nil的空Data；非空Data通过真实有效字节范围调用底层指定algorithm解压。",
+      "affected_refs": [
+        {
+          "path": "replica/Sources/PastoCore/Pasteboard.swift",
+          "symbol": "originalPasteboardItems"
+        }
+      ],
+      "specific_retention_reason": "Decompression wrapper and originalPasteboardItems body unchanged; no compression option field edits.",
+      "unchanged_primary_refs": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPasteboardDataCodec.swift",
+          "sha256": "3994f19683c261c6137c9a97f66f89d69b111e8731cc09acb42f6727980a786c",
+          "symbol": "f_10030f6e8",
+          "symbol_present": true
+        }
+      ],
+      "decision": "retain finite Source contract; no downgrade required by this edit; old compiled whole-file hash not silently rebound",
+      "remaining_boundary": "Final linked app/compiled metadata/SDK bindings require Root final build review; Core-target compilation is not runtime or wholeparent parity."
+    },
+    {
+      "id": "Paste:0x10030f920",
+      "prior_state": "migrated",
+      "contract": "nil输入buffer返回非nil空Data；capacity=max(input.count*2,65536)，C decode0返回nil；非满容量复制结果；满容量且capacity>0x0fffffff返回nil，否则释放后容量倍增继续。",
+      "affected_refs": [
+        {
+          "path": "replica/Sources/PastoCore/Pasteboard.swift",
+          "symbol": "originalPasteboardItems"
+        }
+      ],
+      "specific_retention_reason": "Buffergrowth/maxsize/error algorithm primary unchanged; decoded tuple flag comes from storetransaction, notcodec.",
+      "unchanged_primary_refs": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPasteboardDataCodec.swift",
+          "sha256": "3994f19683c261c6137c9a97f66f89d69b111e8731cc09acb42f6727980a786c",
+          "symbol": "f_10030f920",
+          "symbol_present": true
+        }
+      ],
+      "decision": "retain finite Source contract; no downgrade required by this edit; old compiled whole-file hash not silently rebound",
+      "remaining_boundary": "Final linked app/compiled metadata/SDK bindings require Root final build review; Core-target compilation is not runtime or wholeparent parity."
+    },
+    {
+      "id": "Paste:0x10031aeec",
+      "prior_state": "migrated",
+      "contract": "bvx前三字节→LZFSE；bplist或首字节[/{不解压；其他尝试zlib；解压失败保留原Data；bplist先PropertyListDecoder再JSONDecoder，最终失败返回[]。",
+      "affected_refs": [
+        {
+          "path": "replica/Sources/PastoCore/Pasteboard.swift",
+          "symbol": "originalPasteboardItems"
+        }
+      ],
+      "specific_retention_reason": "Multiitem payload decoder normalization/format selection unchanged; publiccapture still returns optionalid/error compatible.",
+      "unchanged_primary_refs": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPasteboardDataCodec.swift",
+          "sha256": "3994f19683c261c6137c9a97f66f89d69b111e8731cc09acb42f6727980a786c",
+          "symbol": "f_10031aeec",
+          "symbol_present": true
+        }
+      ],
+      "decision": "retain finite Source contract; no downgrade required by this edit; old compiled whole-file hash not silently rebound",
+      "remaining_boundary": "Final linked app/compiled metadata/SDK bindings require Root final build review; Core-target compilation is not runtime or wholeparent parity."
+    },
+    {
+      "id": "Paste:0x100383a0c",
+      "prior_state": "migrated",
+      "contract": "创建空NSMutableAttributedString；顺序遍历输入attributed strings，仅当当前result.string非空时先追加separator的无属性NSAttributedString，然后追加当前content；保留源attributes，最终返回同一mutable result。",
+      "affected_refs": [
+        {
+          "path": "replica/Sources/PastoCore/Pasteboard.swift",
+          "symbol": "writeToPasteboard(ids:"
+        }
+      ],
+      "specific_retention_reason": "Restore attributedjoin pipeline/writeToPasteboard body unchanged; insertion code onlycapture/add.",
+      "unchanged_primary_refs": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPasteboardRestore.swift",
+          "sha256": "bf309c94b15bb4db46acedc6ba535d1f060aa3a8d74257053a773cf7200dd2c6",
+          "symbol": "f_100383a0c",
+          "symbol_present": true
+        }
+      ],
+      "decision": "retain finite Source contract; no downgrade required by this edit; old compiled whole-file hash not silently rebound",
+      "remaining_boundary": "Final linked app/compiled metadata/SDK bindings require Root final build review; Core-target compilation is not runtime or wholeparent parity."
+    },
+    {
+      "id": "Paste:0x100381fdc",
+      "prior_state": "migrated",
+      "contract": "NSAttributedString全UTF16范围data(from:documentAttributes:)：documentType为RTF，characterEncoding为Foundation.String.Encoding.utf8；NSError/Swift error路径吞错误返回nil，成功返回桥接Data。",
+      "affected_refs": [
+        {
+          "path": "replica/Sources/PastoCore/Pasteboard.swift",
+          "symbol": "writeToPasteboard(ids:"
+        }
+      ],
+      "specific_retention_reason": "Restore RTFencoding pipeline/writeToPasteboard body unchanged; no Unicode or documentattributes edit.",
+      "unchanged_primary_refs": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPasteboardRestore.swift",
+          "sha256": "bf309c94b15bb4db46acedc6ba535d1f060aa3a8d74257053a773cf7200dd2c6",
+          "symbol": "f_100381fdc",
+          "symbol_present": true
+        }
+      ],
+      "decision": "retain finite Source contract; no downgrade required by this edit; old compiled whole-file hash not silently rebound",
+      "remaining_boundary": "Final linked app/compiled metadata/SDK bindings require Root final build review; Core-target compilation is not runtime or wholeparent parity."
+    },
+    {
+      "id": "Paste:0x100384aac",
+      "prior_state": "migrated",
+      "contract": "取得目录optional，nil不调度；否则DispatchQueue.global(qos:.background).async，捕获目录值和弱self，unspecified任务QoS/空flags；后台清理只在错误日志时访问弱引用logger。",
+      "affected_refs": [
+        {
+          "path": "replica/Sources/PastoCore/Pasteboard.swift",
+          "symbol": "writeToPasteboard(ids:"
+        }
+      ],
+      "specific_retention_reason": "Restore image-preparation cleanup scheduling call and primary asyncweakbody unchanged; sourceapp/timestamp/options unaffected.",
+      "unchanged_primary_refs": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPasteboardImageRestore.swift",
+          "sha256": "4c2d234efaf5a3a2d64ce78515fb05e2683e47adfb2aa6b31920428b4cffa1b9",
+          "symbol": "f_100384aac",
+          "symbol_present": true
+        }
+      ],
+      "decision": "retain finite Source contract; no downgrade required by this edit; old compiled whole-file hash not silently rebound",
+      "remaining_boundary": "Final linked app/compiled metadata/SDK bindings require Root final build review; Core-target compilation is not runtime or wholeparent parity."
+    },
+    {
+      "id": "Paste:0x100384e6c",
+      "prior_state": "migrated",
+      "contract": "Date()加-86400秒为cutoff；contentsOfDirectory URL/keys nil/options0；依次creationDateKey resourceValues，缺失略过，严格creationDate<cutoff才remove；目录枚举/属性读取/删除首个throw结束整个循环，弱owner存在才日志Error while remove old temporary image file: +localizedDescription。",
+      "affected_refs": [
+        {
+          "path": "replica/Sources/PastoCore/Pasteboard.swift",
+          "symbol": "writeToPasteboard(ids:"
+        }
+      ],
+      "specific_retention_reason": "Image cleanup algorithm primary unchanged and restore/dra g caller unchanged; no files read/removed by this task.",
+      "unchanged_primary_refs": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPasteboardImageRestore.swift",
+          "sha256": "4c2d234efaf5a3a2d64ce78515fb05e2683e47adfb2aa6b31920428b4cffa1b9",
+          "symbol": "f_100384e6c",
+          "symbol_present": true
+        }
+      ],
+      "decision": "retain finite Source contract; no downgrade required by this edit; old compiled whole-file hash not silently rebound",
+      "remaining_boundary": "Final linked app/compiled metadata/SDK bindings require Root final build review; Core-target compilation is not runtime or wholeparent parity."
+    },
+    {
+      "id": "Paste:0x1002ff9c8",
+      "prior_state": "migrated",
+      "contract": "同步执行throws Void操作，Result?初值nil，正常写.success(())，Swift Error写.failure且最终原样throw；优先把ObjC异常转换为保存name:String/reason:String?的独立Swift Error；无异常且Result未写则trap；operation不逃逸。",
+      "affected_refs": [
+        {
+          "path": "replica/Sources/PastoCore/ClipboardStore.swift",
+          "symbol": "exportArchive(to"
+        }
+      ],
+      "specific_retention_reason": "ClipboardStore.exportArchive(to:), withLock and synchronousVoidObjCcatcher body unchanged. Newadd helper still uses existingmutate lock and cannot bypass exception/error cleanup; fresh tuple specialization is not proof originalCoreData ABI.",
+      "unchanged_primary_refs": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalObjCExceptionBridge.swift",
+          "sha256": "cf3e9e3b016001d7d982a673e00e365d8b638693effe3c9c49f8c77b93102bc2",
+          "symbol": "f_1002ff9c8",
+          "symbol_present": true
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalObjCExceptionBridge.swift",
+          "sha256": "cf3e9e3b016001d7d982a673e00e365d8b638693effe3c9c49f8c77b93102bc2",
+          "symbol": "withResult<T>",
+          "symbol_present": true
+        }
+      ],
+      "decision": "retain finite Source contract; no downgrade required by this edit; old compiled whole-file hash not silently rebound",
+      "remaining_boundary": "Final linked app/compiled metadata/SDK bindings require Root final build review; Core-target compilation is not runtime or wholeparent parity."
+    }
+  ],
+  "affected_partial_parent": "Paste:0x10037b034 actual returnedBool path corrected; full CoreData entity/transaction/metadata identity remainspartial. No address upgraded here.",
+  "build": "swift build --package-path replica --target PastoCore -c release --jobs2 passed9.73s; no product/testexecuted",
+  "source_modified": false,
+  "ledger_modified": false,
+  "new_complete_addresses": 0
+}

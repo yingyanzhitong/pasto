@@ -2,14 +2,14 @@
   "schema_version": 1,
   "kind": "static_code_migration",
   "function_id": "Paste:0x10020d598",
-  "reviewed_at": "2026-10-26T11:35:29.017720+00:00",
+  "reviewed_at": "2026-10-27T03:59:45.653489+00:00",
   "original_binary_sha256": "871f00354fbb1c165d858a98e6d19d6f43cb9d3f9f958b3e07c7f07eb5c19afb",
   "source_sha256": {
     "replica/Sources/Pasto/UI/ReplicaCopiedOSD.swift": "d1b58b05ef6c37302cf6d6c1e0056ee0af55035422071d4c53ebe1583c84883d"
   },
   "build_succeeded": true,
   "build_command": "bash replica/scripts/build-app.sh",
-  "compiled_app_binary_sha256": "0357ba6a42a608c8746c59654ece36c4847a2566601f5bd187f83f4e7e4da6e5",
+  "compiled_app_binary_sha256": "c6ebd121b3cb9b31f2d4d3f11e543fe92d6557791b1117d311549d61c3a17562",
   "compiled_product": "Pasto",
   "functional_regression_executed": false,
   "equivalence_verified": false,
@@ -17,7 +17,7 @@
   "implementation_origin": "newly_migrated",
   "source_review": "192文件精确可逆改名证明及原证据不变守卫通过；菜单/产品/资源路径/错误域和临时前缀例外已逐文件审阅。保持本地址已有有限契约，新模块build76编译及当前源码摘要绑定；详见reports/replica/pasto-brand-build76.json。不将本轮静态检查称为差分运行或完整父功能等价。",
   "rename_audit": "reports/replica/pasto-brand-build76.json",
-  "build_snapshot": "reports/replica/dev51-crash-static-build77.json",
+  "build_snapshot": "reports/replica/dev52-static-build78.json",
   "original_pseudocode": {
     "path": "decompiled/Paste/part-0177.c",
     "line": 328
@@ -29,9 +29,9 @@
     "sha256": "1795d1f45b0046be0738c8e1ca5182f5943bc7a9aa7e2828e6874e58bdcf0a53"
   },
   "compiled_provenance_refresh": {
-    "review": "全部既有实现引用的完整文件SHA与前次静态证据一致，声明符号、逐地址原文摘要与原二进制绑定经validate_review校验；只重绑本次成功编译来源，不声明旧机器边界仍是当前地址，不运行差分或功能回归。",
+    "review": "已核对完整实现引用源码摘要未变化、符号及原地址绑定；仅刷新本次静态编译来源。",
     "source_unchanged": true,
-    "previous_compiled_app_binary_sha256": "abc3c0ed6ceece4e50ecc84fd174d2bd436794202fce166f7a709e96bbbde006",
+    "previous_compiled_app_binary_sha256": "0357ba6a42a608c8746c59654ece36c4847a2566601f5bd187f83f4e7e4da6e5",
     "current_compiled_boundary_verified": false,
     "functional_tests_executed": false
   }

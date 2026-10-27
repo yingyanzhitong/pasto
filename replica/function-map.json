@@ -23764,21 +23764,35 @@
       }
     },
     "Paste:0x1003e2f54": {
-      "state": "partial",
-      "contract": "原 MultipleDocuments 名称图像，center/scaleProportionallyDown，160×160；既有内容复用。",
+      "state": "migrated",
+      "contract": "懒缓存已有 NSImageView 时返回同一对象；否则分配视图、设置 center 与 scaleProportionallyDown，按 MultipleDocuments 名称取共享 NSImage，非空时直接设置 160×160，设置 image 后缓存并返回视图。",
       "implementations": [
         {
           "path": "replica/Sources/Pasto/UI/ReplicaFilePreviewContent.swift",
-          "symbol": "init(state:"
+          "symbol": "func f_1003e2f54()"
         }
       ],
       "implementation_origin": "newly_migrated",
-      "review": "原 REA 伪码及指定 arm64 调用链静态核对；真实 files factory 消费。最终 build25 统一 release 编译通过，124 输入 SHA 构建前后一致；本批绑定冻结源摘要。未执行产品、功能、单测、原版动态、UI 或 MCP 测试；完整父缺口继续 partial。",
-      "remaining": "原 lazy getter/缓存身份未完整，副本复制共享 NSImage 后设大小；不把 eager 初始化计为原 getter 完整。",
-      "original_evidence": {
-        "path": "decompiled/Paste/part-0309.c",
-        "line": 880,
-        "fragment_sha256": "36bab99c823fdcfc5f811b6025b79676e4b52e77cfe31f5ed6c6c8d8cd1dbf78"
+      "review": "原 224 字节 arm64 全体与伪码逐段对照；build78 的实际属性 getter 312 字节、nil/缓存两分支和构造器真实调用点已复核。仅该局部 getter 的静态迁移，完整父视图和 ABI/运行等价仍未验证。",
+      "remaining": "全部范围内迁移完成后执行统一功能回归；完整父视图和原类 ABI 不包括在此有限契约中。",
+      "migration_evidence": "reports/function-migration/Paste-0x1003e2f54.json",
+      "historical_partial_review": {
+        "state": "partial",
+        "contract": "原 MultipleDocuments 名称图像，center/scaleProportionallyDown，160×160；既有内容复用。",
+        "implementations": [
+          {
+            "path": "replica/Sources/Pasto/UI/ReplicaFilePreviewContent.swift",
+            "symbol": "init(state:"
+          }
+        ],
+        "implementation_origin": "newly_migrated",
+        "review": "原 REA 伪码及指定 arm64 调用链静态核对；真实 files factory 消费。最终 build25 统一 release 编译通过，124 输入 SHA 构建前后一致；本批绑定冻结源摘要。未执行产品、功能、单测、原版动态、UI 或 MCP 测试；完整父缺口继续 partial。",
+        "remaining": "原 lazy getter/缓存身份未完整，副本复制共享 NSImage 后设大小；不把 eager 初始化计为原 getter 完整。",
+        "original_evidence": {
+          "path": "decompiled/Paste/part-0309.c",
+          "line": 880,
+          "fragment_sha256": "36bab99c823fdcfc5f811b6025b79676e4b52e77cfe31f5ed6c6c8d8cd1dbf78"
+        }
       }
     },
     "Paste:0x1003e31a4": {
@@ -30133,6 +30147,604 @@
       ],
       "compiled_review": "reports/replica/unavailable-content-static-audit.json",
       "remaining": "有限原生视图已接，原整个factory/对象/DI/actor/动画、实际shortcut功能及运行像素仍partial，不以本次编译扩大完成范围。"
+    },
+    "Paste:0x100bf4f2c": {
+      "state": "migrated",
+      "contract": "arm64 纯转发：ADRP/LDR 从导入指针槽读取目标并 BR x16；不修改参数寄存器、栈或返回地址。SDK 内部实现不计入此契约。",
+      "sdk_implementation": {
+        "report": "reports/function-migration/sdk-import-reuse.json",
+        "entry_key": "Paste:0x100bf4f2c",
+        "symbol": "_$s12CoreGraphics14CGPathFillRuleOMa"
+      },
+      "implementation_origin": "existing_sdk_reused",
+      "review": "逐地址核对原始和当前编译产物的12字节转发体、符号、dylib、弱导入、ABI和零偏移绑定；仅记录系统入口复用。",
+      "remaining": "系统版本与调用上下文留待全部范围完成后的统一功能回归。",
+      "migration_evidence": "reports/function-migration/Paste-0x100bf4f2c.json"
+    },
+    "Paste:0x100bf5cc4": {
+      "state": "migrated",
+      "contract": "arm64 纯转发：ADRP/LDR 从导入指针槽读取目标并 BR x16；不修改参数寄存器、栈或返回地址。SDK 内部实现不计入此契约。",
+      "sdk_implementation": {
+        "report": "reports/function-migration/sdk-import-reuse.json",
+        "entry_key": "Paste:0x100bf5cc4",
+        "symbol": "_$s7SwiftUI12ViewModifierPAAE05_makeC08modifier6inputs4bodyAA01_C7OutputsVAA11_GraphValueVyxG_AA01_C6InputsVAiA01_J0V_ANtctFZ"
+      },
+      "implementation_origin": "existing_sdk_reused",
+      "review": "逐地址核对原始和当前编译产物的12字节转发体、符号、dylib、弱导入、ABI和零偏移绑定；仅记录系统入口复用。",
+      "remaining": "系统版本与调用上下文留待全部范围完成后的统一功能回归。",
+      "migration_evidence": "reports/function-migration/Paste-0x100bf5cc4.json"
+    },
+    "Paste:0x100bf5cd0": {
+      "state": "migrated",
+      "contract": "arm64 纯转发：ADRP/LDR 从导入指针槽读取目标并 BR x16；不修改参数寄存器、栈或返回地址。SDK 内部实现不计入此契约。",
+      "sdk_implementation": {
+        "report": "reports/function-migration/sdk-import-reuse.json",
+        "entry_key": "Paste:0x100bf5cd0",
+        "symbol": "_$s7SwiftUI12ViewModifierPAAE05_makeC4List8modifier6inputs4bodyAA01_cF7OutputsVAA11_GraphValueVyxG_AA01_cF6InputsVAiA01_K0V_ANtctFZ"
+      },
+      "implementation_origin": "existing_sdk_reused",
+      "review": "逐地址核对原始和当前编译产物的12字节转发体、符号、dylib、弱导入、ABI和零偏移绑定；仅记录系统入口复用。",
+      "remaining": "系统版本与调用上下文留待全部范围完成后的统一功能回归。",
+      "migration_evidence": "reports/function-migration/Paste-0x100bf5cd0.json"
+    },
+    "Paste:0x100bf5cdc": {
+      "state": "migrated",
+      "contract": "arm64 纯转发：ADRP/LDR 从导入指针槽读取目标并 BR x16；不修改参数寄存器、栈或返回地址。SDK 内部实现不计入此契约。",
+      "sdk_implementation": {
+        "report": "reports/function-migration/sdk-import-reuse.json",
+        "entry_key": "Paste:0x100bf5cdc",
+        "symbol": "_$s7SwiftUI12ViewModifierPAAE14_viewListCount6inputs4bodySiSgAA01_cfG6InputsV_AgIXEtFZ"
+      },
+      "implementation_origin": "existing_sdk_reused",
+      "review": "逐地址核对原始和当前编译产物的12字节转发体、符号、dylib、弱导入、ABI和零偏移绑定；仅记录系统入口复用。",
+      "remaining": "系统版本与调用上下文留待全部范围完成后的统一功能回归。",
+      "migration_evidence": "reports/function-migration/Paste-0x100bf5cdc.json"
+    },
+    "Paste:0x100bf6c60": {
+      "state": "migrated",
+      "contract": "arm64 纯转发：ADRP/LDR 从导入指针槽读取目标并 BR x16；不修改参数寄存器、栈或返回地址。SDK 内部实现不计入此契约。",
+      "sdk_implementation": {
+        "report": "reports/function-migration/sdk-import-reuse.json",
+        "entry_key": "Paste:0x100bf6c60",
+        "symbol": "_$s7SwiftUI7AnyViewVyACxcAA0D0RzlufC"
+      },
+      "implementation_origin": "existing_sdk_reused",
+      "review": "逐地址核对原始和当前编译产物的12字节转发体、符号、dylib、弱导入、ABI和零偏移绑定；仅记录系统入口复用。",
+      "remaining": "系统版本与调用上下文留待全部范围完成后的统一功能回归。",
+      "migration_evidence": "reports/function-migration/Paste-0x100bf6c60.json"
+    },
+    "Paste:0x100bf7d04": {
+      "state": "migrated",
+      "contract": "arm64 纯转发：ADRP/LDR 从导入指针槽读取目标并 BR x16；不修改参数寄存器、栈或返回地址。SDK 内部实现不计入此契约。",
+      "sdk_implementation": {
+        "report": "reports/function-migration/sdk-import-reuse.json",
+        "entry_key": "Paste:0x100bf7d04",
+        "symbol": "_$sSS14removeSubrangeyySnySS5IndexVGF"
+      },
+      "implementation_origin": "existing_sdk_reused",
+      "review": "逐地址核对原始和当前编译产物的12字节转发体、符号、dylib、弱导入、ABI和零偏移绑定；仅记录系统入口复用。",
+      "remaining": "系统版本与调用上下文留待全部范围完成后的统一功能回归。",
+      "migration_evidence": "reports/function-migration/Paste-0x100bf7d04.json"
+    },
+    "Paste:0x100bf8a3c": {
+      "state": "migrated",
+      "contract": "arm64 纯转发：ADRP/LDR 从导入指针槽读取目标并 BR x16；不修改参数寄存器、栈或返回地址。SDK 内部实现不计入此契约。",
+      "sdk_implementation": {
+        "report": "reports/function-migration/sdk-import-reuse.json",
+        "entry_key": "Paste:0x100bf8a3c",
+        "symbol": "_$sSo10CGColorRefa12CoreGraphicsE10componentsSayAC7CGFloatVGSgvg"
+      },
+      "implementation_origin": "existing_sdk_reused",
+      "review": "逐地址核对原始和当前编译产物的12字节转发体、符号、dylib、弱导入、ABI和零偏移绑定；仅记录系统入口复用。",
+      "remaining": "系统版本与调用上下文留待全部范围完成后的统一功能回归。",
+      "migration_evidence": "reports/function-migration/Paste-0x100bf8a3c.json"
+    },
+    "Paste:0x100bf8b38": {
+      "state": "migrated",
+      "contract": "arm64 纯转发：ADRP/LDR 从导入指针槽读取目标并 BR x16；不修改参数寄存器、栈或返回地址。SDK 内部实现不计入此契约。",
+      "sdk_implementation": {
+        "report": "reports/function-migration/sdk-import-reuse.json",
+        "entry_key": "Paste:0x100bf8b38",
+        "symbol": "_$sSo12CGContextRefa12CoreGraphicsE8fillPath5usingyAC14CGPathFillRuleO_tF"
+      },
+      "implementation_origin": "existing_sdk_reused",
+      "review": "逐地址核对原始和当前编译产物的12字节转发体、符号、dylib、弱导入、ABI和零偏移绑定；仅记录系统入口复用。",
+      "remaining": "系统版本与调用上下文留待全部范围完成后的统一功能回归。",
+      "migration_evidence": "reports/function-migration/Paste-0x100bf8b38.json"
+    },
+    "Paste:0x100bf8d30": {
+      "state": "migrated",
+      "contract": "arm64 纯转发：ADRP/LDR 从导入指针槽读取目标并 BR x16；不修改参数寄存器、栈或返回地址。SDK 内部实现不计入此契约。",
+      "sdk_implementation": {
+        "report": "reports/function-migration/sdk-import-reuse.json",
+        "entry_key": "Paste:0x100bf8d30",
+        "symbol": "_$sSo18NSAttributedStringC10FoundationEyAbC010AttributedB0VcfC"
+      },
+      "implementation_origin": "existing_sdk_reused",
+      "review": "逐地址核对原始和当前编译产物的12字节转发体、符号、dylib、弱导入、ABI和零偏移绑定；仅记录系统入口复用。",
+      "remaining": "系统版本与调用上下文留待全部范围完成后的统一功能回归。",
+      "migration_evidence": "reports/function-migration/Paste-0x100bf8d30.json"
+    },
+    "Paste:0x100bf90e4": {
+      "state": "migrated",
+      "contract": "arm64 纯转发：ADRP/LDR 从导入指针槽读取目标并 BR x16；不修改参数寄存器、栈或返回地址。SDK 内部实现不计入此契约。",
+      "sdk_implementation": {
+        "report": "reports/function-migration/sdk-import-reuse.json",
+        "entry_key": "Paste:0x100bf90e4",
+        "symbol": "_$sSo9CGPathRefa12CoreGraphicsE11subtracting_5usingA2B_AC0A8FillRuleOtF"
+      },
+      "implementation_origin": "existing_sdk_reused",
+      "review": "逐地址核对原始和当前编译产物的12字节转发体、符号、dylib、弱导入、ABI和零偏移绑定；仅记录系统入口复用。",
+      "remaining": "系统版本与调用上下文留待全部范围完成后的统一功能回归。",
+      "migration_evidence": "reports/function-migration/Paste-0x100bf90e4.json"
+    },
+    "Paste:0x100bfaba8": {
+      "state": "migrated",
+      "contract": "arm64 纯转发：ADRP/LDR 从导入指针槽读取目标并 BR x16；不修改参数寄存器、栈或返回地址。SDK 内部实现不计入此契约。",
+      "sdk_implementation": {
+        "report": "reports/function-migration/sdk-import-reuse.json",
+        "entry_key": "Paste:0x100bfaba8",
+        "symbol": "_CATransform3DMakeRotation"
+      },
+      "implementation_origin": "existing_sdk_reused",
+      "review": "逐地址核对原始和当前编译产物的12字节转发体、符号、dylib、弱导入、ABI和零偏移绑定；仅记录系统入口复用。",
+      "remaining": "系统版本与调用上下文留待全部范围完成后的统一功能回归。",
+      "migration_evidence": "reports/function-migration/Paste-0x100bfaba8.json"
+    },
+    "Paste:0x100bfacec": {
+      "state": "migrated",
+      "contract": "arm64 纯转发：ADRP/LDR 从导入指针槽读取目标并 BR x16；不修改参数寄存器、栈或返回地址。SDK 内部实现不计入此契约。",
+      "sdk_implementation": {
+        "report": "reports/function-migration/sdk-import-reuse.json",
+        "entry_key": "Paste:0x100bfacec",
+        "symbol": "_CGColorCreate"
+      },
+      "implementation_origin": "existing_sdk_reused",
+      "review": "逐地址核对原始和当前编译产物的12字节转发体、符号、dylib、弱导入、ABI和零偏移绑定；仅记录系统入口复用。",
+      "remaining": "系统版本与调用上下文留待全部范围完成后的统一功能回归。",
+      "migration_evidence": "reports/function-migration/Paste-0x100bfacec.json"
+    },
+    "Paste:0x100bfacf8": {
+      "state": "migrated",
+      "contract": "arm64 纯转发：ADRP/LDR 从导入指针槽读取目标并 BR x16；不修改参数寄存器、栈或返回地址。SDK 内部实现不计入此契约。",
+      "sdk_implementation": {
+        "report": "reports/function-migration/sdk-import-reuse.json",
+        "entry_key": "Paste:0x100bfacf8",
+        "symbol": "_CGColorCreateCopyByMatchingToColorSpace"
+      },
+      "implementation_origin": "existing_sdk_reused",
+      "review": "逐地址核对原始和当前编译产物的12字节转发体、符号、dylib、弱导入、ABI和零偏移绑定；仅记录系统入口复用。",
+      "remaining": "系统版本与调用上下文留待全部范围完成后的统一功能回归。",
+      "migration_evidence": "reports/function-migration/Paste-0x100bfacf8.json"
+    },
+    "Paste:0x100bfad10": {
+      "state": "migrated",
+      "contract": "arm64 纯转发：ADRP/LDR 从导入指针槽读取目标并 BR x16；不修改参数寄存器、栈或返回地址。SDK 内部实现不计入此契约。",
+      "sdk_implementation": {
+        "report": "reports/function-migration/sdk-import-reuse.json",
+        "entry_key": "Paste:0x100bfad10",
+        "symbol": "_CGColorSpaceCreateWithName"
+      },
+      "implementation_origin": "existing_sdk_reused",
+      "review": "逐地址核对原始和当前编译产物的12字节转发体、符号、dylib、弱导入、ABI和零偏移绑定；仅记录系统入口复用。",
+      "remaining": "系统版本与调用上下文留待全部范围完成后的统一功能回归。",
+      "migration_evidence": "reports/function-migration/Paste-0x100bfad10.json"
+    },
+    "Paste:0x100bfad1c": {
+      "state": "migrated",
+      "contract": "arm64 纯转发：ADRP/LDR 从导入指针槽读取目标并 BR x16；不修改参数寄存器、栈或返回地址。SDK 内部实现不计入此契约。",
+      "sdk_implementation": {
+        "report": "reports/function-migration/sdk-import-reuse.json",
+        "entry_key": "Paste:0x100bfad1c",
+        "symbol": "_CGContextAddPath"
+      },
+      "implementation_origin": "existing_sdk_reused",
+      "review": "逐地址核对原始和当前编译产物的12字节转发体、符号、dylib、弱导入、ABI和零偏移绑定；仅记录系统入口复用。",
+      "remaining": "系统版本与调用上下文留待全部范围完成后的统一功能回归。",
+      "migration_evidence": "reports/function-migration/Paste-0x100bfad1c.json"
+    },
+    "Paste:0x100bfad40": {
+      "state": "migrated",
+      "contract": "arm64 纯转发：ADRP/LDR 从导入指针槽读取目标并 BR x16；不修改参数寄存器、栈或返回地址。SDK 内部实现不计入此契约。",
+      "sdk_implementation": {
+        "report": "reports/function-migration/sdk-import-reuse.json",
+        "entry_key": "Paste:0x100bfad40",
+        "symbol": "_CGContextRestoreGState"
+      },
+      "implementation_origin": "existing_sdk_reused",
+      "review": "逐地址核对原始和当前编译产物的12字节转发体、符号、dylib、弱导入、ABI和零偏移绑定；仅记录系统入口复用。",
+      "remaining": "系统版本与调用上下文留待全部范围完成后的统一功能回归。",
+      "migration_evidence": "reports/function-migration/Paste-0x100bfad40.json"
+    },
+    "Paste:0x100bfad4c": {
+      "state": "migrated",
+      "contract": "arm64 纯转发：ADRP/LDR 从导入指针槽读取目标并 BR x16；不修改参数寄存器、栈或返回地址。SDK 内部实现不计入此契约。",
+      "sdk_implementation": {
+        "report": "reports/function-migration/sdk-import-reuse.json",
+        "entry_key": "Paste:0x100bfad4c",
+        "symbol": "_CGContextSaveGState"
+      },
+      "implementation_origin": "existing_sdk_reused",
+      "review": "逐地址核对原始和当前编译产物的12字节转发体、符号、dylib、弱导入、ABI和零偏移绑定；仅记录系统入口复用。",
+      "remaining": "系统版本与调用上下文留待全部范围完成后的统一功能回归。",
+      "migration_evidence": "reports/function-migration/Paste-0x100bfad4c.json"
+    },
+    "Paste:0x100bfad58": {
+      "state": "migrated",
+      "contract": "arm64 纯转发：ADRP/LDR 从导入指针槽读取目标并 BR x16；不修改参数寄存器、栈或返回地址。SDK 内部实现不计入此契约。",
+      "sdk_implementation": {
+        "report": "reports/function-migration/sdk-import-reuse.json",
+        "entry_key": "Paste:0x100bfad58",
+        "symbol": "_CGContextSetAllowsAntialiasing"
+      },
+      "implementation_origin": "existing_sdk_reused",
+      "review": "逐地址核对原始和当前编译产物的12字节转发体、符号、dylib、弱导入、ABI和零偏移绑定；仅记录系统入口复用。",
+      "remaining": "系统版本与调用上下文留待全部范围完成后的统一功能回归。",
+      "migration_evidence": "reports/function-migration/Paste-0x100bfad58.json"
+    },
+    "Paste:0x100bfad64": {
+      "state": "migrated",
+      "contract": "arm64 纯转发：ADRP/LDR 从导入指针槽读取目标并 BR x16；不修改参数寄存器、栈或返回地址。SDK 内部实现不计入此契约。",
+      "sdk_implementation": {
+        "report": "reports/function-migration/sdk-import-reuse.json",
+        "entry_key": "Paste:0x100bfad64",
+        "symbol": "_CGContextSetFillColorWithColor"
+      },
+      "implementation_origin": "existing_sdk_reused",
+      "review": "逐地址核对原始和当前编译产物的12字节转发体、符号、dylib、弱导入、ABI和零偏移绑定；仅记录系统入口复用。",
+      "remaining": "系统版本与调用上下文留待全部范围完成后的统一功能回归。",
+      "migration_evidence": "reports/function-migration/Paste-0x100bfad64.json"
+    },
+    "Paste:0x100bfad7c": {
+      "state": "migrated",
+      "contract": "arm64 纯转发：ADRP/LDR 从导入指针槽读取目标并 BR x16；不修改参数寄存器、栈或返回地址。SDK 内部实现不计入此契约。",
+      "sdk_implementation": {
+        "report": "reports/function-migration/sdk-import-reuse.json",
+        "entry_key": "Paste:0x100bfad7c",
+        "symbol": "_CGContextSetLineWidth"
+      },
+      "implementation_origin": "existing_sdk_reused",
+      "review": "逐地址核对原始和当前编译产物的12字节转发体、符号、dylib、弱导入、ABI和零偏移绑定；仅记录系统入口复用。",
+      "remaining": "系统版本与调用上下文留待全部范围完成后的统一功能回归。",
+      "migration_evidence": "reports/function-migration/Paste-0x100bfad7c.json"
+    },
+    "Paste:0x100bfad88": {
+      "state": "migrated",
+      "contract": "arm64 纯转发：ADRP/LDR 从导入指针槽读取目标并 BR x16；不修改参数寄存器、栈或返回地址。SDK 内部实现不计入此契约。",
+      "sdk_implementation": {
+        "report": "reports/function-migration/sdk-import-reuse.json",
+        "entry_key": "Paste:0x100bfad88",
+        "symbol": "_CGContextSetShouldAntialias"
+      },
+      "implementation_origin": "existing_sdk_reused",
+      "review": "逐地址核对原始和当前编译产物的12字节转发体、符号、dylib、弱导入、ABI和零偏移绑定；仅记录系统入口复用。",
+      "remaining": "系统版本与调用上下文留待全部范围完成后的统一功能回归。",
+      "migration_evidence": "reports/function-migration/Paste-0x100bfad88.json"
+    },
+    "Paste:0x100bfad94": {
+      "state": "migrated",
+      "contract": "arm64 纯转发：ADRP/LDR 从导入指针槽读取目标并 BR x16；不修改参数寄存器、栈或返回地址。SDK 内部实现不计入此契约。",
+      "sdk_implementation": {
+        "report": "reports/function-migration/sdk-import-reuse.json",
+        "entry_key": "Paste:0x100bfad94",
+        "symbol": "_CGContextSetStrokeColorWithColor"
+      },
+      "implementation_origin": "existing_sdk_reused",
+      "review": "逐地址核对原始和当前编译产物的12字节转发体、符号、dylib、弱导入、ABI和零偏移绑定；仅记录系统入口复用。",
+      "remaining": "系统版本与调用上下文留待全部范围完成后的统一功能回归。",
+      "migration_evidence": "reports/function-migration/Paste-0x100bfad94.json"
+    },
+    "Paste:0x100bfada0": {
+      "state": "migrated",
+      "contract": "arm64 纯转发：ADRP/LDR 从导入指针槽读取目标并 BR x16；不修改参数寄存器、栈或返回地址。SDK 内部实现不计入此契约。",
+      "sdk_implementation": {
+        "report": "reports/function-migration/sdk-import-reuse.json",
+        "entry_key": "Paste:0x100bfada0",
+        "symbol": "_CGContextStrokePath"
+      },
+      "implementation_origin": "existing_sdk_reused",
+      "review": "逐地址核对原始和当前编译产物的12字节转发体、符号、dylib、弱导入、ABI和零偏移绑定；仅记录系统入口复用。",
+      "remaining": "系统版本与调用上下文留待全部范围完成后的统一功能回归。",
+      "migration_evidence": "reports/function-migration/Paste-0x100bfada0.json"
+    },
+    "Paste:0x100bfadb8": {
+      "state": "migrated",
+      "contract": "arm64 纯转发：ADRP/LDR 从导入指针槽读取目标并 BR x16；不修改参数寄存器、栈或返回地址。SDK 内部实现不计入此契约。",
+      "sdk_implementation": {
+        "report": "reports/function-migration/sdk-import-reuse.json",
+        "entry_key": "Paste:0x100bfadb8",
+        "symbol": "_CGEventPost"
+      },
+      "implementation_origin": "existing_sdk_reused",
+      "review": "逐地址核对原始和当前编译产物的12字节转发体、符号、dylib、弱导入、ABI和零偏移绑定；仅记录系统入口复用。",
+      "remaining": "系统版本与调用上下文留待全部范围完成后的统一功能回归。",
+      "migration_evidence": "reports/function-migration/Paste-0x100bfadb8.json"
+    },
+    "Paste:0x100bfadd0": {
+      "state": "migrated",
+      "contract": "arm64 纯转发：ADRP/LDR 从导入指针槽读取目标并 BR x16；不修改参数寄存器、栈或返回地址。SDK 内部实现不计入此契约。",
+      "sdk_implementation": {
+        "report": "reports/function-migration/sdk-import-reuse.json",
+        "entry_key": "Paste:0x100bfadd0",
+        "symbol": "_CGEventSetIntegerValueField"
+      },
+      "implementation_origin": "existing_sdk_reused",
+      "review": "逐地址核对原始和当前编译产物的12字节转发体、符号、dylib、弱导入、ABI和零偏移绑定；仅记录系统入口复用。",
+      "remaining": "系统版本与调用上下文留待全部范围完成后的统一功能回归。",
+      "migration_evidence": "reports/function-migration/Paste-0x100bfadd0.json"
+    },
+    "Paste:0x100bfae60": {
+      "state": "migrated",
+      "contract": "arm64 纯转发：ADRP/LDR 从导入指针槽读取目标并 BR x16；不修改参数寄存器、栈或返回地址。SDK 内部实现不计入此契约。",
+      "sdk_implementation": {
+        "report": "reports/function-migration/sdk-import-reuse.json",
+        "entry_key": "Paste:0x100bfae60",
+        "symbol": "_CGPathCreateWithEllipseInRect"
+      },
+      "implementation_origin": "existing_sdk_reused",
+      "review": "逐地址核对原始和当前编译产物的12字节转发体、符号、dylib、弱导入、ABI和零偏移绑定；仅记录系统入口复用。",
+      "remaining": "系统版本与调用上下文留待全部范围完成后的统一功能回归。",
+      "migration_evidence": "reports/function-migration/Paste-0x100bfae60.json"
+    },
+    "Paste:0x100bfaea8": {
+      "state": "migrated",
+      "contract": "arm64 纯转发：ADRP/LDR 从导入指针槽读取目标并 BR x16；不修改参数寄存器、栈或返回地址。SDK 内部实现不计入此契约。",
+      "sdk_implementation": {
+        "report": "reports/function-migration/sdk-import-reuse.json",
+        "entry_key": "Paste:0x100bfaea8",
+        "symbol": "_CGRectGetMidX"
+      },
+      "implementation_origin": "existing_sdk_reused",
+      "review": "逐地址核对原始和当前编译产物的12字节转发体、符号、dylib、弱导入、ABI和零偏移绑定；仅记录系统入口复用。",
+      "remaining": "系统版本与调用上下文留待全部范围完成后的统一功能回归。",
+      "migration_evidence": "reports/function-migration/Paste-0x100bfaea8.json"
+    },
+    "Paste:0x100bfaeb4": {
+      "state": "migrated",
+      "contract": "arm64 纯转发：ADRP/LDR 从导入指针槽读取目标并 BR x16；不修改参数寄存器、栈或返回地址。SDK 内部实现不计入此契约。",
+      "sdk_implementation": {
+        "report": "reports/function-migration/sdk-import-reuse.json",
+        "entry_key": "Paste:0x100bfaeb4",
+        "symbol": "_CGRectGetMidY"
+      },
+      "implementation_origin": "existing_sdk_reused",
+      "review": "逐地址核对原始和当前编译产物的12字节转发体、符号、dylib、弱导入、ABI和零偏移绑定；仅记录系统入口复用。",
+      "remaining": "系统版本与调用上下文留待全部范围完成后的统一功能回归。",
+      "migration_evidence": "reports/function-migration/Paste-0x100bfaeb4.json"
+    },
+    "Paste:0x100bfaee4": {
+      "state": "migrated",
+      "contract": "arm64 纯转发：ADRP/LDR 从导入指针槽读取目标并 BR x16；不修改参数寄存器、栈或返回地址。SDK 内部实现不计入此契约。",
+      "sdk_implementation": {
+        "report": "reports/function-migration/sdk-import-reuse.json",
+        "entry_key": "Paste:0x100bfaee4",
+        "symbol": "_CGRectInset"
+      },
+      "implementation_origin": "existing_sdk_reused",
+      "review": "逐地址核对原始和当前编译产物的12字节转发体、符号、dylib、弱导入、ABI和零偏移绑定；仅记录系统入口复用。",
+      "remaining": "系统版本与调用上下文留待全部范围完成后的统一功能回归。",
+      "migration_evidence": "reports/function-migration/Paste-0x100bfaee4.json"
+    },
+    "Paste:0x100bfaf08": {
+      "state": "migrated",
+      "contract": "arm64 纯转发：ADRP/LDR 从导入指针槽读取目标并 BR x16；不修改参数寄存器、栈或返回地址。SDK 内部实现不计入此契约。",
+      "sdk_implementation": {
+        "report": "reports/function-migration/sdk-import-reuse.json",
+        "entry_key": "Paste:0x100bfaf08",
+        "symbol": "_CGRectIsEmpty"
+      },
+      "implementation_origin": "existing_sdk_reused",
+      "review": "逐地址核对原始和当前编译产物的12字节转发体、符号、dylib、弱导入、ABI和零偏移绑定；仅记录系统入口复用。",
+      "remaining": "系统版本与调用上下文留待全部范围完成后的统一功能回归。",
+      "migration_evidence": "reports/function-migration/Paste-0x100bfaf08.json"
+    },
+    "Paste:0x100bfb028": {
+      "state": "migrated",
+      "contract": "arm64 纯转发：ADRP/LDR 从导入指针槽读取目标并 BR x16；不修改参数寄存器、栈或返回地址。SDK 内部实现不计入此契约。",
+      "sdk_implementation": {
+        "report": "reports/function-migration/sdk-import-reuse.json",
+        "entry_key": "Paste:0x100bfb028",
+        "symbol": "_NSClassFromString"
+      },
+      "implementation_origin": "existing_sdk_reused",
+      "review": "逐地址核对原始和当前编译产物的12字节转发体、符号、dylib、弱导入、ABI和零偏移绑定；仅记录系统入口复用。",
+      "remaining": "系统版本与调用上下文留待全部范围完成后的统一功能回归。",
+      "migration_evidence": "reports/function-migration/Paste-0x100bfb028.json"
+    },
+    "Paste:0x100bfb5bc": {
+      "state": "migrated",
+      "contract": "arm64 纯转发：ADRP/LDR 从导入指针槽读取目标并 BR x16；不修改参数寄存器、栈或返回地址。SDK 内部实现不计入此契约。",
+      "sdk_implementation": {
+        "report": "reports/function-migration/sdk-import-reuse.json",
+        "entry_key": "Paste:0x100bfb5bc",
+        "symbol": "__availability_version_check"
+      },
+      "implementation_origin": "existing_sdk_reused",
+      "review": "逐地址核对原始和当前编译产物的12字节转发体、符号、dylib、弱导入、ABI和零偏移绑定；仅记录系统入口复用。",
+      "remaining": "系统版本与调用上下文留待全部范围完成后的统一功能回归。",
+      "migration_evidence": "reports/function-migration/Paste-0x100bfb5bc.json"
+    },
+    "Paste:0x100bfb868": {
+      "state": "migrated",
+      "contract": "arm64 纯转发：ADRP/LDR 从导入指针槽读取目标并 BR x16；不修改参数寄存器、栈或返回地址。SDK 内部实现不计入此契约。",
+      "sdk_implementation": {
+        "report": "reports/function-migration/sdk-import-reuse.json",
+        "entry_key": "Paste:0x100bfb868",
+        "symbol": "_dispatch_once_f"
+      },
+      "implementation_origin": "existing_sdk_reused",
+      "review": "逐地址核对原始和当前编译产物的12字节转发体、符号、dylib、弱导入、ABI和零偏移绑定；仅记录系统入口复用。",
+      "remaining": "系统版本与调用上下文留待全部范围完成后的统一功能回归。",
+      "migration_evidence": "reports/function-migration/Paste-0x100bfb868.json"
+    },
+    "Paste:0x100bfb8ec": {
+      "state": "migrated",
+      "contract": "arm64 纯转发：ADRP/LDR 从导入指针槽读取目标并 BR x16；不修改参数寄存器、栈或返回地址。SDK 内部实现不计入此契约。",
+      "sdk_implementation": {
+        "report": "reports/function-migration/sdk-import-reuse.json",
+        "entry_key": "Paste:0x100bfb8ec",
+        "symbol": "_dlsym"
+      },
+      "implementation_origin": "existing_sdk_reused",
+      "review": "逐地址核对原始和当前编译产物的12字节转发体、符号、dylib、弱导入、ABI和零偏移绑定；仅记录系统入口复用。",
+      "remaining": "系统版本与调用上下文留待全部范围完成后的统一功能回归。",
+      "migration_evidence": "reports/function-migration/Paste-0x100bfb8ec.json"
+    },
+    "Paste:0x100bfb964": {
+      "state": "migrated",
+      "contract": "arm64 纯转发：ADRP/LDR 从导入指针槽读取目标并 BR x16；不修改参数寄存器、栈或返回地址。SDK 内部实现不计入此契约。",
+      "sdk_implementation": {
+        "report": "reports/function-migration/sdk-import-reuse.json",
+        "entry_key": "Paste:0x100bfb964",
+        "symbol": "_fclose"
+      },
+      "implementation_origin": "existing_sdk_reused",
+      "review": "逐地址核对原始和当前编译产物的12字节转发体、符号、dylib、弱导入、ABI和零偏移绑定；仅记录系统入口复用。",
+      "remaining": "系统版本与调用上下文留待全部范围完成后的统一功能回归。",
+      "migration_evidence": "reports/function-migration/Paste-0x100bfb964.json"
+    },
+    "Paste:0x100bfb9d0": {
+      "state": "migrated",
+      "contract": "arm64 纯转发：ADRP/LDR 从导入指针槽读取目标并 BR x16；不修改参数寄存器、栈或返回地址。SDK 内部实现不计入此契约。",
+      "sdk_implementation": {
+        "report": "reports/function-migration/sdk-import-reuse.json",
+        "entry_key": "Paste:0x100bfb9d0",
+        "symbol": "_fopen"
+      },
+      "implementation_origin": "existing_sdk_reused",
+      "review": "逐地址核对原始和当前编译产物的12字节转发体、符号、dylib、弱导入、ABI和零偏移绑定；仅记录系统入口复用。",
+      "remaining": "系统版本与调用上下文留待全部范围完成后的统一功能回归。",
+      "migration_evidence": "reports/function-migration/Paste-0x100bfb9d0.json"
+    },
+    "Paste:0x100bfb9e8": {
+      "state": "migrated",
+      "contract": "arm64 纯转发：ADRP/LDR 从导入指针槽读取目标并 BR x16；不修改参数寄存器、栈或返回地址。SDK 内部实现不计入此契约。",
+      "sdk_implementation": {
+        "report": "reports/function-migration/sdk-import-reuse.json",
+        "entry_key": "Paste:0x100bfb9e8",
+        "symbol": "_fread"
+      },
+      "implementation_origin": "existing_sdk_reused",
+      "review": "逐地址核对原始和当前编译产物的12字节转发体、符号、dylib、弱导入、ABI和零偏移绑定；仅记录系统入口复用。",
+      "remaining": "系统版本与调用上下文留待全部范围完成后的统一功能回归。",
+      "migration_evidence": "reports/function-migration/Paste-0x100bfb9e8.json"
+    },
+    "Paste:0x100bfba24": {
+      "state": "migrated",
+      "contract": "arm64 纯转发：ADRP/LDR 从导入指针槽读取目标并 BR x16；不修改参数寄存器、栈或返回地址。SDK 内部实现不计入此契约。",
+      "sdk_implementation": {
+        "report": "reports/function-migration/sdk-import-reuse.json",
+        "entry_key": "Paste:0x100bfba24",
+        "symbol": "_fseek"
+      },
+      "implementation_origin": "existing_sdk_reused",
+      "review": "逐地址核对原始和当前编译产物的12字节转发体、符号、dylib、弱导入、ABI和零偏移绑定；仅记录系统入口复用。",
+      "remaining": "系统版本与调用上下文留待全部范围完成后的统一功能回归。",
+      "migration_evidence": "reports/function-migration/Paste-0x100bfba24.json"
+    },
+    "Paste:0x100bfba6c": {
+      "state": "migrated",
+      "contract": "arm64 纯转发：ADRP/LDR 从导入指针槽读取目标并 BR x16；不修改参数寄存器、栈或返回地址。SDK 内部实现不计入此契约。",
+      "sdk_implementation": {
+        "report": "reports/function-migration/sdk-import-reuse.json",
+        "entry_key": "Paste:0x100bfba6c",
+        "symbol": "_ftell"
+      },
+      "implementation_origin": "existing_sdk_reused",
+      "review": "逐地址核对原始和当前编译产物的12字节转发体、符号、dylib、弱导入、ABI和零偏移绑定；仅记录系统入口复用。",
+      "remaining": "系统版本与调用上下文留待全部范围完成后的统一功能回归。",
+      "migration_evidence": "reports/function-migration/Paste-0x100bfba6c.json"
+    },
+    "Paste:0x100bfbbd4": {
+      "state": "migrated",
+      "contract": "arm64 纯转发：ADRP/LDR 从导入指针槽读取目标并 BR x16；不修改参数寄存器、栈或返回地址。SDK 内部实现不计入此契约。",
+      "sdk_implementation": {
+        "report": "reports/function-migration/sdk-import-reuse.json",
+        "entry_key": "Paste:0x100bfbbd4",
+        "symbol": "_hypot"
+      },
+      "implementation_origin": "existing_sdk_reused",
+      "review": "逐地址核对原始和当前编译产物的12字节转发体、符号、dylib、弱导入、ABI和零偏移绑定；仅记录系统入口复用。",
+      "remaining": "系统版本与调用上下文留待全部范围完成后的统一功能回归。",
+      "migration_evidence": "reports/function-migration/Paste-0x100bfbbd4.json"
+    },
+    "Paste:0x100bfbe50": {
+      "state": "migrated",
+      "contract": "arm64 纯转发：ADRP/LDR 从导入指针槽读取目标并 BR x16；不修改参数寄存器、栈或返回地址。SDK 内部实现不计入此契约。",
+      "sdk_implementation": {
+        "report": "reports/function-migration/sdk-import-reuse.json",
+        "entry_key": "Paste:0x100bfbe50",
+        "symbol": "_objc_alloc"
+      },
+      "implementation_origin": "existing_sdk_reused",
+      "review": "逐地址核对原始和当前编译产物的12字节转发体、符号、dylib、弱导入、ABI和零偏移绑定；仅记录系统入口复用。",
+      "remaining": "系统版本与调用上下文留待全部范围完成后的统一功能回归。",
+      "migration_evidence": "reports/function-migration/Paste-0x100bfbe50.json"
+    },
+    "Paste:0x100bfbf4c": {
+      "state": "migrated",
+      "contract": "arm64 纯转发：ADRP/LDR 从导入指针槽读取目标并 BR x16；不修改参数寄存器、栈或返回地址。SDK 内部实现不计入此契约。",
+      "sdk_implementation": {
+        "report": "reports/function-migration/sdk-import-reuse.json",
+        "entry_key": "Paste:0x100bfbf4c",
+        "symbol": "_objc_opt_class"
+      },
+      "implementation_origin": "existing_sdk_reused",
+      "review": "逐地址核对原始和当前编译产物的12字节转发体、符号、dylib、弱导入、ABI和零偏移绑定；仅记录系统入口复用。",
+      "remaining": "系统版本与调用上下文留待全部范围完成后的统一功能回归。",
+      "migration_evidence": "reports/function-migration/Paste-0x100bfbf4c.json"
+    },
+    "Paste:0x100bfbfdc": {
+      "state": "migrated",
+      "contract": "arm64 纯转发：ADRP/LDR 从导入指针槽读取目标并 BR x16；不修改参数寄存器、栈或返回地址。SDK 内部实现不计入此契约。",
+      "sdk_implementation": {
+        "report": "reports/function-migration/sdk-import-reuse.json",
+        "entry_key": "Paste:0x100bfbfdc",
+        "symbol": "_objc_storeStrong"
+      },
+      "implementation_origin": "existing_sdk_reused",
+      "review": "逐地址核对原始和当前编译产物的12字节转发体、符号、dylib、弱导入、ABI和零偏移绑定；仅记录系统入口复用。",
+      "remaining": "系统版本与调用上下文留待全部范围完成后的统一功能回归。",
+      "migration_evidence": "reports/function-migration/Paste-0x100bfbfdc.json"
+    },
+    "Paste:0x100bfc330": {
+      "state": "migrated",
+      "contract": "arm64 纯转发：ADRP/LDR 从导入指针槽读取目标并 BR x16；不修改参数寄存器、栈或返回地址。SDK 内部实现不计入此契约。",
+      "sdk_implementation": {
+        "report": "reports/function-migration/sdk-import-reuse.json",
+        "entry_key": "Paste:0x100bfc330",
+        "symbol": "_rewind"
+      },
+      "implementation_origin": "existing_sdk_reused",
+      "review": "逐地址核对原始和当前编译产物的12字节转发体、符号、dylib、弱导入、ABI和零偏移绑定；仅记录系统入口复用。",
+      "remaining": "系统版本与调用上下文留待全部范围完成后的统一功能回归。",
+      "migration_evidence": "reports/function-migration/Paste-0x100bfc330.json"
+    },
+    "Paste:0x100bfc420": {
+      "state": "migrated",
+      "contract": "arm64 纯转发：ADRP/LDR 从导入指针槽读取目标并 BR x16；不修改参数寄存器、栈或返回地址。SDK 内部实现不计入此契约。",
+      "sdk_implementation": {
+        "report": "reports/function-migration/sdk-import-reuse.json",
+        "entry_key": "Paste:0x100bfc420",
+        "symbol": "_sscanf"
+      },
+      "implementation_origin": "existing_sdk_reused",
+      "review": "逐地址核对原始和当前编译产物的12字节转发体、符号、dylib、弱导入、ABI和零偏移绑定；仅记录系统入口复用。",
+      "remaining": "系统版本与调用上下文留待全部范围完成后的统一功能回归。",
+      "migration_evidence": "reports/function-migration/Paste-0x100bfc420.json"
+    },
+    "Paste:0x100bfca2c": {
+      "state": "migrated",
+      "contract": "arm64 纯转发：ADRP/LDR 从导入指针槽读取目标并 BR x16；不修改参数寄存器、栈或返回地址。SDK 内部实现不计入此契约。",
+      "sdk_implementation": {
+        "report": "reports/function-migration/sdk-import-reuse.json",
+        "entry_key": "Paste:0x100bfca2c",
+        "symbol": "_swift_stdlib_random"
+      },
+      "implementation_origin": "existing_sdk_reused",
+      "review": "逐地址核对原始和当前编译产物的12字节转发体、符号、dylib、弱导入、ABI和零偏移绑定；仅记录系统入口复用。",
+      "remaining": "系统版本与调用上下文留待全部范围完成后的统一功能回归。",
+      "migration_evidence": "reports/function-migration/Paste-0x100bfca2c.json"
     }
   }
 }

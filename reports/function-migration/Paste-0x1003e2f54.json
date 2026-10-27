@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "kind": "static_code_migration",
+  "function_id": "Paste:0x1003e2f54",
+  "reviewed_at": "2026-10-27T04:00:55.984489+00:00",
+  "original_binary_sha256": "871f00354fbb1c165d858a98e6d19d6f43cb9d3f9f958b3e07c7f07eb5c19afb",
+  "original_pseudocode": {
+    "path": "decompiled/Paste/part-0309.c",
+    "line": 880
+  },
+  "original_pseudocode_sha256": "9ad09f456b1a4fd56883cca5521d42adb9409aadbc831884fc81d645e8ab055d",
+  "source_sha256": {
+    "replica/Sources/Pasto/UI/ReplicaFilePreviewContent.swift": "7ee7e74605682467d606c7bb7c621364f4f00a742be0a8b789d6b5dd79b9ef9c"
+  },
+  "build_succeeded": true,
+  "build_command": "bash replica/scripts/build-app.sh",
+  "compiled_app_binary_sha256": "c6ebd121b3cb9b31f2d4d3f11e543fe92d6557791b1117d311549d61c3a17562",
+  "compiled_product": "Pasto",
+  "functional_regression_executed": false,
+  "equivalence_verified": false,
+  "implementation_origin": "newly_migrated",
+  "contract": "懒缓存已有 NSImageView 时返回同一对象；否则分配视图、设置 center 与 scaleProportionallyDown，按 MultipleDocuments 名称取共享 NSImage，非空时直接设置 160×160，设置 image 后缓存并返回视图。",
+  "review": "原 224 字节 arm64 全体与伪码逐段对照；build78 的实际属性 getter 312 字节、nil/缓存两分支和构造器真实调用点已复核。仅该局部 getter 的静态迁移，完整父视图和 ABI/运行等价仍未验证。",
+  "original_static_body": {
+    "start": "0x1003e2f54",
+    "end_exclusive": "0x1003e3034",
+    "size": 224,
+    "sha256": "6413cc5883dfe59f3138f73e438ca9b09c43ce9e53515c37b52d10dd1ad81fdb",
+    "bytes_hex": "f657bda9f44f01a9fd7b02a9fd830091085f00b016f544f9806a76f8600000b4f30300aa29000014485d00f0005143f9b663209476822094f30300aa020080d283a42094e00313aa020080d298a42094285600f0087140f9150140f9485d00f0005d43f9e8632094e20315aab8812094fd031daaf3632094f50300aac00000b4880ce8d20001679ee00315aa011ca04ee7aa2094e00313aae20315aa5ca42094e00315aadb632094956a76f8936a36f8e00313aada632094f30300aae00315aad4632094000080d2d5632094e00313aafd7b42a9f44f41a9f657c3a8c0035fd6"
+  },
+  "compiled_boundary": {
+    "start": "0x10008d7bc",
+    "end_exclusive": "0x10008d8f4",
+    "size": 312,
+    "sha256": "b5f37e01ef9c1942fb0a310253252bdd4564d28de403152d7bcffdfef40b8cce",
+    "binary_sha256": "c6ebd121b3cb9b31f2d4d3f11e543fe92d6557791b1117d311549d61c3a17562",
+    "bytes_hex": "f85fbca9f65701a9f44f02a9fd7b03a9fdc30091a80d00d017dd44f9806a77f8600000b4f30300aa3d000014680d00b0001d46f9bdf40494680d009001a141f9c6f40494f30300aa680d009001a545f9020080d2c1f40494680d0090015945f9e00313aa020080d2bcf40494a80c00b008f946f9000140f9a4f00494f50301aa99f00494f60300aae00315aafef40494680d00b000e145f9bcf40494680d009001e146f9e20316aaacf40494fd031daac2f40494f50300aae00316aab6f40494150100b4680d009001e546f9880ce8d20001679ee00315aa0140601e9ff40494680d009001e942f9e00313aae20315aa9af40494e00315aaa7f40494956a77f8936a37f8e00313aaa6f40494f30300aae00315aaa0f40494000080d2a1f40494e00313aafd7b43a9f44f42a9f65741a9f85fc4a8c0035fd6"
+  },
+  "build_snapshot": "reports/replica/dev52-static-build78.json",
+  "regression_policy": "全部范围内迁移完成后统一回归；不宣称完整父视图、类 ABI 或动态等价。"
+}

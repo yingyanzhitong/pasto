@@ -116,6 +116,14 @@ extension ClipboardStore {
     public func capture(pasteboard: NSPasteboard, sourceName: String, sourceBundleID: String?,
                         snapshot: [OriginalPasteboardItem]? = nil, respectMonitoringPolicy: Bool = true,
                         sourceApplication: SourceApplicationRecord? = nil) throws -> UUID? {
+        try captureWithInsertionResult(pasteboard: pasteboard, sourceName: sourceName,
+            sourceBundleID: sourceBundleID, snapshot: snapshot, respectMonitoringPolicy: respectMonitoringPolicy,
+            sourceApplication: sourceApplication)?.id
+    }
+
+    func captureWithInsertionResult(pasteboard: NSPasteboard, sourceName: String, sourceBundleID: String?,
+                                    snapshot: [OriginalPasteboardItem]? = nil, respectMonitoringPolicy: Bool = true,
+                                    sourceApplication: SourceApplicationRecord? = nil) throws -> (id: UUID, isNew: Bool)? {
         let rawItems = snapshot == nil ? pasteboard.pasteboardItems ?? [] : []
         let types = Set(snapshot?.flatMap { $0.f_10037da6c() } ?? rawItems.flatMap { $0.types.map(\.rawValue) })
         if respectMonitoringPolicy {
@@ -190,11 +198,11 @@ extension ClipboardStore {
             else if !types.isDisjoint(with: richTypes) { kind = .richText }
             else { kind = .unknown }
         }
-        let id = try add(ClipboardItem(title: "", kind: kind, plainText: plainText, sourceName: sourceName,
+        let result = try addWithInsertionResult(ClipboardItem(title: "", kind: kind, plainText: plainText, sourceName: sourceName,
                                        sourceBundleID: sourceBundleID, payloads: payloads),
                          sourceApplication: sourceApplication)
-        if kind == .image { startBackgroundTextRecognition(id: id) }
-        return id
+        if kind == .image { startBackgroundTextRecognition(id: result.id) }
+        return result
     }
 
     public func importOriginalPasteboardItems(_ data: Data, sourceName: String) throws -> UUID? {
@@ -502,16 +510,15 @@ public final class ClipboardMonitor: NSObject, OriginalPasteboardCaptureDelegate
                                                       kind: OriginalPasteboardClassification.f_10032362c(items)) != nil else {
             throw OriginalPasteboardItemCreationError.unsupportedContent
         }
-        let identifiers = Set(store.items.map(\.id))
         let app = NSWorkspace.shared.frontmostApplication
-        guard let captured = try store.capture(pasteboard: pasteboard, sourceName: app?.localizedName ?? "未知应用",
+        guard let captured = try store.captureWithInsertionResult(pasteboard: pasteboard, sourceName: app?.localizedName ?? "未知应用",
                                                sourceBundleID: app?.bundleIdentifier, snapshot: items,
                                                respectMonitoringPolicy: false,
                                                sourceApplication: OriginalSourceApplication.snapshot(app)) else {
             throw OriginalPasteboardItemCreationError.unsupportedContent
         }
-        onCapture?(captured)
-        return !identifiers.contains(captured)
+        onCapture?(captured.id)
+        return captured.isNew
     }
 
     private func synchronizePasteboard() {

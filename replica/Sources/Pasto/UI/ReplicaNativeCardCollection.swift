@@ -156,9 +156,24 @@ final class ReplicaNativeCollectionHost: NSView, NSDraggingSource {
         if needsPrimaryReveal, !bounds.isEmpty,
            let index = items.firstIndex(where: { $0.id == lastPrimaryID }) {
             needsPrimaryReveal = false
-            document.scrollToVisible(cardFrame(index))
+            revealPrimaryCard(at: index)
             tileCells()
         }
+    }
+
+    /// The finite horizontal target from f22c9c4; scroll animation remains a separate contract.
+    private func revealPrimaryCard(at index: Int) {
+        let clip = scrollView.contentView
+        var viewport = clip.bounds
+        let card = cardFrame(index)
+        let gap: CGFloat = 24
+        if card.maxX > viewport.maxX {
+            viewport.origin.x = card.minX - ((scrollView.frame.width - (gap + card.width)) - gap * 1.5)
+        } else if card.minX < viewport.minX {
+            viewport.origin.x = card.minX - (gap * 1.5 + gap)
+        }
+        // This document is horizontal only; preserve its existing vertical clip origin.
+        if viewport != clip.bounds { clip.bounds = viewport }
     }
 
     private func cardFrame(_ index: Int) -> NSRect {

@@ -2,7 +2,7 @@
   "schema_version": 1,
   "kind": "static_code_migration",
   "function_id": "Paste-Helper:0x1000019f4",
-  "reviewed_at": "2026-10-26T11:35:29.017720+00:00",
+  "reviewed_at": "2026-10-27T03:59:45.653489+00:00",
   "original_binary_sha256": "fb580e708dc53433f1f2efc7b2d49811361e174cbc752ce351cdf5871977638f",
   "source_sha256": {
     "replica/Sources/PastoHelper/HelperMain.swift": "60d98b18e87390fcc6c8de6a43b75d9505bfd74b822eb9e0fc6dc58bbfd47e12"
@@ -17,7 +17,7 @@
   "implementation_origin": "newly_migrated",
   "source_review": "192文件精确可逆改名证明及原证据不变守卫通过；菜单/产品/资源路径/错误域和临时前缀例外已逐文件审阅。保持本地址已有有限契约，新模块build76编译及当前源码摘要绑定；详见reports/replica/pasto-brand-build76.json。不将本轮静态检查称为差分运行或完整父功能等价。",
   "rename_audit": "reports/replica/pasto-brand-build76.json",
-  "build_snapshot": "reports/replica/dev51-crash-static-build77.json",
+  "build_snapshot": "reports/replica/dev52-static-build78.json",
   "original_pseudocode": {
     "path": "decompiled/Paste-Helper/part-0000.c",
     "line": 204
@@ -29,7 +29,7 @@
     "sha256": "1cebb3fd8bd1437668ab4bd4f4ff3897c2c9f75424082531593ae75a365529bb"
   },
   "compiled_provenance_refresh": {
-    "review": "全部既有实现引用的完整文件SHA与前次静态证据一致，声明符号、逐地址原文摘要与原二进制绑定经validate_review校验；只重绑本次成功编译来源，不声明旧机器边界仍是当前地址，不运行差分或功能回归。",
+    "review": "已核对完整实现引用源码摘要未变化、符号及原地址绑定；仅刷新本次静态编译来源。",
     "source_unchanged": true,
     "previous_compiled_app_binary_sha256": "c8b9aa18ac4d60af5f6b54c405a70b6aec2e43d2c98735b3f3369f732f2d8b0f",
     "current_compiled_boundary_verified": false,
