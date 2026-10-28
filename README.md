@@ -10,7 +10,7 @@ Pasto 面向 **macOS 14+，支持 Intel（x86_64）和 Apple 芯片（arm64）**
 
 [![构建与发布](https://github.com/yingyanzhitong/pasto/actions/workflows/release.yml/badge.svg)](https://github.com/yingyanzhitong/pasto/actions/workflows/release.yml)
 
-[下载 1.0.0](https://github.com/yingyanzhitong/pasto/releases/tag/v1.0.0) · [源码构建](#源码构建) · [参与贡献](CONTRIBUTING.md) · [许可范围](NOTICE.md)
+[官网](https://yingyanzhitong.github.io/pasto/) · [下载 1.0.0](https://github.com/yingyanzhitong/pasto/releases/tag/v1.0.0) · [功能对比](#paste-与-pasto-功能对比) · [源码构建](#源码构建) · [参与贡献](CONTRIBUTING.md) · [许可范围](NOTICE.md)
 
 ## 界面
 
@@ -34,6 +34,27 @@ Pasto 面向 **macOS 14+，支持 Intel（x86_64）和 Apple 芯片（arm64）**
 - 本地 Vision OCR，以及独立的 `pasto-mcp` stdio 服务。
 
 **当前是开发中的独立实现，尚未完成与原版一比一的全面验收。** 上述项目表示已有源码和功能入口，不代表每个交互或边界都已验证。跨应用直接粘贴仍未完成验证，不能保证在所有应用的光标位置正确插入；复制与粘贴问题请附不含隐私的复现步骤。
+
+## Paste 与 Pasto 功能对比
+
+**Pasto 免费、开源，专注 Mac 本地使用。** ✅ 已提供 · ❌ 未提供
+
+| 核心功能 | Paste | Pasto |
+| --- | :---: | :---: |
+| 剪贴板历史与内容预览 | ✅ | ✅ |
+| 搜索与筛选 | ✅ | ✅ |
+| 收藏分组 | ✅ | ✅ |
+| 单条与批量复制、粘贴 | ✅ | ✅ |
+| Stack 顺序粘贴 | ✅ | ✅ |
+| 图片文字识别（OCR） | ✅ | ✅ |
+| 自定义快捷键 | ✅ | ✅ |
+| AI 工具接入（MCP） | ✅ | ✅ |
+| 系统“快捷指令” | ✅ | ❌ |
+| iCloud 同步与手机端 | ✅ | ❌ |
+| 分组共享与协作 | ✅ | ❌ |
+| 联网链接预览 | ✅ | ❌ |
+
+Pasto 另支持[从 Paste 迁移本地分组](replica/README.md#从-paste-迁移分组)。✅ 表示已有实现，完整交互及跨应用粘贴仍待全面验证，详见[功能与验证范围](replica/TESTING.md)。对照基于 Paste 6.6.6 及 Pasto 1.0.0；同步与协作介绍见 [Paste 官网](https://pasteapp.io/)。
 
 ## 下载与使用
 
@@ -100,7 +121,7 @@ Release 页面中的 `Source code (zip)` 和 `Source code (tar.gz)` 是 GitHub �
 
 Pasto 基于 **Paste 6.6.6** 的 REA / Ghidra 静态逆向证据独立重写；反编译伪代码不是可直接编译的原始 Swift 工程。本项目不隶属于或代表 Paste 原厂，不修改原版应用或其授权。
 
-现有原版机器码分析与地址证据来自 **arm64**。Pasto 提供两个架构的独立安装包，不表示已反编译原版 x86_64，也不表示 Intel 与 Apple 芯片上的全功能回归均已通过。
+现有原版机器码分析与地址证据来自 **arm64**。Pasto 提供包含两个架构的单个 Universal DMG，不表示已反编译原版 x86_64，也不表示 Intel 与 Apple 芯片上的全功能回归均已通过。
 
 研究过程见 [逆向研究说明](docs/REVERSE_ENGINEERING.md)；当前证据与剩余差异见 [集中功能核对报告](reports/replica/fast-coverage-audit.md)。二进制地址数量、伪代码导出数量和已登记实现数均不能换算为产品完成百分比；构建、安装和单项操作成功也不等于完整交互验收。
 
