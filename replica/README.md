@@ -19,15 +19,15 @@ bash replica/scripts/build-app.sh
 open 'replica/dist/Pasto.app'
 ```
 
-一次构建并打包 Apple 芯片和 Intel 两个独立 DMG：
+一次构建并打包同时兼容 Apple 芯片和 Intel 的 Universal DMG：
 
 ```sh
 npm run build:dmg
 ```
 
-`npm run build:dmg` 调用 `release-ci.py package` 完成两个架构的构建和打包。只处理已有应用时，可运行 `bash replica/scripts/build-dmg.sh replica/dist/Pasto.app replica/dist/Pasto.dmg` 制作本机安装镜像。`npm run build:icon` 根据独立前景素材和标准画布重新生成应用图标。
+`npm run build:dmg` 调用 `release-ci.py package` 完成两个架构的构建、合并和通用镜像打包。只处理已有应用时，可运行 `bash replica/scripts/build-dmg.sh replica/dist/Pasto.app replica/dist/Pasto.dmg` 制作本机安装镜像。`npm run build:icon` 根据独立前景素材和标准画布重新生成应用图标。
 
-Releases 按芯片分别提供 `Pasto-<版本号>-macos-arm64.dmg` 与 `Pasto-<版本号>-macos-x86_64.dmg`。1.0.0 的 Apple 芯片包为 `Pasto-1.0.0-macos-arm64.dmg`，Intel 包为 `Pasto-1.0.0-macos-x86_64.dmg`；每个包中的主程序、登录项辅助程序和 `pasto-mcp` 均应匹配其目标架构。打开对应 DMG 后，将 `Pasto.app` 拖到 `Applications` 快捷入口，复制完成后从应用程序目录启动，并在 Finder 中推出磁盘映像。Release 另附 `SHA256SUMS.txt` 和 `release-manifest.json`。
+Releases 仅提供一个 `Pasto-<版本号>-macos-universal.dmg`。1.0.0 安装包为 `Pasto-1.0.0-macos-universal.dmg`；其中主程序、登录项辅助程序和 `pasto-mcp` 均包含 arm64 与 x86_64 两种架构，自动适配本机芯片。打开 DMG 后，将 `Pasto.app` 拖到 `Applications` 快捷入口，复制完成后从应用程序目录启动，并在 Finder 中推出磁盘映像。Release 另附 `SHA256SUMS.txt` 和 `release-manifest.json`。
 
 页面上的 `Source code (zip)` / `Source code (tar.gz)` 是 GitHub 自动生成的标签源码链接，不是流程上传的安装附件。
 

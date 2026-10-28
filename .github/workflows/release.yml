@@ -21,6 +21,8 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      - name: Check the universal installer contract
+        run: python3 replica/scripts/test-release-packaging.py
       - id: version
         name: Determine whether the package version changed
         run: python3 replica/scripts/release-plan.py
@@ -71,7 +73,7 @@ jobs:
         run: >-
           python3 replica/scripts/release-ci.py check
           --version "$RELEASE_VERSION" --tag "$RELEASE_TAG" --commit "$RELEASE_COMMIT"
-      - name: Compile, verify, and create separate Apple Silicon and Intel DMGs
+      - name: Compile, verify, and create a universal macOS DMG
         if: steps.existing.outputs.exists != 'true'
         run: >-
           python3 replica/scripts/release-ci.py package

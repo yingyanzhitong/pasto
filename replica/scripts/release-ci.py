@@ -68,7 +68,7 @@ def remote_state(repo, tag, commit):
 
 
 def asset_names(version):
-    return ["Pasto-" + version + "-macos-" + arch + ".dmg" for arch in RELEASE_ARCHITECTURES] + ["SHA256SUMS.txt", "release-manifest.json"]
+    return ["Pasto-" + version + "-macos-universal.dmg", "SHA256SUMS.txt", "release-manifest.json"]
 
 
 def changelog_entry(version):
@@ -121,12 +121,12 @@ def verify_intel(version):
     verify_app(ROOT / "replica/dist/Pasto.app", version, ["x86_64"])
 
 
-def verify_dmg(archive, version, architecture):
+def verify_dmg(archive, version, architectures):
     with tempfile.TemporaryDirectory(prefix="pasto-release-mount-") as temporary:
         mount = Path(temporary)
         run(["hdiutil", "attach", "-readonly", "-nobrowse", "-mountpoint", str(mount), str(archive)])
         try:
-            verify_app(mount / "Pasto.app", version, [architecture])
+            verify_app(mount / "Pasto.app", version, architectures)
             applications = mount / "Applications"
             if not applications.is_symlink() or os.readlink(applications) != "/Applications":
                 raise ValueError("Disk image is missing the Applications shortcut")
@@ -140,20 +140,19 @@ def package(version, tag, commit):
     app = ROOT / "replica/dist/Pasto.app"
     output = ROOT / "replica/dist/release"
     output.mkdir(parents=True, exist_ok=False)
-    archives = []
-    for architecture, name in zip(RELEASE_ARCHITECTURES, asset_names(version)[:2]):
-        run(["bash", "replica/scripts/build-app.sh", "release", architecture])
-        verify_app(app, version, [architecture])
-        archive = output / name
-        run(["bash", "replica/scripts/build-dmg.sh", str(app), str(archive), architecture])
-        verify_dmg(archive, version, architecture)
-        archives.append({"archive": name, "architectures": [architecture], "sha256": sha(archive)})
+    run(["bash", "replica/scripts/build-app.sh", "release", "universal"])
+    verify_app(app, version, RELEASE_ARCHITECTURES)
+    name = asset_names(version)[0]
+    archive = output / name
+    run(["bash", "replica/scripts/build-dmg.sh", str(app), str(archive), "universal"])
+    verify_dmg(archive, version, RELEASE_ARCHITECTURES)
+    archives = [{"archive": name, "architectures": RELEASE_ARCHITECTURES, "sha256": sha(archive)}]
     manifest = {"version": version, "tag": tag, "commit": commit, "archives": archives, "container": "dmg",
                 "codesign_verified": True, "notarized": False,
                 "functional_tests_executed": False, "application_executed": False}
     (output / "release-manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
     (output / "SHA256SUMS.txt").write_text("".join(
-        sha(output / name) + "  " + name + "\n" for name in asset_names(version)[:2] + ["release-manifest.json"]))
+        sha(output / name) + "  " + name + "\n" for name in asset_names(version)[:1] + ["release-manifest.json"]))
 
 
 def publish(repo, version, tag, commit):
@@ -163,31 +162,29 @@ def publish(repo, version, tag, commit):
     output = ROOT / "replica/dist/release"
     names = asset_names(version)
     manifest = json.loads((output / "release-manifest.json").read_text())
-    expected_archives = [{"archive": name, "architectures": [architecture], "sha256": sha(output / name)}
-                         for architecture, name in zip(RELEASE_ARCHITECTURES, names[:2])]
+    expected_archives = [{"archive": names[0], "architectures": RELEASE_ARCHITECTURES, "sha256": sha(output / names[0])}]
     expected_sums = "".join(sha(output / name) + "  " + name + "\n"
-                            for name in names[:2] + ["release-manifest.json"])
+                            for name in names[:1] + ["release-manifest.json"])
     if (manifest.get("commit") != commit or manifest.get("version") != version or manifest.get("tag") != tag
             or manifest.get("container") != "dmg" or manifest.get("archives") != expected_archives
             or manifest.get("codesign_verified") is not True
             or (output / "SHA256SUMS.txt").read_text() != expected_sums):
         raise ValueError("Unverified or stale local release assets")
-    for architecture, name in zip(RELEASE_ARCHITECTURES, names[:2]):
-        verify_dmg(output / name, version, architecture)
+    verify_dmg(output / names[0], version, RELEASE_ARCHITECTURES)
     if not ref:
         api("repos/" + repo + "/git/refs", "--method", "POST", "-f", "ref=refs/tags/" + tag, "-f", "sha=" + commit)
     remote_state(repo, tag, commit)
     notes = output / "notes.md"
     download = "https://github.com/" + repo + "/releases/download/" + tag + "/"
-    notes.write_text("[下载 Apple Silicon 版（arm64）](" + download + names[0] + ")\n\n"
-                     "[下载 Intel 版（x86_64）](" + download + names[1] + ")\n\n"
-                     "Pasto " + version + " · macOS 14+。请选择与芯片对应的独立 DMG。\n\n"
+    notes.write_text("[下载 macOS 通用版（Intel / Apple 芯片）](" + download + names[0] + ")\n\n"
+                     "Pasto " + version + " · macOS 14+。一个 Universal DMG 同时兼容 Intel 与 Apple 芯片。\n\n"
                      "## 更新内容\n\n" + changelog_entry(version) + "\n\n"
                      "## 安装与验证\n\n"
                      "将 Pasto.app 拖入 Applications 即可安装；同时提供 SHA256SUMS.txt 与构建来源清单。\n"
                      "应用采用临时签名，未经 Apple 公证。\n"
                      "本次 Actions 发布任务验证编译、架构、版本、签名及安装镜像，没有在构建节点执行应用或功能回归；本机定向验证范围见上方变更日志。\n"
-                     "本流程仅上传两个 DMG、校验文件及清单；页面中的 Source code (zip/tar.gz) 链接由 GitHub 自动生成，没有主动上传源码包。\n\n"
+                     "主程序、Helper 与 MCP 可执行文件均包含 arm64 和 x86_64 架构。\n"
+                     "本流程仅上传一个 DMG、校验文件及清单；页面中的 Source code (zip/tar.gz) 链接由 GitHub 自动生成，没有主动上传源码包。\n\n"
                      "Commit: " + commit + "\n")
     args = ["gh", "release", "create", tag, *[str(output / name) for name in names],
             "--repo", repo, "--draft", "--verify-tag", "--target", commit,

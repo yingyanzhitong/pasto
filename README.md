@@ -39,12 +39,11 @@ Pasto 面向 **macOS 14+，支持 Intel（x86_64）和 Apple 芯片（arm64）**
 
 从 [1.0.0 Release](https://github.com/yingyanzhitong/pasto/releases/tag/v1.0.0) 下载，并阅读该版本的限制说明。安装包采用临时签名，尚未经过 Apple 公证。
 
-按 Mac 的芯片选择 1.0.0 安装包：
+1.0.0 使用同一个安装包，兼容 Intel 与 Apple 芯片：
 
-- **Apple 芯片（arm64）**：[Pasto-1.0.0-macos-arm64.dmg](https://github.com/yingyanzhitong/pasto/releases/download/v1.0.0/Pasto-1.0.0-macos-arm64.dmg)
-- **Intel（x86_64）**：[Pasto-1.0.0-macos-x86_64.dmg](https://github.com/yingyanzhitong/pasto/releases/download/v1.0.0/Pasto-1.0.0-macos-x86_64.dmg)
+[下载 Pasto-1.0.0-macos-universal.dmg](https://github.com/yingyanzhitong/pasto/releases/download/v1.0.0/Pasto-1.0.0-macos-universal.dmg)
 
-可在“关于本机”中查看芯片或处理器。历史版本的格式与架构范围以该版本的发布说明为准。
+主程序、Helper 和 MCP 均包含两种架构，无需选择芯片版本。历史版本的格式与架构范围以该版本的发布说明为准。
 
 打开 DMG，将窗口中的 `Pasto.app` 拖到旁边的 `Applications` 快捷入口。复制完成后，从应用程序目录启动 Pasto，再在 Finder 中推出安装磁盘映像；不要直接从磁盘映像运行日常使用的应用。
 
@@ -65,13 +64,13 @@ open replica/dist/Pasto.app
 
 默认按当前 Mac 的本机架构构建。构建脚本生成 `replica/dist/Pasto.app`，包含资源、登录项辅助程序及 MCP 可执行文件，并进行本地签名检查。
 
-一次构建 Apple 芯片和 Intel 两个独立 DMG：
+一次构建同时兼容 Apple 芯片与 Intel 的 Universal DMG：
 
 ```sh
 npm run build:dmg
 ```
 
-该命令调用发布脚本 `release-ci.py package`，自动构建并打包两个架构。只为已有的本机应用制作 DMG：
+该命令调用发布脚本 `release-ci.py package`，自动构建两个架构并合并为一个 Universal DMG。只为已有的本机应用制作 DMG：
 
 ```sh
 bash replica/scripts/build-dmg.sh replica/dist/Pasto.app replica/dist/Pasto.dmg
@@ -91,7 +90,7 @@ swift build --package-path replica -c release
 
 修改根目录 `package.json` 的 `version` 并推送到 `main`，GitHub Actions 会在版本变化时自动构建和发布。也支持推送对应的 `v<版本号>` 标签，或在 Actions 页面手动运行。
 
-工作流分别校验两个安装包的版本、目标架构及签名，发布四个附件：`Pasto-<版本号>-macos-arm64.dmg`、`Pasto-<版本号>-macos-x86_64.dmg`、`SHA256SUMS.txt` 和 `release-manifest.json`。上传校验成功后才公开 Release；`-dev.N` 版本标记为预发布。同一版本不覆盖其他提交的产物，失败不会发布正式 Release。
+工作流保留 Intel 原生构建检查，再校验 Universal 安装包的版本、三项可执行文件的双架构及签名，发布三个附件：`Pasto-<版本号>-macos-universal.dmg`、`SHA256SUMS.txt` 和 `release-manifest.json`。上传校验成功后才公开 Release；`-dev.N` 版本标记为预发布，正式版本标为最新版本。同一版本不覆盖其他提交的产物，失败不会发布正式 Release。
 
 Release 页面中的 `Source code (zip)` 和 `Source code (tar.gz)` 是 GitHub 自动提供的标签源码下载链接，不是安装包，也不是此发布流程额外上传的附件。
 
