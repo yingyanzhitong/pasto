@@ -1,0 +1,184 @@
+{
+  "schema_version": 1,
+  "kind": "static_code_migration",
+  "functions": [
+    {
+      "function_id": "Paste:0x100324388",
+      "state": "migrated",
+      "contract": "依次encodeIfPresent三字段：type:String?、capacity:Int?、colorCode:UInt64?，nil省略，错误传播。",
+      "implementations": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPinboardAttributes.swift",
+          "symbol": "private struct Attributes: Codable"
+        }
+      ],
+      "source": {
+        "path": "decompiled/Paste/part-0258.c",
+        "line": 2241
+      },
+      "review": "逐项读取成功原体，现三字段声明顺序/可选类型完全对应；合成Codable/CodingKeys直接复用，真实分组颜色读取与创建/更新编码消费。无重复包装。",
+      "remaining": "只此独立Stored/Key/协议转发源码合同完整，不升级实体rawAttributes getter、description/debugDescription、witness或生成ABI。"
+    },
+    {
+      "function_id": "Paste:0x1003247b8",
+      "state": "migrated",
+      "contract": "依次decodeIfPresent同三字段，missing/null为nil，任何present坏类型使整记录失败，不逐字段吞错。",
+      "implementations": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPinboardAttributes.swift",
+          "symbol": "private struct Attributes: Codable"
+        }
+      ],
+      "source": {
+        "path": "decompiled/Paste/part-0258.c",
+        "line": 2483
+      },
+      "review": "逐项读取成功原体，现三字段声明顺序/可选类型完全对应；合成Codable/CodingKeys直接复用，真实分组颜色读取与创建/更新编码消费。无重复包装。",
+      "remaining": "只此独立Stored/Key/协议转发源码合同完整，不升级实体rawAttributes getter、description/debugDescription、witness或生成ABI。"
+    },
+    {
+      "function_id": "Paste:0x10032469c",
+      "state": "migrated",
+      "contract": "合成CodingKeys字符串解析仅接受精确type/capacity/colorCode三个键，分别对应0/1/2，其他nil。",
+      "implementations": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPinboardAttributes.swift",
+          "symbol": "private struct Attributes: Codable"
+        }
+      ],
+      "source": {
+        "path": "decompiled/Paste/part-0258.c",
+        "line": 2442
+      },
+      "review": "逐项读取成功原体，现三字段声明顺序/可选类型完全对应；合成Codable/CodingKeys直接复用，真实分组颜色读取与创建/更新编码消费。无重复包装。",
+      "remaining": "只此独立Stored/Key/协议转发源码合同完整，不升级实体rawAttributes getter、description/debugDescription、witness或生成ABI。"
+    },
+    {
+      "function_id": "Paste:0x1003244dc",
+      "state": "migrated",
+      "contract": "合成CodingKeys有效case0/1/2分别返回type/capacity/colorCode字符串。",
+      "implementations": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPinboardAttributes.swift",
+          "symbol": "private struct Attributes: Codable"
+        }
+      ],
+      "source": {
+        "path": "decompiled/Paste/part-0258.c",
+        "line": 2282
+      },
+      "review": "逐项读取成功原体，现三字段声明顺序/可选类型完全对应；合成Codable/CodingKeys直接复用，真实分组颜色读取与创建/更新编码消费。无重复包装。",
+      "remaining": "只此独立Stored/Key/协议转发源码合同完整，不升级实体rawAttributes getter、description/debugDescription、witness或生成ABI。"
+    },
+    {
+      "function_id": "Paste:0x1003245a8",
+      "state": "migrated",
+      "contract": "解码协议转发完整init(from:)，仅无错误时产生结果，错误不发布部分值。",
+      "implementations": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPinboardAttributes.swift",
+          "symbol": "JSONDecoder().decode(Attributes.self"
+        }
+      ],
+      "source": {
+        "path": "decompiled/Paste/part-0258.c",
+        "line": 2358
+      },
+      "review": "逐项读取成功原体，现三字段声明顺序/可选类型完全对应；合成Codable/CodingKeys直接复用，真实分组颜色读取与创建/更新编码消费。无重复包装。",
+      "remaining": "只此独立Stored/Key/协议转发源码合同完整，不升级实体rawAttributes getter、description/debugDescription、witness或生成ABI。"
+    },
+    {
+      "function_id": "Paste:0x1003245e8",
+      "state": "migrated",
+      "contract": "编码协议入口直接转发完整encode(to:)，保相同字段/错误。",
+      "implementations": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPinboardAttributes.swift",
+          "symbol": "JSONEncoder().encode(Attributes"
+        }
+      ],
+      "source": {
+        "path": "decompiled/Paste/part-0258.c",
+        "line": 2386
+      },
+      "review": "逐项读取成功原体，现三字段声明顺序/可选类型完全对应；合成Codable/CodingKeys直接复用，真实分组颜色读取与创建/更新编码消费。无重复包装。",
+      "remaining": "只此独立Stored/Key/协议转发源码合同完整，不升级实体rawAttributes getter、description/debugDescription、witness或生成ABI。"
+    },
+    {
+      "function_id": "Paste:0x10007a830",
+      "state": "migrated",
+      "contract": "弱预览View缺失无操作；存活先从该View取Header取消标题，再有window时关闭；无window仍完成取消。",
+      "implementations": [
+        {
+          "path": "replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift",
+          "symbol": "header.onClose = { [weak view]"
+        }
+      ],
+      "source": {
+        "path": "decompiled/Paste/part-0040.c",
+        "line": 1568
+      },
+      "review": "移除分别weak header/view的额外生命周期域，改为只weak view并从其真实previewHeader取标题；实际关闭按钮消费。",
+      "remaining": "此关闭callback业务完整，不升级Header构造/lazy父。"
+    },
+    {
+      "function_id": "Paste:0x10007c954",
+      "state": "migrated",
+      "contract": "直接尾转发完整0x10007a830，无额外分支/副作用。",
+      "implementations": [
+        {
+          "path": "replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift",
+          "symbol": "header.onClose = { [weak view]"
+        }
+      ],
+      "source": {
+        "path": "decompiled/Paste/part-0041.c",
+        "line": 701
+      },
+      "review": "成功原仅转发；真实按钮回调复用同完整源码，不另造包装。",
+      "remaining": "仅源码尾转合同完整，不升级生成ABI或Header父。"
+    },
+    {
+      "function_id": "Paste:0x10002e80c",
+      "state": "migrated",
+      "contract": "接旧可选索引：旧索引存在先将对应row设未选；当前新索引存在再将对应row设选中。两者均有数组边界失败分支；相同索引仍先false后true，不刷新无关行。",
+      "implementations": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchSuggestionsMenu.swift",
+          "symbol": "private func selectionDidChange(from previous: Int?)"
+        }
+      ],
+      "source": {
+        "path": "decompiled/Paste/part-0018.c",
+        "line": 1818
+      },
+      "review": "真实select写索引后调用独立变化方法；替换rows先select(nil)再移除旧views，防旧索引指向新数组；去掉行选中样式的额外isEnabled条件。",
+      "remaining": "此旧/新行选择通知业务合同完整；原列表items更新中的actor报告和构造/全部视觉父不升级。"
+    },
+    {
+      "function_id": "Paste:0x100228a50",
+      "state": "partial",
+      "contract": "双击失效dragWaitTimer，直接单项选择/anchor/primary及视觉刷新，不经过普通reveal/预览/beep回调。",
+      "implementations": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "func selectForDoubleClick(at index: Int)"
+        }
+      ],
+      "source": {
+        "path": "decompiled/Paste/part-0188.c",
+        "line": 1896
+      },
+      "review": "Native双击实际调用专用路径，随后同步lastPrimary并清pending reveal，保用户直接paste与实际event的plain配置。",
+      "remaining": "原manager额外字段、无效数字索引状态及DI点击委托仍不完整，不计整方法完成。"
+    }
+  ],
+  "updated_event_parents": {
+    "Paste:0x100227b54": "首尾导航按原animate=0贯穿state/controller/native；单步animate=1，其他原modifier/keyboard/manager与完整事件父仍partial。",
+    "Paste:0x100227cd4": "双击不再走普通selectIndex；专用singleton/视觉刷新后直接粘贴，原count/manager/DI完整输入域仍partial。"
+  },
+  "build_executed": false,
+  "tests_executed": false,
+  "equivalence_verified": false,
+  "limitations": "Source migration/manual static comparison only; no compile, parse, product execution, tests, install, commit or release. Original parent data/DI/actor/ABI and historical evidence freshness remain separate."
+}

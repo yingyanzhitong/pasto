@@ -1,5 +1,6 @@
 import AppKit
 import PastoCore
+import QuartzCore
 
 /// Native child window for search suggestions. The editor supplies real rows and keeps first responder.
 @MainActor
@@ -63,7 +64,7 @@ final class ReplicaSearchSuggestionsMenu: NSWindow {
 
     func show(rows: [Row], anchorRect: NSRect, in anchorView: NSView,
               onAccept: @escaping (Int) -> Void, onEscape: @escaping () -> Void) {
-        guard let parent = anchorView.window else { dismiss(); return }
+        guard let parent = anchorView.window else { return }
         self.rows = rows
         self.anchorView = anchorView
         accept = onAccept
@@ -72,17 +73,15 @@ final class ReplicaSearchSuggestionsMenu: NSWindow {
         scroller.setRows(rows)
         selectedIndex = nil
         scroller.select(selectedIndex)
+        let width = max(120, scroller.fittingSize.width)
+        setFrame(.init(x: frame.minX, y: frame.minY, width: width, height: frame.height), display: false)
+        scroller.layoutSubtreeIfNeeded()
+        let contentHeight = scroller.fittingSize.height
         let screenRect = parent.convertToScreen(anchorView.convert(anchorRect, to: nil))
-        guard let screen = NSScreen.screens.first(where: { $0.frame.contains(screenRect.origin) }) else {
-            cancel()
-            return
-        }
-        let fit = scroller.fittingSize
-        let width = max(120, fit.width)
+        guard let screen = NSScreen.screens.first(where: { $0.frame.contains(screenRect.origin) }) else { return }
         // Original caps downward height at anchor.y - visibleFrame.minY - 6;
         // it does not add an unrelated right-edge or above-anchor placement policy.
-        let height = min(fit.height, screenRect.minY - screen.visibleFrame.minY - 6)
-        guard height > 0 else { cancel(); return }
+        let height = min(contentHeight, screenRect.minY - screen.visibleFrame.minY - 6)
         setFrame(.init(x: screenRect.minX, y: screenRect.minY - height, width: width, height: height), display: true)
         scroller.layoutSubtreeIfNeeded()
         if let titleRect = scroller.firstTitleRectInWindow {
@@ -110,17 +109,20 @@ final class ReplicaSearchSuggestionsMenu: NSWindow {
     @discardableResult
     func handleKeyDown(_ event: NSEvent) -> Bool {
         guard isVisible else { return false }
-        switch event.keyCode {
-        case 125: moveSelection(by: 1)
-        case 126: moveSelection(by: -1)
-        case 115: moveSelection(by: -rows.count)
-        case 116: moveSelection(by: -5)
-        case 119: moveSelection(by: rows.count)
-        case 121: moveSelection(by: 5)
-        case 36, 48, 124:
+        switch OriginalNavigationKey.f_100219ddc(event) {
+        case .down: moveSelection(by: 1)
+        case .up: moveSelection(by: -1)
+        case .home: moveSelection(by: -rows.count)
+        case .pageUp: moveSelection(by: -5)
+        case .end: moveSelection(by: rows.count)
+        case .pageDown: moveSelection(by: 5)
+        case .enter, .tab, .right:
             guard let selectedIndex else { return false }
             acceptRow(selectedIndex)
-        case 53: cancel()
+        case .escape:
+            let forwardToPanel = parent is ReplicaPanel && (event.window ?? NSApp.keyWindow) === parent
+            cancel()
+            return !forwardToPanel
         default: return false
         }
         return true
@@ -131,7 +133,9 @@ final class ReplicaSearchSuggestionsMenu: NSWindow {
         mouseSelectionCooldown?.cancel()
         let index = selectedIndex.map { max(0, min(rows.count - 1, $0 + offset)) }
             ?? (offset > 0 ? 0 : rows.count - 1)
-        select(index, reveal: true)
+        selectedIndex = index
+        scroller.select(index)
+        scroller.revealSelection()
         let cooldown = DispatchWorkItem { [weak self] in
             MainActor.assumeIsolated { self?.mouseSelectionCooldown = nil }
         }
@@ -140,14 +144,14 @@ final class ReplicaSearchSuggestionsMenu: NSWindow {
     }
 
     private func select(_ index: Int, reveal: Bool) {
-        guard rows.indices.contains(index), rows[index].isEnabled else { return }
         selectedIndex = index
         scroller.select(index)
-        if reveal { scroller.reveal(index) }
+        if reveal { scroller.revealSelection() }
     }
 
     private func acceptRow(_ index: Int) {
-        guard rows.indices.contains(index), rows[index].isEnabled else { return }
+        guard index < rows.count else { return }
+        precondition(index >= 0)
         accept?(index)
     }
 
@@ -189,7 +193,8 @@ final class ReplicaSearchSuggestionsMenu: NSWindow {
 @MainActor
 private final class SuggestionsScroller: NSView {
     private let background = NSVisualEffectView()
-    private let scrollView = NSScrollView()
+    private var storedScrollView: NSScrollView?
+    private var scrollView: NSScrollView { f_1000493ec() }
     private let list = SuggestionsList()
     private let up = SuggestionsScrollIndicator(symbol: "chevron.up")
     private let down = SuggestionsScrollIndicator(symbol: "chevron.down")
@@ -207,14 +212,6 @@ private final class SuggestionsScroller: NSView {
         background.layer?.cornerRadius = 6
         background.layer?.masksToBounds = true
         addSubview(background)
-        scrollView.contentView.postsBoundsChangedNotifications = true
-        scrollView.usesPredominantAxisScrolling = true
-        scrollView.hasHorizontalScroller = false
-        scrollView.hasVerticalScroller = false
-        scrollView.autohidesScrollers = false
-        scrollView.drawsBackground = false
-        scrollView.borderType = .noBorder
-        scrollView.wantsLayer = true
         scrollView.documentView = list
         addSubview(scrollView)
         addSubview(up)
@@ -222,8 +219,16 @@ private final class SuggestionsScroller: NSView {
         list.onHover = { [weak self] in self?.onHover?($0) }
         list.onAccept = { [weak self] in self?.onAccept?($0) }
         list.onExit = { [weak self] in self?.onExit?() }
-        up.hoverChanged = { [weak self] in self?.hover(direction: -1, active: $0) }
-        down.hoverChanged = { [weak self] in self?.hover(direction: 1, active: $0) }
+        up.canScroll = { [weak self] in
+            guard let self else { return false }
+            return self.scrollView.documentVisibleRect.minY > 0
+        }
+        down.canScroll = { [weak self] in
+            guard let self else { return false }
+            return self.scrollView.documentVisibleRect.maxY < self.list.bounds.height
+        }
+        up.onScroll = { [weak self] in self?.list.scrollUpOneRow() }
+        down.onScroll = { [weak self] in self?.list.scrollDownOneRow() }
         boundsObserver = NotificationCenter.default.addObserver(forName: NSView.boundsDidChangeNotification,
             object: scrollView.contentView, queue: .main) { [weak self] _ in
                 MainActor.assumeIsolated { self?.updateIndicators() }
@@ -232,12 +237,35 @@ private final class SuggestionsScroller: NSView {
 
     required init?(coder: NSCoder) { return nil }
 
+    private func f_1000493ec() -> NSScrollView {
+        if let storedScrollView { return storedScrollView }
+        let view = NSScrollView()
+        view.contentView.postsBoundsChangedNotifications = true
+        view.usesPredominantAxisScrolling = true
+        view.hasHorizontalScroller = false
+        view.hasVerticalScroller = false
+        view.autohidesScrollers = false
+        view.drawsBackground = false
+        view.borderType = .noBorder
+        view.wantsLayer = true
+        storedScrollView = view
+        return view
+    }
+
     override var fittingSize: NSSize { list.fittingSize }
     var firstTitleRectInWindow: NSRect? { list.firstTitleRectInWindow }
 
     func setRows(_ rows: [ReplicaSearchSuggestionsMenu.Row]) { list.setRows(rows); needsLayout = true }
     func select(_ index: Int?) { list.select(index) }
-    func reveal(_ index: Int) { list.reveal(index); updateIndicators() }
+    func revealSelection() { list.revealSelection(); updateIndicators() }
+
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        if window != nil {
+            layoutSubtreeIfNeeded()
+            updateIndicators()
+        }
+    }
 
     override func layout() {
         super.layout()
@@ -254,20 +282,41 @@ private final class SuggestionsScroller: NSView {
         let visible = scrollView.documentVisibleRect
         up.isHidden = visible.minY <= 0
         down.isHidden = visible.maxY >= list.bounds.height
+        f_10004a994(showLowEdge: visible.maxY < list.bounds.height, showHighEdge: 0 < visible.origin.y)
     }
 
-    private func hover(direction: Int, active: Bool) {
-        guard active else { return }
-        // Original hover callbacks step by the current selected row's height, without a timer.
-        scroll(by: CGFloat(direction) * list.selectedRowHeight)
+    private func f_10004a994(showLowEdge: Bool, showHighEdge: Bool) {
+        guard let layer = scrollView.layer else { return }
+        let rect = scrollView.bounds
+        guard showLowEdge || showHighEdge else {
+            layer.mask = nil
+            return
+        }
+        let mask = CALayer()
+        mask.frame = rect
+        let low: CGFloat = showLowEdge ? 18 : 0
+        let high: CGFloat = showHighEdge ? 18 : 0
+        let body = CALayer()
+        body.frame = .init(x: 0, y: low, width: rect.width, height: rect.height - low - high)
+        body.backgroundColor = NSColor.white.cgColor
+        mask.addSublayer(body)
+        if showLowEdge {
+            mask.addSublayer(f_10004ad10(y: 0, bounds: rect, height: 18, colors: [.clear, .white]))
+        }
+        if showHighEdge {
+            mask.addSublayer(f_10004ad10(y: rect.height - 18, bounds: rect, height: 18, colors: [.white, .clear]))
+        }
+        layer.mask = mask
     }
 
-    private func scroll(by delta: CGFloat) {
-        let clip = scrollView.contentView
-        let y = max(0, min(list.bounds.height - clip.bounds.height, clip.bounds.minY + delta))
-        clip.scroll(to: .init(x: 0, y: y))
-        scrollView.reflectScrolledClipView(clip)
-        updateIndicators()
+    private func f_10004ad10(y: CGFloat, bounds: NSRect, height: CGFloat,
+                            colors: [NSColor]) -> CAGradientLayer {
+        let gradient = CAGradientLayer()
+        gradient.frame = .init(x: 0, y: y, width: bounds.width, height: height)
+        gradient.colors = colors.map { $0.cgColor }
+        gradient.startPoint = .init(x: 0.5, y: 0)
+        gradient.endPoint = .init(x: 0.5, y: 1)
+        return gradient
     }
 
     func dispose() {
@@ -279,7 +328,6 @@ private final class SuggestionsScroller: NSView {
 private final class SuggestionsList: NSView {
     private var rows: [SuggestionRowView] = []
     private var selectedIndex: Int?
-    var selectedRowHeight: CGFloat { selectedIndex.flatMap { rows.indices.contains($0) ? rows[$0].bounds.height : nil } ?? 0 }
     var onHover: ((Int) -> Void)?
     var onAccept: ((Int) -> Void)?
     var onExit: (() -> Void)?
@@ -292,6 +340,7 @@ private final class SuggestionsList: NSView {
     }
 
     func setRows(_ items: [ReplicaSearchSuggestionsMenu.Row]) {
+        select(nil)
         rows.forEach { $0.removeFromSuperview() }
         rows = items.enumerated().map { index, item in
             let row = SuggestionRowView(item: item)
@@ -314,18 +363,67 @@ private final class SuggestionsList: NSView {
     }
 
     func select(_ index: Int?) {
+        let previous = selectedIndex
         selectedIndex = index
-        for (offset, row) in rows.enumerated() { row.setSelected(offset == index) }
+        selectionDidChange(from: previous)
     }
-    func reveal(_ index: Int) { if rows.indices.contains(index) { rows[index].scrollToVisible(rows[index].bounds) } }
+
+    private func selectionDidChange(from previous: Int?) {
+        if let previous {
+            precondition(rows.indices.contains(previous))
+            rows[previous].setSelected(false)
+        }
+        if let selectedIndex {
+            precondition(rows.indices.contains(selectedIndex))
+            rows[selectedIndex].setSelected(true)
+        }
+    }
+    func revealSelection() {
+        guard let selectedIndex, selectedIndex < rows.count else { return }
+        precondition(selectedIndex >= 0)
+        let row = rows[selectedIndex]
+        let padding = rows.first?.bounds.size.height ?? 0
+        var rect = row.bounds
+        rect.origin.y -= padding
+        rect.size.height += padding + padding
+        row.scrollToVisible(rect)
+    }
+
+    func scrollDownOneRow() {
+        guard let scroll = enclosingScrollView, let document = scroll.documentView else { return }
+        let origin = scroll.documentVisibleRect.origin.y
+        let maximum = document.bounds.size.height - scroll.documentVisibleRect.size.height
+        let candidate = origin + (rows.first?.bounds.size.height ?? 0)
+        let y = candidate < maximum ? candidate : maximum
+        scroll.documentView?.scroll(.init(x: 0, y: y))
+        scroll.reflectScrolledClipView(scroll.contentView)
+    }
+
+    func scrollUpOneRow() {
+        guard let scroll = enclosingScrollView else { return }
+        let origin = scroll.documentVisibleRect.origin.y
+        let y: CGFloat
+        if let first = rows.first {
+            let candidate = origin - first.bounds.size.height
+            y = 0 <= candidate ? candidate : 0
+        } else {
+            y = origin < 0 ? 0 : origin
+        }
+        scroll.documentView?.scroll(.init(x: 0, y: y))
+        scroll.reflectScrolledClipView(scroll.contentView)
+    }
 }
 
 @MainActor
 private final class SuggestionRowView: NSView {
-    private let title: NSTextField
-    private let image: NSImageView
-    private let stack = NSStackView()
+    private var storedTitle: NSTextField?
+    private var storedImage: NSImageView?
+    private var storedStack: NSStackView?
+    private var title: NSTextField { f_10000ed50() }
+    private var image: NSImageView { f_10000ee38() }
+    private var stack: NSStackView { f_10000eedc() }
     private let item: ReplicaSearchSuggestionsMenu.Row
+    private var selected = false
     private var hoverArea: NSTrackingArea?
     var onHover: (() -> Void)?
     var onExit: (() -> Void)?
@@ -334,18 +432,7 @@ private final class SuggestionRowView: NSView {
 
     init(item: ReplicaSearchSuggestionsMenu.Row) {
         self.item = item
-        title = NSTextField(labelWithString: item.title)
-        image = NSImageView()
         super.init(frame: .zero)
-        title.font = OriginalSearchAppearance.f_1001ff928()
-        title.lineBreakMode = .byTruncatingTail
-        title.maximumNumberOfLines = 1
-        image.image = item.image
-        image.imageScaling = .scaleProportionallyDown
-        image.isHidden = item.image == nil
-        stack.orientation = .horizontal
-        stack.alignment = .centerY
-        stack.spacing = 7
         stack.translatesAutoresizingMaskIntoConstraints = false
         image.translatesAutoresizingMaskIntoConstraints = false
         stack.addArrangedSubview(image)
@@ -362,62 +449,138 @@ private final class SuggestionRowView: NSView {
         wantsLayer = true
         layer?.cornerRadius = 7
         layer?.cornerCurve = .continuous
-        setSelected(false)
+        updateSelectionAppearance()
     }
 
     required init?(coder: NSCoder) { return nil }
+
+    private func f_10000ed50() -> NSTextField {
+        if let storedTitle { return storedTitle }
+        let field = NSTextField(labelWithString: item.title)
+        field.lineBreakMode = .byTruncatingTail
+        field.maximumNumberOfLines = 1
+        field.font = OriginalSearchAppearance.f_1001ff928()
+        storedTitle = field
+        return field
+    }
+
+    private func f_10000ee38() -> NSImageView {
+        if let storedImage { return storedImage }
+        let view = NSImageView()
+        view.imageScaling = .scaleProportionallyDown
+        view.image = item.image
+        view.isHidden = item.image == nil
+        storedImage = view
+        return view
+    }
+
+    private func f_10000eedc() -> NSStackView {
+        if let storedStack { return storedStack }
+        let view = NSStackView()
+        view.orientation = .horizontal
+        view.alignment = .centerY
+        view.spacing = 7
+        storedStack = view
+        return view
+    }
+
+    override func layout() {
+        super.layout()
+        updateSelectionAppearance()
+    }
     override var fittingSize: NSSize {
         let iconWidth: CGFloat = image.isHidden ? 0 : 25
         return .init(width: title.fittingSize.width + iconWidth + 16,
                      height: max(title.fittingSize.height, image.isHidden ? 0 : 18) + 6)
     }
     func setSelected(_ value: Bool) {
-        let selected = item.isEnabled && value
+        guard selected != value else { return }
+        selected = value
+        needsLayout = true
+    }
+
+    private func updateSelectionAppearance() {
         layer?.backgroundColor = selected ? NSColor.controlAccentColor.cgColor : NSColor.clear.cgColor
         let primary = selected ? NSColor.white : OriginalSearchAppearance.f_1001fec18()!
         let secondary = selected ? NSColor.white.withAlphaComponent(0.6) : NSColor.secondaryLabelColor
         image.contentTintColor = primary
-        let matches = item.matchQuery.map { OriginalSearchSuggestions.f_1002f5748($0, in: item.title) } ?? []
-        let attributed = NSMutableAttributedString(string: item.title, attributes: [.foregroundColor: matches.isEmpty ? primary : secondary])
-        for match in matches {
-            attributed.addAttribute(.foregroundColor, value: primary, range: NSRange(match, in: item.title))
-        }
-        title.attributedStringValue = attributed
+        title.attributedStringValue = OriginalSuggestionAttributedTitle.f_100010984(
+            primary: primary, secondary: secondary, title: item.title, query: item.matchQuery)
     }
     override func updateTrackingAreas() {
         super.updateTrackingAreas()
         if let hoverArea { removeTrackingArea(hoverArea) }
-        let area = NSTrackingArea(rect: bounds, options: .init(rawValue: 0x81), owner: self, userInfo: nil)
-        addTrackingArea(area)
+        let area: NSTrackingArea? = NSTrackingArea(rect: bounds, options: .init(rawValue: 0x81), owner: self, userInfo: nil)
         hoverArea = area
+        if let area { addTrackingArea(area) }
     }
-    override func mouseEntered(with event: NSEvent) { if item.isEnabled { onHover?() } }
-    override func mouseExited(with event: NSEvent) { if item.isEnabled { onExit?() } }
-    override func mouseDown(with event: NSEvent) { if item.isEnabled { onAccept?() } }
+    override func mouseEntered(with event: NSEvent) { onHover?() }
+    override func mouseExited(with event: NSEvent) { onExit?() }
+    override func mouseDown(with event: NSEvent) { onAccept?() }
 }
 
 @MainActor
 private final class SuggestionsScrollIndicator: NSView {
-    private let image: NSImageView
+    private var storedImage: NSImageView?
+    private var image: NSImageView { f_10004afcc() }
     private var hoverArea: NSTrackingArea?
-    var hoverChanged: ((Bool) -> Void)?
+    private var isMouseInside = false
+    private var scrollTimer: OriginalSuggestionScrollTimer?
+    var canScroll: () -> Bool = { false }
+    var onScroll: (() -> Void)?
     init(symbol: String) {
-        image = NSImageView()
-        image.image = NSImage(systemSymbolName: symbol, accessibilityDescription: nil)
         super.init(frame: .zero)
+        let symbolImage: NSImage
+        if NSImage(systemSymbolName: symbol, accessibilityDescription: nil) == nil {
+            symbolImage = NSImage(systemSymbolName: "questionmark.square", accessibilityDescription: nil)!
+        } else {
+            symbolImage = NSImage(systemSymbolName: symbol, accessibilityDescription: nil)!
+        }
+        image.image = symbolImage.withSymbolConfiguration(.init(pointSize: 12, weight: .medium))
+        image.contentTintColor = .secondaryLabelColor
         addSubview(image)
         wantsLayer = true
         layer?.backgroundColor = NSColor.windowBackgroundColor.withAlphaComponent(0.95).cgColor
     }
     required init?(coder: NSCoder) { return nil }
-    override func layout() { super.layout(); image.frame = .init(x: (bounds.width - 12) / 2, y: (bounds.height - 8) / 2, width: 12, height: 8) }
+
+    private func f_10004afcc() -> NSImageView {
+        if let storedImage { return storedImage }
+        let view = NSImageView()
+        storedImage = view
+        return view
+    }
+
+    override func layout() { super.layout(); image.frame = .init(x: (bounds.width - 12) / 2, y: (bounds.height - 12) / 2, width: 12, height: 12) }
     override func updateTrackingAreas() {
         super.updateTrackingAreas()
         if let hoverArea { removeTrackingArea(hoverArea) }
-        let area = NSTrackingArea(rect: .zero, options: [.mouseEnteredAndExited, .activeAlways, .inVisibleRect], owner: self, userInfo: nil)
-        addTrackingArea(area)
+        let area: NSTrackingArea? = NSTrackingArea(rect: bounds, options: .init(rawValue: 0x83), owner: self, userInfo: nil)
         hoverArea = area
+        if let area { addTrackingArea(area) }
     }
-    override func mouseEntered(with event: NSEvent) { hoverChanged?(true) }
-    override func mouseExited(with event: NSEvent) { hoverChanged?(false) }
+    override func mouseEntered(with event: NSEvent) { isMouseInside = true }
+    override func mouseMoved(with event: NSEvent) {
+        guard isMouseInside, canScroll(), scrollTimer == nil else { return }
+        scrollTimer = OriginalSuggestionScrollTimer(interval: 0.075, repeats: true) { [weak self] in
+            MainActor.assumeIsolated { self?.onScroll?() }
+        }
+    }
+    override func mouseExited(with event: NSEvent) {
+        isMouseInside = false
+        scrollTimer = nil
+    }
+}
+
+/// Paste 0x100385984 / 0x100385acc: release of the wrapper invalidates its scheduled timer.
+private final class OriginalSuggestionScrollTimer {
+    private let timer: Timer
+
+    init(interval: TimeInterval, repeats: Bool, action: @escaping () -> Void) {
+        timer = Timer.scheduledTimer(withTimeInterval: interval, repeats: repeats) { _ in action() }
+    }
+
+    func invalidate() { timer.invalidate() }
+
+    deinit { invalidate() }
 }

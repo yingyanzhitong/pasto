@@ -1,0 +1,297 @@
+{
+  "kind": "static_localization_tail_reuse",
+  "generated_at": "2026-10-27T11:43:35.272681+00:00",
+  "binary_sha256": "871f00354fbb1c165d858a98e6d19d6f43cb9d3f9f958b3e07c7f07eb5c19afb",
+  "source_sha256": "0163cc854b291a3341675ea525903141dc764dda4a2791b513f4a9c4515632f1",
+  "limitations": "仅资源构造/跳转合同；不声明原地址、原bundle身份或运行等价。",
+  "build_executed": false,
+  "tests_executed": false,
+  "records": [
+    {
+      "function_id": "Paste:0x1001e69bc",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-0155.c",
+        "line": 335,
+        "branch_instruction": "0x1400005f",
+        "branch_target": "0x1001e6b38",
+        "key": "editor.character-count"
+      },
+      "current": {
+        "path": "replica/Sources/PastoCore/OriginalPreviewLocalization.swift",
+        "symbol": "f_1001e6b38"
+      },
+      "consumers": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPreviewFooter.swift",
+          "line": 19,
+          "sha256": "97d14915cc4fa873a0d526a42f168ea5487864d0b8327e825bee18e28bd2e25c"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/OriginalCompactTextFooter.swift",
+          "line": 107,
+          "sha256": "cd31a6dd52715f0f376365665dabba599bd190358ba6b9d23d4f6d0b4c284d2b"
+        }
+      ],
+      "criterion": "原C调用对应的本地化键；尾跳地址为单指令B到该目标，当前由生产调用直接复用目标资源构造；保留数值或字符串参数与Locale.current。"
+    },
+    {
+      "function_id": "Paste:0x1001e6b38",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-0155.c",
+        "line": 836,
+        "branch_instruction": null,
+        "branch_target": null,
+        "key": "editor.character-count"
+      },
+      "current": {
+        "path": "replica/Sources/PastoCore/OriginalPreviewLocalization.swift",
+        "symbol": "f_1001e6b38"
+      },
+      "consumers": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPreviewFooter.swift",
+          "line": 19,
+          "sha256": "97d14915cc4fa873a0d526a42f168ea5487864d0b8327e825bee18e28bd2e25c"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/OriginalCompactTextFooter.swift",
+          "line": 107,
+          "sha256": "cd31a6dd52715f0f376365665dabba599bd190358ba6b9d23d4f6d0b4c284d2b"
+        }
+      ],
+      "criterion": "原C调用对应的本地化键；尾跳地址为单指令B到该目标，当前由生产调用直接复用目标资源构造；保留数值或字符串参数与Locale.current。"
+    },
+    {
+      "function_id": "Paste:0x1001e69c4",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-0155.c",
+        "line": 357,
+        "branch_instruction": "0x14000065",
+        "branch_target": "0x1001e6b58",
+        "key": "editor.line-count"
+      },
+      "current": {
+        "path": "replica/Sources/PastoCore/OriginalPreviewLocalization.swift",
+        "symbol": "f_1001e6b58"
+      },
+      "consumers": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPreviewFooter.swift",
+          "line": 21,
+          "sha256": "97d14915cc4fa873a0d526a42f168ea5487864d0b8327e825bee18e28bd2e25c"
+        }
+      ],
+      "criterion": "原C调用对应的本地化键；尾跳地址为单指令B到该目标，当前由生产调用直接复用目标资源构造；保留数值或字符串参数与Locale.current。"
+    },
+    {
+      "function_id": "Paste:0x1001e6b58",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-0155.c",
+        "line": 858,
+        "branch_instruction": null,
+        "branch_target": null,
+        "key": "editor.line-count"
+      },
+      "current": {
+        "path": "replica/Sources/PastoCore/OriginalPreviewLocalization.swift",
+        "symbol": "f_1001e6b58"
+      },
+      "consumers": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPreviewFooter.swift",
+          "line": 21,
+          "sha256": "97d14915cc4fa873a0d526a42f168ea5487864d0b8327e825bee18e28bd2e25c"
+        }
+      ],
+      "criterion": "原C调用对应的本地化键；尾跳地址为单指令B到该目标，当前由生产调用直接复用目标资源构造；保留数值或字符串参数与Locale.current。"
+    },
+    {
+      "function_id": "Paste:0x1001e69cc",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-0155.c",
+        "line": 379,
+        "branch_instruction": "0x1400006b",
+        "branch_target": "0x1001e6b78",
+        "key": "editor.word-count"
+      },
+      "current": {
+        "path": "replica/Sources/PastoCore/OriginalPreviewLocalization.swift",
+        "symbol": "f_1001e6b78"
+      },
+      "consumers": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPreviewFooter.swift",
+          "line": 20,
+          "sha256": "97d14915cc4fa873a0d526a42f168ea5487864d0b8327e825bee18e28bd2e25c"
+        }
+      ],
+      "criterion": "原C调用对应的本地化键；尾跳地址为单指令B到该目标，当前由生产调用直接复用目标资源构造；保留数值或字符串参数与Locale.current。"
+    },
+    {
+      "function_id": "Paste:0x1001e6b78",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-0155.c",
+        "line": 880,
+        "branch_instruction": null,
+        "branch_target": null,
+        "key": "editor.word-count"
+      },
+      "current": {
+        "path": "replica/Sources/PastoCore/OriginalPreviewLocalization.swift",
+        "symbol": "f_1001e6b78"
+      },
+      "consumers": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPreviewFooter.swift",
+          "line": 20,
+          "sha256": "97d14915cc4fa873a0d526a42f168ea5487864d0b8327e825bee18e28bd2e25c"
+        }
+      ],
+      "criterion": "原C调用对应的本地化键；尾跳地址为单指令B到该目标，当前由生产调用直接复用目标资源构造；保留数值或字符串参数与Locale.current。"
+    },
+    {
+      "function_id": "Paste:0x1001e69d4",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-0155.c",
+        "line": 401,
+        "branch_instruction": "0x14000071",
+        "branch_target": "0x1001e6b98",
+        "key": "general.action.open-in"
+      },
+      "current": {
+        "path": "replica/Sources/PastoCore/OriginalPreviewLocalization.swift",
+        "symbol": "f_1001e6b98"
+      },
+      "consumers": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaLinkPreviewContent.swift",
+          "line": 121,
+          "sha256": "6becef98930daa19e63760be5039f4eda502f2a21ae7b91a2f484abb3d7b7947"
+        }
+      ],
+      "criterion": "原C调用对应的本地化键；尾跳地址为单指令B到该目标，当前由生产调用直接复用目标资源构造；保留数值或字符串参数与Locale.current。"
+    },
+    {
+      "function_id": "Paste:0x1001e6b98",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-0156.c",
+        "line": 6,
+        "branch_instruction": null,
+        "branch_target": null,
+        "key": "general.action.open-in"
+      },
+      "current": {
+        "path": "replica/Sources/PastoCore/OriginalPreviewLocalization.swift",
+        "symbol": "f_1001e6b98"
+      },
+      "consumers": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaLinkPreviewContent.swift",
+          "line": 121,
+          "sha256": "6becef98930daa19e63760be5039f4eda502f2a21ae7b91a2f484abb3d7b7947"
+        }
+      ],
+      "criterion": "原C调用对应的本地化键；尾跳地址为单指令B到该目标，当前由生产调用直接复用目标资源构造；保留数值或字符串参数与Locale.current。"
+    },
+    {
+      "function_id": "Paste:0x1001e69f4",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-0155.c",
+        "line": 489,
+        "branch_instruction": "0x14000089",
+        "branch_target": "0x1001e6c18",
+        "key": "general.until"
+      },
+      "current": {
+        "path": "replica/Sources/PastoCore/OriginalPreviewLocalization.swift",
+        "symbol": "f_1001e6c18"
+      },
+      "consumers": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaCopiedOSD.swift",
+          "line": 22,
+          "sha256": "d1b58b05ef6c37302cf6d6c1e0056ee0af55035422071d4c53ebe1583c84883d"
+        }
+      ],
+      "criterion": "原C调用对应的本地化键；尾跳地址为单指令B到该目标，当前由生产调用直接复用目标资源构造；保留数值或字符串参数与Locale.current。"
+    },
+    {
+      "function_id": "Paste:0x1001e6c18",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-0156.c",
+        "line": 94,
+        "branch_instruction": null,
+        "branch_target": null,
+        "key": "general.until"
+      },
+      "current": {
+        "path": "replica/Sources/PastoCore/OriginalPreviewLocalization.swift",
+        "symbol": "f_1001e6c18"
+      },
+      "consumers": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaCopiedOSD.swift",
+          "line": 22,
+          "sha256": "d1b58b05ef6c37302cf6d6c1e0056ee0af55035422071d4c53ebe1583c84883d"
+        }
+      ],
+      "criterion": "原C调用对应的本地化键；尾跳地址为单指令B到该目标，当前由生产调用直接复用目标资源构造；保留数值或字符串参数与Locale.current。"
+    },
+    {
+      "function_id": "Paste:0x1001e69fc",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-0155.c",
+        "line": 511,
+        "branch_instruction": "0x1400008f",
+        "branch_target": "0x1001e6c38",
+        "key": "item-type.file-count"
+      },
+      "current": {
+        "path": "replica/Sources/PastoCore/OriginalPreviewLocalization.swift",
+        "symbol": "f_1001e6c38"
+      },
+      "consumers": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPreviewTitles.swift",
+          "line": 9,
+          "sha256": "a207f688f263c9652c37d347391efd7cfcebcbe1f637125a623555dbc0d3d687"
+        }
+      ],
+      "criterion": "原C调用对应的本地化键；尾跳地址为单指令B到该目标，当前由生产调用直接复用目标资源构造；保留数值或字符串参数与Locale.current。"
+    },
+    {
+      "function_id": "Paste:0x1001e6c38",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-0156.c",
+        "line": 116,
+        "branch_instruction": null,
+        "branch_target": null,
+        "key": "item-type.file-count"
+      },
+      "current": {
+        "path": "replica/Sources/PastoCore/OriginalPreviewLocalization.swift",
+        "symbol": "f_1001e6c38"
+      },
+      "consumers": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPreviewTitles.swift",
+          "line": 9,
+          "sha256": "a207f688f263c9652c37d347391efd7cfcebcbe1f637125a623555dbc0d3d687"
+        }
+      ],
+      "criterion": "原C调用对应的本地化键；尾跳地址为单指令B到该目标，当前由生产调用直接复用目标资源构造；保留数值或字符串参数与Locale.current。"
+    }
+  ]
+}

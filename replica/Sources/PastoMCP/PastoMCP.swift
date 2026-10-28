@@ -41,22 +41,22 @@ private final class Server {
         let identifier: [String: Any] = ["type": "string", "format": "uuid"]
         let boolean: [String: Any] = ["type": "boolean"]
         definitions = [
-            ToolDefinition(name: "search", description: "搜索历史和 Pinboard；无参数返回最近项目。兼容原版已证实的输入字段。", properties: [
+            ToolDefinition(name: "search", description: "搜索历史和 Pasto；无参数返回最近项目。兼容原版已证实的输入字段。", properties: [
                 "query": string, "type": ["type": "string", "enum": ["text", "image", "file", "color", "link"]],
                 "app": string, "device": string, "title": string, "pinboard_id": identifier,
                 "date_from": string, "date_to": string,
                 "limit": ["type": "integer", "default": 20, "description": "默认 20，实际值限制在 1 到 100。"]
             ], readOnly: true),
             ToolDefinition(name: "read_item", description: "按 search 返回的 id 读取完整内容；支持文本和 PNG 图像。", properties: ["id": identifier], required: ["id"], readOnly: true),
-            ToolDefinition(name: "create_item", description: "保存文本，自动识别 text/color/link；不写系统剪贴板。list_id 指向私有 Pinboard；新建仅置顶项无历史时间。", properties: ["content": string, "list_id": identifier], required: ["content"]),
+            ToolDefinition(name: "create_item", description: "保存文本，自动识别 text/color/link；不写系统剪贴板。list_id 指向私有 Pasto；新建仅置顶项无历史时间。", properties: ["content": string, "list_id": identifier], required: ["content"]),
             ToolDefinition(name: "update_item", description: "更新 title/content，至少传入一项；图片和文件只能改标题。", properties: ["id": identifier, "title": string, "content": string], required: ["id"]),
             ToolDefinition(name: "delete_item", description: "不可逆删除。confirm 缺省或 false 仅预览，true 才实际删除。", properties: ["id": identifier, "confirm": boolean], required: ["id"], destructive: true),
-            ToolDefinition(name: "list_pinboards", description: "列出 Pinboard 的 id、name、itemCount。", properties: [:], readOnly: true),
-            ToolDefinition(name: "create_pinboard", description: "创建私有 Pinboard，名称去除首尾空白。", properties: ["name": string], required: ["name"]),
-            ToolDefinition(name: "rename_pinboard", description: "重命名 Pinboard，名称去除首尾空白。", properties: ["id": identifier, "name": string], required: ["id", "name"]),
-            ToolDefinition(name: "delete_pinboard", description: "confirm 缺省或 false 仅预览；true 删除 Pinboard，保留历史项目。", properties: ["id": identifier, "confirm": boolean], required: ["id"], destructive: true),
-            ToolDefinition(name: "add_item_to_pinboard", description: "将已保存项目加入 Pinboard；重复调用保持幂等。", properties: ["item_id": identifier, "pinboard_id": identifier], required: ["item_id", "pinboard_id"]),
-            ToolDefinition(name: "remove_item_from_pinboard", description: "仅移除指定 Pinboard 的归属，保留历史和其他 Pinboard。", properties: ["item_id": identifier, "pinboard_id": identifier], required: ["item_id", "pinboard_id"]),
+            ToolDefinition(name: "list_pinboards", description: "列出 Pasto 的 id、name、itemCount。", properties: [:], readOnly: true),
+            ToolDefinition(name: "create_pinboard", description: "创建私有 Pasto，名称去除首尾空白。", properties: ["name": string], required: ["name"]),
+            ToolDefinition(name: "rename_pinboard", description: "重命名 Pasto，名称去除首尾空白。", properties: ["id": identifier, "name": string], required: ["id", "name"]),
+            ToolDefinition(name: "delete_pinboard", description: "confirm 缺省或 false 仅预览；true 删除 Pasto，保留历史项目。", properties: ["id": identifier, "confirm": boolean], required: ["id"], destructive: true),
+            ToolDefinition(name: "add_item_to_pinboard", description: "将已保存项目加入 Pasto；重复调用保持幂等。", properties: ["item_id": identifier, "pinboard_id": identifier], required: ["item_id", "pinboard_id"]),
+            ToolDefinition(name: "remove_item_from_pinboard", description: "仅移除指定 Pasto 的归属，保留历史和其他 Pasto。", properties: ["item_id": identifier, "pinboard_id": identifier], required: ["item_id", "pinboard_id"]),
             ToolDefinition(name: "replica_restore_item", description: "复刻扩展，非原版已证工具：恢复 UI 软删除项目；无法恢复 delete_item 永久删除。", properties: ["item_id": identifier], required: ["item_id"]),
             ToolDefinition(name: "replica_copy_item", description: "复刻扩展，非原版已证工具。显式写入具名私有剪贴板；只有 allow_system_clipboard=true 才可写 general，具有剪贴板副作用。", properties: ["item_id": identifier, "pasteboard_name": string, "plain_text_only": boolean, "allow_system_clipboard": boolean], required: ["item_id", "pasteboard_name"])
         ]
@@ -184,7 +184,7 @@ private final class Server {
     }
 
     private func pinboard(_ id: UUID) throws -> Pinboard {
-        guard let board = store.pinboards.first(where: { $0.id == id }) else { throw invalid("No pinboard with this id") }
+        guard let board = store.pinboards.first(where: { $0.id == id }) else { throw invalid("No Pasto with this id") }
         return board
     }
 
@@ -324,7 +324,7 @@ private final class Server {
         case "delete_item":
             let id = try uuid(args, "id"), value = try item(id), confirmed = args["confirm"] as? Bool ?? false
             if confirmed { try store.permanentlyDelete(ids: [id]) }
-            return try result(["deleted": confirmed, "item": summary(value), "message": confirmed ? "项目已永久删除。" : "预览：confirm=true 后永久删除项目及其 Pinboard 归属。"])
+            return try result(["deleted": confirmed, "item": summary(value), "message": confirmed ? "项目已永久删除。" : "预览：confirm=true 后永久删除项目及其 Pasto 归属。"])
         case "list_pinboards":
             return try result(["pinboards": store.pinboards.sorted { $0.sortOrder < $1.sortOrder }.map(boardSummary)])
         case "create_pinboard":
@@ -338,7 +338,7 @@ private final class Server {
             let id = try uuid(args, "id"), value = try pinboard(id), confirmed = args["confirm"] as? Bool ?? false
             let before = boardSummary(value)
             if confirmed { try store.removePinboard(id: id) }
-            return try result(["deleted": confirmed, "pinboard": before, "message": confirmed ? "Pinboard 已删除，历史项目保留。" : "预览：confirm=true 后删除 Pinboard。"])
+            return try result(["deleted": confirmed, "pinboard": before, "message": confirmed ? "Pasto 已删除，历史项目保留。" : "预览：confirm=true 后删除 Pasto。"])
         case "add_item_to_pinboard", "remove_item_from_pinboard":
             let id = try uuid(args, "item_id"), boardID = try uuid(args, "pinboard_id")
             _ = try item(id); _ = try pinboard(boardID)

@@ -13,12 +13,12 @@ final class ReplicaSearchIndex: NSObject, CSSearchableIndexDelegate {
         let title: String
         let text: String
         let modified: Date
-        let app: String
+        let app: String?
         let type: String
         let device: String
         let pinboards: [String]
 
-        init(_ item: ClipboardItem) {
+        init(_ item: ClipboardItem, app: String?) {
             id = item.id
             let defaultTitle: String
             switch item.kind {
@@ -30,9 +30,20 @@ final class ReplicaSearchIndex: NSObject, CSSearchableIndexDelegate {
             case .unknown: defaultTitle = "Unknown"
             }
             title = item.originalTitle ?? defaultTitle
-            text = String([item.plainText, item.recognizedText].compactMap { $0 }.joined(separator: "\n").prefix(5000))
+            let recognizedText: String?
+            if item.kind != .image {
+                recognizedText = nil
+            } else if let document = item.recognizedTextDocument {
+                let words = document.words.map(\.text).joined(separator: " ")
+                recognizedText = words.isEmpty ? nil : words
+            } else {
+                recognizedText = item.recognizedText.flatMap { $0.isEmpty ? nil : $0 }
+            }
+            let baseText = item.kind == .image ? "" : (item.plainText ?? "")
+            let indexedText = recognizedText.map { baseText.isEmpty ? $0 : baseText + "\n" + $0 } ?? baseText
+            text = String(indexedText.prefix(5000))
             modified = item.updatedAt
-            app = item.sourceName
+            self.app = app
             type = item.kind == .files ? "file" : item.kind == .richText ? "text" : item.kind.rawValue
             device = item.sourceDevice
             pinboards = item.pinboardIDs.map(\.uuidString).sorted()
@@ -46,12 +57,14 @@ final class ReplicaSearchIndex: NSObject, CSSearchableIndexDelegate {
 
     private let domain: String
     private let index: CSSearchableIndex
+    private weak var store: ClipboardStore?
     private let appKey = CSCustomAttributeKey(keyName: "pasteApp", searchable: true, searchableByDefault: true, unique: false, multiValued: false)!
     private let typeKey = CSCustomAttributeKey(keyName: "pasteType", searchable: true, searchableByDefault: true, unique: false, multiValued: false)!
     private let deviceKey = CSCustomAttributeKey(keyName: "pasteDevice", searchable: true, searchableByDefault: true, unique: false, multiValued: false)!
     private let pinboardKey = CSCustomAttributeKey(keyName: "pastePinboard", searchable: true, searchableByDefault: true, unique: false, multiValued: true)!
     private let storeKey = CSCustomAttributeKey(keyName: "pasteReplicaStore", searchable: true, searchableByDefault: false, unique: false, multiValued: false)!
     private var sourceItems: [ClipboardItem] = []
+    private var sourceApplications: [SourceApplicationRecord] = []
     private var entries: [Entry] = []
     private var requested: Request?
     private var pending: Request?
@@ -65,18 +78,28 @@ final class ReplicaSearchIndex: NSObject, CSSearchableIndexDelegate {
     private(set) var error: Error?
     var onUpdate: (() -> Void)?
 
-    init(directoryURL: URL) {
+    init(directoryURL: URL, store: ClipboardStore? = nil) {
         let hash = SHA256.hash(data: Data(directoryURL.standardizedFileURL.path.utf8))
         domain = "PasteReplica." + hash.map { String(format: "%02x", $0) }.joined()
         index = CSSearchableIndex(name: domain)
+        self.store = store
         super.init()
         index.indexDelegate = self
     }
 
     func update(items: [ClipboardItem], nodes: [OriginalSearchQueryNode]) {
-        if sourceItems != items {
+        let applications = store?.sourceApplications ?? []
+        if sourceItems != items || sourceApplications != applications {
             sourceItems = items
-            entries = items.map(Entry.init)
+            sourceApplications = applications
+            let names = store.map { ReplicaSearchSuggestionSource.applicationNames(for: items, store: $0) }
+                ?? items.map {
+                    if $0.sourceApplicationBundleID == nil, $0.sourceApplicationRelationIsKnown == true { return nil }
+                    return $0.sourceName.isEmpty ? nil : $0.sourceName
+                }
+            entries = zip(items, names).map { item, app in
+                return Entry(item, app: app)
+            }
         }
         let request = Request(entries: entries, nodes: nodes)
         guard requested != request else { return }
@@ -114,7 +137,7 @@ final class ReplicaSearchIndex: NSObject, CSSearchableIndexDelegate {
             attributes.contentDescription = entry.text
         }
         attributes.contentModificationDate = entry.modified
-        attributes.setValue(entry.app as NSString, forCustomKey: appKey)
+        attributes.setValue(entry.app.map { $0 as NSString }, forCustomKey: appKey)
         attributes.setValue(entry.type as NSString, forCustomKey: typeKey)
         attributes.setValue(entry.device as NSString, forCustomKey: deviceKey)
         attributes.setValue(entry.pinboards as NSArray, forCustomKey: pinboardKey)

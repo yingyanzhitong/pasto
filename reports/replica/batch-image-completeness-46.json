@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "round": 46,
+  "scope": "文件/链接预览三个本地显示资源；跳过已在第7轮列待证的 Quick Look 父构造器，不重复计数。",
+  "counts": {"reviewed": 3, "complete": 3, "gap": 0, "uncertain": 0},
+  "source_binding": {
+    "helper": "replica/Sources/PastoCore/OriginalPreviewLocalization.swift",
+    "helper_sha256": "0163cc854b291a3341675ea525903141dc764dda4a2791b513f4a9c4515632f1",
+    "file_consumer": "replica/Sources/Pasto/UI/ReplicaFilePreviewContent.swift",
+    "file_consumer_sha256": "df56f4edf10439457eb19ae21ca3225088e66e2b9ebeb6db461f024fa60c76ee",
+    "link_consumer": "replica/Sources/Pasto/UI/ReplicaLinkPreviewContent.swift",
+    "link_consumer_sha256": "6becef98930daa19e63760be5039f4eda502f2a21ae7b91a2f484abb3d7b7947",
+    "historical_comparison": "Finder/多个文件入口各18个历史源码及资源摘要全部一致；browser入口19个绑定中helper+17locale资源一致，只有link消费者文件不同，已读取当前方法具体消费。没有将历史build当作当前build。"
+  },
+  "shared_contract": "三个入口均返回无插值的 Localizable/Locale.current/atURL 资源；原once bundle与当前Pasto资源bundle的产品身份适配单列，不声称URL相同。en与zh-Hans资源已spot-read，其余locale只按完整历史资源摘要复用，不声称逐语言运行。",
+  "records": [
+    {
+      "function_id": "Paste:0x1001dac54",
+      "status": "complete",
+      "historical_evidence": "reports/function-migration/Paste-0x1001dac54.json",
+      "original": {"path": "decompiled/Paste/part-0153.c", "start_line": 280, "end_line": 326, "address_range": "0x1001dac54..<0x1001dadd4"},
+      "current_reference": {"path": "replica/Sources/PastoCore/OriginalPreviewLocalization.swift", "symbol": "f_1001dac54()", "line_range": "140..142"},
+      "criterion": "完整原体初始化字符串后读共享bundle并取current locale构造Localizable资源，无额外分支。原长String指针100d9c030对应实际UTF8地址100d9c050，按原长度读取30字节确认为 preview.reveal-in-finder.title；当前精确同键，未用硬编码按钮文本替换。",
+      "actual_consumer": "ReplicaFilePreviewContent.swift:55 把 String(localized: f1dac54()) 作为真实 OriginalToolbarButton 标题；其weak回调调用revealInFinder，按钮插入metadata，previewMetadataView返回该metadata。",
+      "limitations": "只确认资源方法，Finder动作、关闭顺序及整个文件预览父不升级。"
+    },
+    {
+      "function_id": "Paste:0x1001c6fb0",
+      "status": "complete",
+      "historical_evidence": "reports/function-migration/Paste-0x1001c6fb0.json",
+      "original": {"path": "decompiled/Paste/part-0149.c", "start_line": 1744, "end_line": 1794, "address_range": "0x1001c6fb0..<0x1001c7130"},
+      "current_reference": {"path": "replica/Sources/PastoCore/OriginalPreviewLocalization.swift", "symbol": "f_1001c6fb0()", "line_range": "126..128"},
+      "criterion": "原完整体相同无插值构造流程；长String指针100d99770、长度0x18，对应实际地址100d99790的24字节为 item-type.multiple-files。当前同键，保留原资源查找及fallback机制。",
+      "actual_consumer": "ReplicaFilePreviewContent.swift:92..99 的update在paths.count != 1时真实生成description，并与持久size一起写入metadataLabel；该update由store.$items观察触发，不是未消费资源。",
+      "limitations": "仅资源键/构造合同，路径投影及文件count分类不由本条重新证明。"
+    },
+    {
+      "function_id": "Paste:0x1001c4388",
+      "status": "complete",
+      "historical_evidence": "reports/function-migration/Paste-0x1001c4388.json",
+      "original": {"path": "decompiled/Paste/part-0149.c", "start_line": 280, "end_line": 290, "address_range": "0x1001c4388..<0x1001c43ac"},
+      "current_reference": {"path": "replica/Sources/PastoCore/OriginalPreviewLocalization.swift", "symbol": "f_1001c4388()", "line_range": "122..124"},
+      "criterion": "原小String两个立即数0x2e6c6172656e6567与0xef726573776f7262按UTF8字节为general.browser，直接转f1e681c无插值。当前resource同键。无应用/Bundle/name的具体分支属于调用方，不混作资源getter内部。",
+      "actual_consumer": "ReplicaLinkPreviewContent.swift:117..121在默认应用或CFBundleName缺失/非String时执行String(localized: f1c4388())，继而生成真实打开按钮标题；空CFBundleName成功String仍保留，不误触此fallback。",
+      "limitations": "当前link文件已变化，资源入口有限合同由本轮实际消费核对保留；不冒系统浏览器实际查询曾运行验证。"
+    }
+  ],
+  "excluded_failed_addresses": ["Paste:0x100ac35f8", "Paste:0x100ac746c"],
+  "verification_scope": {"product_source_modified": false, "ledger_modified": false, "compiled": false, "application_executed": false, "functional_tests_executed": false, "mcp_executed": false, "one_to_one_acceptance_claimed": false}
+}

@@ -1,0 +1,31 @@
+{
+  "kind": "static_reuse_review",
+  "records": [
+    {
+      "function_id": "Paste:0x1002d2b54",
+      "status": "uncertain",
+      "original_path": "decompiled/Paste/part-0234.c",
+      "original_line": 6,
+      "current_path": "replica/Sources/PastoObjC/PRObjCExceptionCatcher.m",
+      "current_symbol": "catchExceptionIn:",
+      "criterion": "同步调用void block一次；正常返回nil；仅捕获NSException对象并返回原异常对象，不改名/reason，不吞其他异常类型。",
+      "consumer": "OriginalPasteboardArchive 调用 f_1002ffc68，后者同步调用 PRObjCExceptionCatcher.catchException。",
+      "source_sha256": "99b8ce9f229954f427517a16c4a976b6b1ad776873c0eb5a6856b6a82943af6e",
+      "limitations": "反编译C仅展示正常返回，原Objective-C异常landing pad及其捕获类型未从该C闭合。"
+    },
+    {
+      "function_id": "Paste:0x1002ffc68",
+      "status": "uncertain",
+      "original_path": "decompiled/Paste/part-0249.c",
+      "original_line": 1034,
+      "current_path": "replica/Sources/PastoCore/OriginalObjCExceptionBridge.swift",
+      "current_symbol": "f_1002ffc68",
+      "criterion": "同步执行throws Data操作；保留成功Data完整值或原Swift Error；ObjC异常转name/reason Error；无异常且Result未写则trap。",
+      "consumer": "OriginalPasteboardArchive 调用 f_1002ffc68，后者同步调用 PRObjCExceptionCatcher.catchException。",
+      "source_sha256": "cf3e9e3b016001d7d982a673e00e365d8b638693effe3c9c49f8c77b93102bc2",
+      "limitations": "Data成功、Swift错误和异常转换路径对应，但原非逃逸闭包运行时检查及catcher异常边界仍待证。"
+    }
+  ],
+  "build_executed": false,
+  "tests_executed": false
+}

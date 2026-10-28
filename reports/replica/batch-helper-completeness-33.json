@@ -1,0 +1,43 @@
+{
+  "kind": "static_reuse_review",
+  "records": [
+    {
+      "function_id": "Paste-Helper:0x100003c20",
+      "status": "complete",
+      "original_path": "decompiled/Paste-Helper/part-0000.c",
+      "original_line": 1674,
+      "current_path": "replica/Sources/PastoHelper/HelperMain.swift",
+      "current_symbol": "launchApplication",
+      "criterion": "NSWorkspace 启动无错误时记录成功并向上游返回 true。",
+      "consumer": "HelperMain.main → HelperDelegate.checkRunning → launchAfterDelay → launchApplication → openApplication；运行结果传给 completeLaunchAttempt。",
+      "source_sha256": "60d98b18e87390fcc6c8de6a43b75d9505bfd74b822eb9e0fc6dc58bbfd47e12",
+      "limitations": "源码级结果与 continuation 分支；不推断系统启动、进程状态或当前二进制 ABI。"
+    },
+    {
+      "function_id": "Paste-Helper:0x100003d58",
+      "status": "complete",
+      "original_path": "decompiled/Paste-Helper/part-0000.c",
+      "original_line": 1723,
+      "current_path": "replica/Sources/PastoHelper/HelperMain.swift",
+      "current_symbol": "launchApplication",
+      "criterion": "NSWorkspace 启动错误时记录 localizedDescription 并向上游返回 false；错误不继续抛给重试调度器。",
+      "consumer": "HelperMain.main → HelperDelegate.checkRunning → launchAfterDelay → launchApplication → openApplication；运行结果传给 completeLaunchAttempt。",
+      "source_sha256": "60d98b18e87390fcc6c8de6a43b75d9505bfd74b822eb9e0fc6dc58bbfd47e12",
+      "limitations": "源码级结果与 continuation 分支；不推断系统启动、进程状态或当前二进制 ABI。"
+    },
+    {
+      "function_id": "Paste-Helper:0x100004230",
+      "status": "complete",
+      "original_path": "decompiled/Paste-Helper/part-0000.c",
+      "original_line": 1963,
+      "current_path": "replica/Sources/PastoHelper/HelperMain.swift",
+      "current_symbol": "openApplication",
+      "criterion": "NSWorkspace completion 的 error 非空时优先 resume throwing；无 error 时 application 必须非空，否则 trap；正常 application 则 resume returning，一次完成 checked continuation。",
+      "consumer": "HelperMain.main → HelperDelegate.checkRunning → launchAfterDelay → launchApplication → openApplication；运行结果传给 completeLaunchAttempt。",
+      "source_sha256": "60d98b18e87390fcc6c8de6a43b75d9505bfd74b822eb9e0fc6dc58bbfd47e12",
+      "limitations": "源码级结果与 continuation 分支；不推断系统启动、进程状态或当前二进制 ABI。"
+    }
+  ],
+  "build_executed": false,
+  "tests_executed": false
+}

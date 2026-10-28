@@ -1,0 +1,61 @@
+{
+  "review_kind": "read_only_existing_source_color_and_file_action_batch",
+  "scope": "round9未纳入的三个已有来源颜色/本地文件动作方法；已由image第8批覆盖的临时图片清理不重复计入。",
+  "counts": { "reviewed": 3, "complete": 2, "gap": 0, "uncertain": 1, "new_migrations_claimed": 0 },
+  "inputs": {
+    "ledger": "replica/function-map.json",
+    "original_success_index": "reports/Paste/function-index.json",
+    "current_sources": [
+      "replica/Sources/PastoCore/OriginalSourceApplicationColors.swift",
+      "replica/Sources/PastoCore/OriginalFilePreviewActions.swift",
+      "replica/Sources/Pasto/UI/ReplicaFilePreviewContent.swift"
+    ],
+    "existing_original_codec_arm_proof": ".local/pasteboard-source-color-codec-original-proof.json",
+    "existing_original_color_table": ".local/root-source-app-color-overrides.json",
+    "existing_original_table_pointer_proof": ".local/pasteboard-next-source-color-overrides-review.json"
+  },
+  "skipped_overlap": [
+    { "function_id": "Paste:0x100384aac", "already_in": "reports/replica/batch-image-completeness-8.json" },
+    { "function_id": "Paste:0x100384e6c", "already_in": "reports/replica/batch-image-completeness-8.json" }
+  ],
+  "limits": [
+    "仅阅读成功原C、现有源码及已存静态原ARM/常量表证据；未改产品源码、台账或用户数据，仅写本报告。",
+    "未编译、parse、运行应用、功能或MCP测试，未运行验证脚本或发布。",
+    "未重新计算原镜像/源码摘要，既有machine/table摘要只作为已有证据标识引用，不冒当前编译产物绑定。",
+    "两项complete为独立合法值方法；不把SourceApplication实体factory、取色算法父、Header或数据库事务升级完整。",
+    "3项中2项完整仅为本批结论，不代表项目总进度；三项均为已有migrated，本批新增迁移计数0。",
+    "失败地址0x100ac35f8、0x100ac746c未分析。"
+  ],
+  "functions": [
+    {
+      "function_id": "Paste:0x100308c8c", "status": "complete",
+      "original_path": "decompiled/Paste/part-0251.c", "original_line": 613,
+      "current_path": "replica/Sources/PastoCore/OriginalSourceApplicationColors.swift",
+      "current_symbol": "OriginalSourceApplicationColors.encoded(_:)",
+      "criterion": "原NSColor转deviceRGB，失败trap；四个CGFloat槽先零，经一次getRed:green:blue:alpha:读取；按A/R/G/B各乘255转UInt64截断，不round/clamp，再A<<24|R<<16|G<<8|B。当前完全同读取与转换顺序；Swift UInt64浮点构造保非有限、<=-1、>=2^64的失败域，负零/(-1,0)截断0保持，未只取RGB或丢alpha。",
+      "original_arm_evidence": "已存完整body100308c8c..100308ea0共532B，证据sha256=4e549d7714133cb0854667e58f354bba96beced4185c9d07880fee0203f2b098；call100308d0c→stub100c02f80→selref100f877e8→cstring100decf44精确getRed:green:blue:alpha:。四槽读取后原FCVTZU/位移或与当前数值操作对应，不据Ghidra有符号long打印误改成Int64。",
+      "consumer": "OriginalSourceApplicationColors.rawColor→SourceApplication.snapshot实际存rawColor；SourceAppColor把decodedNSColor重新encoded后匹配Header palette，两个真实消费路径均在。",
+      "boundary": "不是整个来源app持久化factory完整，亦不声明UIColor/NSColor子类机器实现或当前编译入口验证。"
+    },
+    {
+      "function_id": "Paste:0x100311f7c", "status": "complete",
+      "original_path": "decompiled/Paste/part-0254.c", "original_line": 403,
+      "current_path": "replica/Sources/PastoCore/OriginalSourceApplicationColors.swift",
+      "current_symbol": "OriginalSourceApplicationColors.f_100311f7c(_:)",
+      "criterion": "原once初始化覆盖表，按完整bundleIdentifier精确查找，空表/未命中nil；命中值signed负数trap，否则调用色码→NSColor值方法。当前lazy static字典查找同域，precondition <=Int64.max保同UInt64高位错误域，再委托已存在color(code)。不lowercase、不前缀匹配、不在getter内从图像取色。",
+      "table_review": "本轮读取既有原表全部47个bundle/color对，并逐项对照当前overrides字面表一致，含Adobe大小写、Photoshop0x5c90、Notion0等，未按常识改app名称或颜色。既有pointer证据区分39个large literal链与8个inline literal，表恢复出处可追；本轮没有重跑链验证或把表initializer另增完成计数。",
+      "consumer": "rawColor(bundleIdentifier:image:)先调用本getter；nil才走实际prominentColor/gray回退，并最终encoded，不把表中的RGB常量直接冒最终ARGB。",
+      "boundary": "只核表lookup getter及固定输入表值，不宣称原全局槽地址、DI或整个SourceApplication父完成。"
+    },
+    {
+      "function_id": "Paste:0x1003bc874", "status": "uncertain",
+      "original_path": "decompiled/Paste/part-0295.c", "original_line": 1227,
+      "current_path": "replica/Sources/PastoCore/OriginalFilePreviewActions.swift",
+      "current_symbol": "OriginalFilePreviewActions.f_1003bc874(_:)",
+      "criterion": "原已读数组部分逐项取fileURL Data、严格UTF8、URL(string:)失败丢弃，保序/重复，[]也调用NSWorkspace.activateFileViewerSelecting，随后NSApp.deactivate；当前Core compactMap f37cc6c及两个系统调用同合同，无isFileURL/reachable/nonempty guard。",
+      "unresolved": "原完整方法开头实际读取self所持ItemEntity.data，再调用f31b218的原ItemDataEntity表示getter；当前Core入口直接接已解码items，真实UI revealInFinder先按itemID查当前store记录，并以try? ClipboardStore.originalPasteboardItems(... ) ?? []预解码。普通可解码值链可对应，但原实体data fault/Objective-C异常路径、缺实体与UI try?失败域尚未完整对照，不能只把数组投影完整当原整个方法已闭。这是具体读取与错误链边界，非仅类名/ABI不同。",
+      "consumer": "ReplicaFilePreviewContent.revealInFinder真实委托；其defer performClose属原f3e2eac独立父关闭适配，不签入本方法；guard item缺失时当前不调用Finder也是该UI前置域。",
+      "decision": "保留uncertain，不改产品源码或已登记状态；不称数组过滤或Finder系统调用存在已证错误。"
+    }
+  ]
+}

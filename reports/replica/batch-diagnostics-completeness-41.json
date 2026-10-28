@@ -1,0 +1,31 @@
+{
+  "kind": "static_reuse_review",
+  "records": [
+    {
+      "function_id": "Paste:0x1002fe514",
+      "status": "complete",
+      "original_path": "decompiled/Paste/part-0249.c",
+      "original_line": 70,
+      "current_path": "replica/Sources/PastoCore/OriginalDiagnosticsManager.swift",
+      "current_symbol": "f_1002fe514",
+      "criterion": "尝试创建日志目录（中间目录允许，失败吞掉继续）；关闭旧句柄，设置directoryURL并启用文件输出，将共享console门槛设0。",
+      "consumer": "AppMain.swift 启动恢复偏好并处理诊断开关，调用 f_1002fe72c；启用分支调用 f_1002fe514。",
+      "source_sha256": "afb071a98b036e3023f254c039ca1d85c4a975e79307aa3f3075b1caf21513ed",
+      "limitations": "源码级目录错误、持久化及输出开关顺序合同；不推断文件系统运行结果或编译二进制行为。"
+    },
+    {
+      "function_id": "Paste:0x1002fe72c",
+      "status": "complete",
+      "original_path": "decompiled/Paste/part-0249.c",
+      "original_line": 139,
+      "current_path": "replica/Sources/PastoCore/OriginalDiagnosticsManager.swift",
+      "current_symbol": "f_1002fe72c",
+      "criterion": "写enabled字段，仅值变化才persist；persist后重新读取self.enabled，为true调用启用流程，否则先禁用file、close、门槛改1。",
+      "consumer": "AppMain.swift 启动恢复偏好并处理诊断开关，调用 f_1002fe72c；启用分支调用 f_1002fe514。",
+      "source_sha256": "afb071a98b036e3023f254c039ca1d85c4a975e79307aa3f3075b1caf21513ed",
+      "limitations": "源码级目录错误、持久化及输出开关顺序合同；不推断文件系统运行结果或编译二进制行为。"
+    }
+  ],
+  "build_executed": false,
+  "tests_executed": false
+}

@@ -1,0 +1,314 @@
+{
+  "kind": "batch-window-completeness-30",
+  "generated_at": "2026-10-27T12:40:24.399373+00:00",
+  "scope": "7项已有快捷键有限方法；复用未变化历史逐地址证据，同时重读原完整C、当前实现及真实生产引用。",
+  "summary": {
+    "reviewed": 7,
+    "complete": 6,
+    "gap": 1,
+    "uncertain": 0
+  },
+  "inventory": "reports/replica/batch-unchanged-static-evidence.json",
+  "activities": {
+    "product_source_edited": false,
+    "ledger_edited": false,
+    "compiled": false,
+    "product_run": false,
+    "tests_run": false,
+    "wrapper_added": false
+  },
+  "skipped_failed_addresses": [
+    "Paste:0x100ac35f8",
+    "Paste:0x100ac746c"
+  ],
+  "limitations": [
+    "complete仅指本地址有限静态输入输出/分支/副作用合同，不是全体快捷键或UI交互运行验收。",
+    "历史源码摘要一致仅绑定未变证据，不替代逐项合同审阅；历史build76/78声明不当成本轮构建。",
+    "f1e7d18的gap是静态getter顺序差异，未证明普通NSEvent的值或用户体验受影响。",
+    "本轮不改台账完成数，不给产品复刻完成率；报告仅7项局部复核，6/7不等于整体迁移率。"
+  ],
+  "functions": [
+    {
+      "function_id": "Paste:0x1001e95fc",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-0157.c",
+        "line": 282
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutFunctions.swift",
+          "symbol": "f_1001e95fc"
+        }
+      ],
+      "evidence": "已读完整成功C：无参数、无条件、无调用或副作用，唯一返回0x35（Int 53）。当前同名方法无参数直接返回53，没有额外判定/状态写入，有限输入输出合同完整复用。",
+      "actual_consumer": "OriginalShortcutRecorder.f_1001f132c在无修饰Escape分支调用；随后切换录制状态并吞事件。",
+      "historical_evidence": {
+        "path": "reports/function-migration/Paste-0x1001e95fc.json",
+        "sha256": "d8fbce00db33e64cb50c8e4b6a66a576226abb226a708bf2e6fb3d2b127e4036",
+        "contract": "无参数固定键码getter，完整函数仅返回Int 53（Escape），无其他分支或副作用。",
+        "historical_build_snapshot": "reports/replica/dev52-static-build78.json",
+        "build_claim_reused_as_current": false
+      },
+      "current_source_binding": {
+        "replica/Sources/PastoCore/OriginalShortcutFunctions.swift": {
+          "sha256": "82c57689dfb20e2c4c02cd3c4ca72cf40ee7a3fd650b5fa832d79589761a9058",
+          "historical_sha256": "82c57689dfb20e2c4c02cd3c4ca72cf40ee7a3fd650b5fa832d79589761a9058",
+          "unchanged": true
+        },
+        "replica/Sources/PastoCore/OriginalShortcutRecorder.swift": {
+          "sha256": "ba907c942f91fe336506e9a47576051f285bfce47ccd43315cb111aedbd237f2",
+          "historical_sha256": "ba907c942f91fe336506e9a47576051f285bfce47ccd43315cb111aedbd237f2",
+          "unchanged": true
+        }
+      }
+    },
+    {
+      "function_id": "Paste:0x1001e9610",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-0157.c",
+        "line": 302
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutFunctions.swift",
+          "symbol": "f_1001e9610"
+        }
+      ],
+      "evidence": "已读完整成功C：无参数、无条件、无调用或副作用，唯一返回0x33（Int 51）。当前同名方法无参数直接返回51，没有额外判定/状态写入，有限输入输出合同完整复用。",
+      "actual_consumer": "OriginalShortcutRecorder.f_1001f132c在无修饰Delete/forwardDelete集合条件调用，触发f1ef434清除绑定。",
+      "historical_evidence": {
+        "path": "reports/function-migration/Paste-0x1001e9610.json",
+        "sha256": "172fc6e99fa6bb1152407cf6a8e02e25e47c298aa9d3981a66f2ff091bfd830e",
+        "contract": "无参数固定键码getter，完整函数仅返回Int 51（Delete），无其他分支或副作用。",
+        "historical_build_snapshot": "reports/replica/dev52-static-build78.json",
+        "build_claim_reused_as_current": false
+      },
+      "current_source_binding": {
+        "replica/Sources/PastoCore/OriginalShortcutFunctions.swift": {
+          "sha256": "82c57689dfb20e2c4c02cd3c4ca72cf40ee7a3fd650b5fa832d79589761a9058",
+          "historical_sha256": "82c57689dfb20e2c4c02cd3c4ca72cf40ee7a3fd650b5fa832d79589761a9058",
+          "unchanged": true
+        },
+        "replica/Sources/PastoCore/OriginalShortcutRecorder.swift": {
+          "sha256": "ba907c942f91fe336506e9a47576051f285bfce47ccd43315cb111aedbd237f2",
+          "historical_sha256": "ba907c942f91fe336506e9a47576051f285bfce47ccd43315cb111aedbd237f2",
+          "unchanged": true
+        }
+      }
+    },
+    {
+      "function_id": "Paste:0x1001e9624",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-0157.c",
+        "line": 322
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutFunctions.swift",
+          "symbol": "f_1001e9624"
+        }
+      ],
+      "evidence": "已读完整成功C：无参数、无条件、无调用或副作用，唯一返回0x75（Int 117）。当前同名方法无参数直接返回117，没有额外判定/状态写入，有限输入输出合同完整复用。",
+      "actual_consumer": "OriginalShortcutRecorder.f_1001f132c在无修饰Delete/forwardDelete集合条件调用；不把删除方向策略归入固定键码getter。",
+      "historical_evidence": {
+        "path": "reports/function-migration/Paste-0x1001e9624.json",
+        "sha256": "8b106423f43f69f505cb6c65fc1b104a61865928c8967d672c12351ba93676cb",
+        "contract": "无参数固定键码getter，完整函数仅返回Int 117（forwardDelete），无其他分支或副作用。",
+        "historical_build_snapshot": "reports/replica/dev52-static-build78.json",
+        "build_claim_reused_as_current": false
+      },
+      "current_source_binding": {
+        "replica/Sources/PastoCore/OriginalShortcutFunctions.swift": {
+          "sha256": "82c57689dfb20e2c4c02cd3c4ca72cf40ee7a3fd650b5fa832d79589761a9058",
+          "historical_sha256": "82c57689dfb20e2c4c02cd3c4ca72cf40ee7a3fd650b5fa832d79589761a9058",
+          "unchanged": true
+        },
+        "replica/Sources/PastoCore/OriginalShortcutRecorder.swift": {
+          "sha256": "ba907c942f91fe336506e9a47576051f285bfce47ccd43315cb111aedbd237f2",
+          "historical_sha256": "ba907c942f91fe336506e9a47576051f285bfce47ccd43315cb111aedbd237f2",
+          "unchanged": true
+        }
+      }
+    },
+    {
+      "function_id": "Paste:0x1001e9638",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-0157.c",
+        "line": 342
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutFunctions.swift",
+          "symbol": "f_1001e9638"
+        }
+      ],
+      "evidence": "已读完整成功C：无参数、无条件、无调用或副作用，唯一返回0x7b（Int 123）。当前同名方法无参数直接返回123，没有额外判定/状态写入，有限输入输出合同完整复用。",
+      "actual_consumer": "KeyboardShortcut.previousPinboardDefault读取本值；Models创建/缺键解码默认值保留，UIController.handlePanelKey通过previousPinboardShortcut.matches后switchBoard(-1)。",
+      "historical_evidence": {
+        "path": "reports/function-migration/Paste-0x1001e9638.json",
+        "sha256": "4867ae022c57fac29233965e7ee4e2674437f3e58c6790740bc9028e4e6ad63d",
+        "contract": "无参数固定键码getter，完整函数仅返回Int 123（leftArrow），无其他分支或副作用。",
+        "historical_build_snapshot": "reports/replica/dev52-static-build78.json",
+        "build_claim_reused_as_current": false
+      },
+      "current_source_binding": {
+        "replica/Sources/PastoCore/OriginalShortcutFunctions.swift": {
+          "sha256": "82c57689dfb20e2c4c02cd3c4ca72cf40ee7a3fd650b5fa832d79589761a9058",
+          "historical_sha256": "82c57689dfb20e2c4c02cd3c4ca72cf40ee7a3fd650b5fa832d79589761a9058",
+          "unchanged": true
+        },
+        "replica/Sources/PastoCore/KeyboardShortcut.swift": {
+          "sha256": "eba51741928fc95619585980567b617d39f3c749564cddb5dff4bbd04bf189d6",
+          "historical_sha256": "eba51741928fc95619585980567b617d39f3c749564cddb5dff4bbd04bf189d6",
+          "unchanged": true
+        }
+      }
+    },
+    {
+      "function_id": "Paste:0x1001e964c",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-0157.c",
+        "line": 362
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutFunctions.swift",
+          "symbol": "f_1001e964c"
+        }
+      ],
+      "evidence": "已读完整成功C：无参数、无条件、无调用或副作用，唯一返回0x7c（Int 124）。当前同名方法无参数直接返回124，没有额外判定/状态写入，有限输入输出合同完整复用。",
+      "actual_consumer": "KeyboardShortcut.nextPinboardDefault读取本值；Models创建/缺键解码默认值保留，UIController.handlePanelKey通过nextPinboardShortcut.matches后switchBoard(1)。",
+      "historical_evidence": {
+        "path": "reports/function-migration/Paste-0x1001e964c.json",
+        "sha256": "9bec2c1fa992ec3cd98c5a6909b5144c914da1815f64ebbd220aab94d2c4b577",
+        "contract": "无参数固定键码getter，完整函数仅返回Int 124（rightArrow），无其他分支或副作用。",
+        "historical_build_snapshot": "reports/replica/dev52-static-build78.json",
+        "build_claim_reused_as_current": false
+      },
+      "current_source_binding": {
+        "replica/Sources/PastoCore/OriginalShortcutFunctions.swift": {
+          "sha256": "82c57689dfb20e2c4c02cd3c4ca72cf40ee7a3fd650b5fa832d79589761a9058",
+          "historical_sha256": "82c57689dfb20e2c4c02cd3c4ca72cf40ee7a3fd650b5fa832d79589761a9058",
+          "unchanged": true
+        },
+        "replica/Sources/PastoCore/KeyboardShortcut.swift": {
+          "sha256": "eba51741928fc95619585980567b617d39f3c749564cddb5dff4bbd04bf189d6",
+          "historical_sha256": "eba51741928fc95619585980567b617d39f3c749564cddb5dff4bbd04bf189d6",
+          "unchanged": true
+        }
+      }
+    },
+    {
+      "function_id": "Paste:0x1001e7d18",
+      "status": "gap",
+      "original": {
+        "path": "decompiled/Paste/part-0156.c",
+        "line": 1284
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutFunctions.swift",
+          "symbol": "f_1001e7d18"
+        }
+      ],
+      "evidence": "完整C与原ARM一致：先modifierFlags（BL 0x1001e7d2c），保存返回值，再keyCode（BL 0x1001e7d3c），输出keyCode低32位与原flags & 0xff5f0000。当前KeyboardShortcut初始化实参先求event.keyCode，再求event.modifierFlags；输出值和掩码一致，但两个getter读取轨迹次序相反。此处按完整静态调用顺序判gap；未证明普通不可变NSEvent有用户可见错误，不推断其事件值会改变。",
+      "actual_consumer": "KeyboardShortcut.matches、OriginalShortcutRecorder.f_1001f132c、UIController.handlePanelKey的exact copy/quick signature均直接调用；不是未接入helper。",
+      "missing": "当前未保留原modifierFlags→keyCode读取顺序。未修改产品源码。",
+      "original_arm_static_range": {
+        "path": ".local/paste-arm64-static.bin",
+        "start": "0x1001e7d18",
+        "end_exclusive": "0x1001e7d58",
+        "flags_call": "0x1001e7d2c -> 0x100c06e00",
+        "keycode_call": "0x1001e7d3c -> 0x100c05f00"
+      },
+      "historical_evidence": {
+        "path": "reports/function-migration/Paste-0x1001e7d18.json",
+        "sha256": "bd687187797499e292c2f294c101d7f5464d40d00da20cd3e8f3417cb711f3b4",
+        "contract": "从 NSEvent 读取 UInt32 键码与修饰位，修饰位严格按 0xff5f0000 过滤；不把 numericPad/function/deviceFlags 混入快捷键值。",
+        "historical_build_snapshot": "reports/replica/dev52-static-build78.json",
+        "build_claim_reused_as_current": false
+      },
+      "current_source_binding": {
+        "replica/Sources/PastoCore/OriginalShortcutFunctions.swift": {
+          "sha256": "82c57689dfb20e2c4c02cd3c4ca72cf40ee7a3fd650b5fa832d79589761a9058",
+          "historical_sha256": "82c57689dfb20e2c4c02cd3c4ca72cf40ee7a3fd650b5fa832d79589761a9058",
+          "unchanged": true
+        },
+        "replica/Sources/PastoCore/KeyboardShortcut.swift": {
+          "sha256": "eba51741928fc95619585980567b617d39f3c749564cddb5dff4bbd04bf189d6",
+          "historical_sha256": "eba51741928fc95619585980567b617d39f3c749564cddb5dff4bbd04bf189d6",
+          "unchanged": true
+        },
+        "replica/Sources/PastoCore/OriginalShortcutRecorder.swift": {
+          "sha256": "ba907c942f91fe336506e9a47576051f285bfce47ccd43315cb111aedbd237f2",
+          "historical_sha256": "ba907c942f91fe336506e9a47576051f285bfce47ccd43315cb111aedbd237f2",
+          "unchanged": true
+        }
+      }
+    },
+    {
+      "function_id": "Paste:0x1001e7d58",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-0156.c",
+        "line": 1303
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutFunctions.swift",
+          "symbol": "f_1001e7d58"
+        }
+      ],
+      "evidence": "完整成功C从固定四项字典遍历，只在(key & ~input)==0时OR映射值，初始0；返回UInt32，原负值/超UInt32及遍历计数溢出trap仅对固定表/合法容器不可能触发。已直接只读原thin MachO固定数组：0x100fb4fc0 header count4/capacity8，entries从0x100fb4fe0分别100000→100、80000→800、40000→1000、20000→200。当前四entry逐项subset判定再OR，同样忽略其它位、空mask返回0；OR交换性令原Dictionary内部枚举次序不影响结果。本方法不接受外部可变字典，未将任意坏字典域缩成固定输入。",
+      "actual_consumer": "OriginalShortcutRegistration.init将返回值直接传RegisterEventHotKey的Carbon modifiers；monitor注册/注销日志与OriginalShortcutValidation系统快捷键比较也调用同一函数。",
+      "fixed_table_static_bytes": {
+        "path": ".local/paste-arm64-static.bin",
+        "virtual_address": "0x100fb4fc0",
+        "file_offset": "0xfb4fc0",
+        "entries_offset": "0x20",
+        "entries": [
+          [
+            "0x100000",
+            "0x100"
+          ],
+          [
+            "0x80000",
+            "0x800"
+          ],
+          [
+            "0x40000",
+            "0x1000"
+          ],
+          [
+            "0x20000",
+            "0x200"
+          ]
+        ]
+      },
+      "historical_evidence": {
+        "path": "reports/function-migration/Paste-0x1001e7d58.json",
+        "sha256": "976f0d16e5ace82ad10f5ffaf01c844b880d8b1229da3dfb03b2979cb7627477",
+        "contract": "遍历原版四项 AppKit→Carbon 修饰键映射，输入含该位则 OR 对应 UInt32 值，其余位忽略。",
+        "historical_build_snapshot": "reports/replica/dev52-static-build78.json",
+        "build_claim_reused_as_current": false
+      },
+      "current_source_binding": {
+        "replica/Sources/PastoCore/OriginalShortcutFunctions.swift": {
+          "sha256": "82c57689dfb20e2c4c02cd3c4ca72cf40ee7a3fd650b5fa832d79589761a9058",
+          "historical_sha256": "82c57689dfb20e2c4c02cd3c4ca72cf40ee7a3fd650b5fa832d79589761a9058",
+          "unchanged": true
+        },
+        "replica/Sources/PastoCore/OriginalGlobalShortcutMonitor.swift": {
+          "sha256": "277dc405a3e660b36ec808e301ccfa3fa48568c8291295e02dafe84e595325b4",
+          "historical_sha256": "277dc405a3e660b36ec808e301ccfa3fa48568c8291295e02dafe84e595325b4",
+          "unchanged": true
+        }
+      }
+    }
+  ]
+}

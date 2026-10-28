@@ -1,0 +1,44 @@
+{
+  "review_kind": "read_only_native_writer_types_and_objc_return_bridge_followup",
+  "counts": {"reviewed": 2, "complete": 1, "gap": 1, "uncertain": 0, "new_migrations_claimed": 0},
+  "functions": [
+    {
+      "function_id": "Paste:0x1003ca700",
+      "status": "complete",
+      "previous_report": "reports/replica/batch-core-completeness-11.json",
+      "reviewed_previously": true,
+      "original_path": "decompiled/Paste/part-0300.c",
+      "original_line": 2145,
+      "current_path": "replica/Sources/PastoCore/OriginalNativeDragPasteboardWriter.swift",
+      "current_symbol": "OriginalNativeDragPasteboardWriter.writableTypes(for:)",
+      "criterion": "重新阅读完整成功C至3ca9c0前：依外层items顺序遍历每个types，再把每项桥接为原生pasteboard类型，拼接后无条件追加一次own-ID类型。当前flatMap orderedTypes再append com.wiheads.paste.item-id，保持重复、空group及无Data类型，不去重、不依赖pasteboard状态。",
+      "actual_consumer": "真实native collection创建writer并交NSDraggingItem；本地重排装饰writer先调用本方法，再另追加自己的marker类型，未替换底层输出或把group顺序变成Set。",
+      "boundary": "此方法不读取source.identifier，因此第50轮身份值gap不传播至本类型列表方法；不能因同一个class其它方法有gap一律降级所有已完整方法。"
+    },
+    {
+      "function_id": "Paste:0x1003ca608",
+      "status": "gap",
+      "previous_report": "reports/replica/batch-core-completeness-18.json",
+      "previous_status": "uncertain",
+      "original_path": "decompiled/Paste/part-0300.c",
+      "original_line": 2109,
+      "current_path": "replica/Sources/PastoCore/OriginalNativeDragPasteboardWriter.swift",
+      "current_symbol": "NSPasteboardWriting.pasteboardPropertyListForType:桥接→pasteboardPropertyList(forType:)",
+      "original_contract": "原ObjC入口调用f3ca374取得Optional Any；none→nil，some按真实type metadata复制值并bridgeAnythingToObjectiveC后销毁临时值，返回对应对象。成功C不把字典缺失数据伪造成空NSData。",
+      "current_contract": "现NSObject子类实现原生NSPasteboardWriting，Swift方法返回Any?中的String、Data或nil，语言桥接对应NSString、NSData或nil。当前本地装饰writer只截自有marker，其余请求继续委托原writer。",
+      "gap_reason": "第50轮已闭合的实际source身份差异会经此桥接入口原样成为不同NSString：原默认本地新建标识为checksum，当前生产Reference返回UUID.uuidString。桥接层本身没有证据显示更改字符串或消除此差异；因此按实际生产返回合同不能继续仅待证或签完整。",
+      "gap_provenance": "仅继承第29/50轮同一个创建身份缺陷，不是桥接新增独立缺陷，不声称Data桥接分支有错。没有当前编译selector/ARC检查，完整机器桥接生命周期仍未闭，不因源级协议存在冒称compiled等价。",
+      "original_body_evidence": ".local/pasteboard-native-drag-writer-closure.json中原完整3ca608..3ca700，248B，SHA2568e4bac190919b96bc7d46de984a9bc3522b3b32626340e08813f09563c5bd637；沿用原证据，不冒当前构建绑定。"
+    }
+  ],
+  "sdk_header_read": {
+    "path": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/AppKit.framework/Headers/NSPasteboard.h",
+    "declarations": ["198: writableTypesForPasteboard: returns NSArray<NSPasteboardType>*", "210: pasteboardPropertyListForType: returns nullable id"],
+    "scope": "静态声明只支持源级协议输入输出核对，不证明当前二进制实际方法表或运行回执。"
+  },
+  "limits": [
+    "只新增报告；不改产品源码、台账、用户数据或标识。",
+    "未编译、parse、运行产品、测试、MCP、验证脚本或发布；跳过两个指定失败地址。",
+    "复审地址及同源身份缺陷须跨批去重，新增迁移0；没有当前编译体或运行验收证明。"
+  ]
+}

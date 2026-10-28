@@ -1,6 +1,32 @@
 import Foundation
 
 public enum OriginalSearchSuggestions {
+    public enum Suggestion: Equatable, Sendable {
+        case query([OriginalSearchQueryNode])
+        case filter(UInt8, String)
+    }
+
+    /// Original 0x1002dcca4, before the caller normalizes the resulting query.
+    public static func f_1002dcca4(_ suggestion: Suggestion, index: Int, addMode: UInt8,
+                                  nodes: [OriginalSearchQueryNode]) -> [OriginalSearchQueryNode] {
+        switch suggestion {
+        case let .query(query):
+            return query
+        case let .filter(tag, value):
+            let filter = OriginalSearchQueryNode.filter(tag, value)
+            guard !nodes.contains(filter) else { return nodes }
+            if addMode == 1 {
+                // f_1002dcf24(1, nodes) is the generic dropLast operation.
+                return Array(nodes.dropLast()) + [filter]
+            }
+            guard index < nodes.count else { return nodes }
+            precondition(index >= 0)
+            var result = nodes
+            result[index] = filter
+            return result
+        }
+    }
+
     public struct Provider {
         public let app: (String) throws -> [String]
         public let type: (String) throws -> [String]

@@ -1,0 +1,30 @@
+{
+  "kind": "batch-window-completeness-21",
+  "scope": "2个完整建议应用/建议锚点计算方法，核全部值分支和实际菜单消费者。",
+  "summary": {"reviewed": 2, "complete": 2, "gap": 0, "uncertain": 0},
+  "prior_inventory": "reports/replica/batch-completeness-round20.json",
+  "definite_product_differences": [],
+  "activities": {"product_source_edited": false, "ledger_edited": false, "compiled": false, "product_run": false, "tests_run": false, "wrapper_added": false},
+  "skipped_failed_addresses": ["Paste:0x100ac35f8", "Paste:0x100ac746c"],
+  "limitations": [
+    "完整仅指有限输入/输出/分支静态合同，不是当前构建、建议弹窗视觉或文本布局运行验收。",
+    "建议应用只负责原节点变换，不冒归一化、异步provider、CoreData或IME全父已完成。",
+    "原索引/数组私有ABI不主张相同，不改变台账数量。"
+  ],
+  "functions": [
+    {
+      "function_id": "Paste:0x1002dcca4", "status": "complete",
+      "original": {"path": "decompiled/Paste/part-0237.c", "line": 1513},
+      "source_references": [{"path": "replica/Sources/PastoCore/OriginalSearchSuggestions.swift", "symbol": "f_1002dcca4"}],
+      "evidence": "原整query建议直接返回所带数组，不使用index/addMode；filter建议先对已有filter按UInt8 tag和原String精确去重，命中返回原nodes。未重复时addMode恰为1调用f2dcf24(1,nodes)再append新filter；其余mode仅index<count替换，负index到替换分支trap，index>=count原样返回。当前switch/contains/dropLast/替换及前置条件同序，空数组addMode1得到单filter。已续读f2dcf24完整ring-buffer逻辑：保留最后count项作延迟缓冲，只输出被后续项推出的前项，最终丢缓冲，确认count1确为dropLast而不是dropFirst或prefix。未在本方法擅加归一化/空白处理。",
+      "actual_consumer": "SearchEditor.accept将真实选中候选转filter，以context.nodeIndex/addMode0调用，再独立归一化、渲染、记录history；query/addMode1全域虽当前该菜单未主动生产，方法分支已按原C核对，不伪称运行覆盖。"
+    },
+    {
+      "function_id": "Paste:0x100046e28", "status": "complete",
+      "original": {"path": "decompiled/Paste/part-0026.c", "line": 180},
+      "source_references": [{"path": "replica/Sources/PastoCore/OriginalSearchSuggestionAnchor.swift", "symbol": "f_100046e28"}],
+      "evidence": "仅用NSRange.location，从textContentManager.documentRange.location偏移定位fragment；任一级nil回zero。先按unsigned NSLocationInRange取首匹配line，否则重新读首line，无line回zero。减line.location采用signed溢出trap，先max0再min(length)；index<length取locationForCharacter.x，否则取typographicBounds.width。x仅加glyphOrigin.x，不加fragment.minX；y=fragmentFrame.minY+glyphOrigin.y，尺寸整行typographicBounds。当前同一短路、回退、三次characterRange读取及四分量。原C误标double返回，ARM 0x100047070..098证实有符号差/溢出/两次长度判定，70c0/70dc分别累加x/y，7120..7128给d3/d2/d1，7174给d0；零分支7168..7170清其余三分量。",
+      "actual_consumer": "SearchEditor.updateSuggestions在真实layoutViewport后用context.anchorRange调用，editor.convert到field坐标后传ReplicaSearchSuggestionsMenu.show的anchorRect；不是未消费几何helper。"
+    }
+  ]
+}

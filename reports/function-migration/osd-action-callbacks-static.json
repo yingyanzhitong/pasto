@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "kind": "static_code_migration",
+  "implementation_origin": "existing_reused",
+  "functions": [
+    {
+      "function_id": "Paste:0x1002387f0",
+      "original": "decompiled/Paste/part-0193.c:2102",
+      "contract": "Schedule retained payload action on the main queue at now plus 0.1 seconds, unspecified QoS and empty flags.",
+      "implementation": "ReplicaCopiedOSD.Content.body onTapGesture / DispatchQueue.main.asyncAfter"
+    },
+    {
+      "function_id": "Paste:0x100238ab8",
+      "original": "decompiled/Paste/part-0193.c:2208",
+      "contract": "On the main executor, invoke a present action once; do nothing when action is nil.",
+      "implementation": "ReplicaCopiedOSD.Content.body / delayed action?()"
+    }
+  ],
+  "source": "replica/Sources/Pasto/UI/ReplicaCopiedOSD.swift",
+  "consumer": "AppMain copy-only OSD optional enableDirectPaste action",
+  "build_executed": false,
+  "tests_executed": false,
+  "equivalence_verified": false,
+  "limitations": "Only these two callback methods are marked migrated. Parent OSD construction, gesture state, Accessibility preferences, DI and compiler ABI/diagnostic identity are not promoted."
+}

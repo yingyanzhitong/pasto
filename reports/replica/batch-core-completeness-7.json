@@ -1,0 +1,110 @@
+{
+  "review_kind": "read_only_existing_core_capture_filter_classification_checksum_batch",
+  "scope": "此前Core批次未审的十个既有 migrated 方法：采集过滤、分类纯值/固定表及三个MD5值方法；不重审unknown归档wire或捕获仓库父事务。",
+  "counts": { "reviewed": 10, "complete": 9, "gap": 0, "uncertain": 1, "new_migrations_claimed": 0 },
+  "inputs": {
+    "ledger": "replica/function-map.json",
+    "success_index": "reports/Paste/function-index.json",
+    "original_arm_image": ".local/targets/Paste.arm64",
+    "current_sources": [
+      "replica/Sources/PastoCore/OriginalPasteboardPolicies.swift",
+      "replica/Sources/PastoCore/OriginalPasteboardClassification.swift",
+      "replica/Sources/PastoCore/OriginalPasteboardChecksums.swift",
+      "replica/Sources/PastoCore/Pasteboard.swift"
+    ]
+  },
+  "limits": [
+    "只读成功原C、当前源码及必要有界ARM/常量字节；未改产品源码、台账、用户数据，仅新增本报告。",
+    "未编译、parse、运行应用、功能或MCP测试，未运行验证脚本或发布。",
+    "没有当前编译产物绑定；完整结论是有限合法源码输入域，不是SDK运行时/对象ABI/完整父事务验收。",
+    "MD5三项只核给定合法Data、Digest、String的值方法，不把原NSKeyedArchiver类名、data键、归档字节或unknown checksum父函数视作已解决。",
+    "本批9/10不代表全项目函数迁移率；十项均为已有 migrated，本批新增迁移计数0。",
+    "失败地址0x100ac35f8、0x100ac746c未分析。"
+  ],
+  "functions": [
+    {
+      "function_id": "Paste:0x10037b278", "status": "complete",
+      "original_path": "decompiled/Paste/part-0281.c", "original_line": 2057,
+      "current_path": "replica/Sources/PastoCore/OriginalPasteboardPolicies.swift",
+      "current_symbol": "OriginalPasteboardPolicies.f_10037b278(_:_:)",
+      "criterion": "原同集合存储直接true；否则数量不等false，逐String成员用第二集合hash/相等查询，任一缺失false，全存在true。当前Set<String> ==在相同合法值域保成员相等、空集合和与迭代顺序无关，不把数组顺序/重复当集合差异。原内部损坏存储trap不属于合法Set值合同。",
+      "consumer": "f37c22c逐类型过滤中比较去重allTypes与file-url/png精确集合。"
+    },
+    {
+      "function_id": "Paste:0x10037c22c", "status": "complete",
+      "original_path": "decompiled/Paste/part-0282.c", "original_line": 4,
+      "current_path": "replica/Sources/PastoCore/OriginalPasteboardPolicies.swift",
+      "current_symbol": "OriginalPasteboardPolicies.f_10037c22c(type:allTypes:)",
+      "criterion": "原每次查询frontmostApplication.bundleIdentifier，lowercase为Excel时只允许UTF16/UTF8文本；否则allTypes去重集合精确为file-url/png时拒file-url，再排除三个MS链接类型。当前分支顺序、nil前台仍走普通过滤、不作全局app缓存均对应。",
+      "original_constant_evidence": "原ARM37c2d8静态表100fc19a0的length19字串解到100da3b00=com.microsoft.excel；37c32c表100fc19d8的两项为100da3b20 public.utf16-plain-text、100da3840 public.utf8-plain-text。集合100fc1958内为public.file-url/public.png。37c43c表100fc1e50三项解到100da3df0 ObjectLink、100da3e10 Link-Source、100da3e30 DataObjec，三者均带com.microsoft.前缀；第三原字串确在Objec后NUL，不能擅补t。",
+      "consumer": "ClipboardMonitor.synchronizePasteboard在读取每个rawItem类型数据前真实调用；当前也先独立remote过滤，本条不把该外层规则签入原函数。"
+    },
+    {
+      "function_id": "Paste:0x10037ba14", "status": "uncertain",
+      "original_path": "decompiled/Paste/part-0281.c", "original_line": 2506,
+      "current_path": "replica/Sources/PastoCore/OriginalPasteboardPolicies.swift",
+      "current_symbol": "OriginalPasteboardPolicies.f_10037ba14(allTypes:excludedApplications:ignoredTypes:diagnostics:)",
+      "criterion": "已读原frontmost nil→debug拒绝，app忽略的精确例外/其他contains路径，以及逐type对ignored模式双向contains、命中info拒绝、否则允许。当前这些值判定和诊断顺序已存在，实际由originalPasteboardShouldRead消费。",
+      "unresolved": "原完整函数自身从manager Config读取应用忽略集合，并在逐type循环内再次调用f2ca7e0读取类型忽略集合；当前函数直接接收两个Set，caller先store.save再取preferences并合成瞬态/隐秘规则。原动态读取的全部时点/配置副作用不能由参数注入或正文未变证明已恢复；本批不据有限contains算法把原整函数签满，也不声称普通配置不变时已发现故障。",
+      "consumer": "ClipboardMonitor.originalPasteboardShouldRead真实调用后另执行store.allowsPasteboardCapture；额外store策略不属于本地址已核值域。"
+    },
+    {
+      "function_id": "Paste:0x100321f48", "status": "complete",
+      "original_path": "decompiled/Paste/part-0258.c", "original_line": 617,
+      "current_path": "replica/Sources/PastoCore/OriginalPasteboardClassification.swift",
+      "current_symbol": "OriginalPasteboardClassification.f_100321f48(_:)",
+      "criterion": "原先Foundation regex匹配^#?[A-Fa-f0-9]{6}$，失败false；成功且#前缀true，否则须再有[A-Fa-f]匹配。当前regex与hasPrefix同域，不trim，不把无#的六个纯数字判颜色。原首个large regex literal100da2300实际字节已读，第二small字串为[A-Fa-f]。",
+      "consumer": "f32362c文本→color判定，以及ClipboardStore.isHexColor真实委托。"
+    },
+    {
+      "function_id": "Paste:0x100322124", "status": "complete",
+      "original_path": "decompiled/Paste/part-0258.c", "original_line": 694,
+      "current_path": "replica/Sources/PastoCore/OriginalPasteboardClassification.swift",
+      "current_symbol": "OriginalPasteboardClassification.priorityTypes static initializer",
+      "criterion": "原构建count11的UTType数组，按fileURL/rtf/png/jpeg/heic/tiff/icns/url/utf8PlainText/plainText/text依序取平台类型并保存一次初始化槽。当前static let lazy初始化字面数组完全同序/同count，实际分类逐数组first(where:)消费，不改为Set或按传入types先后选择。",
+      "consumer": "f32362c选择最高优先级类型，静态存储有真实读取。"
+    },
+    {
+      "function_id": "Paste:0x100322224", "status": "complete",
+      "original_path": "decompiled/Paste/part-0258.c", "original_line": 729,
+      "current_path": "replica/Sources/PastoCore/OriginalPasteboardClassification.swift",
+      "current_symbol": "OriginalPasteboardClassification.typeMap static initializer",
+      "criterion": "原11项键值为fileURL→3，png/jpeg/heic/tiff/icns→1，url→4，rtf/utf8PlainText/plainText/text→5；固定键无重复，字典构建后保存初始化槽。当前Dictionary(uniqueKeysWithValues:)与UInt8枚举raw case相同，无额外HTML/GIF条目，也不把URL格式映射为text。",
+      "consumer": "f32362c通过选中的UTType查询真实kind，不是仅为报告建立的表。"
+    },
+    {
+      "function_id": "Paste:0x10032362c", "status": "complete",
+      "original_path": "decompiled/Paste/part-0258.c", "original_line": 1593,
+      "current_path": "replica/Sources/PastoCore/OriginalPasteboardClassification.swift",
+      "current_symbol": "OriginalPasteboardClassification.f_10032362c(_:)",
+      "criterion": "原聚合所有item.types，按固定优先级找首type/字典kind，无匹配unknown；不要求类型同时有Data。text只从首item取可选URL，非nil提升link，再由首普通文本颜色谓词优先返回color。link首文本trim后非空才NSDataDetector link(0x20) firstMatch；完整覆盖UTF16范围才link，匹配局部text；空/检测器失败/无match保link。当前所有分支及仅首item细化对应。",
+      "nil_comparison_boundary": "原C中text→link包含Optional<URL> Equatable展开：local_e0被显式置none，再与f37ce0c结果比较。它等价于URL结果!=nil；两边some时URL.==的泛型剩余分支并不因此产生一个真实额外URL比较规则，不能仅看到该调用就猜当前漏分支。",
+      "consumer": "Pasteboard.swift capture、knownPasteboardChecksum及ClipboardMonitor捕获动作真实调用；本条不改历史数据或声明外层capture全部恢复。"
+    },
+    {
+      "function_id": "Paste:0x100323324", "status": "complete",
+      "original_path": "decompiled/Paste/part-0258.c", "original_line": 1374,
+      "current_path": "replica/Sources/PastoCore/OriginalPasteboardChecksums.swift",
+      "current_symbol": "OriginalPasteboardChecksums.f_100323324(_:into:)",
+      "criterion": "原按Data合法inline/slice/storage表示取有效字节buffer，对已有MD5 hasher执行一次update；空Data更新零字节，不重置已有状态。当前Data.withUnsafeBytes→hasher.update(bufferPointer:)保当前Data有效范围及inout累积状态。原storage offset路径已读至f3234d0，未把底层capacity或外层payload字典当有效字节。",
+      "consumer": "私有checksum(Data)构造hasher后实际调用；图像Data/字符串UTF8 checksum共用。",
+      "boundary": "不把非法Data内部位型、悬空裸指针及底层SDK内存布局列为可构造Swift值输入。"
+    },
+    {
+      "function_id": "Paste:0x100322fe4", "status": "complete",
+      "original_path": "decompiled/Paste/part-0258.c", "original_line": 1258,
+      "current_path": "replica/Sources/PastoCore/OriginalPasteboardChecksums.swift",
+      "current_symbol": "OriginalPasteboardChecksums.f_100322fe4(_:)",
+      "criterion": "原沿MD5Digest的Sequence顺序逐UInt8以%02x生成String数组，不加分隔、不丢前导0、不反转字节；当前digest.map同格式UInt8 CVarArg。原ARM323158/15c及323290/294用0x78323025 small literal即%02x，确认不是仅按台账文案猜格式。",
+      "consumer": "checksum(Data)对finalize结果实际调用并joined输出。"
+    },
+    {
+      "function_id": "Paste:0x100322d94", "status": "complete",
+      "original_path": "decompiled/Paste/part-0258.c", "original_line": 1186,
+      "current_path": "replica/Sources/PastoCore/OriginalPasteboardChecksums.swift",
+      "current_symbol": "OriginalPasteboardChecksums.f_100322d94(_:)",
+      "criterion": "原String严格UTF8、allowLossyConversion=false，nil则空串；some Data（包含空）新建MD5、update、finalize、%02x逐字节并以空分隔joined。当前guard后checksum同序，未unicode规范化、trim或用平台Hasher替代MD5；空输入产生空Data的MD5而不是直接空串。",
+      "consumer": "f3216bc的text/link/color与FileSnippet路径实际调用；该父方法涉及原归档分支不由本条完整结论升级。"
+    }
+  ]
+}

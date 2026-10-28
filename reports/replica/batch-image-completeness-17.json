@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "scope": "前轮未覆盖的四个预览颜色亮度/对比色/默认背景值方法；成功原C、指定原ARM和实际消费者只读核对。",
+  "counts": { "total": 4, "complete": 4, "gap": 0, "uncertain": 0 },
+  "records": [
+    {
+      "function_id": "Paste:0x1002067d4",
+      "status": "complete",
+      "original": { "path": "decompiled/Paste/part-0170.c", "start_line": 3076, "address_range": "0x1002067d4..<0x1002068e0" },
+      "current_implementations": [ { "path": "replica/Sources/PastoCore/OriginalPreviewTextColors.swift", "start_line": 52, "end_line": 59, "symbol": "public static func f_1002067d4(_ color: NSColor) -> Bool" } ],
+      "criterion": "原先转deviceRGB，失败令加权分子0从而返回false；成功依次读red/green/blue/alpha，alpha不参与亮度，计算((red*299+green*587)+blue*114)/1000并与0.55作严格大于比较。原ARM20686c/87c分别乘，206880加，206890乘blue，206894再加，2068ac除，2068c4 cset gt；没有FMA、clamp或gamma处理。当前相同算式与读取顺序，等于阈值及NaN都false，正无穷true，失败直接false与原0分子分支同值。",
+      "actual_consumer": "ReplicaColorPreviewContent.swift第141行及ReplicaCanonicalCardContent.swift第36行真实色码文字黑白选择；OriginalCompactTextCardAppearance.appearance第18行据此选择局部Aqua/DarkAqua；富文本背景推导也消费。",
+      "limitations": "源码浮点操作合同完整，不宣称当前编译器机器码逐字一致；没有运行NSColor转换或边界测试。"
+    },
+    {
+      "function_id": "Paste:0x100206ecc",
+      "status": "complete",
+      "original": { "path": "decompiled/Paste/part-0170.c", "start_line": 3440, "address_range": "0x100206ecc..<0x100206f0c" },
+      "current_implementations": [
+        { "path": "replica/Sources/Pasto/UI/ReplicaColorPreviewContent.swift", "symbol": "codeLabel.textColor = OriginalPreviewTextColors.f_1002067d4(color) ? .black : .white" },
+        { "path": "replica/Sources/Pasto/UI/ReplicaCanonicalCardContent.swift", "symbol": "OriginalPreviewTextColors.f_1002067d4(color)" }
+      ],
+      "criterion": "原调用f2067d4的返回值决定平台blackColor或whiteColor，true黑、false白，无额外alpha或来源色判断。C把返回寄存器误显为param1，原ARM206ed8调用、206edc保存返回x19、206eec tbz w19分支，证明输入不是独立Bool参数。两个真实色彩消费者直接复用该三元值方法，没有为地址造新包装；nil转换、阈值相等及NaN随目标false选择白。",
+      "actual_consumer": "全文颜色预览codeLabel和canonical颜色卡片HEX文字实际设置textColor/foregroundStyle。",
+      "limitations": "只确认黑白值选择，不升级整个ColorPreview构造/actor桥或色卡布局。"
+    },
+    {
+      "function_id": "Paste:0x100219a90",
+      "status": "complete",
+      "original": { "path": "decompiled/Paste/part-0183.c", "start_line": 422, "address_range": "0x100219a90..<0x100219bc4" },
+      "current_implementations": [ { "path": "replica/Sources/PastoCore/OriginalPreviewTextColors.swift", "start_line": 13, "end_line": 19, "symbol": "public static func f_100219a90()" } ],
+      "criterion": "原建立white light色及RGB三个通道bitpattern3fb4141414141414、alpha1的dark色（20/255），以name:nil的NSColor dynamicProvider捕获dark/light，经f1ff49c按传入appearance选择，保存同一全局槽。当前同两色、同provider/helper、同optional色槽写入，不把dark换系统颜色或使用当前appearance一次性静态解析。",
+      "actual_consumer": "backgroundInitialized的首次初始化实际调用；f219bc4返回该slot供OriginalCompactTextCardAppearance.background和全文plain背景恢复使用。",
+      "limitations": "仅动态颜色构造/槽赋值，appearance分类目标方法不在本批重复计数；不执行系统appearance回调。"
+    },
+    {
+      "function_id": "Paste:0x100219bc4",
+      "status": "complete",
+      "original": { "path": "decompiled/Paste/part-0183.c", "start_line": 468, "address_range": "0x100219bc4..<0x100219c04" },
+      "current_implementations": [ { "path": "replica/Sources/PastoCore/OriginalPreviewTextColors.swift", "start_line": 21, "end_line": 24, "symbol": "public static func f_100219bc4() -> UnsafeMutablePointer<NSColor?>" } ],
+      "criterion": "原swift_once确保f219a90首次初始化，之后每次返回同一全局optional颜色槽地址，不返回颜色副本，也不每次新建provider。当前Swift static let backgroundInitialized承担一次初始化，backgroundSlot持久分配并每次返回同pointer；调用者pointee读取原值，没有把返回合同降为单次颜色值。",
+      "actual_consumer": "OriginalCompactTextFooter.swift第11行真实plain卡片背景读取；OriginalPreviewTextColors.f3eb4a8第98行真实全文背景读取。",
+      "limitations": "只确认一次初始化与稳定槽值接口；原静态地址与独立应用分配地址不主张相同，不做运行初始化测试。"
+    }
+  ],
+  "arm_evidence": { "binary": ".local/paste-arm64-static.bin", "ranges": [ "0x1002067d4..<0x1002068e0", "0x100206ecc..<0x100206f0c" ], "method": "只读llvm-objdump指定成功函数范围，未启动二进制" },
+  "excluded_failed_addresses": [ "0x100ac35f8", "0x100ac746c" ],
+  "verification_scope": "仅新增本独立报告；没有产品源码、台账、旧报告改动，没有编译、parse、运行应用、测试、MCP或发布，未读取指定失败函数。complete为有限源码合同，不表示当前产物核验或一比一功能通过。"
+}

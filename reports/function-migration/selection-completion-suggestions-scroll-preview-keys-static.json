@@ -1,0 +1,165 @@
+{
+  "schema_version": 1,
+  "kind": "static_code_migration",
+  "functions": [
+    {
+      "function_id": "Paste:0x1003245fc",
+      "state": "migrated",
+      "contract": "Stored三可选字段投影：type精确pinboard返回pinboard(colorCode??0)，其余含nil/空/未知返回clipboard(capacity??30)；显式0/负容量和完整UInt64保留。",
+      "implementations": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPinboardAttributes.swift",
+          "symbol": "private static func f_1003245fc"
+        }
+      ],
+      "source": {
+        "path": "decompiled/Paste/part-0258.c",
+        "line": 2397
+      },
+      "review": "完整成功原方法两个case/default与新private Value逐分支对应，现colorCode解码先调用完整投影再取pinboard，Header/AppIntents/卡片真实消费。",
+      "remaining": "仅独立属性值投影完整；原实体rawAttributes读取及全部属性父不升级。"
+    },
+    {
+      "function_id": "Paste:0x100030134",
+      "state": "migrated",
+      "contract": "选区nil或索引>=行数不操作；负索引trap；目标row.bounds纵向向上扩第一行高度、总高增加两倍第一行高度，然后scrollRectToVisible。",
+      "implementations": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchSuggestionsMenu.swift",
+          "symbol": "func revealSelection()"
+        }
+      ],
+      "source": {
+        "path": "decompiled/Paste/part-0018.c",
+        "line": 2972
+      },
+      "review": "将普通row.bounds reveal补为原带留白的rect，并由实际键盘选区路径消费；读取本列表selectedIndex，保持原nil/越界/负值分支。",
+      "remaining": "此建议行定位业务方法完整，原列表构造/NSStackView桥和整体建议父不升级。"
+    },
+    {
+      "function_id": "Paste:0x10002fe24",
+      "state": "migrated",
+      "contract": "无enclosingScrollView或无documentView不操作；读取可见origin.y，加第一行高度(无行加0)，仅以原比较限制到document.height-visible.height，不另加下界；重读document可选滚到x0，再reflect当前clip。",
+      "implementations": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchSuggestionsMenu.swift",
+          "symbol": "func scrollDownOneRow()"
+        }
+      ],
+      "source": {
+        "path": "decompiled/Paste/part-0018.c",
+        "line": 2828
+      },
+      "review": "成功原body并读原arm 10002fe70..10002ff54确认origin与首行高度、比较及调用顺序；实际下箭头hover消费，修正旧selectedRowHeight/双向统一clamp适配。",
+      "remaining": "此向下滚动业务方法完整，不升级外部hover事件桥或整个Scroller。"
+    },
+    {
+      "function_id": "Paste:0x10007bbe8",
+      "state": "migrated",
+      "contract": "原规范化raw快捷键依次匹配CmdR/CmdE/Esc：非内容编辑时重命名/进入编辑且消费；内容编辑时两命令交super；Esc编辑时cancel，非编辑先cancel标题再可选close；其他全部交super并返回结果。",
+      "implementations": [
+        {
+          "path": "replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift",
+          "symbol": "override func performKeyEquivalent(with event: NSEvent)"
+        }
+      ],
+      "source": {
+        "path": "decompiled/Paste/part-0041.c",
+        "line": 35
+      },
+      "review": "先补CmdR及Esc标题取消，再将CmdE和Esc也改为原raw签名；移除额外Editable入口guard，具体begin方法自行no-op而本分派仍按原返回true。成功原f208658=isHidden XOR1已独立核对。",
+      "remaining": "仅纯分派方法完整；ObjC actor桥f07bdc0、lazyHeader构造和具体action父不随之升级。"
+    },
+    {
+      "function_id": "Paste:0x10005aa8c",
+      "state": "partial",
+      "contract": "弱owner有效且有scroll时，按第一行高度向上滚；有首行以0<=candidate保下界，无首行以origin<0分支保原比较；可选document滚后reflect。",
+      "implementations": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchSuggestionsMenu.swift",
+          "symbol": "func scrollUpOneRow()"
+        }
+      ],
+      "source": {
+        "path": "decompiled/Paste/part-0031.c",
+        "line": 2243
+      },
+      "review": "真实上箭头hover改用第一行而非当前选中行高度，并拆开上下边界策略；保原浮点比较分支。",
+      "remaining": "向上值/scroll分支已落；外层weak原list与当前Scroller事件桥对象生命周期仍适配，保留partial。"
+    },
+    {
+      "function_id": "Paste:0x10022c9c4",
+      "state": "partial",
+      "contract": "与viewport相交的card启动定位不传completion并立即回调true；离屏card将completion交真实keyed动画结果。",
+      "implementations": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaNativeCardCollection.swift",
+          "symbol": "private func revealPrimaryCard"
+        }
+      ],
+      "source": {
+        "path": "decompiled/Paste/part-0190.c",
+        "line": 229
+      },
+      "review": "接上上轮真实动画完成/取消链；实际选择reveal入口同步更新cells并抑制同次primary观察的重复动画。",
+      "remaining": "原完整布局/Config/集合类型仍适配，整父继续partial；不把普通非选择定位当完整选择链。"
+    },
+    {
+      "function_id": "Paste:0x100228e1c",
+      "state": "partial",
+      "contract": "只在完成结果为true且weak owner/delegate仍有效时调用选择委托，false或释放不操作。",
+      "implementations": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "fileprivate func revealSelection"
+        }
+      ],
+      "source": {
+        "path": "decompiled/Paste/part-0188.c",
+        "line": 2157
+      },
+      "review": "真实completion弱捕获controller与native collection，success后才调用selectionDidReveal；取消不再当成功，不设临时可见Bool API。",
+      "remaining": "原可变delegate读取/协议对象域与当前固定controller消费图仍适配，保留partial。"
+    },
+    {
+      "function_id": "Paste:0x100229130",
+      "state": "partial",
+      "contract": "只在完成结果为true且weak owner/delegate仍有效时调用选择委托，false或释放不操作。",
+      "implementations": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "fileprivate func revealSelection"
+        }
+      ],
+      "source": {
+        "path": "decompiled/Paste/part-0188.c",
+        "line": 2347
+      },
+      "review": "真实completion弱捕获controller与native collection，success后才调用selectionDidReveal；取消不再当成功，不设临时可见Bool API。",
+      "remaining": "原可变delegate读取/协议对象域与当前固定controller消费图仍适配，保留partial。"
+    },
+    {
+      "function_id": "Paste:0x100075e3c",
+      "state": "partial",
+      "contract": "完成时按requestedIndex而非revealed endpoint解析当前实体及真实可见cell，失败beep；成功且现有popover显示时更新预览。",
+      "implementations": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "private func selectionDidReveal"
+        }
+      ],
+      "source": {
+        "path": "decompiled/Paste/part-0037.c",
+        "line": 3598
+      },
+      "review": "越界导航不再提前丢弃：保选区后仍reveal末项，完成后读取当前visibleItems/cell身份。只success执行此方法。",
+      "remaining": "原f0679ac最终DI选择ID发布尚未同构，现Published提前更新与popover.isDisplayed护栏仍适配，不计完整。"
+    }
+  ],
+  "updated_selection_parent": "Paste:0x100228c78",
+  "original_arm_evidence": ".local/suggestions-scroll-down-original-arm64.txt",
+  "build_executed": false,
+  "tests_executed": false,
+  "equivalence_verified": false,
+  "limitations": "Source migration and manual static comparison only. No compile, parse, application execution, tests, install, commit or release. Original final DI publishing, object lifecycles and historical source-evidence freshness remain separate."
+}

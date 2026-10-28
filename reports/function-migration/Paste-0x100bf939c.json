@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "kind": "static_code_migration",
+  "function_id": "Paste:0x100bf939c",
+  "reviewed_at": "2026-10-27T04:48:53.462782+00:00",
+  "original_binary_sha256": "871f00354fbb1c165d858a98e6d19d6f43cb9d3f9f958b3e07c7f07eb5c19afb",
+  "original_pseudocode": {
+    "path": "decompiled/Paste/part-1194.c",
+    "line": 807
+  },
+  "original_pseudocode_sha256": "bd206dd322742cafcd371b3dc93a996be9050d38a025e7c913b08bb17653da40",
+  "source_sha256": {},
+  "sdk_implementation": {
+    "report": "reports/function-migration/sdk-import-reuse.json",
+    "entry_key": "Paste:0x100bf939c",
+    "symbol": "_$sSy10FoundationE22caseInsensitiveCompareySo18NSComparisonResultVqd__SyRd__lF"
+  },
+  "sdk_reuse_report_sha256": "7644eb6f08c47030049438f2716e708ad517c1631a274524254c25f2f5df9d21",
+  "implementation_origin": "existing_sdk_reused",
+  "build_succeeded": true,
+  "build_command": "swift build --package-path replica -c release",
+  "compiled_app_binary_sha256": "664b642c1888703a032a86a6815b7b7c7921412538b53975987625c7859b22ca",
+  "compiled_product": "Pasto",
+  "functional_regression_executed": false,
+  "equivalence_verified": false,
+  "contract": "arm64 纯转发：ADRP/LDR 从导入指针槽读取目标并 BR x16；不修改参数寄存器、栈或返回地址。SDK 内部实现不计入此契约。",
+  "review": "逐地址核对原始和当前编译产物的12字节转发体、符号、dylib、弱导入、ABI和零偏移绑定；仅记录系统入口复用。",
+  "regression_policy": "全范围迁移完成后统一回归；本条不证明SDK内部或调用方行为。"
+}

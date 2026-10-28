@@ -19,6 +19,7 @@ final class ReplicaUIState: ObservableObject {
     } }
     @Published var pinboardID: UUID?
     @Published var showDeleted = false
+    @Published var isMigratingPasteGroups = false
     @Published var selection: Set<UUID> = [] {
         didSet { if !isApplyingSelection { reconcileExternalSelection() } }
     }
@@ -46,7 +47,7 @@ final class ReplicaUIState: ObservableObject {
 
     init(store: ClipboardStore) {
         self.store = store
-        searchIndex = ReplicaSearchIndex(directoryURL: store.directoryURL)
+        searchIndex = ReplicaSearchIndex(directoryURL: store.directoryURL, store: store)
         stackIDs = store.preferences.stackItemIDs
         searchIndex.onUpdate = { [weak self] in
             self?.objectWillChange.send()
@@ -159,7 +160,8 @@ final class ReplicaUIState: ObservableObject {
         }
     }
 
-    private func selectIndex(_ index: Int, mode: UInt8, items: [ClipboardItem]) {
+    private func selectIndex(_ index: Int, mode: UInt8, items: [ClipboardItem], animated: Bool = true) {
+        if items.indices.contains(index), orderedSelectionIDs == [items[index].id] { return }
         let positions = Dictionary(uniqueKeysWithValues: items.enumerated().map { ($0.element.id, $0.offset) })
         var value = OriginalOrderedSelection(selectedIndexes: orderedSelectionIDs.compactMap { positions[$0] },
             itemCount: items.count, anchor: rangeAnchorID.flatMap { positions[$0] })
@@ -167,6 +169,18 @@ final class ReplicaUIState: ObservableObject {
         let ids = value.selectedIndexes.map { items[$0].id }
         if !ids.isEmpty { allowsEmptySelection = false }
         applyOrderedSelection(ids, anchor: value.anchor.map { items[$0].id }, primary: ids.last)
+        if let endpointID = ids.last {
+            controller?.revealSelection(endpointID: endpointID, requestedIndex: index, animated: animated)
+        }
+    }
+
+    // f228a50's double-click path sets the singleton directly, without a reveal/delegate callback.
+    func selectForDoubleClick(at index: Int) {
+        let items = visibleItems
+        guard items.indices.contains(index) else { return }
+        let id = items[index].id
+        allowsEmptySelection = false
+        applyOrderedSelection([id], anchor: id, primary: id)
     }
 
     func select(_ item: ClipboardItem, modifiers: NSEvent.ModifierFlags = []) {
@@ -176,14 +190,32 @@ final class ReplicaUIState: ObservableObject {
         selectIndex(index, mode: OriginalOrderedSelection.mode(modifierFlags: modifiers.rawValue), items: items)
     }
 
+    // f2287ec keeps the captured numeric index and does not move first responder.
+    func selectAfterPressDelay(at index: Int) {
+        selectIndex(index, mode: 0, items: visibleItems)
+    }
+
+    // f228128 preserves an existing multi-selection and does not change first responder.
+    func selectForContextMenu(_ item: ClipboardItem) {
+        let items = visibleItems
+        guard let index = items.firstIndex(where: { $0.id == item.id }),
+              !selection.contains(item.id) else { return }
+        selectIndex(index, mode: 0, items: items)
+    }
+
     func moveSelection(_ offset: Int, extending: Bool = false) {
         let items = visibleItems
         guard !items.isEmpty else { return }
         guard let endpoint = orderedSelectionIDs.last,
               let current = items.firstIndex(where: { $0.id == endpoint }) else { return }
         let next = current + offset
-        guard items.indices.contains(next) else { return }
         selectIndex(next, mode: extending ? 2 : 0, items: items)
+    }
+
+    func moveSelectionToBoundary(last: Bool, extending: Bool = false) {
+        let items = visibleItems
+        guard !items.isEmpty else { return }
+        selectIndex(last ? items.count - 1 : 0, mode: extending ? 2 : 0, items: items, animated: false)
     }
 
     func chooseBoard(_ id: UUID?) {
@@ -197,8 +229,14 @@ final class ReplicaUIState: ObservableObject {
 
     func switchBoard(_ offset: Int) {
         let ids: [UUID?] = [nil] + store.pinboards.sorted { $0.sortOrder < $1.sortOrder }.map { Optional($0.id) }
-        let current = ids.firstIndex { $0 == pinboardID } ?? 0
-        chooseBoard(ids[max(0, min(ids.count - 1, current + offset))])
+        guard let current = ids.firstIndex(where: { $0 == pinboardID }) else { return }
+        let next: Int
+        switch offset {
+        case -1: next = (current - 1 + ids.count) % ids.count
+        case 1: next = (current + 1) % ids.count
+        default: return
+        }
+        chooseBoard(ids[next])
     }
 
     func perform(_ action: () throws -> Void) {
@@ -243,13 +281,20 @@ final class ReplicaUIState: ObservableObject {
     }
 
     func addToStack(_ item: ClipboardItem) {
-        if !stackIDs.contains(item.id) { stackIDs.append(item.id) }
+        guard !stackIDs.contains(item.id) else { return }
+        let previousIDs = stackItems.map(\.id)
+        let append = store.preferences.stackReversed
+        let insertionIndex = append ? previousIDs.count : 0
+        stackIDs.insert(item.id, at: append ? stackIDs.count : 0)
+        controller?.stackTableController?.didInsertSnippet(previousIDs: previousIDs,
+            updated: stackItems, at: insertionIndex)
     }
 
     func reverseStack() {
         OriginalStackFunctions.f_10008468c(&stackIDs)
         store.preferences.stackReversed.toggle()
         perform { try store.save() }
+        controller?.stackTableController?.updateSnippets(stackItems)
     }
 
     func selectAll() {
@@ -302,21 +347,41 @@ final class ReplicaUIState: ObservableObject {
 @MainActor
 final class ReplicaPanel: NSPanel, NSWindowDelegate {
     weak var collectionFocusTarget: NSView?
+    weak var tabTitleEditingOwner: OriginalPinboardTabTitleView?
     var keyHandler: ((NSEvent) -> Bool)?
     var didResignKey: (() -> Void)?
+    var didChangeScreen: (() -> Void)?
     var closeRequested: (() -> Void)?
     var copyRequested: (() -> Void)?
     func windowDidResignKey(_ notification: Notification) { didResignKey?() }
+    func windowDidChangeScreen(_ notification: Notification) { didChangeScreen?() }
     override func performClose(_ sender: Any?) { closeRequested?() }
+    override func validateMenuItem(_ menuItem: NSMenuItem) -> Bool {
+        if menuItem.action == #selector(NSWindow.performClose(_:)) { return true }
+        return super.validateMenuItem(menuItem)
+    }
     @objc func copy(_ sender: Any?) { copyRequested?() }
     override var canBecomeKey: Bool { true }
     override var canBecomeMain: Bool { true }
+    override func layoutIfNeeded() {
+        super.layoutIfNeeded()
+        minSize = frame.size
+        maxSize = frame.size
+    }
     override func makeFirstResponder(_ responder: NSResponder?) -> Bool {
-        let collection = collectionFocusTarget.flatMap { $0.window === self ? $0 : nil }
-        return super.makeFirstResponder(responder ?? collection ?? initialFirstResponder ?? contentView)
+        if let responder { return super.makeFirstResponder(responder) }
+        return super.makeFirstResponder(initialFirstResponder ?? contentView)
     }
     override func sendEvent(_ event: NSEvent) {
+        if event.type == .keyDown, tabTitleEditingOwner?.ownsEditor(in: self) == true {
+            super.sendEvent(event)
+            return
+        }
         if event.type == .keyDown, keyHandler?(event) == true { return }
+        if event.type == .keyDown, let collection = collectionFocusTarget,
+           collection.window === self, firstResponder === collection,
+           let content = contentView as? ReplicaPanelContentView,
+           content.tryInterpretSearchKeyEvent(event) { return }
         super.sendEvent(event)
     }
 }
@@ -345,6 +410,7 @@ final class ReplicaUIController {
     var hotKeyConfigurationChanged: (() -> Void)?
     var hotKeyRecordingChanged: ((Bool) -> Void)?
     var stackDidChange: (() -> Void)?
+    weak var stackTableController: OriginalStackTableController?
     var isStackVisible: Bool { stackWindow?.isVisible == true }
     var hotKeyStatusMessage: String {
         get { state.hotKeyStatusMessage }
@@ -356,6 +422,7 @@ final class ReplicaUIController {
     private var panelTransitionGeneration = 0
     private var isPanelClosing = false
     private var panelMouseMonitor: Any?
+    private var panelEscapeMonitor: Any?
     private var outsideMouseMonitor: Any?
     private var panelDismissObservers: [NSObjectProtocol] = []
     private var menuTrackingDepth = 0
@@ -365,6 +432,7 @@ final class ReplicaUIController {
     private var closedCreateObserver: NSObjectProtocol?
     private var closedRestoreObservation: AnyCancellable?
     private var stackWindow: NSWindow?
+    private var stackWindowController: OriginalStackWindowController?
     private var itemWindows: [UUID: NSWindow] = [:]
     private let previewRegistry = OriginalPreviewWindowRegistry()
     private var previewAnchors: [UUID: WeakReplicaPreviewAnchor] = [:]
@@ -396,6 +464,21 @@ final class ReplicaUIController {
         panel.isReleasedWhenClosed = false
         sharingPolicy.apply(to: panel)
         let content = ReplicaPanelContentView(frame: NSRect(origin: .zero, size: panel.frame.size))
+        content.canInterpretSearchInput = { [weak self, weak content] in
+            guard let self, let content, self.panel.isKeyWindow,
+                  let responder = self.panel.firstResponder else { return false }
+            return responder === (self.panel as? ReplicaPanel)?.collectionFocusTarget || responder === content || responder === self.panel
+        }
+        content.onSearchText = { [weak self] text in
+            guard let self else { return }
+            let words = text.split(separator: " ").map(String.init)
+            self.state.applySearchInput(nodes: words.map(OriginalSearchQueryNode.text),
+                text: words.joined(separator: " "), filters: [])
+            if !words.isEmpty {
+                self.state.searchVisible = true
+                self.state.searchFocus = UUID()
+            }
+        }
         let hosting = NSHostingView(rootView: ReplicaPanelView(state: state))
         hosting.frame = content.bounds
         hosting.autoresizingMask = [.width, .height]
@@ -403,9 +486,11 @@ final class ReplicaUIController {
         panel.contentView = content
         panel.delegate = panel
         panel.didResignKey = { [weak self] in self?.panelDidResignKey() }
+        panel.didChangeScreen = { [weak self] in self?.panelDidChangeScreen() }
         panel.closeRequested = { [weak self] in self?.hidePanel() }
         panel.copyRequested = { [weak self] in self?.copySelection(plainTextOnly: false) }
         restorePanelFrame()
+        panel.layoutIfNeeded()
         installPanelResizeHandle()
         state.controller = self
         panel.keyHandler = { [weak self] event in self?.handleKey(event) ?? false }
@@ -452,8 +537,20 @@ final class ReplicaUIController {
                 guard let self, let content, generation == self.panelTransitionGeneration else { return }
                 if #available(macOS 26, *) {} else { self.panel.backgroundColor = .windowBackgroundColor }
                 content.superview?.clipsToBounds = true
+                if self.state.searchVisible, self.filterBrowserPopover?.isDisplayed != true {
+                    self.state.searchFocus = UUID()
+                }
             }
         }
+    }
+
+    private func panelDidChangeScreen() {
+        guard let content = panel.contentView, let screen = panel.screen,
+              let originalScreen = originalPanelScreen, !screen.isEqual(originalScreen) else { return }
+        let frame = screen.frame
+        panel.setFrame(.init(x: frame.minX, y: frame.minY,
+                             width: frame.width, height: content.frame.height), display: true)
+        originalPanelScreen = screen
     }
 
     private func panelDidResignKey() {
@@ -485,6 +582,18 @@ final class ReplicaUIController {
 
     private func installPanelDismissMonitors() {
         removePanelDismissMonitors()
+        panelEscapeMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
+            let handled = MainActor.assumeIsolated { () -> Bool in
+                guard let self, event.keyCode == 53, self.canDismissPanelForInteraction,
+                      let window = event.window ?? NSApp.keyWindow else { return false }
+                let filterWindow = self.filterBrowserPopover?.contentViewController?.viewIfLoaded?.window
+                let previewWindow = self.previewPopover?.contentViewController?.viewIfLoaded?.window
+                guard window === filterWindow || window === previewWindow else { return false }
+                self.cancelSearchOrPanel()
+                return true
+            }
+            return handled ? nil : event
+        }
         let mouseDown: NSEvent.EventTypeMask = [.leftMouseDown, .rightMouseDown, .otherMouseDown]
         panelMouseMonitor = NSEvent.addLocalMonitorForEvents(matching: mouseDown) { [weak self] event in
             MainActor.assumeIsolated {
@@ -532,8 +641,10 @@ final class ReplicaUIController {
 
     private func removePanelDismissMonitors() {
         if let panelMouseMonitor { NSEvent.removeMonitor(panelMouseMonitor) }
+        if let panelEscapeMonitor { NSEvent.removeMonitor(panelEscapeMonitor) }
         if let outsideMouseMonitor { NSEvent.removeMonitor(outsideMouseMonitor) }
         panelMouseMonitor = nil
+        panelEscapeMonitor = nil
         outsideMouseMonitor = nil
         for observer in panelDismissObservers { NotificationCenter.default.removeObserver(observer) }
         panelDismissObservers.removeAll()
@@ -602,7 +713,11 @@ final class ReplicaUIController {
         closedRestoreObservation = nil
     }
     func togglePanel() { panel.isVisible && !isPanelClosing ? hidePanel() : showPanel() }
-    func focusSearch() { showPanel(); state.searchVisible = true; state.searchFocus = UUID() }
+    func focusSearch() {
+        if !panel.isVisible || !panel.isKeyWindow || isPanelClosing { showPanel() }
+        state.searchVisible = true
+        state.searchFocus = UUID()
+    }
     func showError(message: String) {
         presentError(NSError(domain: "Pasto", code: 1,
                              userInfo: [NSLocalizedDescriptionKey: message]))
@@ -632,6 +747,7 @@ final class ReplicaUIController {
             }
             let controller = OriginalStackWindowController(window: window)
             controller.f_100011138()
+            stackWindowController = controller
             stackWindow = window
         }
         hidePanel()
@@ -639,7 +755,7 @@ final class ReplicaUIController {
         stackContentsChanged()
     }
 
-    func hideStack() { stackWindow?.orderOut(nil); stackDidChange?() }
+    func hideStack() { stackWindowController?.close(); stackDidChange?() }
 
     func stackContentsChanged() {
         if let window = stackWindow {
@@ -656,9 +772,11 @@ final class ReplicaUIController {
     }
 
     func consumeStackHead() {
-        guard let first = state.stackItems.first else { return }
-        guard let index = state.stackIDs.firstIndex(of: first.id) else { return }
+        let previousIDs = state.stackItems.map(\.id)
+        guard let first = previousIDs.first else { return }
+        guard let index = state.stackIDs.firstIndex(of: first) else { return }
         state.stackIDs.remove(at: index)
+        stackTableController?.didConsumeHead(previousIDs: previousIDs, remaining: state.stackItems)
     }
 
     func newTextItem() { showEditor(item: nil) }
@@ -682,7 +800,7 @@ final class ReplicaUIController {
         let alert = NSAlert()
         sharingPolicy.apply(to: alert.window)
         alert.messageText = "您确定要删除剪贴板历史记录吗？"
-        alert.informativeText = "已固定的项目和 Pinboards 不会被删除。此操作无法撤销。"
+        alert.informativeText = "已固定的项目和 Pasto 不会被删除。此操作无法撤销。"
         alert.addButton(withTitle: "删除历史"); alert.addButton(withTitle: "取消")
         if alert.runModal() == .alertFirstButtonReturn { state.perform { try store.eraseHistory() } }
     }
@@ -699,8 +817,20 @@ final class ReplicaUIController {
 
     func copy(ids: [UUID], plainTextOnly: Bool) {
         guard !ids.isEmpty else { return }
-        state.perform {
+        performCopy {
             try store.writeToPasteboard(ids: ids, pasteboard: pasteboard, plainTextOnly: plainTextOnly)
+        }
+    }
+
+    func copyRecognizedImageText(item: ClipboardItem) {
+        performCopy {
+            try store.writeRecognizedImageTextToPasteboard(item: item, pasteboard: pasteboard)
+        }
+    }
+
+    private func performCopy(_ write: () throws -> Void) {
+        state.perform {
+            try write()
             copiedItemsHandler?()
             // Deactivation may not emit a new notification for a nonactivating panel.
             hidePanel()
@@ -737,9 +867,23 @@ final class ReplicaUIController {
             show(existing)
             return
         }
-        if let anchor = previewAnchors[item.id]?.view, anchor.window != nil {
+        let anchor: NSView?
+        if panel.isVisible, !isPanelClosing, state.visibleItems.contains(where: { $0.id == item.id }),
+           let replicaPanel = panel as? ReplicaPanel,
+           let collection = replicaPanel.collectionFocusTarget as? ReplicaNativeCollectionHost,
+           collection.window === panel {
+            guard let cell = collection.previewAnchor(for: item.id) else { return }
+            anchor = cell
+        } else {
+            anchor = previewAnchors[item.id]?.view
+        }
+        if let anchor, anchor.window != nil {
             let popover = previewPopover ?? makePreviewPopover()
             previewPopover = popover
+            if popover.isDisplayed {
+                popover.close()
+                return
+            }
             popover.show(itemIdentity: AnyHashable(item.id), itemIdentifier: item.id.uuidString,
                 contentView: makePreviewContent(for: item), relativeTo: anchor)
             return
@@ -759,6 +903,33 @@ final class ReplicaUIController {
         previewRegistry.f_100086c10(window: window, itemIdentity: AnyHashable(item.id),
             itemIdentifier: item.id.uuidString, isEditing: false)
         show(window)
+    }
+
+    // f228c78 -> f229130 / f228e1c: only a successful reveal calls the live delegate.
+    fileprivate func revealSelection(endpointID: UUID, requestedIndex: Int, animated: Bool) {
+        guard let replicaPanel = panel as? ReplicaPanel,
+              let collection = replicaPanel.collectionFocusTarget as? ReplicaNativeCollectionHost,
+              collection.window === panel else { return }
+        collection.revealSelection(state: state, itemID: endpointID, animated: animated) { [weak self, weak collection] success in
+            guard success, let self, let collection else { return }
+            self.selectionDidReveal(requestedIndex: requestedIndex, collection: collection)
+        }
+    }
+
+    // f075e3c resolves the requested index after completion, not the revealed endpoint.
+    private func selectionDidReveal(requestedIndex: Int, collection: ReplicaNativeCollectionHost) {
+        let items = state.visibleItems
+        guard items.indices.contains(requestedIndex),
+              let anchor = collection.visibleSelectionAnchor(at: requestedIndex,
+                  itemID: items[requestedIndex].id) else {
+            NSSound.beep()
+            return
+        }
+        let item = items[requestedIndex]
+        if let popover = previewPopover, popover.isDisplayed {
+            popover.show(itemIdentity: AnyHashable(item.id), itemIdentifier: item.id.uuidString,
+                contentView: makePreviewContent(for: item), relativeTo: anchor)
+        }
     }
 
     func registerPreviewAnchor(for itemID: UUID, view: NSView) {
@@ -810,7 +981,7 @@ final class ReplicaUIController {
     }
 
     func createPinboard(assignSelection: Bool = false) {
-        guard let name = prompt(title: "新建 Pinboard", message: "为这个分组输入名称。", initial: "") else { return }
+        guard let name = prompt(title: OriginalSearchLocalization.text("pasto.action.create-group"), message: "为这个分组输入名称。", initial: "") else { return }
         let ids = state.visibleItems.filter { state.selection.contains($0.id) }.map(\.id)
         state.perform {
             let board = try store.createPinboard(name: name)
@@ -820,7 +991,7 @@ final class ReplicaUIController {
     }
 
     func renamePinboard(_ board: Pinboard) {
-        guard let name = prompt(title: "重命名 Pinboard", message: "输入新的分组名称。", initial: board.name) else { return }
+        guard let name = prompt(title: "重命名 Pasto", message: "输入新的分组名称。", initial: board.name) else { return }
         state.perform { try store.renamePinboard(id: board.id, name: name) }
     }
 
@@ -856,6 +1027,64 @@ final class ReplicaUIController {
         if chooser.runModal() == .OK, let url = chooser.url {
             state.perform { try store.importArchive(from: url) }
             state.normalizeSelection()
+        }
+    }
+
+    func migratePasteGroups() {
+        guard !state.isMigratingPasteGroups else { return }
+        hidePanel()
+        NSApp.activate(ignoringOtherApps: true)
+        let source: URL
+        if let detected = PasteGroupMigration.defaultDatabaseURL {
+            source = detected
+        } else {
+            let chooser = NSOpenPanel()
+            sharingPolicy.apply(to: chooser)
+            chooser.title = "选择 Paste 数据库"
+            chooser.message = "未找到本机 Paste 数据。请选择 Paste 的 db.sqlite 文件；已安装的 Paste 将用于识别数据格式。"
+            chooser.canChooseDirectories = false
+            chooser.allowsMultipleSelection = false
+            guard chooser.runModal() == .OK, let url = chooser.url else { return }
+            source = url
+        }
+        state.isMigratingPasteGroups = true
+        Task { @MainActor [weak self] in
+            guard let self else { return }
+            defer { self.state.isMigratingPasteGroups = false }
+            do {
+                let snapshot = try await Task.detached(priority: .userInitiated) {
+                    try PasteGroupMigration.read(from: source)
+                }.value
+                let confirmation = NSAlert()
+                self.sharingPolicy.apply(to: confirmation.window)
+                confirmation.messageText = "从 Paste 迁移分组"
+                guard !snapshot.pinboards.isEmpty else {
+                    confirmation.informativeText = "未找到可迁移的本地分组。"
+                    confirmation.addButton(withTitle: "好")
+                    confirmation.runModal()
+                    return
+                }
+                confirmation.informativeText = "发现 \(snapshot.pinboards.count) 个分组、\(snapshot.items.count) 个项目。\n将保留分组名称、颜色、排列顺序和项目内容。重复迁移不会重复添加，也不会覆盖 Pasto 已有的内容和设置。"
+                if snapshot.unavailableItemCount > 0 {
+                    confirmation.informativeText += "\n另有 \(snapshot.unavailableItemCount) 个项目的本地内容不可用，将跳过这些项目。"
+                }
+                confirmation.addButton(withTitle: "迁移")
+                confirmation.addButton(withTitle: "取消")
+                guard confirmation.runModal() == .alertFirstButtonReturn else { return }
+                let result = try self.store.importPasteGroups(snapshot)
+                self.state.normalizeSelection()
+                let finished = NSAlert()
+                self.sharingPolicy.apply(to: finished.window)
+                finished.messageText = result.unavailableItems == 0 ? "迁移完成" : "迁移完成，部分项目已跳过"
+                finished.informativeText = "已新增 \(result.addedGroups) 个分组、\(result.addedItems) 个项目。\n已存在：\(result.existingGroups) 个分组、\(result.existingItems) 个项目。"
+                if result.unavailableItems > 0 {
+                    finished.informativeText += "\n有 \(result.unavailableItems) 个项目未取得本地内容；在 Paste 中恢复内容后可重新迁移。"
+                }
+                finished.addButton(withTitle: "好")
+                finished.runModal()
+            } catch {
+                self.presentError(error)
+            }
         }
     }
 
@@ -1004,8 +1233,10 @@ final class ReplicaUIController {
         let shift = modifiers.contains(.shift)
         let isEditing = panel.firstResponder is NSTextView
         let key = event.charactersIgnoringModifiers?.lowercased() ?? ""
-        if store.preferences.previousPinboardShortcut?.matches(event) == true { state.switchBoard(-1); return true }
-        if store.preferences.nextPinboardShortcut?.matches(event) == true { state.switchBoard(1); return true }
+        if !state.searchVisible {
+            if store.preferences.previousPinboardShortcut?.matches(event) == true { state.switchBoard(-1); return true }
+            if store.preferences.nextPinboardShortcut?.matches(event) == true { state.switchBoard(1); return true }
+        }
         let plainModifiers = NSEvent.ModifierFlags(rawValue: store.preferences.plainTextModifierRawValue)
         let plain = event.modifierFlags.isSuperset(of: plainModifiers)
         let signature = OriginalShortcutFunctions.f_1001e7d18(event)
@@ -1024,35 +1255,60 @@ final class ReplicaUIController {
             copySelection(plainTextOnly: options.contains(.plainTextAndLinks))
             return true
         }
+        if signature.keyCode == OriginalShortcutFunctions.f_1001e94d4("f"),
+           signature.modifierRawValue == NSEvent.ModifierFlags.command.rawValue {
+            if state.searchVisible, filterBrowserPopover?.isDisplayed == true {
+                filterBrowserPopover?.close()
+            } else {
+                handleSearchCommand()
+            }
+            return true
+        }
         if command {
             switch key {
-            case "f": handleSearchCommand(); return true
             case "n": shift ? createPinboard() : newTextItem(); return true
             case ",": showSettings(); return true
             case "a" where !isEditing: shift ? state.deselectAll() : state.selectAll(); return true
             default: break
             }
         }
-        switch event.keyCode {
-        case 36, 76:
-            return OriginalSearchCommands.f_10004867c(selector: NSSelectorFromString("insertNewline:"),
-                onEnter: { [self] in pasteSelection(plainTextOnly: plain) }, onCancel: nil)
-        case 123 where !isEditing: state.moveSelection(-1, extending: shift); return true
-        case 124 where !isEditing: state.moveSelection(1, extending: shift); return true
-        case 49 where !isEditing:
-            if let item = state.primaryItem { showPreview(item: item) }
+        if event.keyCode == 49, !isEditing {
+            if let item = state.selectedItems.last { showPreview(item: item) }
             return true
-        case 51, 117:
-            guard !isEditing else { return false }
-            state.deleteSelection(); return true
-        default: return false
         }
+        if !isEditing, let specialKey = event.specialKey {
+            switch specialKey {
+            case .backspace, .delete, .deleteForward:
+                state.deleteSelection()
+                return true
+            case .carriageReturn, .enter:
+                return OriginalSearchCommands.f_10004867c(selector: NSSelectorFromString("insertNewline:"),
+                    onEnter: { [self] in pasteSelection(plainTextOnly: plain) }, onCancel: nil)
+            default: break
+            }
+        }
+        guard !isEditing else { return false }
+        let control = modifiers.contains(.control)
+        let specialKey = event.specialKey
+        let navigation: Int
+        if (control && key == "f") || specialKey == .rightArrow { navigation = 0 }
+        else if (control && key == "b") || specialKey == .leftArrow { navigation = 1 }
+        else if (control && key == "e") || (command && specialKey == .downArrow) { navigation = 3 }
+        else if (control && key == "a") || (command && specialKey == .upArrow) { navigation = 2 }
+        else { return false }
+        if navigation == 0 || navigation == 1 {
+            guard !command || shift else { return false }
+            state.moveSelection(navigation == 0 ? 1 : -1, extending: shift)
+        } else {
+            state.moveSelectionToBoundary(last: navigation == 3, extending: shift)
+        }
+        return true
     }
 
     func cancelSearchOrPanel() {
         guard canDismissPanelForInteraction else { return }
-        if filterBrowserPopover?.isShown == true { filterBrowserPopover?.close(); return }
-        if previewPopover?.isShown == true { previewPopover?.close(); return }
+        if filterBrowserPopover?.isShown == true { filterBrowserPopover?.close() }
+        if previewPopover?.isShown == true { previewPopover?.close() }
         hidePanel()
     }
 }

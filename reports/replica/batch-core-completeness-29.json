@@ -1,0 +1,45 @@
+{
+  "review_kind": "read_only_new_item_identifier_and_permanent_id_boundary",
+  "counts": { "reviewed": 1, "complete": 0, "gap": 1, "uncertain": 0, "new_migrations_claimed": 0 },
+  "functions": [
+    {
+      "function_id": "Paste:0x100360d9c",
+      "status": "gap",
+      "original_path": "decompiled/Paste/part-0275.c",
+      "original_line": 230,
+      "current_paths": [
+        "replica/Sources/PastoCore/Models.swift",
+        "replica/Sources/PastoCore/Pasteboard.swift",
+        "replica/Sources/PastoCore/ClipboardStore.swift"
+      ],
+      "current_symbol": "ClipboardItem.init默认id与captureWithInsertionResult→addWithInsertionResult新建分支",
+      "confirmed_gap": "原有可选输入标识字符串：未提供时用表示分类所得checksum作为identifier；提供时保留该输入字符串。当前普通capture新建ClipboardItem未传id，模型默认UUID()；原文本checksum为32位MD5十六进制字符串，当前UUID.uuidString为带连字符36字符，普通无override创建的身份规则不同。当前模型只存UUID，不包含原任意标识字符串的同型保留入口。不能仅因都生成唯一id就签本原函数完整。",
+      "original_arm_chain": [
+        "原普通本地caller f3611b0查找无命中：36120c MOV x1,#0，361210 x2=items，361218 BL360d9c，明确进入无标识override分支。",
+        "360dc4保存输入字符串第二word；360ddc非nil跳e00，nil则360de8分类→360df4 checksum，360df8 checksum nil分支抛case1；360dfc保存checksum第二word x23，360e00保存第一word x26。",
+        "360eb8向context申请permanent IDs，360ecc失败跳NSError转换/throw，成功后360ed4 x0=x26、360ed8 x1=x23将最终输入/推导标识桥NSString；360ef4调用setIdentifier:。之后360f18取device，360f28 setDevice，360f40调用内容writer360ff8。"
+      ],
+      "selector_proof": {
+        "identifier": "stub100c0c0e0加载selref100f89c40，原word0010000000df9fce的rebase目标100df9fce为setIdentifier:，已有界xxd读取。",
+        "permanent_ids": "stub100c075e0加载selref100f88980，原word0010000000df37ae目标100df37ae为obtainPermanentIDsForObjects:error:，不是凭名称猜的validate/save。"
+      },
+      "current_consumer": "captureWithInsertionResult真实调用ClipboardItem(title:'',kind:...,payloads:...)省略id，addWithInsertionResult新分支将该item追加state.items；createIntentText新分支也省略id。原3611b0为本地实际创建/复用caller，非只供CloudKit的不可达函数。",
+      "observable_boundary": "当前native drag身份source返回item.id.uuidString，原writer读取entity.identifier，所以该模型适配可进入外部可读的item-id属性列表。此处不重新改变其它地址的状态，不声称系统通用粘贴或普通显示必然因此失败。",
+      "other_unclosed_contracts": "原context permanent ID错误及device实体取得、内容writer/元数据事务，与当前JSON原子写/设备字符串仍有未闭合范围；有上面明确身份规则差异已足以判gap，不据剩余未知弱化该结论。原title/source/history的默认和上层赋值不在本短函数直接推出。",
+      "data_protection": "本轮只审查，不改UUID、不迁移或重算用户已有标识；独立应用既有JSON关系、旧数据和授权兼容必须保留，不能凭此发现自动替换历史id。"
+    }
+  ],
+  "clarification_to_previous_reports": "第28批等笼统提到的原新建CoreData validation应收窄：本轮解出的该具体调用是obtainPermanentIDsForObjects:error:。其失败会传播NSError；不能把这一selector单独说成内容validate或整个context save。之前对完整事务未知的结论保留。",
+  "inputs": {
+    "original_image": ".local/targets/Paste.arm64",
+    "original_success_c": "decompiled/Paste/part-0275.c",
+    "fresh_bounded_arm_focus": ["0x100360d9c..0x100360ff8", "0x1003611b0..0x100361280", "0x100c075e0..0x100c075f4", "0x100c0c0e0..0x100c0c0f4"],
+    "literal_reads": ["0x100f88980", "0x100df37ae", "0x100f89c40", "0x100df9fce"]
+  },
+  "limits": [
+    "只新增本独立报告，未修改产品源码、台账或用户数据。",
+    "仅静态读成功C、现源码、原ARM/selector；未编译、parse、运行应用、功能/MCP测试、验证脚本或发布。",
+    "本批0/1完整不是项目总迁移率；主智能体汇总总分母和跨批去重，新增迁移0。未核当前编译产物。",
+    "两个指定失败地址0x100ac35f8、0x100ac746c跳过，未读取。"
+  ]
+}

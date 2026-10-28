@@ -53,10 +53,17 @@ public enum OriginalSourceApplicationColors {
     ]
 
     @MainActor
+    public static func f_100311f7c(_ bundleIdentifier: String) -> NSColor? {
+        guard let code = overrides[bundleIdentifier] else { return nil }
+        precondition(code <= UInt64(Int64.max), "Source application color code is negative")
+        return OriginalColorPreviewMetadataGenerator.color(code)
+    }
+
+    @MainActor
     public static func rawColor(bundleIdentifier: String, image: NSImage) -> UInt64 {
         let color: NSColor
-        if let override = overrides[bundleIdentifier] {
-            color = OriginalColorPreviewMetadataGenerator.color(override)
+        if let override = f_100311f7c(bundleIdentifier) {
+            color = override
         } else {
             color = OriginalSourceApplicationImageColor.prominentColor(image) ?? .gray
         }

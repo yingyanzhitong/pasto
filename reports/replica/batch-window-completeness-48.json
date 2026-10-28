@@ -1,0 +1,176 @@
+{
+  "kind": "batch-window-completeness-48",
+  "scope": "4项此前窗口批次未覆盖的快捷键CodingKey及Codable值方法，核完整成功C、必要原ARM与真实偏好读写消费者。",
+  "summary": {
+    "reviewed": 4,
+    "complete": 4,
+    "gap": 0,
+    "uncertain": 0
+  },
+  "activities": {
+    "product_source_edited": false,
+    "ledger_edited": false,
+    "compiled": false,
+    "product_run": false,
+    "tests_run": false,
+    "wrapper_added": false
+  },
+  "skipped_failed_addresses": [
+    "Paste:0x100ac35f8",
+    "Paste:0x100ac746c"
+  ],
+  "limitations": [
+    "完整限于OriginalShortcutValue及其CodingKeys的有限合同，不将外层KeyboardShortcut的UInt32应用适配、旧偏好兼容或全部Store生命周期一并判满。",
+    "未按Ghidra丢失的Swift错误寄存器伪码误判错误时继续decode；必要ARM直接确认第一字段失败跳过第二字段。",
+    "未改台账完成数，4/4仅本批局部分类，不是项目完成率；历史build不作为本轮编译。"
+  ],
+  "functions": [
+    {
+      "function_id": "Paste:0x1001e9990",
+      "status": "complete",
+      "evidence": "完整原C按enum tag选择smallString keyCode或长度17的internalModifiers，直接返回，无分支写入或本地化。已只读原thin 100d9dc50的17字节internalModifiers；当前两个case的stringValue转本方法原样返回这两个键，没有更改存储品牌或以modifierRawValue替代。",
+      "actual_consumer": "OriginalShortcutValue.CodingKeys.stringValue实际调用f1e9990；其KeyedEncodingContainer和KeyedDecodingContainer用于偏好快捷键JSON读写。",
+      "original": {
+        "path": "decompiled/Paste/part-0157.c",
+        "line": 632
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutCoding.swift",
+          "symbol": "enum OriginalShortcutCodingKey"
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutCoding.swift",
+          "symbol": "f_1001e9990",
+          "qualified_symbol": "OriginalShortcutCodingKey.f_1001e9990"
+        }
+      ],
+      "historical_evidence": {
+        "path": "reports/function-migration/Paste-0x1001e9990.json",
+        "sha256": "676243418cd49b0398f4db8d5d8ceba4386ec7a5b82af534bb3fe00e7c4a3a24",
+        "contract": "编码键字符串getter：keyCode变体返回keyCode，internalModifiers变体返回internalModifiers。",
+        "historical_build_snapshot": "reports/replica/dev52-static-build78.json",
+        "current_build_claim": false
+      },
+      "source_binding": {
+        "replica/Sources/PastoCore/OriginalShortcutCoding.swift": {
+          "sha256": "9a0f5880a129959b4a906014bab6aeab7dfc0055e55e73655ecbe2d55090d2e5",
+          "historical_sha256": "c55c3649e56566bab3b41e8f4ba2e6ef542e50e202ab87357219b62236883047",
+          "unchanged": false
+        }
+      }
+    },
+    {
+      "function_id": "Paste:0x1001e99d0",
+      "status": "complete",
+      "evidence": "完整原C按Swift String相等先比较keyCode，再internalModifiers，分别返回enum0/1，均不相等返回Optional.none tag2；不lowercase、不trim、不接受第三个alias。当前精确switch两字符串再default nil，CodingKey.init?(stringValue:)按结果赋self或失败。两个函数仅接受有效String，不将原String快路径/慢路径布局视为另一个业务输入域。",
+      "actual_consumer": "Codable容器通过CodingKeys.init?(stringValue:)实际进入该方法，外层KeyboardShortcut旧modifierRawValue兼容另走独立key，不将其额外alias灌入原CodingKeys。",
+      "original": {
+        "path": "decompiled/Paste/part-0157.c",
+        "line": 655
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutCoding.swift",
+          "symbol": "enum OriginalShortcutCodingKey"
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutCoding.swift",
+          "symbol": "f_1001e99d0",
+          "qualified_symbol": "OriginalShortcutCodingKey.f_1001e99d0"
+        }
+      ],
+      "historical_evidence": {
+        "path": "reports/function-migration/Paste-0x1001e99d0.json",
+        "sha256": "f796aa6eeb12b6eb5717fb7bdda4fbf9902abb49c451bb04438b2c08fe9d70e3",
+        "contract": "从字符串创建可选编码键：精确匹配keyCode/internalModifiers分别成功，其余字符串返回nil。",
+        "historical_build_snapshot": "reports/replica/dev52-static-build78.json",
+        "current_build_claim": false
+      },
+      "source_binding": {
+        "replica/Sources/PastoCore/OriginalShortcutCoding.swift": {
+          "sha256": "9a0f5880a129959b4a906014bab6aeab7dfc0055e55e73655ecbe2d55090d2e5",
+          "historical_sha256": "c55c3649e56566bab3b41e8f4ba2e6ef542e50e202ab87357219b62236883047",
+          "unchanged": false
+        }
+      }
+    },
+    {
+      "function_id": "Paste:0x1001e9b00",
+      "status": "complete",
+      "evidence": "完整原C取得同一CodingKeys容器，先encode signed Int keyCode（tag0），仅无错误才encode UInt internalModifiers（tag1），容器及任一字段错误传播并清理容器；无UInt32裁剪或自造默认值。当前两个try按同序写同名字段，第一失败抛出时第二个try不执行，输入字段类型保持Int/UInt。",
+      "actual_consumer": "OriginalShortcutValue.encode(to:)真实转本方法；KeyboardShortcut.encode(to:)将当前UInt32键码无损转Int后委托同方法，AppPreferences/StoreState经JSONEncoder持久化。",
+      "original": {
+        "path": "decompiled/Paste/part-0157.c",
+        "line": 722
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutCoding.swift",
+          "symbol": "struct OriginalShortcutValue"
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutCoding.swift",
+          "symbol": "f_1001e9b00",
+          "qualified_symbol": "OriginalShortcutValue.f_1001e9b00"
+        }
+      ],
+      "historical_evidence": {
+        "path": "reports/function-migration/Paste-0x1001e9b00.json",
+        "sha256": "88b20bc769feb3fcebbe751af17f1d2fb19a55b33d762b3d416a7b42b4a0b56b",
+        "contract": "依次将有符号Int键码编码至keyCode，UInt修饰编码至internalModifiers；容器/第一字段错误直接传播，不继续第二字段。",
+        "historical_build_snapshot": "reports/replica/dev52-static-build78.json",
+        "current_build_claim": false
+      },
+      "source_binding": {
+        "replica/Sources/PastoCore/OriginalShortcutCoding.swift": {
+          "sha256": "9a0f5880a129959b4a906014bab6aeab7dfc0055e55e73655ecbe2d55090d2e5",
+          "historical_sha256": "c55c3649e56566bab3b41e8f4ba2e6ef542e50e202ab87357219b62236883047",
+          "unchanged": false
+        }
+      }
+    },
+    {
+      "function_id": "Paste:0x1001e9d68",
+      "status": "complete",
+      "evidence": "完整原C从CodingKeys keyed容器按tag0解Int键码再tag1解UInt修饰，返回两字段值；C错误恢复不完整，已读ARM 1e9e08容器失败、1e9e28第一字段失败分支，明确错误直接到清理/返回，不执行1e9e5c第二decode。当前try decoder.container、try decode(Int)、try decode(UInt)保同顺序和错误短路；成功构造OriginalShortcutValue，不在原值类型层拒负Int或超UInt32键码。",
+      "original_arm_static_evidence": {
+        "path": ".local/paste-arm64-static.bin",
+        "start": "0x1001e9d68",
+        "container_error_branch": "0x1001e9e08",
+        "first_field_error_branch": "0x1001e9e28",
+        "second_decode": "0x1001e9e5c"
+      },
+      "actual_consumer": "OriginalShortcutValue.init(from:)真实调用；KeyboardShortcut的新键布局解码先委托该值类型，再在外层适配器单独检查Carbon UInt32应用域，未把该额外适配错误错误归于原Core方法。StoreState通过JSONDecoder实际读取偏好快捷键。",
+      "original": {
+        "path": "decompiled/Paste/part-0157.c",
+        "line": 876
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutCoding.swift",
+          "symbol": "struct OriginalShortcutValue"
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutCoding.swift",
+          "symbol": "f_1001e9d68",
+          "qualified_symbol": "OriginalShortcutValue.f_1001e9d68"
+        }
+      ],
+      "historical_evidence": {
+        "path": "reports/function-migration/Paste-0x1001e9d68.json",
+        "sha256": "d9de97ab316313008b41cdf172b88ee9daed34f9418ca5576d1d7453073c829a",
+        "contract": "从keyed容器先decode Int keyCode，再decode UInt internalModifiers，保留全部Int/UInt范围，任一步错误传播。",
+        "historical_build_snapshot": "reports/replica/dev52-static-build78.json",
+        "current_build_claim": false
+      },
+      "source_binding": {
+        "replica/Sources/PastoCore/OriginalShortcutCoding.swift": {
+          "sha256": "9a0f5880a129959b4a906014bab6aeab7dfc0055e55e73655ecbe2d55090d2e5",
+          "historical_sha256": "c55c3649e56566bab3b41e8f4ba2e6ef542e50e202ab87357219b62236883047",
+          "unchanged": false
+        }
+      }
+    }
+  ]
+}

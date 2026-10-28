@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "round": 50,
+  "scope": "基础预览视图的effectiveAppearance变化工作方法与原生入口，明确super顺序及actor桥边界。",
+  "counts": {"reviewed": 2, "complete": 1, "gap": 0, "uncertain": 1},
+  "source_binding": {"path": "replica/Sources/PastoCore/OriginalLayerBackedView.swift", "sha256": "87acffa7790cb38e5715cf6ce3d4474fffb3633d3deb15635743526f6342303c", "matches_historical_source_sha256": true, "note": "历史build仅作历史，不代表本轮编译或运行。"},
+  "records": [
+    {
+      "function_id": "Paste:0x100235f6c",
+      "status": "complete",
+      "historical_evidence": "reports/function-migration/Paste-0x100235f6c.json",
+      "original": {"path": "decompiled/Paste/part-0192.c", "start_line": 1917, "end_line": 1976, "address_range": "0x100235f6c..<0x1002360c0"},
+      "current_reference": {"path": "replica/Sources/PastoCore/OriginalLayerBackedView.swift", "symbol": "f_100235f6c()", "line_range": "72..75"},
+      "criterion": [
+        "原先调用super.viewDidChangeEffectiveAppearance，之后重新读取自己的effectiveAppearance，同步performAsCurrentDrawingAppearance执行强捕获self的f1fe108→f236188刷新。当前super在先，然后调用已核第49轮同业务f2359f4，没有漏super、反转顺序、换成window appearance或异步刷新。",
+        "原f236364只返回LayerBackedView类元数据（part-0192.c:2126..2134），不隐藏其它业务副作用。原非逃逸闭包检查的源级约束由当前相同NS_NOESCAPE API及不外泄闭包保留；不把编译器诊断文本/闭包ABI算作已运行等价。",
+        "此Swift工作体没有inline MainActor executor检查；原通知入口的检查属于另一地址f2360c0，不能混在一起，也不因此升级被调f236188的独立actor分支。"
+      ],
+      "actual_consumer": "本文件78的真实open override经77进入此方法。OriginalImageCheckerboardView、ReplicaColorPreviewContent及OriginalLinkPreviewViewportView均实际继承OriginalLayerBackedView，故基础appearance回调接入真实预览控件。",
+      "limitations": "仅有限super→同步当前appearance刷新工作合同完整；未执行系统主题切换，也不声称所有派生类覆盖策略都相同。"
+    },
+    {
+      "function_id": "Paste:0x1002360c0",
+      "status": "uncertain",
+      "historical_evidence": "reports/function-migration/Paste-0x1002360c0.json",
+      "original": {"path": "decompiled/Paste/part-0192.c", "start_line": 1977, "end_line": 2014, "address_range": "0x1002360c0..<0x100236188"},
+      "current_reference": {"path": "replica/Sources/PastoCore/OriginalLayerBackedView.swift", "symbol": "f_1002360c0() + viewDidChangeEffectiveAppearance override", "line_range": "77..78"},
+      "criterion": "原正常路径super.viewDidChangeEffectiveAppearance→f2359f4与当前通过f235f6c实现的调用顺序一致，不修改主题偏好。但是原本体首先取MainActor shared/unownedExecutor、检查当前executor并在失败报告PasteUI/LayerBackedView.swift line0x1a；当前只有@MainActor类及native override源声明，没有当前生成入口同诊断证据，因此整入口待证。",
+      "actual_consumer": "同文件78作为实际NSView override接系统appearance变化，并由77进入上述已核工作体；并非未挂载的纯wrapper。",
+      "limitations": "正常业务已满足而actor/ObjC桥未闭，不报告成可见刷新bug，也不以源码未变化直接复用整入口complete。"
+    }
+  ],
+  "excluded_failed_addresses": ["Paste:0x100ac35f8", "Paste:0x100ac746c"],
+  "verification_scope": {"product_source_modified": false, "ledger_modified": false, "compiled": false, "application_executed": false, "functional_tests_executed": false, "mcp_executed": false, "one_to_one_acceptance_claimed": false}
+}

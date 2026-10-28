@@ -1,0 +1,186 @@
+{
+  "kind": "static_bulk_localization_comparison",
+  "generated_at": "2026-10-27T11:36:01.906501+00:00",
+  "source_sha256": "0163cc854b291a3341675ea525903141dc764dda4a2791b513f4a9c4515632f1",
+  "common_original": "decompiled/Paste/part-0155.c:201",
+  "limitation": "确认独立资源构造及真实消费者；Pasto bundle为品牌适配，实际运行/语言切换和原bundle身份不属于本次结论。",
+  "build_executed": false,
+  "tests_executed": false,
+  "records": [
+    {
+      "function_id": "Paste:0x1001c4388",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-0149.c",
+        "line": 282,
+        "short_literal_words": [
+          "2e6c6172656e6567",
+          "ef726573776f7262"
+        ]
+      },
+      "current": {
+        "path": "replica/Sources/PastoCore/OriginalPreviewLocalization.swift",
+        "symbol": "f_1001c4388",
+        "key": "general.browser"
+      },
+      "consumer": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaLinkPreviewContent.swift",
+          "line": 120,
+          "sha256": "6becef98930daa19e63760be5039f4eda502f2a21ae7b91a2f484abb3d7b7947"
+        }
+      ],
+      "criterion": "原短字符串逐字节解码与源码键一致；原公共helper以Locale.current/Localizable构造资源，当前resource复用同表与locale，使用本项目资源bundle。"
+    },
+    {
+      "function_id": "Paste:0x1001c482c",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-0149.c",
+        "line": 431,
+        "short_literal_words": [
+          "2e6c6172656e6567",
+          "ee00646569706f63"
+        ]
+      },
+      "current": {
+        "path": "replica/Sources/PastoCore/OriginalPreviewLocalization.swift",
+        "symbol": "f_1001c482c",
+        "key": "general.copied"
+      },
+      "consumer": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaCopiedOSD.swift",
+          "line": 12,
+          "sha256": "d1b58b05ef6c37302cf6d6c1e0056ee0af55035422071d4c53ebe1583c84883d"
+        }
+      ],
+      "criterion": "原短字符串逐字节解码与源码键一致；原公共helper以Locale.current/Localizable构造资源，当前resource复用同表与locale，使用本项目资源bundle。"
+    },
+    {
+      "function_id": "Paste:0x1001c5b38",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-0149.c",
+        "line": 1071,
+        "short_literal_words": [
+          "2e6c6172656e6567",
+          "ee00646573756170"
+        ]
+      },
+      "current": {
+        "path": "replica/Sources/PastoCore/OriginalPreviewLocalization.swift",
+        "symbol": "f_1001c5b38",
+        "key": "general.paused"
+      },
+      "consumer": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaCopiedOSD.swift",
+          "line": 25,
+          "sha256": "d1b58b05ef6c37302cf6d6c1e0056ee0af55035422071d4c53ebe1583c84883d"
+        }
+      ],
+      "criterion": "原短字符串逐字节解码与源码键一致；原公共helper以Locale.current/Localizable构造资源，当前resource复用同表与locale，使用本项目资源bundle。"
+    },
+    {
+      "function_id": "Paste:0x1001c6f44",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-0149.c",
+        "line": 1713,
+        "short_literal_words": [
+          "7079742d6d657469",
+          "ef726f6c6f632e65"
+        ]
+      },
+      "current": {
+        "path": "replica/Sources/PastoCore/OriginalPreviewLocalization.swift",
+        "symbol": "f_1001c6f44",
+        "key": "item-type.color"
+      },
+      "consumer": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPreviewTitles.swift",
+          "line": 8,
+          "sha256": "a207f688f263c9652c37d347391efd7cfcebcbe1f637125a623555dbc0d3d687"
+        }
+      ],
+      "criterion": "原短字符串逐字节解码与源码键一致；原公共helper以Locale.current/Localizable构造资源，当前resource复用同表与locale，使用本项目资源bundle。"
+    },
+    {
+      "function_id": "Paste:0x1001c6f68",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-0149.c",
+        "line": 1724,
+        "short_literal_words": [
+          "7079742d6d657469",
+          "ef6567616d692e65"
+        ]
+      },
+      "current": {
+        "path": "replica/Sources/PastoCore/OriginalPreviewLocalization.swift",
+        "symbol": "f_1001c6f68",
+        "key": "item-type.image"
+      },
+      "consumer": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPreviewTitles.swift",
+          "line": 7,
+          "sha256": "a207f688f263c9652c37d347391efd7cfcebcbe1f637125a623555dbc0d3d687"
+        }
+      ],
+      "criterion": "原短字符串逐字节解码与源码键一致；原公共helper以Locale.current/Localizable构造资源，当前resource复用同表与locale，使用本项目资源bundle。"
+    },
+    {
+      "function_id": "Paste:0x1001c6f8c",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-0149.c",
+        "line": 1735,
+        "short_literal_words": [
+          "7079742d6d657469",
+          "ee006b6e696c2e65"
+        ]
+      },
+      "current": {
+        "path": "replica/Sources/PastoCore/OriginalPreviewLocalization.swift",
+        "symbol": "f_1001c6f8c",
+        "key": "item-type.link"
+      },
+      "consumer": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPreviewTitles.swift",
+          "line": 10,
+          "sha256": "a207f688f263c9652c37d347391efd7cfcebcbe1f637125a623555dbc0d3d687"
+        }
+      ],
+      "criterion": "原短字符串逐字节解码与源码键一致；原公共helper以Locale.current/Localizable构造资源，当前resource复用同表与locale，使用本项目资源bundle。"
+    },
+    {
+      "function_id": "Paste:0x1001c7130",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-0149.c",
+        "line": 1792,
+        "short_literal_words": [
+          "7079742d6d657469",
+          "ee00747865742e65"
+        ]
+      },
+      "current": {
+        "path": "replica/Sources/PastoCore/OriginalPreviewLocalization.swift",
+        "symbol": "f_1001c7130",
+        "key": "item-type.text"
+      },
+      "consumer": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPreviewTitles.swift",
+          "line": 11,
+          "sha256": "a207f688f263c9652c37d347391efd7cfcebcbe1f637125a623555dbc0d3d687"
+        }
+      ],
+      "criterion": "原短字符串逐字节解码与源码键一致；原公共helper以Locale.current/Localizable构造资源，当前resource复用同表与locale，使用本项目资源bundle。"
+    }
+  ]
+}

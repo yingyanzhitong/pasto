@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "scope": "两个历史未变化的标题字段焦点/尺寸方法；成功原C、指定原ARM与当前生产消费者逐项核对。",
+  "counts": { "total": 2, "complete": 1, "gap": 0, "uncertain": 1 },
+  "source_binding": { "path": "replica/Sources/PastoCore/OriginalPreviewTitleLabel.swift", "historical_sha256": "84e3a33dbd575ad595cded72928d3d9b917ec1ece7eb258ba42ef3cf457bb0e2", "current_read_sha256": "84e3a33dbd575ad595cded72928d3d9b917ec1ece7eb258ba42ef3cf457bb0e2", "whole_file_unchanged": true },
+  "records": [
+    {
+      "function_id": "Paste:0x10023c304",
+      "status": "complete",
+      "historical_evidence": "reports/function-migration/Paste-0x10023c304.json",
+      "historical_contract_reusable": true,
+      "original": { "path": "decompiled/Paste/part-0195.c", "start_line": 756, "address_range": "0x10023c304..<0x10023c3bc" },
+      "current_reference": { "path": "replica/Sources/PastoCore/OriginalPreviewTitleLabel.swift", "start_line": 121, "end_line": 133, "symbol": "public func f_10023c304() -> Bool" },
+      "criterion": "原取得native field并调用其becomeFirstResponder，保存Bool；随后无论Bool真/假都检查field.currentEditor，可转NSTextView时将field.textColor直接给setInsertionPointColor，nil颜色亦传递，不加默认textColor；无editor/其它类型跳过。最后返回先前原Bool。当前同result保存、条件cast、可nil ObjC IMP setter与最终return，不因首次false提前返回或调用super.becomeFirstResponder替代native field。原ARM23c324保存x19，23c348/368两nil分支，23c370..38c取色直传且无色nil检查，23c3a4恢复x0=x19确认完整返回。",
+      "actual_consumer": "OriginalPreviewTextField.becomeFirstResponder override第118行真实调用；TitleLabel.begin第189行window.makeFirstResponder(wrapper)经系统焦点协议触达，Header CmdR/标题点击均使用此实际wrapper。",
+      "limitations": "仅Swift工作方法完整，不升级相邻ObjC bridge f23c3bc的executor检查、原field构造或系统焦点运行结果；未发送焦点请求。"
+    },
+    {
+      "function_id": "Paste:0x10023be78",
+      "status": "uncertain",
+      "historical_evidence": "reports/function-migration/Paste-0x10023be78.json",
+      "historical_contract_reusable": false,
+      "reusable_subset": "尺寸值计算完整匹配并可复用；整个原ObjC入口的executor诊断仍待证。",
+      "original": { "path": "decompiled/Paste/part-0195.c", "start_line": 530, "address_range": "0x10023be78..<0x10023bf80" },
+      "current_reference": { "path": "replica/Sources/PastoCore/OriginalPreviewTitleLabel.swift", "start_line": 135, "end_line": 140, "symbol": "public override var intrinsicContentSize: NSSize" },
+      "criterion": "正常值原先取native intrinsicContentSize.height，使用(infinity,同height)调用同field.sizeThatFits，只取返回width并frinta，返回height仍为最初读取值；当前同规则，非ceil、不用sizeThatFits返回height、不按文本count估宽。原C将frinta误记为long转换，ARM23bf24保存原height v8，23bf3c d0为正无穷、23bf44 d1=v8、23bf48 sizeThatFits、23bf60 frinta宽、23bf64恢复height证实舍入为nearest/half away，保非有限值浮点语义。但原本体23be94..23bf08额外含MainActor检查和reportUnexpectedExecutor(PasteUI/TextField.swift,line81)，当前仅@MainActor源码未证生成桥同诊断，整个入口仍待证。",
+      "actual_consumer": "真实TitleLabel内wrapper由native Auto Layout读取intrinsicContentSize；controlTextDidChange/f23c01c实际invalidate该wrapper尺寸，模型更新及编辑时均可触发，不是无消费测量函数。",
+      "limitations": "没有确认用户可见尺寸差异，待证为整入口检查，不是该浮点公式；未编译或运行布局。"
+    }
+  ],
+  "arm_evidence": { "binary": ".local/paste-arm64-static.bin", "ranges": [ "0x10023c304..<0x10023c3bc", "0x10023be78..<0x10023bf80" ], "method": "只读llvm-objdump指定成功函数范围，未运行原二进制" },
+  "excluded_failed_addresses": [ "0x100ac35f8", "0x100ac746c" ],
+  "verification_scope": "仅新增本报告，无产品源码、台账和历史报告修改，无编译、parse、运行应用、测试、MCP或发布，未读取指定失败函数。历史编译不冒充当前构建，complete限有限源码合同，不是一比一功能验收。"
+}

@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "kind": "static_code_migration",
+  "function_id": "Paste:0x1002dcca4",
+  "original_pseudocode": {
+    "path": "decompiled/Paste/part-0237.c",
+    "line": 1513,
+    "helper": "0x1002dcf24"
+  },
+  "implementations": [
+    {
+      "path": "replica/Sources/PastoCore/OriginalSearchSuggestions.swift",
+      "symbol": "f_1002dcca4"
+    }
+  ],
+  "consumer": {
+    "path": "replica/Sources/Pasto/UI/SearchEditor.swift",
+    "symbol": "func accept("
+  },
+  "branch_review": [
+    "query case returns its array without using current nodes, index or addMode",
+    "duplicate filter compares exact UInt8 tag and Swift String value and returns unchanged nodes",
+    "addMode == 1 returns original nodes.dropLast(1) followed by the new filter, including empty input",
+    "other addMode values replace at index if index < count; negative index traps in this branch",
+    "index >= count leaves nodes unchanged",
+    "Swift arrays preserve value semantics and copy on write; normalization stays in the caller"
+  ],
+  "build_executed": false,
+  "functional_regression_executed": false,
+  "equivalence_verified": false,
+  "limitation": "Source-level function migration only. Parent suggestion providers, query entities, full UI lifecycle and runtime equivalence remain separate work."
+}

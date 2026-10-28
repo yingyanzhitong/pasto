@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "kind": "static_code_migration",
+  "implementation_origin": "existing_reused",
+  "functions": [
+    {"function_id": "Paste:0x100314ea8", "original": "decompiled/Paste/part-0255.c:554", "contract": "encodeIfPresent all 13 fields, propagate encoding errors"},
+    {"function_id": "Paste:0x1003152d4", "original": "decompiled/Paste/part-0255.c:675", "contract": "decodeIfPresent all 13 fields; missing/null nil; any malformed present field fails record"},
+    {"function_id": "Paste:0x100316f08", "original": "decompiled/Paste/part-0255.c:1960", "contract": "Exact CodingKeys string matching for 13 names; unknown returns nil"}
+  ],
+  "source": "replica/Sources/PastoCore/OriginalImagePreviewMetadataCodec.swift",
+  "symbol": "private struct Stored: Codable",
+  "fields_in_order": [
+    "type: String?", "textLength: Int?", "text: AttributedString?", "url: URL?",
+    "urlName: String?", "urlIconData: Data?", "urlImageData: Data?", "imageSize: CGSize?",
+    "imageData: Data?", "filePaths: [String]?", "filesTotalSize: Int?", "filesImageData: Data?", "colorCode: UInt64?"
+  ],
+  "consumer": "Five actual encode/decode projections call encodeStored/decodeStored and the synthesized Encodable/Decodable implementations",
+  "build_executed": false,
+  "tests_executed": false,
+  "equivalence_verified": false,
+  "limitations": "Only these value methods are complete. Parent Config selection, full metadata enum, descriptions, generic value witnesses and generated original ABI are not promoted."
+}

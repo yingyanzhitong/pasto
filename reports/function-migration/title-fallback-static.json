@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "kind": "static_code_migration",
+  "functions": [
+    {"function_id": "Paste:0x100308f88", "original": "decompiled/Paste/part-0251.c:772", "contract": "nil/empty title evaluates fallback; nonempty including whitespace returns unchanged without evaluating fallback"},
+    {"function_id": "Paste:0x100309008", "original": "decompiled/Paste/part-0251.c:813", "contract": "All raw kinds map to recovered localized titles; files use canonical paths count, absent/wrong metadata default1, empty0 and Int32 overflow trap"}
+  ],
+  "source": "replica/Sources/PastoCore/OriginalPreviewTitles.swift",
+  "consumers": ["PanelViews.cardTitle", "OriginalReplicaPreviewAdapter Header title/placeholder"],
+  "changes": ["Preview Header uses originalTitle", "autoclosure and card fallback preserve demand evaluation", "Preview placeholder still computes default first"],
+  "build_executed": false,
+  "tests_executed": false,
+  "equivalence_verified": false,
+  "limitations": "Value methods only. Legacy JSON compatibility, full Entity/VM, metadata parent and original ABI not promoted."
+}

@@ -1,0 +1,48 @@
+{
+  "review_kind": "read_only_capture_configuration_tail_entry_bindings",
+  "counts": {"reviewed": 2, "complete": 0, "gap": 2, "uncertain": 0, "new_migrations_claimed": 0},
+  "functions": [
+    {
+      "function_id": "Paste:0x10037c49c",
+      "status": "gap",
+      "original_path": "decompiled/Paste/part-0282.c",
+      "original_line": 107,
+      "original_range": "0x10037c49c..0x10037c4a0",
+      "original_bytes_little_endian": "64 fa fd 17",
+      "current_paths": ["replica/Sources/PastoCore/Models.swift", "replica/Sources/PastoCore/Pasteboard.swift"],
+      "current_symbol": "Preferences.excludedBundleIDs / ClipboardMonitor.originalPasteboardShouldRead(_:)",
+      "criterion": "成功C只转发f2fae2c；新有界原ARM确认4字节无条件B直接到1002fae2c，没有局部参数转换、判断或返回值替换。不是另一个可用空数组替代的独立provider。",
+      "actual_original_consumer": "原part-0281.c读取应用配置时使用keypath100c43990（2451/2452行）；记录relative getter字段100c439b0原word ff738aec，解到10037c49c。原表可达此转发入口及第40轮完整恢复的14项默认provider。",
+      "current_finding": "现生产monitor读取store.preferences.excludedBundleIDs转Set；Models新初始化和缺JSON字段仍默认[]，没有恢复该provider默认域。当前不存在同地址命名wrapper本身不是缺口理由，真实被转发的默认返回集合不等才是gap。",
+      "gap_provenance": "继承第40轮f2fae2c已证默认缺口，不是新增独立缺陷；不修改台账或据尾跳4字节就签完整。"
+    },
+    {
+      "function_id": "Paste:0x10037c4a0",
+      "status": "gap",
+      "original_path": "decompiled/Paste/part-0282.c",
+      "original_line": 118,
+      "original_range": "0x10037c4a0..0x10037c4a4",
+      "original_bytes_little_endian": "d7 fa fd 17",
+      "current_paths": ["replica/Sources/PastoCore/Models.swift", "replica/Sources/PastoCore/Pasteboard.swift"],
+      "current_symbol": "Preferences.ignoredPasteboardTypes / ClipboardMonitor.originalPasteboardShouldRead(_:)",
+      "criterion": "成功C直接转发f2faffc；新原ARM完整4字节word17fdfad7为B1002faffc，没有局部额外分支。",
+      "actual_original_consumer": "原part-0281.c:2469取得keypath100c439c0；新只读xxd确认relative getter字段100c439e0值ff738ac0，按有符号相对地址解到10037c4a0。实际getter因此到原6项默认类型provider。",
+      "current_finding": "现monitor将当前ignoredPasteboardTypes并上两个布尔偏好控制的类型集合后交给f37ba14，fresh有效并集仍缺com.typeit4me.clipping和Pasteboard generator type，不能视为默认provider完整复用。",
+      "gap_provenance": "继承第40轮f2faffc已证默认缺口；当前额外com.agilebits.onepassword和自有防回环marker不等价这两个原类型。不产生新的独立缺陷计数。"
+    }
+  ],
+  "evidence_inputs": [
+    ".local/targets/Paste.arm64",
+    "decompiled/Paste/part-0281.c",
+    "decompiled/Paste/part-0282.c",
+    "reports/replica/batch-core-completeness-40.json"
+  ],
+  "limits": [
+    "本轮首次把两个实际keypath转发地址单列审阅；两个gap仅为此前provider缺陷沿调用链传播，汇总功能缺陷时不得重复累加。",
+    "当前function-map按这两个Paste:地址查询为null；本报告不是登记请求、不自动认定它们已有迁移状态。",
+    "完整的4字节原尾跳不等于目标业务已迁移，默认集合差异及动态配置父须分别保留；原typed Config七word/订阅错误域仍待证。",
+    "只新增本报告，不改产品源码、台账、用户数据或配置；用户显式保存空排除列表不在本报告授权修改范围。",
+    "未编译、parse、运行应用、测试、MCP、验证脚本或发布；只有成功C、当前源码、原镜像有界静态反汇编和keypath字节读取。",
+    "跳过两个指定失败地址；新增迁移0，没有当前编译体绑定或运行验收结论。"
+  ]
+}

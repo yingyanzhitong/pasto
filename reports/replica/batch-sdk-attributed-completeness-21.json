@@ -1,0 +1,91 @@
+{
+  "kind": "static_sdk_source_level_reuse",
+  "generated_at": "2026-10-27T12:12:40.995972+00:00",
+  "historical_evidence": "reports/replica/batch-pasto-sdk-completeness-15.json",
+  "build_executed": false,
+  "tests_executed": false,
+  "product_executed": false,
+  "limitations": "确认生产源码直接使用Foundation API；未重新编译验证链接或运行时行为。",
+  "records": [
+    {
+      "function_id": "Paste:0x100bf4518",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-1168.c",
+        "line": 588,
+        "sha256": "215ff963ef2a85c1b71b6d6d64efeb55e829f38b5934f76f61aa4a15a617cc11",
+        "stub": "0x100bf4518"
+      },
+      "original_symbol": "_$s10Foundation16AttributedStringVACycfC",
+      "original_dylib": "/System/Library/Frameworks/Foundation.framework/Versions/C/Foundation",
+      "source_reference": {
+        "path": "replica/Sources/PastoCore/OriginalImagePreviewMetadataCodec.swift",
+        "line": 36,
+        "text": "stored.text ?? AttributedString()",
+        "sha256": "1620a024a011c19294f16680ae2a8d6e92afac426d4ebbe1dd4e1fac1e364ca0"
+      },
+      "criterion": "AttributedString.init()为空文本metadata的nil回退值。 已核历史原版SDK转发及当前生产Swift对同一Foundation API直接调用；当前机器链接未重新验证。",
+      "scope": "仅SDK转发源码级复用，不升级metadata、诊断父函数或SDK内部实现。"
+    },
+    {
+      "function_id": "Paste:0x100bf4530",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-1168.c",
+        "line": 622,
+        "sha256": "445dff6e9f6eae7d1ac195d7dac2fddf38704d711fb8fb0ea2ad356752b8c189",
+        "stub": "0x100bf4530"
+      },
+      "original_symbol": "_$s10Foundation16AttributedStringVyACSo012NSAttributedC0CcfC",
+      "original_dylib": "/System/Library/Frameworks/Foundation.framework/Versions/C/Foundation",
+      "source_reference": {
+        "path": "replica/Sources/PastoCore/OriginalTextPreviewMetadata.swift",
+        "line": 21,
+        "text": "text: AttributedString(sample)",
+        "sha256": "7c09e2e2297ef070a792bf8a50e51ab162146d27b516d7e92ac3bd53df36b676"
+      },
+      "criterion": "AttributedString.init(NSAttributedString) 将实际文本样本转换为元数据。 已核历史原版SDK转发及当前生产Swift对同一Foundation API直接调用；当前机器链接未重新验证。",
+      "scope": "仅SDK转发源码级复用，不升级metadata、诊断父函数或SDK内部实现。"
+    },
+    {
+      "function_id": "Paste:0x100bf4b0c",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-1170.c",
+        "line": 593,
+        "sha256": "1470ec9bfec8507ff537923ed1bce7be39ef82a3194919bf09bce7d875e38af2",
+        "stub": "0x100bf4b0c"
+      },
+      "original_symbol": "_$s10Foundation4DateV18ISO8601FormatStyleV13dateSeparator0f4TimeG004timeG00i4ZoneG026includingFractionalSeconds0iJ0A2E0bG0O_AE0bhG0OAE0hG0OAE0hjG0OSbAA0hJ0VtcfC",
+      "original_dylib": "/System/Library/Frameworks/Foundation.framework/Versions/C/Foundation",
+      "source_reference": {
+        "path": "replica/Sources/PastoCore/OriginalDiagnosticDispatcher.swift",
+        "line": 126,
+        "text": "Date.ISO8601FormatStyle(dateSeparator: .dash, dateTimeSeparator: .standard,",
+        "sha256": "7f7ca246acae9248a654db1af4973e8d48c272651a147fffc06cafaf2a103e9f"
+      },
+      "criterion": "Date.ISO8601FormatStyle.init以显式separator、fraction与timezone配置日志格式。 已核历史原版SDK转发及当前生产Swift对同一Foundation API直接调用；当前机器链接未重新验证。",
+      "scope": "仅SDK转发源码级复用，不升级metadata、诊断父函数或SDK内部实现。"
+    },
+    {
+      "function_id": "Paste:0x100bf4e78",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-1171.c",
+        "line": 768,
+        "sha256": "2ac8c9a4b8c27ebc7656d8900adda34d3f8c0f7b5523a1b1541ed3c8808f3664",
+        "stub": "0x100bf4e78"
+      },
+      "original_symbol": "_$s10Foundation8TimeZoneV14secondsFromGMTACSgSi_tcfC",
+      "original_dylib": "/System/Library/Frameworks/Foundation.framework/Versions/C/Foundation",
+      "source_reference": {
+        "path": "replica/Sources/PastoCore/OriginalDiagnosticDispatcher.swift",
+        "line": 128,
+        "text": "TimeZone(secondsFromGMT: 0)!",
+        "sha256": "7f7ca246acae9248a654db1af4973e8d48c272651a147fffc06cafaf2a103e9f"
+      },
+      "criterion": "TimeZone.init(secondsFromGMT:)用于日志ISO格式UTC时区。 已核历史原版SDK转发及当前生产Swift对同一Foundation API直接调用；当前机器链接未重新验证。",
+      "scope": "仅SDK转发源码级复用，不升级metadata、诊断父函数或SDK内部实现。"
+    }
+  ]
+}

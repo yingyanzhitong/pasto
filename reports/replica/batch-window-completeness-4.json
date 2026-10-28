@@ -1,0 +1,487 @@
+{
+  "kind": "batch-window-completeness-4",
+  "scope": "已完成的19项同类输入视图合同，按placeholder/typing/focus与原生转派/menu和filters-clear回调归组，不为凑数量扩查。",
+  "summary": {
+    "reviewed": 19,
+    "complete": 6,
+    "gap": 0,
+    "uncertain": 13
+  },
+  "definite_product_differences": [],
+  "uncertainty_types": [
+    "原显式任务执行器诊断及动态错误行号与当前源码隔离声明未独立证明。",
+    "placeholder原资源包装/17locale对应性未在本批闭合。",
+    "f043f0c成功C丢浮点坐标，当前源码需原ARM已有坐标证据独立核回。"
+  ],
+  "limitations": [
+    "只读当前Source和成功伪代码，未编辑产品、台账，未编译、运行或测试。",
+    "complete仅该有限合同；调用父或callee被标uncertain时不会自动升整个类/输入链完整。",
+    "不把旧构建或静态隔离声明当成当前机器码错误分支证明。",
+    "未分析用户跳过的两个失败地址。"
+  ],
+  "activities": {
+    "source_edited": false,
+    "ledger_edited": false,
+    "compiled": false,
+    "product_run": false,
+    "tests_run": false,
+    "wrapper_added": false
+  },
+  "skipped_failed_addresses": [
+    "Paste:0x100ac35f8",
+    "Paste:0x100ac746c"
+  ],
+  "functions": [
+    {
+      "function_id": "Paste:0x1000436a0",
+      "mapping_state_at_review": "migrated",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-0025.c",
+        "line": 396
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchTextView.swift",
+          "symbol": "f_1000436a0"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/SearchEditor.swift",
+          "symbol": "OriginalSearch"
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchAppearance.swift",
+          "symbol": "searchPlaceholder"
+        }
+      ],
+      "evidence": "placeholder缓存有值返回同一对象；无值NSTextField()→调用配置→存缓存→返回，无重复创建。",
+      "actual_consumer": "实际InputView的placeholder隐藏、布局和typing刷新调用。"
+    },
+    {
+      "function_id": "Paste:0x10004371c",
+      "mapping_state_at_review": "migrated",
+      "status": "uncertain",
+      "original": {
+        "path": "decompiled/Paste/part-0025.c",
+        "line": 426
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchTextView.swift",
+          "symbol": "f_10004371c"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/SearchEditor.swift",
+          "symbol": "OriginalSearch"
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchAppearance.swift",
+          "symbol": "searchPlaceholder"
+        }
+      ],
+      "evidence": "透明/不可选/不可编辑/无框/placeholderTextColor及.font条件NSFont转换均匹配。原文案从f1c6300 LocalizedStringResource读取，当前为可注入placeholderText/独立17语言fallback；本批未逐locale核此资源边界。",
+      "actual_consumer": "真实placeholder factory调用；不是已证明可见文案错误。"
+    },
+    {
+      "function_id": "Paste:0x100043904",
+      "mapping_state_at_review": "migrated",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-0025.c",
+        "line": 509
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchTextView.swift",
+          "symbol": "f_100043904"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/SearchEditor.swift",
+          "symbol": "OriginalSearch"
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchAppearance.swift",
+          "symbol": "searchPlaceholder"
+        }
+      ],
+      "evidence": "依序设置placeholder字体、完整typingAttributes、再设置textView字体；两字体均从preferredTypingAttributes的font条件转换，缺失/类型错nil，正常次序一致。",
+      "actual_consumer": "setSelectedRange、didChangeText、初始text配置真实调用。"
+    },
+    {
+      "function_id": "Paste:0x100043b74",
+      "mapping_state_at_review": "migrated",
+      "status": "uncertain",
+      "original": {
+        "path": "decompiled/Paste/part-0025.c",
+        "line": 620
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchTextView.swift",
+          "symbol": "f_100043b74"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/SearchEditor.swift",
+          "symbol": "OriginalSearch"
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchAppearance.swift",
+          "symbol": "searchPlaceholder"
+        }
+      ],
+      "evidence": "读取canAcceptFocus直接返回、不委托super这一值分支一致；原入口显式executor检查/报告没有当前编译同构证据。",
+      "actual_consumer": "NSTextView acceptsFirstResponder override真实系统消费。"
+    },
+    {
+      "function_id": "Paste:0x100043c24",
+      "mapping_state_at_review": "migrated",
+      "status": "uncertain",
+      "original": {
+        "path": "decompiled/Paste/part-0025.c",
+        "line": 654
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchTextView.swift",
+          "symbol": "f_100043c24"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/SearchEditor.swift",
+          "symbol": "OriginalSearch"
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchAppearance.swift",
+          "symbol": "searchPlaceholder"
+        }
+      ],
+      "evidence": "super.becomeFirstResponder先执行，成功才读并重设selectedRange，返回同一Bool；失败不改选区。原显式Actor诊断未证。",
+      "actual_consumer": "真实becomeFirstResponder override。"
+    },
+    {
+      "function_id": "Paste:0x100043d2c",
+      "mapping_state_at_review": "migrated",
+      "status": "uncertain",
+      "original": {
+        "path": "decompiled/Paste/part-0025.c",
+        "line": 702
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchTextView.swift",
+          "symbol": "f_100043d2c"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/SearchEditor.swift",
+          "symbol": "OriginalSearch"
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchAppearance.swift",
+          "symbol": "searchPlaceholder"
+        }
+      ],
+      "evidence": "原range/affinity/stillSelecting原样super转派，然后刷新typing attrs，当前相同；原executor错误报告轨迹未证。",
+      "actual_consumer": "真实setSelectedRange override与鼠标/键盘编辑选区。"
+    },
+    {
+      "function_id": "Paste:0x100043e4c",
+      "mapping_state_at_review": "migrated",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-0025.c",
+        "line": 748
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchTextView.swift",
+          "symbol": "f_100043e4c"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/SearchEditor.swift",
+          "symbol": "OriginalSearch"
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchAppearance.swift",
+          "symbol": "searchPlaceholder"
+        }
+      ],
+      "evidence": "先super.didChangeText，再按string是否空设placeholder隐藏，最后typing刷新；当前不额外调用onChange或改变输入文本。",
+      "actual_consumer": "didChangeText override经f043efc和回调helper实际调用。"
+    },
+    {
+      "function_id": "Paste:0x100043efc",
+      "mapping_state_at_review": "migrated",
+      "status": "uncertain",
+      "original": {
+        "path": "decompiled/Paste/part-0025.c",
+        "line": 781
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchTextView.swift",
+          "symbol": "f_100043efc"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/SearchEditor.swift",
+          "symbol": "OriginalSearch"
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchAppearance.swift",
+          "symbol": "searchPlaceholder"
+        }
+      ],
+      "evidence": "原薄入口把self/行0xd9/action f043e4c交f043508；当前同context/action同步转交。正常转发完整，但动态行号Actor错误分支因共享helper未证而维持uncertain。",
+      "actual_consumer": "实际NSTextView didChangeText override。"
+    },
+    {
+      "function_id": "Paste:0x100043f0c",
+      "mapping_state_at_review": "migrated",
+      "status": "uncertain",
+      "original": {
+        "path": "decompiled/Paste/part-0025.c",
+        "line": 795
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchTextView.swift",
+          "symbol": "f_100043f0c"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/SearchEditor.swift",
+          "symbol": "OriginalSearch"
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchAppearance.swift",
+          "symbol": "searchPlaceholder"
+        }
+      ],
+      "evidence": "当前super.layout后两次读textContainerOrigin，x-1、y不变，保尺寸设置placeholder.origin再sizeToFit；原成功C浮点寄存器把y/常量混淆，本批未独立重读既有ARM frame坐标证明。",
+      "actual_consumer": "实际TextView.layout经f043fa0调用；不称确定坐标错。"
+    },
+    {
+      "function_id": "Paste:0x100043fa0",
+      "mapping_state_at_review": "migrated",
+      "status": "uncertain",
+      "original": {
+        "path": "decompiled/Paste/part-0025.c",
+        "line": 824
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchTextView.swift",
+          "symbol": "f_100043fa0"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/SearchEditor.swift",
+          "symbol": "OriginalSearch"
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchAppearance.swift",
+          "symbol": "searchPlaceholder"
+        }
+      ],
+      "evidence": "薄入口以self/行0xeb/action f043f0c调用共享helper，当前保持同步context/action；共享Actor/行号错误分支未证。",
+      "actual_consumer": "真实NSView.layout override。"
+    },
+    {
+      "function_id": "Paste:0x100043fb0",
+      "mapping_state_at_review": "migrated",
+      "status": "uncertain",
+      "original": {
+        "path": "decompiled/Paste/part-0025.c",
+        "line": 838
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchTextView.swift",
+          "symbol": "f_100043fb0"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/SearchEditor.swift",
+          "symbol": "OriginalSearch"
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchAppearance.swift",
+          "symbol": "searchPlaceholder"
+        }
+      ],
+      "evidence": "changeLayoutOrientation:返回false，其它action含nil转super并保Bool；当前正常业务完整。原显式Actor检查与报告未有当前编译证明。",
+      "actual_consumer": "NSTextView.validateUserInterfaceItem真实菜单验证。"
+    },
+    {
+      "function_id": "Paste:0x100042fc8",
+      "mapping_state_at_review": "migrated",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-0025.c",
+        "line": 127
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchTextView.swift",
+          "symbol": "f_100042fc8"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/SearchEditor.swift",
+          "symbol": "OriginalSearch"
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchAppearance.swift",
+          "symbol": "searchPlaceholder"
+        }
+      ],
+      "evidence": "逐项核min1/max1000000、每次可选TextKit2容器宽高不跟踪/size/maxlines1/padding0；drawsBackground false/focusRing none、7类自动替换检测全false、contentType nil、可双向resize/fieldEditor/可选可编辑/非rich，最后add placeholder+typing刷新。",
+      "actual_consumer": "OriginalSearchTextScroller.swift:16在持有真实TextView后调用配置；InputView惰性Scroller生产链消费，不把initializer/IME父同时判完整。"
+    },
+    {
+      "function_id": "Paste:0x100043508",
+      "mapping_state_at_review": "migrated",
+      "status": "uncertain",
+      "original": {
+        "path": "decompiled/Paste/part-0025.c",
+        "line": 316
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchTextView.swift",
+          "symbol": "f_100043508"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/SearchEditor.swift",
+          "symbol": "OriginalSearch"
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchAppearance.swift",
+          "symbol": "searchPlaceholder"
+        }
+      ],
+      "evidence": "正常在同执行器同步action(context)一次且返回0，与当前一致；原读取动态param3行号、显式任务执行器检查并报告，当前静态@MainActor声明未独立证明相同错误支路。",
+      "actual_consumer": "真实didChangeText/layout薄入口均使用，不是空wrapper。"
+    },
+    {
+      "function_id": "Paste:0x1000440e4",
+      "mapping_state_at_review": "migrated",
+      "status": "uncertain",
+      "original": {
+        "path": "decompiled/Paste/part-0025.c",
+        "line": 907
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchTextView.swift",
+          "symbol": "f_1000440e4"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/SearchEditor.swift",
+          "symbol": "ReplicaSearchEditor"
+        }
+      ],
+      "evidence": "先super.menu(for:event)，非nil才delegate=self，返回原可选菜单，无后备创建；当前业务一致。原Actor报告未证。",
+      "actual_consumer": "真实menu(for:) override，文本右键菜单生产。"
+    },
+    {
+      "function_id": "Paste:0x10004487c",
+      "mapping_state_at_review": "migrated",
+      "status": "uncertain",
+      "original": {
+        "path": "decompiled/Paste/part-0025.c",
+        "line": 1225
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchTextView.swift",
+          "symbol": "f_10004487c"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/SearchEditor.swift",
+          "symbol": "ReplicaSearchEditor"
+        }
+      ],
+      "evidence": "menuWillOpen同步调用原基础编辑过滤f21b56c，同一menu不重建；当前一致。原executor错误报告未有当前证据。",
+      "actual_consumer": "真实NSMenuDelegate menuWillOpen回调。"
+    },
+    {
+      "function_id": "Paste:0x100045730",
+      "mapping_state_at_review": "migrated",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-0025.c",
+        "line": 1886
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchField.swift",
+          "symbol": "f_100045730"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/SearchEditor.swift",
+          "symbol": "ReplicaSearchEditor"
+        }
+      ],
+      "evidence": "filtersButton缓存命中直接返回；无值才创建NSButton、调用配置、存缓存、返回。weak动作配置由callee负责，未把此getter当整按钮生命周期。",
+      "actual_consumer": "OriginalSearchField初始化/约束及filter点击实际调用。"
+    },
+    {
+      "function_id": "Paste:0x100045e54",
+      "mapping_state_at_review": "migrated",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-0025.c",
+        "line": 2126
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchField.swift",
+          "symbol": "f_100045e54"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/SearchEditor.swift",
+          "symbol": "ReplicaSearchEditor"
+        }
+      ],
+      "evidence": "原弱上下文nil无动作，存活且onClear有值才false调用；实际input.onClear闭包weak self读取后调用f045e54，nil callback不执行。这里只核Void闭包业务，不把Ghidra code*寄存器误作对外动作返回值。",
+      "actual_consumer": "OriginalSearchField.f045c2c给真实InputView安装weak onClear闭包。"
+    },
+    {
+      "function_id": "Paste:0x1000460b8",
+      "mapping_state_at_review": "migrated",
+      "status": "uncertain",
+      "original": {
+        "path": "decompiled/Paste/part-0025.c",
+        "line": 2248
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchField.swift",
+          "symbol": "f_1000460b8"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/SearchEditor.swift",
+          "symbol": "ReplicaSearchEditor"
+        }
+      ],
+      "evidence": "onShowFilters nil不创建filtersButton；有值才读惰性按钮并传入回调，当前吻合。原先显式Actor检查/固定文件报告未证。",
+      "actual_consumer": "真实NSButton action didClickFiltersButton→f0460b8。"
+    },
+    {
+      "function_id": "Paste:0x1000471b4",
+      "mapping_state_at_review": "migrated",
+      "status": "uncertain",
+      "original": {
+        "path": "decompiled/Paste/part-0026.c",
+        "line": 335
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchField.swift",
+          "symbol": "f_1000471b4"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/SearchEditor.swift",
+          "symbol": "ReplicaSearchEditor"
+        }
+      ],
+      "evidence": "有window才将同一InputView.TextView设firstResponder，缺window无动作，无super.mouseDown/选区修改；当前一致。原执行器诊断未证明。",
+      "actual_consumer": "SearchField真实mouseDown override。"
+    }
+  ]
+}

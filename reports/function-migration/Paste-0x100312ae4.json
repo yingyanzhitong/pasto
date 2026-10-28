@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "kind": "static_code_migration",
+  "function_id": "Paste:0x100312ae4",
+  "implementation_origin": "existing_reused",
+  "original_pseudocode": "decompiled/Paste/part-0254.c:1066..1385",
+  "source": "replica/Sources/PastoCore/OriginalFilePreviewMetadata.swift",
+  "symbol": "OriginalFilePreviewMetadataGenerator.generate",
+  "branch_review": [
+    "Decode each file URL independently and skip invalid UTF8/URL values; preserve order and duplicates",
+    "No URL returns empty paths, size zero and nil preview",
+    "Only first URL supplies totalFileSize; errors or absent value become zero",
+    "Only first URL supplies optional preview; do not fall back to later URLs",
+    "Return all valid URL paths in original order",
+    "This function has no Config lookup; its thumbnail helper receives the actual persisted preference from the local consumer"
+  ],
+  "consumer": "ClipboardStore.withPreviewMetadata -> encodeFiles -> rawPreview -> decodedFilePreviewMetadata -> file/card views",
+  "build_executed": false,
+  "tests_executed": false,
+  "equivalence_verified": false,
+  "limitations": "Independent metadata value method only; original dynamic Config service in the thumbnail helper and parent Entity/VM/ABI remain separate work."
+}

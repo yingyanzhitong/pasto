@@ -1,0 +1,45 @@
+{
+  "review_kind": "read_only_capture_repository_action_and_closure_boundary",
+  "counts": {"reviewed": 1, "complete": 0, "gap": 0, "uncertain": 1, "new_migrations_claimed": 0},
+  "functions": [
+    {
+      "function_id": "Paste:0x10037b034",
+      "status": "uncertain",
+      "original_path": "decompiled/Paste/part-0281.c",
+      "original_line": 1978,
+      "current_paths": ["replica/Sources/PastoCore/Pasteboard.swift", "replica/Sources/PastoCore/ClipboardStore.swift"],
+      "current_symbol": "ClipboardMonitor.f_10037b034(_:)",
+      "original_body_review": [
+        "先经f357cf0解析仓库existential，调用witness+0x10；Swift错误寄存器非零时仅销毁existential并退出，不能将该退出描述成必定返回成功Bool。",
+        "成功后再次解析同仓库，调用witness+0x20，传入f37c494闭包和原参数；之后第三次解析，构建单元素数组，并调用witness+0x28及manager+0xa0取得的值。",
+        "只有成功路径最后把此前结果的bit0写入间接输出。多个仓库调用各自的实体创建/持久化/错误/上下文合同不是单一Bool算法。"
+      ],
+      "current_body_review": [
+        "当前拒绝空items；用原分类及checksum helper拒绝不支持内容；取得一次frontmost app并生成sourceApplication快照。",
+        "实际调用store.captureWithInsertionResult，传入显式snapshot、respectMonitoringPolicy=false与来源记录；nil结果抛unsupportedContent，throw原样沿Swift链传播。",
+        "成功后调用onCapture?(captured.id)，再返回captured.isNew。其真实调用方f37ae9c只在成功后清共享Undo，然后按created发DidCreate并发DidCapture；catch设置lastError并记录错误。"
+      ],
+      "actual_consumers": "真实同步delegate→f37b428非空分支→f37ae9c→本方法→Store采集事务。有真实生产调用，不是未消费wrapper。原f37ae9c通过f2ff5d4执行f37c47c；成功C part-0282.c中的f37c47c从闭包context+0x10/+0x18读取捕获值转交本方法。",
+      "judgment": "现有Store提供锁内去重/来源/保存及isNew，但原三段witness调用及闭包注入的全部外向副作用尚未逐一闭合。不能仅因三态成功/失败及通知外观相似把本函数签完整；也不能仅因原CoreData与现JSON类型不同判gap。当前onCapture回调是否等价原witness后续处理尚待证明，保uncertain。",
+      "scope_boundary": "独立分类、Data/字符串checksum值方法的完整结论继续有效；NSCoding未知wire分支及已证键差异不因此解决。这里不把原仓库witness+0x10/+0x20/+0x28按名字猜成save/create/post，亦不推断失败是否已经局部更改原实体。"
+    }
+  ],
+  "supporting_entries_not_counted": [
+    {
+      "function_id": "Paste:0x10037c47c",
+      "original_path": "decompiled/Paste/part-0282.c",
+      "finding": "当前是直接Swift方法调用，原是捕获context两个槽转发；本轮仅作为真实调用链证据，不因4B/少量指令或同名函数就登记完整。"
+    },
+    {
+      "function_id": "Paste:0x10037b204",
+      "original_path": "decompiled/Paste/part-0281.c",
+      "finding": "原经f357e7c解析existential，调用动态witness并写入输出对象+0x10；原f37c494转发它。typed witness及输出对象字段尚未闭合，不能凭旁边现共享Undo依赖推定这是等价的Undo注入，不另计完整。"
+    }
+  ],
+  "limits": [
+    "只新增本报告；没有修改产品源码、台账、用户设置或存储数据。",
+    "只读成功C和当前真实源码；未编译、parse、运行应用、测试、MCP、验证脚本或发布。",
+    "未读取两个指定失败地址。没有当前编译体绑定，不声明端到端回归通过。",
+    "新增迁移0；本项uncertain不撤销已证明独立值方法，也不是新发现用户实际故障的声明。"
+  ]
+}

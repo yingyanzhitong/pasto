@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "round": 41,
+  "scope": "链接完整预览的 URL 标签配置与默认打开应用名有限方法；依据成功原体及当前真实消费者复用。",
+  "counts": {"reviewed": 2, "complete": 2, "gap": 0, "uncertain": 0},
+  "source_binding": {
+    "path": "replica/Sources/Pasto/UI/ReplicaLinkPreviewContent.swift",
+    "sha256": "6becef98930daa19e63760be5039f4eda502f2a21ae7b91a2f484abb3d7b7947",
+    "historical_group": "reports/function-migration/file-link-and-drag-value-static.json",
+    "note": "本轮读取当前完整源码，并非仅以历史摘要复用；不声称本轮构建或运行等价。"
+  },
+  "records": [
+    {
+      "function_id": "Paste:0x1003e7d00",
+      "status": "complete",
+      "original": {"path": "decompiled/Paste/part-0311.c", "start_line": 332, "end_line": 367, "address_range": "0x1003e7d00..<0x1003e7ddc"},
+      "current_reference": {"path": "replica/Sources/Pasto/UI/ReplicaLinkPreviewContent.swift", "symbol": "init(state:item:) URL label configuration + updateMetadata(_:)", "line_ranges": ["38..44", "114..115"]},
+      "criterion": [
+        "原非可选 URL 的 absoluteString 写入标签，设置原 body font、共享 secondary 色，以及 editable/selectable/bordered/drawsBackground 全 false；水平压缩优先级位型 0x437a0000 为 250。当前分别在初始化及实际更新中完成同一有限配置合同。",
+        "原颜色 getter f1fe19c 在 part-0167.c:82..90 明确返回 f1fec34 初始化的共享 secondary；当前 OriginalToolbarAppearance.secondaryForeground 对应同一共享色，不误用 NSColor.secondaryLabelColor。",
+        "当前 nil URL 时显示空串是外围适配；本条只确认原有有效 URL 输入合同。原方法本体没有额外 actor 诊断分支，不把被调用 text setter 的独立桥边界扩大为此业务方法缺口。"
+      ],
+      "actual_consumer": "ReplicaLinkPreviewContent.init 将 urlLabel 插入 metadata arrangedSubviews；store.$items 的观察回调在本文件61..66传入当前 itemURL，再执行 updateMetadata(_:)，预览协议 previewMetadataView 返回该 metadata。",
+      "limitations": "确认标签有限配置和值投影，不升级整个 LinkItemContentView 构造器/VM，也不声称 setter 调用顺序或跨语言 ABI 运行验证。"
+    },
+    {
+      "function_id": "Paste:0x1003e7ddc",
+      "status": "complete",
+      "original": {"path": "decompiled/Paste/part-0311.c", "start_line": 370, "end_line": 463, "address_range": "0x1003e7ddc..<0x1003e8034"},
+      "current_reference": {"path": "replica/Sources/Pasto/UI/ReplicaLinkPreviewContent.swift", "symbol": "updateMetadata(_:) applicationName branch", "line_range": "116..121"},
+      "criterion": [
+        "原按 URL 查询默认打开应用；无应用、Bundle(url:) 失败、CFBundleName 缺失或值不能 cast String 均返回本地化 f1c4388。成功 String 直接返回，空字符串不被替换。当前完整 if-let/as? String 与 else 逐支相符。",
+        "原指定成功 ARM 3e7f14..3e7f2c 的小字符串立即数按字节为 CFBundleName；3e7ff4 动态转换失败跳 3e8008 本地化 fallback，成功直接跳 3e8018 返回，无额外 isEmpty 检查。完整范围到 3e8030 ret，下一入口 3e8034。",
+        "真实显示方法把该值传入 f1e6b98 生成打开按钮标题；没有以文件名、bundleIdentifier 或硬编码浏览器代替原 CFBundleName 合同。"
+      ],
+      "actual_consumer": "同文件114..122的 updateMetadata(_:) 直接生成 openButton.title；该按钮在48..52通过当前 URL 调用 NSWorkspace.open，并作为 metadata 子视图参与真实完整预览。",
+      "limitations": "当前 nil URL 的外围 fallback 与按钮 disabled 不属于原非可选 URL 方法本身；不声称系统默认应用查询曾实测，也不升级打开动作、VM来源或父生命周期。"
+    }
+  ],
+  "excluded_failed_addresses": ["Paste:0x100ac35f8", "Paste:0x100ac746c"],
+  "verification_scope": {"product_source_modified": false, "ledger_modified": false, "compiled": false, "application_executed": false, "functional_tests_executed": false, "mcp_executed": false, "static_original_disassembly": "仅成功函数 f3e7ddc 范围的原静态 ARM；两失败地址跳过。", "one_to_one_acceptance_claimed": false}
+}

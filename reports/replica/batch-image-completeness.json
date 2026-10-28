@@ -1,0 +1,424 @@
+{
+  "schema_version": 1,
+  "scope": "仅20个既有migrated图像/颜色/纯值有限函数的当前源码与成功伪代码只读批量审阅；不是产品功能完成率。",
+  "method": "逐条读取原完整伪代码与当前方法分支/副作用/真实消费者；没有以名称或migrated状态代替完整性判断。complete仅指本报告有限业务合同，不代表运行等价或原Swift ABI。",
+  "prohibited_actions_not_performed": [
+    "编译",
+    "parse",
+    "功能测试",
+    "运行产品",
+    "MCP",
+    "产品源码编辑",
+    "台账变更"
+  ],
+  "skipped_failure_addresses": [
+    "0x100ac35f8",
+    "0x100ac746c"
+  ],
+  "counts": {
+    "complete": 16,
+    "gap": 0,
+    "uncertain": 4
+  },
+  "records": [
+    {
+      "function_id": "Paste:0x100240838",
+      "status": "complete",
+      "mapping_state_observed": "migrated",
+      "original": {
+        "path": "decompiled/Paste/part-0197.c",
+        "start_line": 82,
+        "end_line": 109
+      },
+      "current_implementations": [
+        {
+          "path": "replica/Sources/Pasto/UI/OriginalImageTextSelection.swift",
+          "symbol": "func f_100240838()",
+          "line": 68
+        }
+      ],
+      "criterion": "缓存非nil直接返回；首次创建NSImageView，raw scaling3和wantsLayer=true，缓存同实例；当前子类构造保持两属性。",
+      "actual_consumer": "OriginalZoomableImageView.init→f24095c→f2408c0→f240838"
+    },
+    {
+      "function_id": "Paste:0x1002408c0",
+      "status": "complete",
+      "mapping_state_observed": "migrated",
+      "original": {
+        "path": "decompiled/Paste/part-0197.c",
+        "start_line": 110,
+        "end_line": 140
+      },
+      "current_implementations": [
+        {
+          "path": "replica/Sources/Pasto/UI/OriginalImageTextSelection.swift",
+          "symbol": "func f_1002408c0()",
+          "line": 75
+        }
+      ],
+      "criterion": "缓存返回；首次创建clip，documentView使用同lazy imageView，drawsBackground=false后缓存。",
+      "actual_consumer": "f24095c.contentView"
+    },
+    {
+      "function_id": "Paste:0x10024095c",
+      "status": "complete",
+      "mapping_state_observed": "migrated",
+      "original": {
+        "path": "decompiled/Paste/part-0197.c",
+        "start_line": 141,
+        "end_line": 173
+      },
+      "current_implementations": [
+        {
+          "path": "replica/Sources/Pasto/UI/OriginalImageTextSelection.swift",
+          "symbol": "func f_10024095c()",
+          "line": 84
+        }
+      ],
+      "criterion": "缓存返回；首次双scroller、magnification开启、透明背景、同lazy clip后缓存，顺序符合。",
+      "actual_consumer": "OriginalZoomableImageView.init及缩放更新"
+    },
+    {
+      "function_id": "Paste:0x100240a18",
+      "status": "complete",
+      "mapping_state_observed": "migrated",
+      "original": {
+        "path": "decompiled/Paste/part-0197.c",
+        "start_line": 174,
+        "end_line": 191
+      },
+      "current_implementations": [
+        {
+          "path": "replica/Sources/Pasto/UI/OriginalImageTextSelection.swift",
+          "symbol": "func f_100240a18()",
+          "line": 96
+        }
+      ],
+      "criterion": "原只返回当前可空image存储；现getter返回同image，不触发分析或布局。",
+      "actual_consumer": "ReplicaImagePreviewContent旋转及提交"
+    },
+    {
+      "function_id": "Paste:0x100240a64",
+      "status": "complete",
+      "mapping_state_observed": "migrated",
+      "original": {
+        "path": "decompiled/Paste/part-0197.c",
+        "start_line": 192,
+        "end_line": 215
+      },
+      "current_implementations": [
+        {
+          "path": "replica/Sources/Pasto/UI/OriginalImageTextSelection.swift",
+          "symbol": "func f_100240a64(",
+          "line": 98
+        }
+      ],
+      "criterion": "先存可空image，再以当前存储值设置lazy imageView.image，无额外分析重建或layout。",
+      "actual_consumer": "replaceDisplayedItem/rotateDisplayedImage"
+    },
+    {
+      "function_id": "Paste:0x100240be8",
+      "status": "complete",
+      "mapping_state_observed": "migrated",
+      "original": {
+        "path": "decompiled/Paste/part-0197.c",
+        "start_line": 289,
+        "end_line": 315
+      },
+      "current_implementations": [
+        {
+          "path": "replica/Sources/Pasto/UI/OriginalImageTextSelection.swift",
+          "symbol": "func f_100240be8(",
+          "line": 103
+        }
+      ],
+      "criterion": "先保存Bool；false调用重建overlay，true移除首overlay；当前没有相等值短路。",
+      "actual_consumer": "图片begin/replaceDisplayedItem及只读图片wrapper"
+    },
+    {
+      "function_id": "Paste:0x100240d24",
+      "status": "complete",
+      "mapping_state_observed": "migrated",
+      "original": {
+        "path": "decompiled/Paste/part-0197.c",
+        "start_line": 373,
+        "end_line": 460
+      },
+      "current_implementations": [
+        {
+          "path": "replica/Sources/Pasto/UI/OriginalImageTextSelection.swift",
+          "symbol": "    init() {",
+          "line": 49
+        }
+      ],
+      "criterion": "初始三个lazy槽、image为nil，flag=false；super零frame；加入lazy scroll并关闭autoresizing、四边0约束。只判业务构造状态，不判原对象布局/执行器诊断ABI。",
+      "actual_consumer": "OriginalImageTextSelection.makeNSView及图片预览zoomView"
+    },
+    {
+      "function_id": "Paste:0x100241194",
+      "status": "complete",
+      "mapping_state_observed": "migrated",
+      "original": {
+        "path": "decompiled/Paste/part-0197.c",
+        "start_line": 532,
+        "end_line": 544
+      },
+      "current_implementations": [
+        {
+          "path": "replica/Sources/Pasto/UI/OriginalImageTextSelection.swift",
+          "symbol": "override func viewDidEndLiveResize()",
+          "line": 122
+        }
+      ],
+      "criterion": "完整纯方法是先super.viewDidEndLiveResize后f2411cc；当前override同顺序。被调缩放函数的边界另行审阅。",
+      "actual_consumer": "NSView live-resize系统回调"
+    },
+    {
+      "function_id": "Paste:0x100241380",
+      "status": "complete",
+      "mapping_state_observed": "migrated",
+      "original": {
+        "path": "decompiled/Paste/part-0197.c",
+        "start_line": 634,
+        "end_line": 654
+      },
+      "current_implementations": [
+        {
+          "path": "replica/Sources/Pasto/UI/OriginalImageTextSelection.swift",
+          "symbol": "override func layout()",
+          "line": 127
+        }
+      ],
+      "criterion": "先super.layout，再设置lazy imageView.frame=self.frame，最后f2411cc；当前确为frame而非bounds。",
+      "actual_consumer": "NSView.layout系统回调"
+    },
+    {
+      "function_id": "Paste:0x1002411cc",
+      "status": "uncertain",
+      "mapping_state_observed": "migrated",
+      "original": {
+        "path": "decompiled/Paste/part-0197.c",
+        "start_line": 545,
+        "end_line": 594
+      },
+      "current_implementations": [
+        {
+          "path": "replica/Sources/Pasto/UI/OriginalImageTextSelection.swift",
+          "symbol": "func f_1002411cc()",
+          "line": 111
+        }
+      ],
+      "criterion": "image=nil无副作用、ratio/min/max/magnification正常有限值路径一致；原C浮点寄存器与比较展示不完整，且C显示严格比较而既有合同说明arm为<=/>=。本轮未重新读取对应原指令，不能仅据C确认NaN/等号全边界，不认定代码缺口。",
+      "actual_consumer": "layout/viewDidEndLiveResize"
+    },
+    {
+      "function_id": "Paste:0x10021a8a8",
+      "status": "complete",
+      "mapping_state_observed": "migrated",
+      "original": {
+        "path": "decompiled/Paste/part-0184.c",
+        "start_line": 154,
+        "end_line": 239
+      },
+      "current_implementations": [
+        {
+          "path": "replica/Sources/Pasto/UI/OriginalImageTextSelection.swift",
+          "symbol": "static func f_10021a8a8(_ image: NSImage) -> UInt32",
+          "line": 216
+        }
+      ],
+      "criterion": "TIFF、CGImageSource、首properties、orientation UInt32转换逐层失败返回1；成功保原UInt32，不提前限制orientation合法枚举。",
+      "actual_consumer": "ImageAnalyzer.analyze方向参数"
+    },
+    {
+      "function_id": "Paste:0x10021aabc",
+      "status": "complete",
+      "mapping_state_observed": "migrated",
+      "original": {
+        "path": "decompiled/Paste/part-0184.c",
+        "start_line": 240,
+        "end_line": 331
+      },
+      "current_implementations": [
+        {
+          "path": "replica/Sources/Pasto/UI/OriginalImageTextSelection.swift",
+          "symbol": "func f_10021aabc()",
+          "line": 225
+        }
+      ],
+      "criterion": "按subviews顺序找首个ImageAnalysisOverlayView并remove；无匹配无动作，其它子view保留；MainActor上下文由当前类型承载。",
+      "actual_consumer": "f240be8(true)/wrapper dismantle"
+    },
+    {
+      "function_id": "Paste:0x100308ea0",
+      "status": "complete",
+      "mapping_state_observed": "migrated",
+      "original": {
+        "path": "decompiled/Paste/part-0251.c",
+        "start_line": 722,
+        "end_line": 746
+      },
+      "current_implementations": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalColorPreviewMetadata.swift",
+          "symbol": "public static func color(_ code: UInt64) -> NSColor",
+          "line": 20
+        }
+      ],
+      "criterion": "所有高于bit23均0则alpha1，否则仅bits24..31/255；RGB低24字节/255，当前NSColor(red:green:blue:alpha:)同构造，无mask高位误判。",
+      "actual_consumer": "color card/preview及source color解码"
+    },
+    {
+      "function_id": "Paste:0x100312538",
+      "status": "complete",
+      "mapping_state_observed": "migrated",
+      "original": {
+        "path": "decompiled/Paste/part-0254.c",
+        "start_line": 768,
+        "end_line": 779
+      },
+      "current_implementations": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalColorPreviewMetadata.swift",
+          "symbol": "public static func color(_ code: UInt64) -> NSColor"
+        }
+      ],
+      "criterion": "原有限方法只建立NSColor类型后原样转发UInt64到f308ea0；当前public color同一个实现直接消费，不增加第二套通道算法。",
+      "actual_consumer": "decodedColorPreviewMetadata消费者"
+    },
+    {
+      "function_id": "Paste:0x100206b5c",
+      "status": "uncertain",
+      "mapping_state_observed": "migrated",
+      "original": {
+        "path": "decompiled/Paste/part-0170.c",
+        "start_line": 3189,
+        "end_line": 3367
+      },
+      "current_implementations": [
+        {
+          "path": "replica/Sources/Pasto/UI/OriginalPreviewColorFormatting.swift",
+          "symbol": "f_100206b5c"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaColorPreviewContent.swift",
+          "symbol": "OriginalPreviewColorFormatting.f_100206b5c"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaCanonicalCardContent.swift",
+          "symbol": "OriginalPreviewColorFormatting.f_100206b5c"
+        }
+      ],
+      "criterion": "deviceRGB失败三个0、成功读取RGB/alpha、各通道乘255并Int截断/trap当前可见；原C隐藏String._init的format实参，本轮不凭既有名称确认%02x字面及全部浮点边界，需复用原常量/arm证据后再确认。没有确定差异。",
+      "actual_consumer": "ColorPreview与CanonicalCard两处uppercased显示"
+    },
+    {
+      "function_id": "Paste:0x100218b08",
+      "status": "uncertain",
+      "mapping_state_observed": "migrated",
+      "original": {
+        "path": "decompiled/Paste/part-0182.c",
+        "start_line": 1298,
+        "end_line": 1331
+      },
+      "current_implementations": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSelectionAppearance.swift",
+          "symbol": "f_100218b08"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/PanelViews.swift",
+          "symbol": "OriginalSelectionAppearance.f_100218b08"
+        }
+      ],
+      "criterion": "当前sRGB失败回原色、非RGB回原色、genericGray失败回原色；原C声明void且返回寄存器丢失，单凭本轮C不足以确认这三返回对象。既有arm返回值审阅本轮未重读，不改原台账结论。",
+      "actual_consumer": "PanelViews selection颜色"
+    },
+    {
+      "function_id": "Paste:0x1003c8b58",
+      "status": "complete",
+      "mapping_state_observed": "migrated",
+      "original": {
+        "path": "decompiled/Paste/part-0300.c",
+        "start_line": 660,
+        "end_line": 719
+      },
+      "current_implementations": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalImagePreviewMetadata.swift",
+          "line": 80,
+          "symbol": "f_1003c8b58"
+        }
+      ],
+      "criterion": "CGImage缺失nil；以CGImage建bitmaprep，JPEG raw3，单compressionFactor属性，representation失败nil；当前压缩参数不被固定或吞错替代。",
+      "actual_consumer": "image metadata JPEG0.6及图片提交JPEG0.5"
+    },
+    {
+      "function_id": "Paste:0x1003ca024",
+      "status": "complete",
+      "mapping_state_observed": "migrated",
+      "original": {
+        "path": "decompiled/Paste/part-0300.c",
+        "start_line": 1815,
+        "end_line": 1847
+      },
+      "current_implementations": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalImagePreviewMetadata.swift",
+          "line": 50,
+          "symbol": "f_1003ca024"
+        }
+      ],
+      "criterion": "isValid与两维>0守卫保留，bestRepresentation=nil返回nil；成功按目标size创建NSImage，lockFocus→rep.draw(copy/1/respectFlipped/nil)→unlockFocus。",
+      "actual_consumer": "缩略生成及Header raster消费"
+    },
+    {
+      "function_id": "Paste:0x1003c9f3c",
+      "status": "uncertain",
+      "mapping_state_observed": "migrated",
+      "original": {
+        "path": "decompiled/Paste/part-0300.c",
+        "start_line": 1767,
+        "end_line": 1814
+      },
+      "current_implementations": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalImagePreviewMetadata.swift",
+          "line": 30,
+          "symbol": "f_1003c9f3c"
+        }
+      ],
+      "criterion": "bestRepresentation失败nil与fit长宽分支正常值一致；原C把短边处理显示long截断，既有合同为frinta，源码rounded(.toNearestOrAwayFromZero)，NaN比较也无法单凭C消除。未重核原机器码，不能将C伪类型当确定gap。",
+      "actual_consumer": "f313548缩略预览生成"
+    },
+    {
+      "function_id": "Paste:0x1001fe000",
+      "status": "complete",
+      "mapping_state_observed": "migrated",
+      "original": {
+        "path": "decompiled/Paste/part-0166.c",
+        "start_line": 1945,
+        "end_line": 1974
+      },
+      "current_implementations": [
+        {
+          "path": "replica/Sources/Pasto/UI/OriginalImageCheckerboardView.swift",
+          "symbol": "private static func f_1001fe000(",
+          "line": 17
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/OriginalImageCheckerboardView.swift",
+          "symbol": "let tile = Self.f_1001fe000(",
+          "line": 11
+        }
+      ],
+      "criterion": "目标image为(2w,2h)，lockFocus、传入颜色setFill，依次fill原点与(w,h)两个w×h矩形，unlock返回；当前未填额外两个格。",
+      "actual_consumer": "OriginalImageCheckerboardView.layout生成tile"
+    }
+  ],
+  "limitations": [
+    "未重新核对当前构建产物；报告不声称源码已编译或运行验证。",
+    "uncertain是本轮伪代码证据不足，不是对原migrated台账的自动降级；应补阅已有原指令证据，不能据此猜改源码。",
+    "未检查所有图片/颜色功能或全部函数。"
+  ]
+}

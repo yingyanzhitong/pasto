@@ -1,0 +1,55 @@
+{
+  "kind": "static_reuse_review",
+  "records": [
+    {
+      "function_id": "Paste-Helper:0x10000307c",
+      "status": "complete",
+      "original_path": "decompiled/Paste-Helper/part-0000.c",
+      "original_line": 1144,
+      "current_path": "replica/Sources/PastoHelper/HelperMain.swift",
+      "current_symbol": "checkRunning",
+      "criterion": "主 actor 的首次启动 Task 使用 ContinuousClock 等待三秒，然后进入启动后续；睡眠错误交由恢复分支继续处理。",
+      "consumer": "HelperDelegate.checkRunning 与 completeLaunchAttempt 中真实 Task：ContinuousClock 等待后分别执行 launchAfterDelay 与 weak self?.checkRunning。",
+      "source_sha256": "60d98b18e87390fcc6c8de6a43b75d9505bfd74b822eb9e0fc6dc58bbfd47e12",
+      "limitations": "仅等待与后续弱引用重新检查的源码合同；未推断运行时任务调度、内存释放机器指令或上游重试事务。"
+    },
+    {
+      "function_id": "Paste-Helper:0x100004020",
+      "status": "complete",
+      "original_path": "decompiled/Paste-Helper/part-0000.c",
+      "original_line": 1843,
+      "current_path": "replica/Sources/PastoHelper/HelperMain.swift",
+      "current_symbol": "completeLaunchAttempt",
+      "criterion": "按上次失败算出的整数秒数使用 ContinuousClock 等待，再进入弱捕获重新检查的后续；支持睡眠错误的共同处理路径。",
+      "consumer": "HelperDelegate.checkRunning 与 completeLaunchAttempt 中真实 Task：ContinuousClock 等待后分别执行 launchAfterDelay 与 weak self?.checkRunning。",
+      "source_sha256": "60d98b18e87390fcc6c8de6a43b75d9505bfd74b822eb9e0fc6dc58bbfd47e12",
+      "limitations": "仅等待与后续弱引用重新检查的源码合同；未推断运行时任务调度、内存释放机器指令或上游重试事务。"
+    },
+    {
+      "function_id": "Paste-Helper:0x10000413c",
+      "status": "complete",
+      "original_path": "decompiled/Paste-Helper/part-0000.c",
+      "original_line": 1903,
+      "current_path": "replica/Sources/PastoHelper/HelperMain.swift",
+      "current_symbol": "completeLaunchAttempt",
+      "criterion": "重试冷却完成后释放等待上下文；弱捕获 Delegate 非空时调用 checkRunning，已释放则无操作。sleep 成功和错误均执行同样重新检查。",
+      "consumer": "HelperDelegate.checkRunning 与 completeLaunchAttempt 中真实 Task：ContinuousClock 等待后分别执行 launchAfterDelay 与 weak self?.checkRunning。",
+      "source_sha256": "60d98b18e87390fcc6c8de6a43b75d9505bfd74b822eb9e0fc6dc58bbfd47e12",
+      "limitations": "仅等待与后续弱引用重新检查的源码合同；未推断运行时任务调度、内存释放机器指令或上游重试事务。"
+    },
+    {
+      "function_id": "Paste-Helper:0x1000041a8",
+      "status": "complete",
+      "original_path": "decompiled/Paste-Helper/part-0000.c",
+      "original_line": 1930,
+      "current_path": "replica/Sources/PastoHelper/HelperMain.swift",
+      "current_symbol": "completeLaunchAttempt",
+      "criterion": "重试冷却完成后释放等待上下文；弱捕获 Delegate 非空时调用 checkRunning，已释放则无操作。sleep 成功和错误均执行同样重新检查。",
+      "consumer": "HelperDelegate.checkRunning 与 completeLaunchAttempt 中真实 Task：ContinuousClock 等待后分别执行 launchAfterDelay 与 weak self?.checkRunning。",
+      "source_sha256": "60d98b18e87390fcc6c8de6a43b75d9505bfd74b822eb9e0fc6dc58bbfd47e12",
+      "limitations": "仅等待与后续弱引用重新检查的源码合同；未推断运行时任务调度、内存释放机器指令或上游重试事务。"
+    }
+  ],
+  "build_executed": false,
+  "tests_executed": false
+}

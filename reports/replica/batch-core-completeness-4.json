@@ -1,0 +1,135 @@
+{
+  "review_kind": "read_only_existing_core_clipboard_attributed_text_batch",
+  "scope": "此前三批未审的十二个既有 migrated 方法：富文本表示恢复、表格属性处理、过滤、标记、RTF 合并输出及底层 writer。",
+  "counts": { "reviewed": 12, "complete": 10, "gap": 0, "uncertain": 2, "new_migrations_claimed": 0 },
+  "inputs": {
+    "ledger": "replica/function-map.json",
+    "original_success_index": "reports/Paste/function-index.json",
+    "original_arm_image": ".local/targets/Paste.arm64",
+    "current_sources": [
+      "replica/Sources/PastoCore/OriginalPasteboard.swift",
+      "replica/Sources/PastoCore/OriginalPasteboardRestore.swift",
+      "replica/Sources/PastoCore/OriginalPreviewAttributedText.swift",
+      "replica/Sources/PastoCore/Pasteboard.swift",
+      "replica/Sources/PastoCore/OriginalPasteboardCaptureState.swift"
+    ]
+  },
+  "limits": [
+    "只读成功原伪码、原镜像有界静态反汇编和当前源码，未修改产品代码、台账、用户数据。",
+    "未编译、parse、运行产品、功能或 MCP 测试，也未运行验证脚本。",
+    "complete 为本地址有限方法合同的源码对照结论；没有重新确认当前编译产物，也没有声明 SDK 动态或原对象 ABI 等价。",
+    "uncertain 区分源码方法体已对应与真实消费者/额外副作用尚未闭合，不冒称已证源码错误。",
+    "本批10/12不代表项目总体函数迁移率；全部来自既有 migrated，本批不增加迁移数量，也不直接改状态。",
+    "未分析用户跳过的 0x100ac35f8、0x100ac746c。",
+    "不重新审阅图像、metadata 或前批 NSCoding 键问题；前批已证 data/dataByType 缺口不因本批而解除。"
+  ],
+  "additional_static_evidence": {
+    "rtf_decoder_selectors": "原 f37ebdc 先调用 stub100c04980、再100c04960；有界读取两个 stub 证明各加载selref100f87e68/100f87e60，现有镜像目标cstring100def726为initWithRTFD:documentAttributes:，100de068a为initWithRTF:documentAttributes:，当前rtfd→rtf顺序正确。",
+    "paste_marker": "原 f3838bc length17 large String pointer0x8000000100d97ae0，+32处100d97b00字节确为com.wiheads.paste；写入Data.empty，不是nil。",
+    "range_and_stop": "原完整ARM309700..30971c调用length后mov x1,x0、mov x0,0，返回location0/length；309720..309734仅非空属性字典时先strb0到flag，再strb1到stop，空字典不写。",
+    "bounded_disassembly_ranges": [
+      { "start": "0x100c04960", "end_exclusive": "0x100c04994" },
+      { "start": "0x100309700", "end_exclusive": "0x100309738" }
+    ]
+  },
+  "functions": [
+    {
+      "function_id": "Paste:0x10037ebdc", "status": "complete",
+      "original_path": "decompiled/Paste/part-0282.c", "original_line": 1776,
+      "current_path": "replica/Sources/PastoCore/OriginalPasteboard.swift",
+      "current_symbol": "OriginalPasteboardItem.f_10037ebdc(_:)",
+      "criterion": "按输入UTType数组顺序查dataByType，不以数据非空过滤；每项依次尝试RTFD、RTF、通用NSAttributedString(data:options:[:])，首成功立即返回。通用解码错误释放并继续下一类型，全失败/空类型数组nil。当前三个初始化与try?、循环continue对应；实际selector另经原ARM/字符串核实。",
+      "consumer": "f37d33c以flatRTFD/rtfd/rtf调用；被捕获富文本分类、文本metadata、恢复与完整预览真实消费。"
+    },
+    {
+      "function_id": "Paste:0x10037d33c", "status": "complete",
+      "original_path": "decompiled/Paste/part-0282.c", "original_line": 722,
+      "current_path": "replica/Sources/PastoCore/OriginalPasteboard.swift",
+      "current_symbol": "OriginalPasteboardItem.f_10037d33c()",
+      "criterion": "先flatRTFD/rtfd/rtf解码；成功复制为NSMutableAttributedString并枚举全UTF16属性运行清textBlocks。富文本全失败才用f37c9a8普通文本，some空串也有效；无文本nil。当前复制、枚举、不修改原对象及fallback顺序对应，返回同一处理后副本。",
+      "consumer": "Pasteboard.swift捕获richText、OriginalPasteboardRestore多选聚合、OriginalTextPreviewMetadataGenerator和OriginalReplicaPreviewAdapter真实调用。"
+    },
+    {
+      "function_id": "Paste:0x100309924", "status": "complete",
+      "original_path": "decompiled/Paste/part-0251.c", "original_line": 1236,
+      "current_path": "replica/Sources/PastoCore/OriginalPreviewAttributedText.swift",
+      "current_symbol": "OriginalPreviewAttributedText.f_100309924(attributes:range:destination:)",
+      "criterion": "原仅字典非空且paragraphStyle转换成功、mutableCopy转换成功才清textBlocks并在原range重新addAttribute；其他分支无动作。当前逐guard对应，既不替换其他属性也不修改输入paragraph。OriginalPasteboardItem同名已有方法亦按该有限逻辑实现，空字典因缺paragraph自然无动作。",
+      "consumer": "同文件f3097c0会调用；另OriginalPasteboardItem.f37d33c真实消费同合同实现，恢复与预览链可达。本条核对属性回调合同，不把未证直接调用的f3097c0父升级。"
+    },
+    {
+      "function_id": "Paste:0x100383574", "status": "complete",
+      "original_path": "decompiled/Paste/part-0283.c", "original_line": 2401,
+      "current_path": "replica/Sources/PastoCore/OriginalPasteboard.swift",
+      "current_symbol": "OriginalPasteboardItem.f_100383574(removingTypesContaining:)",
+      "criterion": "原retain最初types数组遍历，对每type按patterns的Foundation StringProtocol.contains做任一匹配；命中则稳定删除当前所有同名types与字典键。当前for遍历Swift数组值快照、contains谓词再调用全删除方法，保重复类型、未匹配相对顺序；空patterns不删除，不加入大小写/前缀/UTType归一规则。",
+      "consumer": "OriginalPasteboardRestore.f38222c在普通恢复和native drag的prepared selections中真实调用，移除指定OLE来源格式。"
+    },
+    {
+      "function_id": "Paste:0x1003838bc", "status": "complete",
+      "original_path": "decompiled/Paste/part-0283.c", "original_line": 2585,
+      "current_path": "replica/Sources/PastoCore/OriginalPasteboard.swift",
+      "current_symbol": "OriginalPasteboardItem.f_1003838bc()",
+      "criterion": "原向types无条件追加com.wiheads.paste并在dataByType写零长度Data；重复调用仍追加，不移除其他格式。当前调用已核setter(Data(),type:)保持顺序/重复/空与nil区别，标记字节已读原镜像确认。",
+      "consumer": "OriginalPasteboardRestore.f38222c逐项准备及聚合新项真实调用，恢复/native drag共享；不把标记当写入成功回执。"
+    },
+    {
+      "function_id": "Paste:0x100383a0c", "status": "complete",
+      "original_path": "decompiled/Paste/part-0283.c", "original_line": 2638,
+      "current_path": "replica/Sources/PastoCore/OriginalPasteboardRestore.swift",
+      "current_symbol": "OriginalPasteboardRestore.f_100383a0c(separator:contents:)",
+      "criterion": "原创建空mutable attributed string，逐项读取当前result.string，只在它非空时追加无属性separator，再追加原content。当前不是用索引或已遍历项数决定分隔符：前导空项不加separator，非空后遇空项仍加separator；保原content attributes和输入顺序，返回同一mutable结果。",
+      "consumer": "f38222c的多选text/link聚合真实以换行分隔调用。"
+    },
+    {
+      "function_id": "Paste:0x100381fdc", "status": "complete",
+      "original_path": "decompiled/Paste/part-0283.c", "original_line": 1557,
+      "current_path": "replica/Sources/PastoCore/OriginalPasteboardRestore.swift",
+      "current_symbol": "OriginalPasteboardRestore.f_100381fdc(_:)",
+      "criterion": "原用NSRange(0,content.length)全UTF16数据，documentType=RTF、characterEncoding=String.Encoding.utf8；成功桥接Data，失败转换/释放NSError后返回nil。当前同属性字典与try?，不另格式回退；是否fallback纯文本由外层调用者处理。",
+      "consumer": "f38222c多选富文本聚合，非plainTextAndLinks选项下生成RTF；nil时外层原有UTF8替代逻辑保持。"
+    },
+    {
+      "function_id": "Paste:0x10037875c", "status": "uncertain",
+      "original_path": "decompiled/Paste/part-0281.c", "original_line": 104,
+      "current_path": "replica/Sources/PastoCore/OriginalPasteboard.swift",
+      "current_symbol": "OriginalPasteboardWriter.f_10037875c(_:)",
+      "criterion": "核心写入合同对应：保输入项顺序和空项，依每项有序types且仅存在Data时setData，零长度Data有效；不按writeObjects Bool分支；空输入也clearContents→writeObjects，最后读取changeCount。",
+      "unresolved": "原体末尾仅写接收者self+0x30 token。当前除writer.lastChangeCount外，还经按pasteboard.name注册的弱表查找另一个OriginalPasteboardCaptureState并写token，且额外保存lastWriteSucceeded。普通生产路径为同步原monitor token的适配，但未证该registry身份和额外外部可观察写在全部输入/多manager同名情况下与原相同，不能只凭核心setData一致签整函数。没有已证普通路径故障。",
+      "consumer": "Pasteboard.swift writeToPasteboard真实创建该writer，随后持久token、recency、Undo、DidRestore；ClipboardMonitor初始化另register captureState。本条不把外层restore副作用签入原writer。"
+    },
+    {
+      "function_id": "Paste:0x100309700", "status": "complete",
+      "original_path": "decompiled/Paste/part-0251.c", "original_line": 1122,
+      "current_path": "replica/Sources/PastoCore/OriginalPreviewAttributedText.swift",
+      "current_symbol": "OriginalPreviewAttributedText.f_100309700(_:)",
+      "criterion": "原C聚合返回失真由有界ARM闭合，返回x0=0,x1=NSAttributedString.length；当前NSRange(location:0,length:source.length)，不以Swift Character数或UTF8字节数代替。",
+      "consumer": "同文件plain判定与去textBlocks枚举，以及编辑文本处理方法真实使用该range。"
+    },
+    {
+      "function_id": "Paste:0x100309720", "status": "complete",
+      "original_path": "decompiled/Paste/part-0251.c", "original_line": 1139,
+      "current_path": "replica/Sources/PastoCore/OriginalPreviewAttributedText.swift",
+      "current_symbol": "OriginalPreviewAttributedText.f_100309720(attributes:isUnattributed:stop:)",
+      "criterion": "原字典为空不写；非空先清isUnattributed再设stop。当前inout Bool=false、ObjCBool stop=true依同顺序，未将只有字体/颜色的run当无属性，也不无条件提前停。",
+      "consumer": "f3095bc真实enumerateAttributes闭包调用。"
+    },
+    {
+      "function_id": "Paste:0x1003095bc", "status": "complete",
+      "original_path": "decompiled/Paste/part-0251.c", "original_line": 1065,
+      "current_path": "replica/Sources/PastoCore/OriginalPreviewAttributedText.swift",
+      "current_symbol": "OriginalPreviewAttributedText.f_1003095bc(_:)",
+      "criterion": "原初始flag=true，枚举全段attributes/options0，首非空字典回调改false并stop，最后返回flag；空文本保true。当前fullUTF16 range、options[]、同回调完全对应，不以内容字符串非空或类型名推断plain。",
+      "consumer": "OriginalPreviewAttributedText的编辑恢复/颜色选择、OriginalPreviewTextColors与OriginalCompactTextFooter的真实plain/rich主题分支。"
+    },
+    {
+      "function_id": "Paste:0x1003097c0", "status": "uncertain",
+      "original_path": "decompiled/Paste/part-0251.c", "original_line": 1174,
+      "current_path": "replica/Sources/PastoCore/OriginalPreviewAttributedText.swift",
+      "current_symbol": "OriginalPreviewAttributedText.f_1003097c0(_:)",
+      "criterion": "当前独立方法体与原完整copy→全段属性枚举→paragraphStyle.textBlocks清空→返回copy的有限算法一致；输入source不改。",
+      "unresolved": "本轮在产品Sources仅找到该独立方法定义，没有直接真实调用点。f37d33c有同类实际算法消费，但没有委托此方法，不能凭相同算法替它虚构真实consumer；本批按严格生产接入口径保uncertain，不宣称body有错误。",
+      "consumer": "未闭；该方法不是本轮新增，未为满足计数改源码接线。"
+    }
+  ]
+}

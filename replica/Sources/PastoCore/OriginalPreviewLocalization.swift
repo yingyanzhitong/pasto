@@ -14,6 +14,8 @@ public enum OriginalPreviewLocalization {
                                 bundle: .atURL(resourceBundle.bundleURL))
     }
 
+    public static func f_1001c6aa4() -> LocalizedStringResource { resource("general.untitled") }
+
     public static func f_1001c5b38() -> LocalizedStringResource { resource("general.paused") }
     public static func f_1001c2888() -> LocalizedStringResource { resource("general.action.pause-paste") }
 

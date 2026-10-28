@@ -35,7 +35,7 @@ public enum OriginalFilePreviewMetadataGenerator {
     private static func f_100312874(_ url: URL, preferQuickLookThumbnails: Bool) -> Data? {
         if preferQuickLookThumbnails,
            let thumbnail = QLThumbnailImageCreate(kCFAllocatorDefault, url as CFURL,
-                                                   CGSize(width: 128, height: 128),
+                                                   CGSize(width: 256, height: 256),
                                                    [kQLThumbnailOptionIconModeKey! as String: true] as CFDictionary) {
             let image = NSImage(cgImage: thumbnail.takeRetainedValue(), size: .zero)
             return OriginalPasteboardImageEncoding.f_1003c89c8(image)

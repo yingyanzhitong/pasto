@@ -95,10 +95,7 @@ final class ReplicaImagePreviewContent: NSView, OriginalPreviewEditableContent, 
 
     func beginPreviewEditing() {
         isEditing = true
-        quarterTurns = 0
-        editingUndoManager.removeAllActions()
         zoomView.f_100240be8(true)
-        updateMetadataAndCommitState()
         window?.makeFirstResponder(self)
     }
 
@@ -107,9 +104,9 @@ final class ReplicaImagePreviewContent: NSView, OriginalPreviewEditableContent, 
     }
 
     func commitPreviewEditing() {
-        if canCommit, let image = zoomView.f_100240a18(), let state {
+        if let image = zoomView.f_100240a18(), let state {
             do {
-                try state.store.updateImageItem(id: itemID, payloads: Self.encodedPayloads(image))
+                try state.store.updateImagePreviewItem(id: itemID, payloads: Self.encodedPayloads(image))
                 state.normalizeSelection()
             } catch { state.controller?.presentError(error) }
         }
@@ -130,28 +127,35 @@ final class ReplicaImagePreviewContent: NSView, OriginalPreviewEditableContent, 
         let payloads = item.payloads.filter { !$0.key.hasPrefix("com.pastereplica.internal.recognized-") }
         guard force || payloads != sourcePayloads else { return }
         sourcePayloads = payloads
-        zoomView.f_100240a64(itemImage(item))
+        zoomView.f_100240a64(Self.previewImage(from: item.payloads))
         zoomView.f_100240be8(false)
         updateMetadataAndCommitState()
     }
 
+    private static func previewImage(from payloads: [String: Data]) -> NSImage? {
+        guard let items = try? ClipboardStore.originalPasteboardItems(from: payloads) else { return nil }
+        for item in items {
+            guard let data = item.f_10037d5c4(), NSImage(data: data) != nil else { continue }
+            return item.f_10037d5c4().flatMap(NSImage.init(data:))
+        }
+        return nil
+    }
+
     private func rotateRight() {
-        guard isEditing else { return }
         let next = quarterTurns + 1
         quarterTurns = next > 3 ? 0 : next
         rotateDisplayedImage(degrees: -90)
-        editingUndoManager.registerUndo(withTarget: self) { target in
-            MainActor.assumeIsolated { target.rotateLeft() }
+        editingUndoManager.registerUndo(withTarget: self) { [weak self] _ in
+            MainActor.assumeIsolated { self?.rotateLeft() }
         }
     }
 
     private func rotateLeft() {
-        guard isEditing else { return }
         let next = quarterTurns - 1
         quarterTurns = next < 0 ? 3 : next
         rotateDisplayedImage(degrees: 90)
-        editingUndoManager.registerUndo(withTarget: self) { target in
-            MainActor.assumeIsolated { target.rotateRight() }
+        editingUndoManager.registerUndo(withTarget: self) { [weak self] _ in
+            MainActor.assumeIsolated { self?.rotateRight() }
         }
     }
 
@@ -212,14 +216,14 @@ final class ReplicaImagePreviewContent: NSView, OriginalPreviewEditableContent, 
         return rotated
     }
 
-    private static func encodedPayloads(_ image: NSImage) throws -> [String: Data] {
+    private static func encodedPayloads(_ image: NSImage) -> [String: Data] {
         if let data = OriginalPasteboardImageEncoding.f_1003c89c8(image) {
             return [NSPasteboard.PasteboardType.png.rawValue: data]
         }
         if let data = OriginalImagePreviewMetadataGenerator.f_1003c8b58(image, compression: 0.5) {
             return ["public.jpeg": data]
         }
-        throw OriginalPasteboardItemCreationError.unsupportedContent
+        return [:]
     }
 
 }

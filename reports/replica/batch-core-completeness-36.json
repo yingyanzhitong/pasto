@@ -1,0 +1,44 @@
+{
+  "review_kind": "read_only_list_raw_attributes_entity_boundary",
+  "counts": { "reviewed": 2, "complete": 0, "gap": 1, "uncertain": 1, "new_migrations_claimed": 0 },
+  "functions": [
+    {
+      "function_id": "Paste:0x1003293c4",
+      "status": "uncertain",
+      "original_path": "decompiled/Paste/part-0261.c",
+      "original_line": 1156,
+      "current_path": "replica/Sources/PastoCore/OriginalPinboardAttributes.swift",
+      "current_symbol": "OriginalPinboardAttributes.colorCode(from:)",
+      "matching_projection": "原读取rawAttributes，存在Data时JSONDecoder解码三Optional Attributes，再经f3245fc映射clipboard(capacity)或pinboard(colorCode)；缺raw/解码失败返回unknown投影。当前对成功JSON执行相同三字段解码和f3245fc，board color包含缺色码默认0；坏Data不伪造board red。",
+      "unresolved": "原返回整个属性enum，含clipboard关联capacity与unknown，当前公开函数专为颜色投影，非pinboard值均折叠nil；完整原getter还包含实体raw属性读取。当前private Value保留capacity计算，但没有据此证明原全部getter消费者/实体异常域都已接通，因此不把颜色Header需求满足签成整个原getter完整。",
+      "consumer": "Panel/preview Header及AppIntent tint真实调用colorCode(from:)，合法board域真实消费；历史保留由Preferences.historyRetentionDays另行处理，不把独立偏好存储冒成此原getter容量返回。"
+    },
+    {
+      "function_id": "Paste:0x1003294d0",
+      "status": "gap",
+      "original_path": "decompiled/Paste/part-0261.c",
+      "original_line": 1191,
+      "current_paths": [
+        "replica/Sources/PastoCore/OriginalPinboardAttributes.swift",
+        "replica/Sources/PastoCore/ClipboardStore.swift"
+      ],
+      "current_symbol": "encoded(colorCode:) + Store.insertPinboard/updatePinboard的rawAttributes赋值",
+      "matching_board_branch": "原pinboard enum关联色码→type:pinboard/capacity:nil/colorCode:some→JSON编码并setRawAttributes；当前同schema写board色码，由真实创建和调色生产调用消费。独立Attributes编解码第34批完整结论保留。",
+      "confirmed_gap": "原完整setter对unknown(tagFF)直接写rawAttributes=nil；有效enum编码若抛错，也释放错误并以nil继续setRawAttributes，不向caller抛该编码错误。当前encoded是throws JSONEncoder.encode，Store用try/try map，错误会退出事务而不按此原分支把rawAttributes置nil；完整错误副作用合同不同。当前还只直接生成pinboard属性，未恢复该setter的clipboard(capacity)完整输入分支，不能称整个原setter完整。",
+      "original_arm_error_evidence": ".local/pasteboard-next-pinboard-header-writer-original-bodies.json保存完整3294d0..329624共340B，sha256=e4bf65b5e1a2e9a02cae3ecf40009e861389891bc48fe77476a7e3b20a6eccf9。已重读错误分支：329598调用encode，32959c错误→3295a0释放error/encoder/string→3295b8置目标nil→3295bc跳3295f4；3295f8 x2=nil，3295fc仍调用setRawAttributes。不能据Ghidra移除3295a0块的成功C忽略该分支。",
+      "practical_limit": "没有运行编码失败注入，也没有证明有限String/Int/UInt64的普通JSON编码实际会失败；这里是原明确错误分支未迁，不夸称当前正常调色已出错。用户既有数据未修改，不建议为审计擅自改变事务回滚策略。"
+    }
+  ],
+  "reused_evidence": [
+    ".local/pasteboard-next-pinboard-header-writer-original-bodies.json",
+    ".local/pasteboard-next-pinboard-header-writer-review.json",
+    "reports/replica/batch-core-completeness-32.json",
+    "reports/replica/batch-core-completeness-34.json"
+  ],
+  "limits": [
+    "只阅读成功原C、既存原ARM和当前源码，新增本独立报告；未修改产品源码、台账或用户数据。",
+    "未编译、parse、运行产品、功能/MCP测试、验证脚本或发布；未核当前二进制。",
+    "本批0/2完整不是项目总迁移率；主智能体汇总分母及跨批去重，新增迁移0。",
+    "指定失败地址0x100ac35f8、0x100ac746c跳过，未读取。"
+  ]
+}

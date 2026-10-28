@@ -1,0 +1,1365 @@
+{
+  "kind": "static_contract_retention",
+  "build": {
+    "log": ".local/gap-build-80.log",
+    "source_sha256": {
+      "replica/Package.swift": "a965840bf97b7127d188cf624d30a9b0ac963dcc62d5216df1474d246b768aaa",
+      "replica/Sources/Pasto/AppMain.swift": "4ba3337274013d16f959d31d8fb3ede45c3e89579e623081fd915978a1f95a68",
+      "replica/Sources/Pasto/BackgroundService.swift": "882176450c8acb852a8573f3ec3a953974ad3198df286ea4da8288835af7faa5",
+      "replica/Sources/Pasto/GlobalHotKey.swift": "4aa739f4ee733ce477b1b3c3b3754b2111299ef09be4339b0f4e629738f9acfb",
+      "replica/Sources/Pasto/SourceAppColor.swift": "fc9c6a1b5dd5aec1998fa9a5b3149f7b8f7055b472473a80902bd9e546e89a74",
+      "replica/Sources/Pasto/UI/AuxiliaryViews.swift": "5e7fab054d7d4f000470681565554c120acb872359a4511ecea317b8cdffe865",
+      "replica/Sources/Pasto/UI/FilterBrowser.swift": "4149942f755922b56f1a43b90be826b87ed7063776dfc3b2026eb8bf91510c22",
+      "replica/Sources/Pasto/UI/OriginalAccessibilityModals.swift": "487740ec4f16e38e4c175eec49445273fb13d07c9e71f2669a68266fbd906d86",
+      "replica/Sources/Pasto/UI/OriginalAccessibilityRequestAction.swift": "22fbc993dae45d453bb2c6586a7823b3c633b2a22446c824cb75256b1e011ed0",
+      "replica/Sources/Pasto/UI/OriginalAdaptiveScalingImageView.swift": "0002845178a53c2617885f40fcfad92f679c1123a095340aa1037450914730d6",
+      "replica/Sources/Pasto/UI/OriginalCardShortcutIndicator.swift": "afb30541523231c5438a4a357d607d87aa67a0babd7ecd1fa839b204e08ff620",
+      "replica/Sources/Pasto/UI/OriginalCompactTextContent.swift": "3f0e9a48a84507ddadbcf2c4c3fee02e166c5aee98ca0b6763286d22dc96a1d6",
+      "replica/Sources/Pasto/UI/OriginalCompactTextFooter.swift": "cd31a6dd52715f0f376365665dabba599bd190358ba6b9d23d4f6d0b4c284d2b",
+      "replica/Sources/Pasto/UI/OriginalHeadTruncatedLabel.swift": "02882527d847263c3370a82d555436d149fd9f9971392ba033967d32cdc9ae6b",
+      "replica/Sources/Pasto/UI/OriginalImageCheckerboardView.swift": "956e55f5c723f031c762c58571098682af9a07055a4ded76af2be684941dd68e",
+      "replica/Sources/Pasto/UI/OriginalImageTextSelection.swift": "930ceb4220aaba298f30eac0642bbcdebfab4d143390be8edd9d903515e1f21d",
+      "replica/Sources/Pasto/UI/OriginalLinkPreviewViewport.swift": "b4df9cc96a0a5fc4aa881bb3785b18df24c96b6cf989a60c7ac9223af72bf7bd",
+      "replica/Sources/Pasto/UI/OriginalPinboardHeaderIcon.swift": "c5aad86b7285c39fd31757919e9cf8d3cc5a29fae201a150132735c193a0c2db",
+      "replica/Sources/Pasto/UI/OriginalPinboardTabTitle.swift": "76bc0f5aece7345a87288d4fe1a912000d053141a5a309d8227acfd02efc708b",
+      "replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift": "25707f9fd58a5283113d3f7d066756d54605defe8c7a747b435cdff52b403cfc",
+      "replica/Sources/Pasto/UI/OriginalUnavailableCompactContent.swift": "aa3a350b3aa3559b9e78db3eb5547a90b4ab73a5abf92e8763ac7340f5706d50",
+      "replica/Sources/Pasto/UI/OriginalUnavailablePreviewContent.swift": "2e1dd8473f7b0aa146ee780fb03defb4729a6a87677031da00e50b31bae08afb",
+      "replica/Sources/Pasto/UI/PanelViews.swift": "d4897ccb2a23cc9b3bf4673acb2f05c1da4a7717093e5fe41b250afed449c49f",
+      "replica/Sources/Pasto/UI/PreviewAnchor.swift": "aa621221c95e877131ce3f53723be87730091482eeac479ec109daf66adaf923",
+      "replica/Sources/Pasto/UI/ReplicaBrand.swift": "17757bf65cc45d46160089c7f4379471045ee0209c517a7337d3ef8fcf55de23",
+      "replica/Sources/Pasto/UI/ReplicaCanonicalCardContent.swift": "77f4c7cde1b6d5241f65a0a8041a9e38b240dfab7847394bb0c7e30b0a45e7e3",
+      "replica/Sources/Pasto/UI/ReplicaCardContextSelection.swift": "2a5b9aac7f579d6466a8f0c6feff24095609873c348ef99444f95f23aeb7615f",
+      "replica/Sources/Pasto/UI/ReplicaColorPreviewContent.swift": "ad43bd0e40c0193ce221f27464fdcc864ae422d3e58a381051b646889255e85c",
+      "replica/Sources/Pasto/UI/ReplicaCopiedOSD.swift": "d1b58b05ef6c37302cf6d6c1e0056ee0af55035422071d4c53ebe1583c84883d",
+      "replica/Sources/Pasto/UI/ReplicaFileCardImage.swift": "92b5d106ab7f48bb8d9dddaa29fdc279ef09b4a02e34448879d34738f440bbd4",
+      "replica/Sources/Pasto/UI/ReplicaFilePreviewContent.swift": "7ee7e74605682467d606c7bb7c621364f4f00a742be0a8b789d6b5dd79b9ef9c",
+      "replica/Sources/Pasto/UI/ReplicaImagePreviewContent.swift": "d9996ed2a1699738d9180a13afffefc8284ceb70d1df68f4e31b2cc63893a17e",
+      "replica/Sources/Pasto/UI/ReplicaLinkMetadataContent.swift": "0a47517556c1c338b3035815126f000cff8e49b32d3e42f3bd80221acb9af21c",
+      "replica/Sources/Pasto/UI/ReplicaLinkPreviewContent.swift": "075062ace9ce70c3d7b51aa029629697697d1fdf9b03ecad473ffa6a9f4e04cf",
+      "replica/Sources/Pasto/UI/ReplicaNativeCardCollection.swift": "2128e311da660ecf87ac5b297235d1d612d7e674f2084aef368e6f82226b9f6b",
+      "replica/Sources/Pasto/UI/ReplicaNativeDragPreview.swift": "0e5adbd506e11dee134c1e059adf4f3c7b27fd7e3cd7379be3c87bdc1fb391b7",
+      "replica/Sources/Pasto/UI/ReplicaPanelContentView.swift": "9ecc072f1f5324e922d9e44e1027c3756b0bc17216fb2c5e74b6ffbc598b96e2",
+      "replica/Sources/Pasto/UI/ReplicaPanelGlassBackground.swift": "95b52f8030c95838d208905d2737b6deea301a6103080143ccf017f5a2ef43d2",
+      "replica/Sources/Pasto/UI/ReplicaPanelResizeHandle.swift": "f0461fe70bbcb486c89ef24d7d2d119b051cd5bbfb34279df06f72636f6bcbbe",
+      "replica/Sources/Pasto/UI/ReplicaReadOnlyPreviewContent.swift": "ab74f0bb2754e477c3fc6a7a4f6bd5279b64f39a5f58fe9efb1694b0fe4da20c",
+      "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift": "dcde34d0b1b8fdd3cc8d1e1b64cafbf99901e7cbb1b9a6c1c96d2b05806c1218",
+      "replica/Sources/Pasto/UI/ReplicaSearchSuggestionSource.swift": "20d3dc7f75309c64f7d299910657971c252897363c8e3f1b8e104f4b46f76468",
+      "replica/Sources/Pasto/UI/ReplicaSearchSuggestionsMenu.swift": "94278a0022b8a6d148429c7c78d300fe83ffc17fe8aeb2cef535d5b9c278d1fc",
+      "replica/Sources/Pasto/UI/ReplicaUIController.swift": "911a173563c4f21c935467e85fea78c923065091c528303b81837567fbe535b5",
+      "replica/Sources/Pasto/UI/RichTextEditor.swift": "7c4a91fd3876d2bd35277b1a2e0ce6e1ac5e4f6af0e8de346ac7a1ced149794d",
+      "replica/Sources/Pasto/UI/SearchEditor.swift": "f1cd5ab79ccf03c3c95aaf8e2c0d49690438607afa3367cc72455398628c8b76",
+      "replica/Sources/Pasto/UI/ShortcutRecorder.swift": "2aa3eccd3955064dc00e2d252b282f268f4c01bee026d846bcdb70a8c463ad90",
+      "replica/Sources/Pasto/WindowSharingPolicy.swift": "d1d69c1996b68c50240bfc952ea9bb9fc8c2f88185e3706daf7ad120af2705fc",
+      "replica/Sources/PastoCore/ClipboardStore.swift": "4b88f5ebe148f72c522c5abf4dd526c37dcb684a3484125226bbc6562dec5223",
+      "replica/Sources/PastoCore/KeyboardShortcut.swift": "eba51741928fc95619585980567b617d39f3c749564cddb5dff4bbd04bf189d6",
+      "replica/Sources/PastoCore/Models.swift": "4f36c99e43e31d16f6fad89de529d7e1f59a364c3bb067cf441182f27e2de944",
+      "replica/Sources/PastoCore/OCR.swift": "862d26c538ee33b527297b973197d609136755e66ab887f5f8eea9d3fad08739",
+      "replica/Sources/PastoCore/OriginalAccessibilityService.swift": "e015554a40a64837f284fb9a0dc08a2639e8606b4e34b5930234cf1751e40073",
+      "replica/Sources/PastoCore/OriginalCardPresentation.swift": "acb4df601c1f35cf1e8767bc8a66140c99ec082c8c82f79acd49fc316a5d09cf",
+      "replica/Sources/PastoCore/OriginalCollectionShortcutActions.swift": "01be6b33a11e469bcbbe4afe6b12ff4f3ee7ef64e7f4a7cc64d8ff654379f9fb",
+      "replica/Sources/PastoCore/OriginalColorPreviewMetadata.swift": "b78c20f7a126322c3be604b7a26fc7d630384f31265969e4d17c5cf0887f60b2",
+      "replica/Sources/PastoCore/OriginalConfigurationFunctions.swift": "d777c6848066ec198ca41739d0a785ece4df2000977cda19b230e3d4530fcb54",
+      "replica/Sources/PastoCore/OriginalDependencies.swift": "6cccb9750822fd36e8e769bbaf820fc92232446bbde723089032b94a862619a8",
+      "replica/Sources/PastoCore/OriginalDiagnosticDispatcher.swift": "7f7ca246acae9248a654db1af4973e8d48c272651a147fffc06cafaf2a103e9f",
+      "replica/Sources/PastoCore/OriginalDiagnosticsAppActions.swift": "51b66a38645a00f634efdb623f74940f503c8c2c36862badc56b1267d2132cac",
+      "replica/Sources/PastoCore/OriginalDiagnosticsHistory.swift": "a2c917352e8d3d194f3528b7023994fdb3e393e7f81007ac5be6c77928f30b62",
+      "replica/Sources/PastoCore/OriginalDiagnosticsManager.swift": "afb071a98b036e3023f254c039ca1d85c4a975e79307aa3f3075b1caf21513ed",
+      "replica/Sources/PastoCore/OriginalFilePreviewMetadata.swift": "abf5d495807ef79b7d857eff269f77de1d69c704eafac9130616c7664a6eebe0",
+      "replica/Sources/PastoCore/OriginalFilterBrowserPopover.swift": "f0476a5457e4326cfa241adc063afb2e0031627cb49fe8bdf226634f9731ae7f",
+      "replica/Sources/PastoCore/OriginalGlobalShortcutMonitor.swift": "277dc405a3e660b36ec808e301ccfa3fa48568c8291295e02dafe84e595325b4",
+      "replica/Sources/PastoCore/OriginalImagePreviewMetadata.swift": "90bfbfd6d413e25d446b47346935f15c53d80dc44028d6630d19331b06908ffa",
+      "replica/Sources/PastoCore/OriginalImagePreviewMetadataCodec.swift": "1620a024a011c19294f16680ae2a8d6e92afac426d4ebbe1dd4e1fac1e364ca0",
+      "replica/Sources/PastoCore/OriginalInitializedValue.swift": "bde8f2a1c9e4b6c74e9bb332ebff29dcbd3569d2459783a451661ff106d0e1c4",
+      "replica/Sources/PastoCore/OriginalItemPreviewView.swift": "09a402b919b028db132cec32108d3f36eca4106fb3c4ae8d641b6f65d5905c4d",
+      "replica/Sources/PastoCore/OriginalLayerBackedView.swift": "87acffa7790cb38e5715cf6ce3d4474fffb3633d3deb15635743526f6342303c",
+      "replica/Sources/PastoCore/OriginalLinkDisplay.swift": "22ddf146e091d4b1f9fb0315e95a8bfb527542b1e1f945c9c80a776e47302b20",
+      "replica/Sources/PastoCore/OriginalLinkPreviewMetadata.swift": "cf30ef0714e8f3bfa31c11765ce3a0493b3228013c3d4096cc5c32e851c2be00",
+      "replica/Sources/PastoCore/OriginalLocalDiagnostics.swift": "95baca2d0ee25cb9ca5a7bcbc111a820bbe70d29feecf46e5d8cd0c1f6d5c911",
+      "replica/Sources/PastoCore/OriginalNativeDragPasteboardWriter.swift": "db793abd1e9b2c3c6ddf5fbe94dcb55af21122e5c9751751d5032a5156a3c908",
+      "replica/Sources/PastoCore/OriginalObjCExceptionBridge.swift": "cf3e9e3b016001d7d982a673e00e365d8b638693effe3c9c49f8c77b93102bc2",
+      "replica/Sources/PastoCore/OriginalOrderedSelection.swift": "b3631aed0222167f88c16329c76483f807d20af3baaf3a90ab4d214e8d9cb9f8",
+      "replica/Sources/PastoCore/OriginalPasteKeyTranslation.swift": "76118ad54378bc18b97d3f4560eca9032be38832c96d045d318f9335c9a68d12",
+      "replica/Sources/PastoCore/OriginalPasteboard.swift": "60f862d0779d4f580e89be5eafef96239c75287facd4602ba02b10ce232c7b61",
+      "replica/Sources/PastoCore/OriginalPasteboardArchive.swift": "52c2053221184f1fc32aa997c78a3ef90657610590f0aecf760e13b9e9139e12",
+      "replica/Sources/PastoCore/OriginalPasteboardCaptureState.swift": "91f582575946ec8e4238d539ac477be694bb0adc1ce4f9a184747e43ba670f5f",
+      "replica/Sources/PastoCore/OriginalPasteboardChecksums.swift": "91b10577b3103f2b5e4ad0879dce27b6ed53648531a0265d93d7d9f636fc611f",
+      "replica/Sources/PastoCore/OriginalPasteboardClassification.swift": "120318efac6b9e47b12a415427c830d051338fcbe0257f6f6c6d5bbab6f30614",
+      "replica/Sources/PastoCore/OriginalPasteboardDataCodec.swift": "3994f19683c261c6137c9a97f66f89d69b111e8731cc09acb42f6727980a786c",
+      "replica/Sources/PastoCore/OriginalPasteboardImageEncoding.swift": "2e4430ee0d8c7d8f88561457d37e8d50c0c756d83471facda099b7518a6a2dfe",
+      "replica/Sources/PastoCore/OriginalPasteboardImageRestore.swift": "4c2d234efaf5a3a2d64ce78515fb05e2683e47adfb2aa6b31920428b4cffa1b9",
+      "replica/Sources/PastoCore/OriginalPasteboardPolicies.swift": "b85860e5fdc4be03afd7f4f69651f3ed1fc15c2c48d4a765fdcae5fdc8787dc7",
+      "replica/Sources/PastoCore/OriginalPasteboardRestore.swift": "bf309c94b15bb4db46acedc6ba535d1f060aa3a8d74257053a773cf7200dd2c6",
+      "replica/Sources/PastoCore/OriginalPinboardAttributes.swift": "d2a1be64643be5b1b6380b92b8787e09dcf9021b6d61b7a3c3f406f5d2293424",
+      "replica/Sources/PastoCore/OriginalPinboardColor.swift": "cfc44a744f2d3769d70582fea50da409435cfd9dcfa7f9ba104719093dcaef8e",
+      "replica/Sources/PastoCore/OriginalPinboardTitle.swift": "111682b2e750e5a237a34b7a39bc90107cffec52f74ffe0eefa95455b5ca0261",
+      "replica/Sources/PastoCore/OriginalPreviewAttributedText.swift": "f670c5a9d4120859b7c75cb646ae574472ce51bdb320143fb929b48ac6e586ed",
+      "replica/Sources/PastoCore/OriginalPreviewFooter.swift": "97d14915cc4fa873a0d526a42f168ea5487864d0b8327e825bee18e28bd2e25c",
+      "replica/Sources/PastoCore/OriginalPreviewLocalization.swift": "0163cc854b291a3341675ea525903141dc764dda4a2791b513f4a9c4515632f1",
+      "replica/Sources/PastoCore/OriginalPreviewPopover.swift": "352554008c692f89091bf3cb700b0cfee1b55768b5a709c3b4320951a154a46e",
+      "replica/Sources/PastoCore/OriginalPreviewSharing.swift": "64b2623f15994676d6798fbc4702a7046826279c56249ade36f9361eef46393c",
+      "replica/Sources/PastoCore/OriginalPreviewTextColors.swift": "06134570276933fc2be82f00033d2ba9c70aaf04d5e1e134e23fcfb830b3a881",
+      "replica/Sources/PastoCore/OriginalPreviewTextTraits.swift": "819f073d5a5a633a4c7794fc0107e7bf3f015b68e74a1543d6edac7b29e31324",
+      "replica/Sources/PastoCore/OriginalPreviewTitleLabel.swift": "84e3a33dbd575ad595cded72928d3d9b917ec1ece7eb258ba42ef3cf457bb0e2",
+      "replica/Sources/PastoCore/OriginalPreviewTitles.swift": "bc8943d70501b6455fd200131f11b860d8d927efe4de4a5cf4fcd46908c7e681",
+      "replica/Sources/PastoCore/OriginalPreviewWindows.swift": "4cc1f30d0de962162c6231a6207cc7623fc82e20f126f3ebc3edb326d5592c2d",
+      "replica/Sources/PastoCore/OriginalSearchAppearance.swift": "0cfd7e194ce6f6b1f4118897810e35d0eafab317a68e6104e4bfbd11dbaeb5c4",
+      "replica/Sources/PastoCore/OriginalSearchCommands.swift": "cf7409e5f4bf47f0e1052ac3ae42c5af43812c37407bfc77eca62ba864ca1bf8",
+      "replica/Sources/PastoCore/OriginalSearchDateEncoding.swift": "b46fe7fca447d1089bfc7c36676ecaf13a2d77c6d665eb5f42cb37ab5d00c5c6",
+      "replica/Sources/PastoCore/OriginalSearchDateRanges.swift": "91f2f941e01c03dc575e29edb80144c4e268174528e551deb72642b4a7743451",
+      "replica/Sources/PastoCore/OriginalSearchEditing.swift": "de4dbf21b72826fed9c0e9418c842eb8b0f1146a7d7aa9bfe22985af5d7ac73e",
+      "replica/Sources/PastoCore/OriginalSearchField.swift": "6a56456d5b45a28cacd291891380b97414e71c1eaf68bd1d9ee15c3ec1596600",
+      "replica/Sources/PastoCore/OriginalSearchFieldAnimation.swift": "5c415996232f8f009d56ca0e07976ac31bb502f2295b7401cda2c62b4f51cc49",
+      "replica/Sources/PastoCore/OriginalSearchFilterSymbols.swift": "73a9ca9cb90529d7c46665ac1af0241f0310505e56704d441df4e94c816698ef",
+      "replica/Sources/PastoCore/OriginalSearchFilterView.swift": "4628dc1edfd81fa48b4442c4b7f05ec5eea3a6f8598038d3a1f9f9480c62f6aa",
+      "replica/Sources/PastoCore/OriginalSearchInputContext.swift": "073c80079e979d5cddc549c105aab901fdf8c9482d7b56cb535e098d9d942867",
+      "replica/Sources/PastoCore/OriginalSearchInputHistory.swift": "7aa112d949aa2982759f8b3a164eb908a3259cccbcd889e19030773bd4bb88a8",
+      "replica/Sources/PastoCore/OriginalSearchInputView.swift": "bacd69180e56aaac3eebae4eca50daa594cd09a6a146da89654f37f04b860b28",
+      "replica/Sources/PastoCore/OriginalSearchLocalization.swift": "3bc5e87065b5c45dc8e358424aac32873c00d142faab21a9a2fc949cefc44019",
+      "replica/Sources/PastoCore/OriginalSearchMenu.swift": "af3962d55bbfae4c40a67d43872d7f30d8e0e9c34c049527f28f94cc5a62f5e9",
+      "replica/Sources/PastoCore/OriginalSearchQuery.swift": "4c828b16c6342387d375e6b5a3f24d28b37bbffa1c377e4cdb064ad27b5d1b28",
+      "replica/Sources/PastoCore/OriginalSearchQueryNormalization.swift": "fc2414e1395bb916246c9ef38509730c394e3d0feebbf0ca6dc9438f86409eb9",
+      "replica/Sources/PastoCore/OriginalSearchSuggestionAnchor.swift": "2af28e89780d0e373331ea15588909cea7d99e1008e396717bb57b10b21436a7",
+      "replica/Sources/PastoCore/OriginalSearchSuggestions.swift": "d64f3d8306a0f563a0711de06af87ea375d609d0e6c640b4a7fb29965eeb6381",
+      "replica/Sources/PastoCore/OriginalSearchTextScroller.swift": "69a73891f67209030ad401a2f64241a544c06c9c429522552d88e3e68a48b970",
+      "replica/Sources/PastoCore/OriginalSearchTextTokens.swift": "ea0bef0b75186bf558f512cd15f5343e1251fb47a9e39791d320fd23248b143f",
+      "replica/Sources/PastoCore/OriginalSearchTextValue.swift": "4edef55597ad4d0a131adee7674cb682ec8c34f422fdef61f8e83dc62e8a2d9b",
+      "replica/Sources/PastoCore/OriginalSearchTextView.swift": "516f59d8ed37513fbcac4ab13bdbc79526d58469d8c4478a28ecffa27efa9015",
+      "replica/Sources/PastoCore/OriginalSelectionAppearance.swift": "5872178f7e902aa92c57626c3a2201be08ee9fcda85d1d7b1b90e11baff84588",
+      "replica/Sources/PastoCore/OriginalSettingsLocalization.swift": "62f7b6d5767ce50f52f1138d76ca6544a0294368cc2b9f9bc65dc7ff2fabf67a",
+      "replica/Sources/PastoCore/OriginalSharedDependencyCache.swift": "d83f199826f661090cdd74b9d05e185e295bf3570ba2f8e8dc868f9dac219cbf",
+      "replica/Sources/PastoCore/OriginalShortcutCoding.swift": "c55c3649e56566bab3b41e8f4ba2e6ef542e50e202ab87357219b62236883047",
+      "replica/Sources/PastoCore/OriginalShortcutControls.swift": "55ecfa91d843f2305044a1558079a89d6da119edc25f5a3d1f4e5b4ffe4d82a8",
+      "replica/Sources/PastoCore/OriginalShortcutDependencies.swift": "73908ddfedcd38cb4f1f64a7a21d1499879bed195dfb13d70f1ebbbeb6ce5b51",
+      "replica/Sources/PastoCore/OriginalShortcutFunctions.swift": "82c57689dfb20e2c4c02cd3c4ca72cf40ee7a3fd650b5fa832d79589761a9058",
+      "replica/Sources/PastoCore/OriginalShortcutMessages.swift": "a359a587810f77d3306db57a0f8b17150dc6d075f1e698be9a1772b9eafa027a",
+      "replica/Sources/PastoCore/OriginalShortcutRecorder.swift": "ba907c942f91fe336506e9a47576051f285bfce47ccd43315cb111aedbd237f2",
+      "replica/Sources/PastoCore/OriginalShortcutRecorderView.swift": "881691562e6378fbadd64502b3ec893c821a1e0a463f8b0c6a5ddbdef7dd6330",
+      "replica/Sources/PastoCore/OriginalShortcutTelemetry.swift": "8873cf835f1611b85b91736a796b4335d3364b9bc9278ace5bc89b2bd43ef14c",
+      "replica/Sources/PastoCore/OriginalShortcutValidation.swift": "094cb536243bcfa19d37564a409c032728c4c5756e98b21b375858394ad2d5cc",
+      "replica/Sources/PastoCore/OriginalSoundEffects.swift": "a452159a1b014ef158f3267ac4cf31501876b24fc89e44f0400f27b64b8b169a",
+      "replica/Sources/PastoCore/OriginalSourceApplication.swift": "f062fd4c806d1c155e84c80e6ba962500c2f2f195a2fee3b50fe5d864f06478b",
+      "replica/Sources/PastoCore/OriginalSourceApplicationColors.swift": "4fd75b6d9d2a3eb64e1d361b757e9134bdbb833487911e38b789ea2cad189662",
+      "replica/Sources/PastoCore/OriginalSourceApplicationImageColor.swift": "c59f458b7f1ec31b2b66e1370aebce4482864299957d4efb9a61934ed8bdcd29",
+      "replica/Sources/PastoCore/OriginalStackFunctions.swift": "e408e508e9bc0bf2b7477ab142e29e4b1c1087daa63cd402c312f145e6cf16a4",
+      "replica/Sources/PastoCore/OriginalStackTableController.swift": "bbd3276b4c9772cf92fcf68a59a3083c0f0f5569915cb56d83ce2b421419a717",
+      "replica/Sources/PastoCore/OriginalTextPreviewMetadata.swift": "7c09e2e2297ef070a792bf8a50e51ab162146d27b516d7e92ac3bd53df36b676",
+      "replica/Sources/PastoCore/OriginalToolbarButton.swift": "f4c3920e5f5cd9f515bbe0cce530f4f8f6335b14450f75e471f0272e19412165",
+      "replica/Sources/PastoCore/OriginalUnavailablePreviewLocalization.swift": "fe4dbd6517e0dd813bff1a508d009a4a2a00a55d644134ebc9477ecb21d608be",
+      "replica/Sources/PastoCore/OriginalViewAnimation.swift": "bafbd46ac9d4212f4d35dfc156c0d6958f8a185bce5985d23a4634e68fa081c5",
+      "replica/Sources/PastoCore/Pasteboard.swift": "c0e5d62afd41caa4a1b556a07dbb4396d2fd5e81b42c46cbf424c1cc1ab6ee19",
+      "replica/Sources/PastoCore/Resources/cs.lproj/Localizable.strings": "227f275b28c3191c31d1ed3e700f9d2a140e2deed79038ed90f31ec7ab6e62ad",
+      "replica/Sources/PastoCore/Resources/cs.lproj/Localizable.stringsdict": "cad4a0663c716b0a571317b5d99b8855f3076469a39f1bfeb1ce05e4ae6f2a8a",
+      "replica/Sources/PastoCore/Resources/da.lproj/Localizable.strings": "ee73fe66071ec7313abc53842ca76eed490c5ad7a7b542f184e819c73472e97c",
+      "replica/Sources/PastoCore/Resources/da.lproj/Localizable.stringsdict": "2fbe4e3d9ae3f2dadad058b3fe4375dd56a346ec26ec191e6f347b0333ea2b25",
+      "replica/Sources/PastoCore/Resources/de.lproj/Localizable.strings": "283db42c15025a28d07ce5fd3fff46acc473a52b5c33397b3a2113fa18ffb6ac",
+      "replica/Sources/PastoCore/Resources/de.lproj/Localizable.stringsdict": "c6fc20ab4a366deb148f095d770cf6f90c94eb246ac497812103b4f5e8aa6b34",
+      "replica/Sources/PastoCore/Resources/en.lproj/Localizable.strings": "68a424cb1a6c9f66362a0ce53da99ae5652dab171a855377cfb5e4f1411d2353",
+      "replica/Sources/PastoCore/Resources/en.lproj/Localizable.stringsdict": "dc7911c873e852bd01252c685a5e9fce24c07ca7f8954054ab6b2c4374d04679",
+      "replica/Sources/PastoCore/Resources/es.lproj/Localizable.strings": "8ceae47f1227bca8c655cece865aaee2ad82a6bb895ccd82553308436fba93c6",
+      "replica/Sources/PastoCore/Resources/es.lproj/Localizable.stringsdict": "28a931243ce4f9259d411fbe579c3b8eb7c0a58711dabd344d31029ea1104c4f",
+      "replica/Sources/PastoCore/Resources/fr.lproj/Localizable.strings": "1ca242d2dbb0be13eb902b4b35514b6d7521188a8a8ff7635dc75cfdb56b2579",
+      "replica/Sources/PastoCore/Resources/fr.lproj/Localizable.stringsdict": "7e0acca552f31d51b5556ab38d664b14d359ec55c6c2f52ce54a3b1cfad3bb03",
+      "replica/Sources/PastoCore/Resources/he.lproj/Localizable.strings": "54cb6abc199275edea9dbddd64e8dbc4812ced4220df277de6f0c729c39b18b4",
+      "replica/Sources/PastoCore/Resources/he.lproj/Localizable.stringsdict": "1c851445f2286d5959411ce7712152009f17a86f3121b597f8563f7a8955808e",
+      "replica/Sources/PastoCore/Resources/it.lproj/Localizable.strings": "731c5d0342787504cabcefc9808dc2744f3e5bfca65293aff0b3ec48306afda8",
+      "replica/Sources/PastoCore/Resources/it.lproj/Localizable.stringsdict": "5b89c5b4fa16e1354a92f46c8070f428dd468e3367a63776a0f7b059db17d492",
+      "replica/Sources/PastoCore/Resources/ja.lproj/Localizable.strings": "267f873e792e82e472d8596c26058f671dc00273e97180e0d0adc76a770fe18c",
+      "replica/Sources/PastoCore/Resources/ja.lproj/Localizable.stringsdict": "cbd651d369b6e4156ec091cc46b97a477273a7476f9082bb3f14b03d199e207d",
+      "replica/Sources/PastoCore/Resources/ko.lproj/Localizable.strings": "090d4f4cce946f723981bce74143c137dc8ac0e3939f32a0b0ef433c1ede19b1",
+      "replica/Sources/PastoCore/Resources/ko.lproj/Localizable.stringsdict": "9a0b1198ca2e28753b38e4d9aa70e5ce026ebfe62308cb36bc45928029b71981",
+      "replica/Sources/PastoCore/Resources/nl.lproj/Localizable.strings": "f6e2919b331deeb0757917da8f80bd1dd44b1bf06e3f20c0baff7a26c413d485",
+      "replica/Sources/PastoCore/Resources/nl.lproj/Localizable.stringsdict": "270356615bf42ba73be94323210365be1d6adfe845256517acd9b6cf343a7809",
+      "replica/Sources/PastoCore/Resources/pl.lproj/Localizable.strings": "f74f1378d15b66c8bff94e73b9ca1dbddd2b4a2c9faacde49b3bb67ae8b3e1cf",
+      "replica/Sources/PastoCore/Resources/pl.lproj/Localizable.stringsdict": "1c257470d804b04c12cab3de12ca8747cc1857bcef963c44e732a5614f5b4232",
+      "replica/Sources/PastoCore/Resources/pt-BR.lproj/Localizable.strings": "4b608112bd92de18277c6e2a4f8ec82bec7120018fcddd4b71becaebcd6e234f",
+      "replica/Sources/PastoCore/Resources/pt-BR.lproj/Localizable.stringsdict": "793057162eaa4cf343f9b8b1cbe83ec3aa4641d0812055b6c7fbbbcb4fb648f1",
+      "replica/Sources/PastoCore/Resources/pt-PT.lproj/Localizable.strings": "335dc209689a8d2cf5daf4903489c9f1fb7cab791f9a49690ea8b5ba9efa2250",
+      "replica/Sources/PastoCore/Resources/pt-PT.lproj/Localizable.stringsdict": "1b28f44dabcb27b6f00d3c8ac5c78b29c6b63510b1525d5cfb7d812cf3e1d399",
+      "replica/Sources/PastoCore/Resources/ru.lproj/Localizable.strings": "5d1b11d8dd2d010fa1e777dfb57f1e90145ab2ef9adf2b005ba210e89e465935",
+      "replica/Sources/PastoCore/Resources/ru.lproj/Localizable.stringsdict": "4195d7291edb5f78b23c95e44e06e52ae313e0ae4421b9ce28010d5df97bb6f4",
+      "replica/Sources/PastoCore/Resources/zh-Hans.lproj/Localizable.strings": "c0eb062c9a0d1ad150f502c4efac742431a5edec2322f2a5eef1f246b6044b6b",
+      "replica/Sources/PastoCore/Resources/zh-Hans.lproj/Localizable.stringsdict": "c1f7a75193a101959e60911f9014ab3ca0ef905a4e2105e9cba5133d1433e1ad",
+      "replica/Sources/PastoCore/Resources/zh-Hant.lproj/Localizable.strings": "7b6a3f057f00592ac3dde925fef04ae589ba8b1e382a84299e9adff816ea0a1d",
+      "replica/Sources/PastoCore/Resources/zh-Hant.lproj/Localizable.stringsdict": "8e8115b30d8b5f765fc5b94b485c028b6bf01510e888b2c568ad7978a48756d4",
+      "replica/Sources/PastoHelper/HelperMain.swift": "60d98b18e87390fcc6c8de6a43b75d9505bfd74b822eb9e0fc6dc58bbfd47e12",
+      "replica/Sources/PastoMCP/PastoMCP.swift": "c97ffb4388a7d46fc6b4c4e16242feb341b3cc31a6f80a970a64d2e773ea589a",
+      "replica/Sources/PastoObjC/PRObjCExceptionCatcher.m": "99b8ce9f229954f427517a16c4a976b6b1ad776873c0eb5a6856b6a82943af6e",
+      "replica/Sources/PastoObjC/PRPanelGlassBackground.m": "79491f7a55dfd2dcaeb9c03099bce75c386b58c2229bc8d855d2a5fd0e875a04",
+      "replica/Sources/PastoObjC/include/PRObjCExceptionCatcher.h": "04b59d8c6afe6efa1496969e34c823ea16752e7c924d9f123a767acfe804a384",
+      "replica/Sources/PastoObjC/include/PRPanelGlassBackground.h": "1e4f72b473bdeb1b90f82daa3e72dd0c75de072e06b9a15a21df0cf8ac818091",
+      "replica/Sources/PastoObjC/include/module.modulemap": "a0b506be5b34eaa0b9594ece73f823634f8c5b3346b7d6535617a68ee63878b6"
+    },
+    "generated_source_sha256": {
+      "replica/.build/arm64-apple-macosx/release/PastoCore.build/DerivedSources/resource_bundle_accessor.swift": "af73cef4d755aafb7dd48c7073e3cbd1f632eaef9ff62926d3799d7ab00f43fa",
+      "replica/.build/arm64-apple-macosx/release/PasteReplicaCore.build/DerivedSources/resource_bundle_accessor.swift": "559a99db118c7a915e8df476b9001917cf66096a50ef6f9135e9021231391302"
+    },
+    "compiled_sha256": {
+      "replica/.build/release/Pasto": "d62d3ee4392cf0f4659b63a21018f15e835436d65324121ff3088b3abb7fa499",
+      "replica/.build/release/PastoHelper": "c8b9aa18ac4d60af5f6b54c405a70b6aec2e43d2c98735b3f3369f732f2d8b0f",
+      "replica/.build/release/pasto-mcp": "6c3f65f0d979a67a7bd00d4e3374e85517406e18f9b8411740399b078ea21e09"
+    },
+    "functional_tests_executed": false
+  },
+  "reviewed_at": "2026-10-27T04:28:47.049355+00:00",
+  "contracts": {
+    "Paste:0x1000114ec": {
+      "old_source_sha256": {
+        "replica/Sources/PastoCore/OriginalStackFunctions.swift": "e408e508e9bc0bf2b7477ab142e29e4b1c1087daa63cd402c312f145e6cf16a4",
+        "replica/Sources/Pasto/UI/ReplicaUIController.swift": "822412f790641b4467627b8ac645874332149975c4ae46b1e5dd54ad71f9700a"
+      },
+      "current_source_sha256": {
+        "replica/Sources/PastoCore/OriginalStackFunctions.swift": "e408e508e9bc0bf2b7477ab142e29e4b1c1087daa63cd402c312f145e6cf16a4",
+        "replica/Sources/Pasto/UI/ReplicaUIController.swift": "911a173563c4f21c935467e85fea78c923065091c528303b81837567fbe535b5"
+      },
+      "original_pseudocode_sha256": "bfcb356b5754e26f3ce872042c2078f3c3d49db5f2b47cf90d7a558666ef25f4",
+      "review": {
+        "replica/Sources/Pasto/UI/ReplicaUIController.swift": "Stack canBecomeMain continues to delegate same OriginalStackFunctions false getter; tab-title weak owner/new group branding does not change this getter."
+      },
+      "window_review": {
+        "contract": "canBecomeMainWindow 在主执行器上委托 0x1000114fc 返回 false，已接入实际 Stack 窗口覆盖方法。",
+        "references": [
+          {
+            "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+            "symbol": "f_1000114ec"
+          }
+        ],
+        "migration_evidence": "reports/function-migration/Paste-0x1000114ec.json",
+        "original_pseudocode_sha256": "bfcb356b5754e26f3ce872042c2078f3c3d49db5f2b47cf90d7a558666ef25f4",
+        "current_source_sha256": {
+          "replica/Sources/Pasto/UI/ReplicaUIController.swift": "911a173563c4f21c935467e85fea78c923065091c528303b81837567fbe535b5"
+        },
+        "review": "Stack canBecomeMain continues to delegate same OriginalStackFunctions false getter; tab-title weak owner/new group branding does not change this getter.",
+        "decision": "existing finite contract preserved at Source; compiled final binding pending; do not claim parent/function regression tested",
+        "needs_downgrade_due_to_branding_alone": false
+      }
+    },
+    "Paste:0x1000114f4": {
+      "old_source_sha256": {
+        "replica/Sources/PastoCore/OriginalStackFunctions.swift": "e408e508e9bc0bf2b7477ab142e29e4b1c1087daa63cd402c312f145e6cf16a4",
+        "replica/Sources/Pasto/UI/ReplicaUIController.swift": "822412f790641b4467627b8ac645874332149975c4ae46b1e5dd54ad71f9700a"
+      },
+      "current_source_sha256": {
+        "replica/Sources/PastoCore/OriginalStackFunctions.swift": "e408e508e9bc0bf2b7477ab142e29e4b1c1087daa63cd402c312f145e6cf16a4",
+        "replica/Sources/Pasto/UI/ReplicaUIController.swift": "911a173563c4f21c935467e85fea78c923065091c528303b81837567fbe535b5"
+      },
+      "original_pseudocode_sha256": "3afa0b687ec977da1ac87d5aae2831387bae4b06da2cd43a65baffe206144bdd",
+      "review": {
+        "replica/Sources/Pasto/UI/ReplicaUIController.swift": "Stack canBecomeKey continues same OriginalStackFunctions false getter; no bool/context branch change."
+      },
+      "window_review": {
+        "contract": "canBecomeKeyWindow 在主执行器上委托 0x1000114fc 返回 false，已接入实际 Stack 窗口覆盖方法。",
+        "references": [
+          {
+            "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+            "symbol": "f_1000114f4"
+          }
+        ],
+        "migration_evidence": "reports/function-migration/Paste-0x1000114f4.json",
+        "original_pseudocode_sha256": "3afa0b687ec977da1ac87d5aae2831387bae4b06da2cd43a65baffe206144bdd",
+        "current_source_sha256": {
+          "replica/Sources/Pasto/UI/ReplicaUIController.swift": "911a173563c4f21c935467e85fea78c923065091c528303b81837567fbe535b5"
+        },
+        "review": "Stack canBecomeKey continues same OriginalStackFunctions false getter; no bool/context branch change.",
+        "decision": "existing finite contract preserved at Source; compiled final binding pending; do not claim parent/function regression tested",
+        "needs_downgrade_due_to_branding_alone": false
+      }
+    },
+    "Paste:0x100011138": {
+      "old_source_sha256": {
+        "replica/Sources/PastoCore/OriginalStackFunctions.swift": "e408e508e9bc0bf2b7477ab142e29e4b1c1087daa63cd402c312f145e6cf16a4",
+        "replica/Sources/Pasto/UI/ReplicaUIController.swift": "822412f790641b4467627b8ac645874332149975c4ae46b1e5dd54ad71f9700a"
+      },
+      "current_source_sha256": {
+        "replica/Sources/PastoCore/OriginalStackFunctions.swift": "e408e508e9bc0bf2b7477ab142e29e4b1c1087daa63cd402c312f145e6cf16a4",
+        "replica/Sources/Pasto/UI/ReplicaUIController.swift": "911a173563c4f21c935467e85fea78c923065091c528303b81837567fbe535b5"
+      },
+      "original_pseudocode_sha256": "77da370655b9c478cbddacfb55d1f9e840bfe558c043654171ca858e22a58383",
+      "review": {
+        "replica/Sources/Pasto/UI/ReplicaUIController.swift": "Stack creation still constructs OriginalStackWindowController(window:) then invokes its f_100011138; helper super.windowDidLoad/window nil guard/level25/collectionBehavior257/movableBackground/original autosave key remain unchanged. Brand patch changes unrelated menu/prompt text and tab owner/search initialization."
+      },
+      "window_review": {
+        "contract": "Stack窗口控制器windowDidLoad调用super后，若window存在设置level25、collectionBehavior257、背景可移动及frameAutosaveName com.wiheads.paste.paste-stack-frame；nil窗口无操作。已接入实际Stack创建路径，并兼容旧复刻frame键读取。",
+        "references": [
+          {
+            "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+            "symbol": "f_100011138"
+          }
+        ],
+        "migration_evidence": "reports/function-migration/Paste-0x100011138.json",
+        "original_pseudocode_sha256": "77da370655b9c478cbddacfb55d1f9e840bfe558c043654171ca858e22a58383",
+        "current_source_sha256": {
+          "replica/Sources/Pasto/UI/ReplicaUIController.swift": "911a173563c4f21c935467e85fea78c923065091c528303b81837567fbe535b5"
+        },
+        "review": "Stack creation still constructs OriginalStackWindowController(window:) then invokes its f_100011138; helper super.windowDidLoad/window nil guard/level25/collectionBehavior257/movableBackground/original autosave key remain unchanged. Brand patch changes unrelated menu/prompt text and tab owner/search initialization.",
+        "decision": "existing finite contract preserved at Source; compiled final binding pending; do not claim parent/function regression tested",
+        "needs_downgrade_due_to_branding_alone": false
+      }
+    },
+    "Paste:0x100082b90": {
+      "old_source_sha256": {
+        "replica/Sources/PastoCore/OriginalStackTableController.swift": "bbd3276b4c9772cf92fcf68a59a3083c0f0f5569915cb56d83ce2b421419a717",
+        "replica/Sources/Pasto/UI/AuxiliaryViews.swift": "ec9b23b2cc595e8baed849fb74aa37c7e05ec74ff338547b1aa8e10a4ea4537d"
+      },
+      "current_source_sha256": {
+        "replica/Sources/PastoCore/OriginalStackTableController.swift": "bbd3276b4c9772cf92fcf68a59a3083c0f0f5569915cb56d83ce2b421419a717",
+        "replica/Sources/Pasto/UI/AuxiliaryViews.swift": "5e7fab054d7d4f000470681565554c120acb872359a4511ecea317b8cdffe865"
+      },
+      "original_pseudocode_sha256": "8a76ac1515791da00ce199ef1576d5224598a5a02e46f4fd26d376469120f0f2",
+      "review": {
+        "replica/Sources/Pasto/UI/AuxiliaryViews.swift": "ReplicaStackTable makeCoordinator/updateNSView wrapper unchanged; actual OriginalStackTableController lazy enclosingScrollView height constraint body untouched. Shortcut setting display does not alter stack height."
+      },
+      "window_review": {
+        "contract": "惰性创建并缓存tableView.enclosingScrollView.heightAnchor等于tableView.rowHeight的约束，首次不激活，后续返回相同实例；表格缺少enclosingScrollView是原版强制解包无效调用。",
+        "references": [
+          {
+            "path": "replica/Sources/Pasto/UI/AuxiliaryViews.swift",
+            "symbol": "OriginalStackTableController"
+          }
+        ],
+        "migration_evidence": "reports/function-migration/Paste-0x100082b90.json",
+        "original_pseudocode_sha256": "8a76ac1515791da00ce199ef1576d5224598a5a02e46f4fd26d376469120f0f2",
+        "current_source_sha256": {
+          "replica/Sources/Pasto/UI/AuxiliaryViews.swift": "5e7fab054d7d4f000470681565554c120acb872359a4511ecea317b8cdffe865"
+        },
+        "review": "ReplicaStackTable makeCoordinator/updateNSView wrapper unchanged; actual OriginalStackTableController lazy enclosingScrollView height constraint body untouched. Shortcut setting display does not alter stack height.",
+        "decision": "existing finite contract preserved at Source; compiled final binding pending; do not claim parent/function regression tested",
+        "needs_downgrade_due_to_branding_alone": false
+      }
+    },
+    "Paste:0x100083a20": {
+      "old_source_sha256": {
+        "replica/Sources/PastoCore/OriginalStackTableController.swift": "bbd3276b4c9772cf92fcf68a59a3083c0f0f5569915cb56d83ce2b421419a717",
+        "replica/Sources/Pasto/UI/AuxiliaryViews.swift": "ec9b23b2cc595e8baed849fb74aa37c7e05ec74ff338547b1aa8e10a4ea4537d"
+      },
+      "current_source_sha256": {
+        "replica/Sources/PastoCore/OriginalStackTableController.swift": "bbd3276b4c9772cf92fcf68a59a3083c0f0f5569915cb56d83ce2b421419a717",
+        "replica/Sources/Pasto/UI/AuxiliaryViews.swift": "5e7fab054d7d4f000470681565554c120acb872359a4511ecea317b8cdffe865"
+      },
+      "original_pseudocode_sha256": "09b7ec41efa94f115ab747f33e6e48533244d1f722ea79762feb2c183b954981",
+      "review": {
+        "replica/Sources/Pasto/UI/AuxiliaryViews.swift": "Same unchanged Stack wrapper forwards items to controller; OriginalStackTableController animator constant=rowHeight*clamp1...10 body untouched; no animation behavior changed by display labels."
+      },
+      "window_review": {
+        "contract": "通过惰性高度约束的animator把constant改为rowHeight乘clamp(snippets.count,1,10)，并立即激活约束；即使动画duration为零，constant也在之后的run-loop轮次提交。",
+        "references": [
+          {
+            "path": "replica/Sources/Pasto/UI/AuxiliaryViews.swift",
+            "symbol": "OriginalStackTableController"
+          }
+        ],
+        "migration_evidence": "reports/function-migration/Paste-0x100083a20.json",
+        "original_pseudocode_sha256": "09b7ec41efa94f115ab747f33e6e48533244d1f722ea79762feb2c183b954981",
+        "current_source_sha256": {
+          "replica/Sources/Pasto/UI/AuxiliaryViews.swift": "5e7fab054d7d4f000470681565554c120acb872359a4511ecea317b8cdffe865"
+        },
+        "review": "Same unchanged Stack wrapper forwards items to controller; OriginalStackTableController animator constant=rowHeight*clamp1...10 body untouched; no animation behavior changed by display labels.",
+        "decision": "existing finite contract preserved at Source; compiled final binding pending; do not claim parent/function regression tested",
+        "needs_downgrade_due_to_branding_alone": false
+      }
+    },
+    "Paste:0x100085230": {
+      "old_source_sha256": {
+        "replica/Sources/PastoCore/OriginalStackTableController.swift": "bbd3276b4c9772cf92fcf68a59a3083c0f0f5569915cb56d83ce2b421419a717",
+        "replica/Sources/Pasto/UI/AuxiliaryViews.swift": "ec9b23b2cc595e8baed849fb74aa37c7e05ec74ff338547b1aa8e10a4ea4537d"
+      },
+      "current_source_sha256": {
+        "replica/Sources/PastoCore/OriginalStackTableController.swift": "bbd3276b4c9772cf92fcf68a59a3083c0f0f5569915cb56d83ce2b421419a717",
+        "replica/Sources/Pasto/UI/AuxiliaryViews.swift": "5e7fab054d7d4f000470681565554c120acb872359a4511ecea317b8cdffe865"
+      },
+      "original_pseudocode_sha256": "88b8c5439471ce782a20f0e7b19c261e769bc9ace12ae50d4350e3a103e9065e",
+      "review": {
+        "replica/Sources/Pasto/UI/AuxiliaryViews.swift": "Same Stack controller/data-source identity and items forwarding retained; full snippet count not display height truncation. No changed parent selection/data projection."
+      },
+      "window_review": {
+        "contract": "主执行器隔离检查后返回snippets数组count，不以十行高度限制截断数据源项目数。",
+        "references": [
+          {
+            "path": "replica/Sources/Pasto/UI/AuxiliaryViews.swift",
+            "symbol": "OriginalStackTableController"
+          }
+        ],
+        "migration_evidence": "reports/function-migration/Paste-0x100085230.json",
+        "original_pseudocode_sha256": "88b8c5439471ce782a20f0e7b19c261e769bc9ace12ae50d4350e3a103e9065e",
+        "current_source_sha256": {
+          "replica/Sources/Pasto/UI/AuxiliaryViews.swift": "5e7fab054d7d4f000470681565554c120acb872359a4511ecea317b8cdffe865"
+        },
+        "review": "Same Stack controller/data-source identity and items forwarding retained; full snippet count not display height truncation. No changed parent selection/data projection.",
+        "decision": "existing finite contract preserved at Source; compiled final binding pending; do not claim parent/function regression tested",
+        "needs_downgrade_due_to_branding_alone": false
+      }
+    },
+    "Paste:0x100085670": {
+      "old_source_sha256": {
+        "replica/Sources/PastoCore/OriginalStackTableController.swift": "bbd3276b4c9772cf92fcf68a59a3083c0f0f5569915cb56d83ce2b421419a717",
+        "replica/Sources/Pasto/UI/AuxiliaryViews.swift": "ec9b23b2cc595e8baed849fb74aa37c7e05ec74ff338547b1aa8e10a4ea4537d"
+      },
+      "current_source_sha256": {
+        "replica/Sources/PastoCore/OriginalStackTableController.swift": "bbd3276b4c9772cf92fcf68a59a3083c0f0f5569915cb56d83ce2b421419a717",
+        "replica/Sources/Pasto/UI/AuxiliaryViews.swift": "5e7fab054d7d4f000470681565554c120acb872359a4511ecea317b8cdffe865"
+      },
+      "original_pseudocode_sha256": "ca5423953ed197e150163509e04a1e966e0a2f27d78f68e2fabe5888bc535f10",
+      "review": {
+        "replica/Sources/Pasto/UI/AuxiliaryViews.swift": "Same Stack table delegate rejects selecting every row, unchanged Core helper/consumer. Native group rename not a Stack row action."
+      },
+      "window_review": {
+        "contract": "主执行器隔离检查后对所有行返回false，拒绝用户选择；不妨碍右键菜单。",
+        "references": [
+          {
+            "path": "replica/Sources/Pasto/UI/AuxiliaryViews.swift",
+            "symbol": "OriginalStackTableController"
+          }
+        ],
+        "migration_evidence": "reports/function-migration/Paste-0x100085670.json",
+        "original_pseudocode_sha256": "ca5423953ed197e150163509e04a1e966e0a2f27d78f68e2fabe5888bc535f10",
+        "current_source_sha256": {
+          "replica/Sources/Pasto/UI/AuxiliaryViews.swift": "5e7fab054d7d4f000470681565554c120acb872359a4511ecea317b8cdffe865"
+        },
+        "review": "Same Stack table delegate rejects selecting every row, unchanged Core helper/consumer. Native group rename not a Stack row action.",
+        "decision": "existing finite contract preserved at Source; compiled final binding pending; do not claim parent/function regression tested",
+        "needs_downgrade_due_to_branding_alone": false
+      }
+    },
+    "Paste:0x10004867c": {
+      "old_source_sha256": {
+        "replica/Sources/PastoCore/OriginalSearchCommands.swift": "cf7409e5f4bf47f0e1052ac3ae42c5af43812c37407bfc77eca62ba864ca1bf8",
+        "replica/Sources/Pasto/UI/ReplicaUIController.swift": "822412f790641b4467627b8ac645874332149975c4ae46b1e5dd54ad71f9700a"
+      },
+      "current_source_sha256": {
+        "replica/Sources/PastoCore/OriginalSearchCommands.swift": "cf7409e5f4bf47f0e1052ac3ae42c5af43812c37407bfc77eca62ba864ca1bf8",
+        "replica/Sources/Pasto/UI/ReplicaUIController.swift": "911a173563c4f21c935467e85fea78c923065091c528303b81837567fbe535b5"
+      },
+      "original_pseudocode_sha256": "075d766168e8afe04fb5b865ac69ec0f9c80cb1bd1e73933dba623bf34b1a085",
+      "review": {
+        "replica/Sources/Pasto/UI/ReplicaUIController.swift": "OriginalSearchCommands newline/cancel dispatch call remains same in existing handleKey. Only exact native tab editor bypasses collection handler via Panel.sendEvent; original search responder contract remains separate partial parent."
+      },
+      "window_review": {
+        "contract": "处理SearchField的两个Selector：insertNewline:调用可选onEnter并返回true，cancelOperation:调用可选onCancel并返回true；即使回调为nil也返回true，其余命令返回false。原版回调存于x20上下文，复刻通过显式闭包参数传递。已接入主面板Enter/Escape实际事件路径。",
+        "references": [
+          {
+            "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+            "symbol": "OriginalSearchCommands.f_10004867c"
+          }
+        ],
+        "migration_evidence": "reports/function-migration/Paste-0x10004867c.json",
+        "original_pseudocode_sha256": "075d766168e8afe04fb5b865ac69ec0f9c80cb1bd1e73933dba623bf34b1a085",
+        "current_source_sha256": {
+          "replica/Sources/Pasto/UI/ReplicaUIController.swift": "911a173563c4f21c935467e85fea78c923065091c528303b81837567fbe535b5"
+        },
+        "review": "OriginalSearchCommands newline/cancel dispatch call remains same in existing handleKey. Only exact native tab editor bypasses collection handler via Panel.sendEvent; original search responder contract remains separate partial parent.",
+        "decision": "existing finite contract preserved at Source; compiled final binding pending; do not claim parent/function regression tested",
+        "needs_downgrade_due_to_branding_alone": false
+      }
+    },
+    "Paste:0x10004795c": {
+      "old_source_sha256": {
+        "replica/Sources/PastoCore/OriginalSearchEditing.swift": "de4dbf21b72826fed9c0e9418c842eb8b0f1146a7d7aa9bfe22985af5d7ac73e",
+        "replica/Sources/Pasto/UI/PanelViews.swift": "b22b084825c21e5f0c380970c427f868751f644314fd0796b18895f1402a6c56",
+        "replica/Sources/PastoCore/OriginalSearchField.swift": "6a56456d5b45a28cacd291891380b97414e71c1eaf68bd1d9ee15c3ec1596600",
+        "replica/Sources/Pasto/UI/SearchEditor.swift": "f1cd5ab79ccf03c3c95aaf8e2c0d49690438607afa3367cc72455398628c8b76"
+      },
+      "current_source_sha256": {
+        "replica/Sources/PastoCore/OriginalSearchEditing.swift": "de4dbf21b72826fed9c0e9418c842eb8b0f1146a7d7aa9bfe22985af5d7ac73e",
+        "replica/Sources/Pasto/UI/PanelViews.swift": "d4897ccb2a23cc9b3bf4673acb2f05c1da4a7717093e5fe41b250afed449c49f",
+        "replica/Sources/PastoCore/OriginalSearchField.swift": "6a56456d5b45a28cacd291891380b97414e71c1eaf68bd1d9ee15c3ec1596600",
+        "replica/Sources/Pasto/UI/SearchEditor.swift": "f1cd5ab79ccf03c3c95aaf8e2c0d49690438607afa3367cc72455398628c8b76"
+      },
+      "original_pseudocode_sha256": "7393ec8473823cef96a36e4ae9c74c705081ea81040c15730e6ed013df6eb71b",
+      "review": {
+        "replica/Sources/Pasto/UI/PanelViews.swift": "ReplicaPanelView searchField and searchFilterChips exact bodies unchanged, including bindings/text/filter callbacks and real ReplicaSearchEditor consumer; UTF16 range replacement proposal, newline handling and attachment deletion guard is not changed by native group label/menu presentation. Actual SearchEditor implementation file untouched."
+      },
+      "window_review": {
+        "contract": "SearchField文本修改检查：没有textStorage返回false；nil替换串按空串处理；逐Character读取首Unicode标量检测换行，仅在提案中把LF和CR替换为空格；删除单字符附件时，未选中该范围则先选中并返回false；复制富文本后替换指定UTF-16范围，光标为范围起点加替换串NSString.length；存在onTextShouldChange则返回回调结果，否则true。函数本身不修改textStorage。",
+        "references": [
+          {
+            "path": "replica/Sources/Pasto/UI/PanelViews.swift",
+            "symbol": "ReplicaSearchEditor"
+          }
+        ],
+        "migration_evidence": "reports/function-migration/Paste-0x10004795c.json",
+        "original_pseudocode_sha256": "7393ec8473823cef96a36e4ae9c74c705081ea81040c15730e6ed013df6eb71b",
+        "current_source_sha256": {
+          "replica/Sources/Pasto/UI/PanelViews.swift": "d4897ccb2a23cc9b3bf4673acb2f05c1da4a7717093e5fe41b250afed449c49f"
+        },
+        "review": "ReplicaPanelView searchField and searchFilterChips exact bodies unchanged, including bindings/text/filter callbacks and real ReplicaSearchEditor consumer; UTF16 range replacement proposal, newline handling and attachment deletion guard is not changed by native group label/menu presentation. Actual SearchEditor implementation file untouched.",
+        "decision": "existing finite contract preserved at Source; compiled final binding pending; do not claim parent/function regression tested",
+        "needs_downgrade_due_to_branding_alone": false
+      }
+    },
+    "Paste:0x100047d8c": {
+      "old_source_sha256": {
+        "replica/Sources/PastoCore/OriginalSearchEditing.swift": "de4dbf21b72826fed9c0e9418c842eb8b0f1146a7d7aa9bfe22985af5d7ac73e",
+        "replica/Sources/Pasto/UI/PanelViews.swift": "b22b084825c21e5f0c380970c427f868751f644314fd0796b18895f1402a6c56",
+        "replica/Sources/PastoCore/OriginalSearchField.swift": "6a56456d5b45a28cacd291891380b97414e71c1eaf68bd1d9ee15c3ec1596600",
+        "replica/Sources/Pasto/UI/SearchEditor.swift": "f1cd5ab79ccf03c3c95aaf8e2c0d49690438607afa3367cc72455398628c8b76"
+      },
+      "current_source_sha256": {
+        "replica/Sources/PastoCore/OriginalSearchEditing.swift": "de4dbf21b72826fed9c0e9418c842eb8b0f1146a7d7aa9bfe22985af5d7ac73e",
+        "replica/Sources/Pasto/UI/PanelViews.swift": "d4897ccb2a23cc9b3bf4673acb2f05c1da4a7717093e5fe41b250afed449c49f",
+        "replica/Sources/PastoCore/OriginalSearchField.swift": "6a56456d5b45a28cacd291891380b97414e71c1eaf68bd1d9ee15c3ec1596600",
+        "replica/Sources/Pasto/UI/SearchEditor.swift": "f1cd5ab79ccf03c3c95aaf8e2c0d49690438607afa3367cc72455398628c8b76"
+      },
+      "original_pseudocode_sha256": "3bfef88d54c710bce61aea197dd675963835cace23ab7ba5bfcf1f42f0cf180c",
+      "review": {
+        "replica/Sources/Pasto/UI/PanelViews.swift": "ReplicaPanelView searchField and searchFilterChips exact bodies unchanged, including bindings/text/filter callbacks and real ReplicaSearchEditor consumer; ObjC shouldChangeTextInRange bridge preserving nullable replacement/range is not changed by native group label/menu presentation. Actual SearchEditor implementation file untouched."
+      },
+      "window_review": {
+        "contract": "SearchField的Objective-C shouldChangeTextInRange选择器入口；主执行器隔离，保留可空replacementString及NSRange，以原参数委托0x10004795c并返回其布尔结果。Swift负责NSString桥接和ARC，不保留原版优化ABI。",
+        "references": [
+          {
+            "path": "replica/Sources/Pasto/UI/PanelViews.swift",
+            "symbol": "ReplicaSearchEditor"
+          }
+        ],
+        "migration_evidence": "reports/function-migration/Paste-0x100047d8c.json",
+        "original_pseudocode_sha256": "3bfef88d54c710bce61aea197dd675963835cace23ab7ba5bfcf1f42f0cf180c",
+        "current_source_sha256": {
+          "replica/Sources/Pasto/UI/PanelViews.swift": "d4897ccb2a23cc9b3bf4673acb2f05c1da4a7717093e5fe41b250afed449c49f"
+        },
+        "review": "ReplicaPanelView searchField and searchFilterChips exact bodies unchanged, including bindings/text/filter callbacks and real ReplicaSearchEditor consumer; ObjC shouldChangeTextInRange bridge preserving nullable replacement/range is not changed by native group label/menu presentation. Actual SearchEditor implementation file untouched.",
+        "decision": "existing finite contract preserved at Source; compiled final binding pending; do not claim parent/function regression tested",
+        "needs_downgrade_due_to_branding_alone": false
+      }
+    },
+    "Paste:0x100047ea4": {
+      "old_source_sha256": {
+        "replica/Sources/PastoCore/OriginalSearchEditing.swift": "de4dbf21b72826fed9c0e9418c842eb8b0f1146a7d7aa9bfe22985af5d7ac73e",
+        "replica/Sources/Pasto/UI/PanelViews.swift": "b22b084825c21e5f0c380970c427f868751f644314fd0796b18895f1402a6c56",
+        "replica/Sources/PastoCore/OriginalSearchField.swift": "6a56456d5b45a28cacd291891380b97414e71c1eaf68bd1d9ee15c3ec1596600",
+        "replica/Sources/Pasto/UI/SearchEditor.swift": "f1cd5ab79ccf03c3c95aaf8e2c0d49690438607afa3367cc72455398628c8b76"
+      },
+      "current_source_sha256": {
+        "replica/Sources/PastoCore/OriginalSearchEditing.swift": "de4dbf21b72826fed9c0e9418c842eb8b0f1146a7d7aa9bfe22985af5d7ac73e",
+        "replica/Sources/Pasto/UI/PanelViews.swift": "d4897ccb2a23cc9b3bf4673acb2f05c1da4a7717093e5fe41b250afed449c49f",
+        "replica/Sources/PastoCore/OriginalSearchField.swift": "6a56456d5b45a28cacd291891380b97414e71c1eaf68bd1d9ee15c3ec1596600",
+        "replica/Sources/Pasto/UI/SearchEditor.swift": "f1cd5ab79ccf03c3c95aaf8e2c0d49690438607afa3367cc72455398628c8b76"
+      },
+      "original_pseudocode_sha256": "3f7bebec5c73403913510118c393fbc5fc848ad9f7c668a2fdd59e923bf39b13",
+      "review": {
+        "replica/Sources/Pasto/UI/PanelViews.swift": "ReplicaPanelView searchField and searchFilterChips exact bodies unchanged, including bindings/text/filter callbacks and real ReplicaSearchEditor consumer; onSelectionChange notification callback only reading selectedRange when callback exists is not changed by native group label/menu presentation. Actual SearchEditor implementation file untouched."
+      },
+      "window_review": {
+        "contract": "SearchField选择变化通知入口；主执行器隔离；回调不存在时不读取选区；存在时读取该SearchField关联输入文本视图的selectedRange并调用onSelectionChange。复刻由原生编辑器注入已创建的同一输入视图，不宣称已恢复尚待迁移的lazy inputView构造函数。",
+        "references": [
+          {
+            "path": "replica/Sources/Pasto/UI/PanelViews.swift",
+            "symbol": "ReplicaSearchEditor"
+          }
+        ],
+        "migration_evidence": "reports/function-migration/Paste-0x100047ea4.json",
+        "original_pseudocode_sha256": "3f7bebec5c73403913510118c393fbc5fc848ad9f7c668a2fdd59e923bf39b13",
+        "current_source_sha256": {
+          "replica/Sources/Pasto/UI/PanelViews.swift": "d4897ccb2a23cc9b3bf4673acb2f05c1da4a7717093e5fe41b250afed449c49f"
+        },
+        "review": "ReplicaPanelView searchField and searchFilterChips exact bodies unchanged, including bindings/text/filter callbacks and real ReplicaSearchEditor consumer; onSelectionChange notification callback only reading selectedRange when callback exists is not changed by native group label/menu presentation. Actual SearchEditor implementation file untouched.",
+        "decision": "existing finite contract preserved at Source; compiled final binding pending; do not claim parent/function regression tested",
+        "needs_downgrade_due_to_branding_alone": false
+      }
+    },
+    "Paste:0x100048058": {
+      "old_source_sha256": {
+        "replica/Sources/PastoCore/OriginalSearchEditing.swift": "de4dbf21b72826fed9c0e9418c842eb8b0f1146a7d7aa9bfe22985af5d7ac73e",
+        "replica/Sources/Pasto/UI/PanelViews.swift": "b22b084825c21e5f0c380970c427f868751f644314fd0796b18895f1402a6c56",
+        "replica/Sources/PastoCore/OriginalSearchCommands.swift": "cf7409e5f4bf47f0e1052ac3ae42c5af43812c37407bfc77eca62ba864ca1bf8",
+        "replica/Sources/PastoCore/OriginalSearchField.swift": "6a56456d5b45a28cacd291891380b97414e71c1eaf68bd1d9ee15c3ec1596600",
+        "replica/Sources/Pasto/UI/SearchEditor.swift": "f1cd5ab79ccf03c3c95aaf8e2c0d49690438607afa3367cc72455398628c8b76"
+      },
+      "current_source_sha256": {
+        "replica/Sources/PastoCore/OriginalSearchEditing.swift": "de4dbf21b72826fed9c0e9418c842eb8b0f1146a7d7aa9bfe22985af5d7ac73e",
+        "replica/Sources/Pasto/UI/PanelViews.swift": "d4897ccb2a23cc9b3bf4673acb2f05c1da4a7717093e5fe41b250afed449c49f",
+        "replica/Sources/PastoCore/OriginalSearchCommands.swift": "cf7409e5f4bf47f0e1052ac3ae42c5af43812c37407bfc77eca62ba864ca1bf8",
+        "replica/Sources/PastoCore/OriginalSearchField.swift": "6a56456d5b45a28cacd291891380b97414e71c1eaf68bd1d9ee15c3ec1596600",
+        "replica/Sources/Pasto/UI/SearchEditor.swift": "f1cd5ab79ccf03c3c95aaf8e2c0d49690438607afa3367cc72455398628c8b76"
+      },
+      "original_pseudocode_sha256": "62e5c3edb17185a398801cd9ac8b773a87e927ed6c5f5613ca217e17ea97e6e2",
+      "review": {
+        "replica/Sources/Pasto/UI/PanelViews.swift": "ReplicaPanelView searchField and searchFilterChips exact bodies unchanged, including bindings/text/filter callbacks and real ReplicaSearchEditor consumer; doCommandBySelector delegates original command dispatcher is not changed by native group label/menu presentation. Actual SearchEditor implementation file untouched."
+      },
+      "window_review": {
+        "contract": "SearchField doCommandBySelector的Objective-C选择器入口；主执行器隔离，将命令Selector委托0x10004867c，并返回同一布尔结果；由实际NSTextViewDelegate命令路径调用。",
+        "references": [
+          {
+            "path": "replica/Sources/Pasto/UI/PanelViews.swift",
+            "symbol": "ReplicaSearchEditor"
+          }
+        ],
+        "migration_evidence": "reports/function-migration/Paste-0x100048058.json",
+        "original_pseudocode_sha256": "62e5c3edb17185a398801cd9ac8b773a87e927ed6c5f5613ca217e17ea97e6e2",
+        "current_source_sha256": {
+          "replica/Sources/Pasto/UI/PanelViews.swift": "d4897ccb2a23cc9b3bf4673acb2f05c1da4a7717093e5fe41b250afed449c49f"
+        },
+        "review": "ReplicaPanelView searchField and searchFilterChips exact bodies unchanged, including bindings/text/filter callbacks and real ReplicaSearchEditor consumer; doCommandBySelector delegates original command dispatcher is not changed by native group label/menu presentation. Actual SearchEditor implementation file untouched.",
+        "decision": "existing finite contract preserved at Source; compiled final binding pending; do not claim parent/function regression tested",
+        "needs_downgrade_due_to_branding_alone": false
+      }
+    },
+    "Paste:0x100048128": {
+      "old_source_sha256": {
+        "replica/Sources/PastoCore/OriginalSearchEditing.swift": "de4dbf21b72826fed9c0e9418c842eb8b0f1146a7d7aa9bfe22985af5d7ac73e",
+        "replica/Sources/Pasto/UI/PanelViews.swift": "b22b084825c21e5f0c380970c427f868751f644314fd0796b18895f1402a6c56",
+        "replica/Sources/PastoCore/OriginalSearchField.swift": "6a56456d5b45a28cacd291891380b97414e71c1eaf68bd1d9ee15c3ec1596600",
+        "replica/Sources/Pasto/UI/SearchEditor.swift": "f1cd5ab79ccf03c3c95aaf8e2c0d49690438607afa3367cc72455398628c8b76"
+      },
+      "current_source_sha256": {
+        "replica/Sources/PastoCore/OriginalSearchEditing.swift": "de4dbf21b72826fed9c0e9418c842eb8b0f1146a7d7aa9bfe22985af5d7ac73e",
+        "replica/Sources/Pasto/UI/PanelViews.swift": "d4897ccb2a23cc9b3bf4673acb2f05c1da4a7717093e5fe41b250afed449c49f",
+        "replica/Sources/PastoCore/OriginalSearchField.swift": "6a56456d5b45a28cacd291891380b97414e71c1eaf68bd1d9ee15c3ec1596600",
+        "replica/Sources/Pasto/UI/SearchEditor.swift": "f1cd5ab79ccf03c3c95aaf8e2c0d49690438607afa3367cc72455398628c8b76"
+      },
+      "original_pseudocode_sha256": "d87365857ebcdfd24bca9413937f4e8de378dd18b048b57c524dfefcdfb48c57",
+      "review": {
+        "replica/Sources/Pasto/UI/PanelViews.swift": "ReplicaPanelView searchField and searchFilterChips exact bodies unchanged, including bindings/text/filter callbacks and real ReplicaSearchEditor consumer; optional onEndEditing callback invoked once is not changed by native group label/menu presentation. Actual SearchEditor implementation file untouched."
+      },
+      "window_review": {
+        "contract": "SearchField结束编辑通知入口；主执行器隔离，通知内容不被业务逻辑读取；可选onEndEditing存在则调用一次，不存在则不调用。由原生编辑器结束编辑通知调用。",
+        "references": [
+          {
+            "path": "replica/Sources/Pasto/UI/PanelViews.swift",
+            "symbol": "ReplicaSearchEditor"
+          }
+        ],
+        "migration_evidence": "reports/function-migration/Paste-0x100048128.json",
+        "original_pseudocode_sha256": "d87365857ebcdfd24bca9413937f4e8de378dd18b048b57c524dfefcdfb48c57",
+        "current_source_sha256": {
+          "replica/Sources/Pasto/UI/PanelViews.swift": "d4897ccb2a23cc9b3bf4673acb2f05c1da4a7717093e5fe41b250afed449c49f"
+        },
+        "review": "ReplicaPanelView searchField and searchFilterChips exact bodies unchanged, including bindings/text/filter callbacks and real ReplicaSearchEditor consumer; optional onEndEditing callback invoked once is not changed by native group label/menu presentation. Actual SearchEditor implementation file untouched.",
+        "decision": "existing finite contract preserved at Source; compiled final binding pending; do not claim parent/function regression tested",
+        "needs_downgrade_due_to_branding_alone": false
+      }
+    },
+    "Paste:0x1000482c8": {
+      "old_source_sha256": {
+        "replica/Sources/PastoCore/OriginalSearchEditing.swift": "de4dbf21b72826fed9c0e9418c842eb8b0f1146a7d7aa9bfe22985af5d7ac73e",
+        "replica/Sources/Pasto/UI/PanelViews.swift": "b22b084825c21e5f0c380970c427f868751f644314fd0796b18895f1402a6c56",
+        "replica/Sources/PastoCore/OriginalSearchField.swift": "6a56456d5b45a28cacd291891380b97414e71c1eaf68bd1d9ee15c3ec1596600",
+        "replica/Sources/Pasto/UI/SearchEditor.swift": "f1cd5ab79ccf03c3c95aaf8e2c0d49690438607afa3367cc72455398628c8b76"
+      },
+      "current_source_sha256": {
+        "replica/Sources/PastoCore/OriginalSearchEditing.swift": "de4dbf21b72826fed9c0e9418c842eb8b0f1146a7d7aa9bfe22985af5d7ac73e",
+        "replica/Sources/Pasto/UI/PanelViews.swift": "d4897ccb2a23cc9b3bf4673acb2f05c1da4a7717093e5fe41b250afed449c49f",
+        "replica/Sources/PastoCore/OriginalSearchField.swift": "6a56456d5b45a28cacd291891380b97414e71c1eaf68bd1d9ee15c3ec1596600",
+        "replica/Sources/Pasto/UI/SearchEditor.swift": "f1cd5ab79ccf03c3c95aaf8e2c0d49690438607afa3367cc72455398628c8b76"
+      },
+      "original_pseudocode_sha256": "e2e06b7c433fba402f364a4f8b3ca62c6bece12db0ebb48f4814448cae9a4c18",
+      "review": {
+        "replica/Sources/Pasto/UI/PanelViews.swift": "ReplicaPanelView searchField and searchFilterChips exact bodies unchanged, including bindings/text/filter callbacks and real ReplicaSearchEditor consumer; first Unicode scalar optional value used by newline proposal is not changed by native group label/menu presentation. Actual SearchEditor implementation file untouched."
+      },
+      "window_review": {
+        "contract": "读取Swift字符串的首Unicode标量；空字符串返回nil，包含补充平面字符时返回完整码点。原版用低32位码点及第32位空值标记打包Optional，复刻采用Unicode.Scalar?并交给Swift处理本地/桥接字符串表示；在0x10004795c逐Character换行判定路径实际调用，不承诺Swift私有字符串ABI相同。",
+        "references": [
+          {
+            "path": "replica/Sources/Pasto/UI/PanelViews.swift",
+            "symbol": "ReplicaSearchEditor"
+          }
+        ],
+        "migration_evidence": "reports/function-migration/Paste-0x1000482c8.json",
+        "original_pseudocode_sha256": "e2e06b7c433fba402f364a4f8b3ca62c6bece12db0ebb48f4814448cae9a4c18",
+        "current_source_sha256": {
+          "replica/Sources/Pasto/UI/PanelViews.swift": "d4897ccb2a23cc9b3bf4673acb2f05c1da4a7717093e5fe41b250afed449c49f"
+        },
+        "review": "ReplicaPanelView searchField and searchFilterChips exact bodies unchanged, including bindings/text/filter callbacks and real ReplicaSearchEditor consumer; first Unicode scalar optional value used by newline proposal is not changed by native group label/menu presentation. Actual SearchEditor implementation file untouched.",
+        "decision": "existing finite contract preserved at Source; compiled final binding pending; do not claim parent/function regression tested",
+        "needs_downgrade_due_to_branding_alone": false
+      }
+    },
+    "Paste:0x1000f6874": {
+      "old_source_sha256": {
+        "replica/Sources/Pasto/UI/ReplicaUIController.swift": "822412f790641b4467627b8ac645874332149975c4ae46b1e5dd54ad71f9700a"
+      },
+      "current_source_sha256": {
+        "replica/Sources/Pasto/UI/ReplicaUIController.swift": "911a173563c4f21c935467e85fea78c923065091c528303b81837567fbe535b5"
+      },
+      "original_pseudocode_sha256": "37b3f2436f20246124c9ba7d2783855c3ea85a9d28ca099bf7ca3a626a17671a",
+      "review": {
+        "replica/Sources/Pasto/UI/ReplicaUIController.swift": "Unchanged prompt field reads input.stringValue; prompt caller title changes do not alter getter input/output. Modal trim policy remains old behavior."
+      },
+      "window_review": {
+        "contract": "Swift NSTextField.text getter：读接收者 stringValue 并桥接返回 Swift String，没有条件分支。",
+        "references": [
+          {
+            "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+            "symbol": "input.stringValue"
+          }
+        ],
+        "migration_evidence": "reports/function-migration/Paste-0x1000f6874.json",
+        "original_pseudocode_sha256": "37b3f2436f20246124c9ba7d2783855c3ea85a9d28ca099bf7ca3a626a17671a",
+        "current_source_sha256": {
+          "replica/Sources/Pasto/UI/ReplicaUIController.swift": "911a173563c4f21c935467e85fea78c923065091c528303b81837567fbe535b5"
+        },
+        "review": "Unchanged prompt field reads input.stringValue; prompt caller title changes do not alter getter input/output. Modal trim policy remains old behavior.",
+        "decision": "existing finite contract preserved at Source; compiled final binding pending; do not claim parent/function regression tested",
+        "needs_downgrade_due_to_branding_alone": false
+      }
+    },
+    "Paste:0x1000123d4": {
+      "old_source_sha256": {
+        "replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift": "82dbb3a6e43972531fc5a2859d90f87cde481e430571967fafdc1d8278d408d5"
+      },
+      "current_source_sha256": {
+        "replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift": "25707f9fd58a5283113d3f7d066756d54605defe8c7a747b435cdff52b403cfc"
+      },
+      "original_pseudocode_sha256": "e2e98c396757ff43e9060107e9c4b45359571ee7b97450c935164f3af5550030",
+      "review": {
+        "replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift": "Exact close-image factory body unchanged (system symbols, force-unwrap, foreground, imageOnly, alpha .6,target/action). Changed Pin/create menu text belongs to different methods."
+      },
+      "window_review": {
+        "contract": "先尝试xmark.circle.fill，首次nil则用questionmark.square且nil不可继续；首次成功时再查原symbol且nil不可继续；设置imageOnly、共享foreground色、border=false、alpha0.6、close action及target。",
+        "references": [
+          {
+            "path": "replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift",
+            "symbol": "f_1000123d4"
+          }
+        ],
+        "migration_evidence": "reports/function-migration/Paste-0x1000123d4.json",
+        "original_pseudocode_sha256": "e2e98c396757ff43e9060107e9c4b45359571ee7b97450c935164f3af5550030",
+        "current_source_sha256": {
+          "replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift": "25707f9fd58a5283113d3f7d066756d54605defe8c7a747b435cdff52b403cfc"
+        },
+        "review": "Exact close-image factory body unchanged (system symbols, force-unwrap, foreground, imageOnly, alpha .6,target/action). Changed Pin/create menu text belongs to different methods.",
+        "decision": "existing finite contract preserved at Source; compiled final binding pending; do not claim parent/function regression tested",
+        "needs_downgrade_due_to_branding_alone": false
+      }
+    },
+    "Paste:0x10004e8ec": {
+      "old_source_sha256": {
+        "replica/Sources/PastoCore/OriginalDiagnosticsAppActions.swift": "51b66a38645a00f634efdb623f74940f503c8c2c36862badc56b1267d2132cac",
+        "replica/Sources/Pasto/AppMain.swift": "4a5c879fa5f9a457dea20719cdeb050d7280c101170ed6a64e33d85e7bcf7e3a"
+      },
+      "current_source_sha256": {
+        "replica/Sources/PastoCore/OriginalDiagnosticsAppActions.swift": "51b66a38645a00f634efdb623f74940f503c8c2c36862badc56b1267d2132cac",
+        "replica/Sources/Pasto/AppMain.swift": "4ba3337274013d16f959d31d8fb3ede45c3e89579e623081fd915978a1f95a68"
+      },
+      "original_pseudocode_sha256": "1b45df6b5594863a3a5b951aac31ee60a4df263649ec66748fb18fd018e0b5cc",
+      "review": {
+        "replica/Sources/Pasto/AppMain.swift": "Actual restart invocation remains inside unchanged f04e064 else branch; OriginalDiagnosticsAppActions Process command/exit helper file is untouched. Menu/About/fixture branding affects no restart contract."
+      },
+      "window_review": {
+        "contract": "构造Process，executableURL=/bin/sh，参数-c与sleep 0.25 && open双引号包Bundle.main.bundleURL.path，try启动后无论成败均_exit(0)。",
+        "references": [
+          {
+            "path": "replica/Sources/Pasto/AppMain.swift",
+            "symbol": "OriginalDiagnosticsAppActions.f_10004e8ec()"
+          }
+        ],
+        "migration_evidence": "reports/function-migration/Paste-0x10004e8ec.json",
+        "original_pseudocode_sha256": "1b45df6b5594863a3a5b951aac31ee60a4df263649ec66748fb18fd018e0b5cc",
+        "current_source_sha256": {
+          "replica/Sources/Pasto/AppMain.swift": "4ba3337274013d16f959d31d8fb3ede45c3e89579e623081fd915978a1f95a68"
+        },
+        "review": "Actual restart invocation remains inside unchanged f04e064 else branch; OriginalDiagnosticsAppActions Process command/exit helper file is untouched. Menu/About/fixture branding affects no restart contract.",
+        "decision": "existing finite contract preserved at Source; compiled final binding pending; do not claim parent/function regression tested",
+        "needs_downgrade_due_to_branding_alone": false
+      }
+    },
+    "Paste:0x100214c20": {
+      "old_source_sha256": {
+        "replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift": "82dbb3a6e43972531fc5a2859d90f87cde481e430571967fafdc1d8278d408d5"
+      },
+      "current_source_sha256": {
+        "replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift": "25707f9fd58a5283113d3f7d066756d54605defe8c7a747b435cdff52b403cfc"
+      },
+      "original_pseudocode_sha256": "94e50f858d3c83775888236cc50e786b6de56b40ad0888043be42f13cf3018aa",
+      "review": {
+        "replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift": "Exact validateUserInterfaceItem body unchanged: changeLayoutOrientation false, otherwise super. Brand new-group menu does not affect selector route."
+      },
+      "window_review": {
+        "contract": "action为changeLayoutOrientation:时false；nil或任何其他action委托super返回结果。",
+        "references": [
+          {
+            "path": "replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift",
+            "symbol": "validateUserInterfaceItem"
+          }
+        ],
+        "migration_evidence": "reports/function-migration/Paste-0x100214c20.json",
+        "original_pseudocode_sha256": "94e50f858d3c83775888236cc50e786b6de56b40ad0888043be42f13cf3018aa",
+        "current_source_sha256": {
+          "replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift": "25707f9fd58a5283113d3f7d066756d54605defe8c7a747b435cdff52b403cfc"
+        },
+        "review": "Exact validateUserInterfaceItem body unchanged: changeLayoutOrientation false, otherwise super. Brand new-group menu does not affect selector route.",
+        "decision": "existing finite contract preserved at Source; compiled final binding pending; do not claim parent/function regression tested",
+        "needs_downgrade_due_to_branding_alone": false
+      }
+    },
+    "Paste:0x100214d54": {
+      "old_source_sha256": {
+        "replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift": "82dbb3a6e43972531fc5a2859d90f87cde481e430571967fafdc1d8278d408d5"
+      },
+      "current_source_sha256": {
+        "replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift": "25707f9fd58a5283113d3f7d066756d54605defe8c7a747b435cdff52b403cfc"
+      },
+      "original_pseudocode_sha256": "b86074ffe3cc211a4cef943f6276e213632345d9cb3b6689dae181bf6047b398",
+      "review": {
+        "replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift": "Exact NSTextView menu(for:) body unchanged: call super, mutate same nonnil menu by OriginalSearchMenu filter, return same object. Header Pin menu is a separate method."
+      },
+      "window_review": {
+        "contract": "先调用super.menu(for:event)，非nil时在同一menu原位调用f21ad80移除原版指定富文本组，nil不操作；返回同一menu。",
+        "references": [
+          {
+            "path": "replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift",
+            "symbol": "menu(for"
+          }
+        ],
+        "migration_evidence": "reports/function-migration/Paste-0x100214d54.json",
+        "original_pseudocode_sha256": "b86074ffe3cc211a4cef943f6276e213632345d9cb3b6689dae181bf6047b398",
+        "current_source_sha256": {
+          "replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift": "25707f9fd58a5283113d3f7d066756d54605defe8c7a747b435cdff52b403cfc"
+        },
+        "review": "Exact NSTextView menu(for:) body unchanged: call super, mutate same nonnil menu by OriginalSearchMenu filter, return same object. Header Pin menu is a separate method.",
+        "decision": "existing finite contract preserved at Source; compiled final binding pending; do not claim parent/function regression tested",
+        "needs_downgrade_due_to_branding_alone": false
+      }
+    },
+    "Paste:0x100012da8": {
+      "old_source_sha256": {
+        "replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift": "82dbb3a6e43972531fc5a2859d90f87cde481e430571967fafdc1d8278d408d5"
+      },
+      "current_source_sha256": {
+        "replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift": "25707f9fd58a5283113d3f7d066756d54605defe8c7a747b435cdff52b403cfc"
+      },
+      "original_pseudocode_sha256": "1cfc45d23d4d5aba315e8bfefc7388dc6640d473eb51db4ee05570070d0e58b7",
+      "review": {
+        "replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift": "Select Header cancelOperation at titleLabel.f_100011d28() body, not the unrelated NSTextView conditional cancelOperation earlier in file. Header body unchanged, no super/close added."
+      },
+      "window_review": {
+        "contract": "PreviewHeader取消命令调用titleLabel.cancelEditing，不转发super、不关闭窗口。",
+        "references": [
+          {
+            "path": "replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift",
+            "symbol": "cancelOperation"
+          }
+        ],
+        "migration_evidence": "reports/function-migration/Paste-0x100012da8.json",
+        "original_pseudocode_sha256": "1cfc45d23d4d5aba315e8bfefc7388dc6640d473eb51db4ee05570070d0e58b7",
+        "current_source_sha256": {
+          "replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift": "25707f9fd58a5283113d3f7d066756d54605defe8c7a747b435cdff52b403cfc"
+        },
+        "review": "Select Header cancelOperation at titleLabel.f_100011d28() body, not the unrelated NSTextView conditional cancelOperation earlier in file. Header body unchanged, no super/close added.",
+        "decision": "existing finite contract preserved at Source; compiled final binding pending; do not claim parent/function regression tested",
+        "needs_downgrade_due_to_branding_alone": false
+      }
+    },
+    "Paste:0x1003ebcd4": {
+      "old_source_sha256": {
+        "replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift": "82dbb3a6e43972531fc5a2859d90f87cde481e430571967fafdc1d8278d408d5"
+      },
+      "current_source_sha256": {
+        "replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift": "25707f9fd58a5283113d3f7d066756d54605defe8c7a747b435cdff52b403cfc"
+      },
+      "original_pseudocode_sha256": "2782a6863a06238ca1f3ce76e8728278a834b5becfb9c70426f1c748b0517889",
+      "review": {
+        "replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift": "Appearance drawing callback exact method unchanged, still invokes OriginalPreviewTextColors.f_1003eb4a8 for original/editor content."
+      },
+      "window_review": {
+        "contract": "MainActor appearance drawing闭包仅调用文本内容颜色更新f3eb4a8。",
+        "references": [
+          {
+            "path": "replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift",
+            "symbol": "f_1003ebcd4"
+          }
+        ],
+        "migration_evidence": "reports/function-migration/Paste-0x1003ebcd4.json",
+        "original_pseudocode_sha256": "2782a6863a06238ca1f3ce76e8728278a834b5becfb9c70426f1c748b0517889",
+        "current_source_sha256": {
+          "replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift": "25707f9fd58a5283113d3f7d066756d54605defe8c7a747b435cdff52b403cfc"
+        },
+        "review": "Appearance drawing callback exact method unchanged, still invokes OriginalPreviewTextColors.f_1003eb4a8 for original/editor content.",
+        "decision": "existing finite contract preserved at Source; compiled final binding pending; do not claim parent/function regression tested",
+        "needs_downgrade_due_to_branding_alone": false
+      }
+    },
+    "Paste:0x1002106d0": {
+      "old_source_sha256": {
+        "replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift": "82dbb3a6e43972531fc5a2859d90f87cde481e430571967fafdc1d8278d408d5"
+      },
+      "current_source_sha256": {
+        "replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift": "25707f9fd58a5283113d3f7d066756d54605defe8c7a747b435cdff52b403cfc"
+      },
+      "original_pseudocode_sha256": "44aab5d054e5a78f3325f939a740670a3242e79abb64496c3f6904680ba8252d",
+      "review": {
+        "replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift": "Exact trait loop unchanged in bold/italic/underline/strikethrough order, immediate isSelected writes, return0. Brand changes outside editor header."
+      },
+      "window_review": {
+        "contract": "按bold0、italic1、underline2、strike3顺序查询给定trait Set，每项向对应真实ToolbarButton写isSelected并立即触发style刷新，返回0。",
+        "references": [
+          {
+            "path": "replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift",
+            "symbol": "f_1002106d0"
+          }
+        ],
+        "migration_evidence": "reports/function-migration/Paste-0x1002106d0.json",
+        "original_pseudocode_sha256": "44aab5d054e5a78f3325f939a740670a3242e79abb64496c3f6904680ba8252d",
+        "current_source_sha256": {
+          "replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift": "25707f9fd58a5283113d3f7d066756d54605defe8c7a747b435cdff52b403cfc"
+        },
+        "review": "Exact trait loop unchanged in bold/italic/underline/strikethrough order, immediate isSelected writes, return0. Brand changes outside editor header.",
+        "decision": "existing finite contract preserved at Source; compiled final binding pending; do not claim parent/function regression tested",
+        "needs_downgrade_due_to_branding_alone": false
+      }
+    },
+    "Paste:0x1002f45b0": {
+      "old_source_sha256": {
+        "replica/Sources/PastoCore/OriginalSearchQuery.swift": "4c828b16c6342387d375e6b5a3f24d28b37bbffa1c377e4cdb064ad27b5d1b28",
+        "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift": "bd3a1fd0e075f37fea4cfdec3b3e60980ceadc88248bd013d7c0e45f02b509fa",
+        "replica/Sources/Pasto/UI/ReplicaUIController.swift": "822412f790641b4467627b8ac645874332149975c4ae46b1e5dd54ad71f9700a"
+      },
+      "current_source_sha256": {
+        "replica/Sources/PastoCore/OriginalSearchQuery.swift": "4c828b16c6342387d375e6b5a3f24d28b37bbffa1c377e4cdb064ad27b5d1b28",
+        "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift": "dcde34d0b1b8fdd3cc8d1e1b64cafbf99901e7cbb1b9a6c1c96d2b05806c1218",
+        "replica/Sources/Pasto/UI/ReplicaUIController.swift": "911a173563c4f21c935467e85fea78c923065091c528303b81837567fbe535b5"
+      },
+      "original_pseudocode_sha256": "6662101b87386d12ea14c895cebf59a7aea8c68aa57fd68083a2ef613af81774",
+      "review": {
+        "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift": "trim/转义/OR分组/AND组合/OS26.4门槛未改，CSSearchQuery及results仍消费原queryString",
+        "replica/Sources/Pasto/UI/ReplicaUIController.swift": "Unchanged refreshSearch forwards same computed searchQueryNodes; OriginalSearchQuery serializer body unchanged. App-index source relation projection is a separate Root change, not this finite query serialization."
+      },
+      "window_review": {
+        "contract": "自由文本节点分别trim(.whitespaces)并去空后单空格join，转义后在title/textContent以及OS26.4+contentDescription形成=\"value*\"cwdt OR组；非text节点按原UInt8 tag分组，组内有效predicate为OR，多于1加括号，组间与自由文本组AND。无有效项返回空串。",
+        "references": [
+          {
+            "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+            "symbol": "private func refreshSearch()"
+          }
+        ],
+        "migration_evidence": "reports/function-migration/Paste-0x1002f45b0.json",
+        "original_pseudocode_sha256": "6662101b87386d12ea14c895cebf59a7aea8c68aa57fd68083a2ef613af81774",
+        "current_source_sha256": {
+          "replica/Sources/Pasto/UI/ReplicaUIController.swift": "911a173563c4f21c935467e85fea78c923065091c528303b81837567fbe535b5"
+        },
+        "review": "Unchanged refreshSearch forwards same computed searchQueryNodes; OriginalSearchQuery serializer body unchanged. App-index source relation projection is a separate Root change, not this finite query serialization.",
+        "decision": "existing finite contract preserved at Source; compiled final binding pending; do not claim parent/function regression tested",
+        "needs_downgrade_due_to_branding_alone": false
+      }
+    },
+    "Paste:0x10021a0b0": {
+      "old_source_sha256": {
+        "replica/Sources/Pasto/UI/OriginalImageTextSelection.swift": "930ceb4220aaba298f30eac0642bbcdebfab4d143390be8edd9d903515e1f21d",
+        "replica/Sources/Pasto/UI/AuxiliaryViews.swift": "ec9b23b2cc595e8baed849fb74aa37c7e05ec74ff338547b1aa8e10a4ea4537d"
+      },
+      "current_source_sha256": {
+        "replica/Sources/Pasto/UI/OriginalImageTextSelection.swift": "930ceb4220aaba298f30eac0642bbcdebfab4d143390be8edd9d903515e1f21d",
+        "replica/Sources/Pasto/UI/AuxiliaryViews.swift": "5e7fab054d7d4f000470681565554c120acb872359a4511ecea317b8cdffe865"
+      },
+      "original_pseudocode_sha256": "aab7adcc711a81ab690cf0743a38191ebf04e9a0ed62e92541aa5a7731fc6ec5",
+      "review": {
+        "replica/Sources/Pasto/UI/AuxiliaryViews.swift": "ReplicaPreviewView exact whole body unchanged; image branch still constructs OriginalImageTextSelection(item:image). Its underlying overlay clearing/image/analysisTask behavior was not edited."
+      },
+      "window_review": {
+        "contract": "清空NSImageView全部subviews；image=nil立即结束；非nil创建ImageAnalysisOverlayView、automatic交互、trackingImageView=self、关闭autoresizing constraints并以零insets四边覆盖；启动MainActor Task强持当次image/overlay直到分析完成。",
+        "references": [
+          {
+            "path": "replica/Sources/Pasto/UI/AuxiliaryViews.swift",
+            "symbol": "OriginalImageTextSelection(item: item, image: image)",
+            "line": 33
+          }
+        ],
+        "migration_evidence": "reports/function-migration/Paste-0x10021a0b0.json",
+        "original_pseudocode_sha256": "aab7adcc711a81ab690cf0743a38191ebf04e9a0ed62e92541aa5a7731fc6ec5",
+        "current_source_sha256": {
+          "replica/Sources/Pasto/UI/AuxiliaryViews.swift": "5e7fab054d7d4f000470681565554c120acb872359a4511ecea317b8cdffe865"
+        },
+        "review": "ReplicaPreviewView exact whole body unchanged; image branch still constructs OriginalImageTextSelection(item:image). Its underlying overlay clearing/image/analysisTask behavior was not edited.",
+        "decision": "existing finite contract preserved at Source; compiled final binding pending; do not claim parent/function regression tested",
+        "needs_downgrade_due_to_branding_alone": false
+      }
+    },
+    "Paste:0x1002f3d94": {
+      "old_source_sha256": {
+        "replica/Sources/PastoCore/OriginalSearchQuery.swift": "4c828b16c6342387d375e6b5a3f24d28b37bbffa1c377e4cdb064ad27b5d1b28",
+        "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift": "bd3a1fd0e075f37fea4cfdec3b3e60980ceadc88248bd013d7c0e45f02b509fa",
+        "replica/Sources/Pasto/UI/ReplicaUIController.swift": "822412f790641b4467627b8ac645874332149975c4ae46b1e5dd54ad71f9700a"
+      },
+      "current_source_sha256": {
+        "replica/Sources/PastoCore/OriginalSearchQuery.swift": "4c828b16c6342387d375e6b5a3f24d28b37bbffa1c377e4cdb064ad27b5d1b28",
+        "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift": "dcde34d0b1b8fdd3cc8d1e1b64cafbf99901e7cbb1b9a6c1c96d2b05806c1218",
+        "replica/Sources/Pasto/UI/ReplicaUIController.swift": "911a173563c4f21c935467e85fea78c923065091c528303b81837567fbe535b5"
+      },
+      "original_pseudocode_sha256": "e582d5e315bd4afa2367b2d26405d9c8e0ba5a222a07c1e6aaba709601fa7c8c",
+      "review": {
+        "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift": "tag到属性、精确/通配cd、日期两epoch与ISO边界不变，经45b0调用；app字段值来源改变不改变本纯构造合同",
+        "replica/Sources/Pasto/UI/ReplicaUIController.swift": "Unchanged refreshSearch/OriginalSearchQuery grouping-expression algorithm; visible Pasto group label does not change raw query nodes or Spotlight fields."
+      },
+      "window_review": {
+        "contract": "trim(.whitespaces)为空返回nil；tag0/1为app/type等值cd、2/4为title/device两侧通配cd、3两空格分隔Double epoch经NSISO8601DateFormatter形成>=start/<end，解析失败nil；其他tag为pinboard等值cd；字符串依序转义反斜杠、双引号、星号、问号。",
+        "references": [
+          {
+            "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+            "symbol": "private func refreshSearch()"
+          }
+        ],
+        "migration_evidence": "reports/function-migration/Paste-0x1002f3d94.json",
+        "original_pseudocode_sha256": "e582d5e315bd4afa2367b2d26405d9c8e0ba5a222a07c1e6aaba709601fa7c8c",
+        "current_source_sha256": {
+          "replica/Sources/Pasto/UI/ReplicaUIController.swift": "911a173563c4f21c935467e85fea78c923065091c528303b81837567fbe535b5"
+        },
+        "review": "Unchanged refreshSearch/OriginalSearchQuery grouping-expression algorithm; visible Pasto group label does not change raw query nodes or Spotlight fields.",
+        "decision": "existing finite contract preserved at Source; compiled final binding pending; do not claim parent/function regression tested",
+        "needs_downgrade_due_to_branding_alone": false
+      }
+    },
+    "Paste:0x1001bdd88": {
+      "old_source_sha256": {
+        "replica/Sources/PastoCore/OriginalPreviewLocalization.swift": "822147a77e05ba31b0425cf0de5ca3d4267a0fb3c7f737c0d44f98deb1c566a7",
+        "replica/Sources/Pasto/AppMain.swift": "4a5c879fa5f9a457dea20719cdeb050d7280c101170ed6a64e33d85e7bcf7e3a"
+      },
+      "current_source_sha256": {
+        "replica/Sources/PastoCore/OriginalPreviewLocalization.swift": "0163cc854b291a3341675ea525903141dc764dda4a2791b513f4a9c4515632f1",
+        "replica/Sources/Pasto/AppMain.swift": "4ba3337274013d16f959d31d8fb3ede45c3e89579e623081fd915978a1f95a68"
+      },
+      "original_pseudocode_sha256": "c50c7c2c39b601d224804fc1b32cc6fe95048e3f15043c72558aac3248c13f51",
+      "review": {
+        "replica/Sources/PastoCore/OriginalPreviewLocalization.swift": "getter 方法体与原摘要逐字一致",
+        "replica/Sources/Pasto/AppMain.swift": "Existing diagnostics LocalizedStringResource accessor/key/original locale values remain untouched; f04e064 actual consumer whole body byte-identical to HEAD (including existing Paste→Pasto display adapter). New Pinboard→Pasto edits are file-menu/About/fixture only, outside diagnostics. Contract remains resource construction, not exact independent-product brand rendering."
+      },
+      "window_review": {
+        "contract": "原 LocalizedStringResource键diagnostics.start.title，table=Localizable/current locale/实际资源bundle；真实诊断确认alert消费。",
+        "references": [
+          {
+            "path": "replica/Sources/Pasto/AppMain.swift",
+            "symbol": "private func f_10004e064()"
+          }
+        ],
+        "migration_evidence": "reports/function-migration/Paste-0x1001bdd88.json",
+        "original_pseudocode_sha256": "c50c7c2c39b601d224804fc1b32cc6fe95048e3f15043c72558aac3248c13f51",
+        "current_source_sha256": {
+          "replica/Sources/Pasto/AppMain.swift": "4ba3337274013d16f959d31d8fb3ede45c3e89579e623081fd915978a1f95a68"
+        },
+        "review": "Existing diagnostics LocalizedStringResource accessor/key/original locale values remain untouched; f04e064 actual consumer whole body byte-identical to HEAD (including existing Paste→Pasto display adapter). New Pinboard→Pasto edits are file-menu/About/fixture only, outside diagnostics. Contract remains resource construction, not exact independent-product brand rendering.",
+        "decision": "existing finite contract preserved at Source; compiled final binding pending; do not claim parent/function regression tested",
+        "needs_downgrade_due_to_branding_alone": false
+      }
+    },
+    "Paste:0x1001bdc08": {
+      "old_source_sha256": {
+        "replica/Sources/PastoCore/OriginalPreviewLocalization.swift": "822147a77e05ba31b0425cf0de5ca3d4267a0fb3c7f737c0d44f98deb1c566a7",
+        "replica/Sources/Pasto/AppMain.swift": "4a5c879fa5f9a457dea20719cdeb050d7280c101170ed6a64e33d85e7bcf7e3a"
+      },
+      "current_source_sha256": {
+        "replica/Sources/PastoCore/OriginalPreviewLocalization.swift": "0163cc854b291a3341675ea525903141dc764dda4a2791b513f4a9c4515632f1",
+        "replica/Sources/Pasto/AppMain.swift": "4ba3337274013d16f959d31d8fb3ede45c3e89579e623081fd915978a1f95a68"
+      },
+      "original_pseudocode_sha256": "2fc5fd02000e1f196dd9877871325f37a97db352b7d86ea76d4f4df3a5ca0380",
+      "review": {
+        "replica/Sources/PastoCore/OriginalPreviewLocalization.swift": "getter 方法体与原摘要逐字一致",
+        "replica/Sources/Pasto/AppMain.swift": "Existing diagnostics LocalizedStringResource accessor/key/original locale values remain untouched; f04e064 actual consumer whole body byte-identical to HEAD (including existing Paste→Pasto display adapter). New Pinboard→Pasto edits are file-menu/About/fixture only, outside diagnostics. Contract remains resource construction, not exact independent-product brand rendering."
+      },
+      "window_review": {
+        "contract": "原 LocalizedStringResource键diagnostics.start.message，table=Localizable/current locale/实际资源bundle；真实诊断确认alert消费。",
+        "references": [
+          {
+            "path": "replica/Sources/Pasto/AppMain.swift",
+            "symbol": "private func f_10004e064()"
+          }
+        ],
+        "migration_evidence": "reports/function-migration/Paste-0x1001bdc08.json",
+        "original_pseudocode_sha256": "2fc5fd02000e1f196dd9877871325f37a97db352b7d86ea76d4f4df3a5ca0380",
+        "current_source_sha256": {
+          "replica/Sources/Pasto/AppMain.swift": "4ba3337274013d16f959d31d8fb3ede45c3e89579e623081fd915978a1f95a68"
+        },
+        "review": "Existing diagnostics LocalizedStringResource accessor/key/original locale values remain untouched; f04e064 actual consumer whole body byte-identical to HEAD (including existing Paste→Pasto display adapter). New Pinboard→Pasto edits are file-menu/About/fixture only, outside diagnostics. Contract remains resource construction, not exact independent-product brand rendering.",
+        "decision": "existing finite contract preserved at Source; compiled final binding pending; do not claim parent/function regression tested",
+        "needs_downgrade_due_to_branding_alone": false
+      }
+    },
+    "Paste:0x1001be088": {
+      "old_source_sha256": {
+        "replica/Sources/PastoCore/OriginalPreviewLocalization.swift": "822147a77e05ba31b0425cf0de5ca3d4267a0fb3c7f737c0d44f98deb1c566a7",
+        "replica/Sources/Pasto/AppMain.swift": "4a5c879fa5f9a457dea20719cdeb050d7280c101170ed6a64e33d85e7bcf7e3a"
+      },
+      "current_source_sha256": {
+        "replica/Sources/PastoCore/OriginalPreviewLocalization.swift": "0163cc854b291a3341675ea525903141dc764dda4a2791b513f4a9c4515632f1",
+        "replica/Sources/Pasto/AppMain.swift": "4ba3337274013d16f959d31d8fb3ede45c3e89579e623081fd915978a1f95a68"
+      },
+      "original_pseudocode_sha256": "7b68cd4250439921ed2da7c2ca7dea46f0e13317ad1e828f6bff1a12c965f1d1",
+      "review": {
+        "replica/Sources/PastoCore/OriginalPreviewLocalization.swift": "getter 方法体与原摘要逐字一致",
+        "replica/Sources/Pasto/AppMain.swift": "Existing diagnostics LocalizedStringResource accessor/key/original locale values remain untouched; f04e064 actual consumer whole body byte-identical to HEAD (including existing Paste→Pasto display adapter). New Pinboard→Pasto edits are file-menu/About/fixture only, outside diagnostics. Contract remains resource construction, not exact independent-product brand rendering."
+      },
+      "window_review": {
+        "contract": "原 LocalizedStringResource键diagnostics.stop.title，table=Localizable/current locale/实际资源bundle；真实诊断确认alert消费。",
+        "references": [
+          {
+            "path": "replica/Sources/Pasto/AppMain.swift",
+            "symbol": "private func f_10004e064()"
+          }
+        ],
+        "migration_evidence": "reports/function-migration/Paste-0x1001be088.json",
+        "original_pseudocode_sha256": "7b68cd4250439921ed2da7c2ca7dea46f0e13317ad1e828f6bff1a12c965f1d1",
+        "current_source_sha256": {
+          "replica/Sources/Pasto/AppMain.swift": "4ba3337274013d16f959d31d8fb3ede45c3e89579e623081fd915978a1f95a68"
+        },
+        "review": "Existing diagnostics LocalizedStringResource accessor/key/original locale values remain untouched; f04e064 actual consumer whole body byte-identical to HEAD (including existing Paste→Pasto display adapter). New Pinboard→Pasto edits are file-menu/About/fixture only, outside diagnostics. Contract remains resource construction, not exact independent-product brand rendering.",
+        "decision": "existing finite contract preserved at Source; compiled final binding pending; do not claim parent/function regression tested",
+        "needs_downgrade_due_to_branding_alone": false
+      }
+    },
+    "Paste:0x1001bdf08": {
+      "old_source_sha256": {
+        "replica/Sources/PastoCore/OriginalPreviewLocalization.swift": "822147a77e05ba31b0425cf0de5ca3d4267a0fb3c7f737c0d44f98deb1c566a7",
+        "replica/Sources/Pasto/AppMain.swift": "4a5c879fa5f9a457dea20719cdeb050d7280c101170ed6a64e33d85e7bcf7e3a"
+      },
+      "current_source_sha256": {
+        "replica/Sources/PastoCore/OriginalPreviewLocalization.swift": "0163cc854b291a3341675ea525903141dc764dda4a2791b513f4a9c4515632f1",
+        "replica/Sources/Pasto/AppMain.swift": "4ba3337274013d16f959d31d8fb3ede45c3e89579e623081fd915978a1f95a68"
+      },
+      "original_pseudocode_sha256": "78aa532df1af1f4afba9c4306ed9f7dc7046355c944e8867be7dcb9c4ffbcaf9",
+      "review": {
+        "replica/Sources/PastoCore/OriginalPreviewLocalization.swift": "getter 方法体与原摘要逐字一致",
+        "replica/Sources/Pasto/AppMain.swift": "Existing diagnostics LocalizedStringResource accessor/key/original locale values remain untouched; f04e064 actual consumer whole body byte-identical to HEAD (including existing Paste→Pasto display adapter). New Pinboard→Pasto edits are file-menu/About/fixture only, outside diagnostics. Contract remains resource construction, not exact independent-product brand rendering."
+      },
+      "window_review": {
+        "contract": "原 LocalizedStringResource键diagnostics.stop.message，table=Localizable/current locale/实际资源bundle；真实诊断确认alert消费。",
+        "references": [
+          {
+            "path": "replica/Sources/Pasto/AppMain.swift",
+            "symbol": "private func f_10004e064()"
+          }
+        ],
+        "migration_evidence": "reports/function-migration/Paste-0x1001bdf08.json",
+        "original_pseudocode_sha256": "78aa532df1af1f4afba9c4306ed9f7dc7046355c944e8867be7dcb9c4ffbcaf9",
+        "current_source_sha256": {
+          "replica/Sources/Pasto/AppMain.swift": "4ba3337274013d16f959d31d8fb3ede45c3e89579e623081fd915978a1f95a68"
+        },
+        "review": "Existing diagnostics LocalizedStringResource accessor/key/original locale values remain untouched; f04e064 actual consumer whole body byte-identical to HEAD (including existing Paste→Pasto display adapter). New Pinboard→Pasto edits are file-menu/About/fixture only, outside diagnostics. Contract remains resource construction, not exact independent-product brand rendering.",
+        "decision": "existing finite contract preserved at Source; compiled final binding pending; do not claim parent/function regression tested",
+        "needs_downgrade_due_to_branding_alone": false
+      }
+    },
+    "Paste:0x1001bda88": {
+      "old_source_sha256": {
+        "replica/Sources/PastoCore/OriginalPreviewLocalization.swift": "822147a77e05ba31b0425cf0de5ca3d4267a0fb3c7f737c0d44f98deb1c566a7",
+        "replica/Sources/Pasto/AppMain.swift": "4a5c879fa5f9a457dea20719cdeb050d7280c101170ed6a64e33d85e7bcf7e3a"
+      },
+      "current_source_sha256": {
+        "replica/Sources/PastoCore/OriginalPreviewLocalization.swift": "0163cc854b291a3341675ea525903141dc764dda4a2791b513f4a9c4515632f1",
+        "replica/Sources/Pasto/AppMain.swift": "4ba3337274013d16f959d31d8fb3ede45c3e89579e623081fd915978a1f95a68"
+      },
+      "original_pseudocode_sha256": "9705b64572b0922403c0e7666b4647a25b9b9a1e0de0d0c4d4dae7371b965e7c",
+      "review": {
+        "replica/Sources/PastoCore/OriginalPreviewLocalization.swift": "getter 方法体与原摘要逐字一致",
+        "replica/Sources/Pasto/AppMain.swift": "Existing diagnostics LocalizedStringResource accessor/key/original locale values remain untouched; f04e064 actual consumer whole body byte-identical to HEAD (including existing Paste→Pasto display adapter). New Pinboard→Pasto edits are file-menu/About/fixture only, outside diagnostics. Contract remains resource construction, not exact independent-product brand rendering."
+      },
+      "window_review": {
+        "contract": "原 LocalizedStringResource键diagnostics.action.stop-and-copy-logs，table=Localizable/current locale/实际资源bundle；真实诊断确认alert消费。",
+        "references": [
+          {
+            "path": "replica/Sources/Pasto/AppMain.swift",
+            "symbol": "private func f_10004e064()"
+          }
+        ],
+        "migration_evidence": "reports/function-migration/Paste-0x1001bda88.json",
+        "original_pseudocode_sha256": "9705b64572b0922403c0e7666b4647a25b9b9a1e0de0d0c4d4dae7371b965e7c",
+        "current_source_sha256": {
+          "replica/Sources/Pasto/AppMain.swift": "4ba3337274013d16f959d31d8fb3ede45c3e89579e623081fd915978a1f95a68"
+        },
+        "review": "Existing diagnostics LocalizedStringResource accessor/key/original locale values remain untouched; f04e064 actual consumer whole body byte-identical to HEAD (including existing Paste→Pasto display adapter). New Pinboard→Pasto edits are file-menu/About/fixture only, outside diagnostics. Contract remains resource construction, not exact independent-product brand rendering.",
+        "decision": "existing finite contract preserved at Source; compiled final binding pending; do not claim parent/function regression tested",
+        "needs_downgrade_due_to_branding_alone": false
+      }
+    },
+    "Paste:0x1001c3188": {
+      "old_source_sha256": {
+        "replica/Sources/PastoCore/OriginalPreviewLocalization.swift": "822147a77e05ba31b0425cf0de5ca3d4267a0fb3c7f737c0d44f98deb1c566a7",
+        "replica/Sources/Pasto/AppMain.swift": "4a5c879fa5f9a457dea20719cdeb050d7280c101170ed6a64e33d85e7bcf7e3a"
+      },
+      "current_source_sha256": {
+        "replica/Sources/PastoCore/OriginalPreviewLocalization.swift": "0163cc854b291a3341675ea525903141dc764dda4a2791b513f4a9c4515632f1",
+        "replica/Sources/Pasto/AppMain.swift": "4ba3337274013d16f959d31d8fb3ede45c3e89579e623081fd915978a1f95a68"
+      },
+      "original_pseudocode_sha256": "b24dea4d06d6490fc4e3e067d6b9eab2712bc203a8bf1b55d0eb6d45d6fbe8da",
+      "review": {
+        "replica/Sources/PastoCore/OriginalPreviewLocalization.swift": "getter 方法体与原摘要逐字一致",
+        "replica/Sources/Pasto/AppMain.swift": "Existing diagnostics LocalizedStringResource accessor/key/original locale values remain untouched; f04e064 actual consumer whole body byte-identical to HEAD (including existing Paste→Pasto display adapter). New Pinboard→Pasto edits are file-menu/About/fixture only, outside diagnostics. Contract remains resource construction, not exact independent-product brand rendering."
+      },
+      "window_review": {
+        "contract": "原 LocalizedStringResource键general.action.restart-paste，table=Localizable/current locale/实际资源bundle；真实诊断确认alert消费。",
+        "references": [
+          {
+            "path": "replica/Sources/Pasto/AppMain.swift",
+            "symbol": "private func f_10004e064()"
+          }
+        ],
+        "migration_evidence": "reports/function-migration/Paste-0x1001c3188.json",
+        "original_pseudocode_sha256": "b24dea4d06d6490fc4e3e067d6b9eab2712bc203a8bf1b55d0eb6d45d6fbe8da",
+        "current_source_sha256": {
+          "replica/Sources/Pasto/AppMain.swift": "4ba3337274013d16f959d31d8fb3ede45c3e89579e623081fd915978a1f95a68"
+        },
+        "review": "Existing diagnostics LocalizedStringResource accessor/key/original locale values remain untouched; f04e064 actual consumer whole body byte-identical to HEAD (including existing Paste→Pasto display adapter). New Pinboard→Pasto edits are file-menu/About/fixture only, outside diagnostics. Contract remains resource construction, not exact independent-product brand rendering.",
+        "decision": "existing finite contract preserved at Source; compiled final binding pending; do not claim parent/function regression tested",
+        "needs_downgrade_due_to_branding_alone": false
+      }
+    },
+    "Paste:0x1002f8760": {
+      "old_source_sha256": {
+        "replica/Sources/PastoCore/OriginalSearchTextTokens.swift": "ea0bef0b75186bf558f512cd15f5343e1251fb47a9e39791d320fd23248b143f",
+        "replica/Sources/Pasto/UI/ReplicaUIController.swift": "822412f790641b4467627b8ac645874332149975c4ae46b1e5dd54ad71f9700a"
+      },
+      "current_source_sha256": {
+        "replica/Sources/PastoCore/OriginalSearchTextTokens.swift": "ea0bef0b75186bf558f512cd15f5343e1251fb47a9e39791d320fd23248b143f",
+        "replica/Sources/Pasto/UI/ReplicaUIController.swift": "911a173563c4f21c935467e85fea78c923065091c528303b81837567fbe535b5"
+      },
+      "original_pseudocode_sha256": "bb18adf154a3797071050ec78ea3e60aafd4b261a59d5c44c76404563fe34238",
+      "review": {
+        "replica/Sources/Pasto/UI/ReplicaUIController.swift": "Unchanged searchQueryNodes invocation of OriginalSearchTextTokens; brand presentation does not alter token splitting or input text."
+      },
+      "window_review": {
+        "contract": "非空buffer先把无metadata U+FFFC替换ASCII空格，按Character.isWhitespace是否相同划分连续run（空白run也保留），逐run append .text到既有node数组；最后原buffer.removeAll(keepingCapacity:true)。空buffer不改变node数组。",
+        "references": [
+          {
+            "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+            "symbol": "OriginalSearchTextTokens.f_1002f8760(&buffer, into: &nodes)"
+          }
+        ],
+        "migration_evidence": "reports/function-migration/Paste-0x1002f8760.json",
+        "original_pseudocode_sha256": "bb18adf154a3797071050ec78ea3e60aafd4b261a59d5c44c76404563fe34238",
+        "current_source_sha256": {
+          "replica/Sources/Pasto/UI/ReplicaUIController.swift": "911a173563c4f21c935467e85fea78c923065091c528303b81837567fbe535b5"
+        },
+        "review": "Unchanged searchQueryNodes invocation of OriginalSearchTextTokens; brand presentation does not alter token splitting or input text.",
+        "decision": "existing finite contract preserved at Source; compiled final binding pending; do not claim parent/function regression tested",
+        "needs_downgrade_due_to_branding_alone": false
+      }
+    },
+    "Paste:0x1002ddcf0": {
+      "old_source_sha256": {
+        "replica/Sources/PastoCore/OriginalSearchQuery.swift": "4c828b16c6342387d375e6b5a3f24d28b37bbffa1c377e4cdb064ad27b5d1b28",
+        "replica/Sources/Pasto/UI/ReplicaUIController.swift": "822412f790641b4467627b8ac645874332149975c4ae46b1e5dd54ad71f9700a",
+        "replica/Sources/Pasto/UI/PanelViews.swift": "b22b084825c21e5f0c380970c427f868751f644314fd0796b18895f1402a6c56"
+      },
+      "current_source_sha256": {
+        "replica/Sources/PastoCore/OriginalSearchQuery.swift": "4c828b16c6342387d375e6b5a3f24d28b37bbffa1c377e4cdb064ad27b5d1b28",
+        "replica/Sources/Pasto/UI/ReplicaUIController.swift": "911a173563c4f21c935467e85fea78c923065091c528303b81837567fbe535b5",
+        "replica/Sources/Pasto/UI/PanelViews.swift": "d4897ccb2a23cc9b3bf4673acb2f05c1da4a7717093e5fe41b250afed449c49f"
+      },
+      "original_pseudocode_sha256": "09bdce56a949683f34ac8f5253af866467f40c216d4e1bbf42c9590dc2779c65",
+      "review": {
+        "replica/Sources/Pasto/UI/ReplicaUIController.swift": "Exact isSearchQueryEmpty body remains same OriginalSearchQuery.f_1002ddcf0 call; Panel search checks still use same state predicate. User group names are not rewritten.",
+        "replica/Sources/Pasto/UI/PanelViews.swift": "Exact isSearchQueryEmpty body remains same OriginalSearchQuery.f_1002ddcf0 call; Panel search checks still use same state predicate. User group names are not rewritten."
+      },
+      "window_review": {
+        "contract": "查询数组为空返回true；依次读取每个text或filter的字符串值，trimmingCharacters(.whitespaces)后非空立即false，否则继续；不把.whitespacesAndNewlines扩大为条件。",
+        "references": [
+          {
+            "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+            "symbol": "var isSearchQueryEmpty: Bool"
+          },
+          {
+            "path": "replica/Sources/Pasto/UI/PanelViews.swift",
+            "symbol": "!state.isSearchQueryEmpty"
+          }
+        ],
+        "migration_evidence": "reports/function-migration/Paste-0x1002ddcf0.json",
+        "original_pseudocode_sha256": "09bdce56a949683f34ac8f5253af866467f40c216d4e1bbf42c9590dc2779c65",
+        "current_source_sha256": {
+          "replica/Sources/Pasto/UI/ReplicaUIController.swift": "911a173563c4f21c935467e85fea78c923065091c528303b81837567fbe535b5",
+          "replica/Sources/Pasto/UI/PanelViews.swift": "d4897ccb2a23cc9b3bf4673acb2f05c1da4a7717093e5fe41b250afed449c49f"
+        },
+        "review": "Exact isSearchQueryEmpty body remains same OriginalSearchQuery.f_1002ddcf0 call; Panel search checks still use same state predicate. User group names are not rewritten.",
+        "decision": "existing finite contract preserved at Source; compiled final binding pending; do not claim parent/function regression tested",
+        "needs_downgrade_due_to_branding_alone": false
+      }
+    },
+    "Paste:0x1002da16c": {
+      "old_source_sha256": {
+        "replica/Sources/PastoCore/OriginalSearchQueryNormalization.swift": "fc2414e1395bb916246c9ef38509730c394e3d0feebbf0ca6dc9438f86409eb9",
+        "replica/Sources/Pasto/UI/ReplicaUIController.swift": "822412f790641b4467627b8ac645874332149975c4ae46b1e5dd54ad71f9700a",
+        "replica/Sources/Pasto/UI/SearchEditor.swift": "f1cd5ab79ccf03c3c95aaf8e2c0d49690438607afa3367cc72455398628c8b76"
+      },
+      "current_source_sha256": {
+        "replica/Sources/PastoCore/OriginalSearchQueryNormalization.swift": "fc2414e1395bb916246c9ef38509730c394e3d0feebbf0ca6dc9438f86409eb9",
+        "replica/Sources/Pasto/UI/ReplicaUIController.swift": "911a173563c4f21c935467e85fea78c923065091c528303b81837567fbe535b5",
+        "replica/Sources/Pasto/UI/SearchEditor.swift": "f1cd5ab79ccf03c3c95aaf8e2c0d49690438607afa3367cc72455398628c8b76"
+      },
+      "original_pseudocode_sha256": "2d60c3b531024ec7109c46f8686e0dc8799befd6e33162d6a3f138287116f739",
+      "review": {
+        "replica/Sources/Pasto/UI/ReplicaUIController.swift": "OriginalSearchQueryNormalization invocation and flags0 unchanged; no raw group kind/value or normalization reorder changed."
+      },
+      "window_review": {
+        "contract": "filter value以.whitespaces trim仅判空，保留raw值；按(tag,raw String)去重保首项顺序。以原始输入最后filter（包含空/重复）为分界，text按前/后保序分组。flag bit0=1丢trim为空text、否则保留，均不改raw、不合并、不去重。最终返回filters + afterLastFilterText + beforeOrNoFilterText。",
+        "references": [
+          {
+            "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+            "symbol": "OriginalSearchQueryNormalization.f_1002da16c(nodes, flag: 0)",
+            "line": 62
+          }
+        ],
+        "migration_evidence": "reports/function-migration/Paste-0x1002da16c.json",
+        "original_pseudocode_sha256": "2d60c3b531024ec7109c46f8686e0dc8799befd6e33162d6a3f138287116f739",
+        "current_source_sha256": {
+          "replica/Sources/Pasto/UI/ReplicaUIController.swift": "911a173563c4f21c935467e85fea78c923065091c528303b81837567fbe535b5"
+        },
+        "review": "OriginalSearchQueryNormalization invocation and flags0 unchanged; no raw group kind/value or normalization reorder changed.",
+        "decision": "existing finite contract preserved at Source; compiled final binding pending; do not claim parent/function regression tested",
+        "needs_downgrade_due_to_branding_alone": false
+      }
+    },
+    "Paste:0x1003d8588": {
+      "old_source_sha256": {
+        "replica/Sources/PastoCore/OriginalCardPresentation.swift": "acb4df601c1f35cf1e8767bc8a66140c99ec082c8c82f79acd49fc316a5d09cf",
+        "replica/Sources/Pasto/UI/PanelViews.swift": "b22b084825c21e5f0c380970c427f868751f644314fd0796b18895f1402a6c56"
+      },
+      "current_source_sha256": {
+        "replica/Sources/PastoCore/OriginalCardPresentation.swift": "acb4df601c1f35cf1e8767bc8a66140c99ec082c8c82f79acd49fc316a5d09cf",
+        "replica/Sources/Pasto/UI/PanelViews.swift": "d4897ccb2a23cc9b3bf4673acb2f05c1da4a7717093e5fe41b250afed449c49f"
+      },
+      "original_pseudocode_sha256": "f3a94f212c10e31c12f3ce8a49f18b534c6c358d00f726d4b62dacbd0bfa5737",
+      "review": {
+        "replica/Sources/Pasto/UI/PanelViews.swift": "OriginalCardPresentation geometry helper unchanged and Panel same .padding(.top, cardGeometry?.bodyTop ?? headerHeight) consumer; create/remove group text is in separate context menu."
+      },
+      "window_review": {
+        "contract": "Completepure3constraintvalues forrawUInt8sizeclass,fullsize andOSbool; actualbodyTop/HeaderHeightconsumer. Lockvalueexactreturned,nativeLockViewparentpartial.",
+        "references": [
+          {
+            "path": "replica/Sources/Pasto/UI/PanelViews.swift",
+            "symbol": ".padding(.top, cardGeometry?.bodyTop ?? headerHeight)",
+            "line": 236
+          }
+        ],
+        "migration_evidence": "reports/function-migration/Paste-0x1003d8588.json",
+        "original_pseudocode_sha256": "f3a94f212c10e31c12f3ce8a49f18b534c6c358d00f726d4b62dacbd0bfa5737",
+        "current_source_sha256": {
+          "replica/Sources/Pasto/UI/PanelViews.swift": "d4897ccb2a23cc9b3bf4673acb2f05c1da4a7717093e5fe41b250afed449c49f"
+        },
+        "review": "OriginalCardPresentation geometry helper unchanged and Panel same .padding(.top, cardGeometry?.bodyTop ?? headerHeight) consumer; create/remove group text is in separate context menu.",
+        "decision": "existing finite contract preserved at Source; compiled final binding pending; do not claim parent/function regression tested",
+        "needs_downgrade_due_to_branding_alone": false
+      }
+    },
+    "Paste:0x10022df78": {
+      "old_source_sha256": {
+        "replica/Sources/PastoCore/OriginalOrderedSelection.swift": "b3631aed0222167f88c16329c76483f807d20af3baaf3a90ab4d214e8d9cb9f8",
+        "replica/Sources/Pasto/UI/ReplicaUIController.swift": "822412f790641b4467627b8ac645874332149975c4ae46b1e5dd54ad71f9700a"
+      },
+      "current_source_sha256": {
+        "replica/Sources/PastoCore/OriginalOrderedSelection.swift": "b3631aed0222167f88c16329c76483f807d20af3baaf3a90ab4d214e8d9cb9f8",
+        "replica/Sources/Pasto/UI/ReplicaUIController.swift": "911a173563c4f21c935467e85fea78c923065091c528303b81837567fbe535b5"
+      },
+      "original_pseudocode_sha256": "a23baf096ca61bb47cff4cb1b42f750293cfedfd2b0c0704d754988b7aac4bed",
+      "review": {
+        "replica/Sources/Pasto/UI/ReplicaUIController.swift": "Exact selectIndex method still calls unchanged OriginalOrderedSelection.select with same mode/index mapping; new tab rename interaction does not rewrite collection selection algorithm."
+      },
+      "window_review": {
+        "contract": "有序selectedIndexes、只读itemCount、可空anchor：越界clicked不变；mode0单选并更新anchor；mode1保最后1项、删除后anchor=剩余最后项或追加clicked；其它mode在anchor非nil时按原数组相邻绝对差1分组，保与闭区间不相交的整组，再追加anchor朝clicked定向连续range，不改变anchor。",
+        "references": [
+          {
+            "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+            "symbol": "value.select(index, mode: mode)"
+          }
+        ],
+        "migration_evidence": "reports/function-migration/Paste-0x10022df78.json",
+        "original_pseudocode_sha256": "a23baf096ca61bb47cff4cb1b42f750293cfedfd2b0c0704d754988b7aac4bed",
+        "current_source_sha256": {
+          "replica/Sources/Pasto/UI/ReplicaUIController.swift": "911a173563c4f21c935467e85fea78c923065091c528303b81837567fbe535b5"
+        },
+        "review": "Exact selectIndex method still calls unchanged OriginalOrderedSelection.select with same mode/index mapping; new tab rename interaction does not rewrite collection selection algorithm.",
+        "decision": "existing finite contract preserved at Source; compiled final binding pending; do not claim parent/function regression tested",
+        "needs_downgrade_due_to_branding_alone": false
+      }
+    }
+  },
+  "functional_tests_executed": false,
+  "current_compiled_boundary_verified": false,
+  "limits": [
+    "仅复核有限函数合同，不声明整个 UI 或原版行为等价。"
+  ]
+}

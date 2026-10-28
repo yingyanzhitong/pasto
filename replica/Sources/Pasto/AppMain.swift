@@ -77,6 +77,7 @@ final class ReplicaAppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValid
             let directory = argument("--data-dir").map { URL(fileURLWithPath: $0, isDirectory: true) }
                 ?? ClipboardStore.defaultDirectoryURL
             store = try ClipboardStore(directoryURL: directory)
+            PastoAppIntentStore.configure(store: store)
             diagnostics = OriginalDiagnosticsManager.makeLocal(
                 logDirectory: directory.appendingPathComponent("Diagnostics", isDirectory: true)
             ) { [weak self] enabled in
@@ -119,7 +120,7 @@ final class ReplicaAppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValid
             ) { [weak self] notification in
                 guard let app = notification.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication,
                       app.processIdentifier != ProcessInfo.processInfo.processIdentifier else { return }
-                Task { @MainActor in self?.targetApplication = app }
+                MainActor.assumeIsolated { self?.targetApplication = app }
             }
             if !arguments.contains("--no-monitor") {
                 monitor = ClipboardMonitor(store: store, pasteboard: pasteboard)
@@ -210,9 +211,10 @@ final class ReplicaAppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValid
         let app = NSMenuItem(); app.submenu = appMenu; main.addItem(app)
         let file = NSMenu(title: "文件")
         file.addItem(menuItem("新建文本…", #selector(newText(_:)), key: "n"))
-        file.addItem(menuItem("新建 Pinboard…", #selector(newBoard(_:)), key: "n", modifiers: [.command, .shift]))
+        file.addItem(menuItem(OriginalSearchLocalization.text("pasto.action.create-group") + "…", #selector(newBoard(_:)), key: "n", modifiers: [.command, .shift]))
         file.addItem(.separator())
         file.addItem(menuItem("导入…", #selector(importArchive(_:))))
+        file.addItem(menuItem("从 Paste 迁移分组…", #selector(migratePasteGroups(_:))))
         file.addItem(menuItem("导出…", #selector(exportArchive(_:))))
         let fileItem = NSMenuItem(title: "文件", action: nil, keyEquivalent: ""); fileItem.submenu = file; main.addItem(fileItem)
         let edit = NSMenu(title: "编辑")
@@ -342,25 +344,28 @@ final class ReplicaAppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValid
     }
 
     @objc private func togglePanel(_ sender: Any?) {
-        if !ui.panel.isVisible {
-            pasteGeneration = UUID()
-            let app = NSWorkspace.shared.frontmostApplication
-            if app?.processIdentifier != ProcessInfo.processInfo.processIdentifier { targetApplication = app }
-        }
+        rememberPasteTargetBeforeOpeningPanel()
         ui.togglePanel()
+    }
+    private func rememberPasteTargetBeforeOpeningPanel() {
+        guard !ui.panel.isVisible else { return }
+        pasteGeneration = UUID()
+        let app = NSWorkspace.shared.frontmostApplication
+        if app?.processIdentifier != ProcessInfo.processInfo.processIdentifier { targetApplication = app }
     }
     @objc private func settings(_ sender: Any?) { ui.showSettings() }
     @objc private func newText(_ sender: Any?) { ui.newTextItem() }
     @objc private func newBoard(_ sender: Any?) { ui.createPinboard() }
-    @objc private func search(_ sender: Any?) { ui.showPanel(); ui.focusSearch() }
+    @objc private func search(_ sender: Any?) { rememberPasteTargetBeforeOpeningPanel(); ui.focusSearch() }
     @objc private func stack(_ sender: Any?) { ui.showStack() }
     @objc private func importArchive(_ sender: Any?) { ui.importArchive() }
+    @objc private func migratePasteGroups(_ sender: Any?) { ui.migratePasteGroups() }
     @objc private func exportArchive(_ sender: Any?) { ui.exportArchive() }
     @objc private func quit(_ sender: Any?) { NSApp.terminate(nil) }
     @objc private func about(_ sender: Any?) {
         NSApp.orderFrontStandardAboutPanel(options: [.applicationName: "Pasto",
                                                      .applicationVersion: Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "开发版本",
-                                                     .credits: NSAttributedString(string: "原生剪贴板历史与 Pinboard 工具")])
+                                                     .credits: NSAttributedString(string: "原生剪贴板历史与 Pasto 工具")])
     }
     private func configurePauseMonitoring() {
         let paused = store.preferences.isMonitoringPaused
@@ -424,7 +429,7 @@ final class ReplicaAppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValid
             pasteLogger.notice("permission_result=\(result, privacy: .public)")
             if result == 2 {
                 NSApp.deactivate()
-                _ = OriginalEnableAccessibilityModal.run()
+                _ = OriginalEnableAccessibilityModal.run(requestOnShow: true)
                 return false
             }
             if result & 1 != 0 {
@@ -504,7 +509,7 @@ final class ReplicaAppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValid
 
     private func seedFixture() throws {
         let board = try store.createPinboard(name: "实用链接", colorHex: "5575D9")
-        _ = try store.add(ClipboardItem(title: "欢迎使用 Pasto", plainText: "拷贝内容，随时找回。\n搜索、预览、编辑，整理到 Pinboard。", sourceName: "文本编辑", sourceBundleID: "com.apple.TextEdit"))
+        _ = try store.add(ClipboardItem(title: "欢迎使用 Pasto", plainText: "拷贝内容，随时找回。\n搜索、预览、编辑，整理到 Pasto。", sourceName: "文本编辑", sourceBundleID: "com.apple.TextEdit"))
         _ = try store.add(ClipboardItem(title: "REA", kind: .link, plainText: "https://github.com/morluto/rea", sourceName: "Safari", sourceBundleID: "com.apple.Safari", pinboardIDs: [board.id]))
         _ = try store.add(ClipboardItem(title: "品牌颜色", kind: .color, plainText: "#5575D9", sourceName: "设计工具"))
         _ = try store.add(ClipboardItem(title: "会议记录", plainText: "今天的计划\n1. 整理灵感\n2. 完成设计\n3. 分享成果", sourceName: "备忘录", sourceBundleID: "com.apple.Notes"))

@@ -3,7 +3,7 @@ import AppKit
 @MainActor
 public enum OriginalSourceApplicationImageColor {
     public static func prominentColor(_ image: NSImage) -> NSColor? {
-        guard let bitmap = raster(image) else { return nil }
+        guard let bitmap = f_1003c7c4c(image, width: 128, height: 128) else { return nil }
         let colors = NSCountedSet(capacity: bitmap.pixelsWide * bitmap.pixelsHigh)
         for x in 0..<bitmap.pixelsWide {
             for y in 0..<bitmap.pixelsHigh {
@@ -21,26 +21,31 @@ public enum OriginalSourceApplicationImageColor {
         // Equal counts retain the counted set's enumeration order.
         counted.sort { $0.count > $1.count }
         guard let winner = counted.first?.color else { return .gray }
-        let originalSaturation = winner.saturationComponent
-        let firstBrightness = winner.brightnessComponent
-        let secondBrightness = winner.brightnessComponent
+        return f_1003c7f84(winner)
+    }
+
+    public static func f_1003c7f84(_ color: NSColor) -> NSColor {
+        let originalSaturation = color.saturationComponent
+        let firstBrightness = color.brightnessComponent
+        let secondBrightness = color.brightnessComponent
         let upperBrightness = secondBrightness > 0.96 ? 0.96 : secondBrightness
         let lowerBrightness = upperBrightness <= 0.75 ? 0.75 : upperBrightness
         let brightness = firstBrightness > 0.4 ? lowerBrightness : secondBrightness
         let saturation = originalSaturation <= 0.85 ? 0.85 : originalSaturation
-        let hue = winner.hueComponent
-        let alpha = winner.alphaComponent
+        let hue = color.hueComponent
+        let alpha = color.alphaComponent
         return NSColor(calibratedHue: hue, saturation: saturation,
                        brightness: brightness, alpha: alpha)
     }
 
-    private static func raster(_ image: NSImage) -> NSBitmapImageRep? {
-        let rect = NSRect(x: 0, y: 0, width: 128, height: 128)
+    public static func f_1003c7c4c(_ image: NSImage, width targetWidth: CGFloat,
+                                 height targetHeight: CGFloat) -> NSBitmapImageRep? {
+        let rect = NSRect(x: 0, y: 0, width: targetWidth, height: targetHeight)
         guard let representation = image.bestRepresentation(for: rect, context: nil, hints: nil) else { return nil }
         let representationWidth = representation.size.width
-        let width = Int(128 < representationWidth ? 128 : representationWidth)
+        let width = Int(targetWidth < representationWidth ? targetWidth : representationWidth)
         let representationHeight = representation.size.height
-        let height = Int(128 < representationHeight ? 128 : representationHeight)
+        let height = Int(targetHeight < representationHeight ? targetHeight : representationHeight)
         guard let bitmap = NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: width, pixelsHigh: height,
                                             bitsPerSample: 8, samplesPerPixel: 4, hasAlpha: true,
                                             isPlanar: false, colorSpaceName: .deviceRGB,

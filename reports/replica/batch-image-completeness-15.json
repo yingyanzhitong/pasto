@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "scope": "两个前轮未覆盖的已有全文预览显示/赋值方法；不凑数量，依据完整成功C与原ARM消除寄存器歧义，确认真实生产调用。",
+  "counts": { "total": 2, "complete": 2, "gap": 0, "uncertain": 0 },
+  "records": [
+    {
+      "function_id": "Paste:0x100215cac",
+      "status": "complete",
+      "original": { "path": "decompiled/Paste/part-0181.c", "start_line": 969, "address_range": "0x100215cac..<0x100215df4" },
+      "current_implementations": [ { "path": "replica/Sources/PastoCore/OriginalPreviewAttributedText.swift", "start_line": 138, "end_line": 142, "symbol": "public static func f_100215cac(_:editor:)" } ],
+      "criterion": "原先取得同一lazy editor，输入length<1取空属性字典，否则取UTF16末单元length-1的attributes(effectiveRange:nil)；先写editor.typingAttributes，再将整个原value传平台attributedText setter。当前先三元生成相同字典，随后调用同平台setter，保空值和非空末字符属性、顺序、不改selection、不发送额外变更通知。原C将输入value误记成setTypingAttributes接收者，原ARM证明215cc0保存value=x19，215cc4取editor并215cc8存x21；215db0将x21作receiver设置typingAttributes；215dd4从owner取同一cached editor，215dd8传x19并尾跳setter。因此源码实际接收者正确。原本体没有执行器诊断；下游类别桥待证不混算为此方法自身缺口。",
+      "actual_consumer": "OriginalPreviewAttributedText.f212e78直接调用本方法；Adapter.swift第231行初始化内容和f3eb330真实内容刷新都进入同一链，typingAttributes参与后续真实编辑/trait toggle。",
+      "limitations": "有限业务赋值合同完整，不升级原lazy editor构造、平台ObjC actor桥、整个编辑状态协议或原编译ABI。Foundation合法NSAttributedString长度及属性语义为输入合同。"
+    },
+    {
+      "function_id": "Paste:0x1003eb330",
+      "status": "complete",
+      "original": { "path": "decompiled/Paste/part-0312.c", "start_line": 457, "address_range": "0x1003eb330..<0x1003eb4a8" },
+      "current_implementations": [ { "path": "replica/Sources/PastoCore/OriginalPreviewAttributedText.swift", "start_line": 153, "end_line": 165, "symbol": "public static func f_1003eb330(original:editing:editor:)" } ],
+      "criterion": "原第一次读editor.isEditable决定取editing(+0x28)或original(+0x20)，再次读取isEditable；第二次false且original纯文本时，复制已选中的displayed内容并按其完整UTF16范围依次删除foregroundColor/backgroundColor，再将结果写回同editor。其他分支不复制/不删除；不改变原文和编辑基线。当前保两次独立isEditable读取、先选择再有条件copy、两色清除顺序和最终f212e78赋值，无额外canCommit/focus动作。原C将第一次getter寄存器错误呈现param1；ARM3eb354返回值x21、3eb370 tbz选择+20/+28、3eb3b8第二次getter、3eb3c8跳过清理、3eb3ec纯文本判断、3eb440/45c两次remove、3eb484最终setter确认完整调用顺序，故无需改成外部Bool参数。",
+      "actual_consumer": "OriginalReplicaPreviewAdapter.displayStoredModel第326行真实调用，紧接f3eb4a8外观更新；Store模型变化仅在非编辑时重绘，初始化/退出编辑恢复也使用同显示逻辑，不是未使用纯函数。",
+      "limitations": "原模型对象与lazy editor由调用方提供现有值及真实editor；不因本方法完成升级VM、父观察生命周期或下游actor桥。当前Int返回值为本地调用适配且实际调用忽略，结论针对原显示副作用方法，不主张机器码返回寄存器ABI相同。"
+    }
+  ],
+  "arm_evidence": { "binary": ".local/paste-arm64-static.bin", "ranges": [ "0x100215cac..<0x100215df4", "0x1003eb330..<0x1003eb4a8" ], "method": "只读llvm-objdump指定成功函数范围；不启动或重新分析原程序" },
+  "excluded_failed_addresses": [ "0x100ac35f8", "0x100ac746c" ],
+  "verification_scope": "本轮仅新增本报告。没有修改产品源码、台账或旧报告，没有编译、parse、运行产品、测试、MCP或发布，未读取两失败函数。complete为有限方法源码合同，不是当前构建证明或一比一功能验收。"
+}

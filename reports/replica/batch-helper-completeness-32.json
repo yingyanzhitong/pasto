@@ -1,0 +1,55 @@
+{
+  "kind": "static_reuse_review",
+  "records": [
+    {
+      "function_id": "Paste-Helper:0x1000019f4",
+      "status": "complete",
+      "original_path": "decompiled/Paste-Helper/part-0000.c",
+      "original_line": 204,
+      "current_path": "replica/Sources/PastoHelper/HelperMain.swift",
+      "current_symbol": "applicationURL",
+      "criterion": "从 Helper bundleURL 向上四层；尾部是主 App 名则直接返回，否则查 Launch Services 的主 bundle ID，仍找不到则使用 URL(fileURLWithPath:) 创建 Applications 后备路径。",
+      "consumer": "HelperMain.main 创建并持有 HelperDelegate；launchApplication 和 startMonitoring 共享 applicationURL；checkRunning 和 launchAfterDelay 调用运行进程检查。",
+      "source_sha256": "60d98b18e87390fcc6c8de6a43b75d9505bfd74b822eb9e0fc6dc58bbfd47e12",
+      "limitations": "品牌和包标识按 Pasto 本地项目替换；仅确认路径解析合同，不证明当前环境 Launch Services 结果或程序运行。"
+    },
+    {
+      "function_id": "Paste-Helper:0x100004c34",
+      "status": "uncertain",
+      "original_path": "decompiled/Paste-Helper/part-0000.c",
+      "original_line": 2517,
+      "current_path": "replica/Sources/PastoHelper/HelperMain.swift",
+      "current_symbol": "isMainApplicationRunning",
+      "criterion": "遍历 NSWorkspace.shared.runningApplications；逐个忽略 nil bundleIdentifier，遇到与主 bundle ID 相等的第一个应用立即返回 true，遍历结束返回 false。",
+      "consumer": "HelperMain.main 创建并持有 HelperDelegate；launchApplication 和 startMonitoring 共享 applicationURL；checkRunning 和 launchAfterDelay 调用运行进程检查。",
+      "source_sha256": "60d98b18e87390fcc6c8de6a43b75d9505bfd74b822eb9e0fc6dc58bbfd47e12",
+      "limitations": "品牌和包标识按 Pasto 本地项目替换；原方法显式 MainActor unexpectedExecutor 诊断未与当前产物逐指令对应，业务分支匹配但严格合同待证。"
+    },
+    {
+      "function_id": "Paste-Helper:0x100001f84",
+      "status": "uncertain",
+      "original_path": "decompiled/Paste-Helper/part-0000.c",
+      "original_line": 392,
+      "current_path": "replica/Sources/PastoHelper/HelperMain.swift",
+      "current_symbol": "applicationDidFinishLaunching",
+      "criterion": "NSApplicationDelegate.applicationDidFinishLaunching 在 MainActor 接收桥接后的 Notification，并调用 Helper 启动流程。",
+      "consumer": "HelperMain.main 创建并持有 HelperDelegate；launchApplication 和 startMonitoring 共享 applicationURL；checkRunning 和 launchAfterDelay 调用运行进程检查。",
+      "source_sha256": "60d98b18e87390fcc6c8de6a43b75d9505bfd74b822eb9e0fc6dc58bbfd47e12",
+      "limitations": "品牌和包标识按 Pasto 本地项目替换；原方法显式 MainActor unexpectedExecutor 诊断未与当前产物逐指令对应，业务分支匹配但严格合同待证。"
+    },
+    {
+      "function_id": "Paste-Helper:0x1000020b4",
+      "status": "uncertain",
+      "original_path": "decompiled/Paste-Helper/part-0000.c",
+      "original_line": 436,
+      "current_path": "replica/Sources/PastoHelper/HelperMain.swift",
+      "current_symbol": "HelperDelegate",
+      "criterion": "在 MainActor 初始化 Helper Delegate：建立 general 分类 Logger，isLaunching=false、retryCount=0、cancellables 为空集合，再执行 NSObject 初始化。",
+      "consumer": "HelperMain.main 创建并持有 HelperDelegate；launchApplication 和 startMonitoring 共享 applicationURL；checkRunning 和 launchAfterDelay 调用运行进程检查。",
+      "source_sha256": "60d98b18e87390fcc6c8de6a43b75d9505bfd74b822eb9e0fc6dc58bbfd47e12",
+      "limitations": "品牌和包标识按 Pasto 本地项目替换；原方法显式 MainActor unexpectedExecutor 诊断未与当前产物逐指令对应，业务分支匹配但严格合同待证。"
+    }
+  ],
+  "build_executed": false,
+  "tests_executed": false
+}

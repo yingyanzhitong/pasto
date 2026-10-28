@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "kind": "same_file_historical_static_contract_review",
+  "scope": "同一OriginalPreviewTitleLabel.swift内三个简单原生字段方法；重新读成功原C、当前完整文件、历史合同和真实消费者。",
+  "counts": { "total": 3, "complete": 2, "gap": 0, "uncertain": 1 },
+  "source_binding": { "path": "replica/Sources/PastoCore/OriginalPreviewTitleLabel.swift", "historical_sha256": "84e3a33dbd575ad595cded72928d3d9b917ec1ece7eb258ba42ef3cf457bb0e2", "current_read_sha256": "84e3a33dbd575ad595cded72928d3d9b917ec1ece7eb258ba42ef3cf457bb0e2", "whole_file_unchanged": true },
+  "records": [
+    {
+      "function_id": "Paste:0x10023b3e0",
+      "status": "complete",
+      "historical_contract_reusable": true,
+      "historical_evidence": "reports/function-migration/Paste-0x10023b3e0.json",
+      "original": { "path": "decompiled/Paste/part-0195.c", "start_line": 45, "address_range": "0x10023b3e0..<0x10023b414" },
+      "current_reference": { "path": "replica/Sources/PastoCore/OriginalPreviewTitleLabel.swift", "line": 63, "symbol": "public func f_10023b3e0() -> Bool" },
+      "criterion": "原取得同lazy nativeField后读isEditable，当前同链，不以wrapper状态或window.firstResponder替代。原ARM23b3ec取field，23b3f4读其isEditable，23b404明确恢复该返回值再ret，解除C将接收者误记param1的歧义。无其它分支或副作用。",
+      "actual_consumer": "OriginalPreviewTitleLabel.mouseDown第211行真实读取，false才进入标题编辑，true走super；同一个field由缓存getter提供。",
+      "limitations": "仅getter有限合同，不升级lazy field构造或标题整状态机。"
+    },
+    {
+      "function_id": "Paste:0x10023b578",
+      "status": "complete",
+      "historical_contract_reusable": true,
+      "historical_evidence": "reports/function-migration/Paste-0x10023b578.json",
+      "original": { "path": "decompiled/Paste/part-0195.c", "start_line": 185, "address_range": "0x10023b578..<0x10023b600" },
+      "current_reference": { "path": "replica/Sources/PastoCore/OriginalPreviewTitleLabel.swift", "line": 65, "symbol": "public func f_10023b578() -> String?" },
+      "criterion": "原取lazy nativeField.placeholderAttributedString，nil返回Optional nil；有值只读string并桥接，不读取attributedText、当前编辑文本或placeholderString代替。当前可选链相同，some空串保some，不trim、不删样式或改字段。",
+      "actual_consumer": "OriginalPreviewTextField.f23af6c第83行在改textColor后真实调用此getter，保原placeholder字符串重新构造其颜色；TitleLabel初始化和Header实际更新文字色消费。",
+      "limitations": "只确认placeholder取值，不升级重建placeholder/font fallback或原类别桥。"
+    },
+    {
+      "function_id": "Paste:0x10023b414",
+      "status": "uncertain",
+      "historical_contract_reusable": false,
+      "reusable_subset": "真实nativeField editable赋值副作用和合法Bool映射已满足，历史返回0表述不按伪码直接复用。",
+      "historical_evidence": "reports/function-migration/Paste-0x10023b414.json",
+      "original": { "path": "decompiled/Paste/part-0195.c", "start_line": 61, "address_range": "0x10023b414..<0x10023b444" },
+      "current_reference": { "path": "replica/Sources/PastoCore/OriginalPreviewTitleLabel.swift", "line": 88, "symbol": "public func f_10023b414(_ value: Bool) -> Int" },
+      "criterion": "原C将param1复用成字段接收者且声称return0。指定ARM23b420先保输入x19，23b424取得lazy field，23b42c按输入bit0传w2，23b430调用setEditable，确认当前对真实field写合法Bool完全正确。但23b434把field放回x0并23b440尾跳objc_release，没有可证明的mov x0,0或固定Int返回；历史合同包含返回0，当前返回Int0仅为本地适配，不能把该历史完整返回合同据C自动当原版已证。",
+      "actual_consumer": "TitleLabel.begin/cancel/commit第188/196/205行真实写editable，所有所见生产调用均忽略返回值，正常编辑行为可复用。",
+      "limitations": "无用户可见确定差异，待证只针对历史返回值合同；原源码可能Void，不猜ABI或为此修改已可用方法。"
+    }
+  ],
+  "arm_evidence": { "binary": ".local/paste-arm64-static.bin", "range": "0x10023b3e0..<0x10023b444", "method": "只读llvm-objdump指定成功函数范围" },
+  "excluded_failed_addresses": [ "0x100ac35f8", "0x100ac746c" ],
+  "verification_scope": "只新增本报告，无产品源码、台账和历史报告修改，无编译、parse、运行应用、测试、MCP或发布，未读取指定失败函数。源码摘要一致只作为引用保留证据，历史编译不冒充本轮构建或一比一功能验收。"
+}

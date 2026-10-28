@@ -231,16 +231,30 @@ struct ReplicaStackTable: NSViewRepresentable {
     @ObservedObject var state: ReplicaUIState
 
     func makeCoordinator() -> OriginalStackTableController { OriginalStackTableController() }
-    func makeNSView(context: Context) -> NSScrollView { context.coordinator.scrollView }
+    func makeNSView(context: Context) -> NSScrollView {
+        state.controller?.stackTableController = context.coordinator
+        return context.coordinator.scrollView
+    }
     func updateNSView(_ view: NSScrollView, context: Context) {
         let controller = context.coordinator
+        controller.removeActionTitle = OriginalShortcutRecorder.removeTitle
+        controller.removeSnippet = { expectedIDs, row in
+            let visibleOffsets = state.stackIDs.indices.filter { index in
+                state.store.items.contains { $0.id == state.stackIDs[index] && !$0.isDeleted }
+            }
+            guard visibleOffsets.indices.contains(row),
+                  visibleOffsets.map({ state.stackIDs[$0] }) == expectedIDs else { return false }
+            state.stackIDs.remove(at: visibleOffsets[row])
+            return true
+        }
         controller.makeCell = { item in
             NSHostingView(rootView:
-                HStack(spacing: 8) {
-                    SourceAppIcon(item: item, store: state.store).frame(width: 24, height: 24)
-                    Text(item.plainText ?? item.title).font(.system(size: 12)).lineLimit(2)
-                    Spacer(minLength: 0)
-                }.padding(.horizontal, 10).frame(height: 44)
+                OriginalStackSnippetCellView(item: item, imageProvider: { item in
+                    if let application = state.store.sourceApplication(for: item) {
+                        return application.rawIcon.flatMap(NSImage.init(data:)) ?? NSImage()
+                    }
+                    return NSImage(systemSymbolName: "doc.on.clipboard.fill", accessibilityDescription: nil)
+                }).frame(maxWidth: .infinity).frame(height: 44)
                 .contextMenu {
                     Button("复制") { state.controller?.copy(item: item, plainTextOnly: false) }
                     Button("粘贴") {
@@ -253,9 +267,7 @@ struct ReplicaStackTable: NSViewRepresentable {
                     Button("移除") { state.stackIDs.removeAll { $0 == item.id } }
                 })
         }
-        controller.snippets = state.stackItems
-        controller.tableView.reloadData()
-        controller.f_100083a20()
+        controller.updateSnippets(state.stackItems)
     }
 }
 
@@ -389,8 +401,8 @@ struct ReplicaSettingsView: View {
             Section(OriginalSettingsLocalization.text("settings.shortcuts.title")) {
                 shortcutRecorder(ReplicaBrand.replacingOriginalName(in: OriginalSettingsLocalization.text("settings.shortcuts.activate-paste.title")), path: \.historyShortcut)
                 shortcutRecorder(ReplicaBrand.replacingOriginalName(in: OriginalSettingsLocalization.text("settings.shortcuts.activate-paste-stack.title")), path: \.stackShortcut)
-                shortcutRecorder(OriginalSettingsLocalization.text("settings.shortcuts.next-pinboard.title"), path: \.nextPinboardShortcut)
-                shortcutRecorder(OriginalSettingsLocalization.text("settings.shortcuts.previous-pinboard.title"), path: \.previousPinboardShortcut)
+                shortcutRecorder(OriginalSettingsLocalization.text("pasto.settings.shortcuts.next-group.title"), path: \.nextPinboardShortcut)
+                shortcutRecorder(OriginalSettingsLocalization.text("pasto.settings.shortcuts.previous-group.title"), path: \.previousPinboardShortcut)
                 Picker(OriginalSettingsLocalization.text("settings.shortcuts.quick-paste.title"), selection: preference(\.quickPasteModifierRawValue)) {
                     Text("⌘ Command + 1…9").tag(NSEvent.ModifierFlags.command.rawValue)
                     Text("⌥ Option + 1…9").tag(NSEvent.ModifierFlags.option.rawValue)
@@ -479,7 +491,7 @@ struct ReplicaSettingsView: View {
             Section("MCP 服务") {
                 Label(FileManager.default.isExecutableFile(atPath: mcpExecutable.path) ? "可执行文件已就绪" : "未找到 MCP 可执行文件",
                       systemImage: FileManager.default.isExecutableFile(atPath: mcpExecutable.path) ? "checkmark.circle" : "exclamationmark.circle")
-                Text("连接 MCP 客户端后，可以搜索和读取内容、创建项目及管理 Pinboard。服务由客户端通过标准输入输出启动。")
+                Text("连接 MCP 客户端后，可以搜索和读取内容、创建项目及管理 Pasto。服务由客户端通过标准输入输出启动。")
                     .font(.caption).foregroundStyle(.secondary)
             }
             Section("客户端配置") {

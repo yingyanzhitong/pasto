@@ -1,0 +1,43 @@
+{
+  "review_kind": "read_only_attributes_optional_codable_pair",
+  "counts": { "reviewed": 2, "complete": 2, "gap": 0, "uncertain": 0, "new_migrations_claimed": 0 },
+  "functions": [
+    {
+      "function_id": "Paste:0x100324388",
+      "status": "complete",
+      "original_path": "decompiled/Paste/part-0258.c",
+      "original_line": 2243,
+      "current_path": "replica/Sources/PastoCore/OriginalPinboardAttributes.swift",
+      "current_symbol": "OriginalPinboardAttributes.Attributes.encode(to:)（Codable派生）",
+      "criterion": "原创建同一CodingKeys keyed容器，按type:String?、capacity:Int?、colorCode:UInt64?顺序encodeIfPresent。当前该顺序声明三个相同可选类型，标准Codable派生encodeIfPresent，不写nil值，不把缺值换成0/30，false/0/空字符串等有值输入保留。第33批键stringValue已逐字确认，非仅按类型名猜schema。",
+      "error_order_evidence": "新有界ARM324388..3244dc完整读取：324440 encode type后324444 CBNZ error→清容器返回；324464 encode capacity后324468仅无error才到3244a0编码color；3244bc color之后无论成功或错误都销毁容器并恢复原error。当前派生throws编码同样首错停止并直传，不执行余下字段、不吞错或返回半成品Data。",
+      "consumer": "Store创建/颜色更改调用OriginalPinboardAttributes.encoded(colorCode:)→JSONEncoder.encode(Attributes(type:pinboard,capacity:nil,colorCode:...))，这是真实生产编码；没有另一个自定义encoder遮蔽合成实现。",
+      "boundary": "此方法只负责已构造Attributes的编码，不签外层JSON字节排序、Pinboard事务/随机色或原实体rawAttributes setter。capacity在当前创建caller常为nil，不削去源方法对其some/nil的完整派生处理。"
+    },
+    {
+      "function_id": "Paste:0x1003247b8",
+      "status": "complete",
+      "original_path": "decompiled/Paste/part-0258.c",
+      "original_line": 2488,
+      "current_path": "replica/Sources/PastoCore/OriginalPinboardAttributes.swift",
+      "current_symbol": "OriginalPinboardAttributes.Attributes.init(from:)（Codable派生）",
+      "criterion": "原取keyed容器，再按type:String?、capacity:Int?、colorCode:UInt64?逐个decodeIfPresent；缺键或显式null为nil，存在但类型错误会使整个记录失败，不按type提前跳过无关字段。当前同三个可选字段的派生Decodable完整对应；负值只允许有符号capacity，colorCode使用UInt64，不吞错给默认值。0/30默认是在另一个f3245fc方法，不能提前注入解码器。",
+      "existing_arm_error_proof": ".local/pasteboard-next-pinboard-header-writer-original-bodies.json保存完整3247b8..324964共428B，sha256=4737495e3319ffa4077571b0ac648ab5d377458d7817ebc5dd556b5141c5c5d3。已重读旧ARM：324864容器错误→48f8；324884 type错误→48e8；3248b0 capacity错误→48e0；3248dc color成功才到4924最终发布字段，否则释放已读String及容器、恢复error返回。当前派生失败自动清理而不发布半初始化对象。",
+      "consumer": "公开colorCode(from:)实际JSONDecoder.decode(Attributes.self)；外层try?在整个记录解码失败后才返回nil，不能误称解码器自己接受坏capacity并继续取board color。Header/preview/AppIntents的rawAttributes读取均用该真实路径。",
+      "boundary": "不签f324534未知protocol slot身份、CodingKey描述Self名称或实体错误契约；这里直接完整值记录的Decodable方法与当前派生对应，不新增无消费wrapper。"
+    }
+  ],
+  "reused_evidence": [
+    ".local/pasteboard-next-pinboard-header-writer-review.json",
+    ".local/pasteboard-next-pinboard-header-writer-original-bodies.json",
+    "reports/replica/batch-core-completeness-32.json",
+    "reports/replica/batch-core-completeness-33.json"
+  ],
+  "limits": [
+    "只新增独立报告，未修改产品源码、台账或用户数据。",
+    "仅原镜像有界静态反汇编及既存原ARM/成功C/当前源码阅读；未编译、parse、运行产品、功能/MCP测试、验证脚本或发布。",
+    "未核当前编译产物，不把历史wholefileSHA自动重绑。",
+    "本批2/2完整不是项目总迁移率；主智能体汇总总分母及跨批去重，新增迁移0。",
+    "指定失败地址0x100ac35f8、0x100ac746c跳过，未读取。"
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "kind": "static_code_migration",
+  "function_id": "Paste:0x1003ec168",
+  "implementation_origin": "existing_extended",
+  "original_pseudocode": "decompiled/Paste/part-0312.c:1154",
+  "machine_boundary_reviewed": {
+    "start": "0x1003ec168",
+    "end_exclusive": "0x1003ec310",
+    "arithmetic": "0x1003ec29c..0x1003ec2ec: doubled horizontal inset plus 20 plus measured width; doubled vertical inset plus measured height; per-axis FCMP/FCSEL MI upper-bound choice"
+  },
+  "source": "replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift",
+  "symbol": "ReplicaInlineTextPreviewContent.preferredPreviewSize",
+  "consumer": "makeOriginalReplicaTextPreview passes the computed value as contentSize",
+  "branch_review": [
+    "Read stored original attributed text, not live editing text",
+    "Use half main-screen frame size; use 1000 for each dimension if no screen",
+    "Measure prefix of 2000 UTF-16 units only when original length exceeds 2000",
+    "boundingRect uses line-fragment origin plus font leading and nil context",
+    "Read actual text view textContainerInset, matching original f_100213454 getter",
+    "Add inset twice, add 20 horizontally only, then clamp each dimension via maximum < result comparison",
+    "No independent minimum size or rounding"
+  ],
+  "build_executed": false,
+  "tests_executed": false,
+  "equivalence_verified": false,
+  "limitations": "Complete source-level size method only; parent VM, content factory, generated protocol witness and original binary ABI remain separate migration work."
+}

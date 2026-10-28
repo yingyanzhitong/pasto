@@ -1,0 +1,171 @@
+{
+  "kind": "batch-window-completeness-6",
+  "scope": "已完成的6个搜索菜单过滤/压缩同类方法；均不在round5聚合185个地址中。不为数量扩查已有Actor待证。",
+  "summary": {
+    "reviewed": 6,
+    "complete": 6,
+    "gap": 0,
+    "uncertain": 0,
+    "new_to_round5": 6
+  },
+  "prior_inventory": "reports/replica/batch-completeness-round5.json",
+  "current_source": "replica/Sources/PastoCore/OriginalSearchMenu.swift",
+  "actual_route": [
+    "OriginalSearchField.f045c2c构造输入TextView",
+    "OriginalSearchTextView.menu(for:)返回系统菜单并设置delegate",
+    "menuWillOpen→f04487c→OriginalSearchMenu.f21b56c",
+    "f21ad80/21b124第一阶段",
+    "f21c304/21c148/21bf44第二阶段"
+  ],
+  "definite_product_differences": [],
+  "not_promoted": [
+    "本批不将menuWillOpen的原Actor诊断及原NSMenu/NSTextView父提升完整。",
+    "未声称当前编译成功、运行菜单表现或整个搜索编辑链一比一验收。"
+  ],
+  "activities": {
+    "product_source_edited": false,
+    "ledger_edited": false,
+    "compiled": false,
+    "product_run": false,
+    "tests_run": false,
+    "wrapper_added": false
+  },
+  "skipped_failed_addresses": [
+    "Paste:0x100ac35f8",
+    "Paste:0x100ac746c"
+  ],
+  "functions": [
+    {
+      "function_id": "Paste:0x10021b124",
+      "status": "complete",
+      "mapping_state_at_review": "migrated",
+      "included_in_round5": false,
+      "original": {
+        "path": "decompiled/Paste/part-0184.c",
+        "line": 626
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchMenu.swift",
+          "symbol": "f_10021b124"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/SearchEditor.swift",
+          "symbol": "ReplicaSearchEditor"
+        }
+      ],
+      "evidence": "本项action为changeLayoutOrientation:立即true；否则依次重新读取直接submenu，分别检测changeLayoutOrientation:、highlight:，再同一submenu逐子项依次检测changeFont:/orderFrontFontPanel:/showFonts:；全部未命中false，不递归孙submenu。当前每条选择器和短路分支一致。",
+      "actual_consumer": "f21ad80的首个删除项扫描和后续保留谓词实际调用。"
+    },
+    {
+      "function_id": "Paste:0x10021bf44",
+      "status": "complete",
+      "mapping_state_at_review": "migrated",
+      "included_in_round5": false,
+      "original": {
+        "path": "decompiled/Paste/part-0184.c",
+        "line": 1296
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchMenu.swift",
+          "symbol": "f_10021bf44"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/SearchEditor.swift",
+          "symbol": "ReplicaSearchEditor"
+        }
+      ],
+      "evidence": "原inout数组删除[from,to)并保持余项顺序和COW语义；当前removeSubrange(from..<to)保空区间、范围/数组失败条件，没有改成filter或整个数组重建。",
+      "actual_consumer": "f21ad80和f21b56c真实压缩后删除尾部；索引非法仍Swift检查终止，非运行验收。"
+    },
+    {
+      "function_id": "Paste:0x10021ad80",
+      "status": "complete",
+      "mapping_state_at_review": "migrated",
+      "included_in_round5": false,
+      "original": {
+        "path": "decompiled/Paste/part-0184.c",
+        "line": 397
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchMenu.swift",
+          "symbol": "f_10021ad80"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/SearchEditor.swift",
+          "symbol": "ReplicaSearchEditor"
+        }
+      ],
+      "evidence": "读取menu.items，找首个删除项，从后续项按谓词反值稳定swap压缩，删压缩尾部，最终重新赋menu.items并返回0；无匹配仍赋回。当前无匹配省去helper(count,count)空删除，该helper不读NSMenuItem属性且无保留项/菜单副作用变化。",
+      "actual_consumer": "f21b56c先调用这一步；真实SearchTextView菜单打开链消费。"
+    },
+    {
+      "function_id": "Paste:0x10021c148",
+      "status": "complete",
+      "mapping_state_at_review": "migrated",
+      "included_in_round5": false,
+      "original": {
+        "path": "decompiled/Paste/part-0184.c",
+        "line": 1442
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchMenu.swift",
+          "symbol": "f_10021c148"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/SearchEditor.swift",
+          "symbol": "ReplicaSearchEditor"
+        }
+      ],
+      "evidence": "separator先判并保留；非separator仅无submenu且action非nil并在传入selector集合才保留，返回首个不保留项的Optional索引；空/全保留nil。当前firstIndex+isRetained完整表达同一分支顺序。",
+      "actual_consumer": "f21c304用返回值决定是否压缩，空集合也保separator。"
+    },
+    {
+      "function_id": "Paste:0x10021c304",
+      "status": "complete",
+      "mapping_state_at_review": "migrated",
+      "included_in_round5": false,
+      "original": {
+        "path": "decompiled/Paste/part-0184.c",
+        "line": 1549
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchMenu.swift",
+          "symbol": "f_10021c304"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/SearchEditor.swift",
+          "symbol": "ReplicaSearchEditor"
+        }
+      ],
+      "evidence": "无首个不保留项返回原count且数组不变；有则从first+1起，把后续应保留项按读序swap到write，write!=read才交换，返回前缀长度但不删尾部。当前保留原尾部置换而非filter重建。",
+      "actual_consumer": "f21b56c读取前缀长度后调用f21bf44；选择器集合及分隔线判定复用f21c148同一谓词。"
+    },
+    {
+      "function_id": "Paste:0x10021b56c",
+      "status": "complete",
+      "mapping_state_at_review": "migrated",
+      "included_in_round5": false,
+      "original": {
+        "path": "decompiled/Paste/part-0184.c",
+        "line": 852
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchMenu.swift",
+          "symbol": "f_10021b56c"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/SearchEditor.swift",
+          "symbol": "ReplicaSearchEditor"
+        }
+      ],
+      "evidence": "先富文本组删除f21ad80，再构造恰cut:/copy:/paste:/selectAll:四项Set，读新menu.items→f21c304→删[count,end)→赋回items。当前未保留其它action，未规范化首尾/连续separator，正常调用顺序一致。",
+      "actual_consumer": "OriginalSearchTextView.menuWillOpen→f04487c→此函数，实际NSMenuDelegate生产消费。"
+    }
+  ]
+}

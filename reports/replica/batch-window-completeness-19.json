@@ -1,0 +1,428 @@
+{
+  "kind": "batch-window-completeness-19",
+  "scope": "Eleven search-symbol storage getters and one previously uncertain mapping.",
+  "summary": {
+    "reviewed": 12,
+    "complete": 12,
+    "gap": 0,
+    "uncertain": 0,
+    "new_slot_methods": 11,
+    "resolved_previous_uncertain": 1
+  },
+  "prior_inventory": "reports/replica/batch-completeness-round18.json",
+  "resolved_previous_uncertain": [
+    "Paste:0x100054b2c"
+  ],
+  "original_slot_decode": {
+    "artifact": ".local/paste-arm64-static.bin",
+    "fixups_file_offset": "0x104c000",
+    "data_const_vm": "0x100ea4000",
+    "data_const_pointer_format": 6,
+    "large_string_rule": "DYLD_CHAINED_PTR_64_OFFSET rebase: low36 target relative to image base 0x100000000; String high8 tag is preserved and native String header32 is skipped for UTF8 bytes.",
+    "large_slots": [
+      "0x100ec1520",
+      "0x100ec1570",
+      "0x100ec15c0"
+    ]
+  },
+  "definite_product_differences": [],
+  "limitations": [
+    "Complete denotes the finite stable-slot/value static contract only, not current compilation or SF rendering acceptance; ledger counts are unchanged.",
+    "Current slots use process-lifetime allocation rather than original DATA_CONST placement. That adaptation does not claim identical allocation effects or original addresses.",
+    "No conclusion extends to all icon assets, input methods or the complete search interface."
+  ],
+  "activities": {
+    "product_source_edited": false,
+    "ledger_edited": false,
+    "compiled": false,
+    "product_run": false,
+    "tests_run": false,
+    "wrapper_added": false
+  },
+  "skipped_failed_addresses": [
+    "Paste:0x100ac35f8",
+    "Paste:0x100ac746c"
+  ],
+  "functions": [
+    {
+      "function_id": "Paste:0x10020c714",
+      "status": "complete",
+      "mapping_state_at_review": "migrated",
+      "original": {
+        "path": "decompiled/Paste/part-0174.c",
+        "line": 579
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchFilterSymbols.swift",
+          "symbol": "f_10020c714"
+        }
+      ],
+      "original_machine": {
+        "artifact": ".local/paste-arm64-static.bin",
+        "range_start": "0x10020c714",
+        "range_end_exclusive": "0x10020c720",
+        "raw12": "405100b000802b91c0035fd6",
+        "instructions": "ADRP x0, slot_page; ADD x0,x0,slot_offset; RET"
+      },
+      "original_slot": {
+        "slot_vm": "0x100c35ae0",
+        "slot_raw16": "6170702e6461736865640000000000ea",
+        "representation": "small Swift String",
+        "length": 10,
+        "decoded": "app.dashed"
+      },
+      "expected_current_value": "app.dashed",
+      "evidence": "Successful original C and the full getter return a fixed String storage address. Raw slot bytes independently decode to the expected value. The current method returns a process-lifetime stable String slot, preserving pointer identity and value across repeated calls. Static storage allocation is an independent model adaptation, not a claim of identical physical addresses or allocation instructions.",
+      "actual_consumer": "OriginalSearchFilterSymbols.f054b2c calls this accessor in its matching branch and reads pointee; FilterBrowser.chip sends the resulting name to the real system-image factory."
+    },
+    {
+      "function_id": "Paste:0x10020c934",
+      "status": "complete",
+      "mapping_state_at_review": "migrated",
+      "original": {
+        "path": "decompiled/Paste/part-0174.c",
+        "line": 915
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchFilterSymbols.swift",
+          "symbol": "f_10020c934"
+        }
+      ],
+      "original_machine": {
+        "artifact": ".local/paste-arm64-static.bin",
+        "range_start": "0x10020c934",
+        "range_end_exclusive": "0x10020c940",
+        "raw12": "405100b000402d91c0035fd6",
+        "instructions": "ADRP x0, slot_page; ADD x0,x0,slot_offset; RET"
+      },
+      "original_slot": {
+        "slot_vm": "0x100c35b50",
+        "slot_raw16": "63616c656e64617200000000000000e8",
+        "representation": "small Swift String",
+        "length": 8,
+        "decoded": "calendar"
+      },
+      "expected_current_value": "calendar",
+      "evidence": "Successful original C and the full getter return a fixed String storage address. Raw slot bytes independently decode to the expected value. The current method returns a process-lifetime stable String slot, preserving pointer identity and value across repeated calls. Static storage allocation is an independent model adaptation, not a claim of identical physical addresses or allocation instructions.",
+      "actual_consumer": "OriginalSearchFilterSymbols.f054b2c calls this accessor in its matching branch and reads pointee; FilterBrowser.chip sends the resulting name to the real system-image factory."
+    },
+    {
+      "function_id": "Paste:0x10020cc48",
+      "status": "complete",
+      "mapping_state_at_review": "migrated",
+      "original": {
+        "path": "decompiled/Paste/part-0175.c",
+        "line": 390
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchFilterSymbols.swift",
+          "symbol": "f_10020cc48"
+        }
+      ],
+      "original_machine": {
+        "artifact": ".local/paste-arm64-static.bin",
+        "range_start": "0x10020cc48",
+        "range_end_exclusive": "0x10020cc54",
+        "raw12": "405100b000c02f91c0035fd6",
+        "instructions": "ADRP x0, slot_page; ADD x0,x0,slot_offset; RET"
+      },
+      "original_slot": {
+        "slot_vm": "0x100c35bf0",
+        "slot_raw16": "636972636c652e66696c6c00000000eb",
+        "representation": "small Swift String",
+        "length": 11,
+        "decoded": "circle.fill"
+      },
+      "expected_current_value": "circle.fill",
+      "evidence": "Successful original C and the full getter return a fixed String storage address. Raw slot bytes independently decode to the expected value. The current method returns a process-lifetime stable String slot, preserving pointer identity and value across repeated calls. Static storage allocation is an independent model adaptation, not a claim of identical physical addresses or allocation instructions.",
+      "actual_consumer": "OriginalSearchFilterSymbols.f054b2c calls this accessor in its matching branch and reads pointee; FilterBrowser.chip sends the resulting name to the real system-image factory."
+    },
+    {
+      "function_id": "Paste:0x10020cdd0",
+      "status": "complete",
+      "mapping_state_at_review": "migrated",
+      "original": {
+        "path": "decompiled/Paste/part-0175.c",
+        "line": 606
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchFilterSymbols.swift",
+          "symbol": "f_10020cdd0"
+        }
+      ],
+      "original_machine": {
+        "artifact": ".local/paste-arm64-static.bin",
+        "range_start": "0x10020cdd0",
+        "range_end_exclusive": "0x10020cddc",
+        "raw12": "405100b000003191c0035fd6",
+        "instructions": "ADRP x0, slot_page; ADD x0,x0,slot_offset; RET"
+      },
+      "original_slot": {
+        "slot_vm": "0x100c35c40",
+        "slot_raw16": "646f63000000000000000000000000e3",
+        "representation": "small Swift String",
+        "length": 3,
+        "decoded": "doc"
+      },
+      "expected_current_value": "doc",
+      "evidence": "Successful original C and the full getter return a fixed String storage address. Raw slot bytes independently decode to the expected value. The current method returns a process-lifetime stable String slot, preserving pointer identity and value across repeated calls. Static storage allocation is an independent model adaptation, not a claim of identical physical addresses or allocation instructions.",
+      "actual_consumer": "OriginalSearchFilterSymbols.f054b2c calls this accessor in its matching branch and reads pointee; FilterBrowser.chip sends the resulting name to the real system-image factory."
+    },
+    {
+      "function_id": "Paste:0x10020cf40",
+      "status": "complete",
+      "mapping_state_at_review": "migrated",
+      "original": {
+        "path": "decompiled/Paste/part-0176.c",
+        "line": 54
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchFilterSymbols.swift",
+          "symbol": "f_10020cf40"
+        }
+      ],
+      "original_machine": {
+        "artifact": ".local/paste-arm64-static.bin",
+        "range_start": "0x10020cf40",
+        "range_end_exclusive": "0x10020cf4c",
+        "raw12": "a06500b000801491c0035fd6",
+        "instructions": "ADRP x0, slot_page; ADD x0,x0,slot_offset; RET"
+      },
+      "original_slot": {
+        "slot_vm": "0x100ec1520",
+        "slot_raw16": "1d000000000000d0d0e3d90000082000",
+        "representation": "large Swift String with chained rebase",
+        "pointer_format": 6,
+        "raw_pointer_word": "0x20080000d9e3d0",
+        "utf8_vm": "0x100d9e3f0",
+        "length": 29,
+        "decoded": "exclamationmark.triangle.fill"
+      },
+      "expected_current_value": "exclamationmark.triangle.fill",
+      "evidence": "Successful original C and the full getter return a fixed String storage address. Raw slot bytes independently decode to the expected value. The current method returns a process-lifetime stable String slot, preserving pointer identity and value across repeated calls. Static storage allocation is an independent model adaptation, not a claim of identical physical addresses or allocation instructions.",
+      "actual_consumer": "OriginalSearchFilterSymbols.f054b2c calls this accessor in its matching branch and reads pointee; FilterBrowser.chip sends the resulting name to the real system-image factory."
+    },
+    {
+      "function_id": "Paste:0x10020d3b0",
+      "status": "complete",
+      "mapping_state_at_review": "migrated",
+      "original": {
+        "path": "decompiled/Paste/part-0177.c",
+        "line": 16
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchFilterSymbols.swift",
+          "symbol": "f_10020d3b0"
+        }
+      ],
+      "original_machine": {
+        "artifact": ".local/paste-arm64-static.bin",
+        "range_start": "0x10020d3b0",
+        "range_end_exclusive": "0x10020d3bc",
+        "raw12": "4051009000003991c0035fd6",
+        "instructions": "ADRP x0, slot_page; ADD x0,x0,slot_offset; RET"
+      },
+      "original_slot": {
+        "slot_vm": "0x100c35e40",
+        "slot_raw16": "6c696e6b0000000000000000000000e4",
+        "representation": "small Swift String",
+        "length": 4,
+        "decoded": "link"
+      },
+      "expected_current_value": "link",
+      "evidence": "Successful original C and the full getter return a fixed String storage address. Raw slot bytes independently decode to the expected value. The current method returns a process-lifetime stable String slot, preserving pointer identity and value across repeated calls. Static storage allocation is an independent model adaptation, not a claim of identical physical addresses or allocation instructions.",
+      "actual_consumer": "OriginalSearchFilterSymbols.f054b2c calls this accessor in its matching branch and reads pointee; FilterBrowser.chip sends the resulting name to the real system-image factory."
+    },
+    {
+      "function_id": "Paste:0x10020d434",
+      "status": "complete",
+      "mapping_state_at_review": "migrated",
+      "original": {
+        "path": "decompiled/Paste/part-0177.c",
+        "line": 112
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchFilterSymbols.swift",
+          "symbol": "f_10020d434"
+        }
+      ],
+      "original_machine": {
+        "artifact": ".local/paste-arm64-static.bin",
+        "range_start": "0x10020d434",
+        "range_end_exclusive": "0x10020d440",
+        "raw12": "a065009000c01591c0035fd6",
+        "instructions": "ADRP x0, slot_page; ADD x0,x0,slot_offset; RET"
+      },
+      "original_slot": {
+        "slot_vm": "0x100ec1570",
+        "slot_raw16": "12000000000000d060e4d90000082000",
+        "representation": "large Swift String with chained rebase",
+        "pointer_format": 6,
+        "raw_pointer_word": "0x20080000d9e460",
+        "utf8_vm": "0x100d9e480",
+        "length": 18,
+        "decoded": "macbook.and.iphone"
+      },
+      "expected_current_value": "macbook.and.iphone",
+      "evidence": "Successful original C and the full getter return a fixed String storage address. Raw slot bytes independently decode to the expected value. The current method returns a process-lifetime stable String slot, preserving pointer identity and value across repeated calls. Static storage allocation is an independent model adaptation, not a claim of identical physical addresses or allocation instructions.",
+      "actual_consumer": "OriginalSearchFilterSymbols.f054b2c calls this accessor in its matching branch and reads pointee; FilterBrowser.chip sends the resulting name to the real system-image factory."
+    },
+    {
+      "function_id": "Paste:0x10020d4f4",
+      "status": "complete",
+      "mapping_state_at_review": "migrated",
+      "original": {
+        "path": "decompiled/Paste/part-0177.c",
+        "line": 232
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchFilterSymbols.swift",
+          "symbol": "f_10020d4f4"
+        }
+      ],
+      "original_machine": {
+        "artifact": ".local/paste-arm64-static.bin",
+        "range_start": "0x10020d4f4",
+        "range_end_exclusive": "0x10020d500",
+        "raw12": "4051009000003b91c0035fd6",
+        "instructions": "ADRP x0, slot_page; ADD x0,x0,slot_offset; RET"
+      },
+      "original_slot": {
+        "slot_vm": "0x100c35ec0",
+        "slot_raw16": "7061696e7470616c65747465000000ec",
+        "representation": "small Swift String",
+        "length": 12,
+        "decoded": "paintpalette"
+      },
+      "expected_current_value": "paintpalette",
+      "evidence": "Successful original C and the full getter return a fixed String storage address. Raw slot bytes independently decode to the expected value. The current method returns a process-lifetime stable String slot, preserving pointer identity and value across repeated calls. Static storage allocation is an independent model adaptation, not a claim of identical physical addresses or allocation instructions.",
+      "actual_consumer": "OriginalSearchFilterSymbols.f054b2c calls this accessor in its matching branch and reads pointee; FilterBrowser.chip sends the resulting name to the real system-image factory."
+    },
+    {
+      "function_id": "Paste:0x10020d6a4",
+      "status": "complete",
+      "mapping_state_at_review": "migrated",
+      "original": {
+        "path": "decompiled/Paste/part-0177.c",
+        "line": 496
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchFilterSymbols.swift",
+          "symbol": "f_10020d6a4"
+        }
+      ],
+      "original_machine": {
+        "artifact": ".local/paste-arm64-static.bin",
+        "range_start": "0x10020d6a4",
+        "range_end_exclusive": "0x10020d6b0",
+        "raw12": "4051009000403d91c0035fd6",
+        "instructions": "ADRP x0, slot_page; ADD x0,x0,slot_offset; RET"
+      },
+      "original_slot": {
+        "slot_vm": "0x100c35f50",
+        "slot_raw16": "70686f746f00000000000000000000e5",
+        "representation": "small Swift String",
+        "length": 5,
+        "decoded": "photo"
+      },
+      "expected_current_value": "photo",
+      "evidence": "Successful original C and the full getter return a fixed String storage address. Raw slot bytes independently decode to the expected value. The current method returns a process-lifetime stable String slot, preserving pointer identity and value across repeated calls. Static storage allocation is an independent model adaptation, not a claim of identical physical addresses or allocation instructions.",
+      "actual_consumer": "OriginalSearchFilterSymbols.f054b2c calls this accessor in its matching branch and reads pointee; FilterBrowser.chip sends the resulting name to the real system-image factory."
+    },
+    {
+      "function_id": "Paste:0x10020d798",
+      "status": "complete",
+      "mapping_state_at_review": "migrated",
+      "original": {
+        "path": "decompiled/Paste/part-0177.c",
+        "line": 664
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchFilterSymbols.swift",
+          "symbol": "f_10020d798"
+        }
+      ],
+      "original_machine": {
+        "artifact": ".local/paste-arm64-static.bin",
+        "range_start": "0x10020d798",
+        "range_end_exclusive": "0x10020d7a4",
+        "raw12": "a065009000001791c0035fd6",
+        "instructions": "ADRP x0, slot_page; ADD x0,x0,slot_offset; RET"
+      },
+      "original_slot": {
+        "slot_vm": "0x100ec15c0",
+        "slot_raw16": "10000000000000d020ded90000082000",
+        "representation": "large Swift String with chained rebase",
+        "pointer_format": 6,
+        "raw_pointer_word": "0x20080000d9de20",
+        "utf8_vm": "0x100d9de40",
+        "length": 16,
+        "decoded": "questionmark.app"
+      },
+      "expected_current_value": "questionmark.app",
+      "evidence": "Successful original C and the full getter return a fixed String storage address. Raw slot bytes independently decode to the expected value. The current method returns a process-lifetime stable String slot, preserving pointer identity and value across repeated calls. Static storage allocation is an independent model adaptation, not a claim of identical physical addresses or allocation instructions.",
+      "actual_consumer": "OriginalSearchFilterSymbols.f054b2c calls this accessor in its matching branch and reads pointee; FilterBrowser.chip sends the resulting name to the real system-image factory."
+    },
+    {
+      "function_id": "Paste:0x10020d9c8",
+      "status": "complete",
+      "mapping_state_at_review": "migrated",
+      "original": {
+        "path": "decompiled/Paste/part-0178.c",
+        "line": 246
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchFilterSymbols.swift",
+          "symbol": "f_10020d9c8"
+        }
+      ],
+      "original_machine": {
+        "artifact": ".local/paste-arm64-static.bin",
+        "range_start": "0x10020d9c8",
+        "range_end_exclusive": "0x10020d9d4",
+        "raw12": "405100b000c00091c0035fd6",
+        "instructions": "ADRP x0, slot_page; ADD x0,x0,slot_offset; RET"
+      },
+      "original_slot": {
+        "slot_vm": "0x100c36030",
+        "slot_raw16": "746578742e616c69676e6c65667400ee",
+        "representation": "small Swift String",
+        "length": 14,
+        "decoded": "text.alignleft"
+      },
+      "expected_current_value": "text.alignleft",
+      "evidence": "Successful original C and the full getter return a fixed String storage address. Raw slot bytes independently decode to the expected value. The current method returns a process-lifetime stable String slot, preserving pointer identity and value across repeated calls. Static storage allocation is an independent model adaptation, not a claim of identical physical addresses or allocation instructions.",
+      "actual_consumer": "OriginalSearchFilterSymbols.f054b2c calls this accessor in its matching branch and reads pointee; FilterBrowser.chip sends the resulting name to the real system-image factory."
+    },
+    {
+      "function_id": "Paste:0x100054b2c",
+      "status": "complete",
+      "mapping_state_at_review": "migrated",
+      "previous_review": "reports/replica/batch-window-completeness-18.json",
+      "previous_status": "uncertain",
+      "original": {
+        "path": "decompiled/Paste/part-0030.c",
+        "line": 44
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchFilterSymbols.swift",
+          "symbol": "f_100054b2c"
+        }
+      ],
+      "evidence": "Round18 already checked all UInt8 tag branches, lowercased exact matching of six type values, tag2 nil, distinct unknown-type and unknown-tag fallbacks, and final slot-value projection. Only the eleven output constants remained unresolved. This review decodes every original accessor target and String slot; all names match current source, including three large strings whose chained rebases are decoded before reading the UTF8 payload. That specific uncertainty is resolved.",
+      "actual_consumer": "FilterBrowser.Selection.chip uses this mapping only if its existing image is nil, then flatMaps OriginalSystemImageFunctions.f0f653c to preserve optional image failure."
+    }
+  ]
+}

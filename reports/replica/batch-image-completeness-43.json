@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "round": 43,
+  "scope": "完整预览的三个计数资源入口及打开应用标题资源入口；仅有限键、插值类型和真实消费合同。",
+  "counts": {"reviewed": 4, "complete": 4, "gap": 0, "uncertain": 0},
+  "shared_evidence": {
+    "current_helper": "replica/Sources/PastoCore/OriginalPreviewLocalization.swift",
+    "current_helper_sha256": "0163cc854b291a3341675ea525903141dc764dda4a2791b513f4a9c4515632f1",
+    "original_count_builder": "decompiled/Paste/part-0156.c:352..458，f1e6ef8 使用 Int32 单插值及格式 %d，前后 literal 都为空，Locale.current、共享 bundle.atURL。",
+    "original_string_builder": "decompiled/Paste/part-0156.c:541..642，f1e7194 使用一个 String 插值，前后 literal 为空，Locale.current、共享 bundle.atURL。",
+    "original_bundle": "decompiled/Paste/part-0156.c:689..732 的 f1e73e4 读取原 Bundle.bundleURL 后构造 atURL；当前使用 Pasto 自身资源 bundle 是独立产品身份适配，不宣称原 bundleURL 字节相同。",
+    "current_builders": "OriginalPreviewLocalization.swift:144..153 的 String/Int32 defaultValue 插值，Localizable/current/atURL；保留空 String 及全部 Int32 值，不预格式化成 String。",
+    "historical_binding_readonly_comparison": "三个计数入口各18份完整绑定文件（helper+17 locale资源）当前 SHA 全等历史；open-in 入口19份绑定中 helper+17资源全等，仅 ReplicaLinkPreviewContent.swift 已变化，该文件本轮另逐行读取真实消费。",
+    "resource_spot_read": "en/zh-Hans 的 Localizable.stringsdict 已读取三个计数键及 d 类型；en one/other，zh-Hans other。两语言 Localizable.strings 的 open-in 均保留 %@。不把此 spot-read 称17语言运行验证。"
+  },
+  "records": [
+    {
+      "function_id": "Paste:0x1001e6b38",
+      "status": "complete",
+      "historical_evidence": "reports/function-migration/Paste-0x1001e6b38.json",
+      "original": {"path": "decompiled/Paste/part-0155.c", "start_line": 834, "end_line": 844, "address_range": "0x1001e6b38..<0x1001e6b48"},
+      "current_reference": {"path": "replica/Sources/PastoCore/OriginalPreviewLocalization.swift", "symbol": "f_1001e6b38(_:)", "line_range": "155..157"},
+      "criterion": "原入口无条件把 Int32 参数和精确键 editor.character-count 转交 f1e6ef8；当前 countResource 使用相同键、参数类型及单插值，不增加 abs/clamp/空值分支。",
+      "actual_consumer": "OriginalPreviewFooter.swift:14 以 Character count 精确转 Int32，18 调本方法并 String(localized:)；OriginalReplicaPreviewAdapter.swift:609..617 的 document observer 实际创建统计视图。另 compact footer 字符数消费不据此升级。",
+      "limitations": "只确认资源入口；父统计构造器的 actor 诊断仍按第39轮待证。"
+    },
+    {
+      "function_id": "Paste:0x1001e6b58",
+      "status": "complete",
+      "historical_evidence": "reports/function-migration/Paste-0x1001e6b58.json",
+      "original": {"path": "decompiled/Paste/part-0155.c", "start_line": 856, "end_line": 866, "address_range": "0x1001e6b58..<0x1001e6b68"},
+      "current_reference": {"path": "replica/Sources/PastoCore/OriginalPreviewLocalization.swift", "symbol": "f_1001e6b58(_:)", "line_range": "163..165"},
+      "criterion": "原入口无条件转发 Int32 与精确键 editor.line-count；当前键与单数值插值一致，没有自行改变行数。",
+      "actual_consumer": "OriginalPreviewFooter.swift:16 计算非空按 newlines 分割的行数，20 调资源并实际装入统计 label；Adapter:609..617 是真实输入来源。",
+      "limitations": "资源有限合同；不重复把行数算法或整个 footer 计为本函数。"
+    },
+    {
+      "function_id": "Paste:0x1001e6b78",
+      "status": "complete",
+      "historical_evidence": "reports/function-migration/Paste-0x1001e6b78.json",
+      "original": {"path": "decompiled/Paste/part-0155.c", "start_line": 878, "end_line": 888, "address_range": "0x1001e6b78..<0x1001e6b88"},
+      "current_reference": {"path": "replica/Sources/PastoCore/OriginalPreviewLocalization.swift", "symbol": "f_1001e6b78(_:)", "line_range": "159..161"},
+      "criterion": "原入口无条件转发 Int32 与精确键 editor.word-count；当前相同类型、键及默认单插值，不先生成其他格式的数字文本。",
+      "actual_consumer": "OriginalPreviewFooter.swift:15 生成词数 Int32，19 调资源并实际显示；Adapter:609..617 的文档更新驱动该视图。",
+      "limitations": "资源入口完整，不扩大为各语言复数选择曾运行验收。"
+    },
+    {
+      "function_id": "Paste:0x1001e6b98",
+      "status": "complete",
+      "historical_evidence": "reports/function-migration/Paste-0x1001e6b98.json",
+      "original": {"path": "decompiled/Paste/part-0156.c", "start_line": 4, "end_line": 14, "address_range": "0x1001e6b98..<0x1001e6ba8"},
+      "current_reference": {"path": "replica/Sources/PastoCore/OriginalPreviewLocalization.swift", "symbol": "f_1001e6b98(_:)", "line_range": "144..148"},
+      "criterion": "原入口转发一个 String 与 general.action.open-in 至 f1e7194；当前保单 String 插值、精确键和当前 locale，空应用名也原样插入。",
+      "actual_consumer": "当前 ReplicaLinkPreviewContent.swift:114..122 的 updateMetadata 查询应用 CFBundleName/本地化 fallback 后，于121以此方法生成 openButton.title；按钮已在48..58接实际 URL 打开动作并插入 metadata。当前消费者SHA 6becef98930daa19e63760be5039f4eda502f2a21ae7b91a2f484abb3d7b7947。",
+      "limitations": "消费文件全体已改变，不能复用其旧全文件摘要当当前编译证明；本轮只读具体标题消费位置，有限资源合同仍满足。"
+    }
+  ],
+  "excluded_failed_addresses": ["Paste:0x100ac35f8", "Paste:0x100ac746c"],
+  "verification_scope": {"product_source_modified": false, "ledger_modified": false, "compiled": false, "application_executed": false, "functional_tests_executed": false, "mcp_executed": false, "one_to_one_acceptance_claimed": false}
+}

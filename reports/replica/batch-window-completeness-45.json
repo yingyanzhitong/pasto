@@ -1,0 +1,130 @@
+{
+  "kind": "batch-window-completeness-45",
+  "scope": "3项已有全局快捷键编号初始化、注册构造与事件分派方法，核完整成功C及生产消费者。",
+  "summary": {
+    "reviewed": 3,
+    "complete": 2,
+    "gap": 0,
+    "uncertain": 1
+  },
+  "activities": {
+    "product_source_edited": false,
+    "ledger_edited": false,
+    "compiled": false,
+    "product_run": false,
+    "tests_run": false,
+    "wrapper_added": false
+  },
+  "skipped_failed_addresses": [
+    "Paste:0x100ac35f8",
+    "Paste:0x100ac746c"
+  ],
+  "limitations": [
+    "完整为进程共享初态和注册输入输出的业务合同；NSLock与原os_unfair_lock的二进制布局、调度公平性不宣称相同。",
+    "诊断adapter正常值匹配不自动等于原protocol sink全部副作用，无证据不将其排除。",
+    "不改台账计数，2/3仅本批分类，历史build不作为本轮编译或系统事件验收。"
+  ],
+  "functions": [
+    {
+      "function_id": "Paste:0x1001eb0d4",
+      "status": "complete",
+      "evidence": "完整原C分配具体共享counter对象，在+10写8字节0并发布DAT_100fb56d8。续读真实注册构造确认+10低32是ID counter，+14为零初始化os_unfair_lock，外部once保证进程一次。当前OriginalShortcutCarbonIDCounter.shared为static let，value UInt32=0且NSLock初始未锁，所有注册经同一shared.next分配，不每个注册重新初始化。该有限构造合同不含锁争抢调度策略，也不把原8字节存储等同当前对象布局。",
+      "actual_consumer": "OriginalShortcutRegistration.init实际调用OriginalShortcutCarbonIDCounter.shared.next；整个manager字典与多个GlobalHotKey对象共同使用同一进程counter。",
+      "original": {
+        "path": "decompiled/Paste/part-0157.c",
+        "line": 1764
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalGlobalShortcutMonitor.swift",
+          "symbol": "OriginalShortcutCarbonIDCounter.shared"
+        }
+      ],
+      "historical_evidence": {
+        "path": "reports/function-migration/Paste-0x1001eb0d4.json",
+        "sha256": "928c92ca09de295ee1fdaba27fd9351eed1d15ed4be08c17101abf79f886fd2e",
+        "contract": "进程一次初始化零值UInt32计数器及互斥锁，后续所有注册共用同一计数器。",
+        "historical_build_snapshot": "reports/replica/dev52-static-build78.json",
+        "current_build_claim": false
+      },
+      "source_binding": {
+        "replica/Sources/PastoCore/OriginalGlobalShortcutMonitor.swift": {
+          "sha256": "277dc405a3e660b36ec808e301ccfa3fa48568c8291295e02dafe84e595325b4",
+          "historical_sha256": "277dc405a3e660b36ec808e301ccfa3fa48568c8291295e02dafe84e595325b4",
+          "unchanged": true
+        }
+      }
+    },
+    {
+      "function_id": "Paste:0x1001eb8d0",
+      "status": "complete",
+      "evidence": "完整原C先nil handle并保存强action，锁内递增共享UInt32 ID（原值max时trap），解锁保存ID；随后检查keyCode非负且<=UInt32.max，故非法键码也先消耗ID；转换Carbon flags，signature1/id、dispatcher target、options0传RegisterEventHotKey并保存status/ref。当前顺序保持action→shared.next→keyCode精确转换→相同HotKeyID/target/options调用→保存返回值；precondition max和Int键码边界均保，不将注册失败当throw或跳过ID。",
+      "actual_consumer": "manager.f1eaa64先移除旧快捷键，再实际构造该registration；仅status0才插入字典，失败对象最终销毁，底层status/ref没有被布尔压缩。",
+      "original": {
+        "path": "decompiled/Paste/part-0158.c",
+        "line": 329
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalGlobalShortcutMonitor.swift",
+          "symbol": "class OriginalShortcutRegistration"
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalGlobalShortcutMonitor.swift",
+          "symbol": "public init(keyCode: Int, modifierRawValue: UInt, action:",
+          "qualified_symbol": "OriginalShortcutRegistration.init"
+        }
+      ],
+      "historical_evidence": {
+        "path": "reports/function-migration/Paste-0x1001eb8d0.json",
+        "sha256": "d22fb577028f4f159f5c15c27f3f25b25dfed48e82e7ce51f970ad3560fdc1ea",
+        "contract": "保存动作；锁定全局计数器分配递增UInt32 ID，溢出trap；即使键码非法也先消耗ID；键码须精确转换UInt32；Carbon修饰转换后以signature=1、dispatcher target、options=0注册并保存status/ref。",
+        "historical_build_snapshot": "reports/replica/dev52-static-build78.json",
+        "current_build_claim": false
+      },
+      "source_binding": {
+        "replica/Sources/PastoCore/OriginalGlobalShortcutMonitor.swift": {
+          "sha256": "277dc405a3e660b36ec808e301ccfa3fa48568c8291295e02dafe84e595325b4",
+          "historical_sha256": "277dc405a3e660b36ec808e301ccfa3fa48568c8291295e02dafe84e595325b4",
+          "unchanged": true
+        }
+      }
+    },
+    {
+      "function_id": "Paste:0x1001ea338",
+      "status": "uncertain",
+      "evidence": "核心事件路径已核完整C：非keyboard返回；8字节零初值EventHotKeyID读参数且忽略status；锁内只按id搜索不比signature，提取并强持action后解锁；缺项warning，命中先fired日志再main.async。当前逻辑和锁/回调顺序对应，缺项固定55字节文案也已读原thin 100d9dd40与当前逐字一致。尚未闭合的是整个诊断副作用：原typed依赖protocol warning/info方法调用含原DI witness/sink，当前经OriginalShortcutDiagnostic值投影到OriginalShortcutTelemetry.localDiagnostic→OSLog。当前注释明确该本地adapter不是原Sentry/breadcrumb方法替代，本批未证明原全部sink合同，因此不把正常日志值与动作顺序一致当整个方法完整。",
+      "original_static_string": {
+        "path": ".local/paste-arm64-static.bin",
+        "address": "0x100d9dd40",
+        "length": 55,
+        "text": "Global shortcut event received with no matching handler"
+      },
+      "actual_consumer": "InstallEventHandler真实C回调f1ea96c保活同一monitor后调用本方法；找到的registration.action由真实GlobalHotKey适配器持有应用动作，DispatchQueue.main.async实际执行，非只创建未消费闭包。",
+      "original": {
+        "path": "decompiled/Paste/part-0157.c",
+        "line": 1233
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalGlobalShortcutMonitor.swift",
+          "symbol": "f_1001ea338"
+        }
+      ],
+      "historical_evidence": {
+        "path": "reports/function-migration/Paste-0x1001ea338.json",
+        "sha256": "af14429ac3b701831b7fbb4efb978145e64608ccd1ea51a21d90b8acc5dd5f54",
+        "contract": "非keyboard事件无操作；GetEventParameter读取8-byte ID忽略status；锁内按id查注册，仅id不比signature；提取并保活动作后解锁，缺项warning带source/carbon_id；命中记录fired并main.async调动作。",
+        "historical_build_snapshot": "reports/replica/dev52-static-build78.json",
+        "current_build_claim": false
+      },
+      "source_binding": {
+        "replica/Sources/PastoCore/OriginalGlobalShortcutMonitor.swift": {
+          "sha256": "277dc405a3e660b36ec808e301ccfa3fa48568c8291295e02dafe84e595325b4",
+          "historical_sha256": "277dc405a3e660b36ec808e301ccfa3fa48568c8291295e02dafe84e595325b4",
+          "unchanged": true
+        }
+      }
+    }
+  ]
+}

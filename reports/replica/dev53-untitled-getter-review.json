@@ -1,0 +1,204 @@
+{
+  "function_id": "Paste:0x1001c6aa4",
+  "classification": "finite localization getter source candidate",
+  "original": {
+    "binary": ".local/targets/Paste.arm64",
+    "binary_sha256": "871f00354fbb1c165d858a98e6d19d6f43cb9d3f9f958b3e07c7f07eb5c19afb",
+    "pseudocode": "decompiled/Paste/part-0149.c:1562",
+    "start": "0x1001c6aa4",
+    "end_exclusive": "0x1001c6c24",
+    "body_size": 384,
+    "machine_sha256": "1f0210a4295493642bc960678a8bf96e6d5866ca275cfce85e45a6fb5f48dd9f",
+    "key_storage_address": "0x100d99730",
+    "key": "general.untitled",
+    "contract": "LocalizedStringResource(String.LocalizationValue literalgeneral.untitled,tableLocalizable,Locale.current,originalsharedBundleDescription)；仅资源getter，不是完整PinboardrenameUI",
+    "pseudocode_fragment_sha256": "9f908163cc46f65610febb9f1a0134a06829a53566f9839d08830595a642eef7"
+  },
+  "replica": {
+    "source": "replica/Sources/PastoCore/OriginalPreviewLocalization.swift",
+    "line": 17,
+    "helper_lines": [
+      5,
+      14
+    ],
+    "compiled_binary": "replica/.build/release/Pasto",
+    "binary_sha256": "d62d3ee4392cf0f4659b63a21018f15e835436d65324121ff3088b3abb7fa499",
+    "symbol": "static PastoCore.OriginalPreviewLocalization.f_1001c6aa4() -> Foundation.LocalizedStringResource",
+    "start": "0x10017edc4",
+    "end_exclusive": "0x10017ede0",
+    "machine_size": 28,
+    "machine_sha256": "bfa2a9bd0f1304556ad3ca466a506d9c41035c294d56028fde432a3e0b4ad489",
+    "body_hex": "490300f029010e91298100d1210141b2000280d20000faf2c8000014",
+    "key_storage_address": "0x1001e9380",
+    "key_storage_bytes": "67656e6572616c2e756e7469746c6564",
+    "tail_call": "0x10017f0fc OriginalPreviewLocalization.resource(_:)",
+    "bundle_adapter": "Pasto_PastoCore.bundle resourceURL ifavailable otherwise Bundle.module; existing sharedresourcehelper pattern. Physical originalbundle identity not claimed"
+  },
+  "resources": [
+    {
+      "locale": "cs.lproj",
+      "original_path": "/Applications/Paste.app/Contents/Resources/PastePackages_PasteLocalization.bundle/Contents/Resources/cs.lproj/Localizable.strings",
+      "original_file_sha256": "97717d4d7b533400d5b063fa37bcc35fe3fb82c13c0ab40c37b847529930d262",
+      "replica_path": "replica/Sources/PastoCore/Resources/cs.lproj/Localizable.strings",
+      "value": "Bez názvu",
+      "exact_match": true
+    },
+    {
+      "locale": "da.lproj",
+      "original_path": "/Applications/Paste.app/Contents/Resources/PastePackages_PasteLocalization.bundle/Contents/Resources/da.lproj/Localizable.strings",
+      "original_file_sha256": "5221a552b14f86614d1de5d747c6200245a1607553763ac32a7882b93cdd537f",
+      "replica_path": "replica/Sources/PastoCore/Resources/da.lproj/Localizable.strings",
+      "value": "Unavngivet",
+      "exact_match": true
+    },
+    {
+      "locale": "de.lproj",
+      "original_path": "/Applications/Paste.app/Contents/Resources/PastePackages_PasteLocalization.bundle/Contents/Resources/de.lproj/Localizable.strings",
+      "original_file_sha256": "3a71bc3ad3b4ec459b7d4f790a4ae825366446d669419c6dcdacc1ad2b8ec609",
+      "replica_path": "replica/Sources/PastoCore/Resources/de.lproj/Localizable.strings",
+      "value": "Unbenannt",
+      "exact_match": true
+    },
+    {
+      "locale": "en.lproj",
+      "original_path": "/Applications/Paste.app/Contents/Resources/PastePackages_PasteLocalization.bundle/Contents/Resources/en.lproj/Localizable.strings",
+      "original_file_sha256": "ec63a90119f09631608b17966e5f5574170d11e38627957bfaba4555e9334d33",
+      "replica_path": "replica/Sources/PastoCore/Resources/en.lproj/Localizable.strings",
+      "value": "Untitled",
+      "exact_match": true
+    },
+    {
+      "locale": "es.lproj",
+      "original_path": "/Applications/Paste.app/Contents/Resources/PastePackages_PasteLocalization.bundle/Contents/Resources/es.lproj/Localizable.strings",
+      "original_file_sha256": "da3c2b7a01675eabd27f534640342d94b6dcc99d3673b5d1396cd35a1bab6afa",
+      "replica_path": "replica/Sources/PastoCore/Resources/es.lproj/Localizable.strings",
+      "value": "Sin título",
+      "exact_match": true
+    },
+    {
+      "locale": "fr.lproj",
+      "original_path": "/Applications/Paste.app/Contents/Resources/PastePackages_PasteLocalization.bundle/Contents/Resources/fr.lproj/Localizable.strings",
+      "original_file_sha256": "32506b19b95ca962a19b78d0a3e2e9c41c9fa8725bc57a5b19baddfd1e03f6f8",
+      "replica_path": "replica/Sources/PastoCore/Resources/fr.lproj/Localizable.strings",
+      "value": "Sans titre",
+      "exact_match": true
+    },
+    {
+      "locale": "he.lproj",
+      "original_path": "/Applications/Paste.app/Contents/Resources/PastePackages_PasteLocalization.bundle/Contents/Resources/he.lproj/Localizable.strings",
+      "original_file_sha256": "bad5eefbca8a7b9ba747bba76deab753eae723d4781667633cd479df5d0969df",
+      "replica_path": "replica/Sources/PastoCore/Resources/he.lproj/Localizable.strings",
+      "value": "לוח ללא שם",
+      "exact_match": true
+    },
+    {
+      "locale": "it.lproj",
+      "original_path": "/Applications/Paste.app/Contents/Resources/PastePackages_PasteLocalization.bundle/Contents/Resources/it.lproj/Localizable.strings",
+      "original_file_sha256": "520dc103e8dd0cb7000b4ad80efdb0207098e5ee1fea6da6d018e63a35da656c",
+      "replica_path": "replica/Sources/PastoCore/Resources/it.lproj/Localizable.strings",
+      "value": "Senza titolo",
+      "exact_match": true
+    },
+    {
+      "locale": "ja.lproj",
+      "original_path": "/Applications/Paste.app/Contents/Resources/PastePackages_PasteLocalization.bundle/Contents/Resources/ja.lproj/Localizable.strings",
+      "original_file_sha256": "c942c46acf3ee4c6fe6bb10edea4452d5e3be2dac7a4f8969dc60824c634feb9",
+      "replica_path": "replica/Sources/PastoCore/Resources/ja.lproj/Localizable.strings",
+      "value": "無題",
+      "exact_match": true
+    },
+    {
+      "locale": "ko.lproj",
+      "original_path": "/Applications/Paste.app/Contents/Resources/PastePackages_PasteLocalization.bundle/Contents/Resources/ko.lproj/Localizable.strings",
+      "original_file_sha256": "f3ecd9d209b1022c4728f0bfe19990b27f0a43437ea1ec6c1deacc79cf8ce76e",
+      "replica_path": "replica/Sources/PastoCore/Resources/ko.lproj/Localizable.strings",
+      "value": "제목 없음",
+      "exact_match": true
+    },
+    {
+      "locale": "nl.lproj",
+      "original_path": "/Applications/Paste.app/Contents/Resources/PastePackages_PasteLocalization.bundle/Contents/Resources/nl.lproj/Localizable.strings",
+      "original_file_sha256": "b9d0bfa126c3daa6c3e0c2b239010a80c7c5ef801a37138d5a1a566437a77c99",
+      "replica_path": "replica/Sources/PastoCore/Resources/nl.lproj/Localizable.strings",
+      "value": "Naamloos",
+      "exact_match": true
+    },
+    {
+      "locale": "pl.lproj",
+      "original_path": "/Applications/Paste.app/Contents/Resources/PastePackages_PasteLocalization.bundle/Contents/Resources/pl.lproj/Localizable.strings",
+      "original_file_sha256": "3d26db8ba13fbe7818132a979bb0167be873392e9b54f37a53a88f4ce05956f1",
+      "replica_path": "replica/Sources/PastoCore/Resources/pl.lproj/Localizable.strings",
+      "value": "Bez nazwy",
+      "exact_match": true
+    },
+    {
+      "locale": "pt-BR.lproj",
+      "original_path": "/Applications/Paste.app/Contents/Resources/PastePackages_PasteLocalization.bundle/Contents/Resources/pt-BR.lproj/Localizable.strings",
+      "original_file_sha256": "94db215d932c088f659417c1c34d190296aeee265466e27a3b827205cff89d4f",
+      "replica_path": "replica/Sources/PastoCore/Resources/pt-BR.lproj/Localizable.strings",
+      "value": "Sem Título",
+      "exact_match": true
+    },
+    {
+      "locale": "pt-PT.lproj",
+      "original_path": "/Applications/Paste.app/Contents/Resources/PastePackages_PasteLocalization.bundle/Contents/Resources/pt-PT.lproj/Localizable.strings",
+      "original_file_sha256": "9ca4fd0c67cc494711ff5803279f59243f8bfdccd4680c908d84c053dd152c39",
+      "replica_path": "replica/Sources/PastoCore/Resources/pt-PT.lproj/Localizable.strings",
+      "value": "Sem Título",
+      "exact_match": true
+    },
+    {
+      "locale": "ru.lproj",
+      "original_path": "/Applications/Paste.app/Contents/Resources/PastePackages_PasteLocalization.bundle/Contents/Resources/ru.lproj/Localizable.strings",
+      "original_file_sha256": "b37e20057d2a4d6bfabe54fe737bfe17d3c52a0c1cbc46ed6c1acfbc2bbf6dab",
+      "replica_path": "replica/Sources/PastoCore/Resources/ru.lproj/Localizable.strings",
+      "value": "Без названия",
+      "exact_match": true
+    },
+    {
+      "locale": "zh-Hans.lproj",
+      "original_path": "/Applications/Paste.app/Contents/Resources/PastePackages_PasteLocalization.bundle/Contents/Resources/zh-Hans.lproj/Localizable.strings",
+      "original_file_sha256": "90eb31a3ba9ed1ebff61ff8600a61f2bce4e176ab2eefa12c4b3ddc15b64b85b",
+      "replica_path": "replica/Sources/PastoCore/Resources/zh-Hans.lproj/Localizable.strings",
+      "value": "未命名",
+      "exact_match": true
+    },
+    {
+      "locale": "zh-Hant.lproj",
+      "original_path": "/Applications/Paste.app/Contents/Resources/PastePackages_PasteLocalization.bundle/Contents/Resources/zh-Hant.lproj/Localizable.strings",
+      "original_file_sha256": "91712b845fc301ebfcf5e122269a084dd875bcb381a04be23cbe838103832454",
+      "replica_path": "replica/Sources/PastoCore/Resources/zh-Hant.lproj/Localizable.strings",
+      "value": "未命名",
+      "exact_match": true
+    }
+  ],
+  "actual_consumers": [
+    {
+      "path": "replica/Sources/PastoCore/OriginalPinboardTitle.swift",
+      "line": 6,
+      "call": "value.isEmpty ? String(localized: OriginalPreviewLocalization.f_1001c6aa4()) : value"
+    },
+    {
+      "path": "replica/Sources/PastoCore/ClipboardStore.swift",
+      "line": 708,
+      "call": "OriginalPinboardTitle.normalizedRename(rawName)"
+    },
+    {
+      "path": "replica/Sources/Pasto/UI/PanelViews.swift",
+      "line": 172,
+      "call": "state.store.preferences.historyTitle = OriginalPinboardTitle.normalizedRename(value)"
+    }
+  ],
+  "registration_recommendation": "可登记有限本地化getter合同；与已有同类getter相同独立bundle适配，17locale keyvalues原样；不含renameUI/CoreData父或Bundle对象identity",
+  "new_complete_registered_by_this_review": 0,
+  "functional_tests_executed": false,
+  "application_executed": false,
+  "source_or_ledger_modified": false,
+  "build_binding": {
+    "manifest": ".local/gap-build-complete.json",
+    "manifest_sha256": "fd8ee97248766a4cc8f5711b018cf05d71bf8a74c9521deb952046f410e41488",
+    "log": ".local/gap-build-80.log",
+    "source_sha256": "0163cc854b291a3341675ea525903141dc764dda4a2791b513f4a9c4515632f1",
+    "compiled_manifest_source_match": true
+  }
+}

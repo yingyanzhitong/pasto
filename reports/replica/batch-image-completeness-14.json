@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "scope": "前轮未覆盖的四个已有全文预览内容读写入口；只读成功原C和生产消费者，区分纯转发与含执行器诊断的类别桥。",
+  "counts": { "total": 4, "complete": 2, "gap": 0, "uncertain": 2 },
+  "records": [
+    {
+      "function_id": "Paste:0x100212ccc",
+      "status": "complete",
+      "original": { "path": "decompiled/Paste/part-0180.c", "start_line": 1445, "address_range": "0x100212ccc..<0x100212d08" },
+      "current_implementations": [ { "path": "replica/Sources/PastoCore/OriginalPreviewAttributedText.swift", "start_line": 133, "end_line": 135, "symbol": "public static func f_100212ccc(editor:)" } ],
+      "criterion": "原取得已有lazy textView后调用其平台attributedText getter并返回，不复制返回内容、不设typingAttributes或重置编辑状态。当前显式传入同实际editor，直接转发f0f6ef8返回其值。这里完整仅指这层转发/对象传递，lazy对象创建及被调ObjC getter执行器桥另列，不因本条complete消除它们的未知。",
+      "actual_consumer": "OriginalReplicaPreviewAdapter.swift第307行真实提交保存用该getter读取当前editor全文，后传Store.updateRichTextItem，不使用过期编辑副本代替。",
+      "limitations": "仅委托已有原生editor读取的有限转发；不升级原lazy构造和f0f6ef8整入口。"
+    },
+    {
+      "function_id": "Paste:0x100212e78",
+      "status": "complete",
+      "original": { "path": "decompiled/Paste/part-0180.c", "start_line": 1550, "address_range": "0x100212e78..<0x100212e9c" },
+      "current_implementations": [ { "path": "replica/Sources/PastoCore/OriginalPreviewAttributedText.swift", "start_line": 146, "end_line": 149, "symbol": "public static func f_100212e78(_:editor:)" } ],
+      "criterion": "完整成功原体只调用f215cac再返回整数0，没有空文本、isEditable或isEditing guard，也不生成变更通知。当前同样传入同value/editor调用f215cac后返回0。f215cac内部typingAttributes/content顺序和其被调类别setter另有合同，不靠本转发体升级。",
+      "actual_consumer": "Adapter第231行初始化全文content；OriginalPreviewAttributedText.f3eb330第163行真实只读/编辑显示刷新都实际调用本方法。",
+      "limitations": "仅完整转发方法；不宣称整个编辑协议或下游actor桥完整。未运行赋值或委托通知。"
+    },
+    {
+      "function_id": "Paste:0x1000f6ef8",
+      "status": "uncertain",
+      "original": { "path": "decompiled/Paste/part-0084.c", "start_line": 4, "address_range": "0x1000f6ef8..<0x1000f6fec" },
+      "current_implementations": [ { "path": "replica/Sources/PastoCore/OriginalPreviewAttributedText.swift", "start_line": 110, "end_line": 112, "symbol": "public static func f_1000f6ef8(editor:)" } ],
+      "satisfied_business_contract": "非nil textStorage直接返回同对象，nil新建空NSTextStorage，不写回editor；当前转发上一批完整核过的f0f6fec，正常值/对象身份/nil全部满足。",
+      "criterion": "原本体与无检查的f0f6fec不同，先获取MainActor executor、调用task_isCurrentExecutor，失败reportUnexpectedExecutor(PastePlatform/NSTextView+UIKit.swift,line7)，随后执行getter并释放actor。当前仅enum @MainActor和普通Swift方法转发，现有源码不足以证明ObjC类别入口相同诊断/桥接，整原入口待证，不能因业务getter完成把两个地址都无条件当完整。",
+      "actual_consumer": "f212ccc真实提交读取；OriginalPreviewTextTraits.f207b54选区读取及Bridge.f214704内容回调均调用本方法，Adapter绑定回调到document.receiveRecoveredContent。",
+      "limitations": "正常业务已满足，未证的是整个原类别入口，不是已发现运行故障；没有编译/运行补证。"
+    },
+    {
+      "function_id": "Paste:0x1000f7054",
+      "status": "uncertain",
+      "original": { "path": "decompiled/Paste/part-0084.c", "start_line": 78, "address_range": "0x1000f7054..<0x1000f7138" },
+      "current_implementations": [ { "path": "replica/Sources/PastoCore/OriginalPreviewAttributedText.swift", "start_line": 119, "end_line": 123, "symbol": "public static func f_1000f7054(_:editor:)" } ],
+      "satisfied_business_contract": "原取当前textStorage，nil不操作，非nil setAttributedString传入内容，最终返回0。当前转发第9批已核完整的f0f7138，保留nil无操作、原storage修改和整数返回。",
+      "criterion": "原本体额外包含MainActor executor失败诊断，来源PastePlatform/NSTextView+UIKit.swift,line8；当前仅@MainActor源码尚无生成桥同分支证据，因此与底层f0f7138分开，整入口保持待证。没有把nil storage改为新建替换或吞掉正常输入。",
+      "actual_consumer": "f215cac在先写末字符typingAttributes后调用本方法；上游Adapter初始化及f3eb330真实刷新通过f212e78到达，不是孤立包装。",
+      "limitations": "不据此改动actor或类别注册；未运行文本赋值/测试。"
+    }
+  ],
+  "excluded_failed_addresses": [ "0x100ac35f8", "0x100ac746c" ],
+  "verification_scope": "只读成功伪码和生产源码后新增本报告。未改产品源码、台账和旧报告，无编译、parse、运行应用、测试、MCP或发布，未研究两失败地址。complete为明确限定的有限转发合同，不是整个目标链或一比一功能验收。"
+}

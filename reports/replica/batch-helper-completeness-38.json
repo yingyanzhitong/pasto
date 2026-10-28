@@ -1,0 +1,43 @@
+{
+  "kind": "static_reuse_review",
+  "records": [
+    {
+      "function_id": "Paste-Helper:0x100003170",
+      "status": "complete",
+      "original_path": "decompiled/Paste-Helper/part-0000.c",
+      "original_line": 1197,
+      "current_path": "replica/Sources/PastoHelper/HelperMain.swift",
+      "current_symbol": "launchAfterDelay",
+      "criterion": "三秒等待后弱捕获 Delegate 存活时重新检查主 App 进程；未运行则异步启动并处理结果，已运行则记录并返回；已运行分支不复位 isLaunching，也不再次读取共享运行标志。",
+      "consumer": "HelperDelegate.checkRunning 的弱引用 Task → launchAfterDelay → launchApplication；系统打开结果进入 completeLaunchAttempt。",
+      "source_sha256": "60d98b18e87390fcc6c8de6a43b75d9505bfd74b822eb9e0fc6dc58bbfd47e12",
+      "limitations": "源码级启动路径和分支合同；运行时调度、系统进程状态和机器级任务分配未验证。"
+    },
+    {
+      "function_id": "Paste-Helper:0x100003314",
+      "status": "complete",
+      "original_path": "decompiled/Paste-Helper/part-0000.c",
+      "original_line": 1276,
+      "current_path": "replica/Sources/PastoHelper/HelperMain.swift",
+      "current_symbol": "launchAfterDelay",
+      "criterion": "三秒等待后弱捕获 Delegate 存活时重新检查主 App 进程；未运行则异步启动并处理结果，已运行则记录并返回；已运行分支不复位 isLaunching，也不再次读取共享运行标志。",
+      "consumer": "HelperDelegate.checkRunning 的弱引用 Task → launchAfterDelay → launchApplication；系统打开结果进入 completeLaunchAttempt。",
+      "source_sha256": "60d98b18e87390fcc6c8de6a43b75d9505bfd74b822eb9e0fc6dc58bbfd47e12",
+      "limitations": "源码级启动路径和分支合同；运行时调度、系统进程状态和机器级任务分配未验证。"
+    },
+    {
+      "function_id": "Paste-Helper:0x10000385c",
+      "status": "complete",
+      "original_path": "decompiled/Paste-Helper/part-0000.c",
+      "original_line": 1531,
+      "current_path": "replica/Sources/PastoHelper/HelperMain.swift",
+      "current_symbol": "launchApplication",
+      "criterion": "启动前写入共享 pasteLaunchedByHelper 标志，解析主应用 URL，创建 OpenConfiguration 且 activates=false，记录路径后通过 NSWorkspace 异步启动。",
+      "consumer": "HelperDelegate.checkRunning 的弱引用 Task → launchAfterDelay → launchApplication；系统打开结果进入 completeLaunchAttempt。",
+      "source_sha256": "60d98b18e87390fcc6c8de6a43b75d9505bfd74b822eb9e0fc6dc58bbfd47e12",
+      "limitations": "源码级启动路径和分支合同；运行时调度、系统进程状态和机器级任务分配未验证。"
+    }
+  ],
+  "build_executed": false,
+  "tests_executed": false
+}

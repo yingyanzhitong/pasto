@@ -1,0 +1,62 @@
+{
+  "kind": "static_existing_date_review",
+  "generated_at": "2026-10-27T11:30:36.412565+00:00",
+  "source_sha256": {
+    "replica/Sources/PastoCore/OriginalDateDisplay.swift": "cd1ad2edda3b32d3e25f1750c7d790e3906869325480933e0d7d47c863500e5b",
+    "replica/Sources/Pasto/UI/PanelViews.swift": "8d21f76aef6761a3e07666782d4941efdda201c6ac087127875731e8742f0118"
+  },
+  "build_executed": false,
+  "tests_executed": false,
+  "records": [
+    {
+      "function_id": "Paste:0x100309c40",
+      "status": "complete",
+      "original_path": "decompiled/Paste/part-0252.c",
+      "original_line": 400,
+      "source_path": "replica/Sources/PastoCore/OriginalDateDisplay.swift",
+      "symbol": "f_100309c40",
+      "criterion": "新建RelativeDateTimeFormatter，设置named并写共享槽；getter通过静态once初始化。",
+      "consumer": "PanelViews.relativeTime与ReplicaCardDatePresentation使用f_100309e0c，间接调用四个helper；单次初始化由formatter getter消费。"
+    },
+    {
+      "function_id": "Paste:0x100309c7c",
+      "status": "complete",
+      "original_path": "decompiled/Paste/part-0252.c",
+      "original_line": 418,
+      "source_path": "replica/Sources/PastoCore/OriginalDateDisplay.swift",
+      "symbol": "f_100309c7c",
+      "criterion": "新建DateComponentsFormatter，依次关闭约略短语、最大单位数1、abbreviated并写共享槽。",
+      "consumer": "PanelViews.relativeTime与ReplicaCardDatePresentation使用f_100309e0c，间接调用四个helper；单次初始化由formatter getter消费。"
+    },
+    {
+      "function_id": "Paste:0x100309cd0",
+      "status": "complete",
+      "original_path": "decompiled/Paste/part-0252.c",
+      "original_line": 438,
+      "source_path": "replica/Sources/PastoCore/OriginalDateDisplay.swift",
+      "symbol": "f_100309cd0",
+      "criterion": "新建DateFormatter，日期medium、时间short后写共享槽。",
+      "consumer": "PanelViews.relativeTime与ReplicaCardDatePresentation使用f_100309e0c，间接调用四个helper；单次初始化由formatter getter消费。"
+    },
+    {
+      "function_id": "Paste:0x100309d18",
+      "status": "complete",
+      "original_path": "decompiled/Paste/part-0252.c",
+      "original_line": 457,
+      "source_path": "replica/Sources/PastoCore/OriginalDateDisplay.swift",
+      "symbol": "f_100309d18",
+      "criterion": "按年月日时分秒依次选择首个非nil正单位，全部缺失或非正返回nil。",
+      "consumer": "PanelViews.relativeTime与ReplicaCardDatePresentation使用f_100309e0c，间接调用四个helper；单次初始化由formatter getter消费。"
+    },
+    {
+      "function_id": "Paste:0x100309e0c",
+      "status": "complete",
+      "original_path": "decompiled/Paste/part-0252.c",
+      "original_line": 501,
+      "source_path": "replica/Sources/PastoCore/OriginalDateDisplay.swift",
+      "symbol": "f_100309e0c",
+      "criterion": "三类输入：named相对本地化；abbreviated计算六单位、选首正值、结果为空回退named；absolute调用日期格式器。",
+      "consumer": "PanelViews.relativeTime与ReplicaCardDatePresentation使用f_100309e0c，间接调用四个helper；单次初始化由formatter getter消费。"
+    }
+  ]
+}

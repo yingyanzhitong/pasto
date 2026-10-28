@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "scope": "收口已有预览工具栏完整尺寸约束方法；两个合法size分支与共用数组builder读取齐全，不为数量扩查父构造。",
+  "counts": { "total": 1, "complete": 1, "gap": 0, "uncertain": 0 },
+  "source_binding": { "path": "replica/Sources/PastoCore/OriginalToolbarButton.swift", "historical_sha256": "f4c3920e5f5cd9f515bbe0cce530f4f8f6335b14450f75e471f0272e19412165", "current_read_sha256": "f4c3920e5f5cd9f515bbe0cce530f4f8f6335b14450f75e471f0272e19412165", "whole_file_unchanged": true },
+  "records": [
+    {
+      "function_id": "Paste:0x10023e080",
+      "status": "complete",
+      "historical_contract_reusable": true,
+      "historical_evidence": "reports/function-migration/Paste-0x10023e080.json",
+      "original": { "path": "decompiled/Paste/part-0196.c", "start_line": 256, "address_range": "0x10023e080..<0x10023e548" },
+      "supporting_original": { "path": "decompiled/Paste/part-0196.c", "start_line": 393, "address_range": "0x10023e548..<0x10023e720" },
+      "current_reference": { "path": "replica/Sources/PastoCore/OriginalToolbarButton.swift", "start_line": 145, "end_line": 157, "symbol": "public func f_10023e080() -> [NSLayoutConstraint]" },
+      "criterion": "原size==1为large：width==32随后height==32，padding0；其它合法normal0：height==22随后width>=32，padding8。随后同stack左右padding约束、stack.centerY==button.centerY，再arrow.width==8/height==8，返回全部有序约束。当前两分支等式/不等式、尺寸值、左右相反常量和追加顺序完全对应，不将normal固定宽或large最小宽，不隐藏箭头时删尺寸约束。原f23e548仅把已有constraint数组保序包装进builder existential列表，未添加新约束或条件，因此直接Swift数组拼接复用同值返回，而非遗漏看不见的布局。原本体无executor检查。",
+      "constant_evidence": "完整成功C原double bits：4040000000000000=32、4036000000000000=22、4020000000000000=8；分支padding large0、normal8，真实anchor selector明确equalToConstant与greaterThanOrEqualToConstant。",
+      "actual_consumer": "OriginalToolbarButton.init第63行真实NSLayoutConstraint.activate(f23e080())，Header/Edit/Save/Share、文本格式和图片旋转按钮走该构造。当前读到的实际调用主要使用默认normal，large分支在生产方法中明确存在且与原静态匹配，不声称已运行large按钮。",
+      "limitations": "只确认约束值/数组构造方法，不升级父Button初始化、tracing/事件/样式或builder生成ABI。第21批updateLayer缺super仍为独立gap，文件未变不消除该缺口。本轮没有构造/布局按钮或运行测试。"
+    }
+  ],
+  "excluded_failed_addresses": [ "0x100ac35f8", "0x100ac746c" ],
+  "verification_scope": "仅新增本报告，无产品源码、台账或历史报告修改，无编译、parse、运行应用、测试、MCP或发布，未读取指定失败函数。历史build_succeeded仅为历史，complete限有限约束方法，不是一比一功能验收或当前产物证明。"
+}

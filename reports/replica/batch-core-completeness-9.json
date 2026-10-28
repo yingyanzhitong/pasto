@@ -1,0 +1,98 @@
+{
+  "review_kind": "read_only_existing_clipboard_initialization_and_protocol_forwarding_batch",
+  "scope": "此前Core八批未审的八个已有对象初始化、编解码协议转发及CodingKey默认描述方法；不把转发方法完整等同于其业务被调函数全部正确。",
+  "counts": { "reviewed": 8, "complete": 7, "gap": 0, "uncertain": 1, "new_migrations_claimed": 0 },
+  "inputs": {
+    "ledger": "replica/function-map.json",
+    "success_index": "reports/Paste/function-index.json",
+    "original_pseudocode": "decompiled/Paste/part-0282.c",
+    "original_arm_image": ".local/targets/Paste.arm64",
+    "current_source": "replica/Sources/PastoCore/OriginalPasteboard.swift",
+    "local_sdk_codingkey_interface": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib/swift/Swift.swiftmodule/arm64e-apple-macos.swiftinterface:3745",
+    "historical_generated_body_review": ".local/pasteboard-build15-static-review.json"
+  },
+  "limits": [
+    "只读成功原C、必要有界原ARM、现有源码与本机Swift协议接口；未改产品源码、台账或用户数据，仅写本报告。",
+    "未编译、parse、运行应用、功能或MCP测试，未运行验证脚本或发布。",
+    "没有核验当前编译产物地址/metadata/witness slot，complete限源码语言层有限合同，不是当前机器ABI绑定。",
+    "历史build15存在生成入口、析构及witness证明，但不能无条件当作当前源码或当前构建的二进制证明。",
+    "已证NSCoding data/dataByType不一致仍存在于f37f31c/f37f520；本批纯ObjC转发完整不消除该缺口，也不声明原归档可互读。",
+    "本批7/8不是项目总体迁移率；已有实现复用，不新增迁移计数。",
+    "指定失败地址0x100ac35f8、0x100ac746c未分析。"
+  ],
+  "functions": [
+    {
+      "function_id": "Paste:0x10037dd6c", "status": "complete",
+      "original_path": "decompiled/Paste/part-0282.c", "original_line": 1192,
+      "current_path": "replica/Sources/PastoCore/OriginalPasteboard.swift",
+      "current_symbol": "OriginalPasteboardItem.init() / NSObject ObjC initializer",
+      "criterion": "原ObjC init先把types置空数组、dataByType置空字典，随后调用NSObject super.init并返回其结果；当前两存储属性相同空默认值，override init只super.init，无额外存储或动作。源码初始化合同一致，不要求沿用原类名/字段偏移才可复用。",
+      "consumer": "f37c6d4/f37c7bc工厂、capture及restore真实构造OriginalPasteboardItem；NSObject子类override initializer为真实构造入口。",
+      "boundary": "仅初始化值与super调用合同；不把原Runtime类名、归档wire或当前ObjC methodlist地址计完整。"
+    },
+    {
+      "function_id": "Paste:0x10037df40", "status": "uncertain",
+      "original_path": "decompiled/Paste/part-0282.c", "original_line": 1310,
+      "current_path": "replica/Sources/PastoCore/OriginalPasteboard.swift",
+      "current_symbol": "OriginalPasteboardItem compiler-generated .cxx_destruct",
+      "criterion": "原完整体只依次释放types数组与dataByType字典两个Swift桥接对象。当前仅这两个Swift引用存储、没有自定义deinit或新增拥有对象，ARC会清理两字段。",
+      "unresolved": "源码本身没有显式规定生成.cxx_destruct入口及两字段释放顺序。本批不编译且未绑定当前生成体；旧build15已证明当时的完整析构顺序，但不能凭旧报告把当前释放顺序、无其他生成动作和methodlist绑定签满。保uncertain不是已证泄漏或析构错误。",
+      "consumer": "真实表示项由捕获/恢复/解码构造并在数组或字典释放后走ARC；不新增空deinit包装。"
+    },
+    {
+      "function_id": "Paste:0x10037e158", "status": "complete",
+      "original_path": "decompiled/Paste/part-0282.c", "original_line": 1382,
+      "current_path": "replica/Sources/PastoCore/OriginalPasteboard.swift",
+      "current_symbol": "OriginalPasteboardItem.init(from:) allocating initializer",
+      "criterion": "原有限体分配本类再调用严格Decoder初始化，不捕获/替换其错误；当前required throws init提供同一真实类分配和初始化路径，不额外构造默认成功值。被调f37e198在前批已核完整，不在本批重复加覆盖。",
+      "arm_detail": "37e168保存原x21；37e174 objc_allocWithZone；37e178把新实例作Swift self；37e180恢复原error寄存器，37e184调用f37e198后直接返回其结果/错误。",
+      "consumer": "PropertyListDecoder/JSONDecoder<[OriginalPasteboardItem]>在恢复canonical表示、导入和结构比较中实际调用所需Decodable构造。",
+      "boundary": "有限分配/初始化/错误传播，不声明当前分配入口机器码或ObjC ABI逐字相同。"
+    },
+    {
+      "function_id": "Paste:0x10037e44c", "status": "complete",
+      "original_path": "decompiled/Paste/part-0282.c", "original_line": 1476,
+      "current_path": "replica/Sources/PastoCore/OriginalPasteboard.swift",
+      "current_symbol": "OriginalPasteboardItem Decodable.init(from:) protocol witness",
+      "criterion": "原witness分配实例并调用Decoder initializer，只有成功才发布返回对象；错误保留且不发布半成品。当前声明Codable和required throws init，无自定义吞错、可失败nil替代或提前保存self，Swift Decodable构造语义同样只在成功时返回值。该有限协议语义不等同于当前witness地址已验证。",
+      "arm_detail": "37e464保存返回buffer x8→x19，37e46c分配，37e47c调用f37e198；37e480 CBNZ x21跳过37e484 STR x0,[x19]，完整原成功发布/错误不发布路径明确。",
+      "consumer": "实际JSON/PropertyList解码表示数组通过真实Codable conformance进入，而不是没有调用者的独立wrapper。"
+    },
+    {
+      "function_id": "Paste:0x10037f4f8", "status": "complete",
+      "original_path": "decompiled/Paste/part-0282.c", "original_line": 2143,
+      "current_path": "replica/Sources/PastoCore/OriginalPasteboard.swift",
+      "current_symbol": "OriginalPasteboardItem.init?(coder:) ObjC NSCoding entry",
+      "criterion": "原是initWithCoder:到同一Swift可失败coder initializer的ObjC桥接，不另处理键/数据、返回原initializer的成功对象或nil。当前NSObject子类NSSecureCoding所需required init?(coder:)提供该真实协议入口；转发语义保持，不把被调initializer的数据键错误隐藏。",
+      "arm_detail": "原C返回param3失真：完整ARM37f504保存receiver作Swift self；37f508取coder x2为参数并在37f50c retain；37f510调用f37f31c后37f51c直接RET，x0为callee返回对象/nil，非原coder参数。",
+      "consumer": "OriginalPasteboardArchive的NSKeyedUnarchiver真实调用；f37f31c原data键对当前dataByType的明确gap仍由前批报告保留。",
+      "boundary": "本条只核自动ObjC桥接的有限转发，不声称当前机器ARC序列/类名与原完全相同。"
+    },
+    {
+      "function_id": "Paste:0x10037f650", "status": "complete",
+      "original_path": "decompiled/Paste/part-0282.c", "original_line": 2194,
+      "current_path": "replica/Sources/PastoCore/OriginalPasteboard.swift",
+      "current_symbol": "OriginalPasteboardItem.encode(with:)",
+      "criterion": "原ObjC encodeWithCoder:全体仅把coder转发到f37f520然后返回；当前NSCoding encode(with:)同一委托，无其他数据转换、guard或错误吞噬。底层f37f520键不一致依旧是gap，不能由转发合同完整推导业务编码正确。",
+      "consumer": "OriginalPasteboardArchive/OriginalPasteboardChecksums的NSKeyedArchiver实际通过协议入口调用。"
+    },
+    {
+      "function_id": "Paste:0x10037def0", "status": "complete",
+      "original_path": "decompiled/Paste/part-0282.c", "original_line": 1284,
+      "current_path": "replica/Sources/PastoCore/OriginalPasteboard.swift",
+      "current_symbol": "OriginalPasteboardItem.CodingKeys.debugDescription default CodingKey witness",
+      "criterion": "原成功完整体取得本CodingKeys的CodingKey witness，直接调用Swift.CodingKey默认debugDescription，无自定义拼字。当前私有enum CodingKeys:String,CodingKey同名、同两个合法字段、无覆盖debugDescription，依协议实际采用同一默认实现；未手写猜测formatter。",
+      "consumer": "该CodingKeys真实用于表示项Codable容器及codingPath/error上下文；不是独立无人使用枚举。",
+      "boundary": "本机Swift接口3745..3760确认CodingKey继承CustomDebugStringConvertible并提供默认getter；仅签默认委托合同，不猜SDK内部格式或把旧build15 witness入口冒当前地址绑定。"
+    },
+    {
+      "function_id": "Paste:0x10037df18", "status": "complete",
+      "original_path": "decompiled/Paste/part-0282.c", "original_line": 1298,
+      "current_path": "replica/Sources/PastoCore/OriginalPasteboard.swift",
+      "current_symbol": "OriginalPasteboardItem.CodingKeys.description default CodingKey witness",
+      "criterion": "原完整体直接取得本CodingKey witness后转发Swift.CodingKey默认description；当前实际CodingKeys没有自定义description，采用协议默认getter，原key名称/optional整数键语义保持。",
+      "consumer": "真实Codable keyed容器使用该枚举；默认description可经CodingKey协议及解码诊断访问。",
+      "boundary": "只核默认协议委托，不将SDK内部文本格式、类型metadata或当前二进制conformance槽算作本批已验证。"
+    }
+  ]
+}

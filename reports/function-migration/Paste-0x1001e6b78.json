@@ -2,10 +2,10 @@
   "schema_version": 1,
   "kind": "static_code_migration",
   "function_id": "Paste:0x1001e6b78",
-  "reviewed_at": "2026-10-27T03:59:45.653489+00:00",
+  "reviewed_at": "2026-10-27T04:26:38.057220+00:00",
   "original_binary_sha256": "871f00354fbb1c165d858a98e6d19d6f43cb9d3f9f958b3e07c7f07eb5c19afb",
   "source_sha256": {
-    "replica/Sources/PastoCore/OriginalPreviewLocalization.swift": "822147a77e05ba31b0425cf0de5ca3d4267a0fb3c7f737c0d44f98deb1c566a7",
+    "replica/Sources/PastoCore/OriginalPreviewLocalization.swift": "0163cc854b291a3341675ea525903141dc764dda4a2791b513f4a9c4515632f1",
     "replica/Sources/PastoCore/Resources/cs.lproj/Localizable.stringsdict": "cad4a0663c716b0a571317b5d99b8855f3076469a39f1bfeb1ce05e4ae6f2a8a",
     "replica/Sources/PastoCore/Resources/da.lproj/Localizable.stringsdict": "2fbe4e3d9ae3f2dadad058b3fe4375dd56a346ec26ec191e6f347b0333ea2b25",
     "replica/Sources/PastoCore/Resources/de.lproj/Localizable.stringsdict": "c6fc20ab4a366deb148f095d770cf6f90c94eb246ac497812103b4f5e8aa6b34",
@@ -26,7 +26,7 @@
   },
   "build_succeeded": true,
   "build_command": "bash replica/scripts/build-app.sh",
-  "compiled_app_binary_sha256": "c6ebd121b3cb9b31f2d4d3f11e543fe92d6557791b1117d311549d61c3a17562",
+  "compiled_app_binary_sha256": "d62d3ee4392cf0f4659b63a21018f15e835436d65324121ff3088b3abb7fa499",
   "compiled_product": "Pasto",
   "functional_regression_executed": false,
   "equivalence_verified": false,
@@ -34,7 +34,7 @@
   "implementation_origin": "newly_migrated",
   "source_review": "192文件精确可逆改名证明及原证据不变守卫通过；菜单/产品/资源路径/错误域和临时前缀例外已逐文件审阅。保持本地址已有有限契约，新模块build76编译及当前源码摘要绑定；详见reports/replica/pasto-brand-build76.json。不将本轮静态检查称为差分运行或完整父功能等价。",
   "rename_audit": "reports/replica/pasto-brand-build76.json",
-  "build_snapshot": "reports/replica/dev52-static-build78.json",
+  "build_snapshot": "reports/replica/dev53-localization-retention-build80.json",
   "original_pseudocode": {
     "path": "decompiled/Paste/part-0155.c",
     "line": 880
@@ -46,9 +46,9 @@
     "sha256": "03dd1113f45aa39c75237ab809f0a5fa2d53848513f28507a10c9dd3c6c04694"
   },
   "compiled_provenance_refresh": {
-    "review": "已核对完整实现引用源码摘要未变化、符号及原地址绑定；仅刷新本次静态编译来源。",
-    "source_unchanged": true,
-    "previous_compiled_app_binary_sha256": "0357ba6a42a608c8746c59654ece36c4847a2566601f5bd187f83f4e7e4da6e5",
+    "review": "逐地址核对原函数伪码、getter 方法体和各语言原资源键值未变；仅更新当前静态构建来源。",
+    "source_unchanged": false,
+    "previous_compiled_app_binary_sha256": "c6ebd121b3cb9b31f2d4d3f11e543fe92d6557791b1117d311549d61c3a17562",
     "current_compiled_boundary_verified": false,
     "functional_tests_executed": false
   }

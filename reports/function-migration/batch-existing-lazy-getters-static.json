@@ -1,0 +1,52 @@
+{
+  "kind": "static_existing_code_comparison",
+  "reviewed_at": "2026-10-27T11:11:10.916959+00:00",
+  "build_executed": false,
+  "tests_executed": false,
+  "functions": [
+    {
+      "function_id": "Paste:0x1000493ec",
+      "state": "migrated",
+      "contract": "懒加载NSScrollView；缓存存在返回同一实例，否则依次启用bounds通知和主轴滚动，关闭横纵滚动条、自动隐藏及背景，设置无边框、layer后缓存并返回。",
+      "implementations": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchSuggestionsMenu.swift",
+          "symbol": "private func f_1000493ec"
+        }
+      ],
+      "source": {
+        "path": "decompiled/Paste/part-0026.c",
+        "line": 2251
+      },
+      "review": "原C的缓存命中、创建、属性设置及返回分支和当前源码逐项一致；scrollView属性由构造、布局、可见区域和bounds观察使用。",
+      "remaining": "只确认此独立getter合同，不升级Scroller、indicator父类的布局和生命周期。",
+      "migration_evidence": "reports/function-migration/batch-existing-lazy-getters-static.json",
+      "source_sha256": {
+        "replica/Sources/Pasto/UI/ReplicaSearchSuggestionsMenu.swift": "fe798a4855021674aef0c99a6c1287375ddcbc12a92f3d981cf085952e51090b"
+      },
+      "original_pseudocode_sha256": "a82fc9808a0c589d583f00b2a6e1ca2a5f989aad3233ed3d7cd596d4da07b1fe"
+    },
+    {
+      "function_id": "Paste:0x10004afcc",
+      "state": "migrated",
+      "contract": "懒加载NSImageView；缓存存在返回同一实例，否则创建、缓存并返回。",
+      "implementations": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchSuggestionsMenu.swift",
+          "symbol": "private func f_10004afcc"
+        }
+      ],
+      "source": {
+        "path": "decompiled/Paste/part-0027.c",
+        "line": 613
+      },
+      "review": "原C的缓存命中、创建、属性设置及返回分支和当前源码逐项一致；image属性由指示器初始化、符号设置和布局使用。",
+      "remaining": "只确认此独立getter合同，不升级Scroller、indicator父类的布局和生命周期。",
+      "migration_evidence": "reports/function-migration/batch-existing-lazy-getters-static.json",
+      "source_sha256": {
+        "replica/Sources/Pasto/UI/ReplicaSearchSuggestionsMenu.swift": "fe798a4855021674aef0c99a6c1287375ddcbc12a92f3d981cf085952e51090b"
+      },
+      "original_pseudocode_sha256": "cfca9e96320e4c92645f74cdb6fbcfe043a15ca89f8cd95b86a86e886d795505"
+    }
+  ]
+}

@@ -1,0 +1,161 @@
+{
+  "schema_version": 1,
+  "scope": "前3批未纳入的4个既有OCR方法与PNG/旋转方法，只读比对当前源码及成功原C；不修改原函数台账。",
+  "records": [
+    {
+      "function_id": "Paste:0x1002d4738",
+      "status": "complete",
+      "mapping_state_observed": "migrated",
+      "original": {
+        "path": "decompiled/Paste/part-0235.c",
+        "start_line": 335,
+        "end_line": 375
+      },
+      "current_implementations": [
+        {
+          "path": "replica/Sources/PastoCore/OCR.swift",
+          "symbol": "f_1002d4738"
+        }
+      ],
+      "criterion": "原Data多种表示判断空值后抛原OCR枚举错误；非空在autoreleasePoolPush/Pop内委托f2d4830，成功和throw都pop。当前isEmpty守卫+try autoreleasepool同分支，保调用者maximumDimension；CustomNSError原domain/code0/userInfo空由现明确实现。只确认错误/委托/词投影合同，RecognizedTextDocument额外全文为本地扩展，不声称原API/ABI同型。",
+      "actual_consumer": "recognizeImageDocument→recognizeDocument Task.detached→f2d4738→f2d4830",
+      "limitations": "仅静态有限业务审阅，不声称系统识别结果、API/ABI或产品功能运行等价。"
+    },
+    {
+      "function_id": "Paste:0x1002d4830",
+      "status": "complete",
+      "mapping_state_observed": "migrated",
+      "original": {
+        "path": "decompiled/Paste/part-0235.c",
+        "start_line": 376,
+        "end_line": 460
+      },
+      "current_implementations": [
+        {
+          "path": "replica/Sources/PastoCore/OCR.swift",
+          "symbol": "f_1002d4830"
+        }
+      ],
+      "criterion": "先f2d4ba0，nil返回空词；成功创建VNRecognizeTextRequest并依序自动语言/纠错/后台true，handler preparedData/options空，perform抛出错误向外传播。results nil为空数组，非nil委托f2d576c。当前原词数组分支及调用顺序满足；另加行文本投影明确独立扩展。f2d576c完整内部索引边界另列待证，不用callee名称代替其审阅。",
+      "actual_consumer": "recognizeDocument与Store离线图片OCR生产路径",
+      "limitations": "仅静态有限业务审阅，不声称系统识别结果、API/ABI或产品功能运行等价。"
+    },
+    {
+      "function_id": "Paste:0x1002d4ba0",
+      "status": "complete",
+      "mapping_state_observed": "migrated",
+      "original": {
+        "path": "decompiled/Paste/part-0235.c",
+        "start_line": 479,
+        "end_line": 667
+      },
+      "current_implementations": [
+        {
+          "path": "replica/Sources/PastoCore/OCR.swift",
+          "symbol": "f_1002d4ba0"
+        }
+      ],
+      "criterion": "CGImageSource及首properties缺失/字典或Int转换失败nil；宽高都必须>10。max(width,height)<=maximumDimension直接保输入Data；否则三项ImageIO选项always=true/transform=true/maxPixelSize原显式Int，不擅拒零负。thumbnail/destination/finalize失败nil，成功单图PNG及nil附加属性。当前每个分支相同；默认1024属于上层工厂，不并入本参数化方法。",
+      "actual_consumer": "f2d4830图像准备（实际离线OCR调用）",
+      "limitations": "仅静态有限业务审阅，不声称系统识别结果、API/ABI或产品功能运行等价。"
+    },
+    {
+      "function_id": "Paste:0x1002d576c",
+      "status": "uncertain",
+      "mapping_state_observed": "migrated",
+      "original": {
+        "path": "decompiled/Paste/part-0235.c",
+        "start_line": 1076,
+        "end_line": 1434
+      },
+      "current_implementations": [
+        {
+          "path": "replica/Sources/PastoCore/OCR.swift",
+          "symbol": "f_1002d576c"
+        }
+      ],
+      "criterion": "正常路径已对照：空观察空数组；每观察只首candidate，whitespacesAndNewlines∪punctuation拆分、丢空词、保置信度和可空boundingBox，当前同路径。原C的String.Index寄存器复用使range搜索后的cursor具体推进及boundingBox错误块（原Ghidra明确删除2d5ccc）不完整。本轮未取得该段完整ARM，不能凭历史有限差分用例或现函数名把所有重复词/Unicode范围/异常路径判完整；未发现确定差异。",
+      "actual_consumer": "f2d4830→document.words保存→ReplicaSearchIndex词数组投影；直接图中文字复制保原全文兼容链",
+      "limitations": "仅静态有限业务审阅，不声称系统识别结果、API/ABI或产品功能运行等价。"
+    },
+    {
+      "function_id": "Paste:0x1003c89c8",
+      "status": "complete",
+      "mapping_state_observed": "migrated",
+      "original": {
+        "path": "decompiled/Paste/part-0300.c",
+        "start_line": 585,
+        "end_line": 642
+      },
+      "current_implementations": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPasteboardImageEncoding.swift",
+          "symbol": "public static func f_1003c89c8(",
+          "line": 5
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalPasteboard.swift",
+          "symbol": "f_10037d8c8(OriginalPasteboardImageEncoding.f_1003c89c8(image), forType: type)",
+          "line": 90
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaImagePreviewContent.swift",
+          "symbol": "OriginalPasteboardImageEncoding.f_1003c89c8(image)",
+          "line": 198
+        }
+      ],
+      "criterion": "CGImage缺失nil；bitmap尺寸以bitmap.width/image.width为scale，宽高均除scale，不新增zero/NaN保护。PNG raw4和空properties，representation nil返回nil。当前真实NSBitmapImageRep(cgImage:)和尺寸公式/representation匹配，非RGB/JPEG误替。只判SDK构造合同下的有限方法。",
+      "actual_consumer": "OriginalPasteboard写图、metadata PNG分支及ReplicaImagePreviewContent.encodedPayloads",
+      "limitations": "仅静态有限业务审阅，不声称系统识别结果、API/ABI或产品功能运行等价。"
+    },
+    {
+      "function_id": "Paste:0x100207054",
+      "status": "uncertain",
+      "mapping_state_observed": "migrated",
+      "original": {
+        "path": "decompiled/Paste/part-0171.c",
+        "start_line": 4,
+        "end_line": 130
+      },
+      "current_implementations": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaImagePreviewContent.swift",
+          "symbol": "static func f_100207054(",
+          "line": 182
+        }
+      ],
+      "criterion": "当前先保存原size，目标width=原height/height=原width，degree*pi/180、三次中心变换、可选context插值raw3、copy/fraction1、unlock返回；原C能确认角度/插值/CTM/绘制/返回主链。但C在initWithSize及源rect的向量寄存器反推损坏，本轮没有读到此函数对应完整原ARM证据，无法仅据C独立确认所有尺寸/向量槽。历史报告合同可参考，不能用其migrated状态替代本次证明；未发现确定代码差异。",
+      "actual_consumer": "ReplicaImagePreviewContent.rotateDisplayedImage→左右旋转/Undo反向操作",
+      "limitations": "仅静态有限业务审阅，不声称系统识别结果、API/ABI或产品功能运行等价。"
+    }
+  ],
+  "counts": {
+    "total": 6,
+    "complete": 4,
+    "gap": 0,
+    "uncertain": 2
+  },
+  "evidence_context": [
+    ".local/dev53-ocr-contract-retention.json保留历史有限对照；本轮未执行其中历史构建/测试。",
+    "reports/function-migration/Paste-0x100207054.json仅作为历史合同背景，不作为本轮寄存器独立证明。"
+  ],
+  "constraints": {
+    "product_source_modified": false,
+    "ledger_modified": false,
+    "compiled": false,
+    "parsed": false,
+    "product_executed": false,
+    "functional_tests_executed": false,
+    "mcp_executed": false,
+    "new_disassembly_executed": false,
+    "skipped_failed_addresses": [
+      "0x100ac35f8",
+      "0x100ac746c"
+    ]
+  },
+  "limitations": [
+    "uncertain是本轮证据不足，不等于已发现行为缺陷，不自动降低function-map状态。",
+    "不将旧差分样本或旧构建成功描述为本轮新测试。",
+    "完整callee内部边界单独标注；caller仅按其自身控制流、参数与错误委托合同审阅。"
+  ]
+}

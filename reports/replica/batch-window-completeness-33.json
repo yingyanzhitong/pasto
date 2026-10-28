@@ -1,0 +1,210 @@
+{
+  "kind": "batch-window-completeness-33",
+  "scope": "3项此前window批次未覆盖的快捷键合法性、系统快捷键匹配和修饰文本方法，核完整成功C、原静态数据及必要ARM。",
+  "summary": {
+    "reviewed": 3,
+    "complete": 3,
+    "gap": 0,
+    "uncertain": 0
+  },
+  "activities": {
+    "product_source_edited": false,
+    "ledger_edited": false,
+    "compiled": false,
+    "product_run": false,
+    "tests_run": false,
+    "wrapper_added": false
+  },
+  "skipped_failed_addresses": [
+    "Paste:0x100ac35f8",
+    "Paste:0x100ac746c"
+  ],
+  "limitations": [
+    "完整仅指有限函数静态合同，不是Carbon系统注册、键盘录制或界面的运行验收。",
+    "SHA未变仅绑定历史证据，完整判定另依据原C、静态数据、必要ARM和实际消费者；历史build不冒充当前构建。",
+    "本轮不修改台账总数，3/3仅是局部批次结论，不是整体迁移率。"
+  ],
+  "functions": [
+    {
+      "function_id": "Paste:0x1001ebc2c",
+      "status": "complete",
+      "evidence": "完整C先比较20个固定功能键值；未命中时返回Command或Control存在，或Option位存在。当前19个functionKeyCodes加keyCode==90涵盖原20项，或modifierRawValue & 0x1c0000非零；Shift、其它位单独存在不能使普通键合法。Int键码无法转UInt32时仍按修饰位判定，未对负数或大键码增设否决。",
+      "original_static_data": {
+        "path": ".local/paste-arm64-static.bin",
+        "address": "0x100fb5788",
+        "file_offset": "0xfb5788",
+        "signed_int64_values": [
+          122,
+          120,
+          99,
+          118,
+          96,
+          97,
+          98,
+          100,
+          101,
+          109,
+          103,
+          111,
+          105,
+          107,
+          113,
+          106,
+          64,
+          79,
+          80,
+          90
+        ]
+      },
+      "actual_consumer": "KeyboardShortcut.isValidGlobal直接调用；OriginalShortcutRecorder.f1f132c在键显示非空且resolve validator后调用，失败beep并放行事件，成功才进入冲突验证。",
+      "original": {
+        "path": "decompiled/Paste/part-0158.c",
+        "line": 649
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutFunctions.swift",
+          "symbol": "f_1001ebc2c"
+        },
+        {
+          "path": "replica/Sources/PastoCore/KeyboardShortcut.swift",
+          "symbol": "isValidGlobal"
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutRecorder.swift",
+          "symbol": "f_1001f132c"
+        }
+      ],
+      "historical_evidence": {
+        "path": "reports/function-migration/Paste-0x1001ebc2c.json",
+        "sha256": "18a4fcafc8a59dbf0fb2daa7b14c00c971ef17873887adec8e9a4069c1e2a071",
+        "contract": "返回快捷键修饰合法性：F1…F20 无需修饰即合法；其余键须包含 Command、Control 或 Option 至少一位，Shift 和其他位不满足条件。",
+        "historical_build_snapshot": "reports/replica/dev52-static-build78.json",
+        "current_build_claim": false
+      },
+      "source_binding": {
+        "replica/Sources/PastoCore/OriginalShortcutFunctions.swift": {
+          "sha256": "82c57689dfb20e2c4c02cd3c4ca72cf40ee7a3fd650b5fa832d79589761a9058",
+          "historical_sha256": "82c57689dfb20e2c4c02cd3c4ca72cf40ee7a3fd650b5fa832d79589761a9058",
+          "unchanged": true
+        },
+        "replica/Sources/PastoCore/KeyboardShortcut.swift": {
+          "sha256": "eba51741928fc95619585980567b617d39f3c749564cddb5dff4bbd04bf189d6",
+          "historical_sha256": "eba51741928fc95619585980567b617d39f3c749564cddb5dff4bbd04bf189d6",
+          "unchanged": true
+        },
+        "replica/Sources/PastoCore/OriginalShortcutRecorder.swift": {
+          "sha256": "ba907c942f91fe336506e9a47576051f285bfce47ccd43315cb111aedbd237f2",
+          "historical_sha256": "ba907c942f91fe336506e9a47576051f285bfce47ccd43315cb111aedbd237f2",
+          "unchanged": true
+        }
+      }
+    },
+    {
+      "function_id": "Paste:0x1001ebf04",
+      "status": "complete",
+      "evidence": "完整原C按三个固定键条件转换NSNumber，要求code.integerValue等于输入Int键码、modifiers.unsignedIntegerValue等于f1e7d58输出Carbon值；通过后才返回enabled.boolValue，缺键、错类型、不匹配均false。当前guard与最终boolValue对应同值及分支。特别核本机Foundation.apinotes：ObjC intValue导入为Swift int32Value，integerValue才导入为Swift intValue；当前code.intValue并非32位截断。unsignedIntegerValue导入uintValue亦一致。原字典是值类型，提前取三个可选NSNumber不引入业务写入；当前guard短路不漏掉原失败输出。",
+      "sdk_static_evidence": {
+        "path": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/Foundation.framework/Headers/Foundation.apinotes",
+        "lines": [
+          477,
+          478,
+          490,
+          491,
+          492,
+          493
+        ],
+        "fact": "intValue->int32Value; integerValue->intValue; unsignedIntegerValue->uintValue"
+      },
+      "actual_consumer": "OriginalShortcutValidation.f1ebce4对CopySymbolicHotKeys所得字典数组逐项contains调用；命中返回系统冲突提示，不命中继续真实NSApp.mainMenu递归验证。",
+      "original": {
+        "path": "decompiled/Paste/part-0158.c",
+        "line": 791
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutFunctions.swift",
+          "symbol": "f_1001ebf04"
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutValidation.swift",
+          "symbol": "f_1001ebce4"
+        }
+      ],
+      "historical_evidence": {
+        "path": "reports/function-migration/Paste-0x1001ebf04.json",
+        "sha256": "7e03a73f553403b9ccf576df0d5436c392f0c6c22be6968b2ad67cff950b04ce",
+        "contract": "匹配单个系统符号快捷键字典：kHISymbolicHotKeyCode 必须可转 NSNumber 且 integerValue 等于键码，kHISymbolicHotKeyModifiers 必须为 NSNumber 且 unsignedIntegerValue 等于 Carbon 修饰，最后返回 NSNumber enabled.boolValue；缺键/类型失败/不匹配返回 false。",
+        "historical_build_snapshot": "reports/replica/dev52-static-build78.json",
+        "current_build_claim": false
+      },
+      "source_binding": {
+        "replica/Sources/PastoCore/OriginalShortcutFunctions.swift": {
+          "sha256": "82c57689dfb20e2c4c02cd3c4ca72cf40ee7a3fd650b5fa832d79589761a9058",
+          "historical_sha256": "82c57689dfb20e2c4c02cd3c4ca72cf40ee7a3fd650b5fa832d79589761a9058",
+          "unchanged": true
+        },
+        "replica/Sources/PastoCore/OriginalShortcutValidation.swift": {
+          "sha256": "094cb536243bcfa19d37564a409c032728c4c5756e98b21b375858394ad2d5cc",
+          "historical_sha256": "094cb536243bcfa19d37564a409c032728c4c5756e98b21b375858394ad2d5cc",
+          "unchanged": true
+        }
+      }
+    },
+    {
+      "function_id": "Paste:0x1001e9774",
+      "status": "complete",
+      "evidence": "完整C四个独立bit分支顺序Control、Option、Shift、Command；verbose选择符号或符号加空格英文名，其它位忽略。C错误传播将返回显示为空串，已读完整ARM 1e9774..1e98e8确认1e97a0初始化栈上空String，每个分支以sp为inout追加，1e97f8从该栈读x0/x1返回，绝非无条件空输出。当前从空字符串开始按四项顺序追加，verbose false使用符号、true为符号加英文名，不加入额外分隔符，完整各位组合一致。",
+      "original_arm_static_evidence": {
+        "path": ".local/paste-arm64-static.bin",
+        "start": "0x1001e9774",
+        "end_exclusive": "0x1001e98e8",
+        "empty_initialization": "0x1001e979c..0x1001e97a0",
+        "returned_value_load": "0x1001e97f8: ldp x0,x1,[sp]"
+      },
+      "actual_consumer": "OriginalShortcutValue.f1e9cc8生成description/displayName；Recorder.f1f02d8用于真实已设与候选标签；ReplicaShortcutRecorder.accessibilityValue以verbose true生成可访问性修饰键文本。",
+      "original": {
+        "path": "decompiled/Paste/part-0157.c",
+        "line": 446
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutFunctions.swift",
+          "symbol": "f_1001e9774"
+        },
+        {
+          "path": "replica/Sources/PastoCore/KeyboardShortcut.swift",
+          "symbol": "displayName"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ShortcutRecorder.swift",
+          "symbol": ".accessibilityValue(shortcut.map"
+        }
+      ],
+      "historical_evidence": {
+        "path": "reports/function-migration/Paste-0x1001e9774.json",
+        "sha256": "e3f6062f741dd9e72ffd60fdc44dfc949cd567491f3c4055a68b5d4cacfd0042",
+        "contract": "按 Control、Option、Shift、Command 次序拼接已置位修饰键；verbose=false 用符号，true 用 ⌃ Control、⌥ Option、⇧ Shift、⌘ Command；其余位忽略，空组合返回空串。",
+        "historical_build_snapshot": "reports/replica/dev52-static-build78.json",
+        "current_build_claim": false
+      },
+      "source_binding": {
+        "replica/Sources/PastoCore/OriginalShortcutFunctions.swift": {
+          "sha256": "82c57689dfb20e2c4c02cd3c4ca72cf40ee7a3fd650b5fa832d79589761a9058",
+          "historical_sha256": "82c57689dfb20e2c4c02cd3c4ca72cf40ee7a3fd650b5fa832d79589761a9058",
+          "unchanged": true
+        },
+        "replica/Sources/PastoCore/KeyboardShortcut.swift": {
+          "sha256": "eba51741928fc95619585980567b617d39f3c749564cddb5dff4bbd04bf189d6",
+          "historical_sha256": "eba51741928fc95619585980567b617d39f3c749564cddb5dff4bbd04bf189d6",
+          "unchanged": true
+        },
+        "replica/Sources/Pasto/UI/ShortcutRecorder.swift": {
+          "sha256": "2aa3eccd3955064dc00e2d252b282f268f4c01bee026d846bcdb70a8c463ad90",
+          "historical_sha256": "2aa3eccd3955064dc00e2d252b282f268f4c01bee026d846bcdb70a8c463ad90",
+          "unchanged": true
+        }
+      }
+    }
+  ]
+}

@@ -7,6 +7,7 @@ import PastoCore
 struct ReplicaPanelView: View {
     @ObservedObject var state: ReplicaUIState
     @State private var searchFocused = false
+    @State private var tabRenameRequest: (key: String, token: UUID)?
 
     var body: some View {
         GeometryReader { geometry in
@@ -14,20 +15,21 @@ struct ReplicaPanelView: View {
             let cardSide = max(0, collectionHeight - 32)
             VStack(spacing: 0) {
                 header.frame(height: 60)
-                if state.visibleItems.isEmpty {
-                    VStack {
-                        Spacer()
-                        Text(state.searchFailed ? "本地搜索暂不可用" : "无结果")
-                            .font(.system(size: 26, weight: .medium))
-                            .foregroundStyle(Color(red: 185 / 255, green: 185 / 255, blue: 185 / 255))
-                        if state.searchFailed { Button("重试") { state.retrySearch() } }
-                        Spacer()
-                    }
-                    .frame(maxWidth: .infinity, minHeight: collectionHeight, maxHeight: collectionHeight)
-                    .accessibilityLabel(state.searchFailed ? "本地搜索暂不可用" : "无结果")
-                } else {
+                ZStack {
                     ReplicaNativeCollection(state: state, cardSide: cardSide)
-                    .frame(height: collectionHeight)
+                        .frame(height: collectionHeight)
+                    if state.visibleItems.isEmpty {
+                        VStack {
+                            Spacer()
+                            Text(state.searchFailed ? "本地搜索暂不可用" : "无结果")
+                                .font(.system(size: 26, weight: .medium))
+                                .foregroundStyle(Color(red: 185 / 255, green: 185 / 255, blue: 185 / 255))
+                            if state.searchFailed { Button("重试") { state.retrySearch() } }
+                            Spacer()
+                        }
+                        .frame(maxWidth: .infinity, minHeight: collectionHeight, maxHeight: collectionHeight)
+                        .accessibilityLabel(state.searchFailed ? "本地搜索暂不可用" : "无结果")
+                    }
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -79,7 +81,13 @@ struct ReplicaPanelView: View {
             onInputChange: { text, filters, nodes in state.applySearchInput(nodes: nodes, text: text, filters: filters) },
             onEnter: { state.controller?.pasteSelection(plainTextOnly: false) },
             onCancel: { state.controller?.cancelSearchOrPanel() },
-            onShowFilters: { button in state.controller?.showFilterBrowser(relativeTo: button) })
+            onShowFilters: { button in state.controller?.showFilterBrowser(relativeTo: button) },
+            onEditingEnded: { field in
+                guard let controller = state.controller, field.window === controller.panel else { return }
+                if state.isSearchQueryEmpty, controller.filterBrowserPopover?.isDisplayed != true {
+                    state.searchVisible = false
+                }
+            })
             .frame(width: 400, height: 32)
     }
 
@@ -91,13 +99,13 @@ struct ReplicaPanelView: View {
         HStack(spacing: 7) {
             boardButton(state.store.preferences.historyTitle, board: nil)
                 .contextMenu {
-                    Button("重命名") { state.controller?.renameHistory() }
+                    Button("重命名") { requestTabRename(nil) }
                     Button("删除历史…") { state.controller?.clearHistory() }
                 }
             ForEach(state.store.pinboards.sorted { $0.sortOrder < $1.sortOrder }) { board in
                 boardButton(board.name, board: board)
                     .contextMenu {
-                        Button("重命名") { state.controller?.renamePinboard(board) }
+                        Button("重命名") { requestTabRename(board.id) }
                         Menu("颜色") {
                             ForEach(OriginalPinboardColor.allCases, id: \.rawValue) { color in
                                 Button(colorName(color)) {
@@ -123,7 +131,8 @@ struct ReplicaPanelView: View {
                     }
             }
             Button { state.controller?.createPinboard() } label: { Image(systemName: "plus").font(.system(size: 21)).frame(width: 30, height: 28) }
-                .buttonStyle(.plain).accessibilityLabel("创建 Pinboard").help("创建 Pinboard (⇧⌘N)")
+                .buttonStyle(.plain).accessibilityLabel(OriginalSearchLocalization.text("pasto.action.create-group"))
+                .help(OriginalSearchLocalization.text("pasto.action.create-group") + " (⇧⌘N)")
         }.fixedSize()
     }
 
@@ -147,17 +156,31 @@ struct ReplicaPanelView: View {
         return parseColor(board.colorHex) ?? .red
     }
 
+    private func requestTabRename(_ id: UUID?) {
+        tabRenameRequest = (key: id?.uuidString ?? "history", token: UUID())
+    }
+
     private func boardButton(_ name: String, board: Pinboard?) -> some View {
-        Button { state.chooseBoard(board?.id) } label: {
-            HStack(spacing: 6) {
-                if let board { Circle().fill(boardColor(board)).frame(width: 12, height: 12) }
-                else { Image(systemName: "clock.arrow.circlepath").font(.system(size: 15)) }
-                Text(name).font(.system(size: 13, weight: .medium))
-            }
-            .lineLimit(1).padding(.horizontal, 10).padding(.vertical, 6)
-            .background(state.pinboardID == board?.id && !state.showDeleted ? Color.primary.opacity(0.10) : .clear, in: Capsule())
-        }.buttonStyle(.plain).accessibilityLabel(name)
+        let key = board?.id.uuidString ?? "history"
+        return OriginalPinboardTab(title: name, iconColor: board.map { NSColor(boardColor($0)) },
+                beginRequest: tabRenameRequest?.key == key ? tabRenameRequest?.token : nil,
+                onSelect: { state.chooseBoard(board?.id) },
+                onEnd: { if tabRenameRequest?.key == key { tabRenameRequest = nil } },
+                onCommit: { value in
+                    if let board {
+                        state.perform { try state.store.renamePinboardFromTab(id: board.id, rawName: value) }
+                        return state.store.pinboards.first(where: { $0.id == board.id })?.name ?? name
+                    } else {
+                        state.store.preferences.historyTitle = OriginalPinboardTitle.normalizedRename(value)
+                        state.perform { try state.store.save() }
+                        return state.store.preferences.historyTitle
+                    }
+                })
+        .background(state.pinboardID == board?.id && !state.showDeleted ? Color.primary.opacity(0.10) : .clear, in: Capsule())
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(name)
         .accessibilityAddTraits(state.pinboardID == board?.id ? .isSelected : [])
+        .accessibilityAction { state.chooseBoard(board?.id) }
     }
 
     private var trailingControls: some View {
@@ -175,6 +198,11 @@ struct ReplicaPanelView: View {
                     Label("设置…", systemImage: "gear")
                 }
                 .keyboardShortcut(",", modifiers: .command)
+                Divider()
+                Button { state.controller?.migratePasteGroups() } label: {
+                    Label("从 Paste 迁移分组…", systemImage: "square.and.arrow.down")
+                }
+                .disabled(state.isMigratingPasteGroups)
                 Divider()
                 Menu {
                     if state.store.preferences.isMonitoringPaused {
@@ -269,7 +297,7 @@ struct ReplicaClipboardCard: View {
                 state.controller?.paste(item: item, plainTextOnly: NSEvent.modifierFlags.isSuperset(of: plainModifiers))
             }))
         .background(ReplicaCardContextSelection(onContextMenu: {
-            if !selected { state.select(item) }
+            state.selectForContextMenu(item)
         }))
         .contextMenu { contextMenu }
         .modifier(ReplicaCardDragHandlers(enabled: !nativeInteractions,
@@ -434,7 +462,7 @@ struct ReplicaClipboardCard: View {
                                             weight: sizeClass == 3 ? .semibold : .medium)))
                 .lineLimit(1)
                 .foregroundStyle(headerPrimaryColor)
-            Text(relativeTime(item.createdAt))
+            ReplicaCardDateLabel(date: item.isInHistory ? item.createdAt : nil, isCompact: sizeClass == 3)
                 .font(Font(NSFont.preferredFont(forTextStyle: sizeClass == 3 ? .body : .callout, options: [:])))
                 .foregroundStyle(headerSecondaryColor)
         }
@@ -515,9 +543,34 @@ struct ReplicaClipboardCard: View {
         case .link: rawType = 4
         case .text, .richText: rawType = 5
         }
-        let defaultTitle = OriginalPreviewTitles.f_100309008(rawType: rawType,
-            fileCount: item.kind == .files ? item.decodedFilePreviewMetadata?.paths.count : nil)
-        return OriginalPreviewTitles.f_100308f88(item.originalTitle, defaultTitle: defaultTitle)
+        return OriginalPreviewTitles.f_100308f88(item.originalTitle,
+            defaultTitle: OriginalPreviewTitles.f_100309008(rawType: rawType,
+                fileCount: item.kind == .files ? item.decodedFilePreviewMetadata?.paths.count : nil))
+    }
+
+    private var canRestoreSelectionAsPlainText: Bool {
+        let items = state.selectedItems
+        guard !items.isEmpty else { return false }
+        do {
+            let selections = try items.map { item -> OriginalPasteboardRestore.Selection in
+                let kind: OriginalPasteboardContentKind
+                switch item.kind {
+                case .text, .richText: kind = .text
+                case .link: kind = .link
+                case .image: kind = .image
+                case .files: kind = .files
+                case .color: kind = .color
+                case .unknown: kind = .unknown
+                }
+                let representations = try ClipboardStore.ordinaryRestoreRepresentations(for: item, plainTextProjection: true)
+                return .init(kind: kind, items: representations, sourceBundleID: nil)
+            }
+            return OriginalPasteboardRestore.f_10038222c(selections, options: .plainText,
+                removingTypesContaining: ["com.microsoft.ole.source"])
+                .contains { !$0.isEmpty }
+        } catch {
+            return false
+        }
     }
 
     @ViewBuilder private var contextMenu: some View {
@@ -526,10 +579,10 @@ struct ReplicaClipboardCard: View {
         } else {
             Button("拷贝") { state.controller?.copySelection(plainTextOnly: false) }
             Button("复制为纯文本") { state.controller?.copySelection(plainTextOnly: true) }
-                .disabled(item.plainText == nil && item.recognizedText == nil)
+                .disabled(!canRestoreSelectionAsPlainText)
             Button("粘贴") { state.controller?.pasteSelection(plainTextOnly: false) }
             Button("以纯文本粘贴") { state.controller?.pasteSelection(plainTextOnly: true) }
-                .disabled(item.plainText == nil && item.recognizedText == nil)
+                .disabled(!canRestoreSelectionAsPlainText)
             Divider()
             Button("预览") { state.controller?.showPreview(item: item) }
             if item.plainText != nil { Button("编辑…") { state.controller?.showEditor(item: item) } }
@@ -540,7 +593,7 @@ struct ReplicaClipboardCard: View {
                     Task {
                         do {
                             _ = try await state.store.recognizeImageText(id: item.id)
-                            state.controller?.copy(item: item, plainTextOnly: true)
+                            state.controller?.copyRecognizedImageText(item: item)
                         } catch { state.controller?.presentError(error) }
                     }
                 }
@@ -549,20 +602,20 @@ struct ReplicaClipboardCard: View {
                 Button("打开") { for url in itemFileURLs(item) { NSWorkspace.shared.open(url) } }
                 Button("在 Finder 中显示") { NSWorkspace.shared.activateFileViewerSelecting(itemFileURLs(item)) }
             }
-            Menu("添加到 Pinboard") {
+            Menu("添加到 Pasto") {
                 ForEach(state.store.pinboards) { board in
                     Button(board.name) { state.assignSelection(to: board.id) }
                 }
                 Divider()
-                Button("新建 Pinboard…") { state.controller?.createPinboard(assignSelection: true) }
+                Button(OriginalSearchLocalization.text("pasto.action.create-group") + "…") { state.controller?.createPinboard(assignSelection: true) }
             }
             if !item.pinboardIDs.isEmpty {
                 if let board = state.pinboardID {
-                    Button("从此 Pinboard 移除") {
+                    Button("从此 Pasto 移除") {
                         state.perform { try state.store.unassign(ids: state.selection, from: board) }
                     }
                 }
-                Button("从所有 Pinboard 移除") { state.assignSelection(to: nil) }
+                Button("从所有 Pasto 移除") { state.assignSelection(to: nil) }
             }
             Button("添加到 Pasto Stack") {
                 for selected in state.selectedItems { state.addToStack(selected) }
@@ -771,10 +824,62 @@ func itemSummary(_ item: ClipboardItem) -> String {
     return ByteCountFormatter.string(fromByteCount: Int64(bytes), countStyle: .file)
 }
 
-func relativeTime(_ date: Date) -> String {
-    let interval = max(0, Date().timeIntervalSince(date))
-    if interval < 60 { return "刚刚" }
-    if interval < 3600 { return "\(Int(interval / 60)) 分钟前" }
-    if interval < 86400 { return "\(Int(interval / 3600)) 小时前" }
-    return "\(Int(interval / 86400)) 天前"
+@MainActor
+func relativeTime(_ date: Date, isCompact: Bool = false) -> String {
+    let reference = Date()
+    return OriginalDateDisplay.f_100309e0c(date, format: isCompact
+        ? .abbreviated(relativeTo: reference) : .named(relativeTo: reference))
+}
+
+@MainActor
+private struct ReplicaCardDateLabel: View {
+    let date: Date?
+    let isCompact: Bool
+    @StateObject private var presentation = ReplicaCardDatePresentation()
+
+    var body: some View {
+        Text(presentation.text ?? relativeTime(date ?? Date(), isCompact: isCompact))
+            .help(presentation.tooltip)
+            .onAppear { presentation.configure(date: date, isCompact: isCompact) }
+            .onChange(of: date) { _, _ in presentation.configure(date: date, isCompact: isCompact) }
+            .onChange(of: isCompact) { _, _ in presentation.configure(date: date, isCompact: isCompact) }
+            .onDisappear { presentation.stop() }
+    }
+}
+
+@MainActor
+private final class ReplicaCardDatePresentation: ObservableObject {
+    @Published private(set) var text: String?
+    private(set) var tooltip = ""
+    private var inputDate: Date?
+    private var resolvedDate: Date?
+    private var timer: Timer?
+
+    deinit { timer?.invalidate() }
+
+    func configure(date: Date?, isCompact: Bool) {
+        if resolvedDate == nil || inputDate != date {
+            inputDate = date
+            resolvedDate = date ?? Date()
+        }
+        refresh(date: resolvedDate!, isCompact: isCompact)
+    }
+
+    private func refresh(date: Date, isCompact: Bool) {
+        tooltip = OriginalDateDisplay.f_100309e0c(date, format: .absolute)
+        text = relativeTime(date, isCompact: isCompact)
+        let replacement = Timer.scheduledTimer(withTimeInterval: 30, repeats: false) { [weak self] _ in
+            MainActor.assumeIsolated {
+                self?.refresh(date: date, isCompact: isCompact)
+            }
+        }
+        let previous = timer
+        timer = replacement
+        previous?.invalidate()
+    }
+
+    func stop() {
+        timer?.invalidate()
+        timer = nil
+    }
 }

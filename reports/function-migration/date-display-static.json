@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "kind": "static_code_migration",
+  "functions": [
+    {
+      "function_id": "Paste:0x100309c40",
+      "original": "decompiled/Paste/part-0252.c:398",
+      "contract": "分配RelativeDateTimeFormatter，设置dateTimeStyle=named，写入共享formatter槽；Void返回。"
+    },
+    {
+      "function_id": "Paste:0x100309c7c",
+      "original": "decompiled/Paste/part-0252.c:416",
+      "contract": "分配DateComponentsFormatter，依次设置includesApproximationPhrase=false、maximumUnitCount=1、unitsStyle=abbreviated，写入共享槽；Void返回。"
+    },
+    {
+      "function_id": "Paste:0x100309cd0",
+      "original": "decompiled/Paste/part-0252.c:436",
+      "contract": "分配DateFormatter，设置dateStyle=medium、timeStyle=short，写入共享槽；Void返回。"
+    },
+    {
+      "function_id": "Paste:0x100309d18",
+      "original": "decompiled/Paste/part-0252.c:455",
+      "contract": "按year、month、day、hour、minute、second顺序返回首个非nil且>0的Calendar单位；均无正值返回nil。"
+    },
+    {
+      "function_id": "Paste:0x100309e0c",
+      "original": "decompiled/Paste/part-0252.c:499",
+      "contract": "三种日期模式：named按reference系统本地化；abbreviated按Calendar.current从date到reference算六单位，选首正单位，formatter结果nil或无单位回退named；absolute用medium日期/short时间。"
+    }
+  ],
+  "source": "replica/Sources/PastoCore/OriginalDateDisplay.swift",
+  "consumers": [
+    "PanelViews.relativeTime -> named(relativeTo: Date())",
+    "Card date Text.help -> absolute"
+  ],
+  "initialization": "Three optional shared formatter slots; independent static once tokens invoke Void initializers that construct/configure/write their slots.",
+  "build_executed": false,
+  "tests_executed": false,
+  "equivalence_verified": false,
+  "limitations": "Only these five methods. Header compact producer, date-label refresh timer, parent VM and generated ABI are not promoted."
+}

@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "round": 47,
+  "scope": "图片编辑旋转工具栏的两个已有资源入口；完整原体、原字符串字节与当前生产按钮逐项核对。",
+  "counts": {"reviewed": 2, "complete": 2, "gap": 0, "uncertain": 0},
+  "source_binding": {
+    "helper": "replica/Sources/PastoCore/OriginalPreviewLocalization.swift",
+    "helper_sha256": "0163cc854b291a3341675ea525903141dc764dda4a2791b513f4a9c4515632f1",
+    "consumer": "replica/Sources/Pasto/UI/ReplicaImagePreviewContent.swift",
+    "consumer_sha256": "a07660c373dd9b2d326200216f02bc0b5c6968aa5cf93cde5d178684829d386c",
+    "history_comparison": "两个入口各19个历史完整文件绑定，均为helper+17locale资源的18份摘要全等，consumer文件摘要不同；已读取当前按钮配置与真实动作调用，不机械套旧consumer证据。"
+  },
+  "records": [
+    {
+      "function_id": "Paste:0x1001bee08",
+      "status": "complete",
+      "historical_evidence": "reports/function-migration/Paste-0x1001bee08.json",
+      "original": {"path": "decompiled/Paste/part-0148.c", "start_line": 602, "end_line": 647, "address_range": "0x1001bee08..<0x1001bef88"},
+      "current_reference": {"path": "replica/Sources/PastoCore/OriginalPreviewLocalization.swift", "symbol": "f_1001bee08()", "line_range": "114..116"},
+      "criterion": "原完整成功体无输入、无插值，读取共享atURL bundle、Locale.current，以Localizable表构造资源。原长String指针100d98c20加实际存储偏移0x20，在100d98c40读取0x23字节恰为edit-item.toolbar.image.rotate-left；当前resource精确同键，不把符号名当原键证据。",
+      "actual_consumer": "ReplicaImagePreviewContent.swift:24..29 的真实 OriginalToolbarButton(symbol:rotate.left) 将本资源 String(localized:) 用作toolTip，weak回调调用rotateLeft；39返回的stack通过previewEditingToolbar提供给完整编辑chrome。",
+      "limitations": "完整仅限资源构造合同，未重新确认旋转/Undo/图片VM整个生命周期；本轮没有点击按钮或调用旋转。"
+    },
+    {
+      "function_id": "Paste:0x1001bef88",
+      "status": "complete",
+      "historical_evidence": "reports/function-migration/Paste-0x1001bef88.json",
+      "original": {"path": "decompiled/Paste/part-0148.c", "start_line": 648, "end_line": 693, "address_range": "0x1001bef88..<0x1001bf108"},
+      "current_reference": {"path": "replica/Sources/PastoCore/OriginalPreviewLocalization.swift", "symbol": "f_1001bef88()", "line_range": "118..120"},
+      "criterion": "原无插值资源构造与左旋同流程；长String指针100d98c50对应实际100d98c70，0x24字节为edit-item.toolbar.image.rotate-right，当前精确一致。没有新增默认值或把左右资源对调。",
+      "actual_consumer": "ReplicaImagePreviewContent.swift:30..35 的真实rotate.right按钮用本资源作为toolTip，weak回调调用rotateRight；其toolbar由previewEditingToolbar返回，不是仅定义未消费资源。",
+      "limitations": "当前图片源文件改动未被历史SHA证明，因此只按本轮所读具体调用保留资源有限合同，不冒当前构建或运行等价。"
+    }
+  ],
+  "resource_scope": "en/zh-Hans的两键实际读为Rotate Left/Right及向左/向右旋转；其余locale只复用未变历史资源摘要。Pasto自身bundleURL是独立产品身份适配，不宣称与原URL字节相同，不声称17语言均运行验收。",
+  "excluded_failed_addresses": ["Paste:0x100ac35f8", "Paste:0x100ac746c"],
+  "verification_scope": {"product_source_modified": false, "ledger_modified": false, "compiled": false, "application_executed": false, "functional_tests_executed": false, "mcp_executed": false, "one_to_one_acceptance_claimed": false}
+}

@@ -1,0 +1,130 @@
+{
+  "schema_version": 1,
+  "kind": "static_code_migration",
+  "functions": [
+    {
+      "function_id": "Paste:0x100311f7c",
+      "state": "migrated",
+      "contract": "一次初始化的覆盖表按完整bundle ID查找；未命中nil；命中色码signed负值失败，否则复用f308ea0返回NSColor。",
+      "implementations": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSourceApplicationColors.swift",
+          "symbol": "public static func f_100311f7c"
+        }
+      ],
+      "source": {
+        "path": "decompiled/Paste/part-0254.c",
+        "line": 403
+      },
+      "review": "补独立可选NSColor getter并由真实rawColor消费，UInt64<=Int64.max保原signed域；47项覆盖表不复制不改值，miss后既有图标取色/灰色回退保持。",
+      "remaining": "本lookup业务完整；独立表写槽初始化、原SourceApplication工厂与全部父链不升级。"
+    },
+    {
+      "function_id": "Paste:0x1000124f4",
+      "state": "migrated",
+      "contract": "弱Header nil无操作；存活且onEdit nil无操作；存在回调则保持并调用，无额外动作。",
+      "implementations": [
+        {
+          "path": "replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift",
+          "symbol": "self?.onEdit?()"
+        }
+      ],
+      "source": {
+        "path": "decompiled/Paste/part-0007.c",
+        "line": 1573
+      },
+      "review": "成功原callback三分支与真实Edit按钮弱闭包全部对应；唯一成功调用链尾转为Void按钮action，不把伪码残留code指针当作产品返回值消费。直接复用不造包装。",
+      "remaining": "此Void动作副作用合同完整；机器返回寄存器/ABI与Header构造不升级。"
+    },
+    {
+      "function_id": "Paste:0x100013a94",
+      "state": "migrated",
+      "contract": "Void按钮action直接尾转完整0x1000124f4，无额外分支或副作用。",
+      "implementations": [
+        {
+          "path": "replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift",
+          "symbol": "self?.onEdit?()"
+        }
+      ],
+      "source": {
+        "path": "decompiled/Paste/part-0008.c",
+        "line": 401
+      },
+      "review": "成功原全体仅尾转发；现真实Edit按钮复用同callback。",
+      "remaining": "仅源级尾转合同完整，不升级生成ABI或具体编辑动作父。"
+    },
+    {
+      "function_id": "Paste:0x10000f828",
+      "state": "migrated",
+      "contract": "先super.updateTrackingAreas；有旧trackingArea时移除；以bounds/options0x81/self/nil创建新area，先写可选存储，非nil再add。",
+      "implementations": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchSuggestionsMenu.swift",
+          "symbol": "override func updateTrackingAreas()"
+        }
+      ],
+      "source": {
+        "path": "decompiled/Paste/part-0006.c",
+        "line": 1098
+      },
+      "review": "改为原先写槽后add顺序，显式可选area覆盖nil不add分支；真实建议行使用同bounds/options/owner/userInfo。",
+      "remaining": "仅纯业务方法完整；原ObjC actor桥0x10000f908仍partial，其他行事件/构造不升级。"
+    },
+    {
+      "function_id": "Paste:0x10000f908",
+      "state": "partial",
+      "contract": "转入完整tracking业务前原另有MainActor执行器报告。",
+      "implementations": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchSuggestionsMenu.swift",
+          "symbol": "override func updateTrackingAreas()"
+        }
+      ],
+      "source": {
+        "path": "decompiled/Paste/part-0006.c",
+        "line": 1131
+      },
+      "review": "真实tracking业务已恢复，独立纯方法已完整登记。",
+      "remaining": "原显式ObjC actor检查桥未逐项同构，不因业务完成而签满。"
+    },
+    {
+      "function_id": "Paste:0x10000f9e8",
+      "state": "partial",
+      "contract": "mouseEntered/Exited原共同helper按字段取可选回调，存在才调用，不按额外enabled值筛选。",
+      "implementations": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchSuggestionsMenu.swift",
+          "symbol": "override func mouseEntered"
+        }
+      ],
+      "source": {
+        "path": "decompiled/Paste/part-0006.c",
+        "line": 1191
+      },
+      "review": "移除建议行鼠标entered/exited的独立isEnabled条件；上游select也不再提前吞非法数字索引，交原边界失败路径。",
+      "remaining": "原actor报告与统一按字段helper桥/外层弱列表对象生命周期仍partial。"
+    },
+    {
+      "function_id": "Paste:0x10000fae4",
+      "state": "partial",
+      "contract": "鼠标按下调用本行接受动作，不加独立enabled门控。",
+      "implementations": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchSuggestionsMenu.swift",
+          "symbol": "override func mouseDown"
+        }
+      ],
+      "source": {
+        "path": "decompiled/Paste/part-0006.c",
+        "line": 1235
+      },
+      "review": "删除独立isEnabled筛选，真实行onAccept转发保持。",
+      "remaining": "现onAccept可选模型与原item必备action/actor桥仍适配，不计完整。"
+    }
+  ],
+  "updated_context_parent": "Paste:0x100228128",
+  "build_executed": false,
+  "tests_executed": false,
+  "equivalence_verified": false,
+  "limitations": "Source-only migration/manual static comparison. No compile, parse, product execution, tests, install, commit or release. Original actor bridges, state/object lifetimes, event parents and historical source evidence freshness remain separate."
+}

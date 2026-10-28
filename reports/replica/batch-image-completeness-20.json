@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "scope": "前轮未覆盖的三个已有原生预览工具栏lazy子view与水平约束方法；成功原C、必要原ARM及真实消费者核对。",
+  "counts": { "total": 3, "complete": 3, "gap": 0, "uncertain": 0 },
+  "records": [
+    {
+      "function_id": "Paste:0x10023cc80",
+      "status": "complete",
+      "original": { "path": "decompiled/Paste/part-0195.c", "start_line": 1202, "address_range": "0x10023cc80..<0x10023ccec" },
+      "current_implementations": [ { "path": "replica/Sources/PastoCore/OriginalToolbarButton.swift", "start_line": 84, "end_line": 89, "symbol": "public func f_10023cc80() -> NSImageView" } ],
+      "criterion": "原缓存非nil返回同NSImageView，nil才用默认init创建、保存并返回；本getter不设置图像、缩放或tint。当前相同两个分支，不因访问多次生成不同view，不把其它configure方法副作用放入getter。原本体没有executor诊断。",
+      "actual_consumer": "OriginalToolbarButton.f23ce40实际设置symbol并将该icon加入stack；contentTintColor setter和applyForeground也调用同getter。Adapter真实Header的pin/share、文本trait按钮以及ReplicaImagePreviewContent左右旋转按钮使用同生产组件。",
+      "limitations": "只确认lazy子view方法，不升级父Button构造、图像symbol配置、鼠标状态或ObjC桥。"
+    },
+    {
+      "function_id": "Paste:0x10023deb4",
+      "status": "complete",
+      "original": { "path": "decompiled/Paste/part-0196.c", "start_line": 195, "address_range": "0x10023deb4..<0x10023e034" },
+      "current_implementations": [ { "path": "replica/Sources/PastoCore/OriginalToolbarButton.swift", "start_line": 91, "end_line": 98, "symbol": "public func f_10023deb4() -> NSTextField" } ],
+      "criterion": "原已有titleLabel返回同对象，不重配font或alignment；缺失才创建空字符串label，size raw0使用preferred.body、非0使用preferred.title3，options空字典，alignment raw1(right)，缓存返回。当前typed Size normal0/large1覆盖合法原值两分支；相同labelWithString空串、字体及right对齐。原C省略空字符串字面，指定ARM23ded4从cache读x0，23ded8 cbz进入创建，此时x0为0，23dee4设x1=e000000000000000后bridge String，证明原初始化为空串。没有把当前super.title提前写入getter。",
+      "actual_consumer": "真实f23ce40按super.title空/非空写stringValue和增删arrangedSubview；applyForeground设置同label颜色。Adapter第368行Edit、第545/546行Cancel/Save等真实带title按钮消费，image toolbar同组件保空label分支。",
+      "limitations": "只确认lazy label方法；用户运行期非法enum raw不属于当前typed合法值域，不宣称原生成ABI相同。未运行字体或控件。"
+    },
+    {
+      "function_id": "Paste:0x10023fb74",
+      "status": "complete",
+      "original": { "path": "decompiled/Paste/part-0196.c", "start_line": 1229, "address_range": "0x10023fb74..<0x10023fc94" },
+      "current_implementations": [ { "path": "replica/Sources/PastoCore/OriginalToolbarButton.swift", "start_line": 140, "end_line": 143, "symbol": "public func f_10023fb74(padding: CGFloat) -> [NSLayoutConstraint]" } ],
+      "criterion": "原返回两条等式约束，顺序child.leading==parent.leading+padding、child.trailing==parent.trailing-padding，不激活、不限制padding非负。当前用真实stackView作为child、button作为parent，两个anchor/符号/顺序同原；不加centerX/额外宽度、不把trailing改小于等于。",
+      "actual_consumer": "OriginalToolbarButton.f23e080第152行按真实size传large0/normal8并合入构造器激活的约束；Header、编辑和图像旋转按钮真实使用此组件。",
+      "limitations": "只确认水平padding构造，不升级f23e080其余尺寸builder或父构造。没有布局或功能测试。"
+    }
+  ],
+  "arm_evidence": { "binary": ".local/paste-arm64-static.bin", "range": "0x10023deb4..<0x10023df2c", "method": "只读llvm-objdump指定成功函数的缓存/空字符串创建段，完整分支其余依原C核对" },
+  "excluded_failed_addresses": [ "0x100ac35f8", "0x100ac746c" ],
+  "verification_scope": "仅新增本独立报告，无产品源码、台账和旧报告修改，无编译、parse、运行应用、测试、MCP或发布，未读取指定两失败函数。complete限静态有限方法合同，不是一比一功能验收或当前产物证明。"
+}

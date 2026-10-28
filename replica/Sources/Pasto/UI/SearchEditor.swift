@@ -25,6 +25,7 @@ struct ReplicaSearchEditor: NSViewRepresentable {
     var onEnter: () -> Void
     var onCancel: () -> Void
     var onShowFilters: (NSButton) -> Void
+    var onEditingEnded: (NSView) -> Void = { _ in }
 
     func makeCoordinator() -> Coordinator { Coordinator(self) }
 
@@ -212,10 +213,9 @@ struct ReplicaSearchEditor: NSViewRepresentable {
 
         private func accept(_ node: OriginalSearchQueryNode, context: OriginalSearchInputContext.Context,
                             field: SearchField, editor: SearchTextView) {
-            var nodes = context.nodes
-            if !nodes.contains(node), nodes.indices.contains(context.nodeIndex) {
-                nodes[context.nodeIndex] = node
-            }
+            guard case let .filter(tag, filterValue) = node else { return }
+            var nodes = OriginalSearchSuggestions.f_1002dcca4(.filter(tag, filterValue),
+                index: context.nodeIndex, addMode: 0, nodes: context.nodes)
             nodes = OriginalSearchQueryNormalization.f_1002da16c(nodes, flag: 0)
             guard nodes != currentNodes else { return }
             let rendered = attributedString(nodes, field: field, editor: editor)
@@ -354,11 +354,20 @@ struct ReplicaSearchEditor: NSViewRepresentable {
                 guard let self, let field, let editor, !self.applyingContents else { return }
                 self.updateSuggestions(field, editor: editor)
             }
-            editing.onEndEditing = { [weak self] in
-                self?.dismissSuggestions()
-                if self?.parent.focused == true { self?.parent.focused = false }
+            editing.onEndEditing = { [weak self, weak field] in
+                guard let self, let field else { return }
+                self.dismissSuggestions()
+                if self.parent.focused { self.parent.focused = false }
+                self.parent.onEditingEnded(field)
             }
-            editing.onEnter = { [weak self] in self?.parent.onEnter() }
+            editing.onEnter = { [weak self, weak editor] in
+                guard let self else { return }
+                if let panel = editor?.window as? ReplicaPanel {
+                    _ = panel.makeFirstResponder(nil)
+                } else {
+                    self.parent.onEnter()
+                }
+            }
             editing.onCancel = { [weak self] in self?.parent.onCancel() }
             editor.delegate = editing
             field.onUndo = { [weak self, weak field, weak editor] in

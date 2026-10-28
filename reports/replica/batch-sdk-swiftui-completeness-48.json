@@ -1,0 +1,107 @@
+{
+  "kind": "static_sdk_source_reuse",
+  "records": [
+    {
+      "function_id": "Paste:0x100bf6aa4",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-1181.c",
+        "line": 100,
+        "sha256": "8e8af7fc326e55bc5b6eae03d20531864a86f6572aa0677d3fe10029dddf6d79",
+        "stub": "0x100bf6aa4"
+      },
+      "sdk_symbol": "_$s7SwiftUI5ImageV02nsC0ACSo7NSImageC_tcfC",
+      "sdk_dylib": "/System/Library/Frameworks/SwiftUI.framework/Versions/A/SwiftUI",
+      "historical_replica_stub": "0x1001d3d7c",
+      "current_source": {
+        "path": "replica/Sources/Pasto/UI/PanelViews.swift",
+        "line": 684,
+        "sha256": "8d21f76aef6761a3e07666782d4941efdda201c6ac087127875731e8742f0118"
+      },
+      "criterion": "Image(nsImage: raster)显式调用系统NSImage构造。 旧版原stub与历史Pasto二进制绑定同一SwiftUI符号；当前源码显式调用同一公开API。",
+      "limitations": "仅源码级SDK API复用；当前二进制链接、运行和外层界面行为未验证。"
+    },
+    {
+      "function_id": "Paste:0x100bf6ab0",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-1181.c",
+        "line": 115,
+        "sha256": "4f00eb3f3b652dc6973b0d7ae4d92124933bb5d05e54a7a40fa7f8a6642635a0",
+        "stub": "0x100bf6ab0"
+      },
+      "sdk_symbol": "_$s7SwiftUI5ImageV10systemNameACSS_tcfC",
+      "sdk_dylib": "/System/Library/Frameworks/SwiftUI.framework/Versions/A/SwiftUI",
+      "historical_replica_stub": "0x1001d3d88",
+      "current_source": {
+        "path": "replica/Sources/Pasto/UI/PanelViews.swift",
+        "line": 70,
+        "sha256": "8d21f76aef6761a3e07666782d4941efdda201c6ac087127875731e8742f0118"
+      },
+      "criterion": "Image(systemName: \"magnifyingglass\")显式调用系统SF Symbols构造。 旧版原stub与历史Pasto二进制绑定同一SwiftUI符号；当前源码显式调用同一公开API。",
+      "limitations": "仅源码级SDK API复用；当前二进制链接、运行和外层界面行为未验证。"
+    },
+    {
+      "function_id": "Paste:0x100bf6cc0",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-1181.c",
+        "line": 837,
+        "sha256": "4ee7b26978dd45995516376c37ef5ad632285677c123a158ab611f8c2d13c6c0",
+        "stub": "0x100bf6cc0"
+      },
+      "sdk_symbol": "_$s7SwiftUI7DividerVACycfC",
+      "sdk_dylib": "/System/Library/Frameworks/SwiftUI.framework/Versions/A/SwiftUI",
+      "historical_replica_stub": "0x1001d3eb4",
+      "current_source": {
+        "path": "replica/Sources/Pasto/UI/PanelViews.swift",
+        "line": 201,
+        "sha256": "8d21f76aef6761a3e07666782d4941efdda201c6ac087127875731e8742f0118"
+      },
+      "criterion": "Divider()显式构造SwiftUI分隔视图。 旧版原stub与历史Pasto二进制绑定同一SwiftUI符号；当前源码显式调用同一公开API。",
+      "limitations": "仅源码级SDK API复用；当前二进制链接、运行和外层界面行为未验证。"
+    },
+    {
+      "function_id": "Paste:0x100bf6c60",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-1181.c",
+        "line": 711,
+        "sha256": "5ee4b8166dc96df5bce61b7fa9a6bcc2a5ad6c1907d5653446affda00e08a9f3",
+        "stub": "0x100bf6c60"
+      },
+      "sdk_symbol": "_$s7SwiftUI7AnyViewVyACxcAA0D0RzlufC",
+      "sdk_dylib": "/System/Library/Frameworks/SwiftUI.framework/Versions/A/SwiftUI",
+      "historical_replica_stub": "0x1001d3e6c",
+      "current_source": {
+        "path": "replica/Sources/Pasto/UI/ReplicaNativeCardCollection.swift",
+        "line": 543,
+        "sha256": "460f0a746b1b3b69df20083aeeb6c806a3f9a338d96796571ab179640aeeea03"
+      },
+      "criterion": "AnyView(ReplicaClipboardCard(...))显式使用泛型视图擦除构造。 旧版原stub与历史Pasto二进制绑定同一SwiftUI符号；当前源码显式调用同一公开API。",
+      "limitations": "仅源码级SDK API复用；当前二进制链接、运行和外层界面行为未验证。"
+    },
+    {
+      "function_id": "Paste:0x100bf6a74",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-1181.c",
+        "line": 36,
+        "sha256": "29722e745729223b811ac1e0523e448d1636b5d589720a26cef51413079d0341",
+        "stub": "0x100bf6a74"
+      },
+      "sdk_symbol": "_$s7SwiftUI5ColorV7primaryACvgZ",
+      "sdk_dylib": "/System/Library/Frameworks/SwiftUI.framework/Versions/A/SwiftUI",
+      "historical_replica_stub": "0x1001d3d64",
+      "current_source": {
+        "path": "replica/Sources/Pasto/UI/PanelViews.swift",
+        "line": 188,
+        "sha256": "8d21f76aef6761a3e07666782d4941efdda201c6ac087127875731e8742f0118"
+      },
+      "criterion": "Color.primary显式读取语义主色。 旧版原stub与历史Pasto二进制绑定同一SwiftUI符号；当前源码显式调用同一公开API。",
+      "limitations": "仅源码级SDK API复用；当前二进制链接、运行和外层界面行为未验证。"
+    }
+  ],
+  "build_executed": false,
+  "tests_executed": false
+}

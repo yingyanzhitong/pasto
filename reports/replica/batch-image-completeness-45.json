@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "round": 45,
+  "scope": "预览 Header 标题的内部布局与点击编辑入口；复用历史有限合同并核当前实际构造及事件调用。",
+  "counts": {"reviewed": 2, "complete": 1, "gap": 0, "uncertain": 1},
+  "source_binding": {"path": "replica/Sources/PastoCore/OriginalPreviewTitleLabel.swift", "sha256": "84e3a33dbd575ad595cded72928d3d9b917ec1ece7eb258ba42ef3cf457bb0e2", "matches_historical_source_sha256": true, "note": "只绑定源码，历史构建不当本轮构建或运行证据。"},
+  "records": [
+    {
+      "function_id": "Paste:0x100013404",
+      "status": "complete",
+      "historical_evidence": "reports/function-migration/Paste-0x100013404.json",
+      "original": {"path": "decompiled/Paste/part-0008.c", "start_line": 4, "end_line": 68, "address_range": "0x100013404..<0x10001354c"},
+      "current_reference": {"path": "replica/Sources/PastoCore/OriginalPreviewTitleLabel.swift", "symbol": "OriginalPreviewTitleLabel.f_100013404(_:)", "line_range": "174..182"},
+      "criterion": [
+        "原从 TitleLabel 取得自身 lazy TextField，使用共享 zero directional insets 与 f1f97b4 构造四边 equality 约束；无额外条件分支或 actor 诊断。当前构造器151..155传入同一个 f13084 取得的字段，四边零间距贴齐自己，满足该实际对象的有限布局合同。",
+        "原共享 f1f9774 的 NSDirectionalEdgeInsetsZero 生产及四边约束 builder 已在第40轮读取完整成功原体/指定ARM；本轮再次读取 f13404 全体，确认使用同一 zero getter，而非凭方法名猜布局。",
+        "原 builder 返回约束供外围布局构造使用；当前在该源方法内直接 activate，constructor 先 addSubview 同一字段。确认实际安装后的有限布局结果，不声称原返回 existential 数组、调用 trace 或 ABI 等价。"
+      ],
+      "actual_consumer": "OriginalPreviewTitleLabel.init():151..155 实际调用；OriginalReplicaPreviewAdapter.swift:354 创建该 titleLabel，并在380..389安装到 Header 及其标题区域约束，故并非独立无消费布局 helper。",
+      "limitations": "仅历史明确四边布局合同完整；原构造器 actor 桥和 TitleLabel 所有生命周期不因此升级。"
+    },
+    {
+      "function_id": "Paste:0x1000136ec",
+      "status": "uncertain",
+      "historical_evidence": "reports/function-migration/Paste-0x1000136ec.json",
+      "original": {"path": "decompiled/Paste/part-0008.c", "start_line": 155, "end_line": 207, "address_range": "0x1000136ec..<0x1000137fc"},
+      "current_reference": {"path": "replica/Sources/PastoCore/OriginalPreviewTitleLabel.swift", "symbol": "OriginalPreviewTitleLabel.mouseDown(with:)", "line_range": "210..213"},
+      "criterion": [
+        "正常分支完全对应：读取实际 lazy 字段 editable；false 调 f11c78 开始编辑且不转发 super；true 才 super.mouseDown 同一个 event。当前没有增加双击次数、modifier 或额外 canEdit gate。",
+        "原方法本体先取得 MainActor shared/unownedExecutor，检查当前 executor，失败报告 Paste/ItemPreviewView.PreviewHeader.swift line0xaa，最后释放 actor。当前只有 @MainActor 类型声明，未核当前生成 ObjC 入口，无法确认该诊断完整复现，整入口仍待证。"
+      ],
+      "actual_consumer": "Adapter:354/380 将该真实 NSView titleLabel 装入 Header，native mouseDown override 接收其点击；false 分支的 f11c78 在187..191保存原标题、设 editable 并请求真实 firstResponder。",
+      "limitations": "仅确认鼠标业务两分支已满足；actor/ObjC桥未证，不把点击正常逻辑完整升级为整入口完整，不执行点击测试。"
+    }
+  ],
+  "excluded_failed_addresses": ["Paste:0x100ac35f8", "Paste:0x100ac746c"],
+  "verification_scope": {"product_source_modified": false, "ledger_modified": false, "compiled": false, "application_executed": false, "functional_tests_executed": false, "mcp_executed": false, "one_to_one_acceptance_claimed": false}
+}

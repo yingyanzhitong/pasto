@@ -1,0 +1,65 @@
+{
+  "kind": "batch-window-completeness-20",
+  "scope": "7个尚未覆盖的InputView构造、拒绝解码、clear/文本通知和focus ring桥；正常分支与诊断边界分列。",
+  "summary": {"reviewed": 7, "complete": 0, "gap": 0, "uncertain": 7},
+  "prior_inventory": "reports/replica/batch-completeness-round19.json",
+  "definite_product_differences": [],
+  "activities": {"product_source_edited": false, "ledger_edited": false, "compiled": false, "product_run": false, "tests_run": false, "wrapper_added": false},
+  "skipped_failed_addresses": ["Paste:0x100ac35f8", "Paste:0x100ac746c"],
+  "limitations": [
+    "本批正常生产业务均找到对应实现，但原Actor报告或初始化错误完整边界未证明，未为增加完整项强判通过。",
+    "未编译当前源码，不能用@MainActor或assumeIsolated源码声明代替原固定诊断检查的机器证据。",
+    "不把诊断待证认定为已证可见产品差异，不改变台账计数。"
+  ],
+  "functions": [
+    {
+      "function_id": "Paste:0x10004223c", "status": "uncertain",
+      "original": {"path": "decompiled/Paste/part-0024.c", "line": 1212},
+      "source_references": [{"path": "replica/Sources/PastoCore/OriginalSearchInputView.swift", "symbol": "public override init(frame frameRect:"}],
+      "evidence": "正常完整序列已核：先清回调/四分量focusBounds/三惰性缓存/visible，super(frame)后按scroller/clear顺序add并禁translates；激活约束，storage存在才设delegate，clear disabled/hidden/alpha0，最后clear/placeholder/inset刷新。另读part-0165.c:205 f1fa150证实原添加builder确会activate，不是仅返回约束。当前相同。但原builder在每次add前含显式Actor检查及LayoutBuilder.swift行0x15报告；当前inline循环无对应显式分支，本批不能确认生成检查是否承接，完整错误副作用保待证。",
+      "actual_consumer": "SearchEditor.SearchField.makeInputView返回InputView(frame:zero)，派生类继承该构造；生产实际使用，不是未接入模型。"
+    },
+    {
+      "function_id": "Paste:0x1000428f8", "status": "uncertain",
+      "original": {"path": "decompiled/Paste/part-0024.c", "line": 1416},
+      "source_references": [{"path": "replica/Sources/PastoCore/OriginalSearchInputView.swift", "symbol": "public override init(frame frameRect:"}],
+      "evidence": "原frame原样经f044728同步转交f04223c；当前frame构造保业务。通用桥原固定Actor报告使用InputView.swift行0x1f，当前静态源码未独立证明诊断及返回桥，不判完整。",
+      "actual_consumer": "同一真实InputView原生init(frame:)入口，SearchField工厂创建派生InputView复用。"
+    },
+    {
+      "function_id": "Paste:0x10004493c", "status": "uncertain",
+      "original": {"path": "decompiled/Paste/part-0025.c", "line": 1260},
+      "source_references": [{"path": "replica/Sources/PastoCore/OriginalSearchInputView.swift", "symbol": "public required init?(coder:"}],
+      "evidence": "原先初始化回调nil、focusBounds零、三缓存nil和visible=false，再assertionFailure/brk，不调super coder、不造子视图。当前保存属性默认状态和fatalError拒绝相同正常错误方向；原断言完整静态消息/文件位置/参数未在本批逐字解出，不能只因都终止认整个错误输出合同相同。",
+      "actual_consumer": "required NSCoding初始化入口存在；正常UI走frame工厂，没有虚构日常coder调用。"
+    },
+    {
+      "function_id": "Paste:0x100042908", "status": "uncertain",
+      "original": {"path": "decompiled/Paste/part-0024.c", "line": 1430},
+      "source_references": [{"path": "replica/Sources/PastoCore/OriginalSearchInputView.swift", "symbol": "public required init?(coder:"}],
+      "evidence": "原先Actor检查和InputView.swift行0x37报告，然后进入f04493c拒绝构造；当前同样不继续解码，但Actor及原断言完整输出未闭，保待证。",
+      "actual_consumer": "真实NSCoding构造入口保留，非普通frame生产路径。"
+    },
+    {
+      "function_id": "Paste:0x100042a68", "status": "uncertain",
+      "original": {"path": "decompiled/Paste/part-0024.c", "line": 1498},
+      "source_references": [{"path": "replica/Sources/PastoCore/OriginalSearchInputView.swift", "symbol": "f_100042a68"}],
+      "evidence": "原clear selector经同步f043508调用f0429d0，无额外改文本；当前同一同步helper闭包和真实clear action一致。已读f043508原完整C，含Actor报告参数行0x3b；当前通用helper仅action(context)/return0，静态MainActor声明不能证明该显式错误分支已恢复。",
+      "actual_consumer": "f04212c把NSButton.action设clear，@objc clear()实际调用f042a68，不新增异步任务或直接清文本。"
+    },
+    {
+      "function_id": "Paste:0x100042a78", "status": "uncertain",
+      "original": {"path": "decompiled/Paste/part-0024.c", "line": 1514},
+      "source_references": [{"path": "replica/Sources/PastoCore/OriginalSearchInputView.swift", "symbol": "f_100042a78"}],
+      "evidence": "原忽略storage/editMask/range/delta业务参数，Actor检查后同步f0449e8，不排队。当前nonisolated协议入口用assumeIsolated同步刷新，参数未被擅用；但原特定unexpectedExecutor文件/行0x40与当前assumeIsolated失败行为尚未独立证明等价，完整桥保待证。",
+      "actual_consumer": "InputView构造给真实TextView.textStorage设置delegate=self，协议didProcessEditing实际触发本链。"
+    },
+    {
+      "function_id": "Paste:0x1000434f8", "status": "uncertain",
+      "original": {"path": "decompiled/Paste/part-0025.c", "line": 302},
+      "source_references": [{"path": "replica/Sources/PastoCore/OriginalSearchTextScroller.swift", "symbol": "f_1000434f8"}],
+      "evidence": "原完整drawFocusRingMask只经f043508以行0x8f调用f043418；当前override及同步闭包同路线，没有super绘制或延迟。原helper显式Actor报告未由当前只执行action的helper证明，不能据callee正常绘图存在判此桥全体完整。",
+      "actual_consumer": "真实搜索scroller的AppKit.drawFocusRingMask override调用；scroller由InputView惰性缓存并进入视图树。"
+    }
+  ]
+}

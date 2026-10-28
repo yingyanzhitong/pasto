@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "scope": "前8批图像报告未覆盖的文本/链接预览有限方法；只读原成功C及当前生产源码，完整项复用，不改产品。",
+  "counts": { "total": 3, "complete": 3, "gap": 0, "uncertain": 0 },
+  "records": [
+    {
+      "function_id": "Paste:0x100309924",
+      "status": "complete",
+      "original": { "path": "decompiled/Paste/part-0251.c", "start_line": 1236, "address_range": "0x100309924..<0x100309ab8" },
+      "current_implementations": [
+        { "path": "replica/Sources/PastoCore/OriginalPreviewAttributedText.swift", "start_line": 60, "end_line": 67, "symbol": "public static func f_100309924(attributes:range:destination:)" },
+        { "path": "replica/Sources/PastoCore/OriginalPasteboard.swift", "start_line": 188, "end_line": 194, "symbol": "public static func f_100309924(attributes:range:string:)" }
+      ],
+      "criterion": "原空attributes无操作；非空只读取NSParagraphStyleAttributeName，缺失或不能转NSParagraphStyle无操作。mutableCopy再次条件转NSMutableParagraphStyle，失败无操作；成功将textBlocks设空数组并仅在传入原range写回paragraphStyle。两处当前实现保两个转换和同范围写回，不修改其他属性；OriginalPasteboard版本未显式空字典guard但空字典取键为nil，同样无副作用。无额外trim、文本重建或原不存在的异常吞掉分支。",
+      "actual_consumer": "OriginalPasteboardItem.f_10037d33c解码富文本后遍历各run真实调用OriginalPasteboard版本；该首项富文本读取由文本预览加载及metadata生成消费。OriginalPreviewAttributedText版本由f3097c0的同类run遍历复用，不据重复实现增加计数。",
+      "limitations": "只确认段落属性清理回调完整，不升级富文本格式解码父方法、整个文本加载/编辑或原closure生成ABI；本轮未编译或运行。"
+    },
+    {
+      "function_id": "Paste:0x1000f7138",
+      "status": "complete",
+      "original": { "path": "decompiled/Paste/part-0084.c", "start_line": 116, "address_range": "0x1000f7138..<0x1000f7180" },
+      "current_implementations": [ { "path": "replica/Sources/PastoCore/OriginalPreviewAttributedText.swift", "start_line": 125, "end_line": 130, "symbol": "public static func f_1000f7138(_:editor:)" } ],
+      "criterion": "原完整体只向当前editor读取一次textStorage；nil直接返回0，非nil对该storage调用setAttributedString传入对象后返回0。当前可选链读取同一属性并保nil无操作和整数0；不在此方法补typingAttributes、不创建替代storage、不要求非空文本。原本体没有MainActor executor诊断分支，不把相邻f7180的actor检查混入此入口。",
+      "actual_consumer": "真实OriginalReplicaPreviewAdapter初始化第231行经f212e78→f215cac→f0f7054→本方法写入NSTextView；模型刷新第326行经f3eb330同样到达本setter。外层typingAttributes设置在原独立f215cac中，不混算为本setter副作用。",
+      "limitations": "仅这个文本存储写入方法完整；不声明ObjC类别注册身份或整个TextEditor/模型父链等价，未运行文本编辑。"
+    },
+    {
+      "function_id": "Paste:0x1003bf65c",
+      "status": "complete",
+      "original": { "path": "decompiled/Paste/part-0296.c", "start_line": 1948, "address_range": "0x1003bf65c..<0x1003bf7ec" },
+      "current_implementations": [ { "path": "replica/Sources/Pasto/UI/ReplicaLinkPreviewContent.swift", "start_line": 106, "end_line": 112, "symbol": "private static func itemURL(_ item: ClipboardItem) -> URL" } ],
+      "criterion": "原读取目标实体的canonical metadata；optional nil走3bf7d8失败，非link enum走3bf7ec失败；link case复制并返回其中非可选URL，不从原表示、plainText或title回填。当前decodedLinkPreviewMetadata经strict type=link的canonical raw解码，缺raw、坏raw或非link为nil，guard触发preconditionFailure；成功原样返回metadata.url。Stored link缺URL的example.com默认属于先前已核codec投影，不是getter额外回退。",
+      "actual_consumer": "ReplicaLinkPreviewContent.items观察第61行对真实current item调用；currentURL第103行在实际record存在时map到本getter，供开始编辑第69行、取消第77行、提交后第87行及打开URL动作第49行使用。record不存在时currentURL仍为nil是外层模型存在性适配，不放宽本getter对现存坏canonical数据的失败契约。",
+      "limitations": "确认本地非可选URL取值与失败分支，未升级CoreData读取父方法、观察生命周期、提交事务或浏览器动作；没有故意触发trap或启动应用。"
+    }
+  ],
+  "excluded_failed_addresses": [ "0x100ac35f8", "0x100ac746c" ],
+  "verification_scope": "本轮只读成功原C和当前源码，写入本独立报告；未改产品/台账/旧报告，未编译、parse、运行产品、测试、MCP或发布，未研究两失败地址。complete为有限方法源码分支结论，非当前二进制一致性或一比一功能验收声明。"
+}

@@ -1,0 +1,147 @@
+{
+  "schema_version": 1,
+  "kind": "static_code_migration",
+  "functions": [
+    {
+      "function_id": "Paste:0x10000ed50",
+      "state": "migrated",
+      "contract": "可选缓存有值直接返回同一NSTextField；无值用item.title创建label，tail截断/最多1行/原body字体，写缓存后返回。",
+      "implementations": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchSuggestionsMenu.swift",
+          "symbol": "private func f_10000ed50"
+        }
+      ],
+      "source": {
+        "path": "decompiled/Paste/part-0006.c",
+        "line": 675
+      },
+      "review": "成功原完整getter与显式optional存储/创建分支逐项对应；真实row构造、布局、fittingSize、标题与图标样式均实际消费缓存getter。约束18x18/insets属于另一方法，不混入本getter合同。",
+      "remaining": "仅此getter业务完整，不升级原Row构造、Invalidating包装、actor桥或模型父。"
+    },
+    {
+      "function_id": "Paste:0x10000ee38",
+      "state": "migrated",
+      "contract": "可选缓存有值直接返回同一NSImageView；无值创建、scaling raw0、item.image、nil时隐藏，写缓存后返回。",
+      "implementations": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchSuggestionsMenu.swift",
+          "symbol": "private func f_10000ee38"
+        }
+      ],
+      "source": {
+        "path": "decompiled/Paste/part-0006.c",
+        "line": 710
+      },
+      "review": "成功原完整getter与显式optional存储/创建分支逐项对应；真实row构造、布局、fittingSize、标题与图标样式均实际消费缓存getter。约束18x18/insets属于另一方法，不混入本getter合同。",
+      "remaining": "仅此getter业务完整，不升级原Row构造、Invalidating包装、actor桥或模型父。"
+    },
+    {
+      "function_id": "Paste:0x10000eedc",
+      "state": "migrated",
+      "contract": "可选缓存有值直接返回同一NSStackView；无值创建、horizontal raw0、centerY raw10、spacing7，写缓存后返回。",
+      "implementations": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchSuggestionsMenu.swift",
+          "symbol": "private func f_10000eedc"
+        }
+      ],
+      "source": {
+        "path": "decompiled/Paste/part-0006.c",
+        "line": 741
+      },
+      "review": "成功原完整getter与显式optional存储/创建分支逐项对应；真实row构造、布局、fittingSize、标题与图标样式均实际消费缓存getter。约束18x18/insets属于另一方法，不混入本getter合同。",
+      "remaining": "仅此getter业务完整，不升级原Row构造、Invalidating包装、actor桥或模型父。"
+    },
+    {
+      "function_id": "Paste:0x10000f738",
+      "state": "partial",
+      "contract": "父layout后刷新本行当前选中样式；选中值变化按Equatable检查后只置needsLayout，构造时独立进行初始样式。",
+      "implementations": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchSuggestionsMenu.swift",
+          "symbol": "override func layout()"
+        }
+      ],
+      "source": {
+        "path": "decompiled/Paste/part-0006.c",
+        "line": 1055
+      },
+      "review": "补回真实layout→updateSelectionAppearance，避免只在setSelected时直接绘制导致布局刷新缺失；原初值false与构造末样式调用保留。",
+      "remaining": "原方法本体actor执行器报告/原Invalidating包装类型尚未全部同构，保留partial。"
+    },
+    {
+      "function_id": "Paste:0x10007a8c8",
+      "state": "partial",
+      "contract": "预览View弱引用nil时不提交标题；存活时保持owner直到同步标题转发结束，title原样传入现Store更新。",
+      "implementations": [
+        {
+          "path": "replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift",
+          "symbol": "header.titleLabel.onCommitEditing"
+        }
+      ],
+      "source": {
+        "path": "decompiled/Paste/part-0040.c",
+        "line": 1596
+      },
+      "review": "补weak view与guard，withExtendedLifetime(view)包现同步转发，避免header单独保留后仍提交；不trim或改写title。",
+      "remaining": "当前state另为weak适配，原VM强持有/rename方法及仓库事务未闭合，不把有限owner门控算整callback完成。"
+    },
+    {
+      "function_id": "Paste:0x10007c95c",
+      "state": "partial",
+      "contract": "尾转发原0x10007a8c8的标题提交callback。",
+      "implementations": [
+        {
+          "path": "replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift",
+          "symbol": "header.titleLabel.onCommitEditing"
+        }
+      ],
+      "source": {
+        "path": "decompiled/Paste/part-0041.c",
+        "line": 712
+      },
+      "review": "原尾转链已接同一真实标题callback；owner门控已补。",
+      "remaining": "目标callback的state/VM强持有合同仍partial，因此本转发不升级完整。"
+    },
+    {
+      "function_id": "Paste:0x100228568",
+      "state": "partial",
+      "contract": "遍历真实visible cell字典，按实际cell.frame与document坐标点命中，保字典顺序，无命中nil。",
+      "implementations": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaNativeCardCollection.swift",
+          "symbol": "private func index(at point: NSPoint)"
+        }
+      ],
+      "source": {
+        "path": "decompiled/Paste/part-0188.c",
+        "line": 1661
+      },
+      "review": "删除固定cardSide数学反算，改实际可见cell frame命中；鼠标/双击/拖拽等既有输入真实消费。",
+      "remaining": "当前items索引/UUID identity护栏与原虚拟cell模型域仍适配，不计完整；不升级Actor/事件桥。"
+    },
+    {
+      "function_id": "Paste:0x1002287ec",
+      "state": "partial",
+      "contract": "延迟选择保留捕获的数字索引，弱owner释放无操作；存活时直接mode0选该数字，不抢焦点、不预筛当前item或越界。",
+      "implementations": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "func selectAfterPressDelay(at index: Int)"
+        }
+      ],
+      "source": {
+        "path": "decompiled/Paste/part-0188.c",
+        "line": 1781
+      },
+      "review": "现0.45秒timer实际走数字索引入口；无效请求交现纯manager/reveal成功失败链，不再经select(item)额外聚焦或提前return。",
+      "remaining": "当前额外weak state与原完整manager/DI/委托域仍partial；原timer创建及actor桥另列。"
+    }
+  ],
+  "unpromoted_candidate": "0x100324534 optional key forwarding; original protocol slot identity not established",
+  "build_executed": false,
+  "tests_executed": false,
+  "equivalence_verified": false,
+  "limitations": "Source migration and manual static comparison only. No compile, parse, product execution, tests, install, commit or release. Parent state/VM retention, actor/DI/ABI and historical evidence freshness remain separate."
+}

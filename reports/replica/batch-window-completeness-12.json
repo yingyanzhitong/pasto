@@ -1,0 +1,58 @@
+{
+  "kind": "batch-window-completeness-12",
+  "scope": "集中只读核搜索历史分组、flush、撤销、重做、清理和单次计时器6个方法；均未见于round11聚合。",
+  "summary": {"reviewed": 6, "complete": 5, "gap": 0, "uncertain": 1, "new_to_round11": 6},
+  "prior_inventory": "reports/replica/batch-completeness-round11.json",
+  "definite_product_differences": [],
+  "activities": {"product_source_edited": false, "ledger_edited": false, "compiled": false, "product_run": false, "tests_run": false, "wrapper_added": false},
+  "skipped_failed_addresses": ["Paste:0x100ac35f8", "Paste:0x100ac746c"],
+  "limitations": [
+    "完整仅指列明有限状态/输入输出/副作用合同，不是当前编译、计时器运行或编辑器功能验收。",
+    "未改变台账及迁移总计；Swift数组容量/ARC私有布局不作产品业务同构要求。",
+    "计时器父的异步任务结果与原返回值边界保待证，不因正常flush路线相同认定整个异步父完整。"
+  ],
+  "functions": [
+    {
+      "function_id": "Paste:0x1002f5e18", "status": "complete",
+      "original": {"path": "decompiled/Paste/part-0244.c", "line": 1743},
+      "source_references": [{"path": "replica/Sources/PastoCore/OriginalSearchInputHistory.swift", "symbol": "f_1002f5e18"}],
+      "evidence": "原先比较nodes及selection两分量，相同no-op；非immediate仅首次pending保存旧current，更新current后重置timer；immediate先flush再把旧current推undo并更新current；有效改变末尾清redo。当前Snapshot Equatable及两分支/执行顺序相同；另读part-0237.c:2775 f2de150证实原node数组比较按case及字符串内容，不是指针身份。",
+      "actual_consumer": "SearchEditor.Coordinator.propose按filterCount变化选immediate；显式编辑投影、清空和内容提交同样调用该方法。"
+    },
+    {
+      "function_id": "Paste:0x1002f5fe8", "status": "complete",
+      "original": {"path": "decompiled/Paste/part-0244.c", "line": 1829},
+      "source_references": [{"path": "replica/Sources/PastoCore/OriginalSearchInputHistory.swift", "symbol": "f_1002f5fe8"}],
+      "evidence": "原timer存在先invalidate，随后清timer；pending存在才按完整nodes/selection追加undo并清pending，无pending不追加。不改current/redo。当前同序且可重复flush不重复记录。",
+      "actual_consumer": "immediate提交和undo开始调用，单次计时器的弱MainActor任务也调用；不是仅声明。"
+    },
+    {
+      "function_id": "Paste:0x1002f61f0", "status": "complete",
+      "original": {"path": "decompiled/Paste/part-0244.c", "line": 1938},
+      "source_references": [{"path": "replica/Sources/PastoCore/OriginalSearchInputHistory.swift", "symbol": "f_1002f61f0"}],
+      "evidence": "先flush pending，然后pop undo，空返回nil；非空推旧current至redo、current改为pop结果并返回完整snapshot。原C丢失多寄存器返回，ARM 0x1002f6230..23c保存x0/x1/x2，6248对nodes非nil分支，62c0..62c4写current，62cc..62d4恢复三寄存器返回，明确含selection两分量。当前Snapshot?保该完整值。",
+      "actual_consumer": "SearchEditor.attach的field.onUndo调用history.f2f61f0并交Coordinator.restore，实际更新文本及selection。"
+    },
+    {
+      "function_id": "Paste:0x1002f63b8", "status": "complete",
+      "original": {"path": "decompiled/Paste/part-0244.c", "line": 2044},
+      "source_references": [{"path": "replica/Sources/PastoCore/OriginalSearchInputHistory.swift", "symbol": "f_1002f63b8"}],
+      "evidence": "原不先flush，redo空返回nil且不改current；存在则pop末项、旧current进undo、完整nodes及selection写current并返回。当前保持无flush非对称行为，没有好心清pending/timer或重排记录。原数组COW分配由Swift Array承接，不新增额外业务分支。",
+      "actual_consumer": "SearchEditor.attach的field.onRedo调用后交Coordinator.restore，真实CmdShiftZ路径消费。"
+    },
+    {
+      "function_id": "Paste:0x1002f6550", "status": "complete",
+      "original": {"path": "decompiled/Paste/part-0244.c", "line": 2132},
+      "source_references": [{"path": "replica/Sources/PastoCore/OriginalSearchInputHistory.swift", "symbol": "f_1002f6550"}],
+      "evidence": "原先清undo再redo，然后invalidate存在timer并置nil，清pending三分量，保留current。当前顺序及保留范围相同，不错误清当前文本/选区。",
+      "actual_consumer": "SearchEditor.clearInput在!preserveHistory时调用；此前先提交空snapshot的既有顺序保留。"
+    },
+    {
+      "function_id": "Paste:0x1002f60fc", "status": "uncertain",
+      "original": {"path": "decompiled/Paste/part-0244.c", "line": 1892},
+      "source_references": [{"path": "replica/Sources/PastoCore/OriginalSearchInputHistory.swift", "symbol": "f_1002f60fc"}],
+      "evidence": "正常调度一致：invalidate旧timer，读取stored interval，以repeats=false创建scheduledTimer，保存新timer；closure持weak存储。原f2f6f0c转f2f65e0创建Task，f2f66c8切MainActor，f2f6734再weakLoad存在才flush。当前两层weak+MainActor Task保该时序。但原Task返回owner是否缺失的Bool，当前Task<Void>未保该结果，原f2f60fc C还返回0而当前Void；尚未独立闭合这些返回是否仅丢弃，因此保完整输出/异步父待证，不当实际计时错误。",
+      "actual_consumer": "f2f5e18非immediate更新每次调用；SearchEditor实际history interval为0.4秒。"
+    }
+  ]
+}

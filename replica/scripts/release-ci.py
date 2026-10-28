@@ -71,6 +71,22 @@ def asset_names(version):
     return ["Pasto-" + version + "-macos-" + arch + ".dmg" for arch in RELEASE_ARCHITECTURES] + ["SHA256SUMS.txt", "release-manifest.json"]
 
 
+def changelog_entry(version):
+    lines = (ROOT / "CHANGELOG.md").read_text().splitlines()
+    entry = None
+    for line in lines:
+        if line.startswith("## "):
+            if entry is not None:
+                break
+            if line.startswith("## " + version + " - "):
+                entry = []
+        elif entry is not None:
+            entry.append(line)
+    if entry is None or not "\n".join(entry).strip():
+        raise ValueError("Release version has no changelog entry")
+    return "\n".join(entry).strip()
+
+
 def check_existing(repo, version, tag, commit):
     ref, release = remote_state(repo, tag, commit)
     if release:
@@ -166,9 +182,11 @@ def publish(repo, version, tag, commit):
     notes.write_text("[下载 Apple Silicon 版（arm64）](" + download + names[0] + ")\n\n"
                      "[下载 Intel 版（x86_64）](" + download + names[1] + ")\n\n"
                      "Pasto " + version + " · macOS 14+。请选择与芯片对应的独立 DMG。\n\n"
+                     "## 更新内容\n\n" + changelog_entry(version) + "\n\n"
+                     "## 安装与验证\n\n"
                      "将 Pasto.app 拖入 Applications 即可安装；同时提供 SHA256SUMS.txt 与构建来源清单。\n"
                      "应用采用临时签名，未经 Apple 公证。\n"
-                     "此发布只验证编译、架构、版本与签名，没有执行应用或功能回归。\n"
+                     "本次 Actions 发布任务验证编译、架构、版本、签名及安装镜像，没有在构建节点执行应用或功能回归；本机定向验证范围见上方变更日志。\n"
                      "本流程仅上传两个 DMG、校验文件及清单；页面中的 Source code (zip/tar.gz) 链接由 GitHub 自动生成，没有主动上传源码包。\n\n"
                      "Commit: " + commit + "\n")
     args = ["gh", "release", "create", tag, *[str(output / name) for name in names],
@@ -184,7 +202,10 @@ def publish(repo, version, tag, commit):
             if sha(Path(temporary) / name) != sha(output / name):
                 raise ValueError("Uploaded asset mismatch; release remains a draft")
     remote_state(repo, tag, commit)
-    run(["gh", "release", "edit", tag, "--repo", repo, "--draft=false", "--verify-tag"])
+    edit_args = ["gh", "release", "edit", tag, "--repo", repo, "--draft=false", "--verify-tag"]
+    if "-dev." not in version:
+        edit_args.append("--latest")
+    run(edit_args)
 
 
 def main():

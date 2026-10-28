@@ -1,0 +1,44 @@
+{
+  "review_kind": "read_only_text_attribute_callback_and_capture_constructor",
+  "counts": { "reviewed": 2, "complete": 0, "gap": 1, "uncertain": 1, "new_migrations_claimed": 0 },
+  "functions": [
+    {
+      "function_id": "Paste:0x1003c14d0",
+      "status": "gap",
+      "original_path": "decompiled/Paste/part-0297.c",
+      "original_line": 1057,
+      "current_path": "replica/Sources/PastoCore/OriginalTextPreviewSubmission.swift",
+      "current_symbol": "OriginalTextPreviewSubmission.f_1003c14d0(attributes:isRich:stop:)",
+      "matching_contract": "遍历当前run属性：font须动态转换NSFont且symbolicTraits低2bits非零才符合；underlineStyle或strikethroughStyle只看key存在，不判断值是否0。命中设置isRich及stop为true，未命中不清已有值。当前同这些值判定，空字典不写值。",
+      "confirmed_gap": "原命中后仍继续遍历当前属性字典，直到字典耗尽才返回；当前在设置两个true后立即return。stop是让外层NSAttributedString停止后续run，并不会自动中断原回调内部的属性循环。当前会省略命中后剩余属性的动态转换，以及若后续有font时的fontDescriptor/symbolicTraits调用；这两个Objective-C读取可有可观察副作用或异常，不能仅以最终Bool相同签整个方法完整。",
+      "arm_evidence": {
+        "path": ".local/pasteboard-next-text-edit-original-bodies.json",
+        "body_start": "0x1003c14d0",
+        "body_end_exclusive": "0x1003c1860",
+        "existing_body_sha256": "6c0400eb76ffaed04f4d57ef56b6b1dfbb931d161334693e9fff66daddf57e17",
+        "control_flow": "1003c1564..1570装载两个输出地址并各写byte1；1003c1574..1580释放当前值，随后落1003c1584继续下个字典元素。字体命中分支同样回内部循环。1003c16e0及1003c16f0分别为fontDescriptor及symbolicTraits调用，非纯静态bit判断。"
+      },
+      "consumer": "makeItem以UTF16全range/枚举options0真实调用，初始isRich=false；ClipboardStore.updateTextPreviewItem消费makeItem，OriginalReplicaPreviewAdapter实际编辑提交调用Store。",
+      "practical_limit": "普通不可变字体及标准属性值下最终isRich/stop与所选plain或RTF结果可相同；本轮未运行自定义字体或构造异常，不声称普通用户保存已发生错误。差异是原完整回调的调用/副作用顺序，未修改源码。"
+    },
+    {
+      "function_id": "Paste:0x100378664",
+      "status": "uncertain",
+      "original_path": "decompiled/Paste/part-0281.c",
+      "original_line": 69,
+      "current_path": "replica/Sources/PastoCore/OriginalPasteboardCaptureState.swift",
+      "current_symbol": "OriginalPasteboardCaptureState.f_100378664(changeCount:pasteboard:)",
+      "matching_contract": "原持有generalPasteboard、delegate weak=nil、items空、两个timer=nil，保存输入token且仅输入0时读系统changeCount替换。当前默认general路径所有这些状态值与零/非零分支一致；不重报已经修复的首运行token写回或timer代理问题。",
+      "unresolved": "原完整构造还执行f0d4ca4初始化及构造命名Pasteboard diagnostic与指定keypath的lazy依赖对象；当前使用OriginalNamedDiagnostic和OriginalPasteboardLogDependency→本地OSLog provider。尚未在本轮闭合原构造依赖的全部初始副作用/解析状态与当前本地替代；不能把token算法及字段初值吻合提升为整个原构造完整，也不因仅类名不同判gap。",
+      "consumer": "ClipboardMonitor.init实际以已存token与自身pasteboard调用，再设置delegate/持久token closure并注册weak registry。原manager f37b778也会主动初始化state，不重复早期过宽的原lazy/current eager用户差异推断。",
+      "original_existing_proof": ".local/pasteboard-capture-lifetime-next-audit.json，完整100378664..10037875c，248B，既有sha256=ec16e9df5308d9a82415a73cadee1c48f1a6853c44b88148d03575a186928ebc；本轮重读成功C与当前源码，未重算摘要或绑定新编译体。"
+    }
+  ],
+  "limits": [
+    "只写本独立报告；未修改产品源码、台账或用户数据。",
+    "未编译、parse、运行产品、功能/MCP测试、验证脚本或发布。",
+    "引用的原ARM文件为既存原证据，不冒充当前构建；未核当前编译产物。",
+    "本批0/2完整仅为两个地址的静态审阅，非项目总体迁移率；全项目分母及跨批去重由主智能体汇总，新增迁移0。",
+    "跳过0x100ac35f8及0x100ac746c，未读取。"
+  ]
+}

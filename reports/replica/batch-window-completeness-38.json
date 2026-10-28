@@ -1,0 +1,147 @@
+{
+  "kind": "batch-window-completeness-38",
+  "scope": "2项系统与菜单快捷键冲突验证方法；完整成功原C及必要ARM、当前方法和真实validator调用对照。",
+  "summary": {
+    "reviewed": 2,
+    "complete": 0,
+    "gap": 2,
+    "uncertain": 0
+  },
+  "activities": {
+    "product_source_edited": false,
+    "ledger_edited": false,
+    "compiled": false,
+    "product_run": false,
+    "tests_run": false,
+    "wrapper_added": false
+  },
+  "skipped_failed_addresses": [
+    "Paste:0x100ac35f8",
+    "Paste:0x100ac746c"
+  ],
+  "limitations": [
+    "gap表示完整静态函数轨迹差异，不等于已复现日常可见错误；普通不可变菜单和稳定输入源的正常结果可能一致。",
+    "原错误分配与当前外层Service包装之间存在表示/归属适配，本批只明确记录，不以类名或ABI不同推断全部业务错误。",
+    "不修改台账完成数或产品源码，不将历史构建声明当本轮编译；0/2不是整体迁移率。"
+  ],
+  "functions": [
+    {
+      "function_id": "Paste:0x1001ec200",
+      "status": "gap",
+      "evidence": "正常逻辑已接：按items顺序，先递归submenu；匹配keyEquivalent.lowercased，再按原字符串是否精确相等决定隐含Shift；比较0x1e0000或强补Shift的修饰值，首次冲突返回含title文案，nil/空菜单无冲突。完整原C与ARM另显示：递归后先读取keyEquivalentModifierMask，再读keyEquivalent并解析候选；lowercase命中后重新读取keyEquivalent且再次调用f1e7e50/等效字符转换。当前先解析candidate，再读keyEquivalent，只有初次文字命中后才读modifierMask，并复用同一个candidate完成后续比较。两次原键盘布局解析被合并为一次，getter顺序也改变，完整轨迹未保留。",
+      "missing": "原第一次修饰键读取时点及命中后第二次键名/菜单字符解析。原方法本体还创建String-bearing Error；当前本体返回String由Service外层包装，不能把正常提示文字相同当独立返回对象合同全闭。",
+      "original_arm_static_evidence": {
+        "path": ".local/paste-arm64-static.bin",
+        "start": "0x1001ec200",
+        "end_exclusive": "0x1001ec8a8",
+        "first_key_label_call": "0x1001ec3f8 -> 0x1001e7e50",
+        "matched_key_label_call": "0x1001ec54c -> 0x1001e7e50"
+      },
+      "actual_consumer": "OriginalShortcutValidation.f1ebce4在系统未命中后调用本方法；OriginalShortcutValidatorService.validate包装实际错误给Recorder.f1f132c，Published错误再被RecorderView alert消费。",
+      "original": {
+        "path": "decompiled/Paste/part-0158.c",
+        "line": 901
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutValidation.swift",
+          "symbol": "f_1001ec200"
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutMessages.swift",
+          "symbol": "shortcut-recorder.error.used-in-menu"
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutRecorder.swift",
+          "symbol": "f_1001f132c"
+        }
+      ],
+      "historical_evidence": {
+        "path": "reports/function-migration/Paste-0x1001ec200.json",
+        "sha256": "3cf7c3c147553add0dade555017a629c3e4a4ac4c95dfa9682a4bcda6894fdd5",
+        "contract": "深度优先递归检查菜单：先检查每项 submenu，再比较 item.keyEquivalent.lowercased 与候选菜单等效字符；原始 equivalent 若非候选原样字符串，则强制补 Shift，修饰位仅保留 0x1e0000；完全相符时返回含菜单标题的本地化错误，否则 nil 表示通过。",
+        "historical_build_snapshot": "reports/replica/dev52-static-build78.json",
+        "current_build_claim": false
+      },
+      "source_binding": {
+        "replica/Sources/PastoCore/OriginalShortcutValidation.swift": {
+          "sha256": "094cb536243bcfa19d37564a409c032728c4c5756e98b21b375858394ad2d5cc",
+          "historical_sha256": "094cb536243bcfa19d37564a409c032728c4c5756e98b21b375858394ad2d5cc",
+          "unchanged": true
+        },
+        "replica/Sources/PastoCore/OriginalShortcutMessages.swift": {
+          "sha256": "a359a587810f77d3306db57a0f8b17150dc6d075f1e698be9a1772b9eafa027a",
+          "historical_sha256": "a359a587810f77d3306db57a0f8b17150dc6d075f1e698be9a1772b9eafa027a",
+          "unchanged": true
+        },
+        "replica/Sources/PastoCore/OriginalShortcutRecorder.swift": {
+          "sha256": "ba907c942f91fe336506e9a47576051f285bfce47ccd43315cb111aedbd237f2",
+          "historical_sha256": "ba907c942f91fe336506e9a47576051f285bfce47ccd43315cb111aedbd237f2",
+          "unchanged": true
+        }
+      }
+    },
+    {
+      "function_id": "Paste:0x1001ebce4",
+      "status": "gap",
+      "evidence": "正常先系统匹配后菜单递归的判定顺序已接：CopySymbolicHotKeys失败/nil/数组转换失败/空/不匹配均走菜单，已启用系统快捷键首次命中返回系统冲突。完整原C仅在系统未命中时读取NSApp，nil时trap，否则此时获取mainMenu再递归。当前函数接受已读取的menu参数；真实Service调用以menu:NSApp.mainMenu作为实参，因此读取全局app与主菜单先于CopySymbolicHotKeys，即使随后命中系统冲突也已读取菜单。这个生产调用时点与原分支不同，不仅是可选参数的测试入口差异。",
+      "missing": "仅系统未命中时才访问NSApp/mainMenu的惰性分支归属。原体自行分配typed Error、当前返回String由Service包装；原LocalizedStringResource与当前字典resolver全域亦不能凭正常文字相同判完整。",
+      "actual_consumer": "OriginalShortcutValidatorService.validate先求实参NSApp.mainMenu再调用本方法，收到String才构造OriginalShortcutRecorderError；Recorder通过真实typed依赖解析服务并发布返回错误。",
+      "original": {
+        "path": "decompiled/Paste/part-0158.c",
+        "line": 695
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutValidation.swift",
+          "symbol": "f_1001ebce4"
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutValidation.swift",
+          "symbol": "f_1001ec200"
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutFunctions.swift",
+          "symbol": "f_1001ebf04"
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutMessages.swift",
+          "symbol": "shortcut-recorder.error.used-in-system"
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutRecorder.swift",
+          "symbol": "f_1001f132c"
+        }
+      ],
+      "historical_evidence": {
+        "path": "reports/function-migration/Paste-0x1001ebce4.json",
+        "sha256": "406455cc4b5ebc691d35f40bdc7daaa9b463584fa3e1a9e0d88a87eb80cf2edf",
+        "contract": "首先 CopySymbolicHotKeys 并条件转换数组，逐字典匹配已启用系统快捷键；首次命中返回系统冲突本地化说明；读取失败、无数组、空或全部不匹配时继续检查 NSApp.mainMenu，返回菜单冲突说明或 nil。",
+        "historical_build_snapshot": "reports/replica/dev52-static-build78.json",
+        "current_build_claim": false
+      },
+      "source_binding": {
+        "replica/Sources/PastoCore/OriginalShortcutValidation.swift": {
+          "sha256": "094cb536243bcfa19d37564a409c032728c4c5756e98b21b375858394ad2d5cc",
+          "historical_sha256": "094cb536243bcfa19d37564a409c032728c4c5756e98b21b375858394ad2d5cc",
+          "unchanged": true
+        },
+        "replica/Sources/PastoCore/OriginalShortcutFunctions.swift": {
+          "sha256": "82c57689dfb20e2c4c02cd3c4ca72cf40ee7a3fd650b5fa832d79589761a9058",
+          "historical_sha256": "82c57689dfb20e2c4c02cd3c4ca72cf40ee7a3fd650b5fa832d79589761a9058",
+          "unchanged": true
+        },
+        "replica/Sources/PastoCore/OriginalShortcutMessages.swift": {
+          "sha256": "a359a587810f77d3306db57a0f8b17150dc6d075f1e698be9a1772b9eafa027a",
+          "historical_sha256": "a359a587810f77d3306db57a0f8b17150dc6d075f1e698be9a1772b9eafa027a",
+          "unchanged": true
+        },
+        "replica/Sources/PastoCore/OriginalShortcutRecorder.swift": {
+          "sha256": "ba907c942f91fe336506e9a47576051f285bfce47ccd43315cb111aedbd237f2",
+          "historical_sha256": "ba907c942f91fe336506e9a47576051f285bfce47ccd43315cb111aedbd237f2",
+          "unchanged": true
+        }
+      }
+    }
+  ]
+}

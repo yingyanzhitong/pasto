@@ -1,0 +1,47 @@
+{
+  "review_kind": "read_only_existing_monitor_methods_recheck",
+  "selection": "复用历史逐地址证据并重新阅读成功C、当前方法和实际调用；允许重复复审但汇总去重，不将重复项称新增迁移。",
+  "counts": {"reviewed": 2, "complete": 2, "gap": 0, "uncertain": 0, "new_migrations_claimed": 0},
+  "functions": [
+    {
+      "function_id": "Paste:0x10037aaf4",
+      "status": "complete",
+      "reviewed_previously": true,
+      "previous_report": "reports/replica/batch-core-completeness-5.json",
+      "original_path": "decompiled/Paste/part-0281.c",
+      "original_line": 1740,
+      "original_range": "0x10037aaf4..0x10037ab4c",
+      "current_path": "replica/Sources/PastoCore/Pasteboard.swift",
+      "current_symbol": "ClipboardMonitor.f_10037aaf4()",
+      "criterion": "原从注入defaults读取pasteboardSyncCount整数并原样返回，无计数增加、非负裁剪或写入分支；当前defaults.integer(forKey:)同键直接返回。",
+      "fresh_bounded_arm": "重新静态读取完整88字节：37ab00读取self+0x90 defaults；37ab04/08 literal100da3a10；37ab0c减0x20与37ab10 Swift高标志；37ab14/18构造长度19；37ab2c调用integerForKey stub；37ab30保存返回，释放桥接NSString后37ab3c恢复原返回值。xxd100da3a10实际为pasteboardSyncCount。未仅凭C省略的参数或方法名签完整。",
+      "current_consumer": "真实originalPasteboardDidRead→f37b428中先保存change token，再调用该getter，随后addingReportingOverflow(1)及写回计数、DidSync通知。getter本身没有承担这些调用者副作用。",
+      "boundary": "仅有限整数读取源码合同完整，未宣称当前编译入口或磁盘可靠性已验证；第5轮重复项，总表须去重。"
+    },
+    {
+      "function_id": "Paste:0x10037ad14",
+      "status": "complete",
+      "reviewed_previously": true,
+      "previous_report": "reports/replica/batch-core-completeness-5.json",
+      "original_path": "decompiled/Paste/part-0281.c",
+      "original_line": 1832,
+      "original_range": "0x10037ad14..0x10037ad20",
+      "current_path": "replica/Sources/PastoCore/Pasteboard.swift",
+      "current_symbol": "ClipboardMonitor.f_10037ad14()",
+      "criterion": "重新阅读成功原完整C：唯一动作是f37ad4c(FUN_100378bc8)，然后返回；当前方法仍将f_100378bc8交f_10037ad4c，没有额外guard、提前post或直接重置token。",
+      "current_consumer": "公开stop()真实调用，deinit在清captureState.delegate后调用；传入的停止方法按顺序停止poll和sync timer。转发函数真实可达。",
+      "boundary": "只确认原地址选取stop闭包并转发的有限合同；不因此升级timer target强弱生命周期、deinit executor或captureState/logger大父。完整结论不依赖本轮运行这些路径；第5轮重复项，总表须去重。"
+    }
+  ],
+  "unresolved_context_not_counted": [
+    "第40轮两个默认配置provider的列表差异不变，本轮未再次计gap。",
+    "第41轮动态配置wrapper七word类型/订阅/错误边界仍待证，没有因本轮读取getter完整而升级。",
+    "采集大父f378df4的weak delegate动态变化、日志/错误域仍不可由局部正常分支推断完整。"
+  ],
+  "limits": [
+    "只新增报告，不修改产品源码、台账、用户数据或配置。",
+    "未编译、parse、运行应用、测试、MCP、验证脚本或发布；新ARM读取仅针对原镜像两个已成功导出范围中的getter。",
+    "跳过两个指定失败地址。无当前编译体绑定；complete为地址级有限源码合同，不是端到端运行验收。",
+    "本批全部为历史复审，新增迁移0，不能将2项再次累加至全项目已完成地址。"
+  ]
+}

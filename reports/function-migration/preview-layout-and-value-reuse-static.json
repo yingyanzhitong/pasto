@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "kind": "static_code_migration",
+  "functions": [
+    {
+      "function_id": "Paste:0x100225cfc",
+      "state": "migrated",
+      "contract": "忽略session；context原值0返回copy(1)，其他值返回move(16)，无其他副作用。",
+      "implementations": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaNativeCardCollection.swift",
+          "symbol": "sourceOperationMaskFor context"
+        }
+      ],
+      "source": {
+        "path": "decompiled/Paste/part-0187.c",
+        "line": 3613
+      },
+      "review": "逐分支对照成功原纯方法及本机SDK枚举定义；真实NSDraggingSource方法已完整满足，直接复用，不增加重复包装。",
+      "remaining": "原ObjC桥0x100225d0c另含actor检查，仍partial；不升级外围拖拽父方法。"
+    },
+    {
+      "function_id": "Paste:0x100206ecc",
+      "state": "migrated",
+      "contract": "调用0x1002067d4亮度判断；结果false返回NSColor.white，true返回NSColor.black。",
+      "implementations": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaColorPreviewContent.swift",
+          "symbol": "codeLabel.textColor = OriginalPreviewTextColors.f_1002067d4(color) ? .black : .white"
+        }
+      ],
+      "source": {
+        "path": "decompiled/Paste/part-0170.c",
+        "line": 3440
+      },
+      "review": "成功原方法完整分支与实际颜色预览文本赋色表达式对应，复用已迁移的亮度判断，不增加地址同名包装。",
+      "remaining": "仅此值方法完整，不升级整个颜色预览更新/构造方法。"
+    },
+    {
+      "function_id": "Paste:0x1003e0820",
+      "state": "partial",
+      "contract": "颜色footer内部stack置于独立NSView容器：top/bottom/leading等于容器，trailing小于等于容器。",
+      "implementations": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaColorPreviewContent.swift",
+          "symbol": "f_1003e0820()"
+        }
+      ],
+      "source": {
+        "path": "decompiled/Paste/part-0308.c",
+        "line": 1271
+      },
+      "review": "补入真实metadataHost容器、四条约束及init激活消费；原top/bottom helper及witness已静态追踪，恢复业务布局分支。",
+      "remaining": "原方法本体包含MainActor执行器检查，未单独恢复该诊断；保留partial，不升级整个footer构造。"
+    }
+  ],
+  "build_executed": false,
+  "tests_executed": false,
+  "equivalence_verified": false,
+  "limitations": "只进行成功伪代码、当前源码及SDK头的人工静态对照；不执行编译、parse、运行、测试或发布。f31bcdc实体解码边界、文件footer父方法和历史证据过期限制仍保留。"
+}

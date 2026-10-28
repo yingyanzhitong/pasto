@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "scope": "两个历史未变化的标题占位文字/颜色刷新方法；重新读成功原C、必要原ARM、完整当前源码引用及生产消费者，复用业务已证部分。",
+  "counts": { "total": 2, "complete": 1, "gap": 0, "uncertain": 1 },
+  "source_binding": { "path": "replica/Sources/PastoCore/OriginalPreviewTitleLabel.swift", "historical_sha256": "84e3a33dbd575ad595cded72928d3d9b917ec1ece7eb258ba42ef3cf457bb0e2", "current_read_sha256": "84e3a33dbd575ad595cded72928d3d9b917ec1ece7eb258ba42ef3cf457bb0e2", "whole_file_unchanged": true },
+  "records": [
+    {
+      "function_id": "Paste:0x10023af6c",
+      "status": "complete",
+      "historical_evidence": "reports/function-migration/Paste-0x10023af6c.json",
+      "historical_contract_reusable": true,
+      "original": { "path": "decompiled/Paste/part-0194.c", "start_line": 1717, "address_range": "0x10023af6c..<0x10023b01c" },
+      "current_reference": { "path": "replica/Sources/PastoCore/OriginalPreviewTitleLabel.swift", "start_line": 80, "end_line": 85, "symbol": "public func f_10023af6c(_ color: NSColor?)" },
+      "criterion": "原先取得lazy nativeField，把输入optional color设其textColor，再读取当时placeholderAttributedString；nil保nil，有则只取string，再用同字符串调用f23b600以重新生成占位样式。当前先field.textColor=color，再f23b578读取原占位字符串，再f23b600；保nil/空串区别，不在有颜色时跳过刷新，不把placeholder改成当前编辑text。指定ARM23af80存输入x19、23af84取field、23af8c把输入作为x2写色，23afa8之后才读placeholder；23aff0/aff4 nil的两寄存器和23b000调重建确认顺序。",
+      "actual_consumer": "TitleLabel.f0130fc第169行真实设置共享前景色时调用；该wrapper被预览Header实际持有，随后模型默认标题以placeholder显示，颜色重建并非孤立helper。",
+      "limitations": "仅副作用方法的历史业务合同完整；当前返回Int0为调用方忽略的适配，不据原伪码推定原返回寄存器ABI。下游placeholder setter历史返回0待证见独立记录，不能因此升级其整返回合同。"
+    },
+    {
+      "function_id": "Paste:0x10023b600",
+      "status": "uncertain",
+      "historical_evidence": "reports/function-migration/Paste-0x10023b600.json",
+      "historical_contract_reusable": false,
+      "reusable_subset": "占位文字生成/清空的全部正常副作用和值分支可复用；历史包含的固定整数返回0尚无原机器码支持。",
+      "original": { "path": "decompiled/Paste/part-0195.c", "start_line": 210, "address_range": "0x10023b600..<0x10023b85c" },
+      "current_reference": { "path": "replica/Sources/PastoCore/OriginalPreviewTitleLabel.swift", "start_line": 68, "end_line": 77, "symbol": "public func f_10023b600(_ value: String?) -> Int" },
+      "criterion": "原nil placeholder直接setPlaceholderAttributedString:nil，不提前读色/font；非nil含空字符串建立AttributedString，前景当前field.textColor存在则替换alpha为0.6，nil则NSColor.textColor且不再额外降alpha；font存在原样用，否则preferred.title3与空options。当前Optional.map同惰性及两fallback规则，不trim文本，不保留旧占位attrs，不将空串变nil，全部生成副作用已满足。历史还称返回0，但指定原ARM23b82c实际赋值后23b838把临时占位对象放x0，23b858尾跳objc_release，无固定Int0返回指令，原C return0不能单独恢复源级返回合同。",
+      "actual_consumer": "Adapter.swift第408行真实模型标题默认值更新；f23af6c第83行颜色变化重建占位也调用。所有所见生产调用均忽略Int返回，因此没有已证用户功能差异，保待证而非gap。",
+      "limitations": "需静态类型/原调用者合同证据确认原Void或返回值用途，不能用不可见效果宣称整历史返回合同通过。未运行或故意触发nil样本。"
+    }
+  ],
+  "arm_evidence": { "binary": ".local/paste-arm64-static.bin", "ranges": [ "0x10023af6c..<0x10023b01c", "0x10023b820..<0x10023b85c" ], "method": "只读llvm-objdump指定成功函数及返回段，不执行二进制" },
+  "excluded_failed_addresses": [ "0x100ac35f8", "0x100ac746c" ],
+  "verification_scope": "仅新增本报告，没有产品源码、台账或历史报告修改，没有编译、parse、运行应用、测试、MCP或发布，未读取指定失败函数。历史编译不当本轮构建，complete限明确业务方法合同，不是一比一功能验收。"
+}

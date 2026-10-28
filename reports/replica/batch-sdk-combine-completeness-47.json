@@ -1,0 +1,127 @@
+{
+  "kind": "static_sdk_source_reuse",
+  "records": [
+    {
+      "function_id": "Paste:0x100bf546c",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-1173.c",
+        "line": 735,
+        "sha256": "724f0cf80479f1e9328880cd7210e7ca77fbd3ca593e97b5269123838ad04cfe",
+        "stub": "0x100bf546c"
+      },
+      "sdk_symbol": "_$s7Combine14AnyCancellableC5store2inyShyACGz_tF",
+      "sdk_dylib": "/System/Library/Frameworks/Combine.framework/Versions/A/Combine",
+      "historical_replica_stub": "0x1001d3230",
+      "current_source": {
+        "path": "replica/Sources/PastoCore/OriginalSoundEffects.swift",
+        "line": 28,
+        "sha256": "a452159a1b014ef158f3267ac4cf31501876b24fc89e44f0400f27b64b8b169a"
+      },
+      "criterion": "已声明Set<AnyCancellable>，sink的AnyCancellable保存进该Set。 旧版原stub与历史Pasto二进制绑定同一Combine符号；当前源码显式调用同一公开API。",
+      "limitations": "仅源码级SDK API复用；当前二进制链接、运行和外层业务合同未验证。"
+    },
+    {
+      "function_id": "Paste:0x100bf552c",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-1173.c",
+        "line": 990,
+        "sha256": "9e1331eaa940d39c549cedd066ea699ef0b5d26a1df80918fcf9cb76aed8501c",
+        "stub": "0x100bf552c"
+      },
+      "sdk_symbol": "_$s7Combine4JustVyACyxGxcfC",
+      "sdk_dylib": "/System/Library/Frameworks/Combine.framework/Versions/A/Combine",
+      "historical_replica_stub": "0x1001d32b4",
+      "current_source": {
+        "path": "replica/Sources/PastoCore/OriginalAccessibilityService.swift",
+        "line": 14,
+        "sha256": "e015554a40a64837f284fb9a0dc08a2639e8606b4e34b5930234cf1751e40073"
+      },
+      "criterion": "Just(f_100ae5e74())显式创建Combine.Just。 旧版原stub与历史Pasto二进制绑定同一Combine符号；当前源码显式调用同一公开API。",
+      "limitations": "仅源码级SDK API复用；当前二进制链接、运行和外层业务合同未验证。"
+    },
+    {
+      "function_id": "Paste:0x100bf55a4",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-1174.c",
+        "line": 104,
+        "sha256": "3d5a186d9287f1c90c4c7a6a5e25e403b44ffc464865c325e23203e46211c4e8",
+        "stub": "0x100bf55a4"
+      },
+      "sdk_symbol": "_$s7Combine9PublisherPAAE010eraseToAnyB0AA0eB0Vy6OutputQz7FailureQzGyF",
+      "sdk_dylib": "/System/Library/Frameworks/Combine.framework/Versions/A/Combine",
+      "historical_replica_stub": "0x1001d3320",
+      "current_source": {
+        "path": "replica/Sources/Pasto/BackgroundService.swift",
+        "line": 13,
+        "sha256": "882176450c8acb852a8573f3ec3a953974ad3198df286ea4da8288835af7faa5"
+      },
+      "criterion": "CurrentValueSubject调用eraseToAnyPublisher以供enabledChanges读取。 旧版原stub与历史Pasto二进制绑定同一Combine符号；当前源码显式调用同一公开API。",
+      "limitations": "仅源码级SDK API复用；当前二进制链接、运行和外层业务合同未验证。"
+    },
+    {
+      "function_id": "Paste:0x100bf54d8",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-1173.c",
+        "line": 879,
+        "sha256": "9e965c3e5c1085a9a04e1def7c43acd1b62e1a3051e8dabb168ca59b12dd067a",
+        "stub": "0x100bf54d8"
+      },
+      "sdk_symbol": "_$s7Combine19CurrentValueSubjectC4sendyyxF",
+      "sdk_dylib": "/System/Library/Frameworks/Combine.framework/Versions/A/Combine",
+      "historical_replica_stub": "0x1001d326c",
+      "current_source": {
+        "path": "replica/Sources/Pasto/BackgroundService.swift",
+        "line": 19,
+        "sha256": "882176450c8acb852a8573f3ec3a953974ad3198df286ea4da8288835af7faa5"
+      },
+      "criterion": "显式CurrentValueSubject<Bool,Never>执行send(enabled)。 旧版原stub与历史Pasto二进制绑定同一Combine符号；当前源码显式调用同一公开API。",
+      "limitations": "仅源码级SDK API复用；当前二进制链接、运行和外层业务合同未验证。"
+    },
+    {
+      "function_id": "Paste:0x100bf54e4",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-1173.c",
+        "line": 894,
+        "sha256": "d3f1c7119b7884cc513bf0d3999a2d7341537f71d352a06c0fcd886ee3611b13",
+        "stub": "0x100bf54e4"
+      },
+      "sdk_symbol": "_$s7Combine19CurrentValueSubjectC5valuexvg",
+      "sdk_dylib": "/System/Library/Frameworks/Combine.framework/Versions/A/Combine",
+      "historical_replica_stub": "0x1001d3278",
+      "current_source": {
+        "path": "replica/Sources/Pasto/BackgroundService.swift",
+        "line": 15,
+        "sha256": "882176450c8acb852a8573f3ec3a953974ad3198df286ea4da8288835af7faa5"
+      },
+      "criterion": "isEnabled读取显式CurrentValueSubject的value。 旧版原stub与历史Pasto二进制绑定同一Combine符号；当前源码显式调用同一公开API。",
+      "limitations": "仅源码级SDK API复用；当前二进制链接、运行和外层业务合同未验证。"
+    },
+    {
+      "function_id": "Paste:0x100bf54fc",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-1173.c",
+        "line": 927,
+        "sha256": "aa4817afc772a123367874db270eb82ac52a8ca65c63a35520df624b5b89fa51",
+        "stub": "0x100bf54fc"
+      },
+      "sdk_symbol": "_$s7Combine19CurrentValueSubjectCyACyxq_Gxcfc",
+      "sdk_dylib": "/System/Library/Frameworks/Combine.framework/Versions/A/Combine",
+      "historical_replica_stub": "0x1001d3284",
+      "current_source": {
+        "path": "replica/Sources/Pasto/BackgroundService.swift",
+        "line": 11,
+        "sha256": "882176450c8acb852a8573f3ec3a953974ad3198df286ea4da8288835af7faa5"
+      },
+      "criterion": "显式CurrentValueSubject<Bool,Never>由当前服务状态初始化。 旧版原stub与历史Pasto二进制绑定同一Combine符号；当前源码显式调用同一公开API。",
+      "limitations": "仅源码级SDK API复用；当前二进制链接、运行和外层业务合同未验证。"
+    }
+  ],
+  "build_executed": false,
+  "tests_executed": false
+}

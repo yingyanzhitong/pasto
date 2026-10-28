@@ -1,0 +1,148 @@
+{
+  "schema_version": 1,
+  "scope": "只读批量核查已有migrated图像/元数据方法，先解决当前汇总唯一图像待证项，再核三项未纳入该汇总的方法；不凑改动或新增迁移计数。",
+  "input_summary": "reports/replica/batch-completeness-current.json",
+  "records": [
+    {
+      "function_id": "Paste:0x100315a38",
+      "status": "complete",
+      "review_kind": "resolved",
+      "mapping_state_observed": "migrated",
+      "original": {
+        "path": "decompiled/Paste/part-0255.c",
+        "start_line": 946,
+        "end_line": 1196
+      },
+      "current_implementations": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalImagePreviewMetadataCodec.swift",
+          "symbol": "public static func decodeColor(_ rawPreview: Data?) -> OriginalColorPreviewMetadata?",
+          "line": 19
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalImagePreviewMetadataCodec.swift",
+          "symbol": "decode",
+          "line": 6
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalImagePreviewMetadataCodec.swift",
+          "symbol": "public static func decodeFiles(",
+          "line": 13
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalImagePreviewMetadataCodec.swift",
+          "symbol": "public static func decodeText(_ rawPreview: Data?) -> OriginalTextPreviewMetadata?",
+          "line": 31
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalImagePreviewMetadataCodec.swift",
+          "symbol": "public static func decodeLink(_ rawPreview: Data?) -> OriginalLinkPreviewMetadata?",
+          "line": 24
+        }
+      ],
+      "criterion": "原C五case与当前各decodeX值语义已逐支核；本轮已有ARM消除最后URL字面待证：0x315b98..bb0的x0=0x2e656c706d617865、小字符串x1末3字节63 6f 6d及长度0xb，合为example.com；0x315bb8调用URL(string:)，失败0x315bd0跳原trap，当前同字面强解包。URL存在时原值保留；name/icon/image直接optional复制。其他type nil/未知归text，image缺size0/data空，files缺paths[]/size0/data空，color缺code0，与当前源码相同。",
+      "actual_consumer": "Models.decodedLink/Image/File/Color/TextPreviewMetadata→实际卡片及完整预览；不是未消费codec。",
+      "limitations": "仅确认此地址有限业务合同；不升级其上游VM、DI/实体、系统注册或ABI父，也不声称运行等价。",
+      "previous_status": "uncertain",
+      "arm_evidence": {
+        "path": ".local/image-dev22-stored-text-projection-arm64.txt",
+        "instruction_range": "0x100315b40..0x100315cc0，原整个projection至0x100316000"
+      }
+    },
+    {
+      "function_id": "Paste:0x100313548",
+      "status": "complete",
+      "review_kind": "additional",
+      "mapping_state_observed": "migrated",
+      "original": {
+        "path": "decompiled/Paste/part-0254.c",
+        "start_line": 1577,
+        "end_line": 1721
+      },
+      "current_implementations": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalImagePreviewMetadata.swift",
+          "line": 14,
+          "symbol": "f_100313548"
+        }
+      ],
+      "criterion": "顺序遍历全部PasteboardItem，按原f37d5c4先取Data并NSImage解码，丢无图项后只取首图；没有任意后项缩略fallback。首图缩略280×230失败nil；缩略CGImage存在且透明度helper=true只PNG，否则JPEG压缩0.6；所选编码nil直接nil，不跨编码fallback。成功保存未缩放首图NSImage.logical size。当前compactMap/first/guard/if-else/guard-preview与原完整成功C吻合。",
+      "actual_consumer": "ClipboardStore.swift:395/714等生成rawPreview，canonical图片卡片/预览消费decodedImagePreviewMetadata；生成与消费均真实。",
+      "limitations": "仅确认此地址有限业务合同；不升级其上游VM、DI/实体、系统注册或ABI父，也不声称运行等价。"
+    },
+    {
+      "function_id": "Paste:0x100308a6c",
+      "status": "complete",
+      "review_kind": "additional",
+      "mapping_state_observed": "migrated",
+      "original": {
+        "path": "decompiled/Paste/part-0251.c",
+        "start_line": 529,
+        "end_line": 612
+      },
+      "current_implementations": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalImagePreviewMetadata.swift",
+          "line": 62,
+          "symbol": "f_100308a6c"
+        }
+      ],
+      "criterion": "alphaInfo0/5/6立即false，其它含高于6进入采样；4096零字节buffer，32×32，8bit，row128，deviceRGB和bitmapInfo1；context失败false，成功draw后只索引3起步每4字节，严格alpha<250计数。原ARM 0x308ba8 reciprocal0x3f50000000000000=1/1024，0x308bb4..bc0阈值bits0x3fa999999999999a=0.05，0x308bc8 ge包含等号；当前Double(count)*(1/1024)>=0.05一致。",
+      "actual_consumer": "OriginalImagePreviewMetadataGenerator.f313548以此真实选择PNG或JPEG，影响保存的预览图像编码。",
+      "limitations": "仅确认此地址有限业务合同；不升级其上游VM、DI/实体、系统注册或ABI父，也不声称运行等价。",
+      "arm_evidence": {
+        "path": ".local/image-dev18-alpha-arm64.txt",
+        "instruction_range": "0x100308a6c..0x100308c88"
+      }
+    },
+    {
+      "function_id": "Paste:0x10031a3a8",
+      "status": "complete",
+      "review_kind": "additional",
+      "mapping_state_observed": "migrated",
+      "original": {
+        "path": "decompiled/Paste/part-0256.c",
+        "start_line": 1494,
+        "end_line": 1655
+      },
+      "current_implementations": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalTextPreviewMetadata.swift",
+          "symbol": "public static func generate(_ items: [OriginalPasteboardItem]) -> OriginalTextPreviewMetadata?",
+          "line": 16
+        }
+      ],
+      "criterion": "空数组nil；仅首有序item，rich优先flatRTFD→rtfd→rtf，成功按原段落清textBlocks；rich失败同首item plain fallback，无文本nil但成功空串有效。当前复用f37d33c真实相同富文本/段落/文本路径。原length为NSAttributedString.length即UTF16，<501保全文，>=501取NSRange(0,500)，保存总length；Foundation非throw AttributedString(NSAttributedString)桥，不从当前显示文本重算。当前generate所有分支相同。",
+      "actual_consumer": "ClipboardStore.swift:385/627/691等保存text rawPreview；PanelViews compact metadata.text和footer metadata.length消费。",
+      "limitations": "仅确认此地址有限业务合同；不升级其上游VM、DI/实体、系统注册或ABI父，也不声称运行等价。"
+    }
+  ],
+  "counts": {
+    "total": 4,
+    "resolved_previous": 1,
+    "additional": 3,
+    "complete": 4,
+    "gap": 0,
+    "uncertain": 0
+  },
+  "basis": "完整成功伪代码、已存在原ARM文本和当前生产源码的分支/值/调用链对比；不是名称匹配，也未从旧migrated状态推断完整。",
+  "skipped_failed_addresses": [
+    "0x100ac35f8",
+    "0x100ac746c"
+  ],
+  "actions": {
+    "product_source_modified": false,
+    "ledger_modified": false,
+    "compiled": false,
+    "parsed": false,
+    "tested": false,
+    "product_executed": false,
+    "mcp_executed": false,
+    "new_disassembly_executed": false
+  },
+  "limitations": [
+    "不更新已发布批量摘要或既有报告；本文件为独立审阅证据。",
+    "不绑定新构建产物、不声称功能一比一验收通过。",
+    "未扩大审阅窗口/OSD的actor诊断待证项；这些属于其他报告/代理范围。"
+  ]
+}

@@ -37,9 +37,14 @@ extension ClipboardItem {
     }
 
     var imageData: Data? {
+        // A serialized original item list is authoritative even when it is corrupt or empty.
+        if payloads[originalItemDataPayloadKey] != nil {
+            guard let items = try? ClipboardStore.originalPasteboardItems(from: payloads) else { return nil }
+            return items.lazy.compactMap { $0.f_10037d5c4() }.first
+        }
         for representation in ClipboardStore.normalizedPasteboardPayloads(payloads) {
-            for key in [NSPasteboard.PasteboardType.png.rawValue, NSPasteboard.PasteboardType.tiff.rawValue,
-                        "public.jpeg", "public.heic", "com.compuserve.gif"] {
+            for key in [UTType.png.identifier, UTType.jpeg.identifier, UTType.heic.identifier,
+                        UTType.tiff.identifier, UTType.icns.identifier] {
                 if let data = representation[key] { return data }
             }
         }
@@ -52,7 +57,7 @@ public enum ImageTextRecognizer {
         try await recognizeDocument(imageData: imageData).text
     }
 
-    public static func recognizeDocument(imageData: Data, maximumDimension: Int = .max) async throws -> RecognizedTextDocument {
+    public static func recognizeDocument(imageData: Data, maximumDimension: Int = 1024) async throws -> RecognizedTextDocument {
         try await Task.detached(priority: .utility) {
             try f_1002d4738(imageData: imageData, maximumDimension: maximumDimension)
         }.value

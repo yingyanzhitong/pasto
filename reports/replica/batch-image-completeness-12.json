@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "scope": "前11批图像报告未覆盖的已有文本预览四个范围/纯文本/提交状态值方法。只读成功原C、指定成功函数ARM及真实生产消费者。",
+  "counts": { "total": 4, "complete": 4, "gap": 0, "uncertain": 0 },
+  "records": [
+    {
+      "function_id": "Paste:0x100309700",
+      "status": "complete",
+      "original": { "path": "decompiled/Paste/part-0251.c", "start_line": 1122, "address_range": "0x100309700..<0x100309720" },
+      "current_implementations": [ { "path": "replica/Sources/PastoCore/OriginalPreviewAttributedText.swift", "start_line": 36, "end_line": 38, "symbol": "public static func f_100309700(_ source: NSAttributedString) -> NSRange" } ],
+      "criterion": "原读取NSAttributedString.length并返回范围(0,length)，不按Swift Character数。Ghidra将双寄存器返回表示为16字节移位，已只读指定原ARM确认：309708将owner传x0，30970c调用length，309710 mov x1,x0，309714 mov x0,0，30971c ret。当前NSRange(location:0,length:source.length)完全对应空文本、UTF16多单元字符及非空范围。",
+      "actual_consumer": "同文件f3095bc、normalizedEditingText及f3eb330的真实原属性枚举/颜色删除范围共用；Adapter初始化和模型更新/提交状态实际走这些方法。",
+      "limitations": "只确认范围值，不执行range枚举或当前二进制检查。静态反汇编未启动产品或编译。"
+    },
+    {
+      "function_id": "Paste:0x100309720",
+      "status": "complete",
+      "original": { "path": "decompiled/Paste/part-0251.c", "start_line": 1139, "address_range": "0x100309720..<0x100309738" },
+      "current_implementations": [ { "path": "replica/Sources/PastoCore/OriginalPreviewAttributedText.swift", "start_line": 41, "end_line": 48, "symbol": "public static func f_100309720(attributes:isUnattributed:stop:)" } ],
+      "criterion": "原空attributes完全不写两个捕获值；非空将isUnattributed=false、stop=true，不根据属性值、字体种类或下划线数值作过滤。ARM309724空count直接ret，309728清x4指向flag，309730向x3 stop写1，原C和当前分支一致。即便原flag已false，空run仍不更改stop。",
+      "actual_consumer": "同文件f3095bc第54行真实enumerateAttributes回调调用；该纯文本判断实际决定文本显示去色、编辑基线选择与提交状态。",
+      "limitations": "只确认回调值分支，原closure ABI生成不在此有限方法结论内。"
+    },
+    {
+      "function_id": "Paste:0x1003095bc",
+      "status": "complete",
+      "original": { "path": "decompiled/Paste/part-0251.c", "start_line": 1065, "address_range": "0x1003095bc..<0x100309700" },
+      "current_implementations": [ { "path": "replica/Sources/PastoCore/OriginalPreviewAttributedText.swift", "start_line": 51, "end_line": 57, "symbol": "public static func f_1003095bc(_ source: NSAttributedString) -> Bool" } ],
+      "criterion": "原局部flag初始true，枚举[0,source.length)全部属性runs，options0；任一非空run经f309720等价转发使flag false并停止，最后返回flag。当前使用同UTF16范围、空options和同回调，空文本/全空属性true，任意属性非空false，不以string是否空之外的富文本解码或富文字体语义重定义。原非逃逸闭包的生命周期检查属于编译器生成，当前同步Foundation枚举保持闭包不逃逸。原本体不含MainActor诊断分支。",
+      "actual_consumer": "OriginalPreviewAttributedText.f3c0be0选择比较基线，f3eb330只读显示时决定去除前景/背景色；OriginalPreviewTextColors.f3eb4a8同样真实消费，Adapter初始化与Store观察刷新接这些方法。",
+      "limitations": "不升级richText判定或整个preview VM；没有执行文本样本。"
+    },
+    {
+      "function_id": "Paste:0x1003c0be0",
+      "status": "complete",
+      "original": { "path": "decompiled/Paste/part-0297.c", "start_line": 686, "address_range": "0x1003c0be0..<0x1003c0e08" },
+      "current_implementations": [ { "path": "replica/Sources/PastoCore/OriginalPreviewAttributedText.swift", "start_line": 103, "end_line": 107, "symbol": "public static func f_1003c0be0(candidate:original:editing:)" } ],
+      "criterion": "原先读candidate.string，空串立即false；非空才枚举原original的属性作纯文本判断，plain时取editing基线，否则original基线，再通过NSObject相等比较candidate并反转。原3c1f3c完整体转发f309720，确认没有额外style谓词。当前同样先guard空字符串，再惰性选择editing/original并用NSAttributedString等值比较；保全部属性相等语义而非只比较string，不trim空白、不增加isEditing或canCommit gate。",
+      "actual_consumer": "OriginalReplicaPreviewAdapter.swift第243..249行document.$content的真实订阅调用，更新self.canCommit并调用onCanCommitEditing；originalText/editingText为实际加载和模型刷新基线。",
+      "limitations": "只确认提交可用性的有限值方法，不升级原VM对象读取、保存事务、按钮动作及生命周期。没有运行编辑或提交测试。"
+    }
+  ],
+  "arm_evidence": { "binary": ".local/paste-arm64-static.bin", "range": "0x100309700..<0x100309738", "method": "只读llvm-objdump指定范围，未运行二进制", "key_instructions": [ "309710 mov x1,x0", "309714 mov x0,#0", "309724 cbz x8,309734", "309728 strb wzr,[x4]", "309730 strb w8,[x3]" ] },
+  "excluded_failed_addresses": [ "0x100ac35f8", "0x100ac746c" ],
+  "verification_scope": "仅新增本独立报告。产品源码、台账和旧报告均未修改；无编译、parse、应用运行、测试、MCP或发布，未读取指定两失败函数。complete仅为所列有限方法的静态分支结论，不是一比一功能验收或当前编译产物证明。"
+}

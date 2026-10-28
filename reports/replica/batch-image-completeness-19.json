@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "scope": "前轮未覆盖的四个全文预览footer约束/内容替换/布局方法；成功原C与生产消费者只读核对。",
+  "counts": { "total": 4, "complete": 2, "gap": 0, "uncertain": 2 },
+  "records": [
+    {
+      "function_id": "Paste:0x100212bac",
+      "status": "complete",
+      "original": { "path": "decompiled/Paste/part-0180.c", "start_line": 1414, "address_range": "0x100212bac..<0x100212ccc" },
+      "current_implementations": [ { "path": "replica/Sources/PastoCore/OriginalPreviewFooter.swift", "symbol": "public static func f_100212bac(_:parent:child:)" } ],
+      "criterion": "原生成恰两条约束，依次child.top==parent.top+inset、child.bottom==parent.bottom-inset，返回数组不自行activate。当前相同anchor双方、相反常量符号和顺序，不加入height/centerY或额外padding，也不限制inset非负；零值和负值同样按原算式处理。原本体无执行器检查。",
+      "actual_consumer": "OriginalPreviewTextMetaView.f212840调用本方法传0，构造器真实activate返回的整体约束；Adapter.swift第615行内容变化构造该metaView并安装到footer。",
+      "limitations": "仅两条垂直约束值方法，不升级metaView整体构造和布局测量。"
+    },
+    {
+      "function_id": "Paste:0x100212840",
+      "status": "complete",
+      "original": { "path": "decompiled/Paste/part-0180.c", "start_line": 1269, "address_range": "0x100212840..<0x100212a10" },
+      "current_implementations": [ { "path": "replica/Sources/PastoCore/OriginalPreviewFooter.swift", "symbol": "public func f_100212840(_ stack: NSView) -> [NSLayoutConstraint]" } ],
+      "criterion": "原先取f212bac(0,parent,stack)两条上下约束，再生成stack.leading==parent.leading与stack.trailing<=parent.trailing，使用原builder按顺序展开返回。当前数组拼接相同四条，特别保trailing小于等于而非等于，不添加最低宽度或centerX；本方法不activate，由构造器消费。原本体没有额外可选或错误分支。",
+      "actual_consumer": "OriginalPreviewTextMetaView.init在真实stack addSubview后activate(f212840(stack))；该view由document.$content变化真实产生，数值footer显示使用该约束链。",
+      "limitations": "只确认本数组构造方法，不把原builder生成ABI或父内容统计/本地化算作已核。"
+    },
+    {
+      "function_id": "Paste:0x1003df0b0",
+      "status": "uncertain",
+      "original": { "path": "decompiled/Paste/part-0308.c", "start_line": 4, "address_range": "0x1003df0b0..<0x1003df260" },
+      "current_implementations": [ { "path": "replica/Sources/PastoCore/OriginalPreviewFooter.swift", "symbol": "public func f_1003df0b0(_ view: NSView)" } ],
+      "satisfied_business_contract": "原对container.subviews取数组快照并按原序removeFromSuperview，随后原layout builder安装传入view及四边约束，最后向container发送layoutIfNeeded。当前for遍历同subviews快照，传入view关闭autoresizing、addSubview、activate四边约束，再调用原布局转发，正常内容替换和顺序满足，不只移除第一子view。",
+      "criterion": "原移除每个旧view前含MainActor executor检查及失败reportUnexpectedExecutor(ItemContent.Footer.swift,line81)；当前只有类@MainActor声明，源码尚不足以证明同检查发生于同循环分支。下游layoutIfNeeded类别入口另含执行器检查，故整入口保待证，不把正常替换同序当所有原分支完整。",
+      "actual_consumer": "OriginalReplicaPreviewAdapter.swift第48/52行所有实际内容footer安装和第615行文本计数更新调用；原生容器真实挂入preview chrome，不是未消费helper。",
+      "limitations": "没有实际修改/移除UI视图或验证layout事件，未升级台账。"
+    },
+    {
+      "function_id": "Paste:0x1000f74b8",
+      "status": "uncertain",
+      "original": { "path": "decompiled/Paste/part-0084.c", "start_line": 341, "address_range": "0x1000f74b8..<0x1000f7540" },
+      "current_implementations": [ { "path": "replica/Sources/PastoCore/OriginalPreviewFooter.swift", "symbol": "public static func f_1000f74b8(_ view: NSView)" } ],
+      "satisfied_business_contract": "原调用同NSView.layoutSubtreeIfNeeded，无layout/display替代、无额外layoutIfNeeded递归；当前直接调用该原生方法，正常布局副作用完整。",
+      "criterion": "原本体先获取MainActor executor，非当前executor时reportUnexpectedExecutor(PastePlatform/NSView+UIKit.swift,line16)，之后仍调用原生布局并释放actor；现只有enum @MainActor，当前生成类别桥及诊断分支尚无证据，因此整原方法待证。",
+      "actual_consumer": "OriginalPreviewFooterView.f3df0b0在新footer内容和约束安装完之后对container调用，真实文本/图片/文件预览factory均有路径。",
+      "limitations": "不编译或运行补证；该待证不是已确认布局故障，也不凭名称匹配升完整。"
+    }
+  ],
+  "excluded_failed_addresses": [ "0x100ac35f8", "0x100ac746c" ],
+  "verification_scope": "仅新增本独立报告，无产品源码、台账和旧报告修改，无编译、parse、运行应用、测试、MCP或发布，未读取指定失败函数。complete为列明有限源码合同，不是一比一功能验收或当前构建证明。"
+}

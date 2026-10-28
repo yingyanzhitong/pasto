@@ -1,0 +1,51 @@
+{
+  "kind": "batch-window-completeness-17",
+  "scope": "只读核5个搜索日期编码、预设集合及显示方法；原C浮点取整失真处补ARM。",
+  "summary": {"reviewed": 5, "complete": 4, "gap": 0, "uncertain": 1},
+  "prior_inventory": "reports/replica/batch-completeness-round16.json",
+  "definite_product_differences": [],
+  "activities": {"product_source_edited": false, "ledger_edited": false, "compiled": false, "product_run": false, "tests_run": false, "wrapper_added": false},
+  "skipped_failed_addresses": ["Paste:0x100ac35f8", "Paste:0x100ac746c"],
+  "limitations": [
+    "complete为有限静态业务合同，不是当前编译、日期格式/时区运行或完整搜索功能验收，不改变台账计数。",
+    "不把Swift Int/Substring/String/DateFormatter私有ABI及原ARC优化视为当前机器码相同。",
+    "原尾跳只核到直接指令，完整函数AddressSet/LC边界未在本批重新核定，单列待证。"
+  ],
+  "functions": [
+    {
+      "function_id": "Paste:0x1002d9d2c", "status": "complete",
+      "original": {"path": "decompiled/Paste/part-0236.c", "line": 2385},
+      "source_references": [{"path": "replica/Sources/PastoCore/OriginalSearchDateEncoding.swift", "symbol": "f_1002d9d2c"}],
+      "evidence": "原C误译为强转截断，ARM 0x1002d9d4c frintm下界、0x1002d9da8 frintp上界，分别有限/Int范围检查后de4/de8转换；e18添加ASCII空格，e24..e40添加第二Int十进制描述，e4c取String双字并e50返回tag3。当前lower.rounded(down)/upper.rounded(up)再Int、单空格拼接及.filter(3)恢复完整值；非有限/越界仍终止，不钳取。",
+      "actual_consumer": "FilterBrowser.Selection.queryNode日期分支、OriginalSearchSuggestions日期候选与显示title(for:)实际调用。"
+    },
+    {
+      "function_id": "Paste:0x1002d7368", "status": "uncertain",
+      "original": {"path": "decompiled/Paste/part-0236.c", "line": 557},
+      "source_references": [{"path": "replica/Sources/PastoCore/OriginalSearchDateEncoding.swift", "symbol": "f_1002d9d2c"}],
+      "evidence": "成功伪码标thunk并转f2d9d2c；原ARM 0x1002d7368=14000a71确为B 0x1002d9d2c，不改寄存器。目标完整值合同本批已核，但本批未另重读此条LC_FUNCTION_STARTS和Ghidra AddressSet以排除入口后隐藏body，仅凭4字节指令不自动判原完整边界。",
+      "actual_consumer": "共用实际日期编码方法，不新增包装；原尾跳ABI透明仅在本指令范围已证明。"
+    },
+    {
+      "function_id": "Paste:0x1002d8ce0", "status": "complete",
+      "original": {"path": "decompiled/Paste/part-0236.c", "line": 1597},
+      "source_references": [{"path": "replica/Sources/PastoCore/OriginalSearchDateRanges.swift", "symbol": "f_1002d8ce0"}],
+      "evidence": "原按固定五项顺序构造tuple：Today/f2d7694、Yesterday/f2d7a14、This week/f2d7db8、Last week/f2d8300、Last 30 days/f2d8860；各原小String字直接解出同一英文标题，非本地化猜测。当前按同顺序逐次调用，不缓存为过期日期，不把周/最近30日改成近似。",
+      "actual_consumer": "FilterBrowser日期section真实选项，日期字符串显示预设识别和建议provider实际消费。"
+    },
+    {
+      "function_id": "Paste:0x1002d8e54", "status": "complete",
+      "original": {"path": "decompiled/Paste/part-0236.c", "line": 1651},
+      "source_references": [{"path": "replica/Sources/PastoCore/OriginalSearchDateEncoding.swift", "symbol": "private static let dateFormatter"}],
+      "evidence": "原NSDateFormatter.alloc/init，dateStyle=2 medium，timeStyle=0 none，保存共享槽，不额外设置locale/calendar/timezone。当前静态let以同顺序配置DateFormatter，首次显示需要时惰性初始化；不每次新建或固定地区。原once使用位于调用父，当前静态let承接一次初始化。",
+      "actual_consumer": "f2d8e9c在未匹配相对预设且两个Int解析成功后，用同一formatter分别格式化两端。"
+    },
+    {
+      "function_id": "Paste:0x1002d8e9c", "status": "complete",
+      "original": {"path": "decompiled/Paste/part-0236.c", "line": 1670},
+      "source_references": [{"path": "replica/Sources/PastoCore/OriginalSearchDateEncoding.swift", "symbol": "f_1002d8e9c"}],
+      "evidence": "先每次生成五相对范围，按原顺序编码精确String比较，命中返回原title；ARM 0x1002d9070/frintm、90c8/frintp证明与f2d9d2c同一取整。未命中按ASCII空格分隔、略空段，必须两段；分别有符号Int十进制解析，任一失败nil，不额外验证start<end。成功按两Int转Double epoch日期，使用共享medium/no-time formatter，以固定英文空格to空格拼接；ARM 9460..946c确认0x206f7420字面量并append，94b4..94c0追加第二格式化字符串，94cc取累计返回双字。当前同序保留原排他上界，不减一天，不把无效输入改默认标题；读完整原C包括原UTF8/foreign解析分支，语义由Swift Int(Substring)承接。",
+      "actual_consumer": "SearchEditor.chip日期分支调用，FilterBrowser日期title通过title(for:)调用，生产显示确实消费；title(for:)自己的失败fallback不并入本原方法。"
+    }
+  ]
+}

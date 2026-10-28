@@ -2,7 +2,6 @@ import AppKit
 import Combine
 import PastoCore
 import QuickLookUI
-import UniformTypeIdentifiers
 
 /// File content, Quick Look, and local Finder action share the existing native preview chrome.
 @MainActor
@@ -115,16 +114,11 @@ final class ReplicaFilePreviewContent: NSView {
     }
 
     private func revealInFinder() {
+        // Paste f_1003e2eac closes the preview independently of the model action.
+        defer { window?.performClose(nil) }
         guard let item = state?.store.items.first(where: { $0.id == itemID }) else { return }
         let items = (try? ClipboardStore.originalPasteboardItems(from: item.payloads)) ?? []
-        let urls = items.compactMap { item -> URL? in
-            guard let data = item.f_10037d810(forType: UTType.fileURL.identifier),
-                  let string = String(data: data, encoding: .utf8) else { return nil }
-            return URL(string: string)
-        }
-        NSWorkspace.shared.activateFileViewerSelecting(urls)
-        NSApp.deactivate()
-        window?.performClose(nil)
+        OriginalFilePreviewActions.f_1003bc874(items)
     }
 }
 
@@ -134,11 +128,12 @@ private final class ReplicaFileQuickLookView: QLPreviewView {
 }
 
 private final class ReplicaFilePreviewItem: NSObject, QLPreviewItem {
-    let previewItemURL: URL?
+    private let fileURL: URL
+    var previewItemURL: URL? { fileURL }
     let previewItemTitle: String?
 
     init(path: String, title: String?) {
-        previewItemURL = URL(fileURLWithPath: path)
+        fileURL = URL(fileURLWithPath: path)
         previewItemTitle = title
         super.init()
     }

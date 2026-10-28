@@ -1,0 +1,51 @@
+{
+  "kind": "batch-window-completeness-11",
+  "scope": "只读核对5个搜索布局、撤销/重做快捷键与筛选动画方法；补读原ARM返回轨迹。",
+  "summary": {"reviewed": 5, "complete": 2, "gap": 0, "uncertain": 3},
+  "prior_inventory": "reports/replica/batch-completeness-round10.json",
+  "definite_product_differences": [],
+  "activities": {"product_source_edited": false, "ledger_edited": false, "compiled": false, "product_run": false, "tests_run": false, "wrapper_added": false},
+  "skipped_failed_addresses": ["Paste:0x100ac35f8", "Paste:0x100ac746c"],
+  "limitations": [
+    "complete限列明有限静态合同，不是当前构建、产品运行或功能验收；不改变台账计数。",
+    "Actor诊断和未独立解出的动画字符串常量保待证，不据此伪造确定产品缺陷。",
+    "读取的ARM为原MachO静态反汇编，不是执行原程序；当前产品源码未编译。"
+  ],
+  "functions": [
+    {
+      "function_id": "Paste:0x1000472ac", "status": "complete",
+      "original": {"path": "decompiled/Paste/part-0026.c", "line": 380},
+      "source_references": [{"path": "replica/Sources/PastoCore/OriginalSearchField.swift", "symbol": "f_1000472ac"}, {"path": "replica/Sources/PastoCore/OriginalLayerBackedView.swift", "symbol": "f_10021d49c"}],
+      "evidence": "先super.layout，取field.bounds转换到内部InputView坐标写focusRingBounds，再原样复制四分量给同一scroller；再重新读field.bounds取height，OS26圆角height/2、旧6，curve circular。原C存在寄存器误归属，ARM 0x1000472e4..31c证实InputView对象及d0..d3存储，0x100047320..348证实scroller及四分量复制，0x100047354..398证实重新bounds/height、OS分支和corner调用。当前同序实现且复用已恢复layer helper，不从frame重算。",
+      "actual_consumer": "SearchEditor创建OriginalSearchField派生视图；AppKit.layout override→f0473b4→本方法，真实focus ring mask读取该矩形。"
+    },
+    {
+      "function_id": "Paste:0x1000473b4", "status": "uncertain",
+      "original": {"path": "decompiled/Paste/part-0026.c", "line": 439},
+      "source_references": [{"path": "replica/Sources/PastoCore/OriginalSearchField.swift", "symbol": "f_1000473b4"}],
+      "evidence": "正常布局入口同步调用f0472ac，当前相同，无异步排队。原另有MainActor executor检查及Paste/SearchField.swift行0x95错误报告，当前静态@MainActor声明不能独立证明该完整错误路径，保待证。",
+      "actual_consumer": "OriginalSearchField.layout override实际调用此方法，SearchEditor派生类未覆盖丢弃它。"
+    },
+    {
+      "function_id": "Paste:0x100047450", "status": "complete",
+      "original": {"path": "decompiled/Paste/part-0026.c", "line": 471},
+      "source_references": [{"path": "replica/Sources/PastoCore/OriginalSearchField.swift", "symbol": "f_100047450"}, {"path": "replica/Sources/Pasto/UI/SearchEditor.swift", "symbol": "attach"}],
+      "evidence": "仅firstResponder存在且按NSObject.isEqual等于同一TextView才识别签名；固定ANSI z先比exact Cmd(0x100000)再CmdShift(0x120000)，匹配但回调nil直接false，有回调返回其Bool；其它一律super.performKeyEquivalent。原C误把回调前上下文当返回值，ARM 0x1000475c4 blr x19、5c8保存x0、5d8取bit0明确真实回调结果；5e0显式false，5e8回super。当前返回/优先级/回退全部一致。",
+      "actual_consumer": "AppKit performKeyEquivalent override→f0475fc→本方法；SearchEditor.attach给onUndo/onRedo接同一history.restore并返回实际Bool。"
+    },
+    {
+      "function_id": "Paste:0x1000475fc", "status": "uncertain",
+      "original": {"path": "decompiled/Paste/part-0026.c", "line": 540},
+      "source_references": [{"path": "replica/Sources/PastoCore/OriginalSearchField.swift", "symbol": "f_1000475fc"}],
+      "evidence": "原实际NSEvent转交f047450并返回其Bool，当前薄入口及系统override相同。原先执行MainActor检查和文件行0x9c错误报告，完整生成入口错误合同仍未独立证明，不因正常转发方法完整而提升此桥。",
+      "actual_consumer": "OriginalSearchField.performKeyEquivalent(with:) override直接调用，真实系统事件路由存在。"
+    },
+    {
+      "function_id": "Paste:0x1000457cc", "status": "uncertain",
+      "original": {"path": "decompiled/Paste/part-0025.c", "line": 1916},
+      "source_references": [{"path": "replica/Sources/PastoCore/OriginalSearchFieldAnimation.swift", "symbol": "f_1000457cc"}, {"path": "replica/Sources/Pasto/UI/FilterBrowser.swift", "symbol": "field?.f_1000457cc()"}],
+      "evidence": "已核layer nil无动作return0；非nil两次anchor/bounds算中心偏移，四组translation→scale→反translation，scale1/1.16/.98/1，keyTimes0/.35/.7/1，cubic、duration.28、返回0均同。原C两处String桥隐藏了keyPath和addAnimation key，本批未独立解对应字符串寄存器，不能只以当前transform/filtersBounce字面量和既有map判断全体完成。",
+      "actual_consumer": "FilterBrowser.showFilterBrowser呈现后调用，onWillClose闭包再次调用；并非仅未启用的NSMenuDelegate扩展。"
+    }
+  ]
+}

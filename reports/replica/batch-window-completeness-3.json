@@ -1,0 +1,475 @@
+{
+  "kind": "batch-window-completeness-3",
+  "scope": "20个既有migrated UI合同，按返回值与once/LayerBackedView/动态色分组只读批审；优先复核上批5个待证。",
+  "summary": {
+    "reviewed": 20,
+    "rechecks": 5,
+    "additional": 15,
+    "complete": 10,
+    "gap": 0,
+    "uncertain": 10
+  },
+  "prior_uncertain_resolution": {
+    "resolved_complete": [
+      "Paste:0x1001fec18"
+    ],
+    "remain_uncertain": [
+      "Paste:0x100238ab8",
+      "Paste:0x1000879dc",
+      "Paste:0x10008727c",
+      "Paste:0x10021d7a4"
+    ]
+  },
+  "definite_product_differences": [],
+  "uncertainty_groups": [
+    "原显式MainActor检查/固定unexpectedExecutor报告与当前源码隔离声明不能自动等同。",
+    "原同步drawing-appearance闭包的逃逸检查/brk支路，未以当前构建证明。"
+  ],
+  "source_snapshot": "当前只读工作树；没有新编译、没有把旧编译当当前Source证据。",
+  "original_read_only_machine": {
+    "path": ".local/paste-arm64-static.bin",
+    "range": "0x1001fec18..0x1001fec34",
+    "tail": "0x1001fec30 B 0x100126a6c"
+  },
+  "activities": {
+    "product_source_edited": false,
+    "ledger_edited": false,
+    "compiled": false,
+    "product_run": false,
+    "tests_run": false,
+    "new_wrapper": false
+  },
+  "counting": "本批是独立审阅结论，不增加或变更既有migrated数量；5项与上批重叠，跨批汇总须去重。",
+  "skipped_failed_addresses": [
+    "Paste:0x100ac35f8",
+    "Paste:0x100ac746c"
+  ],
+  "functions": [
+    {
+      "function_id": "Paste:0x1001fec18",
+      "status": "complete",
+      "kind": "recheck",
+      "mapping_state_at_review": "migrated",
+      "original": {
+        "path": "decompiled/Paste/part-0167.c",
+        "line": 653
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchAppearance.swift",
+          "symbol": "f_1001fec18"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/SearchEditor.swift",
+          "symbol": "OriginalSearch"
+        }
+      ],
+      "evidence": "原入口1fec18..1fec30分别加载once token100fb63e0、slot1010577c8、factory1feab8，再直接B到f126a6c。共享成功C part0101:98明确已初始化返回*slot，否则swift_once后返回*slot。当前f1fec18读取经f1fe15c once初始化的同一foregroundSlot.pointee，原疑点已闭。",
+      "actual_consumer": "SearchEditor/Panel foreground实际读取；地址accessor与value getter保持分离。",
+      "original_machine_addresses": [
+        "0x1001fec18",
+        "0x1001fec20",
+        "0x1001fec28",
+        "0x1001fec30"
+      ],
+      "supporting_original": {
+        "path": "decompiled/Paste/part-0101.c",
+        "line": 98
+      }
+    },
+    {
+      "function_id": "Paste:0x100238ab8",
+      "mapping_state_at_review": "migrated",
+      "status": "uncertain",
+      "original": {
+        "path": "decompiled/Paste/part-0193.c",
+        "line": 2208
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaCopiedOSD.swift",
+          "symbol": "DispatchQueue.main.asyncAfter(deadline: .now() + 0.1)"
+        }
+      ],
+      "evidence": "原先显式MainActor执行器检查与unexpectedExecutor报告，再可选action调用；当前main queue closure中action?()。可选分支/调用次数正确，但未用当前构建证明等价诊断轨迹。",
+      "actual_consumer": "真实OSD点击延迟closure；固定报告/错误路径暂不能标全体完整。",
+      "kind": "recheck",
+      "recheck_result": "已重读当前实际源码，业务分支仍一致；没有新的当前编译或原诊断同构证据，维持uncertain，不循环扩查或补产品代码。"
+    },
+    {
+      "function_id": "Paste:0x1000879dc",
+      "mapping_state_at_review": "migrated",
+      "status": "uncertain",
+      "original": {
+        "path": "decompiled/Paste/part-0045.c",
+        "line": 670
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPreviewWindows.swift",
+          "symbol": "f_1000879dc"
+        }
+      ],
+      "evidence": "稳定removeAll窗口NSObject相等项、随后更新topmost、仅nonempty→empty调callback，当前业务顺序一致；原循环逐项执行器检查/报告不在当前方法显式源码，本批无新编译不能证实完整错误路径。",
+      "actual_consumer": "真实willClose观察回调与registry调用；并非确定漏删/排序缺陷。",
+      "kind": "recheck",
+      "recheck_result": "已重读当前实际源码，业务分支仍一致；没有新的当前编译或原诊断同构证据，维持uncertain，不循环扩查或补产品代码。"
+    },
+    {
+      "function_id": "Paste:0x10008727c",
+      "mapping_state_at_review": "migrated",
+      "status": "uncertain",
+      "original": {
+        "path": "decompiled/Paste/part-0045.c",
+        "line": 273
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPreviewWindows.swift",
+          "symbol": "f_10008727c"
+        }
+      ],
+      "evidence": "原逆序匹配最后identifier，更新该项编辑flag，仅最后entry才发布；当前lastIndex与分支一致。但原循环有MainActor诊断，当前@MainActor声明不足以独立证明全部原错误路径。",
+      "actual_consumer": "预览onEditingStateChanged实际调用；业务复用不代表Actor报告已证明。",
+      "kind": "recheck",
+      "recheck_result": "已重读当前实际源码，业务分支仍一致；没有新的当前编译或原诊断同构证据，维持uncertain，不循环扩查或补产品代码。"
+    },
+    {
+      "function_id": "Paste:0x10021d7a4",
+      "mapping_state_at_review": "migrated",
+      "status": "uncertain",
+      "original": {
+        "path": "decompiled/Paste/part-0185.c",
+        "line": 81
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPreviewWindows.swift",
+          "symbol": "f_10021d7a4"
+        }
+      ],
+      "evidence": "原contentView→superview→直接subviews，收集NSVisualEffectView后取首个；当前compactMap.first业务同序且nil分支一致。原逐subview执行器检查尚无当前编译证据。",
+      "actual_consumer": "OriginalPreviewWindow初始化两次实际消费效果view；仅未决原诊断分支，不是假称层级已运行验收。",
+      "kind": "recheck",
+      "recheck_result": "已重读当前实际源码，业务分支仍一致；没有新的当前编译或原诊断同构证据，维持uncertain，不循环扩查或补产品代码。"
+    },
+    {
+      "function_id": "Paste:0x10021d024",
+      "status": "uncertain",
+      "kind": "additional",
+      "mapping_state_at_review": "migrated",
+      "original": {
+        "path": "decompiled/Paste/part-0184.c",
+        "line": 2310
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalLayerBackedView.swift",
+          "symbol": "f_10021d024"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/SearchEditor.swift",
+          "symbol": "ReplicaSearchEditor"
+        }
+      ],
+      "evidence": "layer/borderColor缺失nil、非nil NSColor(cgColor:)可空转换与当前一致。原在有CGColor分支显式检查MainActor并报告；当前仅enum隔离声明，无法在不编译下证明该诊断支路。",
+      "actual_consumer": "replicaBorderColor真实getter以及颜色refresh消费。"
+    },
+    {
+      "function_id": "Paste:0x10021d1cc",
+      "status": "complete",
+      "kind": "additional",
+      "mapping_state_at_review": "migrated",
+      "original": {
+        "path": "decompiled/Paste/part-0184.c",
+        "line": 2387
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalLayerBackedView.swift",
+          "symbol": "f_10021d1cc"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/SearchEditor.swift",
+          "symbol": "ReplicaSearchEditor"
+        }
+      ],
+      "evidence": "先wantsLayer=true，再读取layer；layer存在才从非nil color取cgColor或写nil；最后返回0。当前optional-chain避免nil layer时取color.cgColor。",
+      "actual_consumer": "OriginalReplicaPreviewAdapter.swift:114真实调用f21d1cc设置预览控件边框；另有LayerBackedView.replicaBorderColor setter。"
+    },
+    {
+      "function_id": "Paste:0x10021d49c",
+      "status": "complete",
+      "kind": "additional",
+      "mapping_state_at_review": "migrated",
+      "original": {
+        "path": "decompiled/Paste/part-0184.c",
+        "line": 2533
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalLayerBackedView.swift",
+          "symbol": "f_10021d49c"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/SearchEditor.swift",
+          "symbol": "ReplicaSearchEditor"
+        }
+      ],
+      "evidence": "先wantsLayer=true、clipsToBounds=true；随后两次分别读layer写radius和curve，返回0；没有clamp或合并一次layer缓存。",
+      "actual_consumer": "真实ShortcutIndicator构造与其他UI圆角设置消费。"
+    },
+    {
+      "function_id": "Paste:0x10023565c",
+      "status": "complete",
+      "kind": "additional",
+      "mapping_state_at_review": "migrated",
+      "original": {
+        "path": "decompiled/Paste/part-0192.c",
+        "line": 1513
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalLayerBackedView.swift",
+          "symbol": "f_10023565c"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/SearchEditor.swift",
+          "symbol": "ReplicaSearchEditor"
+        }
+      ],
+      "evidence": "直接读取保存的可选NSColor引用，缺失nil；不从layer/CGColor重建、不返回存储地址。",
+      "actual_consumer": "open backgroundColor getter与f236188动态读取。"
+    },
+    {
+      "function_id": "Paste:0x1002356a8",
+      "status": "uncertain",
+      "kind": "additional",
+      "mapping_state_at_review": "migrated",
+      "original": {
+        "path": "decompiled/Paste/part-0192.c",
+        "line": 1531
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalLayerBackedView.swift",
+          "symbol": "f_1002356a8"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/SearchEditor.swift",
+          "symbol": "ReplicaSearchEditor"
+        }
+      ],
+      "evidence": "先写保存的可选backgroundColor，再以effectiveAppearance同步执行统一颜色刷新，当前顺序一致。原尾部swift_isEscapingClosureAtFileLocation及brk分支未在当前源码显式出现，也无当前编译证据。",
+      "actual_consumer": "实际backgroundColor setter调用f2359f4并刷新真实layer。"
+    },
+    {
+      "function_id": "Paste:0x1002359f4",
+      "status": "uncertain",
+      "kind": "additional",
+      "mapping_state_at_review": "migrated",
+      "original": {
+        "path": "decompiled/Paste/part-0192.c",
+        "line": 1681
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalLayerBackedView.swift",
+          "symbol": "f_1002359f4"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/SearchEditor.swift",
+          "symbol": "ReplicaSearchEditor"
+        }
+      ],
+      "evidence": "取得effectiveAppearance并performAsCurrentDrawingAppearance中调用捕获的同一view刷新，当前一致；原同步closure escaping检查/brk边界未独立证明。",
+      "actual_consumer": "background setter/appearance change/真实checkerboard等调用。"
+    },
+    {
+      "function_id": "Paste:0x1001fe108",
+      "status": "complete",
+      "kind": "additional",
+      "mapping_state_at_review": "migrated",
+      "original": {
+        "path": "decompiled/Paste/part-0167.c",
+        "line": 4
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalLayerBackedView.swift",
+          "symbol": "f_1001fe108"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/SearchEditor.swift",
+          "symbol": "ReplicaSearchEditor"
+        }
+      ],
+      "evidence": "原捕获view直接转交f236188，当前同一view参数调用view.f236188，无额外view创建/转换/条件。仅此转发体，不把callee诊断缺证一起计完整。",
+      "actual_consumer": "f2359f4实际drawing-appearance closure调用。"
+    },
+    {
+      "function_id": "Paste:0x100236188",
+      "status": "uncertain",
+      "kind": "additional",
+      "mapping_state_at_review": "migrated",
+      "original": {
+        "path": "decompiled/Paste/part-0192.c",
+        "line": 2015
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalLayerBackedView.swift",
+          "symbol": "f_100236188"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/SearchEditor.swift",
+          "symbol": "ReplicaSearchEditor"
+        }
+      ],
+      "evidence": "两次layer读取分别写background与border；background经open getter取值、border经现层CGColor→NSColor→CGColor，nil写nil，当前实际一致。原入口显式Actor报告支路仍缺当前证明。",
+      "actual_consumer": "真实layer颜色刷新；不是未接入helper。"
+    },
+    {
+      "function_id": "Paste:0x100235f6c",
+      "status": "uncertain",
+      "kind": "additional",
+      "mapping_state_at_review": "migrated",
+      "original": {
+        "path": "decompiled/Paste/part-0192.c",
+        "line": 1917
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalLayerBackedView.swift",
+          "symbol": "f_100235f6c"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/SearchEditor.swift",
+          "symbol": "ReplicaSearchEditor"
+        }
+      ],
+      "evidence": "当前先super.viewDidChangeEffectiveAppearance再统一appearance刷新，原正常顺序同。原escaping closure检测/失败brk未在当前源码独立表达，不能仅以正常路径完整判整个方法完整。",
+      "actual_consumer": "NSView有效appearance回调经f2360c0调用。"
+    },
+    {
+      "function_id": "Paste:0x1002360c0",
+      "status": "uncertain",
+      "kind": "additional",
+      "mapping_state_at_review": "migrated",
+      "original": {
+        "path": "decompiled/Paste/part-0192.c",
+        "line": 1977
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalLayerBackedView.swift",
+          "symbol": "f_1002360c0"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/SearchEditor.swift",
+          "symbol": "ReplicaSearchEditor"
+        }
+      ],
+      "evidence": "ObjC appearance入口正常super→刷新链与当前一致；原显式executor检测/固定文件行号报告未用当前构建证明，不能仅凭@MainActor桥判全体。",
+      "actual_consumer": "open override viewDidChangeEffectiveAppearance真实系统回调。"
+    },
+    {
+      "function_id": "Paste:0x1001fef6c",
+      "status": "complete",
+      "kind": "additional",
+      "mapping_state_at_review": "migrated",
+      "original": {
+        "path": "decompiled/Paste/part-0167.c",
+        "line": 791
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalLayerBackedView.swift",
+          "symbol": "f_1001fef6c"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/SearchEditor.swift",
+          "symbol": "ReplicaSearchEditor"
+        }
+      ],
+      "evidence": "原black alpha0.1/light和white alpha0.1/dark构造无name动态色，provider四暗appearance链，写保存槽；当前两颜色/alpha/capture/slot顺序一致。",
+      "actual_consumer": "SearchSurfaceAppearance稳定槽provider，实际SearchEditor表面使用。"
+    },
+    {
+      "function_id": "Paste:0x1001ff0d0",
+      "status": "complete",
+      "kind": "additional",
+      "mapping_state_at_review": "migrated",
+      "original": {
+        "path": "decompiled/Paste/part-0167.c",
+        "line": 837
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalLayerBackedView.swift",
+          "symbol": "f_1001ff0d0"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/SearchEditor.swift",
+          "symbol": "ReplicaSearchEditor"
+        }
+      ],
+      "evidence": "先一次初始化动态表面颜色，再返回稳定颜色槽地址；当前static initialized与process-lifetime colorSlot保持address/value区别。",
+      "actual_consumer": "SearchField/原搜索表面调用f1ff0d0.pointee读取。"
+    },
+    {
+      "function_id": "Paste:0x100219a90",
+      "status": "complete",
+      "kind": "additional",
+      "mapping_state_at_review": "migrated",
+      "original": {
+        "path": "decompiled/Paste/part-0183.c",
+        "line": 422
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPreviewTextColors.swift",
+          "symbol": "f_100219a90"
+        }
+      ],
+      "evidence": "light.white、dark各RGB20/255 alpha1，无name动态颜色，provider捕获dark/light后写backgroundSlot；当前参数一致。",
+      "actual_consumer": "ShortcutIndicator、compact text等真实背景调用。"
+    },
+    {
+      "function_id": "Paste:0x100219bc4",
+      "status": "complete",
+      "kind": "additional",
+      "mapping_state_at_review": "migrated",
+      "original": {
+        "path": "decompiled/Paste/part-0183.c",
+        "line": 468
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPreviewTextColors.swift",
+          "symbol": "f_100219bc4"
+        }
+      ],
+      "evidence": "原once(factory219a90)后返回稳定背景槽地址；当前静态初始化再返回同一process-lifetime pointer，没有返回值替代地址。",
+      "actual_consumer": "真实Indicator init取.pointee及文本背景消费。"
+    },
+    {
+      "function_id": "Paste:0x1002067d4",
+      "status": "complete",
+      "kind": "additional",
+      "mapping_state_at_review": "migrated",
+      "original": {
+        "path": "decompiled/Paste/part-0170.c",
+        "line": 3076
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPreviewTextColors.swift",
+          "symbol": "f_1002067d4"
+        }
+      ],
+      "evidence": "deviceRGB失败false；成功依序读red/green/blue/alpha，alpha不参与权重；按严格0.55<(299R+587G+114B)/1000返回，不clamp、不改>=。",
+      "actual_consumer": "Color预览黑白字、色卡appearance及文本背景真实使用。"
+    }
+  ]
+}

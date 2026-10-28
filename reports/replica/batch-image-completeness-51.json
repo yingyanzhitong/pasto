@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "round": 51,
+  "scope": "预览边框与工具栏共用的动态表面颜色初始化及稳定存储槽getter。",
+  "counts": {"reviewed": 2, "complete": 2, "gap": 0, "uncertain": 0},
+  "source_binding": {"path": "replica/Sources/PastoCore/OriginalLayerBackedView.swift", "sha256": "87acffa7790cb38e5715cf6ce3d4474fffb3633d3deb15635743526f6342303c", "matches_historical_source_sha256": true, "note": "仅静态源码绑定，未执行当前构建或运行检查。"},
+  "records": [
+    {
+      "function_id": "Paste:0x1001fef6c",
+      "status": "complete",
+      "historical_evidence": "reports/function-migration/Paste-0x1001fef6c.json",
+      "original": {"path": "decompiled/Paste/part-0167.c", "start_line": 791, "end_line": 836, "address_range": "0x1001fef6c..<0x1001ff0d0"},
+      "current_reference": {"path": "replica/Sources/PastoCore/OriginalLayerBackedView.swift", "symbol": "OriginalSearchSurfaceAppearance.f_1001fef6c()", "line_range": "82..96"},
+      "criterion": [
+        "原创建black/white两个NSColor并均withAlphaComponent(0x3fb999999999999a=0.1)，在provider上下文+0x10存white为dark、+0x18存black为light，nil name动态颜色通过f1ff49c选择后写进强存储1010577e0。当前相同alpha、两颜色与dark/light参数对应，使用nil name动态provider后写稳定slot。",
+        "当前未提前解析成固定CGColor、未以effectiveAppearance一次性选色，故之后外观变化仍由同appearance helper解析；初始化无额外输入和分支。black/white创建先后只涉及局部对象分配，不将其当本有限颜色值合同或ABI等价。"
+      ],
+      "actual_consumer": "本文件88的initialized静态初始化真实调用；f1ff0d0读该slot后，OriginalReplicaPreviewAdapter.swift:113..117用于实际内容borderColor，OriginalToolbarButton.swift:188/191用于pressed/selected背景。",
+      "limitations": "仅颜色值、动态provider及持久槽写入合同完整，不扩大到原内存绝对地址或全部工具栏状态函数。"
+    },
+    {
+      "function_id": "Paste:0x1001ff0d0",
+      "status": "complete",
+      "historical_evidence": "reports/function-migration/Paste-0x1001ff0d0.json",
+      "original": {"path": "decompiled/Paste/part-0167.c", "start_line": 837, "end_line": 850, "address_range": "0x1001ff0d0..<0x1001ff110"},
+      "current_reference": {"path": "replica/Sources/PastoCore/OriginalLayerBackedView.swift", "symbol": "OriginalSearchSurfaceAppearance.f_1001ff0d0()", "line_range": "83..88,98..101"},
+      "criterion": "原检查once token100fb6458，必要时f1fef6c初始化，然后返回颜色存储槽地址&1010577e0，不是返回颜色本身。当前_ = initialized保证静态初始化完成，返回一个static let分配的UnsafeMutablePointer<NSColor?>；重复调用返回同一slot，pointee可选且强持有NSColor。没有每次allocate或只返回NSColor替代地址合同；成功原体没有actor诊断分支。",
+      "actual_consumer": "Adapter:115及ToolbarButton:188/191实际取.pointee，OriginalSearchField.swift:80和OriginalSearchFilterView.swift:60也使用相同slot。不存在为迁移计数而创建的无消费指针wrapper。",
+      "limitations": "确认源级once初始化及稳定地址合同，不声称当前指针数值等于原绝对地址、线程调度轨迹或执行过重复调用测试。"
+    }
+  ],
+  "excluded_failed_addresses": ["Paste:0x100ac35f8", "Paste:0x100ac746c"],
+  "verification_scope": {"product_source_modified": false, "ledger_modified": false, "compiled": false, "application_executed": false, "functional_tests_executed": false, "mcp_executed": false, "one_to_one_acceptance_claimed": false}
+}

@@ -1,0 +1,33 @@
+{
+  "kind": "static_preview_titles_review",
+  "generated_at": "2026-10-27T11:52:23.113163+00:00",
+  "source_sha256": {
+    "replica/Sources/PastoCore/OriginalPreviewTitles.swift": "a207f688f263c9652c37d347391efd7cfcebcbe1f637125a623555dbc0d3d687",
+    "replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift": "acc091392974dda3bc855c73d8b866e4f672dbd91d7ef9fb20df5eb741e1c3a1",
+    "replica/Sources/Pasto/UI/OriginalStackSnippetText.swift": "64628db702ddcd4a96961e883179e26a0a0d852dff4942f9f21d385eb217505b"
+  },
+  "build_executed": false,
+  "tests_executed": false,
+  "records": [
+    {
+      "function_id": "Paste:0x100308f88",
+      "status": "complete",
+      "original_path": "decompiled/Paste/part-0251.c",
+      "original_line": 774,
+      "current_path": "replica/Sources/PastoCore/OriginalPreviewTitles.swift",
+      "symbol": "f_100308f88",
+      "criterion": "nil或空标题才调用默认标题；非空包括空白原样返回，方法内fallback为autoclosure；原子函数默认标题调用只发生在nil/空分支。",
+      "consumer": "OriginalStackSnippetText、PanelViews和OriginalReplicaPreviewAdapter实际调用。"
+    },
+    {
+      "function_id": "Paste:0x100309008",
+      "status": "uncertain",
+      "original_path": "decompiled/Paste/part-0251.c",
+      "original_line": 815,
+      "current_path": "replica/Sources/PastoCore/OriginalPreviewTitles.swift",
+      "symbol": "f_100309008",
+      "criterion": "六种类型分支、files的nil回退1与实际路径计数相符；原方法自行读取实体rawType和preview数据并映射，当前方法以调用者提供的值为边界，底层实体读取/异常域未闭。",
+      "consumer": "OriginalStackSnippetText、PanelViews和OriginalReplicaPreviewAdapter实际调用。"
+    }
+  ]
+}

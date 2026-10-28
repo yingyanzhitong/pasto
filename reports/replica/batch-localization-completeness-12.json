@@ -1,0 +1,26 @@
+{
+  "kind": "static_existing_localization_review",
+  "product_source_changed": false,
+  "build_executed": false,
+  "tests_executed": false,
+  "records": [
+    {
+      "function_id": "Paste:0x1001c0f08",
+      "status": "uncertain",
+      "original": {
+        "path": "decompiled/Paste/part-0148.c",
+        "line": 1616,
+        "literal_address": "0x100d98f80",
+        "length": 30,
+        "literal_sha256": "b76596cfdf4dd0ed2da404a81f1c2fad2cc9bd31e900634cdf9edfab5795d88a"
+      },
+      "current": {
+        "path": "replica/Sources/PastoCore/OriginalPreviewLocalization.swift",
+        "symbol": "f_1001c0f08",
+        "sha256": "0163cc854b291a3341675ea525903141dc764dda4a2791b513f4a9c4515632f1"
+      },
+      "criterion": "原键字节与当前resource键相同；源码范围内没有找到对该函数的生产调用，调用链尚未闭合，保留待证。",
+      "consumer": "未发现直接引用，资源字符串存在不等于方法有实际调用。"
+    }
+  ]
+}

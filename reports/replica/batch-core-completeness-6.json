@@ -1,0 +1,100 @@
+{
+  "review_kind": "read_only_existing_core_representation_and_string_batch",
+  "candidate_input": "reports/replica/batch-unchanged-method-candidates.json",
+  "scope": "两项此前Core批次未审剪贴板正文相同候选，以及独立复核后发现与窗口round5重叠的五个本地字符串值方法；重复项明确标记，合并须按function_id去重。",
+  "counts": {
+    "reviewed": 7,
+    "complete": 7,
+    "gap": 0,
+    "uncertain": 0,
+    "not_in_previous_round5": 2,
+    "already_in_window_round5": 5,
+    "new_migrations_claimed": 0
+  },
+  "overlap_report": "reports/replica/batch-window-completeness-5.json",
+  "limits": [
+    "仅阅读成功原C、现有源码、候选清单和有界原ARM/常量字节；正文相同只作为选取线索，不自动证明合同完整。",
+    "未修改产品源码、台账或用户数据；仅写本独立报告。",
+    "未编译、parse、运行应用、功能或MCP测试，未运行验证脚本，未发布。",
+    "本批没有当前编译二进制绑定，也没有声明动态回归通过。",
+    "complete为各地址独立有限方法的源码合同，不能升级捕获/仓库/建议提供者父方法；被调用已登记函数不重复新增计数。",
+    "7/7为本批判定，不代表项目迁移率；五个重叠地址仅为交叉复核，合并审核覆盖仅新增两个地址。",
+    "用户指定0x100ac35f8、0x100ac746c未分析。"
+  ],
+  "inputs": {
+    "ledger": "replica/function-map.json",
+    "success_index": "reports/Paste/function-index.json",
+    "original_arm_image": ".local/targets/Paste.arm64",
+    "current_core": [
+      "replica/Sources/PastoCore/OriginalPasteboard.swift",
+      "replica/Sources/PastoCore/OriginalSearchSuggestions.swift"
+    ]
+  },
+  "functions": [
+    {
+      "function_id": "Paste:0x10037ce0c", "status": "complete", "already_reviewed_round5": false,
+      "original_path": "decompiled/Paste/part-0282.c", "original_line": 501,
+      "current_path": "replica/Sources/PastoCore/OriginalPasteboard.swift",
+      "current_symbol": "OriginalPasteboardItem.f_10037ce0c()",
+      "criterion": "先public.url严格UTF8→URL(string:)，成功直接返回，不对该分支额外要求scheme/host。失败才按普通文本getter优先级取字符串，以#、urlQueryAllowed、urlFragmentAllowed并集百分号编码，URL初始化失败或scheme/host任一nil则nil，否则返回。当前顺序及三类失败路径对应；无trim或预加https。",
+      "arm_detail": "原C CharacterSet构造实参省略，原ARM37d008 MOVw0#0x23、37d00c小串tagE1、37d010构造CharacterSet，确认是'#'。读取原37ce0c..37d210有限体并保直接URL与后备文本校验的区别。",
+      "consumer": "OriginalPasteboardClassification用作link判定，OriginalLinkPreviewMetadataGenerator读取实际URL；OriginalPreviewSharing和ClipboardStore文本编辑转link实际调用。",
+      "boundary": "URL及CharacterSet具体平台行为委托同名Foundation API；不把整个link预览/网络metadata父方法签完整。"
+    },
+    {
+      "function_id": "Paste:0x10037e6b0", "status": "complete", "already_reviewed_round5": false,
+      "original_path": "decompiled/Paste/part-0282.c", "original_line": 1592,
+      "current_path": "replica/Sources/PastoCore/OriginalPasteboard.swift",
+      "current_symbol": "OriginalPasteboardItem.f_10037e6b0(_:forType:)",
+      "criterion": "原按Data→String→NSAttributedString→URL→NSImage顺序条件转换。Data原样、String严格UTF8、富文本只取.string、URL取absoluteString、NSImage委托原PNG编码。支持分支均追加给定type，PNG或字符串转换nil仅删data字典键，types仍保；不支持对象无动作。当前同顺序条件转换并委托先前已核setter/PNG方法，保空Data、重复type和失败区别。",
+      "consumer": "Pasteboard.swift的系统采集与synchronizePasteboard对实际读取的Data调用该Any入口；其他受支持输入分支方法体也已实现，不由当前真实调用仅Data推定其余分支不存在。",
+      "boundary": "这里核Any分派及调用参数，不重复计数PNG helper，也不声称捕获事务/分类完整。"
+    },
+    {
+      "function_id": "Paste:0x10030f3e0", "status": "complete", "already_reviewed_round5": true,
+      "original_path": "decompiled/Paste/part-0253.c", "original_line": 1781,
+      "current_path": "replica/Sources/PastoCore/OriginalSearchSuggestions.swift",
+      "current_symbol": "OriginalSearchSuggestions.f_10030f3e0(_:)",
+      "criterion": "query空返回固定六项原顺序；非空lowercase query与候选，再candidate.hasPrefix(query)稳定过滤，不trim。当前六项、顺序和过滤相同。原ARM30f420..428实际静态数组源为100fbed58；其header count6，100fbed78起字符串依次Unknown/Image/Color/File/Link/Text，未用反编译误指的metadata槽当表。",
+      "consumer": "Provider.init的type默认值真实为该方法；SearchEditor构造Provider时省略type，随后f2df190建议生成实际调用。",
+      "merge_policy": "窗口第5批已纳入，只作独立复核，合并不得再加覆盖数。"
+    },
+    {
+      "function_id": "Paste:0x1002f51d0", "status": "complete", "already_reviewed_round5": true,
+      "original_path": "decompiled/Paste/part-0244.c", "original_line": 1107,
+      "current_path": "replica/Sources/PastoCore/OriginalSearchSuggestions.swift",
+      "current_symbol": "OriginalSearchSuggestions.f_1002f51d0(_:maxSplits:omittingEmptySubsequences:)",
+      "criterion": "原逐Character.isWhitespace拆Substring，maxSplits<0前置条件失败；maxSplits0保完整输入（空且omittrue则空数组），达到split上限保余下后缀；omitfalse保边缘/相邻分隔的空段。当前直接复用Swift String.split同参数与Character.isWhitespace谓词，不改为ASCII空格或trim。",
+      "consumer": "f2f5588以Int.max/true实际调用；Substring随后转String再进行正则转义。",
+      "merge_policy": "窗口第5批已纳入，仅交叉复核。"
+    },
+    {
+      "function_id": "Paste:0x1002f5588", "status": "complete", "already_reviewed_round5": true,
+      "original_path": "decompiled/Paste/part-0244.c", "original_line": 1297,
+      "current_path": "replica/Sources/PastoCore/OriginalSearchSuggestions.swift",
+      "current_symbol": "OriginalSearchSuggestions.f_1002f5588(_:)",
+      "criterion": "原按Int.max、omittrue分词，依原顺序将每个Substring转String，经NSRegularExpression.escapedPattern后在前面加\\b。原C在append及数组存储处失真，有界ARM2f55b8..55cc确认参数；2f565c调用escapedPattern、2f568c..56a0初始化\\b并append转义词，2f56b4..56d8存最终拼接值。当前map对应，空/全空白返回[]，不把输入当未转义regex。",
+      "consumer": "f2f5100谓词pattern及f2f5748高亮范围共享真实调用。",
+      "merge_policy": "窗口第5批已纳入，仅交叉复核。"
+    },
+    {
+      "function_id": "Paste:0x1002f5100", "status": "complete", "already_reviewed_round5": true,
+      "original_path": "decompiled/Paste/part-0244.c", "original_line": 1067,
+      "current_path": "replica/Sources/PastoCore/OriginalSearchSuggestions.swift",
+      "current_symbol": "OriginalSearchSuggestions.f_1002f5100(_:)",
+      "criterion": "原调用f2f5588，再以.*连接结果，并加.*前缀与.*后缀；空词数组仍输出.*.*。原C返回常量失真由ARM2f515c join、2f5170前缀初始化、2f5180 append joined、2f51a8 append后缀、2f51b4返回累积字符串闭合；当前表达式同域。",
+      "consumer": "ReplicaSearchSuggestionSource.matches真实构造NSPredicate SELF MATCHES[cd] %@；应用/设备/分组候选源调用。",
+      "merge_policy": "窗口第5批已纳入，仅交叉复核。"
+    },
+    {
+      "function_id": "Paste:0x1002f5748", "status": "complete", "already_reviewed_round5": true,
+      "original_path": "decompiled/Paste/part-0244.c", "original_line": 1362,
+      "current_path": "replica/Sources/PastoCore/OriginalSearchSuggestions.swift",
+      "current_symbol": "OriginalSearchSuggestions.f_1002f5748(_:in:)",
+      "criterion": "原按各\\b转义词先后在目标字符串搜索，options0x401即caseInsensitive+regularExpression、locale nil，从上次match.upperBound到endIndex继续；任何词失败丢弃已积累范围并返回[]；空词数组[]。当前range(of:options:range:locale:)同参数、同串Index与推进规则，无乱序匹配/UTF16偏移转换。",
+      "arm_detail": "2f585c..5868构造Locale.none，2f5888 MOVw1#0x401；2f588c把前一upperBound x25传入，2f58a4调用StringProtocol.range；2f58b0保存新upperBound到x25；2f58c8/cc失败跳5950释放积累并返回空。",
+      "consumer": "OriginalSuggestionAttributedTitle实际以范围构造匹配着色片段；f2df190本地日期建议title匹配也调用该方法。",
+      "merge_policy": "窗口第5批已纳入，仅交叉复核。"
+    }
+  ]
+}

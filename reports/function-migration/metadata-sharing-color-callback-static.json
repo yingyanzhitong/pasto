@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "kind": "static_code_migration",
+  "functions": [
+    {"function_id": "Paste:0x100315a38", "original": "decompiled/Paste/part-0255.c:946", "source": "replica/Sources/PastoCore/OriginalImagePreviewMetadataCodec.swift", "contract": "Full five-case Stored-to-metadata defaults and optional values; entire record decoded before projection", "consumer": "Models -> canonical cards and complete preview content"},
+    {"function_id": "Paste:0x100316004", "original": "decompiled/Paste/part-0255.c:1197", "source": "replica/Sources/PastoCore/OriginalImagePreviewMetadataCodec.swift", "contract": "Five-case inverse writes only selected-case fields into initially nil Stored, preserving file/link optional values", "consumer": "Store.withPreviewMetadata -> five encode methods"},
+    {"function_id": "Paste:0x100320cc0", "original": "decompiled/Paste/part-0257.c:4118", "source": "replica/Sources/PastoCore/OriginalPreviewSharing.swift", "contract": "Known nonfile representations nonempty; files require nonempty valid URLs, all local and reachable; errors and invalid raw kinds false", "consumer": "Preview Header sharing enabled"},
+    {"function_id": "Paste:0x1000183e0", "original": "decompiled/Paste/part-0010.c:617", "source": "replica/Sources/PastoCore/OriginalPreviewSharing.swift", "contract": "Preserve content/representation order, flatten and initialize native sharing picker even for empty input", "consumer": "Preview Header share action"},
+    {"function_id": "Paste:0x1003e1fec", "original": "decompiled/Paste/part-0309.c:170", "source": "replica/Sources/Pasto/UI/ReplicaColorPreviewContent.swift", "contract": "Read color, update display, capture optional callback; only when callback exists reread current panel color and compare model via NSObject equality", "consumer": "Shared NSColorPanel notifications"}
+  ],
+  "color_alpha_investigation": {
+    "original_chain": ["0x1003bc060", "0x100363ff0", "0x100360ff8", "0x100322504"],
+    "conclusion": "Original masks to RGB payload and regenerates color metadata from it. No separate alpha-preserving metadata write was found in this closed chain; do not add the hypothesized alpha API.",
+    "store_or_alpha_changes_made": false
+  },
+  "build_executed": false,
+  "tests_executed": false,
+  "equivalence_verified": false,
+  "limitations": "Independent value/callback/factory methods only. Parent Entity/DI persistence, full metadata enum ABI, Header lifecycle, actual sharing-service execution and runtime equivalence remain separate work."
+}

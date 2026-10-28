@@ -1,0 +1,44 @@
+{
+  "review_kind": "read_only_attributes_key_parser_and_forwarder",
+  "counts": { "reviewed": 2, "complete": 0, "gap": 0, "uncertain": 2, "new_migrations_claimed": 0 },
+  "functions": [
+    {
+      "function_id": "Paste:0x10032469c",
+      "status": "uncertain",
+      "original_path": "decompiled/Paste/part-0258.c",
+      "original_line": 2444,
+      "current_path": "replica/Sources/PastoCore/OriginalPinboardAttributes.swift",
+      "current_symbol": "Attributes.CodingKeys的派生字符串键解析",
+      "matching_value_domain": "完整原C按精确String比较：type→case0、capacity→case1、colorCode→case2；其余返回3可选空标记。不trim/lowercase、不前缀匹配；处理完释放输入String。当前三同名字段派生CodingKeys具备相同合法键字符串域，未设置自定义键策略。",
+      "unresolved": "当前具体key parser没有显式源码body，本轮仍未闭合其实际生产调用入口。JSONEncoder/Decoder真实消费Attributes不能自动证明每个派生CodingKey init都会执行：逐字段encode/decode使用既知key，其它parser常见消费者allKeys在此Core无直接调用。原parser可由f324534调用，但当前该forwarder具体协议slot也未证。保uncertain，不用schema相同代替实际消费者/绑定证据。",
+      "boundary": "第33批曾将此地址列not_counted，本轮首次作为独立条目计入待证；不重复增加当时的stringValue完整地址。也不把原raw3标记当当前enum机器ABI。"
+    },
+    {
+      "function_id": "Paste:0x100324534",
+      "status": "uncertain",
+      "original_path": "decompiled/Paste/part-0258.c",
+      "original_line": 2320,
+      "current_path": "replica/Sources/PastoCore/OriginalPinboardAttributes.swift",
+      "current_symbol": "Attributes.CodingKeys的派生初始化/输出转发候选",
+      "matching_observation": "原短C调用f32469c后将一个byte结果写到输出，没有额外业务值转换或默认字段。当前派生CodingKeys可提供字符串初始化，但仅凭C中被寄存器恢复污染的param_2类型/赋值，不能确认此地址是哪一个精确协议初始化槽及其typed入参。",
+      "unresolved": "读取原CodingKey conformance descriptor100c4130c的有界原始bytes，只证明存在对应conformance结构；本轮未解释其resilient witness映射，不臆造intValue/init(intValue:)/init(stringValue:)槽位。未建立到当前真实parser调用的完整typed链，维持既有待证。",
+      "boundary": "不是因原class/ABI名不同就否定独立值方法；是具体入参/slot/生产调用未闭。没有把未知槽硬映射后借由上一项键域相同升级完整。"
+    }
+  ],
+  "followup_of_round37": "原default description/debugDescription的intValue witness及实际调用仍未闭；本轮没有取得足够新证据解决，round37两项uncertain保持，不重复计入本批。",
+  "inputs": {
+    "original_success_c": "decompiled/Paste/part-0258.c",
+    "current_core": "replica/Sources/PastoCore/OriginalPinboardAttributes.swift",
+    "related_prior_reports": [
+      "reports/replica/batch-core-completeness-33.json",
+      "reports/replica/batch-core-completeness-37.json"
+    ]
+  },
+  "limits": [
+    "只新增本独立报告，未修改产品源码、台账或用户数据。",
+    "只读成功原C、现有源码及有界原元数据；未编译、parse、运行应用、功能/MCP测试、验证脚本或发布。",
+    "未核当前编译产物；不把原元数据原始bytes存在当typed binding已通过。",
+    "本批0/2完整不是项目总迁移率；主智能体汇总总分母及跨批去重，新增迁移0。",
+    "指定失败地址0x100ac35f8、0x100ac746c跳过，未读取。"
+  ]
+}

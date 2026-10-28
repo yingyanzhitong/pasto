@@ -1,0 +1,48 @@
+{
+  "review_kind": "read_only_text_checksum_and_digest_format_recheck",
+  "counts": {"reviewed": 2, "complete": 2, "gap": 0, "uncertain": 0, "new_migrations_claimed": 0},
+  "functions": [
+    {
+      "function_id": "Paste:0x100322d94",
+      "status": "complete",
+      "reviewed_previously": true,
+      "previous_report": "reports/replica/batch-core-completeness-7.json",
+      "original_path": "decompiled/Paste/part-0258.c",
+      "original_line": 1188,
+      "current_path": "replica/Sources/PastoCore/OriginalPasteboardChecksums.swift",
+      "current_symbol": "OriginalPasteboardChecksums.f_100322d94(_:)",
+      "original_branches": [
+        "取得UTF8编码，将输入String以allowLossyConversion=false转换为Data。",
+        "Data optional成功时新建MD5、更新有效字节、finalize，将摘要经f322fe4转字符串数组后以空分隔符joined。空String仍属于成功Data分支，不直接返回空String。",
+        "Data转换失败的none分支直接返回空String；未trim、lowercase或做Unicode规范化。"
+      ],
+      "current_match": "当前guard string.data(using:.utf8,allowLossyConversion:false)失败返回空串，成功调用private checksum；该方法新建Insecure.MD5，经f323324更新后finalize，再f322fe4.joined()。原成功/失败/空字符串的有限值合同完整保留。",
+      "actual_consumers": "f3216bc对text/link/color读取首item普通文本后实际调用；files在存在路径时对FileSnippet:加有序joined paths调用。ClipboardMonitor.f37b034在写入前实际计算该父checksum，非孤立helper。",
+      "boundary": "原归档unknown分支的NSCoding key/wire缺口不会传播到这个独立UTF8字符串MD5方法；反过来此方法完整也不升级f3216bc整个分类/实体链或归档MD5。只签可构造Swift String值及SDK公开MD5语义，不声明ABI机器布局等价。"
+    },
+    {
+      "function_id": "Paste:0x100322fe4",
+      "status": "complete",
+      "reviewed_previously": true,
+      "previous_report": "reports/replica/batch-core-completeness-7.json",
+      "original_path": "decompiled/Paste/part-0258.c",
+      "original_line": 1260,
+      "current_path": "replica/Sources/PastoCore/OriginalPasteboardChecksums.swift",
+      "current_symbol": "OriginalPasteboardChecksums.f_100322fe4(_:)",
+      "original_branches": [
+        "复制合法MD5Digest并建立Sequence iterator；依据underestimatedCount预留输出容量，先消费预估数量，再消费余下元素。",
+        "两个循环均按迭代顺序将UInt8装入CVarArg并调用相同String格式化；末尾返回数组，不自行joined。原非法负计数/越界iterator trap属于底层已破坏值，不是合法MD5Digest的额外值分支。"
+      ],
+      "current_match": "当前digest.map { String(format: \"%02x\", $0) }保摘要字节顺序、每字节两位小写HEX及前导0；预估容量的分配算法不改变合法Digest的返回值。",
+      "format_evidence": "第7轮已保存原ARM323158/15c及323290/294两处small literal0x78323025，即%02x；本轮重读整个成功C两个循环，未用C省略的格式参数或方法名作为唯一判据。未重新声称本轮新ARM或新机器SHA。",
+      "actual_consumers": "当前private checksum对hasher.finalize()结果直接调用本方法后joined，实际服务文本和图片checksum。",
+      "boundary": "合法Digest值域的源码合同完整；未核当前编译二进制，无运行MD5样例或测试。"
+    }
+  ],
+  "limits": [
+    "本批是历史两项复审，必须跨批去重；新增迁移0，不将2 complete当项目进度增加。",
+    "只新增本报告；未修改产品源码、台账、用户数据。",
+    "只读成功伪代码、已有静态证据和当前源码；未编译、parse、运行产品、测试、MCP、验证脚本或发布。",
+    "跳过两个指定失败地址。未因局部完整升级归档类名/键差异、实体读取或原CoreData事务父。"
+  ]
+}

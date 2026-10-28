@@ -1,0 +1,199 @@
+{
+  "schema_version": 1,
+  "kind": "static_code_migration",
+  "functions": [
+    {
+      "function_id": "Paste:0x100385984",
+      "state": "migrated",
+      "contract": "任意interval/repeats与非可选Void action构造scheduled NSTimer，timer存入owner，tick原样调用保留的action，不改变runloop/queue。",
+      "implementations": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchSuggestionsMenu.swift",
+          "symbol": "init(interval: TimeInterval, repeats: Bool, action: @escaping () -> Void)"
+        }
+      ],
+      "source": {
+        "path": "decompiled/Paste/part-0284.c",
+        "line": 692
+      },
+      "review": "补独立owned wrapper并由真实75ms重复滚动消费，未限制为Pause的单次false；弱Indicator由实际caller闭包提供，构造器不擅加弱化。",
+      "remaining": "仅Timer构造业务完整；原元数据/vtable/分配ABI与PauseManager父不升级。"
+    },
+    {
+      "function_id": "Paste:0x100385ac4",
+      "state": "migrated",
+      "contract": "对owner保存的NSTimer调用invalidate，无额外条件。",
+      "implementations": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchSuggestionsMenu.swift",
+          "symbol": "func invalidate() { timer.invalidate() }"
+        }
+      ],
+      "source": {
+        "path": "decompiled/Paste/part-0284.c",
+        "line": 779
+      },
+      "review": "真实owned Timer的deinit调用此方法，保持重复invalidate也转给系统，不造无消费包装。",
+      "remaining": "仅invalidate业务完整，不升级原分配/释放ABI。"
+    },
+    {
+      "function_id": "Paste:0x100385acc",
+      "state": "migrated",
+      "contract": "owner销毁时调用保存Timer.invalidate，停止scheduled timer。",
+      "implementations": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchSuggestionsMenu.swift",
+          "symbol": "deinit { invalidate() }"
+        }
+      ],
+      "source": {
+        "path": "decompiled/Paste/part-0284.c",
+        "line": 792
+      },
+      "review": "Indicator鼠标移出清owned wrapper，释放真实触发deinit及invalidate；替换/owner销毁也由相同持有规则停止。",
+      "remaining": "此deinit业务失效操作完整；原deallocating析构/机器ABI不由此升级。"
+    },
+    {
+      "function_id": "Paste:0x10004b544",
+      "state": "migrated",
+      "contract": "先super tracking更新，移旧area，以bounds/options0x83/self/nil创建，先存新可选area再非nil add。",
+      "implementations": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchSuggestionsMenu.swift",
+          "symbol": "override func updateTrackingAreas()"
+        }
+      ],
+      "source": {
+        "path": "decompiled/Paste/part-0027.c",
+        "line": 834
+      },
+      "review": "真实ScrollIndicator补回mouseMoved tracking并恢复存储/添加顺序及nil分支。",
+      "remaining": "纯tracking业务完整；原ObjC actor桥f4b624仍partial。"
+    },
+    {
+      "function_id": "Paste:0x100236978",
+      "state": "migrated",
+      "contract": "仅X==0且Y!=0且CGEvent存在才转换；再次读Y按Int64转换/失败域写原CG整数轴2，再清轴1；返回NSEvent(cgEvent:)可选结果。其他分支返回原event。",
+      "implementations": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaNativeCardCollection.swift",
+          "symbol": "private func remappedWheelEvent"
+        }
+      ],
+      "source": {
+        "path": "decompiled/Paste/part-0193.c",
+        "line": 147
+      },
+      "review": "原成功C及arm236990/9a0/9c8→9a4..9b4证明passthrough为原event，只有重建可nil；现恢复独立optional方法，真实scrollWheel消费，不copy/clamp。",
+      "remaining": "此转换业务方法完整，不升级ObjC actor桥或其他滚动父。"
+    },
+    {
+      "function_id": "Paste:0x100236910",
+      "state": "migrated",
+      "contract": "调用完整滚轮转换，nil结果回退原event，之后恰一次super.scrollWheel。",
+      "implementations": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaNativeCardCollection.swift",
+          "symbol": "override func scrollWheel(with event: NSEvent)"
+        }
+      ],
+      "source": {
+        "path": "decompiled/Paste/part-0193.c",
+        "line": 124
+      },
+      "review": "真实override使用remappedWheelEvent(event) ?? event再super，输入/返回选择和转交次数对应原纯方法。",
+      "remaining": "仅此滚轮转交业务完整；f236a8c actor桥/响应式getter不升级。"
+    },
+    {
+      "function_id": "Paste:0x10031b830",
+      "state": "migrated",
+      "contract": "两份合法Data按有效长度与字节比较：长度不同false，两空true，非空有效区间字节相等才true，支持inline/slice/large表示。",
+      "implementations": [
+        {
+          "path": "replica/Sources/PastoCore/ClipboardStore.swift",
+          "symbol": "OriginalSourceApplication.normalizedIcon(state.sourceApplications[index].rawIcon) != incomingIcon"
+        }
+      ],
+      "source": {
+        "path": "decompiled/Paste/part-0256.c",
+        "line": 2461
+      },
+      "review": "读取成功原完整比较体与本机Foundation Data.==公开inlinable实现13647..13661：count及withUnsafeBytes/memcmp语义一致；bothSome来源PNG实际消费同Data比较，不另造wrapper。",
+      "remaining": "仅合法Data值相等合同完整；不推广非法内存表示、原ABI布局或底层unsafe f31b604。"
+    },
+    {
+      "function_id": "Paste:0x10004bbd0",
+      "state": "partial",
+      "contract": "inside且canScroll且尚无timer时创建.075秒重复owned timer，弱callback转发滚动；mouseenter只设inside，非立即滚动。",
+      "implementations": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchSuggestionsMenu.swift",
+          "symbol": "override func mouseMoved"
+        }
+      ],
+      "source": {
+        "path": "decompiled/Paste/part-0027.c",
+        "line": 1291
+      },
+      "review": "成功原字段/计时/事件体逐段对照并接真实上下箭头consumer；保持本地flipped列表对应方向，不因原字段名猜反转。",
+      "remaining": "当前回调字段optional/弱对象及Scroller flipped几何绑定仍适配，方法父保partial。"
+    },
+    {
+      "function_id": "Paste:0x10004b874",
+      "state": "partial",
+      "contract": "移出置inside=false并释放timer，owned wrapper deinit停止重复计时。",
+      "implementations": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchSuggestionsMenu.swift",
+          "symbol": "override func mouseExited"
+        }
+      ],
+      "source": {
+        "path": "decompiled/Paste/part-0027.c",
+        "line": 990
+      },
+      "review": "成功原字段/计时/事件体逐段对照并接真实上下箭头consumer；保持本地flipped列表对应方向，不因原字段名猜反转。",
+      "remaining": "原显式actor报告桥尚未同构，保partial。"
+    },
+    {
+      "function_id": "Paste:0x10004b624",
+      "state": "partial",
+      "contract": "转入完整tracking业务前原有MainActor执行器检查。",
+      "implementations": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchSuggestionsMenu.swift",
+          "symbol": "override func updateTrackingAreas()"
+        }
+      ],
+      "source": {
+        "path": "decompiled/Paste/part-0027.c",
+        "line": 873
+      },
+      "review": "成功原字段/计时/事件体逐段对照并接真实上下箭头consumer；保持本地flipped列表对应方向，不因原字段名猜反转。",
+      "remaining": "tracking纯方法已完整，原actor桥不升级。"
+    },
+    {
+      "function_id": "Paste:0x10004b038",
+      "state": "partial",
+      "contract": "图标恢复12pt medium配置、fallback及secondary tint，图像居中12x12；重复hover计时/inside初值接入。",
+      "implementations": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchSuggestionsMenu.swift",
+          "symbol": "init(symbol: String)"
+        }
+      ],
+      "source": {
+        "path": "decompiled/Paste/part-0027.c",
+        "line": 640
+      },
+      "review": "成功原字段/计时/事件体逐段对照并接真实上下箭头consumer；保持本地flipped列表对应方向，不因原字段名猜反转。",
+      "remaining": "原lazy image/visual background/完整canScroll与onScroll必备构造及布局父仍partial。"
+    }
+  ],
+  "updated_image_begin": "Paste:0x1003e699c",
+  "sdk_evidence": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/Foundation.framework/Versions/C/Modules/Foundation.swiftmodule/arm64e-apple-macos.swiftinterface:13647",
+  "build_executed": false,
+  "tests_executed": false,
+  "equivalence_verified": false,
+  "limitations": "Source migration/manual static comparison only; no compile, parse, product execution, tests, install, commit or release. Original actor/object/DI parents and historical source-evidence freshness remain separate."
+}

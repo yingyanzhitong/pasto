@@ -1,0 +1,91 @@
+{
+  "kind": "batch-window-completeness-49",
+  "scope": "2项已有建议菜单惰性NSScrollView/NSImageView getter，重新核完整成功C、缓存分支、配置顺序及实际布局消费者。",
+  "summary": {
+    "reviewed": 2,
+    "complete": 2,
+    "gap": 0,
+    "uncertain": 0
+  },
+  "activities": {
+    "product_source_edited": false,
+    "ledger_edited": false,
+    "compiled": false,
+    "product_run": false,
+    "tests_run": false,
+    "wrapper_added": false
+  },
+  "skipped_failed_addresses": [
+    "Paste:0x100ac35f8",
+    "Paste:0x100ac746c"
+  ],
+  "limitations": [
+    "完整只针对两个独立getter，不升级Scroller/indicator父类布局、mask、hover timer或Actor桥。",
+    "未使用历史state=migrated或SHA一致代替原C与生产调用核对；没有当前编译或运行验收。",
+    "不修改台账计数，2/2仅本批分类，不是项目完成率。"
+  ],
+  "functions": [
+    {
+      "function_id": "Paste:0x1000493ec",
+      "status": "complete",
+      "evidence": "完整原C缓存非nil直接返回原对象；nil才创建NSScrollView，依次contentView.postsBoundsChangedNotifications=true、usesPredominantAxisScrolling=true、hasHorizontalScroller=false、hasVerticalScroller=false、autohidesScrollers=false、drawsBackground=false、borderType raw0、wantsLayer=true，写缓存并返回。当前f493ec保同缓存身份和完整逐项顺序，不在每次读取重复配置，不额外用自定义scroll class替换。",
+      "actual_consumer": "SuggestionsScroller的scrollView computed property调用f493ec；init首次赋documentView=list并addSubview同对象，随后boundsObserver订阅同一contentView，layout/可见区/indicator判断持续读取该缓存。",
+      "original": {
+        "path": "decompiled/Paste/part-0026.c",
+        "line": 2251
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchSuggestionsMenu.swift",
+          "symbol": "private func f_1000493ec"
+        }
+      ],
+      "historical_evidence": {
+        "path": "reports/function-migration/batch-existing-lazy-getters-static.json",
+        "entry_key": "Paste:0x1000493ec",
+        "sha256": "fc76ed7d9cf08a7760fdeba40b43d92ddedccb7c275f02edd8554c52d57a352d",
+        "contract": "懒加载NSScrollView；缓存存在返回同一实例，否则依次启用bounds通知和主轴滚动，关闭横纵滚动条、自动隐藏及背景，设置无边框、layer后缓存并返回。",
+        "original_pseudocode_sha256": "a82fc9808a0c589d583f00b2a6e1ca2a5f989aad3233ed3d7cd596d4da07b1fe",
+        "current_build_claim": false
+      },
+      "source_binding": {
+        "replica/Sources/Pasto/UI/ReplicaSearchSuggestionsMenu.swift": {
+          "sha256": "fe798a4855021674aef0c99a6c1287375ddcbc12a92f3d981cf085952e51090b",
+          "historical_sha256": "fe798a4855021674aef0c99a6c1287375ddcbc12a92f3d981cf085952e51090b",
+          "unchanged": true
+        }
+      }
+    },
+    {
+      "function_id": "Paste:0x10004afcc",
+      "status": "complete",
+      "evidence": "完整原C仅在lazy imageView为空时创建默认NSImageView并缓存，随后返回该实例；缓存命中无新构造、无配置副作用。当前f4afcc同样storedImage命中直接返回，缺失创建默认NSImageView后写缓存，没有把symbol/tint或frame配置塞入getter。",
+      "actual_consumer": "SuggestionsScrollIndicator.image property调用本getter；init对同一image设置实际symbol image/tint并addSubview，layout再调整同一视图frame，未只创建未挂载的占位对象。",
+      "original": {
+        "path": "decompiled/Paste/part-0027.c",
+        "line": 613
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchSuggestionsMenu.swift",
+          "symbol": "private func f_10004afcc"
+        }
+      ],
+      "historical_evidence": {
+        "path": "reports/function-migration/batch-existing-lazy-getters-static.json",
+        "entry_key": "Paste:0x10004afcc",
+        "sha256": "fc76ed7d9cf08a7760fdeba40b43d92ddedccb7c275f02edd8554c52d57a352d",
+        "contract": "懒加载NSImageView；缓存存在返回同一实例，否则创建、缓存并返回。",
+        "original_pseudocode_sha256": "cfca9e96320e4c92645f74cdb6fbcfe043a15ca89f8cd95b86a86e886d795505",
+        "current_build_claim": false
+      },
+      "source_binding": {
+        "replica/Sources/Pasto/UI/ReplicaSearchSuggestionsMenu.swift": {
+          "sha256": "fe798a4855021674aef0c99a6c1287375ddcbc12a92f3d981cf085952e51090b",
+          "historical_sha256": "fe798a4855021674aef0c99a6c1287375ddcbc12a92f3d981cf085952e51090b",
+          "unchanged": true
+        }
+      }
+    }
+  ]
+}

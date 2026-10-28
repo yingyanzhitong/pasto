@@ -1,0 +1,80 @@
+{
+  "kind": "static_tail_branch_reuse",
+  "reviewed_at": "2026-10-27T11:11:37.236355+00:00",
+  "build_executed": false,
+  "tests_executed": false,
+  "functions": [
+    {
+      "function_id": "Paste:0x1002160d8",
+      "state": "migrated",
+      "contract": "单条arm64无链接B直接跳转0x1002085e0，保持所有参数、栈和返回地址；函数行为等同已迁移目标。",
+      "implementations": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPreviewTextTraits.swift",
+          "symbol": "f_1002085e0"
+        }
+      ],
+      "source": {
+        "path": "decompiled/Paste/part-0181.c",
+        "line": 1361
+      },
+      "review": "原ARM指令17ffc942是单条B，目标0x1002085e0；直接复用目标现有生产调用与源码实现，无须添加包装函数。原C对跳板体的展开或调用名与机器码冲突时以机器码为准。",
+      "remaining": "仅确认跳板转发合同；不据此升级目标之外的上游调用方或ABI。未编译或测试。",
+      "migration_evidence": "reports/function-migration/batch-existing-tail-branches-static.json",
+      "target_function_id": "Paste:0x1002085e0",
+      "original_instruction": "17ffc942",
+      "original_binary_sha256": "871f00354fbb1c165d858a98e6d19d6f43cb9d3f9f958b3e07c7f07eb5c19afb",
+      "source_sha256": {
+        "replica/Sources/PastoCore/OriginalPreviewTextTraits.swift": "819f073d5a5a633a4c7794fc0107e7bf3f015b68e74a1543d6edac7b29e31324"
+      }
+    },
+    {
+      "function_id": "Paste:0x100219cbc",
+      "state": "migrated",
+      "contract": "单条arm64无链接B直接跳转0x100219df4，保持所有参数、栈和返回地址；函数行为等同已迁移目标。",
+      "implementations": [
+        {
+          "path": "replica/Sources/Pasto/UI/OriginalNavigationKey.swift",
+          "symbol": "static func f_100219df4"
+        }
+      ],
+      "source": {
+        "path": "decompiled/Paste/part-0183.c",
+        "line": 816
+      },
+      "review": "原ARM指令1400004e是单条B，目标0x100219df4；直接复用目标现有生产调用与源码实现，无须添加包装函数。原C对跳板体的展开或调用名与机器码冲突时以机器码为准。",
+      "remaining": "仅确认跳板转发合同；不据此升级目标之外的上游调用方或ABI。未编译或测试。",
+      "migration_evidence": "reports/function-migration/batch-existing-tail-branches-static.json",
+      "target_function_id": "Paste:0x100219df4",
+      "original_instruction": "1400004e",
+      "original_binary_sha256": "871f00354fbb1c165d858a98e6d19d6f43cb9d3f9f958b3e07c7f07eb5c19afb",
+      "source_sha256": {
+        "replica/Sources/Pasto/UI/OriginalNavigationKey.swift": "63c828be06065a20f1956fb2c4cb346e81990872ff089a13e5af2ecad2c61ded"
+      }
+    },
+    {
+      "function_id": "Paste:0x100309c3c",
+      "state": "migrated",
+      "contract": "单条arm64无链接B直接跳转0x100309e0c，保持所有参数、栈和返回地址；函数行为等同已迁移目标。",
+      "implementations": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalDateDisplay.swift",
+          "symbol": "f_100309e0c"
+        }
+      ],
+      "source": {
+        "path": "decompiled/Paste/part-0252.c",
+        "line": 215
+      },
+      "review": "原ARM指令14000074是单条B，目标0x100309e0c；直接复用目标现有生产调用与源码实现，无须添加包装函数。原C对跳板体的展开或调用名与机器码冲突时以机器码为准。",
+      "remaining": "仅确认跳板转发合同；不据此升级目标之外的上游调用方或ABI。未编译或测试。",
+      "migration_evidence": "reports/function-migration/batch-existing-tail-branches-static.json",
+      "target_function_id": "Paste:0x100309e0c",
+      "original_instruction": "14000074",
+      "original_binary_sha256": "871f00354fbb1c165d858a98e6d19d6f43cb9d3f9f958b3e07c7f07eb5c19afb",
+      "source_sha256": {
+        "replica/Sources/PastoCore/OriginalDateDisplay.swift": "cd1ad2edda3b32d3e25f1750c7d790e3906869325480933e0d7d47c863500e5b"
+      }
+    }
+  ]
+}

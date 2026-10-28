@@ -1,0 +1,58 @@
+{
+  "kind": "batch-window-completeness-10",
+  "scope": "集中只读检查6个搜索编辑委托/首标量方法；不为凑数量扩查。",
+  "summary": {"reviewed": 6, "complete": 1, "gap": 0, "uncertain": 5},
+  "prior_inventory": "reports/replica/batch-completeness-round9.json",
+  "definite_product_differences": [],
+  "activities": {"product_source_edited": false, "ledger_edited": false, "compiled": false, "product_run": false, "tests_run": false, "wrapper_added": false},
+  "skipped_failed_addresses": ["Paste:0x100ac35f8", "Paste:0x100ac746c"],
+  "limitations": [
+    "complete仅表示列明有限静态业务合同；不是当前编译或运行验收，不增加台账完成计数。",
+    "五项正常业务分支与当前实际消费相符；原执行器检查/错误诊断未独立证明，不以@MainActor源码声明自动判完整。",
+    "原C的错误寄存器传播不作为确定产品差异；未声称当前Swift私有String或ObjC生成ABI与原相同。"
+  ],
+  "functions": [
+    {
+      "function_id": "Paste:0x1000482c8", "status": "complete",
+      "original": {"path": "decompiled/Paste/part-0026.c", "line": 1122},
+      "source_references": [{"path": "replica/Sources/PastoCore/OriginalSearchEditing.swift", "symbol": "f_1000482c8"}],
+      "evidence": "原空字符串返回Optional nil判别位；非空按native/shared/small UTF8或foreignErrorCorrectedScalar取得首Unicode标量，返回低32位码点且清nil位。当前unicodeScalars.first恢复合法Swift String整个输入域的首标量/空值语义，补充平面不截为UTF16首单元；不把私有打包表示视为必须相同。",
+      "actual_consumer": "f04795c逐Character转换String后调用本方法判换行；该方法由真实NSTextViewDelegate shouldChange入口进入。"
+    },
+    {
+      "function_id": "Paste:0x10004795c", "status": "uncertain",
+      "original": {"path": "decompiled/Paste/part-0026.c", "line": 673},
+      "source_references": [{"path": "replica/Sources/PastoCore/OriginalSearchEditing.swift", "symbol": "f_10004795c"}],
+      "evidence": "已核全部业务分支：无storage false；nil replacement为空；逐Character首scalar检测10...13、2028...2029、85，仅替换LF/CR为空格；空替换且单附件删除未选中时先选中再false；其余复制富文本生成proposal，UTF16替换长度加range.location形成光标，回调nil true否则返回回调Bool，不直接改storage。当前全部保留，Int加法保溢出终止。但原字符循环内有显式MainActor executor检查与Paste/SearchField.swift行0xb3诊断，当前未独立证明，完整体保待证。",
+      "actual_consumer": "OriginalSearchEditing.textView(shouldChangeTextIn:replacementString:)→f047d8c→本方法；SearchEditor.Coordinator.attach给onTextShouldChange接propose。"
+    },
+    {
+      "function_id": "Paste:0x100047d8c", "status": "uncertain",
+      "original": {"path": "decompiled/Paste/part-0026.c", "line": 869},
+      "source_references": [{"path": "replica/Sources/PastoCore/OriginalSearchEditing.swift", "symbol": "f_100047d8c"}],
+      "evidence": "原保留NSString nil/非nil桥接差异，原样传textView和NSRange至f04795c并返回Bool；当前可选String签名及转交一致。原先执行MainActor检查及文件行0xad错误报告，当前静态源码不能证明该错误路径等价，不能只按薄转发判全体完成。",
+      "actual_consumer": "同对象实际担任NSTextViewDelegate，shouldChange协议方法调用此入口，非未消费wrapper。"
+    },
+    {
+      "function_id": "Paste:0x100047ea4", "status": "uncertain",
+      "original": {"path": "decompiled/Paste/part-0026.c", "line": 912},
+      "source_references": [{"path": "replica/Sources/PastoCore/OriginalSearchEditing.swift", "symbol": "f_100047ea4"}],
+      "evidence": "原callback nil不读取selectedRange，存在才从关联InputView的TextView取范围并回调，Notification内容不参与业务；当前optional chaining仅在回调存在时求值inputTextView.selectedRange，注入对象是同一缓存TextView，正常分支一致。但原Actor检查/行0xd2诊断与Notification桥错误边界未独立闭合。",
+      "actual_consumer": "真实textViewDidChangeSelection协议入口调用；Coordinator.attach的onSelectionChange在非applyingContents时更新建议，既有消费不改。"
+    },
+    {
+      "function_id": "Paste:0x100048058", "status": "uncertain",
+      "original": {"path": "decompiled/Paste/part-0026.c", "line": 985},
+      "source_references": [{"path": "replica/Sources/PastoCore/OriginalSearchEditing.swift", "symbol": "f_100048058"}, {"path": "replica/Sources/PastoCore/OriginalSearchCommands.swift", "symbol": "f_10004867c"}],
+      "evidence": "原doCommandSelector把实际Selector转交f04867c并回同一Bool；当前同样由OriginalSearchCommands分派Enter/Cancel，未按键码猜命令。原显式Actor检查与文件行0xd6诊断未证明，父保持待证，不重复提升已核命令纯值方法。",
+      "actual_consumer": "NSTextViewDelegate.doCommandBy真实调用；Coordinator.attach连接onEnter/onCancel，保当前panel Enter失焦及用户Esc路由。"
+    },
+    {
+      "function_id": "Paste:0x100048128", "status": "uncertain",
+      "original": {"path": "decompiled/Paste/part-0026.c", "line": 1020},
+      "source_references": [{"path": "replica/Sources/PastoCore/OriginalSearchEditing.swift", "symbol": "f_100048128"}],
+      "evidence": "原Notification内容不参与业务；onEndEditing不存在无动作，存在调用一次，当前onEndEditing?()一致。原Actor检查/文件行0xe4报告及通知桥清理边界仍未独立证明，不将正常回调一致误称整个ObjC入口完整。",
+      "actual_consumer": "真实textDidEndEditing协议入口调用；Coordinator.attach的闭包dismissSuggestions、清focused并通知onEditingEnded(field)，回调变化属于实际生产消费而非本项内增加分支。"
+    }
+  ]
+}

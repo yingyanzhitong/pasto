@@ -1,0 +1,26 @@
+{
+  "review_kind": "read_only_pinboard_attribute_value_projection",
+  "counts": { "reviewed": 1, "complete": 1, "gap": 0, "uncertain": 0, "new_migrations_claimed": 0 },
+  "functions": [
+    {
+      "function_id": "Paste:0x1003245fc",
+      "status": "complete",
+      "original_path": "decompiled/Paste/part-0258.c",
+      "original_line": 2399,
+      "current_path": "replica/Sources/PastoCore/OriginalPinboardAttributes.swift",
+      "current_symbol": "OriginalPinboardAttributes.f_1003245fc(_:)",
+      "criterion": "原输入已解码Attributes：type恰等pinboard时返回pinboard(colorCode)，colorCode缺失默认0；type缺失或任何其它字符串（含clipboard、空、未知、不同大小写）均返回clipboard(capacity)，capacity缺失默认30。当前同样仅attributes.type=='pinboard'走pinboard，其余clipboard；两个可选值使用??0/??30。",
+      "full_branches": "原Optional标志决定是否读capacity(+0x10/flag+0x18)或colorCode(+0x20/flag+0x28)，不会因另一个字段存在而串用。当前明确读对应字段；不trim/lowercase，不拒capacity0/负值，不clamp颜色UInt64，也不随机生成默认颜色。原返回enum tag0=clipboard、1=pinboard与当前Value两个case的语义对应，不要求相同机器enum布局。",
+      "real_consumer": "colorCode(from:)只在JSON Attributes成功解码后调用本函数，guard case pinboard取关联值，否则nil；Panel普通board/owner Header、preview Header和PastoPinboardAppIntents.tintColor均真实调用该公开投影。创建/颜色更改Store也用同一Attributes Codable schema写rawAttributes，再由该读链消费。capacity分支值在本函数完整保留，虽当前颜色投影不对外展示capacity，不能据无容量UI而说此值方法未执行。",
+      "error_boundary": "本方法本身不做Data解码或抛错；JSON坏数据/缺Data在外层colorCode(from:)返回nil，不把这些情况错算本方法type=nil的默认clipboard。三个Optional字段的有值/无值状态均保留。",
+      "historical_evidence_reuse": "复用既有pinboard attributes投影证据.local/image-next-pinboard-header-attributes-projection-arm64.txt及.local/pasteboard-next-pinboard-header-writer-review.json作为原地址上下文；本轮完整重读成功C和当前helper及实际调用。未重新跑旧ARM脚本、未拿历史wholefileSHA冒当前源码摘要。",
+      "boundary": "只签该独立已解码属性→enum值转换，不把原rawAttributes实体getter、JSON编码/解码全部协议转发、未知CodingKey槽身份、Pinboard事务或所有Header父升级完整。已由其它批审覆盖的颜色解码308ea0跳过，不重复计数。"
+    }
+  ],
+  "limits": [
+    "只新增本独立报告，未修改产品源码、台账或用户数据。",
+    "未编译、parse、运行应用、功能/MCP测试、验证脚本或发布；未核当前编译产物。",
+    "本批1/1完整不是项目整体迁移率；主智能体汇总总分母及跨批去重，新增迁移0。",
+    "两个指定失败地址0x100ac35f8、0x100ac746c跳过，未读取。"
+  ]
+}

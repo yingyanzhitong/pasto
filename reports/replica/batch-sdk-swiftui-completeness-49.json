@@ -1,0 +1,67 @@
+{
+  "kind": "static_sdk_source_reuse",
+  "records": [
+    {
+      "function_id": "Paste:0x100bf6c90",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-1181.c",
+        "line": 771,
+        "sha256": "3ff8096b704ead070e8b331ec3292a87c4000f8d1030f27a34696b1f535562e6",
+        "stub": "0x100bf6c90"
+      },
+      "sdk_symbol": "_$s7SwiftUI7BindingV3get3setACyxGxyc_yxctcfC",
+      "sdk_dylib": "/System/Library/Frameworks/SwiftUI.framework/Versions/A/SwiftUI",
+      "historical_replica_stub": "0x1001d3e90",
+      "current_source": {
+        "path": "replica/Sources/Pasto/UI/ShortcutRecorder.swift",
+        "line": 12,
+        "sha256": "2aa3eccd3955064dc00e2d252b282f268f4c01bee026d846bcdb70a8c463ad90"
+      },
+      "criterion": "Binding(get:set:)显式构造快捷键读写绑定。 原stub与历史Pasto二进制绑定同一SwiftUI符号；当前源码显式调用对应公开API。",
+      "limitations": "仅源码级SDK API复用；当前二进制链接、运行和外层界面行为未验证。"
+    },
+    {
+      "function_id": "Paste:0x100bf6bac",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-1181.c",
+        "line": 464,
+        "sha256": "e497d259e6f77972024b204333ff680fd05ce7fdb5b3c94fa963e8abb884d6fb",
+        "stub": "0x100bf6bac"
+      },
+      "sdk_symbol": "_$s7SwiftUI6ButtonV6action5labelACyxGyyc_xyXEtcfC",
+      "sdk_dylib": "/System/Library/Frameworks/SwiftUI.framework/Versions/A/SwiftUI",
+      "historical_replica_stub": "0x1001d3e18",
+      "current_source": {
+        "path": "replica/Sources/Pasto/UI/PanelViews.swift",
+        "line": 69,
+        "sha256": "8d21f76aef6761a3e07666782d4941efdda201c6ac087127875731e8742f0118"
+      },
+      "criterion": "Button action 与 label 两闭包显式构造SwiftUI按钮。 原stub与历史Pasto二进制绑定同一SwiftUI符号；当前源码显式调用对应公开API。",
+      "limitations": "仅源码级SDK API复用；当前二进制链接、运行和外层界面行为未验证。"
+    },
+    {
+      "function_id": "Paste:0x100bf5c4c",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-1176.c",
+        "line": 345,
+        "sha256": "d46a9fbe852ef59efa61811197b030162704a0da76ab3622a9e5e5661e54ff95",
+        "stub": "0x100bf5c4c"
+      },
+      "sdk_symbol": "_$s7SwiftUI10ScrollViewV_15showsIndicators7contentACyxGAA4AxisO3SetV_SbxyXEtcfC",
+      "sdk_dylib": "/System/Library/Frameworks/SwiftUI.framework/Versions/A/SwiftUI",
+      "historical_replica_stub": "0x1001d33c8",
+      "current_source": {
+        "path": "replica/Sources/Pasto/UI/FilterBrowser.swift",
+        "line": 106,
+        "sha256": "4149942f755922b56f1a43b90be826b87ed7063776dfc3b2026eb8bf91510c22"
+      },
+      "criterion": "ScrollView(.vertical) 显式使用轴向、默认可见滚动指示与内容闭包构造。 原stub与历史Pasto二进制绑定同一SwiftUI符号；当前源码显式调用对应公开API。",
+      "limitations": "仅源码级SDK API复用；当前二进制链接、运行和外层界面行为未验证。"
+    }
+  ],
+  "build_executed": false,
+  "tests_executed": false
+}

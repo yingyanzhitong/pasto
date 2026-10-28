@@ -1,0 +1,46 @@
+{
+  "review_kind": "read_only_text_submission_representation_and_parent",
+  "counts": { "reviewed": 2, "complete": 1, "gap": 1, "uncertain": 0, "new_migrations_claimed": 0, "new_independent_defects": 0 },
+  "functions": [
+    {
+      "function_id": "Paste:0x10037efac",
+      "status": "complete",
+      "original_path": "decompiled/Paste/part-0282.c",
+      "original_line": 1926,
+      "current_path": "replica/Sources/PastoCore/OriginalTextPreviewSubmission.swift",
+      "current_symbol": "OriginalTextPreviewSubmission.makeItem(_:) 的 isRich=true 表示构造分支",
+      "criterion": "原新建空PasteboardItem，先用完整NSAttributedString调用f381fdc取可选RTF，再无条件向types追加public.rtf，Data有值才写dataByType、nil则无该Data；随后读取content.string，追加public.utf8-plain-text及严格UTF8数据，返回同一item。当前rich分支item→f37d8c8(f381fdc(content),rtf)→f37c4a8(content.string,utf8PlainText)正是同顺序及全部可选数据分支。",
+      "edge_cases": "RTF编码失败不抛出/不放弃构造、不删掉RTF类型，仍保存UTF8表示；RTF空Data作为存在值保存；空string仍写空UTF8 Data。types与dataByType保持独立，不按字典keys重建types。无重复RTF编码、无HTML或其它类型插入。",
+      "helpers_reviewed": "f381fdc是既有可空RTF编码helper；f37d8c8无条件追加type并按可选Data设置/移除字典值；f37c4a8转换UTF8后委托该setter。这些实际定义已读，不仅凭名字对应。",
+      "consumer": "OriginalReplicaPreviewAdapter.commitPreviewEditing→ClipboardStore.updateTextPreviewItem→makeItem→本rich构造分支；Store将原ordered types及Data分别保存，RTF无Data时也保留types列表。",
+      "boundary": "本地址的完整构造体已由真实生产分支内联复用，不要求另造同地址wrapper。不把决定isRich的f3c14d0或整个makeItem/事务父因此标完整。"
+    },
+    {
+      "function_id": "Paste:0x1003c0e50",
+      "status": "gap",
+      "gap_kind": "inherited_confirmed_callback_difference_and_unclosed_parent",
+      "original_path": "decompiled/Paste/part-0297.c",
+      "original_line": 802,
+      "current_paths": [
+        "replica/Sources/PastoCore/OriginalTextPreviewSubmission.swift",
+        "replica/Sources/PastoCore/ClipboardStore.swift"
+      ],
+      "current_symbol": "OriginalTextPreviewSubmission.makeItem(_:) + ClipboardStore.updateTextPreviewItem(id:attributedString:)",
+      "matching_value_path": "原初始isRich=false，enumerateAttributes range0..NSAttributedString.length/UTF16且options0；rich调用f37efac，plain只构造一个UTF8表示；两者均组成单元素数组交给实际仓库writer。当前makeItem同样采用全range和options0，plain/RTF表示构造值路径已对应，不在空文本处新增throw。",
+      "confirmed_gap": "原枚举回调f3c14d0与当前回调的命中后内部继续/提前return差异，已由第14批原ARM证实，传递到本父函数。因此即使普通字体下最终plain/RTF选择相同，也不能签整个原父函数完整。此项不是新的独立缺陷，引用batch-core-completeness-14.json。",
+      "additional_unclosed_boundary": "原函数自身还解析仓库服务、以捕获的ItemEntity和单项数组调用repo witness+0x18，完成后写事务结果；当前Store按UUID在JSON mutate事务内替换字段、重新生成metadata并更新updatedAt。实际有生产消费，但本轮未闭合原完整实体写入/错误/上下文与该JSON适配，不将表示构造完整升级为整个事务父完整。",
+      "consumer": "当前真实preview提交调用updateTextPreviewItem，不是旧updateRichTextItem强制RTF入口；不得拿旧接口的throwing RTF行为冒当前产品路径。"
+    }
+  ],
+  "original_existing_evidence": {
+    "path": ".local/pasteboard-next-text-edit-original-bodies.json",
+    "rich_constructor": "10037efac..10037f284，728B，既有sha256=8130da32bf602d907ea9ba18257a990cc6397fe072b1e4fbd07b3a0ee9c94eb9",
+    "note": "本轮重读完整成功C和当前生产源码；既存机器证据只作出处，不冒当前二进制绑定，未重算摘要。"
+  },
+  "limits": [
+    "只新增本独立报告；未修改产品源码、台账或用户数据。",
+    "未编译、parse、运行产品、功能/MCP测试、验证脚本或发布。",
+    "本批1/2完整不是项目总迁移率；总分母与跨批去重由主智能体汇总，新增迁移0。",
+    "两个失败地址0x100ac35f8、0x100ac746c跳过，未读取。"
+  ]
+}

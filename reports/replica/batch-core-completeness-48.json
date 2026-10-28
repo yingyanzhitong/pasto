@@ -1,0 +1,35 @@
+{
+  "review_kind": "read_only_raw_pasteboard_item_encoder_recheck",
+  "counts": {"reviewed": 1, "complete": 0, "gap": 0, "uncertain": 1, "new_migrations_claimed": 0},
+  "functions": [
+    {
+      "function_id": "Paste:0x10031a8e8",
+      "status": "uncertain",
+      "reviewed_previously": true,
+      "previous_report": "reports/replica/batch-core-completeness-19.json",
+      "original_path": "decompiled/Paste/part-0256.c",
+      "original_line": 1773,
+      "current_paths": ["replica/Sources/PastoCore/OriginalPasteboardDataCodec.swift", "replica/Sources/PastoCore/Pasteboard.swift"],
+      "current_symbol": "OriginalPasteboardDataCodec.f_10031a8e8(_:useBinaryPlist:)",
+      "confirmed_matching_branches": [
+        "原先解析配置依赖，读取当前配置byte；byte==1使用PropertyListEncoder及binary格式0xc8、压缩算法0x801，其它值使用JSONEncoder及算法0x205。当前显式Bool对应binary/LZFSE和JSON/ZLIB两值路径。",
+        "编码完成后才按item数组顺序调用f37d5c4检查图像Data；任一some（包括空Data）就直接保存未压缩编码结果。当前先encode再contains图像getter，空Data!=nil，因此不会把空Data图像误判为无图像。",
+        "无图像时才尝试压缩，原nil压缩结果保原encoded，非nil使用压缩Data。当前同一nil-coalescing回退；不会因压缩不缩小或失败抛错。",
+        "原最终bridge NSData并setRawPasteboardItems；current把Data交回真实调用方写内部canonical raw key，未作为可见NSPasteboard表示类型。"
+      ],
+      "current_actual_consumer": "Pasteboard.swift真实采集先保完整capturedItems顺序，从有data的表示构造兼容外层payload；capturedItems.count>1才调用本方法，传preferences.useBinaryPlist并写originalItemDataPayloadKey。恢复/native drag的originalPasteboardItems经该key解码；strict消费者用decodeIfValid保nil。不是无调用包装器。",
+      "remaining_uncertainty": [
+        "原函数自身包含动态Config读取和Entity raw setter；当前为显式Bool→Data的值投影，caller写Swift字典。原配置读取时点、setter错误/副作用与当前事务适配的全部关系未闭。原类名不同本身不是否定理由，未证的真实读写行为才是边界。",
+        "当前两个encode使用try?失败回退空Data；成功原C有Heritage AFTER dead removal与delay deadcode elimination警告。不能凭打印出来的正常路径确认原编码失败是否也完整回退空Data；本轮未补原异常机器块，因此不签全函数。",
+        "当前真实caller只在多项时使用该值方法，不说明原setter全部输入域只含多项，也不由单个consumer证明全实体合同。"
+      ],
+      "decision": "继续uncertain而非新gap：已核合法正常值路径可复用，但原完整配置/编码错误/实体写入仍未闭合。未发现本轮足以独立认定的新功能缺陷，不据未证失败分支声称用户数据已损坏。"
+    }
+  ],
+  "limits": [
+    "本项第19轮历史待证复审，新增迁移0；第46轮三个独立压缩方法完整不反向升级本父方法。",
+    "只新增本报告，不改产品源码、台账、用户数据或偏好。",
+    "只读成功原C、现源码及历史证据；未编译、parse、运行产品、测试、MCP、验证脚本或发布。",
+    "跳过两个指定失败地址，没有当前编译体或运行回归证明。"
+  ]
+}

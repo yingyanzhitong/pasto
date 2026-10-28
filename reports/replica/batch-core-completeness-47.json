@@ -1,0 +1,46 @@
+{
+  "review_kind": "read_only_nscoding_key_gap_recheck",
+  "counts": {"reviewed": 2, "complete": 0, "gap": 2, "uncertain": 0, "new_migrations_claimed": 0},
+  "functions": [
+    {
+      "function_id": "Paste:0x10037f520",
+      "status": "gap",
+      "reviewed_previously": true,
+      "previous_report": "reports/replica/batch-core-completeness-followup.json",
+      "original_path": "decompiled/Paste/part-0282.c",
+      "original_line": 2161,
+      "original_range": "0x10037f520..0x10037f650",
+      "current_path": "replica/Sources/PastoCore/OriginalPasteboard.swift",
+      "current_symbol": "OriginalPasteboardItem.f_10037f520(with:)",
+      "criterion": "重读整个成功C：有序types数组先桥接NSArray并编码，再桥接dataByType字典并编码，最终返回；值/顺序对应，但原第二归档key是data，现仍dataByType，整函数gap未消除。",
+      "inherited_machine_evidence": "既有完整ARM证据：37f604 MOV w0,#0x6164，37f608 MOVK w0,#0x6174,LSL16产生little-endian data；37f60c为e4 String tag；37f610桥接NSString，37f624调用encodeObject:forKey:。当前方法第二coder.encode显式写dataByType。新审阅不伪称重做了ARM或当前编译体绑定。",
+      "actual_consumers": "encode(with:)仍委托本方法；OriginalPasteboardArchive.encodeItems使用requiringSecureCoding:true的NSKeyedArchiver，unknown checksum的f322ae4使用requiringSecureCoding:false的NSKeyedArchiver，两者均会到此NSCoding实现。",
+      "boundary": "不是默认偏好差异，也不是仅类名不同；明确对象内部wire键不等。原类名身份/归档字节顺序另有未知，不因已证键差异而声称其它wire全闭。"
+    },
+    {
+      "function_id": "Paste:0x10037f31c",
+      "status": "gap",
+      "reviewed_previously": true,
+      "previous_report": "reports/replica/batch-core-completeness-followup.json",
+      "original_path": "decompiled/Paste/part-0282.c",
+      "original_line": 2071,
+      "original_range": "0x10037f31c..0x10037f4f8",
+      "current_path": "replica/Sources/PastoCore/OriginalPasteboard.swift",
+      "current_symbol": "OriginalPasteboardItem.init?(coder:)",
+      "criterion": "成功C先super init，再解NSString数组并cast[String]，成功后解NSString/NSData字典并cast[String:Data]，任一步失败nil，全部成功才赋两个字段。当前guard两项cast及失败nil基本匹配，但字典查询键仍dataByType而原为data，原data-only对象不能靠当前guard读取成功。",
+      "inherited_machine_evidence": "既有完整ARM：37f3ec MOV w2,#0x6164、37f3f0 MOVK w2,#0x6174,LSL16、37f3f4 e4 tag，37f400调用NSCoder.decodeDictionary。不是从字段名dataByType猜原归档键。",
+      "actual_consumers": "Archive.decodeItems先尝试Codable；失败才建立NSKeyedUnarchiver，将PasteCore.PasteboardItem及_TtC9PasteCore14PasteboardItem映射到当前类，要求secure coding并解root。映射类身份不会改对象内部查询键，因此不能抵消此gap。",
+      "boundary": "当前自身NSCoding encode/decode用同键可能互相读通，不能证明原归档兼容。没有读取用户归档或执行交叉解码，不声称所有已有用户记录实际失败。"
+    }
+  ],
+  "independent_path_not_counted": {
+    "path": "OriginalPasteboardItem Codable init(from:) / encode(to:)",
+    "finding": "当前CodingKeys types/dataByType属于独立Codable协议；JSON/PropertyListDecoder与原始表示codec走这一路，不能因NSCoding错误把其键改成data。本轮不重登记已完整Codable地址，也不更改已有JSON。"
+  },
+  "limits": [
+    "两项均历史gap复审，只对应同一个NSCoding第二键独立缺陷；跨批及按功能汇总去重，新增迁移0。",
+    "只新增本报告，不改产品源码、台账、用户数据或归档。未来修复还须保留Pasto既存dataByType归档兼容，此报告不授权批量重写。",
+    "只读成功C、现源码、既有静态ARM证据；未编译、parse、运行应用、测试、MCP、验证脚本或发布。",
+    "跳过两个指定失败地址，没有当前编译体或运行验收证明。"
+  ]
+}

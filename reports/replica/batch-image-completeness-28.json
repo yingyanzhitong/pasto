@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "scope": "前轮未覆盖的三个既有预览工具栏外观/动作入口；区分Swift工作体和含执行器检查的ObjC入口，只读核对。",
+  "counts": { "total": 3, "complete": 1, "gap": 0, "uncertain": 2 },
+  "records": [
+    {
+      "function_id": "Paste:0x10023eed0",
+      "status": "complete",
+      "original": { "path": "decompiled/Paste/part-0196.c", "start_line": 818, "address_range": "0x10023eed0..<0x10023eedc" },
+      "supporting_original": { "path": "decompiled/Paste/part-0196.c", "start_line": 829, "address_range": "0x10023eedc..<0x10023ef1c" },
+      "current_implementations": [ { "path": "replica/Sources/PastoCore/OriginalToolbarButton.swift", "start_line": 234, "end_line": 237, "symbol": "public override func viewDidChangeEffectiveAppearance()" } ],
+      "criterion": "原传viewDidChangeEffectiveAppearance selector给共用f23eedc，后者先objc_msgSendSuper2相同selector，再f23d784刷新样式；没有直接颜色解析、窗口appearance写入、enabled过滤或异步调度。当前先super.viewDidChangeEffectiveAppearance再同style方法，正常两调用及其先后全部满足。不同于第21批已证updateLayer缺super，此方法当前确有super，不能把同helper的已知缺口误套所有调用方。",
+      "actual_consumer": "OriginalToolbarButton真实NSButton override由AppKit appearance变化调用，Header/Edit/Save/Share、文本格式及图像旋转按钮均实际使用同组件。",
+      "limitations": "只确认Swift工作方法，f23ef1c的ObjC桥检查及f23d784样式算法不因本条升级。没有实际切换系统主题。"
+    },
+    {
+      "function_id": "Paste:0x10023ef1c",
+      "status": "uncertain",
+      "original": { "path": "decompiled/Paste/part-0196.c", "start_line": 842, "address_range": "0x10023ef1c..<0x10023ef2c" },
+      "supporting_original": { "path": "decompiled/Paste/part-0196.c", "start_line": 855, "address_range": "0x10023ef2c..<0x10023f028" },
+      "current_implementations": [ { "path": "replica/Sources/PastoCore/OriginalToolbarButton.swift", "start_line": 234, "end_line": 237, "symbol": "public override func viewDidChangeEffectiveAppearance()" } ],
+      "satisfied_business_contract": "当前真实native override正常先super后style，与原ObjC共用helper的正常业务一致，没有漏父调用。",
+      "criterion": "原此入口固定把source line0x93与appearance selector传f23ef2c，该helper先获取MainActor executor并在错误executor reportUnexpectedExecutor(PasteUI/ToolbarButton.macOS.swift)，之后super+style并释放actor。当前仅类@MainActor及Swift native override源码，未证明当前生成ObjC桥的诊断/顺序与之相同，故整个原ObjC入口待证，不把纯Swift工作体完整当整个桥完整。",
+      "actual_consumer": "真实NSButton effectiveAppearance原生回调接当前override，生产多个预览按钮可达；不是无调用包装。",
+      "limitations": "没有编译或运行补桥证据；待证不代表已复现视觉或线程故障。"
+    },
+    {
+      "function_id": "Paste:0x10023f160",
+      "status": "uncertain",
+      "original": { "path": "decompiled/Paste/part-0196.c", "start_line": 944, "address_range": "0x10023f160..<0x10023f230" },
+      "current_implementations": [ { "path": "replica/Sources/PastoCore/OriginalToolbarButton.swift", "start_line": 239, "end_line": 239, "symbol": "@objc public func performAction()" } ],
+      "satisfied_business_contract": "原无条件调用存储的必需buttonAction并传self，不检测isEnabled、不设置hover/pressed、不增加空回调；当前buttonAction(self)与真实构造必需closure相同。",
+      "criterion": "原本体在调用前含MainActor executor检查，失败reportUnexpectedExecutor(PasteUI/ToolbarButton.macOS.swift,line0x9a)，调用后释放actor。当前源码只有@objc方法和外围@MainActor声明，不能在禁止编译条件下声称整个生成入口具同检查，因此业务动作满足但原完整入口待证。",
+      "actual_consumer": "OriginalToolbarButton.init第59/60行真实target=self/action=#selector(performAction)；Adapter实际Cancel/Save/Pin/Share/格式按钮和图片左右旋转均传真实closure，原生button激活调用此action。",
+      "limitations": "没有触发按钮、剪贴板、旋转或保存动作；不把必需closure存在当系统ObjC注册/actor桥已全证。"
+    }
+  ],
+  "excluded_failed_addresses": [ "0x100ac35f8", "0x100ac746c" ],
+  "verification_scope": "仅新增本独立报告，无产品源码、台账、旧报告修改，无编译、parse、运行应用、测试、MCP或发布，未读取两指定失败函数。complete为限定工作体源码合同，不是一比一功能验收或当前产物证明。"
+}

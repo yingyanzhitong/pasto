@@ -1,0 +1,24 @@
+{
+  "kind": "ledger_conflict_static_check",
+  "generated_at": "2026-10-27T12:50:58.963605+00:00",
+  "denominator": 81123,
+  "ledger_migrated": 1648,
+  "confirmed_conflicts": 2,
+  "interpretation": "仅从原台账已标迁移数中扣除两个已核实差异；其他旧标记尚未全部复核，未登记函数也可能已有实现。该数不是全项目完成率，也不是全项目上界；未修改原台账。",
+  "records": [
+    {
+      "function_id": "Paste:0x1001e94d4",
+      "ledger": "migrated",
+      "recent_review": "gap",
+      "review_evidence": "正常分支完整一致：once得到固定表、输入lowercased、成功返回对应键码；不存在时原调用_assertionFailure并trap，当前preconditionFailure亦终止。但是完整失败诊断不相同：原thin字节0x100d9dc30是固定Unknown shortcut key，原文件标识0x100d9dc00为PasteShortcut/Shortcut.Key.swift；当前文字为Unsupported shortcut key:加原输入，且由当前源码位置产生诊断。不能把两者均trap当作完整错误输出一致。"
+    },
+    {
+      "function_id": "Paste:0x1001e7d18",
+      "ledger": "migrated",
+      "recent_review": "gap",
+      "review_evidence": "完整C与原ARM一致：先modifierFlags（BL 0x1001e7d2c），保存返回值，再keyCode（BL 0x1001e7d3c），输出keyCode低32位与原flags & 0xff5f0000。当前KeyboardShortcut初始化实参先求event.keyCode，再求event.modifierFlags；输出值和掩码一致，但两个getter读取轨迹次序相反。此处按完整静态调用顺序判gap；未证明普通不可变NSEvent有用户可见错误，不推断其事件值会改变。"
+    }
+  ],
+  "adjusted_ledger_count": 1646,
+  "adjusted_ledger_percent": 2.029
+}

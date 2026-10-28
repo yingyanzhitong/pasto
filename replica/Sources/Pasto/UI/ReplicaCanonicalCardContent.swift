@@ -19,9 +19,9 @@ struct ReplicaCanonicalCardContent: View {
                             ReplicaAdaptiveScalingImage(image: image)
                         }
                         if sizeClass != 3 {
-                            Text(String(format: "%d × %d", Int(metadata.width), Int(metadata.height)))
-                                .font(Font(NSFont.preferredFont(forTextStyle: .callout, options: [:])))
-                                .foregroundStyle(Color(nsColor: OriginalToolbarAppearance.secondaryForeground()))
+                            OriginalImageSizeBadge(text: String(format: "%d × %d", Int(metadata.width), Int(metadata.height)))
+                                .fixedSize()
+                                .frame(height: 19)
                                 .padding(.bottom, 8)
                         }
                     }
@@ -31,7 +31,7 @@ struct ReplicaCanonicalCardContent: View {
                     let color = OriginalColorPreviewMetadataGenerator.color(metadata.code)
                     Color(nsColor: color)
                         .overlay {
-                            Text(hexString(color))
+                            Text(OriginalPreviewColorFormatting.f_100206b5c(color).uppercased())
                                 .font(Font(NSFont.userFixedPitchFont(ofSize: 18) ?? NSFont.monospacedSystemFont(ofSize: 18, weight: .regular)))
                                 .foregroundStyle(Color(nsColor: (OriginalPreviewTextColors.f_1002067d4(color)
                                     ? NSColor.black : NSColor.white).withAlphaComponent(0.85)))
@@ -48,6 +48,9 @@ struct ReplicaCanonicalCardContent: View {
                             ReplicaFileCardImage(image: ReplicaFileCardImage.multipleDocumentsImage())
                                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                             Text(String(localized: OriginalPreviewLocalization.f_1001c6fb0()))
+                                .foregroundStyle(Color(nsColor: OriginalToolbarAppearance.secondaryForeground()))
+                                .lineLimit(2)
+                                .multilineTextAlignment(.center)
                         }
                     }
                     .font(Font(NSFont.preferredFont(forTextStyle: .callout, options: [:])))
@@ -62,11 +65,6 @@ struct ReplicaCanonicalCardContent: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
-    private func hexString(_ color: NSColor) -> String {
-        guard let rgb = color.usingColorSpace(.deviceRGB) else { return "#000000" }
-        return String(format: "#%02X%02X%02X", Int(rgb.redComponent * 255),
-                      Int(rgb.greenComponent * 255), Int(rgb.blueComponent * 255))
-    }
 }
 
 @MainActor

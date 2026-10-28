@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "scope": "两个已有popover显示/关闭状态方法；成功原C、必要ARM和当前生产delegate调用核对，保留返回值/外层依赖待证。",
+  "counts": { "total": 2, "complete": 0, "gap": 0, "uncertain": 2 },
+  "source_binding": { "path": "replica/Sources/PastoCore/OriginalPreviewPopover.swift", "historical_sha256": "352554008c692f89091bf3cb700b0cfee1b55768b5a709c3b4320951a154a46e", "last_fresh_read_sha256": "352554008c692f89091bf3cb700b0cfee1b55768b5a709c3b4320951a154a46e", "whole_file_unchanged_at_prior_review": true, "note": "本轮重读当前两个方法，不新增编译或运行结论。" },
+  "records": [
+    {
+      "function_id": "Paste:0x100029da8",
+      "status": "uncertain",
+      "historical_evidence": "reports/function-migration/Paste-0x100029da8.json",
+      "historical_contract_reusable": false,
+      "reusable_subset": "正常关闭全部状态/回调/发布副作用同序，可复用；历史固定整数返回0未证。",
+      "original": { "path": "decompiled/Paste/part-0016.c", "start_line": 991, "address_range": "0x100029da8..<0x100029e5c" },
+      "current_reference": { "path": "replica/Sources/PastoCore/OriginalPreviewPopover.swift", "start_line": 81, "end_line": 90, "symbol": "public func f_100029da8() -> Int" },
+      "criterion": "原先animates=true、isDisplayed=false，然后调用可选onWillClose，回调完成后才读manager当前popover标识；存在则清nil再发布topmost，无值不发布。当前同序，因此回调若同步改变标识，后续仍读取更新值，不提前捕获旧标识，不在callback前清空。原ARM29df8回调，29e18之后取manager，29e30 nil跳过、29e34清槽、29e3c发布。历史还把Ghidra return0当固定返回，ARM29e40 x0=manager、29e44 objc_release后直接ret，无固定Int0指令，不能从C恢复该返回合同；当前Int0实际被delegate忽略，未证用户可见差异。",
+      "actual_consumer": "OriginalPreviewPopover.popoverWillClose第93行真实delegate入口调用；init设置delegate=self，UIController.makePreviewPopover接真实内容factory。onWillClose当前未见生产赋值，nil分支合法，不能声称原外部回调功能全接入。",
+      "limitations": "原DI manager身份与当前显式registry边界另列；这里只保关闭副作用复用，不以其通过宣称整个原返回ABI或回调下游完成。"
+    },
+    {
+      "function_id": "Paste:0x100029e6c",
+      "status": "uncertain",
+      "historical_contract_reusable": false,
+      "existing_ledger_state": "partial",
+      "original": { "path": "decompiled/Paste/part-0016.c", "start_line": 1041, "address_range": "0x100029e6c..<0x100029f60" },
+      "current_reference": { "path": "replica/Sources/PastoCore/OriginalPreviewPopover.swift", "start_line": 69, "end_line": 77, "symbol": "public func f_100029e6c() -> Int" },
+      "satisfied_business_contract": "原先isDisplayed=true，再f029f60应用sharing；只有存在item才取得其identifier，与manager现popover标识String等值比较，不同或旧nil才写入并发布topmost，相同不重复发布；无item也已做前两步。当前同状态写入/依赖调用/可选identifier及去重发布顺序，空String为some仍保留，不以空值当nil。",
+      "criterion": "既有partial的sharing Config/完整模型来源边界不能仅因正常调用体存在升级：原从实际item实体实时读identifier并经DI取得manager，当前保存本地identifier及显式registry；原sharing依赖完整配置链未随本方法闭合。其历史合同还称return0，本轮未单独闭原返回ABI，不能猜。可确认delegate真实接入，旧remaining里Popover生产路径尚未接入已过时，但这不是其它依赖都完成的证据。",
+      "actual_consumer": "popoverWillShow第92行真实调用；UIController.makePreviewPopover提供store偏好/变化publisher及真实item content factory，实际delegate=self。isScreenSharingContentVisible偏好适配存在，不等于原Config/DI完整恢复。",
+      "limitations": "仅记录已满足的状态发布业务及已过时的调用缺口；保留partial父依赖，不提升完整计数。未运行popover显示或sharing变更。"
+    }
+  ],
+  "arm_evidence": { "binary": ".local/paste-arm64-static.bin", "range": "0x100029da8..<0x100029e5c", "method": "只读llvm-objdump完整指定成功函数，核回调/标识/发布顺序及返回边界" },
+  "excluded_failed_addresses": [ "0x100ac35f8", "0x100ac746c" ],
+  "verification_scope": "仅新增本报告，没有产品源码、台账或历史报告修改，没有编译、parse、运行应用、测试、MCP或发布，未读取两指定失败函数。正常业务复用不等于一比一运行验收或当前构建证明。"
+}

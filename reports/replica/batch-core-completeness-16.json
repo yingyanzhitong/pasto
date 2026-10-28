@@ -1,0 +1,51 @@
+{
+  "review_kind": "read_only_png_jpeg_data_constructor_projections",
+  "counts": { "reviewed": 2, "complete": 0, "gap": 0, "uncertain": 2, "new_migrations_claimed": 0 },
+  "functions": [
+    {
+      "function_id": "Paste:0x10037f284",
+      "status": "uncertain",
+      "original_path": "decompiled/Paste/part-0282.c",
+      "original_line": 2027,
+      "current_paths": [
+        "replica/Sources/Pasto/UI/ReplicaImagePreviewContent.swift",
+        "replica/Sources/PastoCore/ClipboardStore.swift",
+        "replica/Sources/PastoCore/Pasteboard.swift"
+      ],
+      "current_symbol": "encodedPayloads PNG分支→updateImagePreviewItem→originalPasteboardItems(from:)",
+      "matching_value_path": "原固定传UTType.png getter给f381540；该通用体新建空OriginalPasteboardItem形态对象、向types追加一次所给identifier，并把输入Data原样存入dataByType。当前PNG成功编码分支把Data放public.png，Store写orderedTypes单元素列表，decoder按显式列表与独立Data字典构建对象，移除内部metadata键；可见PNG字节不重编码，普通输入最终表示结构对应。",
+      "unresolved": "原本地址不是仅凭png常量即可签满：成功C在调用f381540后释放输入Data，并把返回值打印为uVar1=param1；这涉及初始化器/返回寄存器恢复与Data所有权的反编译歧义，本轮没有对本地址全部ARM及原真实caller闭合typed返回。现有生产路径是分阶段payload/Store/decoder投影，未证明该原完整方法返回/失败合同与此路径全部对应。不是仅因没有同名wrapper判不完整。",
+      "boundary": "当前普通PNG生产保存可达，不声称存在已证用户错误；不把编码器f3c89c8或Store事务一起计本方法完整。"
+    },
+    {
+      "function_id": "Paste:0x10037f2cc",
+      "status": "uncertain",
+      "original_path": "decompiled/Paste/part-0282.c",
+      "original_line": 2043,
+      "current_paths": [
+        "replica/Sources/Pasto/UI/ReplicaImagePreviewContent.swift",
+        "replica/Sources/PastoCore/ClipboardStore.swift",
+        "replica/Sources/PastoCore/Pasteboard.swift"
+      ],
+      "current_symbol": "encodedPayloads JPEG回退分支→updateImagePreviewItem→originalPasteboardItems(from:)",
+      "matching_value_path": "原固定传UTType.jpeg getter给同一f381540，最终单public.jpeg类型及输入原Data；当前PNG编码失败才JPEG0.5，成功后单JPEG payload经显式orderedTypes解码成单item，相同Data不重编码。PNG失败/JPEG编码参数属于父，不推定本Data构造函数自身有该条件。",
+      "unresolved": "与PNG构造相同，本原完整C保留输入Data release及返回值恢复歧义，尚未以本地址ARM/caller证明完整typed返回。普通值结构对应不等于整个初始化/返回副作用链已闭。",
+      "boundary": "不把两个编码均失败的单空item/unknown适配纳入JPEG构造；也不把有Data但不可解码图片强制转换为nil：通用原构造自身不验证图像。当前decoder单JPEG数据值路径同样可保空/坏Data，但实际UI编码成功域较窄。"
+    }
+  ],
+  "shared_original_body": {
+    "function_id": "Paste:0x100381540",
+    "path": "decompiled/Paste/part-0283.c",
+    "line": 817,
+    "reviewed_contract": "新空对象→调用类型provider→取得identifier→append types→设置非可空Data字典值→返回新对象。另有381528/381534直接转发固定getter，未凭相同C额外增加审阅或完整计数。",
+    "not_claimed": "本轮只作为两个候选的下游证据，不将任意provider副作用或当前机器ABI签为完整。"
+  },
+  "actual_consumer": "ReplicaImagePreviewContent.commitPreviewEditing实际调用updateImagePreviewItem(Self.encodedPayloads(image))；Store在生成metadata和持久化时真实调用originalPasteboardItems。按实际单类型输入，该decoder保显式orderedTypes及原Data，内部键清理不修改PNG/JPEG bytes。未把用户持久化读写当原构造本体。",
+  "limits": [
+    "只写本报告；未修改产品源码、台账或用户数据。",
+    "未编译、parse、运行产品、功能/MCP测试、验证脚本或发布。",
+    "本轮只读取成功C及现有源码，无新反汇编；不能把生成伪码的返回变量名当可靠typed ABI。",
+    "本批0/2完整不是项目总迁移率；总分母及跨批去重由主智能体汇总，新增迁移0。",
+    "失败地址0x100ac35f8、0x100ac746c跳过，未读取。"
+  ]
+}

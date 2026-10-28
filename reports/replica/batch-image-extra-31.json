@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "kind": "same_file_historical_static_reuse",
+  "scope": "同一未变化TitleLabel源码中的两个缓存/配置方法；逐项重读成功原C及生产消费者，不修改旧报告。",
+  "counts": { "total": 2, "complete": 2, "gap": 0, "uncertain": 0 },
+  "source_binding": { "path": "replica/Sources/PastoCore/OriginalPreviewTitleLabel.swift", "historical_sha256": "84e3a33dbd575ad595cded72928d3d9b917ec1ece7eb258ba42ef3cf457bb0e2", "current_read_sha256": "84e3a33dbd575ad595cded72928d3d9b917ec1ece7eb258ba42ef3cf457bb0e2", "whole_file_unchanged": true },
+  "records": [
+    {
+      "function_id": "Paste:0x100013084",
+      "status": "complete",
+      "historical_evidence": "reports/function-migration/Paste-0x100013084.json",
+      "historical_contract_reusable": true,
+      "original": { "path": "decompiled/Paste/part-0007.c", "start_line": 2039, "address_range": "0x100013084..<0x1000130fc" },
+      "current_reference": { "path": "replica/Sources/PastoCore/OriginalPreviewTitleLabel.swift", "start_line": 159, "end_line": 165, "symbol": "public func f_100013084() -> OriginalPreviewTextField" },
+      "criterion": "原读取TitleLabel的lazy TextField wrapper缓存，已有直接返回同对象，nil才创建对应wrapper、调用f0130fc配置，完成后存cache。当前同对象层级、配置先于缓存、两分支，无每次读取重设编辑状态或改text；真实native NSTextField仍由内层wrapper的f23adf0持有，不将两个缓存层混为同一对象。原本体无executor检查。",
+      "actual_consumer": "TitleLabel自身构造第152行、begin/cancel/commit及mouseDown共用该getter；Adapter实际Header第354行构造TitleLabel，第396行模型变更取得同wrapper写标题。",
+      "limitations": "只确认外层wrapper lazy getter，不升级wrapper完整init或TitleLabel父构造；原类名/布局生成ABI差异不作为业务方法缺口。"
+    },
+    {
+      "function_id": "Paste:0x1000130fc",
+      "status": "complete",
+      "historical_evidence": "reports/function-migration/Paste-0x1000130fc.json",
+      "historical_contract_reusable": true,
+      "original": { "path": "decompiled/Paste/part-0007.c", "start_line": 2068, "address_range": "0x1000130fc..<0x100013204" },
+      "current_reference": { "path": "replica/Sources/PastoCore/OriginalPreviewTitleLabel.swift", "start_line": 167, "end_line": 172, "symbol": "public func f_1000130fc(_ field: OriginalPreviewTextField)" },
+      "criterion": "原先给wrapper onDidEndEditing安装weak TitleLabel closure，存在owner才转f013240；随后取共享前景并经f23af6c写色，wrapper alpha=0.8（原bits3fe999999999999a），最后native field字体为f1ff910 headline。当前同顺序、weak self而非强循环、同颜色刷新方法、wrapper alpha非native alpha、native headline与空options。成功原f01393c→f013204显示weakload nil无操作/有owner调用；成功原f1ff910明确转NSFontTextStyleHeadline，未从方法名猜字号。",
+      "actual_consumer": "f013084首次创建真实title wrapper时调用；field delegate结束编辑经f23c56c调用此保存closure到TitleLabel.f013240，继而真实Header onCommitEditing链写标题。配置的font/color/alpha实际用于预览标题。",
+      "limitations": "只确认有限配置/closure安装方法；原weakload回调及具体提交事务的完整返回/actor合同不因安装完成升级。历史build仍仅历史，无运行或编译验证。"
+    }
+  ],
+  "excluded_failed_addresses": [ "0x100ac35f8", "0x100ac746c" ],
+  "verification_scope": "仅新增本报告；未修改产品源码、台账或历史报告，无编译、parse、运行产品、测试、MCP或发布，未读取指定失败函数。complete限有限源码方法，不是一比一运行验收或当前产物证明。"
+}

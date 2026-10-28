@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "kind": "static_code_migration",
+  "functions": [
+    {
+      "function_id": "Paste:0x100206f0c",
+      "state": "migrated",
+      "contract": "读取NSColor.alphaComponent并返回严格小于1.0；不转换色空间，不clamp，不以小于等于替代。",
+      "implementations": [
+        {
+          "path": "replica/Sources/Pasto/UI/OriginalCompactTextFooter.swift",
+          "symbol": "color.alphaComponent < 1"
+        }
+      ],
+      "source": {
+        "path": "decompiled/Paste/part-0170.c",
+        "line": 3466
+      },
+      "review": "成功原纯方法及原紧凑文本背景调用点逐分支对照，真实紧凑卡片/原生卡片及Panel背景消费者已使用相同表达式；直接复用，无额外包装。",
+      "remaining": "此透明度判断值合同完整；不升级原背景父方法或颜色格式化。"
+    },
+    {
+      "function_id": "Paste:0x1003bf65c",
+      "state": "migrated",
+      "contract": "读取canonical预览元数据，缺失/坏记录/非link类型触发失败；link分支返回非可选URL，不从payload或plainText回填。",
+      "implementations": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaLinkPreviewContent.swift",
+          "symbol": "private static func itemURL(_ item: ClipboardItem) -> URL"
+        }
+      ],
+      "source": {
+        "path": "decompiled/Paste/part-0296.c",
+        "line": 1948
+      },
+      "review": "恢复原optional-none及非link失败分支，删除静默空UI适配；真实元数据观察、编辑和打开按钮均消费该getter。currentURL仅在记录本身不存在时保留Optional，属于外围观察生命周期。",
+      "remaining": "本地getter取值/失败业务合同完整；原Entity/VM观察持有和外围窗口/DI仍不由此升级。"
+    },
+    {
+      "function_id": "Paste:0x100228c78",
+      "state": "partial",
+      "contract": "原选区恰为目标单元素时，在选区manager、视觉、滚动及委托动作前立即返回；其他选区按mode选择后刷新，并对末项执行reveal回调。",
+      "implementations": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "private func selectIndex(_ index: Int, mode: UInt8, items: [ClipboardItem])"
+        }
+      ],
+      "source": {
+        "path": "decompiled/Paste/part-0188.c",
+        "line": 2089
+      },
+      "review": "将same-singleton提前返回放在manager构造及Published/anchor更新前，并删除仅抑制preview的旧局部判断；真实鼠标、方向及边界导航入口均使用同方法。",
+      "remaining": "原滚动完成/失败条件及其弱委托回调链尚未闭合，不把早退修复算作整函数完成。"
+    }
+  ],
+  "build_executed": false,
+  "tests_executed": false,
+  "equivalence_verified": false,
+  "limitations": "Only source migration and manual static comparison. No compile, parse, product execution, tests, install, commit or release. Historical source evidence freshness remains unresolved."
+}

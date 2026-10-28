@@ -1,0 +1,191 @@
+{
+  "kind": "static_sdk_source_level_reuse",
+  "generated_at": "2026-10-27T12:09:50.588166+00:00",
+  "historical_evidence": "reports/replica/batch-pasto-sdk-completeness-15.json",
+  "build_executed": false,
+  "tests_executed": false,
+  "product_executed": false,
+  "limitations": "确认生产源码直接使用Foundation API；未重新编译验证链接或运行时行为。",
+  "records": [
+    {
+      "function_id": "Paste:0x100bf40b0",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-1167.c",
+        "line": 122,
+        "sha256": "3753065d2832f909081d0e9d35922558e045a17fd3fc339f623a04e711f89cd8",
+        "stub": "0x100bf40b0"
+      },
+      "original_symbol": "_$s10Foundation12CharacterSetV12charactersInACSSh_tcfC",
+      "original_dylib": "/System/Library/Frameworks/Foundation.framework/Versions/C/Foundation",
+      "source_reference": {
+        "path": "replica/Sources/PastoCore/OriginalPasteboard.swift",
+        "line": 142,
+        "text": "CharacterSet(charactersIn: \"#\")",
+        "sha256": "bda6fc26104af712cbf89c0e974c5d84a17b99b89f15def8b2b8c422fc0b3674"
+      },
+      "criterion": "CharacterSet.init(charactersIn:) 用于URL回退编码字符集合。 已核历史原版SDK转发及当前生产Swift对同一Foundation API直接调用；未验证当前机器链接。",
+      "scope": "仅SDK转发源码级复用，不升级URL/OCR/搜索父函数或SDK内部实现。"
+    },
+    {
+      "function_id": "Paste:0x100bf40d4",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-1167.c",
+        "line": 169,
+        "sha256": "02032b166c119835e646c9aa17075a6d237faed715d281e0a3c24fb1f8dc13c6",
+        "stub": "0x100bf40d4"
+      },
+      "original_symbol": "_$s10Foundation12CharacterSetV15urlQueryAllowedACvgZ",
+      "original_dylib": "/System/Library/Frameworks/Foundation.framework/Versions/C/Foundation",
+      "source_reference": {
+        "path": "replica/Sources/PastoCore/OriginalPasteboard.swift",
+        "line": 143,
+        "text": "allowed.formUnion(.urlQueryAllowed)",
+        "sha256": "bda6fc26104af712cbf89c0e974c5d84a17b99b89f15def8b2b8c422fc0b3674"
+      },
+      "criterion": "CharacterSet.urlQueryAllowed 用于URL回退编码。 已核历史原版SDK转发及当前生产Swift对同一Foundation API直接调用；未验证当前机器链接。",
+      "scope": "仅SDK转发源码级复用，不升级URL/OCR/搜索父函数或SDK内部实现。"
+    },
+    {
+      "function_id": "Paste:0x100bf40e0",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-1167.c",
+        "line": 184,
+        "sha256": "cb3ae913138b8b2ed195dc741ac02f7cd988bbbb756e679c80a04817712c2868",
+        "stub": "0x100bf40e0"
+      },
+      "original_symbol": "_$s10Foundation12CharacterSetV18urlFragmentAllowedACvgZ",
+      "original_dylib": "/System/Library/Frameworks/Foundation.framework/Versions/C/Foundation",
+      "source_reference": {
+        "path": "replica/Sources/PastoCore/OriginalPasteboard.swift",
+        "line": 144,
+        "text": "allowed.formUnion(.urlFragmentAllowed)",
+        "sha256": "bda6fc26104af712cbf89c0e974c5d84a17b99b89f15def8b2b8c422fc0b3674"
+      },
+      "criterion": "CharacterSet.urlFragmentAllowed 用于URL回退编码。 已核历史原版SDK转发及当前生产Swift对同一Foundation API直接调用；未验证当前机器链接。",
+      "scope": "仅SDK转发源码级复用，不升级URL/OCR/搜索父函数或SDK内部实现。"
+    },
+    {
+      "function_id": "Paste:0x100bf40ec",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-1167.c",
+        "line": 199,
+        "sha256": "9551247ddb3c28d48aaf649b42f0793997955fac430ee35256af4433f160f8be",
+        "stub": "0x100bf40ec"
+      },
+      "original_symbol": "_$s10Foundation12CharacterSetV21punctuationCharactersACvgZ",
+      "original_dylib": "/System/Library/Frameworks/Foundation.framework/Versions/C/Foundation",
+      "source_reference": {
+        "path": "replica/Sources/PastoCore/OCR.swift",
+        "line": 115,
+        "text": "CharacterSet.whitespacesAndNewlines.union(.punctuationCharacters)",
+        "sha256": "05735a83412519d0a8fb4b913b17f434a235b57ec7fda6cc0fa334248223ed93"
+      },
+      "criterion": "CharacterSet.punctuationCharacters 用于OCR词分隔。 已核历史原版SDK转发及当前生产Swift对同一Foundation API直接调用；未验证当前机器链接。",
+      "scope": "仅SDK转发源码级复用，不升级URL/OCR/搜索父函数或SDK内部实现。"
+    },
+    {
+      "function_id": "Paste:0x100bf4104",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-1167.c",
+        "line": 229,
+        "sha256": "a420931b285965cb980097e0785bc79b58b9829cdf0599edbf50041438d09d74",
+        "stub": "0x100bf4104"
+      },
+      "original_symbol": "_$s10Foundation12CharacterSetV5unionyA2CF",
+      "original_dylib": "/System/Library/Frameworks/Foundation.framework/Versions/C/Foundation",
+      "source_reference": {
+        "path": "replica/Sources/PastoCore/OCR.swift",
+        "line": 115,
+        "text": "CharacterSet.whitespacesAndNewlines.union(.punctuationCharacters)",
+        "sha256": "05735a83412519d0a8fb4b913b17f434a235b57ec7fda6cc0fa334248223ed93"
+      },
+      "criterion": "CharacterSet.union 用于OCR词分隔。 已核历史原版SDK转发及当前生产Swift对同一Foundation API直接调用；未验证当前机器链接。",
+      "scope": "仅SDK转发源码级复用，不升级URL/OCR/搜索父函数或SDK内部实现。"
+    },
+    {
+      "function_id": "Paste:0x100bf4134",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-1167.c",
+        "line": 289,
+        "sha256": "24ebd5cc4738e78ae5981abc79543944f7b124750661f46c0516548432cae9c3",
+        "stub": "0x100bf4134"
+      },
+      "original_symbol": "_$s10Foundation12CharacterSetV8newlinesACvgZ",
+      "original_dylib": "/System/Library/Frameworks/Foundation.framework/Versions/C/Foundation",
+      "source_reference": {
+        "path": "replica/Sources/PastoCore/OriginalPreviewFooter.swift",
+        "line": 17,
+        "text": "text.components(separatedBy: .newlines)",
+        "sha256": "97d14915cc4fa873a0d526a42f168ea5487864d0b8327e825bee18e28bd2e25c"
+      },
+      "criterion": "CharacterSet.newlines 用于文本行统计。 已核历史原版SDK转发及当前生产Swift对同一Foundation API直接调用；未验证当前机器链接。",
+      "scope": "仅SDK转发源码级复用，不升级URL/OCR/搜索父函数或SDK内部实现。"
+    },
+    {
+      "function_id": "Paste:0x100bf4140",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-1167.c",
+        "line": 304,
+        "sha256": "6875e629f012581af9690f51acaa3d425323eb56dc230d98519f8692f8bfe106",
+        "stub": "0x100bf4140"
+      },
+      "original_symbol": "_$s10Foundation12CharacterSetV9formUnionyyACF",
+      "original_dylib": "/System/Library/Frameworks/Foundation.framework/Versions/C/Foundation",
+      "source_reference": {
+        "path": "replica/Sources/PastoCore/OriginalPasteboard.swift",
+        "line": 143,
+        "text": "allowed.formUnion(.urlQueryAllowed)",
+        "sha256": "bda6fc26104af712cbf89c0e974c5d84a17b99b89f15def8b2b8c422fc0b3674"
+      },
+      "criterion": "CharacterSet.formUnion用于URL回退字符集合。 已核历史原版SDK转发及当前生产Swift对同一Foundation API直接调用；未验证当前机器链接。",
+      "scope": "仅SDK转发源码级复用，不升级URL/OCR/搜索父函数或SDK内部实现。"
+    },
+    {
+      "function_id": "Paste:0x100bf4ce0",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-1171.c",
+        "line": 203,
+        "sha256": "1b303feb212339f637f0686881eb4c9465ef3564f801f803cd6187ecf3f481dc",
+        "stub": "0x100bf4ce0"
+      },
+      "original_symbol": "_$s10Foundation6LocaleV10identifierACSS_tcfC",
+      "original_dylib": "/System/Library/Frameworks/Foundation.framework/Versions/C/Foundation",
+      "source_reference": {
+        "path": "replica/Sources/PastoCore/ClipboardStore.swift",
+        "line": 567,
+        "text": "Locale(identifier: \"en_US_POSIX\")",
+        "sha256": "630b6ccf5038fad731c8623853a0d8a7d2c881f3a63c3d544401a9ebc6449ec5"
+      },
+      "criterion": "Locale.init(identifier:) 用于本地文本折叠。 已核历史原版SDK转发及当前生产Swift对同一Foundation API直接调用；未验证当前机器链接。",
+      "scope": "仅SDK转发源码级复用，不升级URL/OCR/搜索父函数或SDK内部实现。"
+    },
+    {
+      "function_id": "Paste:0x100bf4cec",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-1171.c",
+        "line": 221,
+        "sha256": "3dffc37a2bab996abf5519ec51047357bcf9ae7f090f296f94d488004f1f0f73",
+        "stub": "0x100bf4cec"
+      },
+      "original_symbol": "_$s10Foundation6LocaleV10identifierSSvg",
+      "original_dylib": "/System/Library/Frameworks/Foundation.framework/Versions/C/Foundation",
+      "source_reference": {
+        "path": "replica/Sources/PastoCore/OriginalSearchAppearance.swift",
+        "line": 60,
+        "text": "forPreferences: [locale.identifier]",
+        "sha256": "0cfd7e194ce6f6b1f4118897810e35d0eafab317a68e6104e4bfbd11dbaeb5c4"
+      },
+      "criterion": "Locale.identifier 用于首选语言选择。 已核历史原版SDK转发及当前生产Swift对同一Foundation API直接调用；未验证当前机器链接。",
+      "scope": "仅SDK转发源码级复用，不升级URL/OCR/搜索父函数或SDK内部实现。"
+    }
+  ]
+}

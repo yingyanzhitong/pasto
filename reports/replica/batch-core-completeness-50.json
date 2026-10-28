@@ -1,0 +1,32 @@
+{
+  "review_kind": "read_only_native_drag_identifier_production_binding_followup",
+  "counts": {"reviewed": 1, "complete": 0, "gap": 1, "uncertain": 0, "new_migrations_claimed": 0},
+  "functions": [
+    {
+      "function_id": "Paste:0x1003ca374",
+      "status": "gap",
+      "previous_report": "reports/replica/batch-core-completeness-11.json",
+      "previous_status": "uncertain",
+      "original_path": "decompiled/Paste/part-0300.c",
+      "original_line": 1989,
+      "original_range": "0x1003ca374..0x1003ca608",
+      "current_paths": ["replica/Sources/PastoCore/OriginalNativeDragPasteboardWriter.swift", "replica/Sources/Pasto/UI/ReplicaNativeCardCollection.swift"],
+      "current_symbol": "OriginalNativeDragPasteboardWriter.pasteboardPropertyList(forType:) / ReplicaNativeDragItemReference.pasteboardIdentifier",
+      "matched_value_branches": "成功原C重读确认own-ID类型优先返回所持实体identifier；其它类型按group顺序直接查dataByType，首个存在Data立即返回（包括空Data），全缺才nil，不要求键在types。当前同样先ownID getter、再for item字典查询及nil。输入同一个identifier时这个分派/返回算法没有新缺口。",
+      "production_binding_gap": "第11轮ownID来源待证可用第29轮原创建规则进一步收束：原普通本地新建未传override时明确将checksum字符串setIdentifier；普通文本为32位MD5 HEX。当前真实beginNativeDrag把selected items映射为ReplicaNativeDragItemReference，该类仅持ClipboardItem值并返回item.id.uuidString（带连字符UUID），没有原任意identifier字符串字段或checksum身份读取。原默认本地创建→拖拽own-ID的数据链可输出不同字符串，因此完整生产输入/返回合同存在已证差异。",
+      "evidence": [
+        "既有完整原writer body证据.local/pasteboard-native-drag-writer-closure.json：3ca374..3ca608，660字节，SHA256173e68c6c146dacf90fbea4b14c9b8eeb9b1c39e4d81f4b3732aacd0247a988a。本轮重读成功C与现源码，不把历史source/build绑定当当前二进制证明。",
+        "第29轮reports/replica/batch-core-completeness-29.json：原36120c输入标识none→361218调用360d9c；360de8分类→360df4 checksum；360ed4/ed8桥接该字符串，360ef4 setIdentifier:。已证为本地真实创建而非仅联网/CloudKit调用。",
+        "当前ReplicaNativeCardCollection.swift:343 selected.map创建Reference；文件末599起Reference的pasteboardIdentifier明确item.id.uuidString。Core writer强持source且每次请求调用其getter，协议允许任意String不等于当前实际source已保存原String。"
+      ],
+      "decision_boundary": "gap针对实际生产source的身份数据投影，不否定Core通用writer给定等值source时的分派算法，也不要求增加另一个同名wrapper。原nil identifier/异常/生命周期全域仍未闭，但已证普通有效创建域的字符串差异足以阻止整地址生产迁移签满。",
+      "deduplication": "这是第29轮新建身份差异在实际own-ID消费者中的传播，不是第二个独立功能缺陷。第11轮不确定保留历史快照，本报告仅补生产绑定的新结论，不修改台账。",
+      "user_effect_limit": "没有运行拖拽或读系统剪贴板，不声称普通粘贴文本因此必然失败；确证边界是外部可读取own-ID propertyList值不同。独立Pasto本地重排marker仍使用自身UUID协议，不由本报告声称该协议有错。"
+    }
+  ],
+  "limits": [
+    "只新增报告，不改产品源码、台账、用户标识或存储；不自动重算历史UUID或破坏现JSON关系。",
+    "未编译、parse、运行应用、测试、MCP、验证脚本或发布；跳过两个指定失败地址。",
+    "新增迁移0；没有当前编译体或运行回归证明，跨批地址及独立缺陷汇总须去重。"
+  ]
+}

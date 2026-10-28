@@ -1,0 +1,339 @@
+{
+  "schema_version": 1,
+  "scope": "上轮4项uncertain的已有ARM补证，以及另8项既有migrated元数据编解码方法只读审阅。只判断有限源码合同，不是用户可见功能完成率。",
+  "previous_report": "reports/replica/batch-image-completeness.json",
+  "previous_report_preserved": true,
+  "resolved_previous": [
+    {
+      "function_id": "Paste:0x1002411cc",
+      "previous_status": "uncertain",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-0197.c",
+        "start_line": 545,
+        "end_line": 594
+      },
+      "arm_evidence": {
+        "path": ".local/image-zoom-2411cc-isolated-arm64.txt",
+        "instruction_range": "0x100241204..0x100241288"
+      },
+      "current_implementations": [
+        {
+          "path": "replica/Sources/Pasto/UI/OriginalImageTextSelection.swift",
+          "symbol": "func f_1002411cc()",
+          "line": 111
+        }
+      ],
+      "criterion": "cbz image→无动作；0x241220/238形成image.width/frame.width、image.height/frame.height；0x241240 fcsel ls选择height，否则width，保NaN无序语义；0x241254/25c fcsel ge分别选择1和1/r，else选择r；max按fadd r+r。现<=/>=两个条件与ARM一致，原C严格比较展示已消歧。",
+      "actual_consumer": "layout/viewDidEndLiveResize"
+    },
+    {
+      "function_id": "Paste:0x1003c9f3c",
+      "previous_status": "uncertain",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-0300.c",
+        "start_line": 1767,
+        "end_line": 1814
+      },
+      "arm_evidence": {
+        "path": ".local/image-dev18-thumbnail-arm64.txt",
+        "instruction_range": "0x1003c9f3c..0x1003ca020"
+      },
+      "current_implementations": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalImagePreviewMetadata.swift",
+          "line": 30,
+          "symbol": "f_1003c9f3c"
+        }
+      ],
+      "criterion": "bestRep nil在0x3c9f80结束；宽比较b.hi及高比较b.ls按无序语义对应现!(rep<=target)；scale比较b.pl对应现widthScale<heightScale的else；0x3c9fd0/3c9fdc均frinta，确为最接近且平局离零，并非C显示long截断。未缩放分支复用representation原尺寸，末尾调用f3ca024。",
+      "actual_consumer": "f313548缩略预览生成"
+    },
+    {
+      "function_id": "Paste:0x100218b08",
+      "previous_status": "uncertain",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-0182.c",
+        "start_line": 1298,
+        "end_line": 1331
+      },
+      "arm_evidence": {
+        "path": ".local/image-selection-return-original-static.txt",
+        "instruction_range": "0x100218b08..0x100218c24"
+      },
+      "current_implementations": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSelectionAppearance.swift",
+          "symbol": "f_100218b08"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/PanelViews.swift",
+          "symbol": "OriginalSelectionAppearance.f_100218b08"
+        }
+      ],
+      "criterion": "x20为原color；sRGB转换失败0x218b60..68持有原color为candidate；model!=RGB在0x218bdc..bf8明确返回原x20；gray成功0x218bd4返回x23；gray nil在0x218c10..c24把原x20转入返回。现converted非rgb与gray失败均回原color，完整四路径吻合，不能按C void推断。",
+      "actual_consumer": "PanelViews selection颜色"
+    },
+    {
+      "function_id": "Paste:0x100206b5c",
+      "previous_status": "uncertain",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-0170.c",
+        "start_line": 3189,
+        "end_line": 3367
+      },
+      "arm_evidence": {
+        "path": ".local/image-next-color-card-hex-arm64.txt",
+        "instruction_range": "0x100206b5c..0x100206e4c"
+      },
+      "current_implementations": [
+        {
+          "path": "replica/Sources/Pasto/UI/OriginalPreviewColorFormatting.swift",
+          "symbol": "f_100206b5c"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaColorPreviewContent.swift",
+          "symbol": "OriginalPreviewColorFormatting.f_100206b5c"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaCanonicalCardContent.swift",
+          "symbol": "OriginalPreviewColorFormatting.f_100206b5c"
+        }
+      ],
+      "criterion": "deviceRGB失败0x206c10..18置三通道0；成功读取RGB和alpha后0x206bf4..c08乘255；三个fcvtzs为0x206c8c/206d14/206d8c，前置各自非有限/上下界brk；0x206ca8/cac构造小字符串0x78323025，即%02x，其后两次同字面；0x206db0的0x23为#，按RGB依次append，返回小写字符串，alpha不输出。",
+      "actual_consumer": "ColorPreview与CanonicalCard两处uppercased显示"
+    }
+  ],
+  "additional_batch": [
+    {
+      "function_id": "Paste:0x100314ea8",
+      "status": "complete",
+      "mapping_state_observed": "migrated",
+      "original": {
+        "path": "decompiled/Paste/part-0255.c",
+        "start_line": 554,
+        "end_line": 674
+      },
+      "current_implementations": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalImagePreviewMetadataCodec.swift",
+          "symbol": "private struct Stored: Codable"
+        }
+      ],
+      "criterion": "13个字段顺序case0..12均encodeIfPresent：String/Int/AttributedString/URL/String/Data/Data/CGSize/Data/[String]/Int/Data/UInt64；当前Stored 13个Optional同键名同类型自动合成；nil省略、throw不在字段内吞错。",
+      "actual_consumer": "encode/encodeFiles/encodeColor/encodeText/encodeLink→encodeStored→Stored.Encodable"
+    },
+    {
+      "function_id": "Paste:0x1003152d4",
+      "status": "complete",
+      "mapping_state_observed": "migrated",
+      "original": {
+        "path": "decompiled/Paste/part-0255.c",
+        "start_line": 675,
+        "end_line": 923
+      },
+      "current_implementations": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalImagePreviewMetadataCodec.swift",
+          "symbol": "private struct Stored: Codable"
+        }
+      ],
+      "criterion": "原初始化全部字段nil后按case0..12逐个decodeIfPresent；present类型错误不生成部分记录，missing/null为nil。当前Stored全部Optional的合成Decodable维持同策略，含当前投影不用的字段。",
+      "actual_consumer": "所有decodeX→decodeStored→Stored.Decodable"
+    },
+    {
+      "function_id": "Paste:0x100315a10",
+      "status": "complete",
+      "mapping_state_observed": "migrated",
+      "original": {
+        "path": "decompiled/Paste/part-0255.c",
+        "start_line": 924,
+        "end_line": 934
+      },
+      "current_implementations": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalImagePreviewMetadataCodec.swift",
+          "symbol": "private struct Stored: Codable"
+        }
+      ],
+      "criterion": "完整body只有转发f3152d4；当前Stored:Codable生成Decodable协议入口，真实PropertyListDecoder/JSONDecoder调用，不引入第二套解析或吞错。只判协议转发业务，不判原生成ABI。",
+      "actual_consumer": "decodeStored的两种Foundation decoder"
+    },
+    {
+      "function_id": "Paste:0x100315a24",
+      "status": "complete",
+      "mapping_state_observed": "migrated",
+      "original": {
+        "path": "decompiled/Paste/part-0255.c",
+        "start_line": 935,
+        "end_line": 945
+      },
+      "current_implementations": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalImagePreviewMetadataCodec.swift",
+          "symbol": "private struct Stored: Codable"
+        }
+      ],
+      "criterion": "完整body只有转发f314ea8；当前Stored:Codable生成Encodable协议入口，实际encodeStored的Encoder消费，原throw保留至外层try?。",
+      "actual_consumer": "encodeStored的PropertyListEncoder/JSONEncoder"
+    },
+    {
+      "function_id": "Paste:0x100316f08",
+      "status": "complete",
+      "mapping_state_observed": "migrated",
+      "original": {
+        "path": "decompiled/Paste/part-0255.c",
+        "start_line": 1960,
+        "end_line": 2078
+      },
+      "current_implementations": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalImagePreviewMetadataCodec.swift",
+          "symbol": "private struct Stored: Codable"
+        }
+      ],
+      "criterion": "原13个精确String字面映射0..12，未知返回nil case13；当前Stored同13个属性名生成CodingKeys，未自定key转换策略，大小写/空串不归一化。已逐个对照原small-string常量和当前字段。",
+      "actual_consumer": "Stored.encode/decode的keyed container"
+    },
+    {
+      "function_id": "Paste:0x100316490",
+      "status": "complete",
+      "mapping_state_observed": "migrated",
+      "original": {
+        "path": "decompiled/Paste/part-0255.c",
+        "start_line": 1411,
+        "end_line": 1516
+      },
+      "current_implementations": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalImagePreviewMetadataCodec.swift",
+          "symbol": "private static func decodeStored"
+        }
+      ],
+      "criterion": "已有完整原ARM补回被Ghidra删除的错误分支：0x3166c4调用PropertyListDecoder；0x3166c8 cbz x21成功短路到0x3167b8，失败清理后0x31674c调用JSONDecoder；0x316750 cbz x21成功到0x316800；双失败0x3167ac..7b4设置Optional nil标记1，任一成功0x316874..884标记0并返回完整Stored。当前try? PropertyList.decode ?? try? JSON.decode保持失败才尝试JSON、不返回部分记录，逐分支一致。外层rawPreview=nil是本地可选参数兼容，不升级原外围实体/config合同。",
+      "actual_consumer": "decodedImage/File/Color/Link/TextPreviewMetadata→decodeStored",
+      "arm_evidence": {
+        "path": ".local/image-dev19-decode-arm64.txt",
+        "instruction_range": "0x100316490..0x1003168a4",
+        "cross_reference": "reports/function-migration/suggestion-mask-drag-edge-decoder-static.json"
+      }
+    },
+    {
+      "function_id": "Paste:0x100315a38",
+      "status": "uncertain",
+      "mapping_state_observed": "migrated",
+      "original": {
+        "path": "decompiled/Paste/part-0255.c",
+        "start_line": 946,
+        "end_line": 1196
+      },
+      "current_implementations": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalImagePreviewMetadataCodec.swift",
+          "symbol": "public static func decodeColor(_ rawPreview: Data?) -> OriginalColorPreviewMetadata?",
+          "line": 19
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalImagePreviewMetadataCodec.swift",
+          "symbol": "decode",
+          "line": 6
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalImagePreviewMetadataCodec.swift",
+          "symbol": "public static func decodeFiles(",
+          "line": 13
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalImagePreviewMetadataCodec.swift",
+          "symbol": "public static func decodeText(_ rawPreview: Data?) -> OriginalTextPreviewMetadata?",
+          "line": 31
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalImagePreviewMetadataCodec.swift",
+          "symbol": "public static func decodeLink(_ rawPreview: Data?) -> OriginalLinkPreviewMetadata?",
+          "line": 24
+        }
+      ],
+      "criterion": "原五case按link/image/color/files或default text转换；当前各decodeX匹配同默认0/空值与link optional保留。唯原link缺URL分支URL._init字面在C缺失，当前使用example.com，本轮未复读其原字面绑定，完整五case合同暂待证；并非发现当前字面错误。",
+      "actual_consumer": "Models各decodedXPreviewMetadata→card/full preview"
+    },
+    {
+      "function_id": "Paste:0x100316004",
+      "status": "complete",
+      "mapping_state_observed": "migrated",
+      "original": {
+        "path": "decompiled/Paste/part-0255.c",
+        "start_line": 1197,
+        "end_line": 1410
+      },
+      "current_implementations": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalImagePreviewMetadataCodec.swift",
+          "symbol": "public static func encodeColor(_ metadata: OriginalColorPreviewMetadata?, binaryPropertyList: Bool) -> Data?",
+          "line": 65
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalImagePreviewMetadataCodec.swift",
+          "symbol": "encode",
+          "line": 46
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalImagePreviewMetadataCodec.swift",
+          "symbol": "public static func encodeFiles(",
+          "line": 55
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalImagePreviewMetadataCodec.swift",
+          "symbol": "public static func encodeText(_ metadata: OriginalTextPreviewMetadata?, binaryPropertyList: Bool) -> Data?",
+          "line": 73
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalImagePreviewMetadataCodec.swift",
+          "symbol": "public static func encodeLink(_ metadata: OriginalLinkPreviewMetadata?, binaryPropertyList: Bool) -> Data?",
+          "line": 82
+        }
+      ],
+      "criterion": "原先清13字段再按五个enum case只填当前类型，text/image/color必填呈present，link四值与files图像nil/empty保持；当前每encodeX新建Stored()并仅填对应字段，nil输入为外层兼容边界，非nil五case值映射完整。",
+      "actual_consumer": "Store各内容writer→encodeX→rawPreview持久化"
+    }
+  ],
+  "counts": {
+    "resolved_previous": {
+      "complete": 4,
+      "gap": 0,
+      "uncertain": 0
+    },
+    "additional_batch": {
+      "complete": 7,
+      "gap": 0,
+      "uncertain": 1
+    },
+    "total": {
+      "complete": 11,
+      "gap": 0,
+      "uncertain": 1
+    }
+  },
+  "constraints": {
+    "product_sources_modified": false,
+    "ledger_modified": false,
+    "compiled": false,
+    "parsed": false,
+    "functional_tests_executed": false,
+    "product_executed": false,
+    "mcp_executed": false,
+    "new_disassembly_executed": false,
+    "skipped_failed_addresses": [
+      "0x100ac35f8",
+      "0x100ac746c"
+    ]
+  },
+  "limitations": [
+    "仅复读既有成功伪代码/ARM静态文本与当前源码，不声称当前二进制已重建或与源码绑定。",
+    "complete限所列业务方法输入输出/副作用；未重现原类对象布局、Swift生成ABI或系统actor诊断文本。",
+    "新增f315a38的URL缺省字面仍待本轮补阅；这不自动改变function-map状态或证明源码有误。"
+  ]
+}

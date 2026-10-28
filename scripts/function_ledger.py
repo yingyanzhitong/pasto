@@ -221,9 +221,27 @@ def target_records(root, target, reviews, sdk_cache=None):
 
 
 def render(root):
-    manifest = json.loads((root / "reports/target-manifest.json").read_text())
-    mapping = json.loads((root / "replica/function-map.json").read_text())
+    manifest_path = root / "reports/target-manifest.json"
+    mapping_path = root / "replica/function-map.json"
+    manifest_snapshot = manifest_path.read_bytes()
+    mapping_snapshot = mapping_path.read_bytes()
+    manifest = json.loads(manifest_snapshot)
+    mapping = json.loads(mapping_snapshot)
     reviews = mapping["functions"]
+    partial_reports = {review.get("static_review_evidence", {}).get("report")
+                       for review in reviews.values() if review.get("static_review_evidence")}
+    if partial_reports:
+        supported = "reports/function-migration/tailjump-partial-static.json"
+        if partial_reports != {supported}:
+            raise ValueError("Unsupported partial static evidence report")
+        spec = importlib.util.spec_from_file_location("verify_tailjump_partial", root / "scripts/verify_tailjump_partial.py")
+        verifier = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(verifier)
+        verifier.verify(root)
+        if (verifier.INPUTS.get("reports/target-manifest.json") != hashlib.sha256(manifest_snapshot).hexdigest()
+                or verifier.INPUTS.get("replica/function-map.json") != hashlib.sha256(mapping_snapshot).hexdigest()
+                or manifest_path.read_bytes() != manifest_snapshot or mapping_path.read_bytes() != mapping_snapshot):
+            raise ValueError("Manifest or function map changed during static evidence verification")
     outputs, all_ids, targets = {}, set(), []
     sdk_cache = {}
     total_states = Counter()
@@ -256,6 +274,8 @@ def render(root):
                "full_function_equivalence": False,
                "counting_rule": "Exported pseudocode, partial implementation, contract tests, SDK delegation and scope exclusions are not verified function equivalence."}
     outputs["summary.json"] = json.dumps(summary, ensure_ascii=False, indent=2) + "\n"
+    if manifest_path.read_bytes() != manifest_snapshot or mapping_path.read_bytes() != mapping_snapshot:
+        raise ValueError("Manifest or function map changed during ledger generation")
     return outputs, summary
 
 

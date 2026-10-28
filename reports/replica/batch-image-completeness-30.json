@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "scope": "同一未变化预览标题文件中三个前轮未覆盖的已有刷新/中止编辑/回调方法，复用历史引用但重核原成功C与真实消费者。",
+  "counts": { "total": 3, "complete": 3, "gap": 0, "uncertain": 0 },
+  "source_binding": { "path": "replica/Sources/PastoCore/OriginalPreviewTitleLabel.swift", "historical_sha256": "84e3a33dbd575ad595cded72928d3d9b917ec1ece7eb258ba42ef3cf457bb0e2", "current_read_sha256": "84e3a33dbd575ad595cded72928d3d9b917ec1ece7eb258ba42ef3cf457bb0e2", "whole_file_unchanged": true },
+  "records": [
+    {
+      "function_id": "Paste:0x10023c01c",
+      "status": "complete",
+      "historical_evidence": "reports/function-migration/Paste-0x10023c01c.json",
+      "historical_contract_reusable": true,
+      "original": { "path": "decompiled/Paste/part-0195.c", "start_line": 614, "address_range": "0x10023c01c..<0x10023c0e4" },
+      "current_reference": { "path": "replica/Sources/PastoCore/OriginalPreviewTitleLabel.swift", "start_line": 94, "end_line": 98, "symbol": "public func f_10023c01c()" },
+      "criterion": "原获取native field平台text，再写回同text，最后对wrapper.invalidateIntrinsicContentSize，不trim、不重新使用placeholder、不向父view布局。原C保optional分支；原已绑定NSTextField类别text getter f0f6794正常总从非可空stringValue桥接，因此当前f0f6874读取String再f0f69b0写回同值保该实际输入。平台setter对nil转空的已核值语义不造成可达差异。当前同顺序和wrapper接收者，不调用onDidEndEditing。",
+      "actual_consumer": "OriginalPreviewTextField.controlTextDidChange第112行真实调用；f23bfdc取消原生编辑之后也调用；TitleLabel Header wrapper真实安装，不是未消费尺寸辅助函数。",
+      "limitations": "只确认重写现text与invalidate工作方法；原平台类别actor桥和虚构自定义NSTextField重写text返回nil不混算本生产类型合同。"
+    },
+    {
+      "function_id": "Paste:0x10023bfdc",
+      "status": "complete",
+      "historical_evidence": "reports/function-migration/Paste-0x10023bfdc.json",
+      "historical_contract_reusable": true,
+      "original": { "path": "decompiled/Paste/part-0195.c", "start_line": 597, "address_range": "0x10023bfdc..<0x10023c01c" },
+      "current_reference": { "path": "replica/Sources/PastoCore/OriginalPreviewTitleLabel.swift", "start_line": 102, "end_line": 106, "symbol": "public func f_10023bfdc() -> Bool" },
+      "criterion": "原先取同lazy nativeField，调用abortEditing，之后无论true/false都f23c01c刷新，最后返回abort结果，不因false提前返回。当前result局部保原Bool后刷新再返回。指定原ARM23bff4调用abort、23bff8保存x21、23c004刷新、23c008恢复x0=x21，确认历史返回Bool确有指令证据，与上轮其它setter无固定Int0情形不同。",
+      "actual_consumer": "TitleLabel.f011d28取消第198行先恢复原文后真实调用，中止系统field编辑再释放firstResponder；该取消方法由预览Header/键盘Escape路径消费。",
+      "limitations": "不触发真实abortEditing、不升级取消标题整状态机或原lazy field；有限Bool方法完整。"
+    },
+    {
+      "function_id": "Paste:0x10023c56c",
+      "status": "complete",
+      "historical_evidence": "reports/function-migration/Paste-0x10023c56c.json",
+      "historical_contract_reusable": true,
+      "original": { "path": "decompiled/Paste/part-0195.c", "start_line": 870, "address_range": "0x10023c56c..<0x10023c5d8" },
+      "current_reference": { "path": "replica/Sources/PastoCore/OriginalPreviewTitleLabel.swift", "start_line": 108, "end_line": 108, "symbol": "public func f_10023c56c()" },
+      "criterion": "原读取当前optional onDidEndEditing，nil无操作，存在时保持该闭包并调用一次，无参数、无显式return值、无通知内容使用或actor检查。当前optional closure调用同样nil/no-op或调用一次，不增加文字改变/编辑状态条件。Swift闭包生命周期覆盖调用，原额外ARC捕获不当成业务差异。",
+      "actual_consumer": "当前delegate.controlTextDidEndEditing第110行真实调用，TitleLabel.f0130fc第164行设置weak self结束编辑closure，最终进入f013240提交标题；没有空默认callback替代真实链。",
+      "limitations": "只确认Swift回调工作体，不升级相邻ObjC通知入口f23c5d8的executor检查和Notification桥。"
+    }
+  ],
+  "arm_evidence": { "binary": ".local/paste-arm64-static.bin", "range": "0x10023bfdc..<0x10023c01c", "method": "只读llvm-objdump指定成功函数，核Bool返回保留及刷新顺序" },
+  "excluded_failed_addresses": [ "0x100ac35f8", "0x100ac746c" ],
+  "verification_scope": "仅新增本报告，无产品源码、台账或历史报告修改，无编译、parse、运行应用、测试、MCP或发布，未读取指定失败函数。历史编译声明不当本轮构建，complete限列明有限源码合同，不是一比一功能验收。"
+}

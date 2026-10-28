@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "scope": "四个未覆盖的已有预览格式工具栏本地化访问器；完整成功原C、原字符串字节、18个绑定文件及真实按钮消费静态核对。",
+  "counts": { "total": 4, "complete": 4, "gap": 0, "uncertain": 0 },
+  "shared_evidence": {
+    "source": "replica/Sources/PastoCore/OriginalPreviewLocalization.swift",
+    "source_sha256": "0163cc854b291a3341675ea525903141dc764dda4a2791b513f4a9c4515632f1",
+    "full_binding_review": "逐份读取四个历史source_sha256字典；每份18个完整文件（helper源码+17语言Localizable.strings）现字节SHA均与该历史摘要一致，四份均0 mismatch。不是只检查helper符号或局部声明。没有把历史build_succeeded作为本轮编译。",
+    "constructor": "四原函数均完整内联LocalizationValue(stringLiteral:精确key)、once BundleDescription、Locale.current和Localizable表的LocalizedStringResource初始化；现resource(_:)使用同键/表/locale及实际Pasto资源bundle.atURL。原bundle实体身份为独立app部署适配，不宣称地址相同。",
+    "consumer": "OriginalReplicaPreviewAdapter.swift第579..582行四个实际OriginalToolbarButton toolTip以String(localized:)消费，同时接真实document.toggle对应trait；不是只有资源未使用。",
+    "limits": "本批只确认资源访问器和已有完整文件引用可复用，不运行任何语言切换/工具提示/格式动作。"
+  },
+  "records": [
+    {
+      "function_id": "Paste:0x1001bf288", "status": "complete", "historical_contract_reusable": true,
+      "historical_evidence": "reports/function-migration/Paste-0x1001bf288.json",
+      "original": { "path": "decompiled/Paste/part-0148.c", "start_line": 740, "address_range": "0x1001bf288..<0x1001bf408" },
+      "current_symbol": "OriginalPreviewLocalization.f_1001bf288()",
+      "criterion": "原literal pointer tag100d98ca0+32的27字节为edit-item.toolbar.text.bold，当前精确同key，无参数或额外状态分支；真实bold按钮tooltip消费，快捷键/格式变换为独立父方法。",
+      "literal_address": "0x100d98cc0", "literal_length": 27, "literal_utf8": "edit-item.toolbar.text.bold",
+      "bound_files_checked": 18, "bound_files_mismatched": 0
+    },
+    {
+      "function_id": "Paste:0x1001bf408", "status": "complete", "historical_contract_reusable": true,
+      "historical_evidence": "reports/function-migration/Paste-0x1001bf408.json",
+      "original": { "path": "decompiled/Paste/part-0148.c", "start_line": 786, "address_range": "0x1001bf408..<0x1001bf588" },
+      "current_symbol": "OriginalPreviewLocalization.f_1001bf408()",
+      "criterion": "原literal pointer tag100d98cc0+32长度29为edit-item.toolbar.text.italic，当前同key及无分支资源返回；真实italic按钮消费，不用斜体symbol名称当本地化键。",
+      "literal_address": "0x100d98ce0", "literal_length": 29, "literal_utf8": "edit-item.toolbar.text.italic",
+      "bound_files_checked": 18, "bound_files_mismatched": 0
+    },
+    {
+      "function_id": "Paste:0x1001bf588", "status": "complete", "historical_contract_reusable": true,
+      "historical_evidence": "reports/function-migration/Paste-0x1001bf588.json",
+      "original": { "path": "decompiled/Paste/part-0148.c", "start_line": 832, "address_range": "0x1001bf588..<0x1001bf708" },
+      "current_symbol": "OriginalPreviewLocalization.f_1001bf588()",
+      "criterion": "原literal pointer tag100d98ce0+32长度36为edit-item.toolbar.text.strikethrough，当前同完整key及资源构造；真实strikethrough按钮tooltip消费，不与underline对调。",
+      "literal_address": "0x100d98d00", "literal_length": 36, "literal_utf8": "edit-item.toolbar.text.strikethrough",
+      "bound_files_checked": 18, "bound_files_mismatched": 0
+    },
+    {
+      "function_id": "Paste:0x1001bf708", "status": "complete", "historical_contract_reusable": true,
+      "historical_evidence": "reports/function-migration/Paste-0x1001bf708.json",
+      "original": { "path": "decompiled/Paste/part-0148.c", "start_line": 878, "address_range": "0x1001bf708..<0x1001bf888" },
+      "current_symbol": "OriginalPreviewLocalization.f_1001bf708()",
+      "criterion": "原literal pointer tag100d98d10+32长度32为edit-item.toolbar.text.underline，当前同完整key/无额外分支；真实underline按钮tooltip消费，locale每次构造取current。",
+      "literal_address": "0x100d98d30", "literal_length": 32, "literal_utf8": "edit-item.toolbar.text.underline",
+      "bound_files_checked": 18, "bound_files_mismatched": 0
+    }
+  ],
+  "literal_evidence": { "binary": ".local/paste-arm64-static.bin", "method": "按Mach-O段虚址映射只读四条原literal长度字节；不运行二进制或引擎" },
+  "excluded_failed_addresses": [ "0x100ac35f8", "0x100ac746c" ],
+  "verification_scope": "仅新增本报告，无产品源码、台账和历史报告修改，无编译、parse、运行应用、测试、MCP或发布，未读取指定失败函数。完整文件SHA复核属于静态引用审查，不是功能测试。complete限资源访问器方法，不是一比一运行验收或当前产物证明。"
+}

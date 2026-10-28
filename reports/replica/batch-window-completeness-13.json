@@ -1,0 +1,37 @@
+{
+  "kind": "batch-window-completeness-13",
+  "scope": "集中检查3个搜索文本连续分组、空查询判定与查询节点归一化方法。",
+  "summary": {"reviewed": 3, "complete": 3, "gap": 0, "uncertain": 0},
+  "prior_inventory": "reports/replica/batch-completeness-round12.json",
+  "definite_product_differences": [],
+  "activities": {"product_source_edited": false, "ledger_edited": false, "compiled": false, "product_run": false, "tests_run": false, "wrapper_added": false},
+  "skipped_failed_addresses": ["Paste:0x100ac35f8", "Paste:0x100ac746c"],
+  "limitations": [
+    "complete仅表示列明有限静态合同可复用，不是当前构建或完整搜索功能运行验收。",
+    "不把本组归一化值算法推广成索引、CoreData、异步搜索事务或输入法完整迁移。",
+    "Swift合法String和Array域的边界由当前类型承接，不声称私有字符串编码、索引存储和数组COW机器码相同；未改台账计数。"
+  ],
+  "functions": [
+    {
+      "function_id": "Paste:0x1002f8760", "status": "complete",
+      "original": {"path": "decompiled/Paste/part-0245.c", "line": 1320},
+      "source_references": [{"path": "replica/Sources/PastoCore/OriginalSearchTextTokens.swift", "symbol": "f_1002f8760"}],
+      "evidence": "原buffer空不动nodes和buffer；非空将UTF8 EF BF BC即U+FFFC替换ASCII空格，按Character.isWhitespace布尔相等扩展每个连续run，空白run也逐个append为text节点，不清既有nodes；结束后removeAll(keepingCapacity:true)。当前按相同Character谓词变化截断，保留原始run顺序/内容并清buffer；没有trim、丢空白、按单字符碎拆或用UTF16代Character。原内部索引防御trap仅对应String遍历不变量，当前合法String迭代不扩大输入域。",
+      "actual_consumer": "SearchEditor.contents在附件边界及末尾flush；编辑提案生成也调用；UIState.searchQueryNodes在未有投影时用本方法构造自由文本节点。"
+    },
+    {
+      "function_id": "Paste:0x1002ddcf0", "status": "complete",
+      "original": {"path": "decompiled/Paste/part-0237.c", "line": 2518},
+      "source_references": [{"path": "replica/Sources/PastoCore/OriginalSearchQuery.swift", "symbol": "f_1002ddcf0"}],
+      "evidence": "原空数组立即true；逐节点读取text或filter的字符串value，trimmingCharacters(.whitespaces)后遇任一非空立即false，全部空true。当前allSatisfy相同短路顺序和case投影，不把whitespaces扩大成whitespacesAndNewlines，不因filter标签存在就判非空。",
+      "actual_consumer": "UIState.isSearchQueryEmpty直接调用，用于搜索活动、列表选择和上下文操作门控；不是仅定义的工具方法。"
+    },
+    {
+      "function_id": "Paste:0x1002da16c", "status": "complete",
+      "original": {"path": "decompiled/Paste/part-0236.c", "line": 2585},
+      "source_references": [{"path": "replica/Sources/PastoCore/OriginalSearchQueryNormalization.swift", "symbol": "f_1002da16c"}],
+      "evidence": "原首轮仅filter且trim(.whitespaces)非空才考虑去重，保raw值和首项顺序；f2da7bc完整体确认集合命中比较原UInt8 tag和String内容而非只hash/只显示字段。然后从原输入倒扫最后filter，包括被丢弃的空值或重复值；text分其前/后且各自保序，flag仅bit0控制丢trim空text，内容不改。最后filters+after+before。已读完整主C至尾、f2da7bc和f2da9a8追加体；ARM 0x1002da71c..738证实同一输出inout连续追加两组，0x1002da744..750返回最终数组。当前以tag→Set<String>保同一去重语义，分界基于原nodes.lastIndex，数组拼接顺序一致；无合并/文本去重或改raw。",
+      "actual_consumer": "SearchEditor.contents、updateContents及编辑提案实际以flag0调用；UIState.searchQueryNodes也调用。flag1虽非当前主要消费者，方法完整分支仍已逐C核对，未假称运行覆盖。"
+    }
+  ]
+}

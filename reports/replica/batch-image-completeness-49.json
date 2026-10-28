@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "round": 49,
+  "scope": "预览基础layer-backed视图的背景色存取及同步appearance刷新方法组。",
+  "counts": {"reviewed": 4, "complete": 3, "gap": 0, "uncertain": 1},
+  "source_binding": {"path": "replica/Sources/PastoCore/OriginalLayerBackedView.swift", "sha256": "87acffa7790cb38e5715cf6ce3d4474fffb3633d3deb15635743526f6342303c", "matches_historical_source_sha256": true, "note": "只读源码摘要，不当当前构建证明。"},
+  "shared_consumer": "OriginalImageCheckerboardView.swift:13把真实patternImage颜色写backgroundColor；ReplicaColorPreviewContent.swift:139在真实颜色显示中写backgroundColor。两者均继承OriginalLayerBackedView，属性setter→刷新→CGColor写层是生产路径。",
+  "records": [
+    {
+      "function_id": "Paste:0x10023565c",
+      "status": "complete",
+      "historical_evidence": "reports/function-migration/Paste-0x10023565c.json",
+      "original": {"path": "decompiled/Paste/part-0192.c", "start_line": 1513, "end_line": 1530, "address_range": "0x10023565c..<0x1002356a8"},
+      "current_reference": {"path": "replica/Sources/PastoCore/OriginalLayerBackedView.swift", "symbol": "f_10023565c()", "line_range": "30..34,52"},
+      "criterion": "完整原体只按存储槽读取可选backgroundColor并返回；当前直接返回storedBackgroundColor，保nil和同一NSColor引用，不从layer.cgColor重建、不缓存派生值。原无条件分支或内联actor检查。",
+      "actual_consumer": "该方法作为open backgroundColor属性getter，f236188中的backgroundColor?.cgColor真实读取；图像pattern及颜色预览所保存的动态NSColor因此保留到appearance刷新。",
+      "limitations": "有限存储getter完整，不升级原对象字段偏移/ARC ABI或虚派发父。"
+    },
+    {
+      "function_id": "Paste:0x1002356a8",
+      "status": "complete",
+      "historical_evidence": "reports/function-migration/Paste-0x1002356a8.json",
+      "original": {"path": "decompiled/Paste/part-0192.c", "start_line": 1531, "end_line": 1593, "address_range": "0x1002356a8..<0x100235830"},
+      "current_reference": {"path": "replica/Sources/PastoCore/OriginalLayerBackedView.swift", "symbol": "f_1002356a8(_:)", "line_range": "54..57"},
+      "criterion": "原先将可选color写强引用存储，再在当前effectiveAppearance.performAsCurrentDrawingAppearance中同步调用捕获self的f1fe108，后者转f236188。当前先写存储再调用同一刷新方法，无相等短路、无异步、无weakself丢刷新；nil和同值都刷新。共享刷新方法不增加不同业务。",
+      "actual_consumer": "open backgroundColor setter直接调用；shared_consumer列明真实图片棋盘及颜色预览赋值。",
+      "limitations": "原非逃逸closure约束由当前同一SDK非逃逸API表达，非逃逸运行时检测文本/闭包对象布局不声称相同；被调f236188的actor诊断独立待证，不用父已调用它升级其入口。"
+    },
+    {
+      "function_id": "Paste:0x1002359f4",
+      "status": "complete",
+      "historical_evidence": "reports/function-migration/Paste-0x1002359f4.json",
+      "original": {"path": "decompiled/Paste/part-0192.c", "start_line": 1681, "end_line": 1738, "address_range": "0x1002359f4..<0x100235b34"},
+      "current_reference": {"path": "replica/Sources/PastoCore/OriginalLayerBackedView.swift", "symbol": "f_1002359f4()", "line_range": "59..65"},
+      "criterion": "原取得self.effectiveAppearance并performAsCurrentDrawingAppearance同步执行强捕获self的f1fe108转f236188；当前使用相同appearance和同步closure，没有改成currentAppearance或调度Task。原_isEscapingClosureAtFileLocation的失败trap是非逃逸约束；本机AppKit NSAppearance.h:36原API明确NS_NOESCAPE，当前闭包不存储、不外泄，保该源级合同。",
+      "actual_consumer": "本文件56由背景setter实际调用，74又由viewDidChangeEffectiveAppearance工作体调用；不是未使用wrapper。part-0167.c:4..14的f1fe108确为直转f236188，当前65同转发。",
+      "limitations": "只确认同步appearance执行与非逃逸源码合同，不声称编译器运行时trap文本或生成ABI相同；f236188仍单独待证。"
+    },
+    {
+      "function_id": "Paste:0x100236188",
+      "status": "uncertain",
+      "historical_evidence": "reports/function-migration/Paste-0x100236188.json",
+      "original": {"path": "decompiled/Paste/part-0192.c", "start_line": 2015, "end_line": 2072, "address_range": "0x100236188..<0x100236314"},
+      "current_reference": {"path": "replica/Sources/PastoCore/OriginalLayerBackedView.swift", "symbol": "f_100236188()", "line_range": "67..70"},
+      "criterion": "正常副作用对应：独立读两次layer，第一处存在时虚派发backgroundColor并将cgColor/nil写背景，第二处存在时读取view borderColor转换再写边框；不缓存单个layer，不缺失时补建layer。当前同可选分支。但原本体先检查MainActor executor并报告PasteUI/LayerBackedView.swift line0x21；当前@MainActor声明未证生成入口完全同诊断，故整入口保留待证。",
+      "actual_consumer": "f2359f4的同步appearance closure经f1fe108真实进入；由shared_consumer的图片/颜色显示和系统appearance变化触发。",
+      "limitations": "正常色值与两次layer分支均可复用，不把原C推测的MainActor*返回当业务返回，也不把尚未验证的actor诊断认定完整。"
+    }
+  ],
+  "excluded_failed_addresses": ["Paste:0x100ac35f8", "Paste:0x100ac746c"],
+  "verification_scope": {"product_source_modified": false, "ledger_modified": false, "compiled": false, "application_executed": false, "functional_tests_executed": false, "mcp_executed": false, "one_to_one_acceptance_claimed": false}
+}

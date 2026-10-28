@@ -1,0 +1,29 @@
+{
+  "kind": "batch-window-completeness-28",
+  "scope": "2个建议菜单文字着色与滚动边缘渐隐方法，核完整成功C及实际行/滚动消费者。",
+  "summary": {"reviewed": 2, "complete": 1, "gap": 0, "uncertain": 1},
+  "prior_inventory": "reports/replica/batch-completeness-round27.json",
+  "definite_product_differences": [],
+  "activities": {"product_source_edited": false, "ledger_edited": false, "compiled": false, "product_run": false, "tests_run": false, "wrapper_added": false},
+  "skipped_failed_addresses": ["Paste:0x100ac35f8", "Paste:0x100ac746c"],
+  "limitations": [
+    "complete仅为有限静态合同，不是当前构建、像素/渐隐或搜索建议运行验收。",
+    "原子helper的Actor错误路径未闭合时不因父正常外观一致判完整；不改变台账计数。"
+  ],
+  "functions": [
+    {
+      "function_id": "Paste:0x100010984", "status": "complete",
+      "original": {"path": "decompiled/Paste/part-0007.c", "line": 199},
+      "source_references": [{"path": "replica/Sources/Pasto/UI/OriginalSuggestionAttributedTitle.swift", "symbol": "f_100010984"}],
+      "evidence": "query nil/empty或f2f5748无匹配时，用primary单一foreground键构造整title的NSAttributedString。非空有匹配才构造NSMutableAttributedString，cursor从title.startIndex开始，正间隔追加secondary，再追加primary匹配，cursor升到match.upperBound，存在剩余尾部才追加secondary。当前保原顺序/可变与不可变返回类型、空title/空query和无匹配回退，没有额外font/underline属性或将未命中整串置secondary。匹配来自真实顺序f2f5748（后匹配从前match.upperBound起），所以未把任意重叠/乱序外部范围假造成输入。",
+      "actual_consumer": "SuggestionRowView.updateSelectionAppearance根据选中状态算primary/secondary后，用item.title/matchQuery调用，并赋给真实title.attributedStringValue；建议菜单show的rows由真实候选和context.text生成。"
+    },
+    {
+      "function_id": "Paste:0x10004a994", "status": "uncertain",
+      "original": {"path": "decompiled/Paste/part-0027.c", "line": 378},
+      "source_references": [{"path": "replica/Sources/Pasto/UI/ReplicaSearchSuggestionsMenu.swift", "symbol": "private func f_10004a994"}],
+      "evidence": "已核全部正常分支：scroll layer nil不动；两flag false清mask；否则mask.frame=scroll.bounds，中央白body的y=low18或0、height=height-low-high，先body再各启用端18高gradient，low clear→white/high white→clear，最后一次setMask。当前frame/层次/方向/无clamp均匹配。续读f04ad10完整C确认gradient start(.5,0)/end(.5,1)、原序CGColor映射，当前helper一致。但原color到CGColor循环每项执行Actor检查/FilterSuggestionsMenuScroller.swift行0x88报告，当前colors.map仅受静态MainActor隔离，未证明同诊断路径，因此父整体保待证，不伪称确定渐隐bug。",
+      "actual_consumer": "真实SuggestionsScroller.layout/viewDidMoveToWindow及滚动bounds观察触发updateIndicators，按documentVisibleRect与list.bounds算两flag调用；结果写入实际scrollView.layer.mask。"
+    }
+  ]
+}

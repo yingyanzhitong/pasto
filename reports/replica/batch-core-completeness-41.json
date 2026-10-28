@@ -1,0 +1,34 @@
+{
+  "review_kind": "read_only_capture_filter_configuration_binding",
+  "counts": {"reviewed": 1, "complete": 0, "gap": 0, "uncertain": 1, "new_migrations_claimed": 0},
+  "functions": [
+    {
+      "function_id": "Paste:0x1002faf5c",
+      "status": "uncertain",
+      "original_path": "decompiled/Paste/part-0246.c",
+      "original_line": 1184,
+      "original_range": "0x1002faf5c..0x1002faffc",
+      "current_paths": ["replica/Sources/PastoCore/Models.swift", "replica/Sources/PastoCore/Pasteboard.swift", "replica/Sources/PastoCore/ClipboardStore.swift"],
+      "current_symbol": "Preferences.excludedBundleIDs / Preferences.ignoredPasteboardTypes / ClipboardMonitor.originalPasteboardShouldRead(_:)",
+      "original_branches": [
+        "取得keypath；为Set<String>分别经f2faee8请求Decodable和Encodable witness，槽分别100fbdbc0、100fbdbd0。",
+        "将两witness与输入交f2cb88c，返回后把local_68至local_38的七个word完整投射至输出。不是第40轮提供默认Set值的f2fae2c/f2faffc本身。",
+        "邻接调用者f2fae20（同文件1112行）以100c3f050调用该方法；f2faf50（1173行）以100c3f080调用。两者共享算法但传不同静态记录，不能仅因C都调用同一helper把配置身份合并。"
+      ],
+      "current_consumer": "当前Preferences将两个过滤列表存为[String]并由自身Codable读写；monitor每次shouldRead先try store.save()，随后将当前列表转Set并并入独立布尔偏好控制的固定类型，传给OriginalPasteboardPolicies.f37ba14。ClipboardStore.save进入mutate；reload保留尚未保存本地修改、合并磁盘状态再publish。存在真实本地配置消费路径，不能说两个列表没有消费者。",
+      "judgment": "不能把现有Codable数组加调用时Set转换直接签为原动态配置wrapper的全部合同。原成功C能闭合keypath/witness准备和返回值投射，但这七word的完整类型、动态读取/订阅/写入错误及生命周期需f2cb88c及typed metadata继续证明；当前JSON配置/合并路径与其是否可观察等价未闭。也不能只因容器数组与Set或原类型名不同直接判功能gap。",
+      "known_separate_gap": "默认值差异已由第40轮两个provider逐项确认。本项不把同一默认缺口重复计为新gap；动态配置未闭合不能据此登记完整。",
+      "evidence_limits": "本轮只有原成功C和现源码核对，没有新ARM/当前编译体证明，不宣称compiled或运行验证。两个调用者只作为链证据，不单独凑计数。"
+    }
+  ],
+  "reused_previous_findings": [
+    {"report": "reports/replica/batch-core-completeness-40.json", "function_id": "Paste:0x1002fae2c", "status": "gap", "not_counted": true, "reason": "原14默认应用与当前fresh空数组的差异已恢复；本轮不重复读取原名单或计算新增。"},
+    {"report": "reports/replica/batch-core-completeness-40.json", "function_id": "Paste:0x1002faffc", "status": "gap", "not_counted": true, "reason": "原6默认类型与当前有效默认并集差异沿真实monitor路径仍存在；本轮只核其配置装配周边。"}
+  ],
+  "limits": [
+    "只新增本报告；未修改产品源码、台账、用户数据或任何配置。",
+    "未编译、parse、运行应用、测试、MCP、验证脚本或发布。",
+    "跳过两个指定失败地址；未读取它们。",
+    "待证直接收口，不以wrapper命名或已存在Codable认定完整；新增迁移0，不代表项目总体迁移率。"
+  ]
+}

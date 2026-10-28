@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "round": 42,
+  "scope": "链接预览原生编辑字段配置及 URL 合法性提交回调；核成功原体与现有生产编辑路径。",
+  "counts": {"reviewed": 2, "complete": 2, "gap": 0, "uncertain": 0},
+  "source_binding": {"path": "replica/Sources/Pasto/UI/ReplicaLinkPreviewContent.swift", "sha256": "6becef98930daa19e63760be5039f4eda502f2a21ae7b91a2f484abb3d7b7947", "note": "当前源码重新读取；不将历史构建当本轮构建或运行验证。"},
+  "records": [
+    {
+      "function_id": "Paste:0x1003e83e8",
+      "status": "complete",
+      "historical_evidence": "reports/function-migration/Paste-0x1003e83e8.json",
+      "original": {"path": "decompiled/Paste/part-0311.c", "start_line": 676, "end_line": 702, "address_range": "0x1003e83e8..<0x1003e8490"},
+      "current_reference": {"path": "replica/Sources/Pasto/UI/ReplicaLinkPreviewContent.swift", "symbol": "init(state:item:) textView configuration", "line_range": "31..37"},
+      "criterion": [
+        "原字段 selectable/editable 都 true，font f1ff928、foreground f1fe15c 共享槽、delegate 指向 owner、textContainerInset 两维 0x4028000000000000=12、autoresizingMask raw2。当前逐项具备，无额外 host/换行策略要求混入此有限方法。",
+        "原 part-0167.c:69..78 的 f1fe15c 明确读取 f1feab8 初始化槽；当前 f1fec18 返回 f1fe15c().pointee，是相同 foreground 取值路径。当前 f1ff928 取 body preferredFont。",
+        "当前 delegate 在 inset/mask 之后赋值，原在其之前；这些均在字段向编辑窗口展示之前初始化，没有观察回调注册，本条确认配置后的有限字段合同，不冒 setter trace 或 ABI 相同。"
+      ],
+      "actual_consumer": "同文件69..72 beginPreviewEditing 将当前 URL absoluteString 写入该 textView，showContent(textView) 并 makeFirstResponder；90..92 的实际 NSTextViewDelegate textDidChange 进入 updateCanCommit。",
+      "limitations": "原方法本体无 actor 诊断分支；完整仅指字段配置，不升级 lazy 字段父、网络只读预览或整个编辑生命周期。"
+    },
+    {
+      "function_id": "Paste:0x1003e9940",
+      "status": "complete",
+      "historical_evidence": "reports/function-migration/Paste-0x1003e9940.json",
+      "original": {"path": "decompiled/Paste/part-0311.c", "start_line": 1535, "end_line": 1690, "address_range": "0x1003e9940..<0x1003e9e2c"},
+      "current_reference": {"path": "replica/Sources/Pasto/UI/ReplicaLinkPreviewContent.swift", "symbols": ["normalizedURL(_:)", "updateCanCommit()"], "line_range": "94..100"},
+      "criterion": [
+        "URL(string:) 初始化失败为 nil；成功且 scheme 存在则保原 URL；无 scheme 时拼接 https:// 与其 absoluteString，再初始化并保留第二次初始化失败 nil。原小字符串立即数 0x2f2f3a7370747468 对应 https://。当前三条值分支相同。",
+        "原把规范化 optional 与明确 nil optional 比较，只有非 nil 才回调 true；未要求 host、未 trim、未判断是否等于旧 URL。当前依据 normalizedURL != nil 回调，不增加这些条件。原 optional compare 的复杂 C 不代表旧 URL 比较。",
+        "原 onCanCommitEditing 不存在则直接返回，无外部回调；当前 optional closure 同样无回调。原先规范化再读 callback，当前 optional chaining 可跳过无 callback 时的纯 URL 求值；本条有限合同不主张分配/求值 trace 完全相同。原本体未见额外 actor 诊断分支。"
+      ],
+      "actual_consumer": "同文件71在开始编辑时调用 updateCanCommit；90..92真实 textDidChange 继续调用；81在真实提交中复用同一个 normalizedURL 值方法，避免验证和保存各自不同 URL 规则。",
+      "limitations": "确认规范化输出和 optional Bool 回调的业务合同；原委托/ObjC actor 桥、存储事务和外围编辑父不因此升级。未实际测试任何 URL 字符串或编辑交互。"
+    }
+  ],
+  "excluded_failed_addresses": ["Paste:0x100ac35f8", "Paste:0x100ac746c"],
+  "verification_scope": {"product_source_modified": false, "ledger_modified": false, "compiled": false, "application_executed": false, "functional_tests_executed": false, "mcp_executed": false, "one_to_one_acceptance_claimed": false}
+}

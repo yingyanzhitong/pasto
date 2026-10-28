@@ -1,0 +1,55 @@
+{
+  "generated_at": "2026-10-27T11:08:35.460708+00:00",
+  "policy": "仅定位6条过期引用，不自动升级原函数状态；两个CodingKeys方法已直接复核原C。",
+  "source_edited": false,
+  "records": [
+    {
+      "function_id": "Paste:0x100228c78",
+      "status": "stale_reference_located",
+      "current_path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+      "symbol": "private func selectIndex(_ index: Int, mode: UInt8, items: [ClipboardItem], animated: Bool = true)",
+      "line": 162,
+      "finding": "签名新增animated参数；已有真实调用，仍保持原partial。"
+    },
+    {
+      "function_id": "Paste:0x100051ec8",
+      "status": "stale_reference_located",
+      "current_path": "replica/Sources/Pasto/UI/OriginalStackSnippetCell.swift",
+      "symbol": "OriginalStackSnippetText.f_100051ec8(item)",
+      "line": 60,
+      "finding": "消费位置已从AuxiliaryViews移入原生cell；不是摘要实现缺失。"
+    },
+    {
+      "function_id": "Paste:0x1003c05d4",
+      "status": "stale_reference_located",
+      "current_path": "replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift",
+      "symbol": "private func replaceStoredModel(_ item: ClipboardItem)",
+      "line": 319,
+      "finding": "旧replaceModelAndDisplay已拆为replaceStoredModel/displayStoredModel；初始化与reload继续保存original/normalized两值。"
+    },
+    {
+      "function_id": "Paste:0x1001e9990",
+      "status": "stale_reference_located",
+      "current_path": "replica/Sources/PastoCore/OriginalShortcutCoding.swift",
+      "symbol": "public enum CodingKeys: CodingKey, Sendable",
+      "line": 46,
+      "finding": "旧enum名现为OriginalShortcutValue.CodingKeys别名；两分支getter保留，原C逐项一致。"
+    },
+    {
+      "function_id": "Paste:0x1001e99d0",
+      "status": "stale_reference_located",
+      "current_path": "replica/Sources/PastoCore/OriginalShortcutCoding.swift",
+      "symbol": "public typealias OriginalShortcutCodingKey = OriginalShortcutValue.CodingKeys",
+      "line": 43,
+      "finding": "精确两键成功、其余nil，真实CodingKey.init消费；原C相等比较与nil分支一致。"
+    },
+    {
+      "function_id": "Paste:0x1000496ac",
+      "status": "stale_reference_located",
+      "current_path": "replica/Sources/Pasto/UI/ReplicaSearchSuggestionsMenu.swift",
+      "symbol": "up.onScroll = { [weak self] in self?.list.scrollUpOneRow() }",
+      "line": 230,
+      "finding": "旧hover方法已改为独立indicator鼠标事件和onScroll；原父布局未完整，保持partial，不作完整升级。"
+    }
+  ]
+}

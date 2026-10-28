@@ -1,0 +1,27 @@
+{
+  "review_kind": "read_only_native_writer_ordered_zip_factory",
+  "counts": { "reviewed": 1, "complete": 1, "gap": 0, "uncertain": 0, "new_migrations_claimed": 0 },
+  "functions": [
+    {
+      "function_id": "Paste:0x10006e998",
+      "status": "complete",
+      "original_path": "decompiled/Paste/part-0036.c",
+      "original_line": 745,
+      "current_path": "replica/Sources/PastoCore/OriginalNativeDragPasteboardWriter.swift",
+      "current_symbol": "OriginalNativeDragPasteboardWriter.writers(sources:groups:)",
+      "criterion": "原按两个数组的有序zip创建writer，每一对为对应身份对象和完整二维group；结果数为min两边数量。任一输入空则空结果；长度不同不补齐、不抛长度不一致错误、不保留未配对对象。每个配对新建一个writer并强持输入对象/表示数组。当前zip(sources,groups).map→同init完整复用该算法，保配对顺序和对象引用，不读取identifier、不深复制Data、不去重、不排序。",
+      "group_boundaries": "一个group即使空数组也仍创建一个writer，不因无可写payload跳过；多格式group也不拆多个writer。groups若比sources多，按zip截断，不能为了对齐text聚合而重新分配来源或flatten。当前直接传items参数，完全不flatMap。",
+      "actor_contract": "原每个创建分支检查MainActor executor；当前该工厂明确@MainActor，真实调用来自同一主actor native collection。这里只签合法主actor调用域的源码合同，不声称对绕过actor的非法跨线程调用有相同机器诊断行号/触发位置。",
+      "consumer": "ReplicaNativeCardCollection.beginNativeDrag以state.selectedItems原序形成selected，Store.dragPasteboardGroups返回二维groups，selected.map身份source后真实调用本工厂；结果再按相同顺序装饰Pasto本地marker并交NSDraggingItem。singleWriter判断也用writers.count，不误用原selected.count。",
+      "original_existing_arm_evidence": ".local/pasteboard-native-drag-writer-closure.json：完整10006e998..10006edc4共1068B，既有sha256=9bfbf8d81cf85d8854b7ee49b69297c706309612b3956d0ad8f9886a8da22a77；本轮完整重读成功C全部两段循环、空数组/长度终止及创建体。其reserve-min及后续迭代扩容均是zip/map容器实现，不另外捏造填充语义。",
+      "boundary": "此方法不读实体属性，仅接收/持有opaque身份对象；已存在的f3ca374原identifier读取vs当前UUID快照待证仍保留，不反向否定本单纯配对/构造体。也不将Store解码/临时文件准备、selectedItems排序父或完整native session算完整。"
+    }
+  ],
+  "limits": [
+    "只新增本独立报告，未修改产品源码、台账、用户数据。",
+    "未编译、parse、运行应用、功能/MCP测试、验证脚本或发布。",
+    "本轮未新扫当前编译产物；既存原机器摘要只作证据标识，不冒当前构建。",
+    "本批1/1不是全项目迁移率；总分母/跨批去重由主智能体汇总，新增迁移0。",
+    "指定失败地址0x100ac35f8、0x100ac746c跳过，未读取。"
+  ]
+}

@@ -1,0 +1,194 @@
+{
+  "kind": "batch-window-completeness-31",
+  "generated_at": "2026-10-27T12:42:40.646827+00:00",
+  "scope": "5项未纳入此前window批次的快捷键录制按钮显示/样式方法，读取完整成功C、必要ARM与生产调用链；未只按名称/摘要判通过。",
+  "summary": {
+    "reviewed": 5,
+    "complete": 2,
+    "gap": 0,
+    "uncertain": 3
+  },
+  "inventory": "reports/replica/batch-unchanged-static-evidence.json",
+  "activities": {
+    "product_source_edited": false,
+    "ledger_edited": false,
+    "compiled": false,
+    "product_run": false,
+    "tests_run": false,
+    "wrapper_added": false
+  },
+  "skipped_failed_addresses": [
+    "Paste:0x100ac35f8",
+    "Paste:0x100ac746c"
+  ],
+  "consumer_chain": [
+    "replica/Sources/Pasto/UI/ShortcutRecorder.swift: ReplicaShortcutRecorder.body构造OriginalShortcutRecorderView",
+    "replica/Sources/PastoCore/OriginalShortcutRecorderView.swift: f1ecbc4从model读取presentation/state并构造controls",
+    "replica/Sources/PastoCore/OriginalShortcutControls.swift: f1ed1c4构造真实begin/clear按钮和ButtonStyle.makeBody入口"
+  ],
+  "sdk_static_evidence": [
+    {
+      "path": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/SwiftUI.framework/Modules/SwiftUI.swiftmodule/arm64e-apple-macos.swiftinterface",
+      "line": 16245,
+      "fact": "contentShape<S>(_ shape:S,eoFill:Bool=false)"
+    },
+    {
+      "path": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/SwiftUICore.framework/Modules/SwiftUICore.swiftmodule/arm64e-apple-macos.swiftinterface",
+      "line": 13808,
+      "fact": "background<S>(_ style:S,ignoresSafeAreaEdges edges:Edge.Set=.all)"
+    }
+  ],
+  "limitations": [
+    "完整仅为有限静态合同，不是SwiftUI视觉/事件运行验收。",
+    "源码SHA未变仅绑定历史证据，不自动复用build_succeeded声明；本轮没有编译或差分运行。",
+    "Actor诊断/StateObject读取归属/本地化求值时点仍未知的方法保uncertain，不将正常可见结构一致冒全函数完整。",
+    "本报告不增加台账计数，2/5仅批次分类，不是全项目迁移率。"
+  ],
+  "functions": [
+    {
+      "function_id": "Paste:0x1001ee604",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-0158.c",
+        "line": 2466
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutControls.swift",
+          "symbol": "f_1001ee604"
+        }
+      ],
+      "evidence": "完整C先取configuration.label并body字体，再取primary与isPressed，pressed为0.5、否则0.85；frame中心24×24，Rectangle contentShape且eoFill=false。ARM 1ee6d4/1ee6dc两轴均0x4038000000000000且optional tags0；1ee72c最终flag写0。当前同序modifier链与条件一致，本机SwiftUI macOS接口contentShape默认eoFill=false。",
+      "actual_consumer": "OriginalShortcutControls.f1ed1c4仅assigned态构建clear按钮并应用OriginalShortcutRemoveButtonStyle；makeBody直接调用本方法。",
+      "historical_evidence": {
+        "path": "reports/function-migration/Paste-0x1001ee604.json",
+        "sha256": "1c0ac6ffb0c21c7174891514fcc6c49a363d46f9231c457b55f2ca30124d9fb9",
+        "contract": "移除按钮style：label设body字体、primary颜色；按isPressed选opacity0.5或0.85；frame24×24中心对齐，Rectangle contentShape，eoFill=false。",
+        "historical_build_snapshot": "reports/replica/dev52-static-build78.json",
+        "current_build_claim": false
+      },
+      "source_binding": {
+        "path": "replica/Sources/PastoCore/OriginalShortcutControls.swift",
+        "sha256": "55ecfa91d843f2305044a1558079a89d6da119edc25f5a3d1f4e5b4ffe4d82a8",
+        "historical_sha256": "55ecfa91d843f2305044a1558079a89d6da119edc25f5a3d1f4e5b4ffe4d82a8",
+        "unchanged": true
+      }
+    },
+    {
+      "function_id": "Paste:0x1001ee748",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-0158.c",
+        "line": 2542
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutControls.swift",
+          "symbol": "f_1001ee748"
+        }
+      ],
+      "evidence": "完整C设置body字体、中心frame120×24、NSColor.controlColor背景/all safeArea edges、continuous半径6裁剪、第二个continuous半径6的separator stroke宽1中心overlay；不读取isPressed。ARM 1ee830/1ee838宽120高24且optional tags0。当前链对应同配置；本机SwiftUICore background<S>(style,ignoresSafeAreaEdges:)默认.all，未因省略显式edges改行为。",
+      "actual_consumer": "OriginalShortcutControls.f1ed1c4主录制按钮应用OriginalShortcutPrimaryButtonStyle；makeBody实际调用本方法。",
+      "historical_evidence": {
+        "path": "reports/function-migration/Paste-0x1001ee748.json",
+        "sha256": "efeb0025ada8c490f8550bba90ec8d7cbbf5bdd4bffc996e6e04058300fa6387",
+        "contract": "主录制按钮style：label设body字体，frame120×24中心；controlColor背景忽略全部safeArea边，continuous圆角6裁剪，continuous圆角6 separator stroke宽1中心overlay；不按pressed改变样式。",
+        "historical_build_snapshot": "reports/replica/dev52-static-build78.json",
+        "current_build_claim": false
+      },
+      "source_binding": {
+        "path": "replica/Sources/PastoCore/OriginalShortcutControls.swift",
+        "sha256": "55ecfa91d843f2305044a1558079a89d6da119edc25f5a3d1f4e5b4ffe4d82a8",
+        "historical_sha256": "55ecfa91d843f2305044a1558079a89d6da119edc25f5a3d1f4e5b4ffe4d82a8",
+        "unchanged": true
+      }
+    },
+    {
+      "function_id": "Paste:0x1001ee524",
+      "status": "uncertain",
+      "original": {
+        "path": "decompiled/Paste/part-0158.c",
+        "line": 2425
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutControls.swift",
+          "symbol": "f_1001ee524"
+        }
+      ],
+      "evidence": "正常返回分支完整一致：构造systemName=xmark，caption2字体，不加额外颜色/尺寸。原完整C在构造前做MainActor executor检查，失败以PasteShortcut/ShortcutRecorderButton.swift行0x41报告unexpectedExecutor；当前静态MainActor enum不能独立证明相同错误入口/固定诊断，因此整个原函数待证。",
+      "actual_consumer": "OriginalShortcutControls.f1ed1c4的assigned专属clear按钮实际调用此图标方法。",
+      "historical_evidence": {
+        "path": "reports/function-migration/Paste-0x1001ee524.json",
+        "sha256": "98b2a0b104df01d05151a00c01d75691c7a4db38dd6d0219b91d027d96059dc2",
+        "contract": "构造systemName=xmark的SwiftUI Image并设置caption2字体。",
+        "historical_build_snapshot": "reports/replica/dev52-static-build78.json",
+        "current_build_claim": false
+      },
+      "source_binding": {
+        "path": "replica/Sources/PastoCore/OriginalShortcutControls.swift",
+        "sha256": "55ecfa91d843f2305044a1558079a89d6da119edc25f5a3d1f4e5b4ffe4d82a8",
+        "historical_sha256": "55ecfa91d843f2305044a1558079a89d6da119edc25f5a3d1f4e5b4ffe4d82a8",
+        "unchanged": true
+      }
+    },
+    {
+      "function_id": "Paste:0x1001eda4c",
+      "status": "uncertain",
+      "original": {
+        "path": "decompiled/Paste/part-0158.c",
+        "line": 1944
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutControls.swift",
+          "symbol": "f_1001eda4c"
+        }
+      ],
+      "evidence": "正常布局匹配：presentation第3位true时依次输出修饰符SF Text/footnote和键名Text/body；false仅状态Text/body。原方法还从StateObject取当前model并调用f1f02d8读取presentation，入口检查MainActor并以固定原文件行0x11报告；当前改成显式tuple入参，真实父先model.f1f02d8再传入，正常数据流有消费者，但原状态读取归属/执行器错误路径不在该独立方法内，不能因同文件SHA未变判整个原body完整。",
+      "actual_consumer": "RecorderView.f1ecbc4从当前StateObject model读取presentation/state→Controls主按钮→f1ed830 HStack→本方法。",
+      "historical_evidence": {
+        "path": "reports/function-migration/Paste-0x1001eda4c.json",
+        "sha256": "30f20c3e3621ae3801fd1b3ba0e0758ad19140eca666ec9ad0053498b15b3309",
+        "contract": "读取显示三元组；样式位true时返回修饰符SF Text(footnote)与键名Text(body)两项；false只返回状态Text(body)。",
+        "historical_build_snapshot": "reports/replica/dev52-static-build78.json",
+        "current_build_claim": false
+      },
+      "source_binding": {
+        "path": "replica/Sources/PastoCore/OriginalShortcutControls.swift",
+        "sha256": "55ecfa91d843f2305044a1558079a89d6da119edc25f5a3d1f4e5b4ffe4d82a8",
+        "historical_sha256": "55ecfa91d843f2305044a1558079a89d6da119edc25f5a3d1f4e5b4ffe4d82a8",
+        "unchanged": true
+      }
+    },
+    {
+      "function_id": "Paste:0x1001ed830",
+      "status": "uncertain",
+      "original": {
+        "path": "decompiled/Paste/part-0158.c",
+        "line": 1852
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutControls.swift",
+          "symbol": "f_1001ed830"
+        }
+      ],
+      "evidence": "正常可见结构中心HStack间距1并调用条件标签；recording true附general.action.cancel帮助、false无help，与当前结构一致。原完整C另有固定原文件行0x10执行器诊断、从StateObject Published读取状态，以及无论recording值都先解本地化Cancel再传f1edee4的调用轨迹；当前接显式recording值且只true才求help字符串，完整输入/副作用轨迹未闭合。未据此声称普通界面可见错误。",
+      "actual_consumer": "OriginalShortcutControls.f1ed1c4主Button label调用本方法，recording来自state.isRecording；父presentation和state实际源于同一录制model。",
+      "historical_evidence": {
+        "path": "reports/function-migration/Paste-0x1001ed830.json",
+        "sha256": "f33c084df00b910f215b1c9256d59cae869cfdf5bef8fc033bca425553643b65",
+        "contract": "中心HStack间距1承载条件标签；recording时附本地化general.action.cancel帮助，其余状态无help。",
+        "historical_build_snapshot": "reports/replica/dev52-static-build78.json",
+        "current_build_claim": false
+      },
+      "source_binding": {
+        "path": "replica/Sources/PastoCore/OriginalShortcutControls.swift",
+        "sha256": "55ecfa91d843f2305044a1558079a89d6da119edc25f5a3d1f4e5b4ffe4d82a8",
+        "historical_sha256": "55ecfa91d843f2305044a1558079a89d6da119edc25f5a3d1f4e5b4ffe4d82a8",
+        "unchanged": true
+      }
+    }
+  ]
+}

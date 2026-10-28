@@ -1,0 +1,778 @@
+{
+  "kind": "static_bulk_localization_comparison",
+  "generated_at": "2026-10-27T11:39:20.501112+00:00",
+  "source_sha256": "0163cc854b291a3341675ea525903141dc764dda4a2791b513f4a9c4515632f1",
+  "original_arm64_sha256": "871f00354fbb1c165d858a98e6d19d6f43cb9d3f9f958b3e07c7f07eb5c19afb",
+  "common_original": "decompiled/Paste/part-0155.c:201",
+  "limitations": "只确认资源构造及当前消费者，不声明运行时语言切换、原bundle身份或二进制ABI等价。",
+  "build_executed": false,
+  "tests_executed": false,
+  "records": [
+    {
+      "function_id": "Paste:0x1001bf288",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-0148.c",
+        "line": 742,
+        "literal_evidence": {
+          "kind": "swift_large_string",
+          "pointer": "0x100d98cc0",
+          "length": 27,
+          "binary_bytes_sha256": "201c4073d526fed20291636a005c9449da934bf284dc6c6166dfb6b58a56256c"
+        }
+      },
+      "current": {
+        "path": "replica/Sources/PastoCore/OriginalPreviewLocalization.swift",
+        "symbol": "f_1001bf288",
+        "key": "edit-item.toolbar.text.bold"
+      },
+      "consumers": [
+        {
+          "path": "replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift",
+          "line": 579,
+          "sha256": "acc091392974dda3bc855c73d8b866e4f672dbd91d7ef9fb20df5eb741e1c3a1"
+        }
+      ],
+      "criterion": "原伪代码中字符串字节/长度与现源码键一致，均使用当前locale/Localizable表；原bundle适配为Pasto资源bundle并接入实际消费者。"
+    },
+    {
+      "function_id": "Paste:0x1001bf408",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-0148.c",
+        "line": 788,
+        "literal_evidence": {
+          "kind": "swift_large_string",
+          "pointer": "0x100d98ce0",
+          "length": 29,
+          "binary_bytes_sha256": "0c7f5be7a08e41553742d7a96a77603afd15eadb50733a8ca3d0ced9b765e2bb"
+        }
+      },
+      "current": {
+        "path": "replica/Sources/PastoCore/OriginalPreviewLocalization.swift",
+        "symbol": "f_1001bf408",
+        "key": "edit-item.toolbar.text.italic"
+      },
+      "consumers": [
+        {
+          "path": "replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift",
+          "line": 580,
+          "sha256": "acc091392974dda3bc855c73d8b866e4f672dbd91d7ef9fb20df5eb741e1c3a1"
+        }
+      ],
+      "criterion": "原伪代码中字符串字节/长度与现源码键一致，均使用当前locale/Localizable表；原bundle适配为Pasto资源bundle并接入实际消费者。"
+    },
+    {
+      "function_id": "Paste:0x1001bf588",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-0148.c",
+        "line": 834,
+        "literal_evidence": {
+          "kind": "swift_large_string",
+          "pointer": "0x100d98d00",
+          "length": 36,
+          "binary_bytes_sha256": "ba7c82151678e8e17320a0a3d0823bb437fe8cf1710ea7fb64d07411412970d9"
+        }
+      },
+      "current": {
+        "path": "replica/Sources/PastoCore/OriginalPreviewLocalization.swift",
+        "symbol": "f_1001bf588",
+        "key": "edit-item.toolbar.text.strikethrough"
+      },
+      "consumers": [
+        {
+          "path": "replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift",
+          "line": 582,
+          "sha256": "acc091392974dda3bc855c73d8b866e4f672dbd91d7ef9fb20df5eb741e1c3a1"
+        }
+      ],
+      "criterion": "原伪代码中字符串字节/长度与现源码键一致，均使用当前locale/Localizable表；原bundle适配为Pasto资源bundle并接入实际消费者。"
+    },
+    {
+      "function_id": "Paste:0x1001bf708",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-0148.c",
+        "line": 880,
+        "literal_evidence": {
+          "kind": "swift_large_string",
+          "pointer": "0x100d98d30",
+          "length": 32,
+          "binary_bytes_sha256": "2cb5d4e6247739f0f0a75f3e35aaeda4734b22eab95e31108fb61d90c8c1dcbf"
+        }
+      },
+      "current": {
+        "path": "replica/Sources/PastoCore/OriginalPreviewLocalization.swift",
+        "symbol": "f_1001bf708",
+        "key": "edit-item.toolbar.text.underline"
+      },
+      "consumers": [
+        {
+          "path": "replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift",
+          "line": 581,
+          "sha256": "acc091392974dda3bc855c73d8b866e4f672dbd91d7ef9fb20df5eb741e1c3a1"
+        }
+      ],
+      "criterion": "原伪代码中字符串字节/长度与现源码键一致，均使用当前locale/Localizable表；原bundle适配为Pasto资源bundle并接入实际消费者。"
+    },
+    {
+      "function_id": "Paste:0x1001bf108",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-0148.c",
+        "line": 696,
+        "literal_evidence": {
+          "kind": "swift_large_string",
+          "pointer": "0x100d98ca0",
+          "length": 30,
+          "binary_bytes_sha256": "e9b0fff191cc3a069c2bcb6a2a00bbb0ad12e8184b0c2968504d0b803af9b15b"
+        }
+      },
+      "current": {
+        "path": "replica/Sources/PastoCore/OriginalPreviewLocalization.swift",
+        "symbol": "f_1001bf108",
+        "key": "edit-item.toolbar.save-changes"
+      },
+      "consumers": [
+        {
+          "path": "replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift",
+          "line": 546,
+          "sha256": "acc091392974dda3bc855c73d8b866e4f672dbd91d7ef9fb20df5eb741e1c3a1"
+        }
+      ],
+      "criterion": "原伪代码中字符串字节/长度与现源码键一致，均使用当前locale/Localizable表；原bundle适配为Pasto资源bundle并接入实际消费者。"
+    },
+    {
+      "function_id": "Paste:0x1001c3908",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-0148.c",
+        "line": 2904,
+        "literal_evidence": {
+          "kind": "swift_large_string",
+          "pointer": "0x100d99330",
+          "length": 19,
+          "binary_bytes_sha256": "39a432e7b293e3d4521839bf9d4163d66452e389bf7ad6997ecba4b0a2900925"
+        }
+      },
+      "current": {
+        "path": "replica/Sources/PastoCore/OriginalPreviewLocalization.swift",
+        "symbol": "f_1001c3908",
+        "key": "general.action.save"
+      },
+      "consumers": [
+        {
+          "path": "replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift",
+          "line": 484,
+          "sha256": "acc091392974dda3bc855c73d8b866e4f672dbd91d7ef9fb20df5eb741e1c3a1"
+        }
+      ],
+      "criterion": "原伪代码中字符串字节/长度与现源码键一致，均使用当前locale/Localizable表；原bundle适配为Pasto资源bundle并接入实际消费者。"
+    },
+    {
+      "function_id": "Paste:0x1001c0788",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-0148.c",
+        "line": 1386,
+        "literal_evidence": {
+          "kind": "swift_large_string",
+          "pointer": "0x100d98ed0",
+          "length": 21,
+          "binary_bytes_sha256": "ab8ed0d38bcf7e1e25ec9dddb8df78c91526323df5ff32d92282a652751a384c"
+        }
+      },
+      "current": {
+        "path": "replica/Sources/PastoCore/OriginalPreviewLocalization.swift",
+        "symbol": "f_1001c0788",
+        "key": "general.action.cancel"
+      },
+      "consumers": [
+        {
+          "path": "replica/Sources/Pasto/AppMain.swift",
+          "line": 328,
+          "sha256": "f81bf026f83757bbd3cf98b56c62ec66ab94c580f2f477def71e17162ffd9c0a"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift",
+          "line": 485,
+          "sha256": "acc091392974dda3bc855c73d8b866e4f672dbd91d7ef9fb20df5eb741e1c3a1"
+        }
+      ],
+      "criterion": "原伪代码中字符串字节/长度与现源码键一致，均使用当前locale/Localizable表；原bundle适配为Pasto资源bundle并接入实际消费者。"
+    },
+    {
+      "function_id": "Paste:0x1001be988",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-0148.c",
+        "line": 466,
+        "literal_evidence": {
+          "kind": "swift_large_string",
+          "pointer": "0x100d98bb0",
+          "length": 33,
+          "binary_bytes_sha256": "9947f68036815b9478b560d38cf620f5a00059336a6c14fc09ab3fe9a139576d"
+        }
+      },
+      "current": {
+        "path": "replica/Sources/PastoCore/OriginalPreviewLocalization.swift",
+        "symbol": "f_1001be988",
+        "key": "edit-item.toolbar.discard-changes"
+      },
+      "consumers": [
+        {
+          "path": "replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift",
+          "line": 545,
+          "sha256": "acc091392974dda3bc855c73d8b866e4f672dbd91d7ef9fb20df5eb741e1c3a1"
+        }
+      ],
+      "criterion": "原伪代码中字符串字节/长度与现源码键一致，均使用当前locale/Localizable表；原bundle适配为Pasto资源bundle并接入实际消费者。"
+    },
+    {
+      "function_id": "Paste:0x1001c1688",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-0148.c",
+        "line": 1846,
+        "literal_evidence": {
+          "kind": "swift_large_string",
+          "pointer": "0x100d99020",
+          "length": 19,
+          "binary_bytes_sha256": "cd853f396f278f9bc665946613440767548380e001202d9b91550f0f30384bc0"
+        }
+      },
+      "current": {
+        "path": "replica/Sources/PastoCore/OriginalPreviewLocalization.swift",
+        "symbol": "f_1001c1688",
+        "key": "general.action.edit"
+      },
+      "consumers": [
+        {
+          "path": "replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift",
+          "line": 368,
+          "sha256": "acc091392974dda3bc855c73d8b866e4f672dbd91d7ef9fb20df5eb741e1c3a1"
+        }
+      ],
+      "criterion": "原伪代码中字符串字节/长度与现源码键一致，均使用当前locale/Localizable表；原bundle适配为Pasto资源bundle并接入实际消费者。"
+    },
+    {
+      "function_id": "Paste:0x1001c2a08",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-0148.c",
+        "line": 2444,
+        "literal_evidence": {
+          "kind": "swift_large_string",
+          "pointer": "0x100d991f0",
+          "length": 18,
+          "binary_bytes_sha256": "2e91244c1910fdb9d376867a5d09b393b7340a2d456b72ea5af0784351669424"
+        }
+      },
+      "current": {
+        "path": "replica/Sources/PastoCore/OriginalPreviewLocalization.swift",
+        "symbol": "f_1001c2a08",
+        "key": "general.action.pin"
+      },
+      "consumers": [
+        {
+          "path": "replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift",
+          "line": 369,
+          "sha256": "acc091392974dda3bc855c73d8b866e4f672dbd91d7ef9fb20df5eb741e1c3a1"
+        }
+      ],
+      "criterion": "原伪代码中字符串字节/长度与现源码键一致，均使用当前locale/Localizable表；原bundle适配为Pasto资源bundle并接入实际消费者。"
+    },
+    {
+      "function_id": "Paste:0x1001c3f08",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-0149.c",
+        "line": 144,
+        "literal_evidence": {
+          "kind": "swift_large_string",
+          "pointer": "0x100d993b0",
+          "length": 20,
+          "binary_bytes_sha256": "25f2da163b9d0cfe69bda39947608943acdf64e32ed266c64588b58379dc3604"
+        }
+      },
+      "current": {
+        "path": "replica/Sources/PastoCore/OriginalPreviewLocalization.swift",
+        "symbol": "f_1001c3f08",
+        "key": "general.action.share"
+      },
+      "consumers": [
+        {
+          "path": "replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift",
+          "line": 374,
+          "sha256": "acc091392974dda3bc855c73d8b866e4f672dbd91d7ef9fb20df5eb741e1c3a1"
+        }
+      ],
+      "criterion": "原伪代码中字符串字节/长度与现源码键一致，均使用当前locale/Localizable表；原bundle适配为Pasto资源bundle并接入实际消费者。"
+    },
+    {
+      "function_id": "Paste:0x1001c4208",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-0149.c",
+        "line": 236,
+        "literal_evidence": {
+          "kind": "swift_large_string",
+          "pointer": "0x100d993f0",
+          "length": 20,
+          "binary_bytes_sha256": "807022a6f5dc3e131b5ee27b08f558cbc8fefaa9a5b990e7801854a2b2df6a8a"
+        }
+      },
+      "current": {
+        "path": "replica/Sources/PastoCore/OriginalPreviewLocalization.swift",
+        "symbol": "f_1001c4208",
+        "key": "general.action.unpin"
+      },
+      "consumers": [
+        {
+          "path": "replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift",
+          "line": 470,
+          "sha256": "acc091392974dda3bc855c73d8b866e4f672dbd91d7ef9fb20df5eb741e1c3a1"
+        }
+      ],
+      "criterion": "原伪代码中字符串字节/长度与现源码键一致，均使用当前locale/Localizable表；原bundle适配为Pasto资源bundle并接入实际消费者。"
+    },
+    {
+      "function_id": "Paste:0x1001bee08",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-0148.c",
+        "line": 604,
+        "literal_evidence": {
+          "kind": "swift_large_string",
+          "pointer": "0x100d98c40",
+          "length": 35,
+          "binary_bytes_sha256": "329c421d1160272d0b0c441d89a47a287f0072db9b1e79101677b3bd3233069d"
+        }
+      },
+      "current": {
+        "path": "replica/Sources/PastoCore/OriginalPreviewLocalization.swift",
+        "symbol": "f_1001bee08",
+        "key": "edit-item.toolbar.image.rotate-left"
+      },
+      "consumers": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaImagePreviewContent.swift",
+          "line": 27,
+          "sha256": "a07660c373dd9b2d326200216f02bc0b5c6968aa5cf93cde5d178684829d386c"
+        }
+      ],
+      "criterion": "原伪代码中字符串字节/长度与现源码键一致，均使用当前locale/Localizable表；原bundle适配为Pasto资源bundle并接入实际消费者。"
+    },
+    {
+      "function_id": "Paste:0x1001bef88",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-0148.c",
+        "line": 650,
+        "literal_evidence": {
+          "kind": "swift_large_string",
+          "pointer": "0x100d98c70",
+          "length": 36,
+          "binary_bytes_sha256": "0f4a6edbc70801f9b8e797af095a1452d74b4aea3b640484b663c9a0bf31194e"
+        }
+      },
+      "current": {
+        "path": "replica/Sources/PastoCore/OriginalPreviewLocalization.swift",
+        "symbol": "f_1001bef88",
+        "key": "edit-item.toolbar.image.rotate-right"
+      },
+      "consumers": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaImagePreviewContent.swift",
+          "line": 33,
+          "sha256": "a07660c373dd9b2d326200216f02bc0b5c6968aa5cf93cde5d178684829d386c"
+        }
+      ],
+      "criterion": "原伪代码中字符串字节/长度与现源码键一致，均使用当前locale/Localizable表；原bundle适配为Pasto资源bundle并接入实际消费者。"
+    },
+    {
+      "function_id": "Paste:0x1001c6fb0",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-0149.c",
+        "line": 1746,
+        "literal_evidence": {
+          "kind": "swift_large_string",
+          "pointer": "0x100d99790",
+          "length": 24,
+          "binary_bytes_sha256": "82e8007043d64d0b2c8ab248542de07f6c18cfb91343adb001c4a92a147ab874"
+        }
+      },
+      "current": {
+        "path": "replica/Sources/PastoCore/OriginalPreviewLocalization.swift",
+        "symbol": "f_1001c6fb0",
+        "key": "item-type.multiple-files"
+      },
+      "consumers": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaFilePreviewContent.swift",
+          "line": 93,
+          "sha256": "df56f4edf10439457eb19ae21ca3225088e66e2b9ebeb6db461f024fa60c76ee"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaCanonicalCardContent.swift",
+          "line": 50,
+          "sha256": "366ac2b62df5d28f46fc9264538503dcabf1159f06fefbcbea8b038bdc8cc928"
+        }
+      ],
+      "criterion": "原伪代码中字符串字节/长度与现源码键一致，均使用当前locale/Localizable表；原bundle适配为Pasto资源bundle并接入实际消费者。"
+    },
+    {
+      "function_id": "Paste:0x1001dac54",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-0153.c",
+        "line": 282,
+        "literal_evidence": {
+          "kind": "swift_large_string",
+          "pointer": "0x100d9c050",
+          "length": 30,
+          "binary_bytes_sha256": "ce3cb0500bf398f67971250646e05df32216419160570b7cee123280d0266d3a"
+        }
+      },
+      "current": {
+        "path": "replica/Sources/PastoCore/OriginalPreviewLocalization.swift",
+        "symbol": "f_1001dac54",
+        "key": "preview.reveal-in-finder.title"
+      },
+      "consumers": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaFilePreviewContent.swift",
+          "line": 55,
+          "sha256": "df56f4edf10439457eb19ae21ca3225088e66e2b9ebeb6db461f024fa60c76ee"
+        }
+      ],
+      "criterion": "原伪代码中字符串字节/长度与现源码键一致，均使用当前locale/Localizable表；原bundle适配为Pasto资源bundle并接入实际消费者。"
+    },
+    {
+      "function_id": "Paste:0x1001bdd88",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-0148.c",
+        "line": 98,
+        "literal_evidence": {
+          "kind": "swift_large_string",
+          "pointer": "0x100d98ab0",
+          "length": 23,
+          "binary_bytes_sha256": "aab63ecdedf13a963cf6099b7b1b502805a7f44bfdffa3210c7eab25a7191059"
+        }
+      },
+      "current": {
+        "path": "replica/Sources/PastoCore/OriginalPreviewLocalization.swift",
+        "symbol": "f_1001bdd88",
+        "key": "diagnostics.start.title"
+      },
+      "consumers": [
+        {
+          "path": "replica/Sources/Pasto/AppMain.swift",
+          "line": 305,
+          "sha256": "f81bf026f83757bbd3cf98b56c62ec66ab94c580f2f477def71e17162ffd9c0a"
+        }
+      ],
+      "criterion": "原伪代码中字符串字节/长度与现源码键一致，均使用当前locale/Localizable表；原bundle适配为Pasto资源bundle并接入实际消费者。"
+    },
+    {
+      "function_id": "Paste:0x1001bdc08",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-0148.c",
+        "line": 52,
+        "literal_evidence": {
+          "kind": "swift_large_string",
+          "pointer": "0x100d98a90",
+          "length": 25,
+          "binary_bytes_sha256": "f24825e7a690adffb82252eca9bbf061c509dac0491b40e4fcb70cc15cb2e0c5"
+        }
+      },
+      "current": {
+        "path": "replica/Sources/PastoCore/OriginalPreviewLocalization.swift",
+        "symbol": "f_1001bdc08",
+        "key": "diagnostics.start.message"
+      },
+      "consumers": [
+        {
+          "path": "replica/Sources/Pasto/AppMain.swift",
+          "line": 325,
+          "sha256": "f81bf026f83757bbd3cf98b56c62ec66ab94c580f2f477def71e17162ffd9c0a"
+        }
+      ],
+      "criterion": "原伪代码中字符串字节/长度与现源码键一致，均使用当前locale/Localizable表；原bundle适配为Pasto资源bundle并接入实际消费者。"
+    },
+    {
+      "function_id": "Paste:0x1001be088",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-0148.c",
+        "line": 190,
+        "literal_evidence": {
+          "kind": "swift_large_string",
+          "pointer": "0x100d98af0",
+          "length": 22,
+          "binary_bytes_sha256": "c7d4e014b1e60df31ff8201030c393f33fb4dca78297dfcfce0481e4c11ea80b"
+        }
+      },
+      "current": {
+        "path": "replica/Sources/PastoCore/OriginalPreviewLocalization.swift",
+        "symbol": "f_1001be088",
+        "key": "diagnostics.stop.title"
+      },
+      "consumers": [
+        {
+          "path": "replica/Sources/Pasto/AppMain.swift",
+          "line": 305,
+          "sha256": "f81bf026f83757bbd3cf98b56c62ec66ab94c580f2f477def71e17162ffd9c0a"
+        }
+      ],
+      "criterion": "原伪代码中字符串字节/长度与现源码键一致，均使用当前locale/Localizable表；原bundle适配为Pasto资源bundle并接入实际消费者。"
+    },
+    {
+      "function_id": "Paste:0x1001bdf08",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-0148.c",
+        "line": 144,
+        "literal_evidence": {
+          "kind": "swift_large_string",
+          "pointer": "0x100d98ad0",
+          "length": 24,
+          "binary_bytes_sha256": "ae4e32e5b57fc11b35d46c3c772889d8e97965181bdf8c02780334c93c8a1c74"
+        }
+      },
+      "current": {
+        "path": "replica/Sources/PastoCore/OriginalPreviewLocalization.swift",
+        "symbol": "f_1001bdf08",
+        "key": "diagnostics.stop.message"
+      },
+      "consumers": [
+        {
+          "path": "replica/Sources/Pasto/AppMain.swift",
+          "line": 325,
+          "sha256": "f81bf026f83757bbd3cf98b56c62ec66ab94c580f2f477def71e17162ffd9c0a"
+        }
+      ],
+      "criterion": "原伪代码中字符串字节/长度与现源码键一致，均使用当前locale/Localizable表；原bundle适配为Pasto资源bundle并接入实际消费者。"
+    },
+    {
+      "function_id": "Paste:0x1001bda88",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-0148.c",
+        "line": 6,
+        "literal_evidence": {
+          "kind": "swift_large_string",
+          "pointer": "0x100d98a60",
+          "length": 37,
+          "binary_bytes_sha256": "2fb99062b60f1a5ed7a161cf1ceeb53ea47cba3774782165ebd4172c7bd577d3"
+        }
+      },
+      "current": {
+        "path": "replica/Sources/PastoCore/OriginalPreviewLocalization.swift",
+        "symbol": "f_1001bda88",
+        "key": "diagnostics.action.stop-and-copy-logs"
+      },
+      "consumers": [
+        {
+          "path": "replica/Sources/Pasto/AppMain.swift",
+          "line": 327,
+          "sha256": "f81bf026f83757bbd3cf98b56c62ec66ab94c580f2f477def71e17162ffd9c0a"
+        }
+      ],
+      "criterion": "原伪代码中字符串字节/长度与现源码键一致，均使用当前locale/Localizable表；原bundle适配为Pasto资源bundle并接入实际消费者。"
+    },
+    {
+      "function_id": "Paste:0x1001c3188",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-0148.c",
+        "line": 2674,
+        "literal_evidence": {
+          "kind": "swift_large_string",
+          "pointer": "0x100d99290",
+          "length": 28,
+          "binary_bytes_sha256": "a1301eff05c217531b22a281e7661258228ed9d658edfb995e8de47f3a5836ef"
+        }
+      },
+      "current": {
+        "path": "replica/Sources/PastoCore/OriginalPreviewLocalization.swift",
+        "symbol": "f_1001c3188",
+        "key": "general.action.restart-paste"
+      },
+      "consumers": [
+        {
+          "path": "replica/Sources/Pasto/AppMain.swift",
+          "line": 327,
+          "sha256": "f81bf026f83757bbd3cf98b56c62ec66ab94c580f2f477def71e17162ffd9c0a"
+        }
+      ],
+      "criterion": "原伪代码中字符串字节/长度与现源码键一致，均使用当前locale/Localizable表；原bundle适配为Pasto资源bundle并接入实际消费者。"
+    },
+    {
+      "function_id": "Paste:0x1001c5838",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-0149.c",
+        "line": 979,
+        "literal_evidence": {
+          "kind": "swift_large_string",
+          "pointer": "0x100d995b0",
+          "length": 20,
+          "binary_bytes_sha256": "8e0fec27aee858ecdad4ae15f194d97eef039dc11787ad9b08422e6ea8cf7ca4"
+        }
+      },
+      "current": {
+        "path": "replica/Sources/PastoCore/OriginalPreviewLocalization.swift",
+        "symbol": "f_1001c5838",
+        "key": "general.paste-paused"
+      },
+      "consumers": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaCopiedOSD.swift",
+          "line": 27,
+          "sha256": "d1b58b05ef6c37302cf6d6c1e0056ee0af55035422071d4c53ebe1583c84883d"
+        }
+      ],
+      "criterion": "原伪代码中字符串字节/长度与现源码键一致，均使用当前locale/Localizable表；原bundle适配为Pasto资源bundle并接入实际消费者。"
+    },
+    {
+      "function_id": "Paste:0x1001c59b8",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-0149.c",
+        "line": 1025,
+        "literal_evidence": {
+          "kind": "swift_large_string",
+          "pointer": "0x100d995d0",
+          "length": 21,
+          "binary_bytes_sha256": "c67b556efb2bbd115c343efd01d9b0ea095c5dd13e7ba90c0c7ebf9206980de8"
+        }
+      },
+      "current": {
+        "path": "replica/Sources/PastoCore/OriginalPreviewLocalization.swift",
+        "symbol": "f_1001c59b8",
+        "key": "general.paste-resumed"
+      },
+      "consumers": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaCopiedOSD.swift",
+          "line": 32,
+          "sha256": "d1b58b05ef6c37302cf6d6c1e0056ee0af55035422071d4c53ebe1583c84883d"
+        }
+      ],
+      "criterion": "原伪代码中字符串字节/长度与现源码键一致，均使用当前locale/Localizable表；原bundle适配为Pasto资源bundle并接入实际消费者。"
+    },
+    {
+      "function_id": "Paste:0x1001c2888",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-0148.c",
+        "line": 2398,
+        "literal_evidence": {
+          "kind": "swift_large_string",
+          "pointer": "0x100d991d0",
+          "length": 26,
+          "binary_bytes_sha256": "3afb66453513bf66a8a76898ee8a7a3201daf104de100ab6b79c3b4c182aad20"
+        }
+      },
+      "current": {
+        "path": "replica/Sources/PastoCore/OriginalPreviewLocalization.swift",
+        "symbol": "f_1001c2888",
+        "key": "general.action.pause-paste"
+      },
+      "consumers": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaCopiedOSD.swift",
+          "line": 25,
+          "sha256": "d1b58b05ef6c37302cf6d6c1e0056ee0af55035422071d4c53ebe1583c84883d"
+        }
+      ],
+      "criterion": "原伪代码中字符串字节/长度与现源码键一致，均使用当前locale/Localizable表；原bundle适配为Pasto资源bundle并接入实际消费者。"
+    },
+    {
+      "function_id": "Paste:0x1001c7154",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-0149.c",
+        "line": 1803,
+        "literal_evidence": {
+          "kind": "swift_large_string",
+          "pointer": "0x100d997b0",
+          "length": 17,
+          "binary_bytes_sha256": "213ad97b0a7babb97ed52664187be0c81ebeded629a657b00e544a64ac0ea773"
+        }
+      },
+      "current": {
+        "path": "replica/Sources/PastoCore/OriginalPreviewLocalization.swift",
+        "symbol": "f_1001c7154",
+        "key": "item-type.unknown"
+      },
+      "consumers": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPreviewTitles.swift",
+          "line": 12,
+          "sha256": "a207f688f263c9652c37d347391efd7cfcebcbe1f637125a623555dbc0d3d687"
+        }
+      ],
+      "criterion": "原伪代码中字符串字节/长度与现源码键一致，均使用当前locale/Localizable表；原bundle适配为Pasto资源bundle并接入实际消费者。"
+    },
+    {
+      "function_id": "Paste:0x1001c4b50",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-0149.c",
+        "line": 534,
+        "literal_evidence": {
+          "kind": "swift_large_string",
+          "pointer": "0x100d994b0",
+          "length": 27,
+          "binary_bytes_sha256": "1042abcd75fd00f964dc04e563f85e002e14624f4bd32a0453722907fae503e8"
+        }
+      },
+      "current": {
+        "path": "replica/Sources/PastoCore/OriginalPreviewLocalization.swift",
+        "symbol": "f_1001c4b50",
+        "key": "general.enable-direct-paste"
+      },
+      "consumers": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaCopiedOSD.swift",
+          "line": 13,
+          "sha256": "d1b58b05ef6c37302cf6d6c1e0056ee0af55035422071d4c53ebe1583c84883d"
+        }
+      ],
+      "criterion": "原伪代码中字符串字节/长度与现源码键一致，均使用当前locale/Localizable表；原bundle适配为Pasto资源bundle并接入实际消费者。"
+    },
+    {
+      "function_id": "Paste:0x1001c6aa4",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-0149.c",
+        "line": 1564,
+        "literal_evidence": {
+          "kind": "swift_large_string",
+          "pointer": "0x100d99730",
+          "length": 16,
+          "binary_bytes_sha256": "1053425bbe6b3ce99a94a8f888ec7ac11d96a7594c4e5c8dd9fc256ef4668da1"
+        }
+      },
+      "current": {
+        "path": "replica/Sources/PastoCore/OriginalPreviewLocalization.swift",
+        "symbol": "f_1001c6aa4",
+        "key": "general.untitled"
+      },
+      "consumers": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPinboardTitle.swift",
+          "line": 6,
+          "sha256": "111682b2e750e5a237a34b7a39bc90107cffec52f74ffe0eefa95455b5ca0261"
+        }
+      ],
+      "criterion": "原伪代码中字符串字节/长度与现源码键一致，均使用当前locale/Localizable表；原bundle适配为Pasto资源bundle并接入实际消费者。"
+    }
+  ]
+}

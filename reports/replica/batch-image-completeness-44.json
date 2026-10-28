@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "round": 44,
+  "scope": "预览标题字段的文本读写有限方法及两个原生编辑通知入口；复用未变历史源码并读完整成功原体。",
+  "counts": {"reviewed": 4, "complete": 1, "gap": 0, "uncertain": 3},
+  "source_binding": {"path": "replica/Sources/PastoCore/OriginalPreviewTitleLabel.swift", "sha256": "84e3a33dbd575ad595cded72928d3d9b917ec1ece7eb258ba42ef3cf457bb0e2", "matches_historical_source_sha256": true, "note": "摘要相同不代表本轮编译或运行验证。"},
+  "records": [
+    {
+      "function_id": "Paste:0x10023b1a4",
+      "status": "complete",
+      "historical_evidence": "reports/function-migration/Paste-0x10023b1a4.json",
+      "original": {"path": "decompiled/Paste/part-0194.c", "start_line": 1822, "end_line": 1846, "address_range": "0x10023b1a4..<0x10023b214"},
+      "current_reference": {"path": "replica/Sources/PastoCore/OriginalPreviewTitleLabel.swift", "symbol": "OriginalPreviewTextField.f_10023b1a4()", "line_range": "49..58"},
+      "criterion": "原取 lazy native field 后读取 text，有值桥为 Swift String，无值为 nil。当前返回 native stringValue 到 String?。对当前实际创建的 NSTextField，原 PastePlatform text getter f0f6874（part-0083.c:1585..1602）本来就是 stringValue 的非可选桥，因此该实际对象的结果为 some String（包括空串），当前一致；不把任意外部自定义 text override 当本方法允许的生产输入。",
+      "actual_consumer": "同文件188 begin-title-edit 保存 originalText；207 commit 回调读取当前文本。外部 Adapter 创建并使用 OriginalPreviewTitleLabel，读取来自真实 native field，不是独立无消费 getter。",
+      "limitations": "仅实际 native 字段文本读取业务合同；原 ObjC 分类 getter/父对象 ABI 不因本条升级。"
+    },
+    {
+      "function_id": "Paste:0x10023b214",
+      "status": "uncertain",
+      "historical_evidence": "reports/function-migration/Paste-0x10023b214.json",
+      "original": {"path": "decompiled/Paste/part-0194.c", "start_line": 1847, "end_line": 1870, "address_range": "0x10023b214..<0x10023b280"},
+      "current_reference": {"path": "replica/Sources/PastoCore/OriginalPreviewTitleLabel.swift", "symbol": "OriginalPreviewTextField.f_10023b214(_:)", "line_range": "51..61"},
+      "criterion": "可复用副作用：原 optional String nil 传 nil、非 nil 桥 NSString 并调用 native setText；该类别 nil 转空 stringValue 已有第24轮静态证据，当前 f0f69b0(value) 同样 nil→空且不 trim。不能复用为固定 Int0 返回合同：原 ARM 23b26c 将 NSString 临时值 x20 送 x0，23b27c 尾跳 objc_release，没有显式设置返回整数0；C 的 return0 不能证明此ABI。当前显式 Int0 是源码适配，尚无原返回契约依据。",
+      "actual_consumer": "OriginalReplicaPreviewAdapter.swift:409 把实际 canonical 标题写入该 setter；本文件197 cancel 恢复 originalText；两处都忽略返回值，故这里不把返回待证描述成已证用户可见问题。",
+      "limitations": "文本赋值副作用已满足；返回值/ABI待证。被调用类别 setter 的独立 actor 桥不重复升级。"
+    },
+    {
+      "function_id": "Paste:0x10023c5d8",
+      "status": "uncertain",
+      "historical_evidence": "reports/function-migration/Paste-0x10023c5d8.json",
+      "original": {"path": "decompiled/Paste/part-0195.c", "start_line": 895, "end_line": 964, "address_range": "0x10023c5d8..<0x10023c780"},
+      "current_reference": {"path": "replica/Sources/PastoCore/OriginalPreviewTitleLabel.swift", "symbol": "controlTextDidEndEditing(_:)", "line_range": "108..110"},
+      "criterion": "正常业务一致：onDidEndEditing 为 nil 不调用，非 nil 调用一次；当前通过已核第30轮 f23c56c 工作体转发。原入口本身还包含 MainActor executor 检查与 PasteUI/TextField.swift line0x82 诊断，并桥接 Notification；当前 @MainActor delegate 源码未证明生成入口包含相同诊断，整入口保留待证。",
+      "actual_consumer": "同文件34..46 的真实 native field 配置 delegate=self；167..171 的标题控件配置 onDidEndEditing weak closure -> f13240，后者执行标题提交回调。",
+      "limitations": "不得用工作体已完整代替原 ObjC 通知桥完整，未运行结束编辑交互。"
+    },
+    {
+      "function_id": "Paste:0x10023c784",
+      "status": "uncertain",
+      "historical_evidence": "reports/function-migration/Paste-0x10023c784.json",
+      "original": {"path": "decompiled/Paste/part-0195.c", "start_line": 976, "end_line": 1031, "address_range": "0x10023c784..<0x10023c8b4"},
+      "current_reference": {"path": "replica/Sources/PastoCore/OriginalPreviewTitleLabel.swift", "symbol": "controlTextDidChange(_:)", "line_range": "94..98,112"},
+      "criterion": "正常业务转发 f23c01c 一次：读取 text、重设相同 text、invalidateIntrinsicContentSize，当前符合第30轮已完整工作体。原本体先执行 MainActor executor 检查及 line0x86 诊断、Notification 桥；本轮未核当前编译入口，所以不能仅 @MainActor 声明认定通知入口完整。",
+      "actual_consumer": "真实 native field 的 delegate=self，编辑文本变化由该 delegate 方法进入同一 wrapper 的尺寸失效；并非没有挂载的 helper。",
+      "limitations": "只确认当前业务工作体存在；原通知/actor桥待证，不修改源码或重复升级父标题生命周期。"
+    }
+  ],
+  "excluded_failed_addresses": ["Paste:0x100ac35f8", "Paste:0x100ac746c"],
+  "verification_scope": {"product_source_modified": false, "ledger_modified": false, "compiled": false, "application_executed": false, "functional_tests_executed": false, "mcp_executed": false, "static_original_disassembly": "只读取成功 f23b214 的指定原ARM范围；未触碰失败函数。", "one_to_one_acceptance_claimed": false}
+}

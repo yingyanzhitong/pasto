@@ -1,0 +1,43 @@
+{
+  "kind": "static_reuse_review",
+  "records": [
+    {
+      "function_id": "Paste:0x1000d80e0",
+      "status": "complete",
+      "original_path": "decompiled/Paste/part-0071.c",
+      "original_line": 1055,
+      "current_path": "replica/Sources/PastoCore/OriginalSharedDependencyCache.swift",
+      "current_symbol": "f_1000d80e0",
+      "criterion": "按file.description + \"-\" + UInt line.description + \"-\" + UInt column.description构造缓存键；TaskLocal容器存在时使用该容器的共享服务cache，否则经once取全局cache；同一factory与结果类型原样传递。",
+      "consumer": "OriginalDependencies.f_1000d80e0 用共享cache并由 OriginalShortcutDependencies 和应用服务依赖消费。",
+      "source_sha256": "d83f199826f661090cdd74b9d05e185e295bf3570ba2f8e8dc868f9dac219cbf",
+      "limitations": "源码级共享键和缓存合同，不包含编译二进制或运行时线程调度证明。"
+    },
+    {
+      "function_id": "Paste:0x1000daac0",
+      "status": "complete",
+      "original_path": "decompiled/Paste/part-0072.c",
+      "original_line": 669,
+      "current_path": "replica/Sources/PastoCore/OriginalSharedDependencyCache.swift",
+      "current_symbol": "f_1000daac0",
+      "criterion": "持有NSRecursiveLock读取String键；已存储时必须向请求的Value类型转换成功，否则trap；未存储时持锁调用factory，装箱为Any并保存，返回同一value；Optional.none作为Value时仍缓存。",
+      "consumer": "OriginalDependencies.f_1000d80e0 用共享cache并由 OriginalShortcutDependencies 和应用服务依赖消费。",
+      "source_sha256": "d83f199826f661090cdd74b9d05e185e295bf3570ba2f8e8dc868f9dac219cbf",
+      "limitations": "源码级共享键和缓存合同，不包含编译二进制或运行时线程调度证明。"
+    },
+    {
+      "function_id": "Paste:0x1000dad10",
+      "status": "uncertain",
+      "original_path": "decompiled/Paste/part-0072.c",
+      "original_line": 756,
+      "current_path": "replica/Sources/PastoCore/OriginalSharedDependencyCache.swift",
+      "current_symbol": "f_1000dad10",
+      "criterion": "对共享cache的String键赋值Optional<Any>；nil移除，some装箱值写入并替换旧值；Swift字典保留写时复制，锁由上层持有。",
+      "consumer": "OriginalDependencies.f_1000d80e0 用共享cache并由 OriginalShortcutDependencies 和应用服务依赖消费。",
+      "source_sha256": "d83f199826f661090cdd74b9d05e185e295bf3570ba2f8e8dc868f9dac219cbf",
+      "limitations": "当前私有函数具备nil移除语义，但生产调用仅传装箱值，nil输入路径实际消费未闭合。"
+    }
+  ],
+  "build_executed": false,
+  "tests_executed": false
+}

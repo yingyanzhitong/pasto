@@ -1,0 +1,43 @@
+{
+  "review_kind": "read_only_existing_pasteboard_image_representation_accessors",
+  "scope": "round11未覆盖的PasteboardItem两个数据读取方法；核固定类型优先级和数据存在/图像有效性之间的边界，不重审缩略图或metadata父。",
+  "counts": { "reviewed": 2, "complete": 2, "gap": 0, "uncertain": 0, "new_migrations_claimed": 0 },
+  "inputs": {
+    "original_success_index": "reports/Paste/function-index.json",
+    "original_success_c": "decompiled/Paste/part-0282.c",
+    "current_source": "replica/Sources/PastoCore/OriginalPasteboard.swift"
+  },
+  "functions": [
+    {
+      "function_id": "Paste:0x10037d5c4",
+      "status": "complete",
+      "original_path": "decompiled/Paste/part-0282.c",
+      "original_line": 825,
+      "current_path": "replica/Sources/PastoCore/OriginalPasteboard.swift",
+      "current_symbol": "OriginalPasteboardItem.f_10037d5c4()",
+      "criterion": "原构造固定5个UTType：png、jpeg、heic、tiff、icns；依该顺序直接在dataByType查identifier，首个字典存在的Data返回，五个都缺失才Optional.none。当前同序for及f37d810字典读取完全对应；不读取orderedTypes、不要求Data非空、不验证是否可解码图像、不把TIFF排在HEIC前、不读取任意其它图片类型。",
+      "edge_cases": "空Data属于存在值，立即返回；损坏PNG若存在，即使JPEG可解码也返回该PNG，不在本方法尝试JPEG。列表含类型但字典无数据继续下一类型；字典有数据但orderedTypes不含该类型仍返回。",
+      "consumer": "Core checksums的image分支、DataCodec图片存在性判断、OCR imageData的权威表示分支均实际调用；OriginalImagePreviewMetadataGenerator和OriginalPreviewSharing也调用本方法后独立解码。各父函数的其它错误/实体合同不随此方法升级。",
+      "boundary": "本方法只读取自身持有字典，当前同样无缓存、文件、系统剪贴板读写或实体副作用；不以类型同名作为完整判据。未核当前编译产物或破损内存的机器容器ABI。"
+    },
+    {
+      "function_id": "Paste:0x10037cd68",
+      "status": "complete",
+      "original_path": "decompiled/Paste/part-0282.c",
+      "original_line": 476,
+      "current_path": "replica/Sources/PastoCore/OriginalPasteboard.swift",
+      "current_symbol": "OriginalPasteboardItem.f_10037cd68()",
+      "criterion": "原先调用f37d5c4；Optional.none直接返回nil，someData经NSData桥接调用NSImage.initWithData并直接返回其可空结果。当前f37d5c4().flatMap(NSImage.init(data:))同合同：仅调用一次数据getter、仅尝试一次图片构造，无placeholder、重编码、缩放、文件URL或低优先级格式回退。",
+      "edge_cases": "有Data但init失败与没有Data都返回nil；空Data仍进入构造而非提前另造空NSImage；损坏高优先级PNG不会在同一item内回退有效JPEG。当前父pasteboardImage可继续下一个item，是独立父循环，不改变本函数的单item语义。",
+      "consumer": "ClipboardStore.pasteboardImage(from:)逐个规范化表示构建OriginalPasteboardItem，真实调用此函数并只在成功时返回；本轮只签本函数，不将该父的规范化/历史兼容输入与原实体解码自动视为完全相同。",
+      "boundary": "NSImage/NSData桥接使用当前系统Foundation/AppKit；原对象retain/release实现和当前机器码未另签完整，源码输入输出与系统调用顺序闭合。"
+    }
+  ],
+  "limits": [
+    "仅阅读成功伪码和当前源码，新增本独立报告；未修改产品源码、台账、数据库或用户数据。",
+    "未编译、parse、运行产品、功能/MCP测试、验证脚本或发布。",
+    "只判断两个已有独立数据访问方法，不将真实调用方整个metadata/OCR/去重/恢复链升级完整。",
+    "本批2/2为审阅结果，不是全项目迁移率；全项目分母与跨批去重总数由主智能体汇总，本批新增迁移0。",
+    "两个指定失败地址0x100ac35f8、0x100ac746c跳过，未读取。"
+  ]
+}

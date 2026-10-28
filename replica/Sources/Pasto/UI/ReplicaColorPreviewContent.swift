@@ -7,7 +7,7 @@ import PastoCore
 final class ReplicaColorPreviewContent: OriginalLayerBackedView, OriginalPreviewEditableContent {
     var onCanCommitEditing: ((Bool) -> Void)?
     var previewEditingToolbar: NSView? { nil }
-    var previewMetadataView: NSView? { metadata }
+    var previewMetadataView: NSView? { metadataHost }
     var preferredPreviewSize: NSSize {
         // Without a PreferredSize provider, f_10007c994 uses a quarter screen or zero.
         guard let size = NSScreen.main?.frame.size else { return .zero }
@@ -17,6 +17,7 @@ final class ReplicaColorPreviewContent: OriginalLayerBackedView, OriginalPreview
     private weak var state: ReplicaUIState?
     private let itemID: UUID
     private let codeLabel = NSTextField(labelWithString: "")
+    private let metadataHost = NSView()
     private let metadata = NSStackView()
     private var itemObservation: AnyCancellable?
     private var editing = false
@@ -42,6 +43,9 @@ final class ReplicaColorPreviewContent: OriginalLayerBackedView, OriginalPreview
         metadata.orientation = .horizontal
         metadata.alignment = .centerY
         metadata.spacing = 8
+        metadata.translatesAutoresizingMaskIntoConstraints = false
+        metadataHost.addSubview(metadata)
+        NSLayoutConstraint.activate(f_1003e0820())
         NotificationCenter.default.addObserver(self, selector: #selector(colorChanged),
             name: NSColorPanel.colorDidChangeNotification, object: colorPanel)
         itemObservation = state.store.$items.sink { [weak self] items in
@@ -54,6 +58,15 @@ final class ReplicaColorPreviewContent: OriginalLayerBackedView, OriginalPreview
     }
 
     required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
+
+    private func f_1003e0820() -> [NSLayoutConstraint] {
+        [
+            metadata.topAnchor.constraint(equalTo: metadataHost.topAnchor),
+            metadata.bottomAnchor.constraint(equalTo: metadataHost.bottomAnchor),
+            metadata.leadingAnchor.constraint(equalTo: metadataHost.leadingAnchor),
+            metadata.trailingAnchor.constraint(lessThanOrEqualTo: metadataHost.trailingAnchor)
+        ]
+    }
 
     private var colorPanel: NSColorPanel {
         if let storedPanel { return storedPanel }
@@ -77,7 +90,9 @@ final class ReplicaColorPreviewContent: OriginalLayerBackedView, OriginalPreview
         if let window, let screen = NSScreen.main {
             let frame = window.frame
             let panelFrame = panel.frame
-            let x = screen.frame.maxX - frame.maxX >= panelFrame.width + 40
+            // The original compares the screen's stored width, without adding its origin.
+            let remainingWidth = screen.frame.size.width - frame.maxX
+            let x = !(remainingWidth < panelFrame.width + 40)
                 ? frame.maxX + 20 : frame.minX - 20 - panelFrame.width
             panel.setFrameOrigin(.init(x: x, y: frame.minY + (frame.height - panelFrame.height) * 0.5))
         }
@@ -94,7 +109,8 @@ final class ReplicaColorPreviewContent: OriginalLayerBackedView, OriginalPreview
         colorPanel.orderOut(nil)
         guard let state else { return }
         do {
-            try state.store.updateColorItem(id: itemID, text: Self.hexString(displayedColor))
+            try state.store.updateColorItem(id: itemID,
+                text: OriginalPreviewColorFormatting.f_100206b5c(displayedColor).uppercased())
             state.normalizeSelection()
         } catch { state.controller?.presentError(error) }
     }
@@ -102,7 +118,11 @@ final class ReplicaColorPreviewContent: OriginalLayerBackedView, OriginalPreview
     @objc private func colorChanged() {
         let color = colorPanel.color
         display(color)
-        onCanCommitEditing?(!color.isEqual(currentModelColor()))
+        guard let onCanCommitEditing else { return }
+        // Paste f_1003e1fec compares the panel's value after updating the displayed content.
+        let panelColor = colorPanel.color
+        let modelColor = currentModelColor()
+        onCanCommitEditing(panelColor != modelColor)
     }
 
     private func currentModelColor() -> NSColor {
@@ -114,16 +134,10 @@ final class ReplicaColorPreviewContent: OriginalLayerBackedView, OriginalPreview
         return OriginalColorPreviewMetadataGenerator.color(metadata.code)
     }
 
-    private static func hexString(_ color: NSColor) -> String {
-        guard let rgb = color.usingColorSpace(.deviceRGB) else { return "#000000" }
-        return String(format: "#%02X%02X%02X", Int(rgb.redComponent * 255),
-                      Int(rgb.greenComponent * 255), Int(rgb.blueComponent * 255))
-    }
-
     private func display(_ color: NSColor) {
         displayedColor = color
         backgroundColor = color
-        codeLabel.stringValue = Self.hexString(color)
+        codeLabel.stringValue = OriginalPreviewColorFormatting.f_100206b5c(color).uppercased()
         codeLabel.textColor = OriginalPreviewTextColors.f_1002067d4(color) ? .black : .white
         for view in metadata.arrangedSubviews {
             metadata.removeArrangedSubview(view)

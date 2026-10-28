@@ -1,0 +1,27 @@
+{
+  "finding": "NSCoding归档第二字段原为data，现为dataByType，两个方法不完整；Codable的dataByType是另一条编码路径，不自动改动。",
+  "records": [
+    {
+      "function_id": "Paste:0x10037f520",
+      "original_arm": [
+        "0x10037f604 mov w0,#0x6164",
+        "0x10037f608 movk w0,#0x6174,lsl #16",
+        "0x10037f610 bridge NSString",
+        "0x10037f624 encodeObject:forKey:"
+      ],
+      "current": "OriginalPasteboardItem.f_10037f520 使用 dataByType"
+    },
+    {
+      "function_id": "Paste:0x10037f31c",
+      "original_arm": [
+        "0x10037f3ec mov w2,#0x6164",
+        "0x10037f3f0 movk w2,#0x6174,lsl #16",
+        "0x10037f400 decodeDictionary"
+      ],
+      "current": "OriginalPasteboardItem.init(coder:) 使用 dataByType"
+    }
+  ],
+  "source": "replica/Sources/PastoCore/OriginalPasteboard.swift",
+  "product_source_changed": false,
+  "tests_executed": false
+}

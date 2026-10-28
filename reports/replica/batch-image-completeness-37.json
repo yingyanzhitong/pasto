@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "scope": "四个已有预览保存/取消标题与工具提示资源访问器；原成功C、原literal字节、历史完整文件摘要和实际编辑按钮消费者静态核对。",
+  "counts": { "total": 4, "complete": 4, "gap": 0, "uncertain": 0 },
+  "shared_contract": {
+    "current_source": "replica/Sources/PastoCore/OriginalPreviewLocalization.swift",
+    "current_source_sha256": "0163cc854b291a3341675ea525903141dc764dda4a2791b513f4a9c4515632f1",
+    "binding_review": "每条历史source_sha256的18个完整文件（源码+17语言Localizable.strings）本轮只读逐份SHA匹配，四条均0 mismatch；不是只核名字或局部字串。",
+    "constructor": "四个成功原体皆以精确String literal创建LocalizationValue，再复制一次初始化BundleDescription、取Locale.current并以Localizable表构造LocalizedStringResource。当前resource(_:)相同值合同，Pasto实际bundleURL与Bundle.module后备明确是独立产品部署身份适配，不冒原二进制Bundle身份。",
+    "actual_consumer": "OriginalReplicaPreviewAdapter.swift第545/546行真实Cancel/Save Native ToolbarButton分别使用标题及tooltip，按钮closure接onCancel/onSave；本批只核资源返回，不把快捷键匹配或提交事务当访问器功能。"
+  },
+  "records": [
+    {
+      "function_id": "Paste:0x1001be988", "status": "complete", "historical_contract_reusable": true,
+      "historical_evidence": "reports/function-migration/Paste-0x1001be988.json",
+      "original": { "path": "decompiled/Paste/part-0148.c", "start_line": 464, "address_range": "0x1001be988..<0x1001beb08" },
+      "current_symbol": "OriginalPreviewLocalization.f_1001be988()",
+      "criterion": "原33字节key是edit-item.toolbar.discard-changes，当前同精确键、无额外条件资源返回，真实Cancel按钮工具提示消费；并非按钮标题general.action.cancel。",
+      "literal_address": "0x100d98bb0", "literal_length": 33, "literal_utf8": "edit-item.toolbar.discard-changes",
+      "bound_files_checked": 18, "bound_files_mismatched": 0
+    },
+    {
+      "function_id": "Paste:0x1001bf108", "status": "complete", "historical_contract_reusable": true,
+      "historical_evidence": "reports/function-migration/Paste-0x1001bf108.json",
+      "original": { "path": "decompiled/Paste/part-0148.c", "start_line": 694, "address_range": "0x1001bf108..<0x1001bf288" },
+      "current_symbol": "OriginalPreviewLocalization.f_1001bf108()",
+      "criterion": "原30字节key为edit-item.toolbar.save-changes，当前同key，真实Save按钮tooltip消费；不与general.action.save标题互换，没有拼接用户内容或网络任务。",
+      "literal_address": "0x100d98ca0", "literal_length": 30, "literal_utf8": "edit-item.toolbar.save-changes",
+      "bound_files_checked": 18, "bound_files_mismatched": 0
+    },
+    {
+      "function_id": "Paste:0x1001c0788", "status": "complete", "historical_contract_reusable": true,
+      "historical_evidence": "reports/function-migration/Paste-0x1001c0788.json",
+      "original": { "path": "decompiled/Paste/part-0148.c", "start_line": 1384, "address_range": "0x1001c0788..<0x1001c0908" },
+      "current_symbol": "OriginalPreviewLocalization.f_1001c0788()",
+      "criterion": "原21字节general.action.cancel，当前同无参数访问器，由实际Cancel按钮title使用，所有本地编辑类型共享此资源；缺参数插值或异步分支。",
+      "literal_address": "0x100d98ed0", "literal_length": 21, "literal_utf8": "general.action.cancel",
+      "bound_files_checked": 18, "bound_files_mismatched": 0
+    },
+    {
+      "function_id": "Paste:0x1001c3908", "status": "complete", "historical_contract_reusable": true,
+      "historical_evidence": "reports/function-migration/Paste-0x1001c3908.json",
+      "original": { "path": "decompiled/Paste/part-0148.c", "start_line": 2902, "address_range": "0x1001c3908..<0x1001c3a88" },
+      "current_symbol": "OriginalPreviewLocalization.f_1001c3908()",
+      "criterion": "原19字节general.action.save，当前同key和标准资源构造，真实Save按钮title消费；不是免费/付费校验路径，不以静态英文替代当前locale资源。",
+      "literal_address": "0x100d99330", "literal_length": 19, "literal_utf8": "general.action.save",
+      "bound_files_checked": 18, "bound_files_mismatched": 0
+    }
+  ],
+  "literal_evidence": { "binary": ".local/paste-arm64-static.bin", "method": "按Mach-O段虚址映射只读四条成功函数引用的原literal字节，不运行二进制" },
+  "excluded_failed_addresses": [ "0x100ac35f8", "0x100ac746c" ],
+  "verification_scope": "仅新增本报告，无产品源码、台账或历史报告修改，无编译、parse、运行应用、测试、MCP或发布，未读取指定失败函数。文件摘要匹配是静态引用审阅，不是语言/UI功能测试；complete为有限访问器源码合同，不是一比一验收或当前构建证明。"
+}

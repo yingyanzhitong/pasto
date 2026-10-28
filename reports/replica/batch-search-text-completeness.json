@@ -1,0 +1,103 @@
+{
+  "kind": "static_existing_search_text_review",
+  "generated_at": "2026-10-27T11:15:54.281393+00:00",
+  "source_sha256": {
+    "replica/Sources/PastoCore/OriginalSearchTextView.swift": "516f59d8ed37513fbcac4ab13bdbc79526d58469d8c4478a28ecffa27efa9015",
+    "replica/Sources/Pasto/UI/SearchEditor.swift": "fcd850213ccfaf2efc39294c8c5740e9f552bab607512a6552124a83d478f194"
+  },
+  "records": [
+    {
+      "function_id": "Paste:0x100043904",
+      "status": "complete",
+      "original_path": "decompiled/Paste/part-0025.c",
+      "source_path": "replica/Sources/PastoCore/OriginalSearchTextView.swift",
+      "symbol": "f_100043904",
+      "source_line": 60,
+      "criterion": "按字体可选转换设置placeholder.font，再设置typingAttributes及textview.font；三步与原C顺序一致。",
+      "consumer": "SearchEditor.SearchTextView继承OriginalSearchTextView，override进入对应方法。"
+    },
+    {
+      "function_id": "Paste:0x100043e4c",
+      "status": "complete",
+      "original_path": "decompiled/Paste/part-0025.c",
+      "source_path": "replica/Sources/PastoCore/OriginalSearchTextView.swift",
+      "symbol": "f_100043e4c",
+      "source_line": 84,
+      "criterion": "super.didChangeText后按文本非空隐藏占位，再刷新typingAttributes；生产override经回调调用。",
+      "consumer": "SearchEditor.SearchTextView继承OriginalSearchTextView，override进入对应方法。"
+    },
+    {
+      "function_id": "Paste:0x100043f0c",
+      "status": "complete",
+      "original_path": "decompiled/Paste/part-0025.c",
+      "source_path": "replica/Sources/PastoCore/OriginalSearchTextView.swift",
+      "symbol": "f_100043f0c",
+      "source_line": 97,
+      "criterion": "先super.layout，两次取textContainerOrigin，修改原frame的x-1/y，sizeToFit；原ARM另确认y来自第二次getter。",
+      "consumer": "SearchEditor.SearchTextView继承OriginalSearchTextView，override进入对应方法。"
+    },
+    {
+      "function_id": "Paste:0x100043b74",
+      "status": "uncertain",
+      "original_path": "decompiled/Paste/part-0025.c",
+      "source_path": "replica/Sources/PastoCore/OriginalSearchTextView.swift",
+      "symbol": "f_100043b74",
+      "source_line": 66,
+      "criterion": "canAcceptFocus布尔业务一致；原入口含MainActor错误执行器报告，当前仅源码隔离，诊断边界尚未证实。",
+      "consumer": "SearchEditor.SearchTextView继承OriginalSearchTextView，override进入对应方法。"
+    },
+    {
+      "function_id": "Paste:0x100043c24",
+      "status": "uncertain",
+      "original_path": "decompiled/Paste/part-0025.c",
+      "source_path": "replica/Sources/PastoCore/OriginalSearchTextView.swift",
+      "symbol": "f_100043c24",
+      "source_line": 69,
+      "criterion": "super成功后重设原选区并返回结果的业务一致；原入口额外MainActor诊断路径待证。",
+      "consumer": "SearchEditor.SearchTextView继承OriginalSearchTextView，override进入对应方法。"
+    },
+    {
+      "function_id": "Paste:0x100043d2c",
+      "status": "uncertain",
+      "original_path": "decompiled/Paste/part-0025.c",
+      "source_path": "replica/Sources/PastoCore/OriginalSearchTextView.swift",
+      "symbol": "f_100043d2c",
+      "source_line": 76,
+      "criterion": "原样转发三个选区参数后刷新属性的业务一致；原入口额外MainActor诊断路径待证。",
+      "consumer": "SearchEditor.SearchTextView继承OriginalSearchTextView，override进入对应方法。"
+    },
+    {
+      "function_id": "Paste:0x100043fb0",
+      "status": "uncertain",
+      "original_path": "decompiled/Paste/part-0025.c",
+      "source_path": "replica/Sources/PastoCore/OriginalSearchTextView.swift",
+      "symbol": "f_100043fb0",
+      "source_line": 110,
+      "criterion": "禁止changeLayoutOrientation并将其他selector交super的业务一致；原入口额外MainActor诊断路径待证。",
+      "consumer": "SearchEditor.SearchTextView继承OriginalSearchTextView，override进入对应方法。"
+    },
+    {
+      "function_id": "Paste:0x100043efc",
+      "status": "uncertain",
+      "original_path": "decompiled/Paste/part-0025.c",
+      "source_path": "replica/Sources/PastoCore/OriginalSearchTextView.swift",
+      "symbol": "f_100043efc",
+      "source_line": 94,
+      "criterion": "生产didChangeText入口通过闭包调用业务方法；原helper的执行器诊断路径尚未闭合。",
+      "consumer": "SearchEditor.SearchTextView继承OriginalSearchTextView，override进入对应方法。"
+    },
+    {
+      "function_id": "Paste:0x100043fa0",
+      "status": "uncertain",
+      "original_path": "decompiled/Paste/part-0025.c",
+      "source_path": "replica/Sources/PastoCore/OriginalSearchTextView.swift",
+      "symbol": "f_100043fa0",
+      "source_line": 107,
+      "criterion": "生产layout入口通过闭包调用业务方法；原helper的执行器诊断路径尚未闭合。",
+      "consumer": "SearchEditor.SearchTextView继承OriginalSearchTextView，override进入对应方法。"
+    }
+  ],
+  "policy": "仅核现有实现，不把actor诊断未知自动视为完整，不修改产品源码。",
+  "build_executed": false,
+  "tests_executed": false
+}

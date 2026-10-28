@@ -1,0 +1,48 @@
+{
+  "review_kind": "read_only_ordered_representation_removal_and_marker_recheck",
+  "counts": {"reviewed": 3, "complete": 3, "gap": 0, "uncertain": 0, "new_migrations_claimed": 0},
+  "functions": [
+    {
+      "function_id": "Paste:0x10037dab0",
+      "status": "complete",
+      "reviewed_previously": true,
+      "previous_report": "reports/replica/batch-core-completeness.json",
+      "original_path": "decompiled/Paste/part-0282.c",
+      "original_line": 1044,
+      "current_path": "replica/Sources/PastoCore/OriginalPasteboard.swift",
+      "current_symbol": "OriginalPasteboardItem.f_10037dab0(_:)",
+      "criterion": "重读原完整C：从types稳定删除全部String相等项，保其它相对顺序，然后无条件移除dataByType同键；types为空或没有目标仍执行字典移除。当前removeAll加removeValue同域，不要求存在Data，不仅删除第一个重复，不顺便清除未列其它字典数据。",
+      "consumer": "f383574按模式匹配后真实调用；Pasteboard.swift去内部分析键及采集clone清理同样调用。只核该方法，不把额外caller过滤策略冒成原方法自有行为。"
+    },
+    {
+      "function_id": "Paste:0x100383574",
+      "status": "complete",
+      "reviewed_previously": true,
+      "previous_report": "reports/replica/batch-core-completeness-4.json",
+      "original_path": "decompiled/Paste/part-0283.c",
+      "original_line": 2403,
+      "current_path": "replica/Sources/PastoCore/OriginalPasteboard.swift",
+      "current_symbol": "OriginalPasteboardItem.f_100383574(removingTypesContaining:)",
+      "criterion": "原retain最初types数组，以原顺序扫描每项，对patterns逐项contains，任何命中都从当前types稳定删除所有同名项并删dataByType键。当前for遍历Array值快照、patterns.contains谓词、命中委托f37dab0；即使最初数组有重复、前次已删除全部，同名后续扫描仍安全对应。空patterns无删除，保大小写与子串语义，不变成UTType继承或前缀匹配。",
+      "consumer": "真实f38222c在来源marker写入和own marker追加之前逐prepared item调用。Store普通恢复与native drag准备共享processor，因此此过滤不是未消费方法；不升级processor的实体解码/事务父。"
+    },
+    {
+      "function_id": "Paste:0x1003838bc",
+      "status": "complete",
+      "reviewed_previously": true,
+      "previous_report": "reports/replica/batch-core-completeness-4.json",
+      "original_path": "decompiled/Paste/part-0283.c",
+      "original_line": 2587,
+      "current_path": "replica/Sources/PastoCore/OriginalPasteboard.swift",
+      "current_symbol": "OriginalPasteboardItem.f_1003838bc()",
+      "criterion": "原无条件向types追加length17 largeString com.wiheads.paste，再将字典同键置some零长度Data。当前f37d8c8(Data(),forType:com.wiheads.paste)同样追加、保重复、字典覆盖为空Data而非nil，不删其它类型。原literal指针100d97ae0的+32语义沿第4轮已读原字节证明，不因品牌Pasto更名协议标记。",
+      "consumer": "f38222c对每个处理后表示及新聚合项真实调用。own marker存在只说明准备过payload，不是系统写入成功或目标应用接受的回执。"
+    }
+  ],
+  "limits": [
+    "3项均历史复审，跨批去重，新增迁移0；无新功能缺陷声明。",
+    "只读成功原C、当前方法与生产消费者，新增本报告；不改产品源码、台账、用户数据。",
+    "未编译、parse、运行应用、测试、MCP、验证脚本或发布；没有当前编译体或运行验收证明。",
+    "跳过两个指定失败地址。complete只指本地址合法Swift值输入及规定字段变更，不包含非法运行时内部位型或整个存储/恢复父事务。"
+  ]
+}

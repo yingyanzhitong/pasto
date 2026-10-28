@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "kind": "static_code_migration",
+  "functions": [
+    {"function_id": "Paste:0x1002feb60", "original": "decompiled/Paste/part-0249.c:333", "source": "replica/Sources/PastoCore/OriginalDiagnosticsManager.swift", "contract": "Return current optional fileOutput.fileURL unchanged; no filesystem mutation", "consumer": "OriginalDiagnosticsHistory -> AppMain stop diagnostics action"},
+    {"function_id": "Paste:0x1003e3638", "original": "decompiled/Paste/part-0309.c:1184", "source": "replica/Sources/Pasto/UI/ReplicaFilePreviewContent.swift", "contract": "Construct nonoptional file URL from path, preserve nil/empty optional title, call NSObject.init; expose optional URL to QuickLook", "consumer": "installPreviewItemIfNeeded -> quickLookView.previewItem"}
+  ],
+  "build_executed": false,
+  "tests_executed": false,
+  "equivalence_verified": false,
+  "limitations": "Source-level getter/constructor business methods only. Parent repositories, window lifecycle, original actor/ObjC bridges and generated ABI remain separate work."
+}

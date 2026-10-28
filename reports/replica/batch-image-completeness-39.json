@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "round": 39,
+  "scope": "完整文本预览的统计 footer；复用历史有限合同并重新读取成功伪代码、指定原 ARM 和实际生产消费者。",
+  "counts": {"reviewed": 2, "complete": 1, "gap": 0, "uncertain": 1},
+  "source_binding": {
+    "path": "replica/Sources/PastoCore/OriginalPreviewFooter.swift",
+    "sha256": "97d14915cc4fa873a0d526a42f168ea5487864d0b8327e825bee18e28bd2e25c",
+    "matches_historical_source_sha256": true,
+    "original_c_path": "decompiled/Paste/part-0180.c",
+    "original_c_sha256": "7b8fa7855469038065e9d8d8513f309a13580caa176e146c2e65ee508e558e07",
+    "meaning": "仅绑定当前源码及原 C；历史构建记录不代表本轮构建或运行验证。"
+  },
+  "records": [
+    {
+      "function_id": "Paste:0x100211e80",
+      "status": "uncertain",
+      "historical_evidence": "reports/function-migration/Paste-0x100211e80.json",
+      "original": {"path": "decompiled/Paste/part-0180.c", "start_line": 922, "end_line": 1243, "address_range": "0x100211e80..<0x1002127a4"},
+      "current_reference": {"path": "replica/Sources/PastoCore/OriginalPreviewFooter.swift", "symbol": "OriginalPreviewTextMetaView.init(text:)", "line_range": "12..36"},
+      "criterion": [
+        "正常计数分支一致：字符采用 String.count；空串的词与行均为 0；词按 CharacterSet.whitespaces 分割并滤空，非 whitespacesAndNewlines；非空行按 CharacterSet.newlines 分割且不滤空，保留尾部空段。",
+        "三项均作 Int32 精确转换，越界陷阱；字符/词/行资源顺序 f1e6b38/f1e6b78/f1e6b58 一致。",
+        "三个原生 label 使用 secondaryForeground 和 body 点数的 regular monospacedDigit 字体，中间插入 separator，stack spacing 8，随后添加并激活 f212840 约束，与成功原体相符。",
+        "整构造器仍待证：原成功体在过滤词、构造 label 及 LayoutBuilder 路径含 MainActor executor 诊断；本轮不能仅以当前 @MainActor 声明证明这些入口诊断全等。"
+      ],
+      "actual_consumer": {"path": "replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift", "line_range": "609..617", "symbol": "ReplicaInlinePreviewFooter.init(document:)", "call": "document.$content -> MainActor.assumeIsolated -> f_1003df0b0(OriginalPreviewTextMetaView(text: content.string))"},
+      "limitations": "正常统计与显示业务可直接复用；未确认整入口 actor 诊断/生成 ABI，不声称统计 footer 完整运行等价。"
+    },
+    {
+      "function_id": "Paste:0x1002127a4",
+      "status": "complete",
+      "historical_evidence": "reports/function-migration/Paste-0x1002127a4.json",
+      "original": {"path": "decompiled/Paste/part-0180.c", "start_line": 1244, "end_line": 1268, "address_range": "0x1002127a4..<0x100212840"},
+      "current_reference": {"path": "replica/Sources/PastoCore/OriginalPreviewFooter.swift", "symbol": "OriginalPreviewTextMetaView.f_1002127a4()", "line_range": "40..50"},
+      "criterion": [
+        "原完整 ARM 2127b8 的 w0=0xb7c2 为 UTF-8 C2 B7，中点“·”；创建 NSTextField.labelWithString 后仅设置共享颜色并返回该 label，当前一致，无额外字体或布局赋值。",
+        "原 2127f0..21283c 对 once token 100fb6450 初始化 f1feda8 并读取 1010577d8；成功原 part-0167.c:721..769 的 f1feda8 使用 black/white alpha 位型 0x3fd0a3d70a3d70a4（0.26），nil name 动态 provider 转发 f1ff49c。当前静态 separatorColor 使用相同两个颜色、alpha、nil name 和同一 appearance helper。",
+        "原完整函数无额外 actor 诊断分支；保留本有限 label 构造与动态色合同，不扩大到外围构造器或完整 footer。"
+      ],
+      "actual_consumer": {"path": "replica/Sources/PastoCore/OriginalPreviewFooter.swift", "line_range": "23..30", "call": "OriginalPreviewTextMetaView.init(text:) 在每个非首统计 label 前调用 Self.f_1002127a4()；其外部消费者为 Adapter:609..617 的真实 document content observer。"},
+      "limitations": "仅源码/原静态指令比对；未执行外观切换、语言、布局或功能测试，不将当前 Swift 返回 ABI 当原 x8 间接结果 ABI 的运行验证。"
+    }
+  ],
+  "excluded_failed_addresses": ["Paste:0x100ac35f8", "Paste:0x100ac746c"],
+  "verification_scope": {"product_source_modified": false, "ledger_modified": false, "compiled": false, "application_executed": false, "functional_tests_executed": false, "mcp_executed": false, "static_original_disassembly": "只读取成功函数 0x1002127a4..<0x100212840；没有读取两个失败函数。", "one_to_one_acceptance_claimed": false}
+}

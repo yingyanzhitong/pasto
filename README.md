@@ -10,7 +10,7 @@ Pasto 面向 **macOS 14+，支持 Intel（x86_64）和 Apple 芯片（arm64）**
 
 [![构建与发布](https://github.com/yingyanzhitong/pasto/actions/workflows/release.yml/badge.svg)](https://github.com/yingyanzhitong/pasto/actions/workflows/release.yml)
 
-[下载预发布版本](https://github.com/yingyanzhitong/pasto/releases) · [源码构建](#源码构建) · [参与贡献](CONTRIBUTING.md) · [许可范围](NOTICE.md)
+[下载 1.0.0](https://github.com/yingyanzhitong/pasto/releases/tag/v1.0.0) · [源码构建](#源码构建) · [参与贡献](CONTRIBUTING.md) · [许可范围](NOTICE.md)
 
 ## 界面
 
@@ -29,6 +29,7 @@ Pasto 面向 **macOS 14+，支持 Intel（x86_64）和 Apple 芯片（arm64）**
 - 剪贴板历史与多格式内容保留，支持文本、图片、文件、链接和颜色。
 - 横向卡片面板、搜索筛选、多选、预览和本地编辑。
 - Pinboard 整理、Pasto Stack 队列、归档导入和导出。
+- 从 Paste 迁移本地分组与组内内容，保留颜色和顺序；重复迁移不覆盖已有编辑。入口：更多 → 从 Paste 迁移分组…，详见[迁移说明](replica/README.md#从-paste-迁移分组)。
 - 全局快捷键、可配置的纯文本操作、暂停采集与本地设置。
 - 本地 Vision OCR，以及独立的 `pasto-mcp` stdio 服务。
 
@@ -36,12 +37,12 @@ Pasto 面向 **macOS 14+，支持 Intel（x86_64）和 Apple 芯片（arm64）**
 
 ## 下载与使用
 
-从 [Releases](https://github.com/yingyanzhitong/pasto/releases) 选择预发布版本并阅读该版本的限制说明。目前提供开发预览版。安装包采用临时签名，尚未经过 Apple 公证。
+从 [1.0.0 Release](https://github.com/yingyanzhitong/pasto/releases/tag/v1.0.0) 下载，并阅读该版本的限制说明。安装包采用临时签名，尚未经过 Apple 公证。
 
-按 Mac 的芯片选择安装包，例如 `0.8.0-dev.51` 版本：
+按 Mac 的芯片选择 1.0.0 安装包：
 
-- **Apple 芯片（arm64）**：`Pasto-0.8.0-dev.51-macos-arm64.dmg`
-- **Intel（x86_64）**：`Pasto-0.8.0-dev.51-macos-x86_64.dmg`
+- **Apple 芯片（arm64）**：[Pasto-1.0.0-macos-arm64.dmg](https://github.com/yingyanzhitong/pasto/releases/download/v1.0.0/Pasto-1.0.0-macos-arm64.dmg)
+- **Intel（x86_64）**：[Pasto-1.0.0-macos-x86_64.dmg](https://github.com/yingyanzhitong/pasto/releases/download/v1.0.0/Pasto-1.0.0-macos-x86_64.dmg)
 
 可在“关于本机”中查看芯片或处理器。历史版本的格式与架构范围以该版本的发布说明为准。
 

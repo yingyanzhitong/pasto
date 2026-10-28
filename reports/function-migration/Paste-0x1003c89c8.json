@@ -2,16 +2,16 @@
   "schema_version": 1,
   "kind": "static_code_migration",
   "function_id": "Paste:0x1003c89c8",
-  "reviewed_at": "2026-10-27T03:59:45.653489+00:00",
+  "reviewed_at": "2026-10-27T04:30:18.864426+00:00",
   "original_binary_sha256": "871f00354fbb1c165d858a98e6d19d6f43cb9d3f9f958b3e07c7f07eb5c19afb",
   "source_sha256": {
     "replica/Sources/PastoCore/OriginalPasteboardImageEncoding.swift": "2e4430ee0d8c7d8f88561457d37e8d50c0c756d83471facda099b7518a6a2dfe",
     "replica/Sources/PastoCore/OriginalPasteboard.swift": "60f862d0779d4f580e89be5eafef96239c75287facd4602ba02b10ce232c7b61",
-    "replica/Sources/Pasto/UI/ReplicaImagePreviewContent.swift": "4ad25fb43ae663e0806b8d16f06c973c2ff480e2388589f2f1dc3ee6bf2dad37"
+    "replica/Sources/Pasto/UI/ReplicaImagePreviewContent.swift": "d9996ed2a1699738d9180a13afffefc8284ceb70d1df68f4e31b2cc63893a17e"
   },
   "build_succeeded": true,
   "build_command": "bash replica/scripts/build-app.sh",
-  "compiled_app_binary_sha256": "c6ebd121b3cb9b31f2d4d3f11e543fe92d6557791b1117d311549d61c3a17562",
+  "compiled_app_binary_sha256": "d62d3ee4392cf0f4659b63a21018f15e835436d65324121ff3088b3abb7fa499",
   "compiled_product": "Pasto",
   "functional_regression_executed": false,
   "equivalence_verified": false,
@@ -19,7 +19,7 @@
   "implementation_origin": "existing_source_reused",
   "source_review": "192文件精确可逆改名证明及原证据不变守卫通过；菜单/产品/资源路径/错误域和临时前缀例外已逐文件审阅。保持本地址已有有限契约，新模块build76编译及当前源码摘要绑定；详见reports/replica/pasto-brand-build76.json。不将本轮静态检查称为差分运行或完整父功能等价。",
   "rename_audit": "reports/replica/pasto-brand-build76.json",
-  "build_snapshot": "reports/replica/dev52-static-build78.json",
+  "build_snapshot": "reports/replica/dev53-image-retention-build80.json",
   "original_pseudocode": {
     "path": "decompiled/Paste/part-0300.c",
     "line": 587
@@ -31,9 +31,9 @@
     "sha256": "62ef48bacb9de0e0cadf9033333ff98a060fa51864f469a49f87fa299049e791"
   },
   "compiled_provenance_refresh": {
-    "review": "已核对完整实现引用源码摘要未变化、符号及原地址绑定；仅刷新本次静态编译来源。",
-    "source_unchanged": true,
-    "previous_compiled_app_binary_sha256": "0357ba6a42a608c8746c59654ece36c4847a2566601f5bd187f83f4e7e4da6e5",
+    "review": "逐地址审查原伪码、图片函数实现及实际调用，并验证资源键值。",
+    "source_unchanged": false,
+    "previous_compiled_app_binary_sha256": "c6ebd121b3cb9b31f2d4d3f11e543fe92d6557791b1117d311549d61c3a17562",
     "current_compiled_boundary_verified": false,
     "functional_tests_executed": false
   }

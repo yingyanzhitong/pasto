@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "scope": "前轮未覆盖的四个已有文本预览选区trait聚合/查询方法。对照成功原C与真实消费者，源码冻结。",
+  "counts": { "total": 4, "complete": 3, "gap": 0, "uncertain": 1 },
+  "records": [
+    {
+      "function_id": "Paste:0x100208290",
+      "status": "complete",
+      "original": { "path": "decompiled/Paste/part-0171.c", "start_line": 767, "address_range": "0x100208290..<0x10020834c" },
+      "current_implementations": [ { "path": "replica/Sources/PastoCore/OriginalPreviewTextTraits.swift", "start_line": 20, "end_line": 22, "symbol": "public static func f_100208290(_:in:)" } ],
+      "criterion": "原空集合立即false；非空按UInt8 trait散列并线性探测，有相等元素true，遇未占槽false。当前Set<Trait>.contains保合法typed trait全部成员关系，空集合false，不改集合；真实Trait raw0..3与原单字节表示一致。源码业务合同不要求Swift不同版本集合桶或随机散列种子相同，也不把非法enum raw值视为合法输入。",
+      "actual_consumer": "OriginalReplicaPreviewAdapter.f_1002106d0第602行逐个bold/italic/underline/strike查询并设置真实四个工具栏按钮isSelected；OriginalPreviewTextTraits.f207648也用本方法决定切换/移除。",
+      "limitations": "只确认typed集合成员查询，不升级选区范围读取、attribute解析或整个工具栏UI。未执行集合或产品测试。"
+    },
+    {
+      "function_id": "Paste:0x1002080e0",
+      "status": "complete",
+      "original": { "path": "decompiled/Paste/part-0171.c", "start_line": 681, "address_range": "0x1002080e0..<0x1002081d0" },
+      "supporting_original": { "path": "decompiled/Paste/part-0192.c", "start_line": 47, "address_range": "0x100233964..<0x100233a50" },
+      "current_implementations": [ { "path": "replica/Sources/PastoCore/OriginalPreviewTextTraits.swift", "start_line": 24, "end_line": 26, "symbol": "public static func f_1002080e0(_:accumulating:)" } ],
+      "criterion": "原扫描输入Set每个占用位，将对应UInt8传f233964插入捕获的累计Set；f233964已有相等元素不插入、未命中才写集合。输入空不加元素，已存在元素保留，不删除累计集合既有值。当前formUnion具有同一原地并集值合同，覆盖空集合、重复、重叠与全新元素；不把集合内存桶复制/引用计数实现当用户可见值要求。",
+      "actual_consumer": "f208024把每个run的f207db8 trait集合传入本方法；f207b54真实enumerateAttributes逐run累计，OriginalPreviewTextStorageBridge.onTraitsChange最终驱动真实文本预览按钮。",
+      "limitations": "只核并集方法；上层f208024的executor诊断单列待证，不因本值方法完成而升级其父。未运行或编译。"
+    },
+    {
+      "function_id": "Paste:0x100208024",
+      "status": "uncertain",
+      "original": { "path": "decompiled/Paste/part-0171.c", "start_line": 650, "address_range": "0x100208024..<0x1002080e0" },
+      "current_implementations": [ { "path": "replica/Sources/PastoCore/OriginalPreviewTextTraits.swift", "start_line": 28, "end_line": 31, "symbol": "public static func f_100208024(_:accumulating:)" } ],
+      "criterion": "正常业务顺序一致：输入当前run attributes调用f207db8，再把返回集合交f2080e0聚合，不修改run属性及stop。原完整本体先获取MainActor executor并调用swift_task_isCurrentExecutor，失败时swift_task_reportUnexpectedExecutor(PasteUI/XXTextView+TextTraits.swift,line33)，之后继续业务并释放actor。当前只有外围enum的@MainActor声明，源码未显式恢复该执行器诊断；本轮禁止编译/运行，因此未证明当前生成入口具有相同非当前executor分支，整入口保留待证。",
+      "actual_consumer": "f207b54选区非空且边界有效时enumerateAttributes调用f2085e0→本方法；真实NativeTextStorageBridge的trait回调供预览编辑器和工具栏消费。",
+      "limitations": "此处不是已证正常功能差异，更不是运行故障；需要已有明确生成入口证据才能消除executor分支待证。本轮未改代码或提升台账。"
+    },
+    {
+      "function_id": "Paste:0x1002085e0",
+      "status": "complete",
+      "original": { "path": "decompiled/Paste/part-0171.c", "start_line": 955, "address_range": "0x1002085e0..<0x1002085e8" },
+      "current_implementations": [ { "path": "replica/Sources/PastoCore/OriginalPreviewTextTraits.swift", "start_line": 33, "end_line": 36, "symbol": "public static func f_1002085e0(_:accumulating:)" } ],
+      "criterion": "原完整成功C只调用f208024后返回，无独立值变换、过滤、stop或额外副作用。当前把同一attributes与同一个inout累计集合直接交f208024，不生成未消费包装。仅认定本转发体合同满足；被调方法含executor诊断的待证不被这条转发体结论消除。",
+      "actual_consumer": "OriginalPreviewTextTraits.swift第46..47行真实选区run枚举调用本方法；其结果经Bridge与Adapter第239行到达工具栏更新。",
+      "limitations": "仅转发入口，不声称目标f208024整入口完成，也不将其上游纯ARM尾跳或整个选区编辑方法重复计数。"
+    }
+  ],
+  "excluded_failed_addresses": [ "0x100ac35f8", "0x100ac746c" ],
+  "verification_scope": "只读成功原C和生产源码后新增本报告；无产品源码、台账或旧报告修改，无编译、parse、运行、测试、MCP、发布，也未读取指定失败函数。complete只表示列明有限源码合同，不等于一比一运行验收或当前构建产物证明。"
+}

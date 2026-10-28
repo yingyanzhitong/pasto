@@ -1,0 +1,44 @@
+{
+  "kind": "batch-window-completeness-26",
+  "scope": "4个实际搜索建议菜单的tracking、选区样式通知与计时器方法；不扩大整个弹窗父。",
+  "summary": {"reviewed": 4, "complete": 3, "gap": 0, "uncertain": 1},
+  "prior_inventory": "reports/replica/batch-completeness-round25.json",
+  "definite_product_differences": [],
+  "activities": {"product_source_edited": false, "ledger_edited": false, "compiled": false, "product_run": false, "tests_run": false, "wrapper_added": false},
+  "skipped_failed_addresses": ["Paste:0x100ac35f8", "Paste:0x100ac746c"],
+  "limitations": [
+    "complete仅为列明有限静态合同，不是当前编译、鼠标悬停或菜单滚动运行验收。",
+    "仅核原普通业务体，不自动提升另一个Actor ObjC桥；原Invalidating setter细节不凭当前属性名认同。",
+    "不修改台账状态或迁移数量。"
+  ],
+  "functions": [
+    {
+      "function_id": "Paste:0x10000f828", "status": "complete",
+      "original": {"path": "decompiled/Paste/part-0006.c", "line": 1096},
+      "source_references": [{"path": "replica/Sources/Pasto/UI/ReplicaSearchSuggestionsMenu.swift", "symbol": "SuggestionRowView.updateTrackingAreas"}],
+      "evidence": "先super.updateTrackingAreas；旧trackingArea非nil才remove；读取当前bounds，以options0x81/owner self/userInfo nil创建新NSTrackingArea；先写可选存储，再非nil add。当前全部顺序、mask和nil路径一致，没有用inVisibleRect替代bounds或保留旧area；原随后独立Actor入口f00f908不并入本体。",
+      "actual_consumer": "SuggestionsList.setRows为真实候选逐项创建SuggestionRowView并加到视图；AppKit调用其override安装hover enter/exit区域，真实菜单鼠标选择消费。"
+    },
+    {
+      "function_id": "Paste:0x10004b544", "status": "complete",
+      "original": {"path": "decompiled/Paste/part-0027.c", "line": 834},
+      "source_references": [{"path": "replica/Sources/Pasto/UI/ReplicaSearchSuggestionsMenu.swift", "symbol": "SuggestionsScrollIndicator.updateTrackingAreas"}],
+      "evidence": "同样super→移旧→bounds→创建→先存新可选area→非nil add，原options为0x83（区别row0x81），owner self/userInfo nil。当前正确保留额外mouseMoved相关位，未共用错误mask；原独立Actor入口f04b624不提升。",
+      "actual_consumer": "SuggestionsScroller实际持有up/down两个指示器并添加到视图；其mouseMoved用于悬停滚动，不是未挂载的控件。"
+    },
+    {
+      "function_id": "Paste:0x100385984", "status": "complete",
+      "original": {"path": "decompiled/Paste/part-0284.c", "line": 692},
+      "source_references": [{"path": "replica/Sources/Pasto/UI/ReplicaSearchSuggestionsMenu.swift", "symbol": "OriginalSuggestionScrollTimer.init(interval:repeats:action:)"}],
+      "evidence": "原保非可选action闭包上下文，以传入interval及repeats低bit创建scheduled NSTimer，并存owner.timer；tick经thunk0386a0直接调用保留action，无额外队列/条件。已读part-0021.c:497真实0386a0及:842尾转thunk，非以名字猜回调。当前同一scheduledTimer、完整TimeInterval、Bool及捕获action，无固定interval硬编码在构造体。销毁invalidate属于另一个方法不并入本合同。",
+      "actual_consumer": "实际SuggestionsScrollIndicator.mouseMoved在inside/canScroll/尚无timer时以interval.075/repeats true创建；action转onScroll。构造本身仍支持原任意interval/repeats输入。"
+    },
+    {
+      "function_id": "Paste:0x10002e80c", "status": "uncertain",
+      "original": {"path": "decompiled/Paste/part-0018.c", "line": 1818},
+      "source_references": [{"path": "replica/Sources/Pasto/UI/ReplicaSearchSuggestionsMenu.swift", "symbol": "private func selectionDidChange(from previous: Int?)"}],
+      "evidence": "原先旧可选index取arrangedSubviews，负/越界终止，条件cast为row后经Invalidating keypath setter写false；再对当前新index同样写true。两项相同仍执行false→true，nil不读对应行。当前两次bounds precondition和setSelected调用顺序一致，同索引也先false后true，无刷新无关行。但原setter经泛型Invalidating::_set_subscript及两keypath，当前setSelected有值相等guard并只needsLayout=true；本批未独立闭其全部相等/失效副作用，亦未把原非row cast失败域机械等同当前typed rows，故完整父保待证，不当确定可见bug。",
+      "actual_consumer": "SuggestionsList.select先写selectedIndex后传previous；真实菜单select/hover/清空路径都调用，rows由同一setRows生产。"
+    }
+  ]
+}

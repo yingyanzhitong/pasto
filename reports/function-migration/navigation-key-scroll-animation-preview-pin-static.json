@@ -1,0 +1,216 @@
+{
+  "schema_version": 1,
+  "kind": "static_code_migration",
+  "functions": [
+    {
+      "function_id": "Paste:0x100219df4",
+      "state": "migrated",
+      "contract": "UInt16物理键码映射为原13种raw值0..12；Return/Tab/Space/Escape/Home/PageUp/End/PageDown/Left/Right/Down/Up及其余完整覆盖。",
+      "implementations": [
+        {
+          "path": "replica/Sources/Pasto/UI/OriginalNavigationKey.swift",
+          "symbol": "static func f_100219df4"
+        }
+      ],
+      "source": {
+        "path": "decompiled/Paste/part-0183.c",
+        "line": 929
+      },
+      "review": "成功原纯分类器全体switch与新raw UInt8枚举逐项对应，真实建议键盘处理消费，不读取字符或修饰键。",
+      "remaining": "此纯分类值合同完整，建议列表与ObjC/actor父不升级。"
+    },
+    {
+      "function_id": "Paste:0x100219ddc",
+      "state": "migrated",
+      "contract": "读取输入NSEvent.keyCode一次，转发0x100219df4并返回同一分类。",
+      "implementations": [
+        {
+          "path": "replica/Sources/Pasto/UI/OriginalNavigationKey.swift",
+          "symbol": "static func f_100219ddc"
+        }
+      ],
+      "source": {
+        "path": "decompiled/Paste/part-0183.c",
+        "line": 914
+      },
+      "review": "原完整getter转发入口与现真实建议键盘调用对应，没有额外字符/修饰键筛选。",
+      "remaining": "仅此事件分类转发业务完整，不升级完整快捷键分派或事件监视器。"
+    },
+    {
+      "function_id": "Paste:0x1001f8a84",
+      "state": "migrated",
+      "contract": "任意三X多项式系数、x及epsilon：初值误差提前返回，最多7次Newton，导数绝对值低于1e-6转二分；保原0/1和unordered比较、二分终止条件，返回参数t。",
+      "implementations": [
+        {
+          "path": "replica/Sources/Pasto/UI/OriginalCollectionScrollAnimator.swift",
+          "symbol": "func parameter(x: Double, epsilon: Double)"
+        }
+      ],
+      "source": {
+        "path": "decompiled/Paste/part-0164.c",
+        "line": 733
+      },
+      "review": "成功原求解体全部分支与通用六系数值类型独立parameter方法对应；未缩成固定scroll系数或将Y值误作t。真实scroll timing调用value后消费。",
+      "remaining": "此纯求解合同完整；泛型Animator协议、时钟与集合委托父不升级。"
+    },
+    {
+      "function_id": "Paste:0x1001f8858",
+      "state": "migrated",
+      "contract": "读取任意六系数，调用完整X参数求解，再按t*(cy+t*(t*ay+by))计算Y并返回。",
+      "implementations": [
+        {
+          "path": "replica/Sources/Pasto/UI/OriginalCollectionScrollAnimator.swift",
+          "symbol": "func value(at x: Double, epsilon: Double)"
+        }
+      ],
+      "source": {
+        "path": "decompiled/Paste/part-0164.c",
+        "line": 474
+      },
+      "review": "完整原值方法对应通用系数receiver与显式x/epsilon输入；真实滚动注册提供原六系数及原epsilon，不造未消费wrapper。",
+      "remaining": "仅此纯值方法完整，不升级包含捕获/协议的原timing closure或完整Animator。"
+    },
+    {
+      "function_id": "Paste:0x10002fadc",
+      "state": "partial",
+      "contract": "非空建议列表先取消旧cooldown；当前索引加offset并夹到0..count-1，未选中按offset正负选首/末；写选区、显示并reveal，安排main+.1秒弱cooldown清空。",
+      "implementations": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchSuggestionsMenu.swift",
+          "symbol": "private func moveSelection(by offset: Int)"
+        }
+      ],
+      "source": {
+        "path": "decompiled/Paste/part-0018.c",
+        "line": 2681
+      },
+      "review": "移除键盘选择对独立Row.isEnabled的额外过滤，直接按原算法更新选中和reveal；溢出仍由Swift整数运算trap，非空才取消旧任务。",
+      "remaining": "原逐旧/新row无效化和原reveal几何链仍未完全恢复，保留partial。"
+    },
+    {
+      "function_id": "Paste:0x10002f870",
+      "state": "partial",
+      "contract": "物理导航分类驱动建议键盘；确认键在无selected时转交，已选且越上界只消费，负索引trap；Escape走回调，导航步长1/5/count。",
+      "implementations": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchSuggestionsMenu.swift",
+          "symbol": "func handleKeyDown(_ event: NSEvent)"
+        }
+      ],
+      "source": {
+        "path": "decompiled/Paste/part-0018.c",
+        "line": 2567
+      },
+      "review": "接入原独立键分类器；acceptRow按原索引上界/负值分支处理，不再按独立enabled值过滤键盘确认。",
+      "remaining": "原MainActor执行器检查、Escape向面板透传适配和完整列表生命周期仍partial。"
+    },
+    {
+      "function_id": "Paste:0x100229d4c",
+      "state": "partial",
+      "contract": "相同目标/非动画直接成功；动画使用原elapsed/.25/.1时长、原六系数及epsilon、两次mediaTime与from/to/start布局；key为contentOffset。",
+      "implementations": [
+        {
+          "path": "replica/Sources/Pasto/UI/OriginalCollectionScrollAnimator.swift",
+          "symbol": "func setContentOffset"
+        }
+      ],
+      "source": {
+        "path": "decompiled/Paste/part-0188.c",
+        "line": 2835
+      },
+      "review": "成功原C及既有原arm静态证据对应，已实际接普通primary reveal；预览锚点用非动画立即定位。",
+      "remaining": "当前为单集合CGPoint消费者，原完整NSScrollView类别/通用可注入Animator及集合完成委托尚未闭合。"
+    },
+    {
+      "function_id": "Paste:0x10020b948",
+      "state": "partial",
+      "contract": "同key先移除旧动画再以false取消，随后插入新动画并启动时钟，保留回调可重入顺序。",
+      "implementations": [
+        {
+          "path": "replica/Sources/Pasto/UI/OriginalCollectionScrollAnimator.swift",
+          "symbol": "animations.removeValue(forKey: key)?.completion?(false)"
+        }
+      ],
+      "source": {
+        "path": "decompiled/Paste/part-0173.c",
+        "line": 1705
+      },
+      "review": "成功原C及既有原arm静态证据对应，已实际接普通primary reveal；预览锚点用非动画立即定位。",
+      "remaining": "当前字典专用于CGPoint scroll，未覆盖原任意动画协议/键与整个原view animator注册域。"
+    },
+    {
+      "function_id": "Paste:0x1001f5144",
+      "state": "partial",
+      "contract": "按字典值快照更新；startTime+duration<=timestamp时先completion(true)再移除原key；为空停止时钟。",
+      "implementations": [
+        {
+          "path": "replica/Sources/Pasto/UI/OriginalCollectionScrollAnimator.swift",
+          "symbol": "private func tick(_ timestamp: Double)"
+        }
+      ],
+      "source": {
+        "path": "decompiled/Paste/part-0162.c",
+        "line": 909
+      },
+      "review": "成功原C及既有原arm静态证据对应，已实际接普通primary reveal；预览锚点用非动画立即定位。",
+      "remaining": "当前CGPoint特化真实消费，原全部泛型关联值/外部动画类型与协议ABI仍partial。"
+    },
+    {
+      "function_id": "Paste:0x1001f42bc",
+      "state": "partial",
+      "contract": "进度为(timestamp-start)/duration，先按原比较夹到0..1，求缓动后计算点并更新；NaN比较分支保留。",
+      "implementations": [
+        {
+          "path": "replica/Sources/Pasto/UI/OriginalCollectionScrollAnimator.swift",
+          "symbol": "func tick(_ timestamp: Double)"
+        }
+      ],
+      "source": {
+        "path": "decompiled/Paste/part-0162.c",
+        "line": 253
+      },
+      "review": "成功原C及既有原arm静态证据对应，已实际接普通primary reveal；预览锚点用非动画立即定位。",
+      "remaining": "当前仅CGPoint特化，原泛型关联类型及任意timing/update协议域未闭合。"
+    },
+    {
+      "function_id": "Paste:0x1001f4414",
+      "state": "partial",
+      "contract": "缓动值<=0取from，<1逐分量插值，其余取to，保unordered比较分支。",
+      "implementations": [
+        {
+          "path": "replica/Sources/Pasto/UI/OriginalCollectionScrollAnimator.swift",
+          "symbol": "let point: CGPoint"
+        }
+      ],
+      "source": {
+        "path": "decompiled/Paste/part-0162.c",
+        "line": 301
+      },
+      "review": "成功原C及既有原arm静态证据对应，已实际接普通primary reveal；预览锚点用非动画立即定位。",
+      "remaining": "只落实CGPoint消费者，原泛型Interpolation全部类型域未覆盖。"
+    },
+    {
+      "function_id": "Paste:0x1001f72d8",
+      "state": "partial",
+      "contract": "创建CVDisplayLink，仅created指针nil时失败；设置output handler与主显示器，display线程mediaTime弱派往MainActor。失败保留动画、不调用completion，后续可重试。",
+      "implementations": [
+        {
+          "path": "replica/Sources/Pasto/UI/OriginalCollectionScrollAnimator.swift",
+          "symbol": "private final class OriginalCollectionDisplayClock"
+        }
+      ],
+      "source": {
+        "path": "decompiled/Paste/part-0163.c",
+        "line": 1037
+      },
+      "review": "成功原C及既有原arm静态证据对应，已实际接普通primary reveal；预览锚点用非动画立即定位。",
+      "remaining": "真实scroll已消费时钟；原默认回调属性和通用时钟协议/任务桥等对象合同尚未逐方法全部分离恢复。"
+    }
+  ],
+  "partial_header_update": "Paste:0x100011e00",
+  "original_arm_evidence": ".local/window-primary-reveal-scroll-primitive-arm64.txt",
+  "build_executed": false,
+  "tests_executed": false,
+  "equivalence_verified": false,
+  "limitations": "Source-only migration and manual static comparison. Original generic animation domains and collection completion/delegate/beep parents remain partial. No compile, parse, execution, tests, install, commit or release. Historical freshness limitations remain."
+}

@@ -1,0 +1,40 @@
+{
+  "review_kind": "read_only_capture_excluded_applications_default_provider",
+  "counts": { "reviewed": 1, "complete": 0, "gap": 1, "uncertain": 0, "new_migrations_claimed": 0 },
+  "functions": [
+    {
+      "function_id": "Paste:0x1002fae2c",
+      "status": "gap",
+      "original_path": "decompiled/Paste/part-0246.c",
+      "original_line": 1123,
+      "current_paths": [
+        "replica/Sources/PastoCore/Models.swift",
+        "replica/Sources/PastoCore/Pasteboard.swift",
+        "replica/Sources/PastoCore/OriginalPasteboardPolicies.swift"
+      ],
+      "current_symbol": "Preferences.excludedBundleIDs默认及ClipboardMonitor.originalPasteboardShouldRead(_:)",
+      "confirmed_gap": "原ignoredBundleIdentifiers配置provider提供由14个静态String组成的非空默认Set；当前Preferences新初始化及JSON缺字段时excludedBundleIDs均默认[]。至少原默认包含com.1password这一明确inline项，当前没有等效默认应用排除项；fresh/缺键域的排除策略不同，不能把现有可自定义空数组当原默认provider已完整迁移。",
+      "original_bounded_evidence": [
+        "原完整成功C2fae2c..2faee8构造静态String集合，_arrayDestroy计数14后传给f2ccc34作默认值。新有界ARM2fae64/68选静态数组100fbe020，2fae88 MOV w1,#14；2faeb8长度24及2faeb0所用String指针还原literal100da0b50='ignoredBundleIdentifiers'。",
+        "静态数组100fbe020+0x10值14；第3项100fbe060..06f为inline字节com.1password及tagED。证明默认集合非空且存在该确定条目，不必靠猜测全部14应用名称。",
+        "原manager构造使用keypath100c43990；记录中的relative getter字段100c439b0值ff738aec（signed -0x8c7514），解到10037c49c，该完整成功C直接转发2fae2c。原f37ba14从manager+0x18等读取该配置wrapper并用于frontmost来源过滤，非未消费表。"
+      ],
+      "current_consumer": "Preferences.init的excludedBundleIDs=[]；init(from:) decodeIfPresent([String].self)??[]。真实monitor shouldRead先将store.preferences.excludedBundleIDs转Set传给f37ba14；后续allowsPasteboardCapture也只按该数组contains做来源拒绝，无补齐原14默认的独立常量表。ignoreConcealedContent/ignoreTransientContent按types过滤，不能对普通UTF8输入冒成同一个来源app默认过滤。",
+      "scope_of_effect": "指fresh或缺该配置字段、普通无concealed/transient类型时的默认来源政策；用户明确保存的空列表应当保留，本发现不授权回填或覆盖现有配置。没有实际读取或复制任何密码管理器内容，不声称已发生敏感数据采集。",
+      "boundary": "原配置键与当前自有JSON字段名不同本身不作缺口理由，缺口依据是确定默认集合内容不同及真实过滤消费。其它原14项尚未全解不猜名称；原f2ccc34完整配置/持久化父不随此方法审阅升级。"
+    }
+  ],
+  "not_counted": [
+    {
+      "function_id": "Paste:0x1002faffc",
+      "status": "not_completed_in_this_batch",
+      "reason": "邻近ignoredPasteboardTypes provider的原默认6项/键已读到，但尚未逐项恢复并与当前concealed/transient并集比较，不能依据数量差直接判缺口或完整；留后续待证，不计本批。"
+    }
+  ],
+  "limits": [
+    "只新增本独立报告，未修改产品源码、台账、用户数据或排除列表。",
+    "仅成功C/当前源码及有界原ARM/常量读取；未编译、parse、运行应用、功能/MCP测试、验证脚本或发布。",
+    "本批0/1完整不是项目总体迁移率；主智能体汇总总分母及跨批去重，新增迁移0。未核当前编译体。",
+    "指定失败地址0x100ac35f8、0x100ac746c跳过，未读取。"
+  ]
+}

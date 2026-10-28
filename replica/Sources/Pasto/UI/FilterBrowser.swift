@@ -45,13 +45,19 @@ enum ReplicaFilterMatching {
             title = kind.displayName
             value = kind == .files ? "file" : kind == .richText ? "text" : kind.rawValue
         case let .source(source):
-            let item = store.items.first { $0.sourceName == source }
-            title = item?.sourceName ?? source
-            image = item?.sourceBundleID.flatMap { NSWorkspace.shared.urlForApplication(withBundleIdentifier: $0) }
-                .map { NSWorkspace.shared.icon(forFile: $0.path) }
+            title = source
+            if let application = store.sourceApplications.first(where: {
+                $0.name.caseInsensitiveCompare(source) == .orderedSame
+            }) {
+                image = application.rawIcon.flatMap(NSImage.init(data:)) ?? NSImage()
+            } else if let item = zip(store.items, ReplicaSearchSuggestionSource.applicationNames(for: store.items, store: store))
+                .first(where: { $0.1?.caseInsensitiveCompare(source) == .orderedSame })?.0 {
+                image = item.sourceBundleID.flatMap { NSWorkspace.shared.urlForApplication(withBundleIdentifier: $0) }
+                    .map { NSWorkspace.shared.icon(forFile: $0.path) }
+            }
         case let .device(device): title = device
         case let .date(filter): title = OriginalSearchDateEncoding.title(for: filter.range)
-        case let .pinboard(id): title = store.pinboards.first { $0.id == id }?.name ?? "Pinboard"
+        case let .pinboard(id): title = store.pinboards.first { $0.id == id }?.name ?? "Pasto"
         }
         if image == nil {
             image = OriginalSearchFilterSymbols.f_100054b2c(kind: selection.group, value: value)
@@ -270,14 +276,15 @@ extension ReplicaUIController {
             }
             field?.f_1000457cc()
         }
-        let sources = Set(store.items.map(\.sourceName)).filter { !$0.isEmpty }
+        let sources = Set(ReplicaSearchSuggestionSource.applicationNames(for: store.items, store: store).compactMap { $0 })
+            .filter { !$0.isEmpty }
             .sorted { $0.compare($1) == .orderedAscending }
         let devices = Set(store.items.map(\.sourceDevice)).sorted()
         let sections: [ReplicaFilterBrowser.Section] = [
             .init(id: 1, title: OriginalSearchLocalization.text("search.filters.section.type"),
                   choices: [ClipboardKind.text, .link, .image, .files, .color, .unknown].map { .kind($0) }),
             .init(id: 0, title: OriginalSearchLocalization.text("search.filters.section.app"), choices: sources.map { .source($0) }),
-            .init(id: 5, title: OriginalSearchLocalization.text("search.filters.section.pinboard"),
+            .init(id: 5, title: OriginalSearchLocalization.text("pasto.search.filters.section.group"),
                   choices: store.pinboards.sorted { $0.sortOrder < $1.sortOrder }.map { .pinboard($0.id) }),
             .init(id: 3, title: OriginalSearchLocalization.text("search.filters.section.date"), choices: OriginalSearchDateRanges.f_1002d8ce0().map { .date($0) }),
             .init(id: 4, title: OriginalSearchLocalization.text("search.filters.section.device"), choices: devices.map { .device($0) })

@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "kind": "same_file_unchanged_historical_static_reuse",
+  "scope": "同一标题预览文件两个已有native字段初始化方法；复用已确认未变化的完整历史源码引用，逐属性重读原成功C与当前实现。",
+  "counts": { "total": 2, "complete": 2, "gap": 0, "uncertain": 0 },
+  "source_binding": { "path": "replica/Sources/PastoCore/OriginalPreviewTitleLabel.swift", "historical_sha256": "84e3a33dbd575ad595cded72928d3d9b917ec1ece7eb258ba42ef3cf457bb0e2", "last_fresh_read_sha256": "84e3a33dbd575ad595cded72928d3d9b917ec1ece7eb258ba42ef3cf457bb0e2", "binding_review": "本轮接续batch-image-completeness-30.json的完整文件读取和SHA，本轮再次读取本两函数当前源码；不把历史编译当本轮构建。" },
+  "records": [
+    {
+      "function_id": "Paste:0x10023adf0",
+      "status": "complete",
+      "historical_evidence": "reports/function-migration/Paste-0x10023adf0.json",
+      "historical_contract_reusable": true,
+      "original": { "path": "decompiled/Paste/part-0194.c", "start_line": 1615, "address_range": "0x10023adf0..<0x10023ae6c" },
+      "current_reference": { "path": "replica/Sources/PastoCore/OriginalPreviewTitleLabel.swift", "start_line": 25, "end_line": 31, "symbol": "public func f_10023adf0() -> NSTextField" },
+      "criterion": "原已有cached native field直接返回，不重新配置其编辑状态；nil才默认NSTextField.init，调用f23b954配置，配置完才存cache并返回。当前同构造类型、配置调用、保存顺序及同对象身份；不把读取getter变成每次重置isEditable=false或新建Field，不设原无初始text/font/tint。原本体无executor诊断。",
+      "actual_consumer": "OriginalPreviewTextField.init第11行首次取得真实field并装入wrapper；后续title text/placeholder/editability/focus方法访问同cached field，TitleLabel经真实Header第354行持有。",
+      "limitations": "只确认lazy getter完整，不升级wrapper完整构造、原类ABI和被调系统类别actor入口。"
+    },
+    {
+      "function_id": "Paste:0x10023b954",
+      "status": "complete",
+      "historical_evidence": "reports/function-migration/Paste-0x10023b954.json",
+      "historical_contract_reusable": true,
+      "original": { "path": "decompiled/Paste/part-0195.c", "start_line": 345, "address_range": "0x10023b954..<0x10023b9ec" },
+      "current_reference": { "path": "replica/Sources/PastoCore/OriginalPreviewTitleLabel.swift", "start_line": 34, "end_line": 46, "symbol": "public func f_10023b954(_ field: NSTextField)" },
+      "criterion": "原依次设置delegate为owner、bordered=false、editable=false、drawsBackground=false、usesSingleLineMode=true、allowsExpansionToolTips=true、allowsDefaultTighteningForTruncation=true、maximumNumberOfLines=1、lineBreakMode raw4(tail truncation)、textAlignment raw4(natural)、focusRingType raw1(none)。当前十一项全部按同顺序配置同一field；不顺带改变selectable、text/font或placeholder，不用NSButton/SwiftUI Text默认行为代替。原无条件配置，没有optional owner或状态过滤。",
+      "actual_consumer": "f23adf0仅首次native field创建时调用；真实TitleLabel后续再加headline/font/alpha/共享textColor，保原配置先于标题专有外观的顺序；Header和CmdR/标题点击进入同一字段。",
+      "limitations": "有限字段配置合同完整，不将platform textAlignment类别桥的执行器诊断、父view构造布局或运行视觉效果并算。未创建真实控件或运行编辑。"
+    }
+  ],
+  "excluded_failed_addresses": [ "0x100ac35f8", "0x100ac746c" ],
+  "verification_scope": "仅新增本报告。未修改产品源码、台账、历史或已有报告，没有编译、parse、运行产品、测试、MCP或发布，未读取指定失败函数。complete限源码方法静态合同，不是一比一功能验收或当前产物证明。"
+}

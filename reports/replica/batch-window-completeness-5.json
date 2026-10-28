@@ -1,0 +1,235 @@
+{
+  "kind": "batch-window-completeness-5",
+  "scope": "收口6个未覆盖的搜索/窗口UI历史方法相同候选，并复核1个近期坐标待证；共7项，不为凑数量扩查。",
+  "summary": {
+    "reviewed": 7,
+    "unchanged_method_candidates": 6,
+    "recent_uncertain_recheck": 1,
+    "complete": 5,
+    "gap": 0,
+    "uncertain": 2
+  },
+  "candidate_inventory": "reports/replica/batch-unchanged-method-candidates.json",
+  "candidate_policy": "identical_method_candidate仅历史文本一致筛选，不直接等价于原合同完整、消费者存在或当前编译有效。",
+  "resolved_previous_uncertain": [
+    "Paste:0x100043f0c"
+  ],
+  "definite_product_differences": [],
+  "remaining_evidence": [
+    "f30f3e0原静态六项表和Swift hasPrefix实际接收者/参数方向。",
+    "f2f5100原String append最后累加pair与返回寄存器，避免Ghidra原C失真。"
+  ],
+  "source_snapshot": "当前源码只读，无新编译；既有build32/84等历史结果不能当作当前Source构建证明。",
+  "original_machine_read": {
+    "artifact": ".local/paste-arm64-static.bin",
+    "range": "0x100043f0c..0x100043fa0",
+    "existing_escaped_word_machine": ".local/window-dev13-word-escape-arm64.txt"
+  },
+  "activities": {
+    "source_edited": false,
+    "ledger_edited": false,
+    "compiled": false,
+    "product_run": false,
+    "tests_run": false,
+    "wrapper_added": false
+  },
+  "skipped_failed_addresses": [
+    "Paste:0x100ac35f8",
+    "Paste:0x100ac746c"
+  ],
+  "functions": [
+    {
+      "function_id": "Paste:0x1003e2f54",
+      "mapping_state_at_review": "migrated",
+      "status": "complete",
+      "kind": "unchanged_method_candidate",
+      "original": {
+        "path": "decompiled/Paste/part-0309.c",
+        "line": 880
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaFilePreviewContent.swift",
+          "symbol": "func f_1003e2f54()"
+        }
+      ],
+      "evidence": "缓存命中同一NSImageView；未命中创建后center(raw0)/proportionallyDown(raw0)，取系统共享MultipleDocuments图，非nil才修改该共享图size160x160，再赋image/缓存并返回。未copy或强制nil失败。",
+      "actual_consumer": "ReplicaFilePreviewContent.init将multipleFilesView加到真实预览，update按单/多文件切换显示。",
+      "candidate_classifications": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaFilePreviewContent.swift",
+          "symbol": "func f_1003e2f54()",
+          "classification": "identical_method_candidate"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1002f51d0",
+      "mapping_state_at_review": "migrated",
+      "status": "complete",
+      "kind": "unchanged_method_candidate",
+      "original": {
+        "path": "decompiled/Paste/part-0244.c",
+        "line": 1107
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchSuggestions.swift",
+          "symbol": "f_1002f51d0"
+        }
+      ],
+      "evidence": "原先拒绝负maxSplits，按Character.isWhitespace扫描且返回Substring；maxSplits0/空串/是否省略空段/达到拆分上限后保剩余串均对应Swift String.split同参数合同。当前不把字符空白改为ASCII或UnicodeScalar分类。",
+      "actual_consumer": "f2f5588传默认Int.max/true，实际regex/provider查询链消费。",
+      "candidate_classifications": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchSuggestions.swift",
+          "symbol": "f_1002f51d0",
+          "classification": "identical_method_candidate"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1002f5588",
+      "mapping_state_at_review": "migrated",
+      "status": "complete",
+      "kind": "unchanged_method_candidate",
+      "original": {
+        "path": "decompiled/Paste/part-0244.c",
+        "line": 1297
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchSuggestions.swift",
+          "symbol": "f_1002f5588"
+        }
+      ],
+      "evidence": "原Int.max/true拆词，每词转String、NSRegularExpression escapedPattern，再前置反斜线b；空词集空数组。原C累加结果寄存器失真由已有ARM补足：2f568c存0x625c初始字，2f5698..56a0追加escapedString，2f56b4取累加pair、2f56d8写数组。",
+      "actual_consumer": "f2f5100与f2f5748真实调用；补充原证据.local/window-dev13-word-escape-arm64.txt。",
+      "candidate_classifications": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchSuggestions.swift",
+          "symbol": "f_1002f5588",
+          "classification": "identical_method_candidate"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1002f5748",
+      "mapping_state_at_review": "migrated",
+      "status": "complete",
+      "kind": "unchanged_method_candidate",
+      "original": {
+        "path": "decompiled/Paste/part-0244.c",
+        "line": 1362
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchSuggestions.swift",
+          "symbol": "f_1002f5748"
+        }
+      ],
+      "evidence": "每词pattern在target当前lowerBound..<endIndex以raw0x401(caseInsensitive|regularExpression)、locale nil搜索，保首match、lowerBound=match.upperBound；任一步失败清空返回[]，空query返回[]。当前保持Range<String.Index>，无模糊排序。",
+      "actual_consumer": "OriginalSuggestionAttributedTitle真实高亮与f2df190日期候选匹配使用。",
+      "candidate_classifications": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchSuggestions.swift",
+          "symbol": "f_1002f5748",
+          "classification": "identical_method_candidate"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x10030f3e0",
+      "mapping_state_at_review": "migrated",
+      "status": "uncertain",
+      "kind": "unchanged_method_candidate",
+      "original": {
+        "path": "decompiled/Paste/part-0253.c",
+        "line": 1781
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchSuggestions.swift",
+          "symbol": "f_10030f3e0"
+        }
+      ],
+      "evidence": "当前固定六项Unknown/Image/Color/File/Link/Text、空query原序、lowercased前缀过滤均明确。原C从DAT100fc1bf0静态数组取值，且String.hasPrefix隐式self寄存器恢复混淆；本批未独立重解静态表内容/原call ABI方向，不能凭历史方法文本未变与旧报告摘要自动判全输入域完整。",
+      "actual_consumer": "Provider.type默认真实采用此方法；未发现确定当前过滤错误。",
+      "candidate_classifications": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchSuggestions.swift",
+          "symbol": "f_10030f3e0",
+          "classification": "identical_method_candidate"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1002f5100",
+      "mapping_state_at_review": "migrated",
+      "status": "uncertain",
+      "kind": "unchanged_method_candidate",
+      "original": {
+        "path": "decompiled/Paste/part-0244.c",
+        "line": 1067
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchSuggestions.swift",
+          "symbol": "f_1002f5100"
+        }
+      ],
+      "evidence": "当前明确返回 .* + 有序escaped词以.*连接 + .*，空词集.*.*；原C含join和两次append，但输出String pair被误恢复为固定0x2a2e字面，本批尚未独立闭合最后append与返回寄存器，不以相同文本/旧构建冒当前完整证明。",
+      "actual_consumer": "ReplicaSearchSuggestionSource.swift:19实际给NSPredicate MATCHES[cd]输入该regex；不是无消费wrapper。",
+      "candidate_classifications": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchSuggestions.swift",
+          "symbol": "f_1002f5100",
+          "classification": "identical_method_candidate"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x100043f0c",
+      "mapping_state_at_review": "migrated",
+      "status": "complete",
+      "kind": "recheck",
+      "original": {
+        "path": "decompiled/Paste/part-0025.c",
+        "line": 795
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchTextView.swift",
+          "symbol": "f_100043f0c"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/SearchEditor.swift",
+          "symbol": "OriginalSearch"
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchAppearance.swift",
+          "symbol": "searchPlaceholder"
+        }
+      ],
+      "evidence": "解除上批坐标待证：原ARM43f40取首textContainerOrigin，43f44/-1与43f48仅使首d0(x)减1；第二getter43f50的d1(y)保存到v9，43f68/6c恢复x/y后setFrame43f70，再sizeToFit43f88。当前super.layout、两次origin读取、保原frame尺寸、x-1/y不减、sizeToFit完全对应。",
+      "actual_consumer": "OriginalSearchTextView.layout→f043fa0→f043f0c；该普通body无原显式Actor诊断，不把共享桥同时升级。",
+      "candidate_classifications": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchTextView.swift",
+          "symbol": "f_100043f0c",
+          "classification": "unchanged_file"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/SearchEditor.swift",
+          "symbol": "OriginalSearch",
+          "classification": "historical_snapshot_unavailable"
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchAppearance.swift",
+          "symbol": "searchPlaceholder",
+          "classification": "unchanged_file"
+        }
+      ]
+    }
+  ]
+}

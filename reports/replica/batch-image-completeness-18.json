@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "scope": "两个前轮未覆盖的已有文件/链接预览缓存及尺寸方法；以完整成功原C、必要ARM与实际消费者核对，不扩父生命周期。",
+  "counts": { "total": 2, "complete": 2, "gap": 0, "uncertain": 0 },
+  "records": [
+    {
+      "function_id": "Paste:0x1003e2f54",
+      "status": "complete",
+      "original": { "path": "decompiled/Paste/part-0309.c", "start_line": 880, "address_range": "0x1003e2f54..<0x1003e3034" },
+      "current_implementations": [ { "path": "replica/Sources/Pasto/UI/ReplicaFilePreviewContent.swift", "symbol": "private func f_1003e2f54() -> NSImageView" } ],
+      "criterion": "原lazy imageView非nil返回同对象且不重配，nil才创建NSImageView，设置imageAlignment raw0(center)、imageScaling raw0(scaleProportionallyDown)；按NSImageNameMultipleDocuments取共享image，存在时直接setSize160×160（0x4064000000000000），缺失时仍给view.image设nil；最后缓存view并返回。当前两个cache分支、原生属性、named image及optional尺寸副作用同原，不copy共享image、不在缺图时用SFsymbol或空图替换。",
+      "actual_consumer": "ReplicaFilePreviewContent.init真实遍历multipleFilesView和quickLookView加入view并设中心/160边界约束，getter初始化即被调用；后续update根据paths.count显示/隐藏同一缓存view，不生成第二个同名图层。",
+      "supporting_evidence": "reports/function-migration/Paste-0x1003e2f54.json保留原224字节完整body/两cache分支及历史构造调用证明；本轮重新读取原C和当前源码，没有把历史build78当当前源码产物证明。",
+      "limitations": "有限lazy getter完整，不升级整个文件视图布局、QuickLook生命周期、VM观察或原类ABI。未读取实际用户文件或调用系统图标API。"
+    },
+    {
+      "function_id": "Paste:0x1003e3eec",
+      "status": "complete",
+      "original": { "path": "decompiled/Paste/part-0309.c", "start_line": 1659, "address_range": "0x1003e3eec..<0x1003e3f58" },
+      "current_implementations": [
+        { "path": "replica/Sources/Pasto/UI/ReplicaFilePreviewContent.swift", "symbol": "var preferredPreviewSize: NSSize" },
+        { "path": "replica/Sources/Pasto/UI/ReplicaLinkPreviewContent.swift", "symbol": "var preferredPreviewSize: NSSize" }
+      ],
+      "criterion": "Ghidra C损失浮点返回，只显示mainScreen/frame及return0；本轮指定原ARM补证：3e3f14无屏跳3e3f40/44清d0/d1；有屏3e3f1c frame返回v2/v3尺寸保存v8/v9，3e3f30常量0.5，3e3f34/38分别乘宽高并返回d0/d1。当前file/link同NSScreen.main.frame.size各乘0.5，无屏zero，不用visibleFrame、不加screen origin/inset、不取ceil或设置最小值。两个消费复用同一原witness值方法，只记一地址。",
+      "actual_consumer": "OriginalReplicaPreviewAdapter.swift第27/32行分别在真实link/files factory读取preferredPreviewSize作为contentSize，第77行完整preview包装同样消费内容尺寸，不是未用默认值。",
+      "arm_evidence": { "binary": ".local/paste-arm64-static.bin", "range": "0x1003e3eec..<0x1003e3f58", "method": "只读llvm-objdump指定成功函数，未执行二进制" },
+      "limitations": "只确认首选尺寸值和无屏分支；窗口最终屏幕位置、限制和转场不在该方法合同，没有运行布局验证。"
+    }
+  ],
+  "excluded_failed_addresses": [ "0x100ac35f8", "0x100ac746c" ],
+  "verification_scope": "只新增本报告，没有产品源码、台账或旧报告修改；无编译、parse、运行应用、测试、MCP或发布，未读取两指定失败函数。complete仅表示有限源码合同，不是当前产物一致性或一比一功能验收。"
+}

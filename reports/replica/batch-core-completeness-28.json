@@ -1,0 +1,42 @@
+{
+  "review_kind": "read_only_local_create_or_update_repository_paths",
+  "counts": { "reviewed": 2, "complete": 0, "gap": 0, "uncertain": 2, "new_migrations_claimed": 0 },
+  "functions": [
+    {
+      "function_id": "Paste:0x1003611b0",
+      "status": "uncertain",
+      "original_path": "decompiled/Paste/part-0275.c",
+      "original_line": 367,
+      "current_paths": [
+        "replica/Sources/PastoCore/Pasteboard.swift",
+        "replica/Sources/PastoCore/ClipboardStore.swift"
+      ],
+      "current_symbol": "ClipboardMonitor.f_10037b034→captureWithInsertionResult→addWithInsertionResult",
+      "matching_control_flow": "原表示数组空时抛原错误case0；非空先f3214c8查找，nil走f360d9c新建，命中走f360ff8更新。当前monitor明确拒空；capture进入add锁内查重复，命中复用UUID并返回isNew=false，新建返回true；保存失败throw上游，不在失败后发布DidCreate。实际创建/复用路径存在。",
+      "unresolved": "当前将原单仓库动作分为monitor校验、采集payload投影与JSON/flock事务，f3214c8的原谓词查询范围等仍待证；原新建CoreData validation/device/context与当前生成ClipboardItem、预览/来源关系及软删除兼容的全体失败域未闭合。原方法接受任何非空表示数组，当前采集仍要求至少一项有Data；普通系统monitor两者都先过滤empty types，不能据此扩称任意直接仓库输入全等。",
+      "consumer": "原真实f37b034的repo witness链调用创建/复用仓库操作；当前timer采集→monitor→captureWithInsertionResult→addWithInsertionResult是实际生产调用，而preview编辑直接更新已有item属不同入口。",
+      "boundary": "不把原CoreData事务与JSON原子保存等同，不把当前安全兼容策略自动称原版差异bug；新增事务与通知不在本轮修改。"
+    },
+    {
+      "function_id": "Paste:0x100360ff8",
+      "status": "uncertain",
+      "original_path": "decompiled/Paste/part-0275.c",
+      "original_line": 313,
+      "current_paths": [
+        "replica/Sources/PastoCore/ClipboardStore.swift",
+        "replica/Sources/PastoCore/Pasteboard.swift"
+      ],
+      "current_symbol": "addWithInsertionResult的命中更新分支及updateTextPreviewItem/updateImagePreviewItem等编辑入口",
+      "matching_reviewed_value_path": "原重新分类并生成可选checksum，nil不写；非nil先setRawType/checksum，删除旧ItemDataEntity，创建新data、序列化原表示并setData，再生成/设置preview。当前正常命中路径重新投影kind、payload、preview，保既存UUID而不追加第二条；预览编辑入口也用新表示重分类，并非仅改显示文本。",
+      "unresolved": "原完整体涉及CoreData旧data物理删除、新实体创建/持有及f322504→f31ed94元数据回调；当前字段替换/JSON事务没有逐步相同实体生命周期。尤其原checksum=nil时完全不写的域，与当前允许结构比较回退后的替换条件未证明相同；当前还保OCR分析缓存、软删除/来源/时间与owner兼容，不能从普通payload相同推断整原方法副作用完整。",
+      "device_boundary": "本原体未直接setDevice，但下游metadata回调/上层capture事务仍未全闭；当前duplicate会写sourceDevice，不能仅凭这里缺直接setter就断言原设备关系不变或宣布已证bug。原新建f360d9c明确存在device设置，不能把新建分支泛化到复用分支。",
+      "consumer": "原f3611b0命中时及原编辑writer会实际进入本体；当前duplicate和preview编辑分别是实际消费者。已知unknown/归档checksum依赖缺口沿用第13批，不重复增加独立问题。"
+    }
+  ],
+  "limits": [
+    "只阅读成功原C和当前生产源码，新增本独立报告；未修改产品源码、台账或用户数据。",
+    "未编译、parse、运行应用、功能/MCP测试、验证脚本或发布；未核当前二进制。",
+    "本批0/2完整不是项目总迁移率；主智能体汇总总分母及跨批去重，新增迁移0。",
+    "指定失败地址0x100ac35f8、0x100ac746c跳过，未读取。"
+  ]
+}

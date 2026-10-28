@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "scope": "前轮未覆盖的工具栏下拉箭头状态及完整内容重建方法；只读成功原C、必要ARM和实际消费者，未证类别语义不猜。",
+  "counts": { "total": 3, "complete": 2, "gap": 0, "uncertain": 1 },
+  "records": [
+    {
+      "function_id": "Paste:0x10023d6e0",
+      "status": "complete",
+      "original": { "path": "decompiled/Paste/part-0195.c", "start_line": 1699, "address_range": "0x10023d6e0..<0x10023d720" },
+      "current_implementations": [ { "path": "replica/Sources/PastoCore/OriginalToolbarButton.swift", "start_line": 28, "end_line": 28, "symbol": "public var hasPullDownArrow" } ],
+      "criterion": "原只读取hasPullDownArrow Bool并返回，没有创建arrow或重建stack，没有推导menu是否存在。当前stored Bool getter完整保两值，无额外动作。",
+      "actual_consumer": "OriginalToolbarButton.f23ce40第136行实际判是否把既有pullDownArrowView加入stack；Adapter第372行对真实pin按钮设true以显示原生菜单箭头。",
+      "limitations": "只确认存储读取，原shared箭头图形和整内容构造不随之升级。"
+    },
+    {
+      "function_id": "Paste:0x10023d720",
+      "status": "complete",
+      "original": { "path": "decompiled/Paste/part-0195.c", "start_line": 1715, "address_range": "0x10023d720..<0x10023d734" },
+      "supporting_original": { "path": "decompiled/Paste/part-0195.c", "start_line": 1881, "address_range": "0x10023da1c..<0x10023da6c" },
+      "current_implementations": [ { "path": "replica/Sources/PastoCore/OriginalToolbarButton.swift", "start_line": 28, "end_line": 28, "symbol": "public var hasPullDownArrow = false { didSet { f_10023ce40() } }" } ],
+      "criterion": "原将输入Bool、arrow字段地址及f23ce40交共用setter，先存值后无条件调用内容重建，不比对旧值，同值也调用。当前didSet顺序和无条件触发一致；只确认该赋值/调用合同，内容重建自身待证分支见独立记录。",
+      "actual_consumer": "Adapter真实Header构造pin按钮后第372行赋true，此后f23ce40消费保存值；普通按钮初始false保无箭头。",
+      "limitations": "只核普通setter，不升级_modify协程异常路径、ObjC桥或整个菜单功能。"
+    },
+    {
+      "function_id": "Paste:0x10023ce40",
+      "status": "uncertain",
+      "original": { "path": "decompiled/Paste/part-0195.c", "start_line": 1304, "address_range": "0x10023ce40..<0x10023d164" },
+      "current_implementations": [ { "path": "replica/Sources/PastoCore/OriginalToolbarButton.swift", "start_line": 118, "end_line": 138, "symbol": "public func f_10023ce40()" } ],
+      "satisfied_business_contract": "symbol nil清image并removeFromSuperview；非nil先查symbol，首次成功必须再次请求同symbol并强制非nil，首次失败才单次取questionmark.square并强制非nil；normal.body/large.title2 SymbolConfiguration，配置结果optional直接给image，不加原无raw-image回退；然后添加同cached icon。非空super.title写同cached label并添加；arrow根据Bool添加或移除。实际顺序icon→label→arrow与当前一致。",
+      "criterion": "原成功体空title分支明确向平台label发送setText:nil，再removeFromSuperview；当前直接label.stringValue=空串，再移除。当前显示结果可能相同，但本批尚未闭合该原setText:类别对nil的完整存储/副作用合同，不能只因空文字不可见便认定整方法完整。其余图像分支由原ARM23cedc首次查找、23cef0第二次查找/23cef8trap、23cf2c失败进入fallback、23cf50 niltrap确认；原literal虚址100d8de40的19字节只读为questionmark.square。",
+      "actual_consumer": "OriginalToolbarButton构造、symbol和arrow didSet及title setter真实调用；Adapter第432行pinButton.symbol随实际owner状态变化，Header pin/share、图像旋转及文字格式按钮均显示此stack。",
+      "remaining_evidence": "下一步只需定位原label setText:类别的nil投影，若其只是将nil规范为空stringValue即可解除此项待证；不需运行UI或重写已满足的symbol逻辑。",
+      "limitations": "没有证实用户可见缺陷，故列uncertain而非gap；没有修改源码或使用历史migrated状态替代原类别证据。"
+    }
+  ],
+  "arm_evidence": { "binary": ".local/paste-arm64-static.bin", "range": "0x10023cebc..<0x10023cf80", "literal_address": "0x100d8de40", "literal_bytes": "questionmark.square", "method": "只读指定成功ARM和Mach-O段映射后的19字节字符串，不运行二进制" },
+  "excluded_failed_addresses": [ "0x100ac35f8", "0x100ac746c" ],
+  "verification_scope": "仅新增本独立报告；无产品源码、台账及旧报告修改，无编译、parse、运行应用、测试、MCP或发布，未读取两指定失败函数。complete为有限方法静态合同，不表示一比一运行验收。"
+}

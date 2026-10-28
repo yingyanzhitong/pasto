@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "scope": "前轮未覆盖的已有文本预览颜色属性计权与缺省判断三方法；原成功C和真实显示消费者只读核对，不扩张排序/主色选择父方法。",
+  "counts": { "total": 3, "complete": 3, "gap": 0, "uncertain": 0 },
+  "records": [
+    {
+      "function_id": "Paste:0x100200560",
+      "status": "complete",
+      "original": { "path": "decompiled/Paste/part-0169.c", "start_line": 596, "end_line": 631 },
+      "current_implementations": [ { "path": "replica/Sources/PastoCore/OriginalPreviewTextColors.swift", "start_line": 26, "end_line": 30, "symbol": "public static func f_100200560(_:range:counts:)" } ],
+      "criterion": "原先解包Any?，nil直接无操作，不检查负length；非nil才判断length<0失败，不触发后续桥接；length0不添加，正值按length次数桥接并addObject到NSCountedSet。当前guard value先于precondition(range.length>=0)，for每UTF16长度add同value，对零/负/nil保持相同分支次序；不按run数量计权，不检查range.location，不提前强转NSColor或过滤无效颜色对象。",
+      "actual_consumer": "同文件counts(_:key:)在真实NSAttributedString.enumerateAttribute回调经f2006b0调用；foreground/background统计供全文背景色恢复和compact文本footer背景推导使用。",
+      "limitations": "值为原Foundation可桥接Any；不声明对象桥接生成ABI或计数集合内部布局相同。未执行循环、对象桥接或测试。"
+    },
+    {
+      "function_id": "Paste:0x1002006b0",
+      "status": "complete",
+      "original": { "path": "decompiled/Paste/part-0169.c", "start_line": 676, "address_range": "0x1002006b0..<0x1002006b8" },
+      "current_implementations": [ { "path": "replica/Sources/PastoCore/OriginalPreviewTextColors.swift", "start_line": 32, "end_line": 34, "symbol": "public static func f_1002006b0(_:range:counts:)" } ],
+      "criterion": "完整成功原体仅转发f200560，当前传同optional value、原range与同计数集合，没有独立过滤、stop、归一化或额外计数。目标业务已在本批逐分支核清，不因wrapper新增函数或重复统计消费者。",
+      "actual_consumer": "counts(_:key:)第39行实际属性枚举回调调用，覆盖文本预览的前景和背景统计，不是未消费入口。",
+      "limitations": "只认定纯转发体，不升级原block桥、异步链或父主色算法。"
+    },
+    {
+      "function_id": "Paste:0x1001ffac0",
+      "status": "complete",
+      "original": { "path": "decompiled/Paste/part-0169.c", "start_line": 172, "address_range": "0x1001ffac0..<0x1001ffc58" },
+      "current_implementations": [ { "path": "replica/Sources/PastoCore/OriginalPreviewTextColors.swift", "start_line": 44, "end_line": 46, "symbol": "public static func f_1001ffac0(_ source: NSAttributedString) -> Bool" } ],
+      "criterion": "原仅枚举NSForegroundColorAttributeName，范围0至source.length、options0，使用f2006b0把所有非nil属性按UTF16长度加入计数集合，最后转数组判是否count0。当前同key/范围/options及回调，直接countedSet.count==0与该数组空判等价：空文/全无前景true，任意非nil前景对象false，即使对象不能转NSColor也不能视缺失。不要求全文所有字符覆盖，不把任一run颜色当整体值。合法NSAttributedString.length非负，原负length失败保护属于同Foundation值合同之外不可达输入，不增加截断/取绝对值。",
+      "actual_consumer": "OriginalPreviewTextColors.f3eb4a8第102行在富文本分支使用此结果，true才提供默认textColor，false保留原属性；Adapter.swift第232/272/327行真实初始化和模型重绘均消费该路径。",
+      "limitations": "只确认是否缺少前景属性的Bool方法，不升级dominant背景色排序或整个f3eb4a8；没有运行样本文本或UI。"
+    }
+  ],
+  "excluded_failed_addresses": [ "0x100ac35f8", "0x100ac746c" ],
+  "verification_scope": "本轮只新增本独立报告。产品源码、台账和旧报告未改；未编译、parse、运行应用、执行测试、MCP或发布，未读取两失败函数。complete只表示列明有限方法静态源码合同，不是当前产物或一比一功能验收。"
+}

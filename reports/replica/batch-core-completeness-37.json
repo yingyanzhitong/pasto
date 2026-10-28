@@ -1,0 +1,45 @@
+{
+  "review_kind": "read_only_attributes_codingkey_default_descriptions",
+  "counts": { "reviewed": 2, "complete": 0, "gap": 0, "uncertain": 2, "new_migrations_claimed": 0 },
+  "functions": [
+    {
+      "function_id": "Paste:0x100324558",
+      "status": "uncertain",
+      "original_path": "decompiled/Paste/part-0258.c",
+      "original_line": 2332,
+      "current_path": "replica/Sources/PastoCore/OriginalPinboardAttributes.swift",
+      "current_symbol": "Attributes.CodingKeys的默认CodingKey.debugDescription",
+      "matching_default": "原完整短体先解析f324964的CodingKey一致性，再调用Swift CodingKey默认debugDescription，无自有固定文本。当前Attributes采用标准派生CodingKeys，未自定义debugDescription或description，确实复用Swift协议默认实现，不需要手写formatter。",
+      "unresolved": "默认描述除stringValue还取Self显示名及intValue。三个stringValue已在第33批闭合，原leaf名本轮补证为CodingKeys；但本轮没有闭合此具体Attributes key的intValue witness及这两个描述方法在当前生产Foundation错误/日志路径中的实际调用。不能仅有Codable声明就把所有默认描述入口自动记完整。",
+      "boundary": "不是认定存在名字差异；当前源没有先前Shortcut顶层OriginalShortcutCodingKey那种明确leaf改名问题。未因为继承默认实现而捏造当前编译witness/入口地址。"
+    },
+    {
+      "function_id": "Paste:0x100324580",
+      "status": "uncertain",
+      "original_path": "decompiled/Paste/part-0258.c",
+      "original_line": 2346,
+      "current_path": "replica/Sources/PastoCore/OriginalPinboardAttributes.swift",
+      "current_symbol": "Attributes.CodingKeys的默认CodingKey.description",
+      "matching_default": "原完整体与上项同一致性解析，仅调用Swift CodingKey.description；当前也没有自定义描述。未把String(reflecting:metatype)的全模块名行为冒普通description，历史默认实现研究说明普通metatype显示使用leaf名，debugDescription又委托description。",
+      "unresolved": "同一具体intValue witness/实际描述消费路径未闭合，保留uncertain；不凭相同key名或猜协议slot签完整。Header/AppIntent的颜色消费证明的是属性编解码/值投影，不自动证明这些描述getter会执行。",
+      "boundary": "不推导当前用户会见到错误描述，也不把这项未知反向撤销已完整的Attributes编码、解码、字段字符串或f3245fc方法。"
+    }
+  ],
+  "new_bounded_type_name_evidence": {
+    "original_image": ".local/targets/Paste.arm64",
+    "metadata": "100ecaa88的首word0x201是enum元数据；+8 word0010000000cac2f0按既存64_OFFSET格式解到nominal descriptor100cac2f0。",
+    "descriptor": "descriptor名称relative字段100cac2f8内容fff94f50（signed -0x6b0b0），目标100c41248；xxd已读为CodingKeys。",
+    "limit": "只做上述有界槽/字符串静态读取，没有重跑整页fixup验证，也不声称当前编译nominal descriptor已读取。"
+  },
+  "reused_default_implementation_evidence": {
+    "review": ".local/pasteboard-next-coding-description-review.json",
+    "local_interface": "/Library/Developer/CommandLineTools/SDKs/MacOSX15.2.sdk/usr/lib/swift/Swift.swiftmodule/arm64e-apple-macos.swiftinterface:3745",
+    "finding": "本轮重读本机CodingKey继承CustomStringConvertible/CustomDebugStringConvertible并声明extension默认getters；接口无函数体。历史报告已记录pinned Swift Codable.swift/OutputStream.swift源码研究，这里复用而非重新访问网络或冒当前库二进制验证。"
+  },
+  "limits": [
+    "只新增本独立报告，未修改产品源码、台账或用户数据。",
+    "未编译、parse、运行应用、功能/MCP测试、验证脚本或发布；未核当前编译产物。",
+    "本批0/2完整不是项目总迁移率；主智能体汇总总分母及跨批去重，新增迁移0。",
+    "指定失败地址0x100ac35f8、0x100ac746c跳过，未读取。"
+  ]
+}

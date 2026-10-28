@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "scope": "两个前轮未覆盖的既有文本预览格式trait识别/选区聚合方法，成功原C、必要原ARM与生产消费者只读核对。",
+  "counts": { "total": 2, "complete": 2, "gap": 0, "uncertain": 0 },
+  "records": [
+    {
+      "function_id": "Paste:0x100207db8",
+      "status": "complete",
+      "original": { "path": "decompiled/Paste/part-0171.c", "start_line": 553, "address_range": "0x100207db8..<0x100208024" },
+      "current_implementations": [ { "path": "replica/Sources/PastoCore/OriginalPreviewTextTraits.swift", "start_line": 8, "end_line": 18, "symbol": "public static func f_100207db8(_ attributes: [NSAttributedString.Key: Any]) -> Set<Trait>" } ],
+      "criterion": "原空dictionary返回空Set。font存在且可转NSFont时按descriptor.symbolicTraits的bold位2/italic位1分别加入trait raw0/raw1；其它font类型不插入。underline/strike各自独立要求值可转Int且严格等1，不接受其它非零值，不以键存在判true；全部可同时出现。当前所有typed条件、键与raw映射同原。原C丢失underline插入参数，本轮原ARM207e84检查bit1→207e90 w1=0，207ebc检查bit0→207ec8 w1=1；207f54 cmp1→207f64 w1=2；207fe8 cmp1→207ff8 w1=3完整确认四项。原本体无executor检查。",
+      "actual_consumer": "OriginalPreviewTextTraits.f207b54在选区/typingAttributes两分支调用；f208024每run转换并集，f207648格式切换查询原trait。Bridge→Adapter.f2106d0实际更新四个原生格式按钮。",
+      "limitations": "只确认合法Foundation属性值的trait投影，不声明原Set桶、NSFont实现内部getter次数或生成ABI一致；未运行属性样本。"
+    },
+    {
+      "function_id": "Paste:0x100207b54",
+      "status": "complete",
+      "original": { "path": "decompiled/Paste/part-0171.c", "start_line": 462, "address_range": "0x100207b54..<0x100207db8" },
+      "current_implementations": [ { "path": "replica/Sources/PastoCore/OriginalPreviewTextTraits.swift", "start_line": 38, "end_line": 53, "symbol": "public static func f_100207b54(editor: NSTextView) -> Set<Trait>" } ],
+      "criterion": "原先读取selectedRange和真实attributedText；location<=content.length才执行location+length有符号溢出检查，end<=content.length且再读selectedRange.length非0才聚合。合法非空分支重新读content和selectedRange，以options0枚举该范围并把全部runs trait作并集返回，不只看首run；其余分支读取typingAttributes作单值投影，不返回空Set代替。当前分支顺序、Swift加法trap、边界等号、二次range/content读取、空选区回退及全run union均相同。原本体不内含MainActor诊断；被调原platform getter/枚举桥的独立待证不被此结论升级。",
+      "actual_consumer": "OriginalPreviewTextStorageBridge.f213fe8对真实typingAttributes KVO异步刷新调用本方法；f214704真实NSTextStorage编辑事件也调用，再通过onTraitsChange进入Adapter第239行document.applyRecoveredTraits及工具栏状态更新。",
+      "limitations": "有限选区值计算方法完整，原native editor生命周期、异步调度父与f208024执行器检查仍单独保边界。合法NSRange不作额外夹取；没有运行选区测试。"
+    }
+  ],
+  "arm_evidence": { "binary": ".local/paste-arm64-static.bin", "range": "0x100207db8..<0x100208024", "method": "只读llvm-objdump完整指定成功函数，核原C丢失的trait raw插入参数" },
+  "excluded_failed_addresses": [ "0x100ac35f8", "0x100ac746c" ],
+  "verification_scope": "仅新增本报告，没有产品源码、台账或旧报告修改，没有编译、parse、运行应用、测试、MCP或发布，未读取指定失败函数。complete限有限源码合同，不是当前产物证明或一比一功能验收。"
+}

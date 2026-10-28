@@ -1,0 +1,44 @@
+{
+  "kind": "batch-window-completeness-29",
+  "scope": "4个LayerBackedView窗口共用初始化体/桥，核默认色、父类构造参数与coder失败传播。",
+  "summary": {"reviewed": 4, "complete": 2, "gap": 0, "uncertain": 2},
+  "prior_inventory": "reports/replica/batch-completeness-round28.json",
+  "definite_product_differences": [],
+  "activities": {"product_source_edited": false, "ledger_edited": false, "compiled": false, "product_run": false, "tests_run": false, "wrapper_added": false},
+  "skipped_failed_addresses": ["Paste:0x100ac35f8", "Paste:0x100ac746c"],
+  "limitations": [
+    "完整仅为有限构造业务合同，不是当前构建或所有子类图层外观/窗口生命周期运行验收。",
+    "原Actor桥错误报告不因构造正常路径匹配判完整；不改变台账计数。",
+    "coder签名真实保留，但未发现日常生产UI显式解码调用，不虚构该分支已运行。"
+  ],
+  "functions": [
+    {
+      "function_id": "Paste:0x100235c68", "status": "complete",
+      "original": {"path": "decompiled/Paste/part-0192.c", "line": 1794},
+      "source_references": [{"path": "replica/Sources/PastoCore/OriginalLayerBackedView.swift", "symbol": "public override init(frame frameRect:"}],
+      "evidence": "原backgroundColor存储先nil，取LayerBackedView类元数据用于super.init(frame:)原样四分量传递，成功后wantsLayer=true并返回self。当前private storedBackgroundColor默认nil发生super之前，override原frame直传NSView，再仅写wantsLayer=true。额外f236364已读part-0192.c:2126，确只返回原类元数据0x100f96e28，不是漏掉业务初始化或日志；不提前设背景、border、frame或theme。",
+      "actual_consumer": "OriginalSearchField继承此类，其真实init(frame:)调用super；当前ColorPreview、LinkViewport、图像badge/checkerboard、ShortcutIndicator也实际继承该父初始化链。"
+    },
+    {
+      "function_id": "Paste:0x100235cec", "status": "uncertain",
+      "original": {"path": "decompiled/Paste/part-0192.c", "line": 1812},
+      "source_references": [{"path": "replica/Sources/PastoCore/OriginalLayerBackedView.swift", "symbol": "public override init(frame frameRect:"}],
+      "evidence": "原原生frame入口自身内联相同nil色→super(frame)→wantsLayertrue→return，当前正常路径同。但原先执行MainActor检查及PasteUI/LayerBackedView.swift行0xd错误报告，当前静态源码不能证明该显式错误路径，完整桥保待证。原C的pcVar4被同时误认super_class不能凭伪码变量名判断真实父类变更。",
+      "actual_consumer": "真实SearchField等NSView子类构造经过该原生父入口；没有新增旁路包装。"
+    },
+    {
+      "function_id": "Paste:0x100235ddc", "status": "complete",
+      "original": {"path": "decompiled/Paste/part-0192.c", "line": 1850},
+      "source_references": [{"path": "replica/Sources/PastoCore/OriginalLayerBackedView.swift", "symbol": "public required init?(coder:"}],
+      "evidence": "原先nil背景存储，再super.init(coder:)；父nil直接返回nil，只有非nil才wantsLayer=true，不创建替代view。当前required failable init先默认nil，再super(coder)，Swift父失败自然终止并传播nil，成功才执行wantsLayer；同一NSCoder原样传递，无额外decode、颜色或layout。普通body没有单独Actor诊断，桥另列。",
+      "actual_consumer": "OriginalLayerBackedView实际required NSCoding构造入口及其继承类存在；日常搜索视图走frame构造，本项不伪称生产主动解码。"
+    },
+    {
+      "function_id": "Paste:0x100235e60", "status": "uncertain",
+      "original": {"path": "decompiled/Paste/part-0192.c", "line": 1872},
+      "source_references": [{"path": "replica/Sources/PastoCore/OriginalLayerBackedView.swift", "symbol": "public required init?(coder:"}],
+      "evidence": "原原生coder桥内联nil色、super(coder)及成功才wantsLayertrue，当前正常状态和失败传播一致。原在此前还有Actor检查及固定文件行0x13错误报告，静态@MainActor声明不足以关闭该边界，完整原生桥保待证。",
+      "actual_consumer": "实际NSCoding入口保留，未创建假正常消费者，也不将原桥全体提升为普通构造body。"
+    }
+  ]
+}

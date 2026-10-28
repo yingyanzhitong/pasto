@@ -1,0 +1,70 @@
+{
+  "schema_version": 1,
+  "input_summary": "reports/replica/batch-completeness-round6.json",
+  "scope": "六个round6尚未覆盖的已有文件/链接预览与本地分享方法；只读有限源码合同核对。",
+  "counts": { "total": 6, "complete": 4, "gap": 0, "uncertain": 2 },
+  "records": [
+    {
+      "function_id": "Paste:0x1003e29b0",
+      "status": "complete",
+      "original": { "path": "decompiled/Paste/part-0309.c", "start_line": 587, "end_line": 616 },
+      "current_implementations": [ { "path": "replica/Sources/Pasto/UI/ReplicaFilePreviewContent.swift", "symbol": "metadataLabel configuration in init(state:item:) and metadataLabel.stringValue in update" } ],
+      "criterion": "原先设置给定文本，再numberOfLines0、f1fe19c动态secondary色、f1ff928 body字体；editable/selectable/bordered/drawsBackground均false，横向compression250。当前真实label同属性，update给定description及size格式的文本，不造payload回退。初始化与更新分离是本地组件复用，所列配置与文本写入合同满足。",
+      "actual_consumer": "Store.items观察更新ReplicaFilePreviewContent.update，metadataLabel在真实previewMetadataView的水平stack内显示。",
+      "limitations": "不升级完整footer构造器、路径/字节数格式父方法或VM生命周期。"
+    },
+    {
+      "function_id": "Paste:0x100320cc0",
+      "status": "complete",
+      "original": { "path": "decompiled/Paste/part-0257.c", "start_line": 4118, "address_range": "0x100320cc0..<0x100321210" },
+      "arm_evidence": ".local/window-dev17-share-gate-arm64.txt",
+      "current_implementations": [ { "path": "replica/Sources/PastoCore/OriginalPreviewSharing.swift", "symbol": "public static func f_100320cc0" } ],
+      "criterion": "原rawType1/2/4/5仅检查f3202f0原表示数组非空；unknown及非法type为false。files严格UTF8和URL(string:)提取有序有效URL，空为false，逐项isFileURL且checkResourceIsReachable为true才继续。原C删除的错误块在ARM3211e8释放error后321208返回false；当前try? reachability==true保错误false和短路。没有增加扩展名、可读性或联网判断。",
+      "actual_consumer": "OriginalReplicaPreviewAdapter的Header.items观察实际设置Share按钮isEnabled；输入由真实原表示和当前kind raw映射构造。",
+      "limitations": "只核可用性方法，不执行文件可达性或分享服务，也不升级其Content生成父链。"
+    },
+    {
+      "function_id": "Paste:0x1000183e0",
+      "status": "complete",
+      "original": { "path": "decompiled/Paste/part-0010.c", "start_line": 617, "address_range": "0x1000183e0..<0x1000185fc" },
+      "current_implementations": [ { "path": "replica/Sources/PastoCore/OriginalPreviewSharing.swift", "symbol": "public static func f_1000183e0" } ],
+      "criterion": "原逐输入Content调用f3202f0并按各返回数组顺序拼接，空输入或空表示仍创建NSSharingServicePicker(items:空数组)。当前flatMap保两个层级顺序、重复值和空值，再直接创建同原生picker，没有额外可用性过滤或网络任务。只确认picker的实际输入构造和原生创建合同，不宣称原包装对象存储槽相同。",
+      "actual_consumer": "OriginalReplicaPreviewAdapter.showSharingPicker真实保存picker并show(relativeTo:of:preferredEdge:)。",
+      "limitations": "没有实际弹出菜单或调用分享目标；系统服务、网络分享和原包装ABI不在此合同。"
+    },
+    {
+      "function_id": "Paste:0x1003189b0",
+      "status": "complete",
+      "original": { "path": "decompiled/Paste/part-0256.c", "start_line": 128, "address_range": "0x1003189b0..<0x100318d20" },
+      "arm_evidence": ".local/image-dev24-url-format-arm64.txt",
+      "supporting_evidence": ".local/image-dev24-layout-bindings.json",
+      "current_implementations": [ { "path": "replica/Sources/PastoCore/OriginalLinkDisplay.swift", "symbol": "public static func formattedURL" } ],
+      "criterion": "host缺省空，替换所有www.再拼接path；scheme可空，存在且不按Character序列以http起始才加scheme://；query存在且当前结果不以pasteapp.io起始才加?query，空query作为some仍保?。末尾按只包含斜杠的CharacterSet两端trim。原ARM scheme small-string为http，query前缀来自已绑定https://pasteapp.io.host，trim数组原值47，SDK进口确为URL.host/path/scheme/query及StringProtocol trimming。当前每个可选、前缀、替换及trim分支相同。",
+      "actual_consumer": "ReplicaLinkMetadataContent的真实URL label在linkPreviewsEnabled时调用formattedURL；关闭偏好时独立显示absoluteString，不把该上层分支混算进原formatter。",
+      "limitations": "只读本地字符串方法；不获取HTTP预览，不升级LinkItemCell布局、VM或Provider。"
+    },
+    {
+      "function_id": "Paste:0x1003e3960",
+      "status": "uncertain",
+      "original": { "path": "decompiled/Paste/part-0309.c", "start_line": 1346, "end_line": 1375 },
+      "current_implementations": [ { "path": "replica/Sources/Pasto/UI/ReplicaFilePreviewContent.swift", "symbol": "ReplicaFileQuickLookView.acceptsFirstResponder" } ],
+      "criterion": "原正常路径固定返回false，不读QL item、不调super；当前真实QLPreviewView子类override固定false，业务值满足。",
+      "unresolved": "原入口本体显式检查MainActor执行器并调用固定文件/行号unexpectedExecutor报告；当前只凭类隔离与override声明无法在禁止编译的本轮证明其完整错误诊断分支同构，因此不把固定Bool值等同整个原入口已独立证明。",
+      "actual_consumer": "ReplicaFilePreviewContent.quickLookView是真实该子类，供系统首响应者判断。",
+      "limitations": "未发现确定的用户可见焦点缺陷；本记录不改既有台账状态。"
+    },
+    {
+      "function_id": "Paste:0x1003e3638",
+      "status": "uncertain",
+      "original": { "path": "decompiled/Paste/part-0309.c", "start_line": 1184, "end_line": 1245 },
+      "current_implementations": [ { "path": "replica/Sources/Pasto/UI/ReplicaFilePreviewContent.swift", "symbol": "ReplicaFilePreviewItem.init(path:title:)" } ],
+      "criterion": "当前fileURL为非可选存储，URL(fileURLWithPath:)构造后QL协议可选投影；title保nil与空串区别，super.init。原读取VM可选title后构造同非可选URL并存值，正常构造值合同一致。",
+      "unresolved": "原整个f3e3638还包含MainActor执行器检查/固定unexpectedExecutor报告和VM标题getter调用；当前调用方传originalTitle，方法参数/调用语义已核，但本轮没有全部原诊断同构证据，不能只凭有限值构造升级整函数。",
+      "actual_consumer": "installPreviewItemIfNeeded从canonical首路径和当前originalTitle构造实际QLPreviewItem并赋给quickLookView。",
+      "limitations": "原非可选URL/optional title正常业务已满足，不声称有已证数据缺陷，也不修改产品源码或迁移状态。"
+    }
+  ],
+  "actions": { "product_source_modified": false, "ledger_modified": false, "compiled": false, "parsed": false, "tests_executed": false, "product_executed": false, "mcp_executed": false, "new_disassembly_executed": false },
+  "skipped_failed_addresses": [ "0x100ac35f8", "0x100ac746c" ],
+  "limitations": [ "完整只限相应有限业务方法；不代表整个本地预览或应用一比一验收。", "待证是本轮完整入口证据不足，不等于已证明代码错误，不自动修改function-map。", "未修改round6、旧审阅报告或历史构建摘要，未生成当前编译产物。" ]
+}

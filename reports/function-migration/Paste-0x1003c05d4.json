@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "kind": "static_code_migration",
+  "function_id": "Paste:0x1003c05d4",
+  "implementation_origin": "existing_extended",
+  "original_pseudocode": "decompiled/Paste/part-0297.c:478..683",
+  "source": "replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift",
+  "symbols": ["ReplicaInlineTextPreviewContent.init", "attributedContent", "replaceModelAndDisplay"],
+  "reused_helpers": ["OriginalPasteboardItem.f_10037d33c", "OriginalPreviewAttributedText.normalizedEditingText"],
+  "branch_review": [
+    "Read full original representations, not only top-level legacy payload fields",
+    "Use first representation only, including when it has no usable text",
+    "Try flatRTFD, rtfd and rtf with existing rich decoder; remove paragraph table blocks",
+    "If rich text fails, use same-item plain text; missing or empty representation array yields empty attributed string",
+    "Preserve original attributed text separately from normalized editing text",
+    "Both init and reload feed the actual text display, size calculation and editing paths"
+  ],
+  "build_executed": false,
+  "tests_executed": false,
+  "equivalence_verified": false,
+  "limitations": "Source-level data flow only; original CoreData/VM object layout and compiled ABI are not claimed identical."
+}

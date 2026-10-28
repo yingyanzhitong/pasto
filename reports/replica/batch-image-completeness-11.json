@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "scope": "已有完整预览窗口登记/关闭链五个方法，前轮图像批次未覆盖；成功原C与生产消费者只读比对。",
+  "counts": { "total": 5, "complete": 2, "gap": 0, "uncertain": 3 },
+  "records": [
+    {
+      "function_id": "Paste:0x100087864",
+      "status": "complete",
+      "original": { "path": "decompiled/Paste/part-0045.c", "start_line": 603, "address_range": "0x100087864..<0x1000879dc" },
+      "current_implementations": [ { "path": "replica/Sources/PastoCore/OriginalPreviewWindows.swift", "start_line": 103, "end_line": 109, "symbol": "public func f_100087864()" } ],
+      "criterion": "entries非空取最后项identifier与editing并写Published；entries空但popover identifier存在则发布(identifier,false)，两者空发布nil。每次调用均写Published，不额外去重或先比较旧值；detached条目优先，不把popover当最后窗口。当前三个互斥分支与发布顺序一致，原本体无额外executor检查。",
+      "actual_consumer": "UIController第902行注册真实预览窗口后，Registry.f086c10第92行调用；编辑状态变化f08727c及关闭移除f0879dc也真实调用。OriginalPreviewPopover显示/关闭同时维护popover标识并调用本方法。",
+      "limitations": "这里只确认Published状态计算/写入。当前没有已接入的topmost订阅业务，不能据此宣称原所有topmost下游功能完成；模型身份仍为独立本地UUID适配。"
+    },
+    {
+      "function_id": "Paste:0x10008771c",
+      "status": "complete",
+      "original": { "path": "decompiled/Paste/part-0045.c", "start_line": 527, "address_range": "0x10008771c..<0x1000877a4" },
+      "current_implementations": [ { "path": "replica/Sources/PastoCore/OriginalPreviewWindows.swift", "start_line": 125, "end_line": 126, "symbol": "deinit" } ],
+      "criterion": "原从default NotificationCenter对self调用removeObserver，随后super dealloc；当前Swift deinit同样先移除self所有selector观察，语言负责其余NSObject析构。没有只移除某一窗口、额外关闭窗口或执行用户回调。原字段释放属于相邻cxx_destruct，不混入此有限销毁方法。",
+      "actual_consumer": "UIController第436行真实持有Registry；Registry第90行注册各实际窗口willClose selector，故该deinit对应真实观察者生命周期，不是未消费辅助类。",
+      "limitations": "本轮不销毁实际对象或验证通知线程，只确认源码销毁副作用与顺序。"
+    },
+    {
+      "function_id": "Paste:0x10008727c",
+      "status": "uncertain",
+      "original": { "path": "decompiled/Paste/part-0045.c", "start_line": 273, "address_range": "0x10008727c..<0x10008747c" },
+      "current_implementations": [ { "path": "replica/Sources/PastoCore/OriginalPreviewWindows.swift", "start_line": 96, "end_line": 100, "symbol": "public func f_10008727c(isEditing:itemIdentifier:)" } ],
+      "satisfied_business_contract": "原倒序扫描找到最后一个相等String identifier；空/无匹配无操作，匹配仅写该项editing；只有该项原本就是entries末项才发布topmost，不移动窗口顺序。当前lastIndex、赋值及index==count-1完整对应。",
+      "criterion": "原扫描过程中明确获取MainActor executor并对非当前executor调用reportUnexpectedExecutor，源码当前仅class @MainActor，未读取当前生成入口证明同一诊断分支。因此正常值及更新时序满足，但整入口仍待证，不把正常业务相同冒充所有返回/诊断路径完成。",
+      "actual_consumer": "UIController第895行真实preview.onEditingStateChanged调用；Popover.f029a80创建的preview.onEditingStateChanged也实际调用本方法。",
+      "limitations": "没有编译或运行来补executor证据，未升级台账。"
+    },
+    {
+      "function_id": "Paste:0x1000879dc",
+      "status": "uncertain",
+      "original": { "path": "decompiled/Paste/part-0045.c", "start_line": 670, "address_range": "0x1000879dc..<0x100087d3c" },
+      "current_implementations": [ { "path": "replica/Sources/PastoCore/OriginalPreviewWindows.swift", "start_line": 112, "end_line": 117, "symbol": "public func f_1000879dc(window:)" } ],
+      "satisfied_business_contract": "原稳定删除所有NSObject相等窗口，不只首个；保留其余顺序，随后无条件更新Published topmost。只有删除前entries非空且删除后空才调用可选onAllPreviewsClosed；即使popover仍存在也不屏蔽回调，无匹配且原空不回调。当前previousCount/removeAll(isEqual)/publish/条件回调同序。",
+      "criterion": "原removeAll谓词在每次NSObject相等判定前包含MainActor executor诊断，当前class @MainActor源码不足以证明生成分支完全一致；正常业务完成，整个原入口执行器失败分支保留待证。原数组容量/拷贝/交换细节不当成用户业务差异。",
+      "actual_consumer": "Registry实际注册的handleWindowWillClose从NSWindow.willCloseNotification提取真实OriginalPreviewWindow后第122行调用本方法，关闭链不是孤立方法。",
+      "limitations": "onAllPreviewsClosed当前没有赋值消费者，故确认的是可选回调调用规则，不声称原外部全部关闭行为已接入。"
+    },
+    {
+      "function_id": "Paste:0x100087d3c",
+      "status": "uncertain",
+      "original": { "path": "decompiled/Paste/part-0045.c", "start_line": 843, "address_range": "0x100087d3c..<0x100087ef0" },
+      "current_implementations": [ { "path": "replica/Sources/PastoCore/OriginalPreviewWindows.swift", "start_line": 120, "end_line": 123, "symbol": "@objc private func handleWindowWillClose(_ notification: Notification)" } ],
+      "satisfied_business_contract": "原Notification.object不存在无操作，存在但无法条件转具体ItemPreviewWindow类型同样无操作；符合类型仅调用f0879dc。当前as? OriginalPreviewWindow guard实现独立对应具体类型，不把任意NSWindow移除，不额外关闭通知对象。",
+      "criterion": "原ObjC入口先执行MainActor executor检查并桥接NSNotification；当前@objc/@MainActor实际生成桥的诊断细节本轮无产物证据，故不以Swift源码存在自动认定整个原ObjC入口完成。",
+      "actual_consumer": "Registry.f086c10在第90..91行以本selector真实注册default NSWindow.willCloseNotification且object为登记窗口；进入后第122行移除该窗口记录。",
+      "limitations": "仅正常通知分类/调用已满足；无通知注入、应用运行或实际关闭测试。"
+    }
+  ],
+  "excluded_failed_addresses": [ "0x100ac35f8", "0x100ac746c" ],
+  "verification_scope": "只读成功原伪码与生产源码并新增本报告；未修改产品、台账或旧报告，未编译、parse、运行、测试、MCP或发布，未研究指定失败地址。complete为列明有限方法的静态结论，不代表一比一功能验收。"
+}

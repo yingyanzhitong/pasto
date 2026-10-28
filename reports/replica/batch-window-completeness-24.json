@@ -1,0 +1,57 @@
+{
+  "kind": "batch-window-completeness-24",
+  "scope": "复核4个既有待证搜索按钮/图像/动画方法，补原常量及真实生产域证据。",
+  "summary": {"reviewed": 4, "complete": 3, "gap": 0, "uncertain": 1, "resolved_previous_uncertain": 3},
+  "prior_inventory": "reports/replica/batch-completeness-round23.json",
+  "resolved_previous_uncertain": ["Paste:0x1000457cc", "Paste:0x10004212c", "Paste:0x100045d40"],
+  "definite_product_differences": [],
+  "activities": {"product_source_edited": false, "ledger_edited": false, "compiled": false, "product_run": false, "tests_run": false, "wrapper_added": false},
+  "skipped_failed_addresses": ["Paste:0x100ac35f8", "Paste:0x100ac746c"],
+  "limitations": [
+    "complete仅是列明有限静态业务合同，不是当前编译或符号图像/动画运行验收，不修改台账计数。",
+    "原MachO大String按已核DYLD_CHAINED_PTR_64_OFFSET格式6读取槽；内联small String按原长度解字节，未靠函数名字猜常量。",
+    "独立Swift静态存储不承诺与原物理地址相同；本地化bundle完整fallback仍保待证。"
+  ],
+  "original_constants": [
+    {"accessor": "0x10020db28", "raw12": "a065009000001991c0035fd6", "slot": "0x100ec1640", "slot_raw16": "11000000000000d0d0e5d90000082000", "utf8": "0x100d9e5f0", "value": "xmark.circle.fill"},
+    {"accessor": "0x10020d45c", "raw12": "4051009000003a91c0035fd6", "slot": "0x100c35e80", "slot_raw16": "6d61676e696679696e67676c617373ef", "value": "magnifyingglass"},
+    {"accessor": "0x10020d37c", "raw12": "a065009000401591c0035fd6", "slot": "0x100ec1550", "slot_raw16": "1a000000000000d040e4d90000082000", "utf8": "0x100d9e460", "value": "line.3.horizontal.decrease"},
+    {"utf8": "0x100d8de40", "length": 19, "value": "questionmark.square"},
+    {"instructions": "0x10004585c..0x100045874", "word0": "0x726f66736e617274", "word1": "0xe90000000000006d", "value": "transform"},
+    {"instructions": "0x100045bb4..0x100045bd4", "word0": "0x42737265746c6966", "word1": "0xed000065636e756f", "value": "filtersBounce"}
+  ],
+  "functions": [
+    {
+      "function_id": "Paste:0x1000457cc", "status": "complete",
+      "previous_review": "reports/replica/batch-window-completeness-11.json",
+      "original": {"path": "decompiled/Paste/part-0025.c", "line": 1916},
+      "source_references": [{"path": "replica/Sources/PastoCore/OriginalSearchFieldAnimation.swift", "symbol": "f_1000457cc"}],
+      "evidence": "上批已核layer nil无动作、两次anchor/bounds、中心translation→scale→反translation四组、scale1/1.16/.98/1、keyTimes0/.35/.7/1、cubic/.28及真实调用，仅原两个String常量未闭。本批完整原ARM在585c..5874拼transform，5bb4..5bd4拼filtersBounce，随即传动画工厂和addAnimation。原5b98..5ba8 duration位型0x3fd1eb851eb851ec，5978..5988和59e4..59f4两scale位型也与当前字面值相同，关闭常量待证。原C声明return0不作为原无观察者的机器返回寄存器证明，有限公开消费为动画副作用。",
+      "actual_consumer": "FilterBrowser.showFilterBrowser呈现后及onWillClose实际调用；不是只定义NSMenuDelegate但未接。"
+    },
+    {
+      "function_id": "Paste:0x10004212c", "status": "complete",
+      "previous_review": "reports/replica/batch-window-completeness-8.json",
+      "original": {"path": "decompiled/Paste/part-0024.c", "line": 1162},
+      "source_references": [{"path": "replica/Sources/PastoCore/OriginalSearchInputView.swift", "symbol": "f_10004212c"}],
+      "evidence": "关闭前次唯一常量待证：原f20db28实际指向槽100ec1640，format6重定位后的UTF8明确xmark.circle.fill；后备100d8de40明确questionmark.square。原探测、成功再次加载/强非nil、失败后备强非nil及image/action/refusesFirstResponder/bordered顺序与当前相同。原target来自weak上下文，当前NSButton.target本身非持有self；真实唯一生产者f042090在存活owner方法内同步构造并配置，未扩成任意弱owner注入API完全同构。",
+      "actual_consumer": "InputView.f042090首次创建按钮立即配置，action clear进入实际同步清除回调。"
+    },
+    {
+      "function_id": "Paste:0x100045d40", "status": "complete",
+      "previous_review": "reports/replica/batch-window-completeness-9.json",
+      "original": {"path": "decompiled/Paste/part-0025.c", "line": 2078},
+      "source_references": [{"path": "replica/Sources/PastoCore/OriginalSearchField.swift", "symbol": "f_100045d40"}],
+      "evidence": "原f20d45c不是根据邻接访问器推断，本批解其ADRP/ADD真实目标100c35e80及small String完整15字节，值magnifyingglass。当前缓存命中同对象，首次OS26 body/旧title2配置、探测重载/后备、withSymbolConfiguration nil保原图、创建NSImageView并存缓存，与原C/f20dce0流程一致；未将symbol缺失错误改为静默空图。",
+      "actual_consumer": "SearchField构造及约束getter取此图标并加入真实搜索视图。"
+    },
+    {
+      "function_id": "Paste:0x100045edc", "status": "uncertain",
+      "previous_review": "reports/replica/batch-window-completeness-23.json",
+      "original": {"path": "decompiled/Paste/part-0025.c", "line": 2154},
+      "source_references": [{"path": "replica/Sources/PastoCore/OriginalSearchField.swift", "symbol": "f_100045edc"}],
+      "evidence": "本批新增解出f20d37c槽实际line.3.horizontal.decrease和同一questionmark.square后备，消除此常量未知。配置顺序、弱target生产域、CmdF当前布局显示和括号拼接已核。仍未证明当前17值字典Locale选择与原LocalizedStringResource/bundle在用户语言覆盖及缺资源fallback全域相同，因此只更新待证范围，不升完整。",
+      "actual_consumer": "真实f045730构造的filtersButton进入SearchField，SearchEditor.onShowFilters消费其点击。"
+    }
+  ]
+}

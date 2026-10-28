@@ -1,0 +1,294 @@
+{
+  "kind": "batch-window-completeness-7",
+  "scope": "只读核对预览窗口/registry与搜索输入惰性缓存、clear动画回调，共13项；有限业务合同与Actor/闭包错误边界分别记录。",
+  "summary": {
+    "reviewed": 13,
+    "complete": 10,
+    "gap": 0,
+    "uncertain": 3,
+    "new_to_round6": 13
+  },
+  "prior_inventory": "reports/replica/batch-completeness-round6.json",
+  "definite_product_differences": [],
+  "limitations": [
+    "complete仅表示列明有限静态合同可复用，不是当前源码编译、运行或功能验收。",
+    "三项uncertain保留原Actor诊断或闭包错误边界；未修改台账状态或完整迁移计数。",
+    "未将私有类型布局、CoreData对象身份适配、callee完整父和生成ABI自动视为已闭合。"
+  ],
+  "activities": {
+    "product_source_edited": false,
+    "ledger_edited": false,
+    "compiled": false,
+    "product_run": false,
+    "tests_run": false,
+    "wrapper_added": false
+  },
+  "skipped_failed_addresses": [
+    "Paste:0x100ac35f8",
+    "Paste:0x100ac746c"
+  ],
+  "functions": [
+    {
+      "function_id": "Paste:0x100087ef0",
+      "status": "complete",
+      "mapping_state_at_review": "migrated",
+      "included_in_round6": false,
+      "original": {
+        "path": "decompiled/Paste/part-0045.c",
+        "line": 919
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPreviewWindows.swift",
+          "symbol": "OriginalPreviewWindowRegistry"
+        }
+      ],
+      "evidence": "entries空、popover标识nil、Published topmost nil、关闭回调nil，随后NSObject.init；当前属性初始化和super顺序保留。",
+      "actual_consumer": "UIController持有OriginalPreviewWindowRegistry()，showPreview注册/查找窗口并发布状态。"
+    },
+    {
+      "function_id": "Paste:0x100087ffc",
+      "status": "complete",
+      "mapping_state_at_review": "migrated",
+      "included_in_round6": false,
+      "original": {
+        "path": "decompiled/Paste/part-0045.c",
+        "line": 960
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPreviewWindows.swift",
+          "symbol": "public override init() { super.init() }"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "OriginalPreviewWindowRegistry()"
+        }
+      ],
+      "evidence": "原ObjC init仅转交f087ef0并返回self；当前override init连同保存属性初始化恢复该薄入口的业务合同，不将其它ObjC Actor桥并入。",
+      "actual_consumer": "UIController的OriginalPreviewWindowRegistry()构造真实消费。"
+    },
+    {
+      "function_id": "Paste:0x10008771c",
+      "status": "complete",
+      "mapping_state_at_review": "migrated",
+      "included_in_round6": false,
+      "original": {
+        "path": "decompiled/Paste/part-0045.c",
+        "line": 527
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPreviewWindows.swift",
+          "symbol": "deinit"
+        }
+      ],
+      "evidence": "销毁前NotificationCenter.default.removeObserver(self)，随后NSObject销毁；当前deinit完全保留selector观察清理，不按窗口擅自缩减移除范围。",
+      "actual_consumer": "registry.f086c10安装willClose selector观察，registry deinit负责清理。"
+    },
+    {
+      "function_id": "Paste:0x100087d3c",
+      "status": "uncertain",
+      "mapping_state_at_review": "migrated",
+      "included_in_round6": false,
+      "original": {
+        "path": "decompiled/Paste/part-0045.c",
+        "line": 843
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPreviewWindows.swift",
+          "symbol": "handleWindowWillClose"
+        }
+      ],
+      "evidence": "原Notification.object缺失或非OriginalItemPreviewWindow时无动作，转换成功调用f0879dc；当前guard和调用一致。但原显式MainActor executor检查及unexpectedExecutor文件/行诊断未由当前静态源码独立证明，不以@MainActor声明替代。",
+      "actual_consumer": "registry.f086c10安装handleWindowWillClose selector，真实NSWindow.willCloseNotification进入本方法。"
+    },
+    {
+      "function_id": "Paste:0x1000af8a0",
+      "status": "complete",
+      "mapping_state_at_review": "migrated",
+      "included_in_round6": false,
+      "original": {
+        "path": "decompiled/Paste/part-0058.c",
+        "line": 198
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPreviewWindows.swift",
+          "symbol": "OriginalPreviewWindow"
+        }
+      ],
+      "evidence": "NSPanel零rect/style0x801b/buffered/defertrue；animation.none，分别两次读取首个兄弟visualEffect设置behindWindow与popover，按mini/close/zoom顺序隐藏按钮，透明标题栏、背景拖动、hidesOnDeactivate=false、level3均保留。只核本普通构造体，不包含另一个ObjC init桥。",
+      "actual_consumer": "UIController.showPreview构造OriginalPreviewWindow并设置真实内容、注册后显示。"
+    },
+    {
+      "function_id": "Paste:0x1000afaa8",
+      "status": "uncertain",
+      "mapping_state_at_review": "migrated",
+      "included_in_round6": false,
+      "original": {
+        "path": "decompiled/Paste/part-0058.c",
+        "line": 276
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPreviewWindows.swift",
+          "symbol": "becomeKey"
+        }
+      ],
+      "evidence": "原先NSApp.activateIgnoringOtherApps(true)再super.becomeKeyWindow；当前顺序相同，NSApp缺失仍不可继续。原显式Actor executor诊断未独立闭合，故完整函数保待证。",
+      "actual_consumer": "OriginalPreviewWindow被showPreview显示，系统key-window转换调用该override。"
+    },
+    {
+      "function_id": "Paste:0x100236e48",
+      "status": "uncertain",
+      "mapping_state_at_review": "migrated",
+      "included_in_round6": false,
+      "original": {
+        "path": "decompiled/Paste/part-0193.c",
+        "line": 368
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaCopiedOSD.swift",
+          "symbol": "NSAnimationContext.runAnimationGroup"
+        }
+      ],
+      "evidence": "真实OSD倒计时进入0.5秒easeOut fade：animator.alpha=0，completion再orderOut(nil)。正常消费保留；原Actor诊断、escaping closure错误分支未证明，原动画descriptor字节经通用helper解释尚未在本批闭合，不能据字节猜当前allowsImplicitAnimation有确定差异。",
+      "actual_consumer": "ReplicaCopiedOSD显示后asyncAfter实际调用NSAnimationContext.runAnimationGroup，非未接入包装。"
+    },
+    {
+      "function_id": "Paste:0x100041f9c",
+      "status": "complete",
+      "mapping_state_at_review": "migrated",
+      "included_in_round6": false,
+      "original": {
+        "path": "decompiled/Paste/part-0024.c",
+        "line": 1077
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchInputView.swift",
+          "symbol": "f_100041f9c"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/SearchEditor.swift",
+          "symbol": "ReplicaSearchEditor"
+        }
+      ],
+      "evidence": "缓存存在返回同对象；nil才usingTextLayoutManager=true构造、保存、返回。实际UI工厂覆盖makeTextView返回SearchTextView派生类，保原专用TextView业务与生产回调适配，不声称私有类布局/生成ABI同构。",
+      "actual_consumer": "SearchEditor.InputView继承OriginalSearchInputView并覆盖makeTextView；初始化、scroller与文本更新均调用该getter。"
+    },
+    {
+      "function_id": "Paste:0x10004200c",
+      "status": "complete",
+      "mapping_state_at_review": "migrated",
+      "included_in_round6": false,
+      "original": {
+        "path": "decompiled/Paste/part-0024.c",
+        "line": 1103
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchInputView.swift",
+          "symbol": "f_10004200c"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/SearchEditor.swift",
+          "symbol": "ReplicaSearchEditor"
+        }
+      ],
+      "evidence": "缓存存在直接返回；否则先获取同一惰性TextView，创建OriginalSearchTextScroller、保存返回，没有重复构造或换TextView。callee构造父边界不在本项扩张。",
+      "actual_consumer": "OriginalSearchInputView.init及约束组实际使用此scroller。"
+    },
+    {
+      "function_id": "Paste:0x100042090",
+      "status": "complete",
+      "mapping_state_at_review": "migrated",
+      "included_in_round6": false,
+      "original": {
+        "path": "decompiled/Paste/part-0024.c",
+        "line": 1132
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchInputView.swift",
+          "symbol": "f_100042090"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/SearchEditor.swift",
+          "symbol": "ReplicaSearchEditor"
+        }
+      ],
+      "evidence": "缓存存在返回；nil则NSButton初始化、f04212c配置、保存返回；配置回调由真实callee承接，不把getter冒充整个target/action父。",
+      "actual_consumer": "InputView.init/约束/clear显隐动画实际共用该getter。"
+    },
+    {
+      "function_id": "Paste:0x100042d64",
+      "status": "complete",
+      "mapping_state_at_review": "migrated",
+      "included_in_round6": false,
+      "original": {
+        "path": "decompiled/Paste/part-0025.c",
+        "line": 4
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchInputView.swift",
+          "symbol": "f_100042d64"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/SearchEditor.swift",
+          "symbol": "ReplicaSearchEditor"
+        }
+      ],
+      "evidence": "读取惰性clear按钮，取animator设置alpha=1，各路径返回0。当前方法输入输出与副作用相同。",
+      "actual_consumer": "f042b50显现分支的OriginalViewAnimation闭包实际调用f042d64。"
+    },
+    {
+      "function_id": "Paste:0x100042db0",
+      "status": "complete",
+      "mapping_state_at_review": "migrated",
+      "included_in_round6": false,
+      "original": {
+        "path": "decompiled/Paste/part-0025.c",
+        "line": 23
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchInputView.swift",
+          "symbol": "f_100042db0"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/SearchEditor.swift",
+          "symbol": "ReplicaSearchEditor"
+        }
+      ],
+      "evidence": "读取惰性clear按钮，取animator设置alpha=0，各路径返回0；未擅自隐藏按钮或改变visible状态。",
+      "actual_consumer": "f042b50隐藏分支动画实际调用f042db0，隐藏由独立completion执行。"
+    },
+    {
+      "function_id": "Paste:0x100042dfc",
+      "status": "complete",
+      "mapping_state_at_review": "migrated",
+      "included_in_round6": false,
+      "original": {
+        "path": "decompiled/Paste/part-0025.c",
+        "line": 42
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchInputView.swift",
+          "symbol": "f_100042dfc"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/SearchEditor.swift",
+          "symbol": "ReplicaSearchEditor"
+        }
+      ],
+      "evidence": "原weakLoad owner，nil无动作；存在且isClearButtonVisible=false才读取按钮并hidden=true；其它路径无动作，均返回0。当前静态optional方法与真实调用闭包[weak self]一起保留弱读取生命周期，不能只按强optional形参判断。",
+      "actual_consumer": "f042b50隐藏动画completion以[weak self]调用Self.f042dfc(self)，重新变可见时不误隐藏。"
+    }
+  ]
+}

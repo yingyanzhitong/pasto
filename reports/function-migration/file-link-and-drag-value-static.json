@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "kind": "static_code_migration",
+  "functions": [
+    {
+      "function_id": "Paste:0x1003bc874",
+      "original": "decompiled/Paste/part-0295.c:1227",
+      "source": "replica/Sources/PastoCore/OriginalFilePreviewActions.swift",
+      "contract": "Decode ordered fileURL representations, skip invalid ones, retain duplicates, always invoke Finder including [], then deactivate NSApp",
+      "consumer": "File preview button"
+    },
+    {
+      "function_id": "Paste:0x1003e7ddc",
+      "original": "decompiled/Paste/part-0311.c:370",
+      "source": "replica/Sources/Pasto/UI/ReplicaLinkPreviewContent.swift",
+      "contract": "Default app CFBundleName or localized browser fallback; retain empty String names",
+      "consumer": "Open-in button title"
+    },
+    {
+      "function_id": "Paste:0x1003e7d00",
+      "original": "decompiled/Paste/part-0311.c:336",
+      "source": "replica/Sources/Pasto/UI/ReplicaLinkPreviewContent.swift",
+      "contract": "URL absoluteString label, original font/color, editable/selectable/border/background false, horizontal compression250",
+      "consumer": "Live URL metadata label"
+    },
+    {
+      "function_id": "Paste:0x100225db8",
+      "original": "decompiled/Paste/part-0187.c:3666",
+      "source": "replica/Sources/Pasto/UI/ReplicaNativeCardCollection.swift",
+      "contract": "Weak optional session assignment, replacement, nil clear and zeroing",
+      "consumer": "Native dragging begin/end callbacks"
+    },
+    {
+      "function_id": "Paste:0x100312538",
+      "original": "decompiled/Paste/part-0254.c:768",
+      "source": "replica/Sources/PastoCore/OriginalColorPreviewMetadata.swift",
+      "contract": "NSColor typed wrapper of complete 0x100308ea0, preserving all UInt64 byte/alpha branches",
+      "consumer": "Color cards, Stack, preview and source-color projection"
+    }
+  ],
+  "build_executed": false,
+  "tests_executed": false,
+  "equivalence_verified": false,
+  "limitations": "Source business methods only. Original Entity/JSON source adapters, parent windows, ObjC actor-check wrappers, metadata caches and generated ABI are not promoted."
+}

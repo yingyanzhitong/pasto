@@ -1,0 +1,39 @@
+{
+  "review_kind": "read_only_attributes_codable_result_forwarders",
+  "counts": { "reviewed": 2, "complete": 2, "gap": 0, "uncertain": 0, "new_migrations_claimed": 0 },
+  "functions": [
+    {
+      "function_id": "Paste:0x1003245a8",
+      "status": "complete",
+      "original_path": "decompiled/Paste/part-0258.c",
+      "original_line": 2360,
+      "current_path": "replica/Sources/PastoCore/OriginalPinboardAttributes.swift",
+      "current_symbol": "Attributes的派生Decodable结果初始化/协议转发",
+      "criterion": "原完整短体调用f3247b8解码到临时结果，仅error寄存器无错误时将三个Optional字段及present标志发布到输出；失败不发布、不以默认Attributes成功返回。当前Attributes:Codable的派生Decodable协议入口委托派生init(from:)，只有整个初始化成功才返回值；错误直传，不额外catch填空。第34批已经完整核对decodeIfPresent三字段及错误清理，本条核新增的成功发布/失败不发布转发边界。",
+      "consumer": "colorCode(from:)实际JSONDecoder.decode(Attributes.self)通过该类型的Decodable一致性取结果；外层try?位于类型初始化之后，失败会返回nil而非半记录。真实Header、preview与AppIntent tint继续消费成功记录。",
+      "boundary": "本条源码结果语义不依赖原Optional/String机器布局保持相同；不把原memcpy偏移当当前ABI断言，不登记VWT/metadata accessor或f324534未知CodingKey槽。"
+    },
+    {
+      "function_id": "Paste:0x1003245e8",
+      "status": "complete",
+      "original_path": "decompiled/Paste/part-0258.c",
+      "original_line": 2388,
+      "current_path": "replica/Sources/PastoCore/OriginalPinboardAttributes.swift",
+      "current_symbol": "Attributes的派生Encodable协议转发",
+      "criterion": "原完整体仅调用f324388后返回，未附加默认值、错误处理、数据包装或共享状态写入。当前Attributes:Codable的Encodable一致性使用已在第34批完整核对的派生encode(to:)，原样传播编码器错误；没有自定义外层覆盖或不同schema入口。",
+      "consumer": "encoded(colorCode:)实际JSONEncoder.encode(Attributes(...))通过Encodable一致性调用；Store创建和修改board颜色真实使用结果，不是仅声明未消费。",
+      "boundary": "只签单次调用与错误传播的源码合同，不声称当前协议witness表地址、编译tailcall或原JSON字节顺序已经验证。原f324388全字段方法的完整结论来自第34批，本条不重复计该地址。"
+    }
+  ],
+  "reused_evidence": [
+    "reports/replica/batch-core-completeness-33.json",
+    "reports/replica/batch-core-completeness-34.json",
+    ".local/pasteboard-next-pinboard-header-writer-original-bodies.json"
+  ],
+  "limits": [
+    "本轮重读两个完整成功C及当前Codable声明/生产调用，只新增独立报告；未修改产品源码、台账或用户数据。",
+    "未编译、parse、运行应用、功能/MCP测试、验证脚本或发布；未核当前二进制。",
+    "本批2/2完整不是项目总体迁移率；主智能体汇总分母与跨批去重，新增迁移0。",
+    "指定失败地址0x100ac35f8、0x100ac746c跳过，未读取。"
+  ]
+}

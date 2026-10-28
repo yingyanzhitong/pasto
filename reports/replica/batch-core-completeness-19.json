@@ -1,0 +1,41 @@
+{
+  "review_kind": "read_only_itemdata_entity_codec_boundaries",
+  "counts": { "reviewed": 2, "complete": 0, "gap": 0, "uncertain": 2, "new_migrations_claimed": 0 },
+  "functions": [
+    {
+      "function_id": "Paste:0x10031a8e8",
+      "status": "uncertain",
+      "original_path": "decompiled/Paste/part-0256.c",
+      "original_line": 1773,
+      "current_path": "replica/Sources/PastoCore/OriginalPasteboardDataCodec.swift",
+      "current_symbol": "OriginalPasteboardDataCodec.f_10031a8e8(_:useBinaryPlist:)",
+      "matching_value_path": "原配置byte==1时PropertyListEncoder输出binary0xc8、压缩algorithm0x801；其它走JSONEncoder、压缩algorithm0x205。只要任一表示f37d5c4返回Data（包括空Data），不压缩；全部无图片Data才压缩，压缩nil保原编码Data。当前明确同选择、同图片存在性getter和同压缩失败回退。Codable字段不走已经有NSCoding键差异的归档路径。",
+      "unresolved": "原完整方法会在自身读取itemSerializationFormat依赖的当前配置，最终调用setRawPasteboardItems修改所持ItemDataEntity。当前同名函数是显式Bool输入→Data输出的值投影，真正写入是调用方payloads内部raw key。配置读取与实体setter的错误/副作用/时点没有在本轮闭合；原Ghidra还有deadcode警告，不能只根据当前try?默认空Data就签所有原编码错误分支完整。本轮无充分证据指出现JSON数据必然被破坏，故uncertain而非gap。",
+      "consumer": "Pasteboard.swift captureWithInsertionResult在capturedItems.count>1时真实调用，将结果存originalItemDataPayloadKey；并非无人消费算法。原setter方法全部输入/实体副作用不能由这个有限多项caller自动覆盖。",
+      "boundary": "已有压缩/解压、图片Data getter及Codable独立方法的完整结论保留；不反向降它们，也不将这些小方法完整提升为本原实体setter完整。"
+    },
+    {
+      "function_id": "Paste:0x10031b218",
+      "status": "uncertain",
+      "original_path": "decompiled/Paste/part-0256.c",
+      "original_line": 2182,
+      "current_paths": [
+        "replica/Sources/PastoCore/Pasteboard.swift",
+        "replica/Sources/PastoCore/OriginalPasteboardDataCodec.swift",
+        "replica/Sources/PastoCore/OriginalObjCExceptionBridge.swift"
+      ],
+      "current_symbol": "ClipboardStore.originalPasteboardItems(from:) 的权威raw容器分支 + OriginalPasteboardDataCodec.f_10031aeec(_:)",
+      "matching_value_path": "当前raw key存在即取其Data交f31aeec，不按解码失败回退外层legacy；格式识别/解压/PL或JSON解码的值部分已单独审完整，最终无效结果为空数组。保留多项及原顺序。",
+      "original_extra_chain": "原完整入口先以f2ffc68包住f31bc34，f31bc34再调f31b1bc读取所持实体的raw getter并Data桥接；之后显式autoreleasepool内调用f31aeec，释放raw Data并返回数组。成功C标有移除不可达块，原读取异常/桥接失败不能据打印C臆定完全吞掉。",
+      "unresolved": "当前raw分支直接读Swift字典Data，未实际调用同一ObjC实体raw getter/异常边界；项目虽有真实OriginalObjCExceptionBridge，也不能因为桥存在就声称本getter生产调用已接。正常Data解码值可复用，但原raw读取/异常及池生命周期到现输入适配的完整关系未证明，保持uncertain；不是仅实体类名不同。",
+      "consumer": "Store恢复、校验和、文本/图像metadata与native drag准备均真实通过originalPasteboardItems取得表示；该外层还有multiItem JSON和flat legacy兼容，不能把这些独立适配分支冒原f31b218自身行为。"
+    }
+  ],
+  "limits": [
+    "仅阅读成功原C与当前源码，新增本独立报告；未修改产品源码、台账或用户数据。",
+    "未编译、parse、运行产品、功能/MCP测试、验证脚本或发布。",
+    "本轮不声称原编码器全部异常块已由新ARM闭合，也未验证当前编译体。",
+    "本批0/2完整不是项目总迁移率；总分母与跨批去重由主智能体汇总，新增迁移0。",
+    "失败地址0x100ac35f8、0x100ac746c跳过，未读取。"
+  ]
+}

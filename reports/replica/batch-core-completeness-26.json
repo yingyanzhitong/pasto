@@ -1,0 +1,38 @@
+{
+  "review_kind": "read_only_status_action_wrapper_lazy_timing_followup",
+  "previous_report": "reports/replica/batch-core-completeness-5.json",
+  "counts": { "reviewed": 1, "complete": 1, "gap": 0, "uncertain": 0, "previous_uncertain_rechecked": 1, "new_migrations_claimed": 0 },
+  "functions": [
+    {
+      "function_id": "Paste:0x10037ad4c",
+      "status": "complete",
+      "previous_status": "uncertain",
+      "original_path": "decompiled/Paste/part-0281.c",
+      "original_line": 1871,
+      "current_path": "replica/Sources/PastoCore/Pasteboard.swift",
+      "current_symbol": "ClipboardMonitor.f_10037ad4c(_:)",
+      "criterion": "原在保持已缓存Pasteboard state存活期间调用所给同步非throwing action一次，释放临时持有后，以manager为object发送DidChangeStatus一次；不看action是否改变timer、不加start/stop状态guard。当前withExtendedLifetime(captureState,action)之后post同名通知、object=self，同生命周期保护/动作/通知顺序，重复start或stop仍会进入通知包装器。",
+      "correction_to_previous_uncertain": "第5批认为此方法首次调用f37aa3c可能才读defaults并创建state，因而与当前init预建不同。完整原构造f37b778已在返回前主动调用f37aa3c，设置state weak delegate，再从缓存state读取token作首次defaults写回。合法已初始化manager调用本方法时state早已创建；把getter自身nil分支当成本方法实际首次动作时点是过宽推断。当前init也先创建state/设delegate/初始token写回，不能仅因原使用lazy getter语法继续维持此项未知。",
+      "original_arm_evidence": [
+        "完整10037ad4c..10037ade4已新做有界静态反汇编。37ad60保存manager x19，37ad64调用缓存getter；37ad68保存取得state于x20，37ad6c BLR动作；37ad70/74释放临时state；之后才取NotificationCenter。",
+        "37ada8加载通知槽1010579a8，37adb0 MOV x3,x19把原manager作为通知object，37adb4 post；once分支37adcc..ade0返回同一post路径。",
+        "原通知初始化器37a848..37a87c有界反汇编确认large literal +32定位100da3be0，已xxd读取为pasteboardHistoryManagerDidChangeStatus，与当前字符串完全相同。"
+      ],
+      "consumer": "当前start→f37ad40传f378ac0；stop→f37ad14传f378bc8；动作和post都是真实生产调用，不是孤立包装。原C同两个明确调用者，原构造器先创建state的成功初始化路径已读。",
+      "boundary": "仅修正此动作/通知方法的完整结论；不将f37aa3c自身首次nil构造、f378664诊断/依赖初始化、weak TimerTarget父或manager析构executor也升完整。保留已完成对象合法调用域，不包含破坏原private cache或在未完成初始化时伪造调用的损坏对象。无需为该包装器另外实现同名lazy字段。"
+    }
+  ],
+  "inputs": {
+    "original_image": ".local/targets/Paste.arm64",
+    "original_success_c": "decompiled/Paste/part-0281.c",
+    "supporting_current_source": "replica/Sources/PastoCore/OriginalPasteboardCaptureState.swift",
+    "existing_lifetime_review": ".local/pasteboard-capture-lifetime-next-audit.json"
+  },
+  "limits": [
+    "只新增本独立报告，未修改产品源码、台账或用户数据。",
+    "仅原镜像有界静态反汇编/常量读取；未编译、parse、运行应用、功能/MCP测试、验证脚本或发布。",
+    "本报告补充第5批同地址的uncertain结论；汇总按function_id替代去重，不能作为新增迁移。",
+    "本批1/1完整不是项目总体迁移率；总分母及去重计数由主智能体汇总，未核当前编译体。",
+    "指定失败地址0x100ac35f8、0x100ac746c跳过，未读取。"
+  ]
+}

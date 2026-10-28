@@ -1,0 +1,134 @@
+{
+  "kind": "batch-window-completeness-43",
+  "scope": "3项已有Carbon快捷键错误显示、C回调和注册对象析构方法，核完整成功C、原字符串字节与生产消费者。",
+  "summary": {
+    "reviewed": 3,
+    "complete": 3,
+    "gap": 0,
+    "uncertain": 0
+  },
+  "activities": {
+    "product_source_edited": false,
+    "ledger_edited": false,
+    "compiled": false,
+    "product_run": false,
+    "tests_run": false,
+    "wrapper_added": false
+  },
+  "skipped_failed_addresses": [
+    "Paste:0x100ac35f8",
+    "Paste:0x100ac746c"
+  ],
+  "limitations": [
+    "完整限于有限typed函数业务合同；不证明Carbon事件在当前系统运行、原Swift对象ABI或整个manager迁移完整。",
+    "Swift析构自动释放保存的action及对象，不要求另造手动dealloc wrapper；私有reference清nil在销毁期不对外发布状态。",
+    "未修改台账完成数，3/3是本批分类，不是整体完成率；历史build声明不当本轮编译。"
+  ],
+  "functions": [
+    {
+      "function_id": "Paste:0x1001e9ff8",
+      "status": "complete",
+      "evidence": "完整原C按错误enum tag选择两个固定英文前缀，追加OSStatus有符号十进制description，最后追加右括号。已只读原thin中0x100d9dcd0的45字节hotKey前缀与0x100d9dd00的50字节eventHandler前缀，逐字匹配当前两个case字符串，包括空格与OSStatus冒号，不做本地化、绝对值或无符号转换。当前OSStatus保原Int32标量的有符号插值。",
+      "original_static_strings": {
+        "path": ".local/paste-arm64-static.bin",
+        "hotkey": "0x100d9dcd0: Failed to register Carbon hot key (OSStatus: ",
+        "handler": "0x100d9dd00: Failed to install Carbon event handler (OSStatus: "
+      },
+      "actual_consumer": "GlobalShortcutMonitor.init安装handler失败及f1eaa64注册失败分别构造两case；failure.description实际进入OriginalShortcutDiagnostic.message及当前本地日志adapter，非仅测试格式化。",
+      "original": {
+        "path": "decompiled/Paste/part-0157.c",
+        "line": 1093
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalGlobalShortcutMonitor.swift",
+          "symbol": "enum OriginalShortcutMonitorError"
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalGlobalShortcutMonitor.swift",
+          "symbol": "public var description: String",
+          "qualified_symbol": "OriginalShortcutMonitorError.description"
+        }
+      ],
+      "historical_evidence": {
+        "path": "reports/function-migration/Paste-0x1001e9ff8.json",
+        "sha256": "c1a0f5d211a1e1012d59e1b994b7d88073fe935adb9594ca707c5197dfcedbf1",
+        "contract": "按注册或handler错误变体，拼接准确英文前缀、十进制有符号OSStatus与右括号。",
+        "historical_build_snapshot": "reports/replica/dev52-static-build78.json",
+        "current_build_claim": false
+      },
+      "source_binding": {
+        "replica/Sources/PastoCore/OriginalGlobalShortcutMonitor.swift": {
+          "sha256": "277dc405a3e660b36ec808e301ccfa3fa48568c8291295e02dafe84e595325b4",
+          "historical_sha256": "277dc405a3e660b36ec808e301ccfa3fa48568c8291295e02dafe84e595325b4",
+          "unchanged": true
+        }
+      }
+    },
+    {
+      "function_id": "Paste:0x1001ea96c",
+      "status": "complete",
+      "evidence": "完整原C忽略call参数；event与context都非nil才retain monitor、以event转f1ea338、再release，所有路径返回0。当前if let event/context同样处理，Unmanaged.retain().takeRetainedValue保持monitor到handler返回且withExtendedLifetime覆盖使用期；nil任一值不解引用/不调用handler，最终noErr为0。没有把空context当共享manager，也没有传播handler错误。",
+      "actual_consumer": "OriginalGlobalShortcutMonitor.init实际将静态f1ea96c作为InstallEventHandler的C回调，context为同一self的passUnretained地址；GlobalHotKey通过shared manager注册真实应用全局快捷键。",
+      "original": {
+        "path": "decompiled/Paste/part-0157.c",
+        "line": 1455
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalGlobalShortcutMonitor.swift",
+          "symbol": "f_1001ea96c"
+        }
+      ],
+      "historical_evidence": {
+        "path": "reports/function-migration/Paste-0x1001ea96c.json",
+        "sha256": "c2cfe00465c0ac3a3ce16c5e66570e6fb2ccd15ba95f79732c633c9eebe65858",
+        "contract": "C回调event/context均非nil才保活monitor并转event处理器；任何分支均return noErr。",
+        "historical_build_snapshot": "reports/replica/dev52-static-build78.json",
+        "current_build_claim": false
+      },
+      "source_binding": {
+        "replica/Sources/PastoCore/OriginalGlobalShortcutMonitor.swift": {
+          "sha256": "277dc405a3e660b36ec808e301ccfa3fa48568c8291295e02dafe84e595325b4",
+          "historical_sha256": "277dc405a3e660b36ec808e301ccfa3fa48568c8291295e02dafe84e595325b4",
+          "unchanged": true
+        }
+      }
+    },
+    {
+      "function_id": "Paste:0x1001eb110",
+      "status": "complete",
+      "evidence": "完整原C在注册对象销毁时读取可选Carbon handle，非nil才UnregisterEventHotKey，然后释放保存的action并dealloc实例。当前registration.deinit调用私有f1eb110，非nil同样注销、无handle不调用；随后Swift析构释放let action并销毁对象。reference=nil仅在该私有析构helper中写入，无published或外部observer，不增加可见状态转移。原beginAccess和dealloc交由合法Swift存储/ARC实现，不将此同业务析构合同扩成机器布局等价。",
+      "actual_consumer": "manager注册字典强持OriginalShortcutRegistration；注销f1eae90移除后在日志完成后释放，替换或manager析构也释放实际registration，从而消费真实deinit而非闲置helper。",
+      "original": {
+        "path": "decompiled/Paste/part-0157.c",
+        "line": 1781
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalGlobalShortcutMonitor.swift",
+          "symbol": "class OriginalShortcutRegistration"
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalGlobalShortcutMonitor.swift",
+          "symbol": "f_1001eb110",
+          "qualified_symbol": "OriginalShortcutRegistration.f_1001eb110"
+        }
+      ],
+      "historical_evidence": {
+        "path": "reports/function-migration/Paste-0x1001eb110.json",
+        "sha256": "8e2bbd746e74e745d2f3cacc0692ef41ed17680168cb5c7e387f31c6bc57bcd4",
+        "contract": "销毁注册对象时如Carbon handle非nil则注销，释放动作及对象。",
+        "historical_build_snapshot": "reports/replica/dev52-static-build78.json",
+        "current_build_claim": false
+      },
+      "source_binding": {
+        "replica/Sources/PastoCore/OriginalGlobalShortcutMonitor.swift": {
+          "sha256": "277dc405a3e660b36ec808e301ccfa3fa48568c8291295e02dafe84e595325b4",
+          "historical_sha256": "277dc405a3e660b36ec808e301ccfa3fa48568c8291295e02dafe84e595325b4",
+          "unchanged": true
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,59 @@
+{
+  "kind": "batch-window-completeness-15",
+  "scope": "6个搜索TextView构造体与原生初始化桥；核默认状态、父类调用及失败传播，业务体与Actor桥分列。",
+  "summary": {"reviewed": 6, "complete": 3, "gap": 0, "uncertain": 3},
+  "prior_inventory": "reports/replica/batch-completeness-round14.json",
+  "definite_product_differences": [],
+  "activities": {"product_source_edited": false, "ledger_edited": false, "compiled": false, "product_run": false, "tests_run": false, "wrapper_added": false},
+  "skipped_failed_addresses": ["Paste:0x100ac35f8", "Paste:0x100ac746c"],
+  "limitations": [
+    "complete只指有限初始化业务合同，不代表当前构建成功、原生初始化桥或编辑器整体运行验收。",
+    "原Actor诊断错误路径未独立证明的桥保待证，不用@MainActor声明自动替代。",
+    "coder入口没有发现当前日常UI显式调用，报告仅确认实际NSCoding构造签名及super失败传播，不虚构正常调用。",
+    "不修改台账状态或完整迁移计数。"
+  ],
+  "functions": [
+    {
+      "function_id": "Paste:0x100044aec", "status": "complete",
+      "original": {"path": "decompiled/Paste/part-0025.c", "line": 1346},
+      "source_references": [{"path": "replica/Sources/PastoCore/OriginalSearchTextView.swift", "symbol": "public override init(frame frameRect: NSRect, textContainer container:"}],
+      "evidence": "原先canAcceptFocus=true，按foreground/font两键构建preferredTypingAttributes，placeholder惰性缓存nil，随后super.init(frame:textContainer:)原样传frame/container。当前保存属性默认初始化发生super之前，两键同原顺序，默认前景读f1fec18而原f1fe15c槽解引用：已读OriginalSearchAppearance，前者确为后者.pointee，未换另一个颜色；字体同f1ff928。未提前创建placeholder或调用scroller配置，额外storedPlaceholderText默认nil不提前加载本地化。",
+      "actual_consumer": "真实SearchEditor.InputView.makeTextView创建SearchTextView(usingTextLayoutManager:true)，继承本组NSTextView初始化能力；派生类没有重写替代这组frame/container初始属性。"
+    },
+    {
+      "function_id": "Paste:0x100044204", "status": "uncertain",
+      "original": {"path": "decompiled/Paste/part-0025.c", "line": 955},
+      "source_references": [{"path": "replica/Sources/PastoCore/OriginalSearchTextView.swift", "symbol": "public override init(frame frameRect: NSRect, textContainer container:"}],
+      "evidence": "原原生入口把frame和可空container传f044aec，当前对应签名/构造体正常业务一致。原入口先执行MainActor检查与固定SearchField.InputView.swift行0x97报告，C误传播frame.x为返回值不能据此认产品错误；当前静态源码无法证明原桥完整诊断及生成返回轨迹，保待证。",
+      "actual_consumer": "同一原生NSTextView frame/textContainer初始化入口存在，实际搜索派生TextView复用此构造组；没有新增独立wrapper。"
+    },
+    {
+      "function_id": "Paste:0x100044578", "status": "complete",
+      "original": {"path": "decompiled/Paste/part-0025.c", "line": 1090},
+      "source_references": [{"path": "replica/Sources/PastoCore/OriginalSearchTextView.swift", "symbol": "public override init(frame frameRect: NSRect)"}],
+      "evidence": "原先同样设置focus=true、动态前景+body字体两键、placeholder缓存nil；然后直接super.init(frame:)而非自行创建container或转frame/container路径。当前默认保存属性加frame-only override保同序和原frame，不添加文本配置或占位读取。",
+      "actual_consumer": "OriginalSearchTextView及SearchTextView继承的AppKit frame构造入口保留；正常生产对象是该搜索文本视图类，不能把本分支的静态存在夸大成日常调用已运行验证。"
+    },
+    {
+      "function_id": "Paste:0x100044718", "status": "uncertain",
+      "original": {"path": "decompiled/Paste/part-0025.c", "line": 1151},
+      "source_references": [{"path": "replica/Sources/PastoCore/OriginalSearchTextView.swift", "symbol": "public override init(frame frameRect: NSRect)"}],
+      "evidence": "原经f044728通用同步桥调用f044578，当前frame-only override保持实际业务。已读f044728完整C：原桥检查MainActor并用调用方行0x97诊断，不另加异步；当前未证明该Actor错误路径，因此不提升完整原生桥。",
+      "actual_consumer": "同一搜索TextView原生init(frame:)构造入口，实际类继承链复用，不额外构造替代文本视图。"
+    },
+    {
+      "function_id": "Paste:0x10004430c", "status": "complete",
+      "original": {"path": "decompiled/Paste/part-0025.c", "line": 992},
+      "source_references": [{"path": "replica/Sources/PastoCore/OriginalSearchTextView.swift", "symbol": "public required init?(coder:"}],
+      "evidence": "原同样先准备focus=true、foreground/font两键和placeholder缓存nil，然后super.init(coder:)并直接返回其结果。当前required failable initializer同样先做保存属性默认初始化再super(coder)，父失败自然传播nil，不创建替代view、不fatalError、不额外调用scroller或提前placeholder本地化。该body原C没有独立Actor诊断，桥另列。",
+      "actual_consumer": "类确实实现required NSCoding构造入口；未发现日常UI主动归档解码调用，只核该原生输入/输出合同，不声称普通初始化实际走coder。"
+    },
+    {
+      "function_id": "Paste:0x1000444b0", "status": "uncertain",
+      "original": {"path": "decompiled/Paste/part-0025.c", "line": 1056},
+      "source_references": [{"path": "replica/Sources/PastoCore/OriginalSearchTextView.swift", "symbol": "public required init?(coder:"}],
+      "evidence": "原执行MainActor诊断后同步调用f04430c，当前coder构造正常业务/父失败传播一致；原固定file/line0x97错误报告未由当前源码独立证明，完整桥仍待证。原C的param返回寄存器失真不能以名字或薄转发直接计完整。",
+      "actual_consumer": "实际类required NSCoding入口；没有伪造普通SearchEditor主动调用解码的消费者。"
+    }
+  ]
+}

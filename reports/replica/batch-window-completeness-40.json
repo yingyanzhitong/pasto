@@ -1,0 +1,144 @@
+{
+  "kind": "batch-window-completeness-40",
+  "scope": "2项已有录制model初始化与键名翻译方法，原完整C、必要ARM及keypath静态数据、生产消费者对照。",
+  "summary": {
+    "reviewed": 2,
+    "complete": 1,
+    "gap": 0,
+    "uncertain": 1
+  },
+  "activities": {
+    "product_source_edited": false,
+    "ledger_edited": false,
+    "compiled": false,
+    "product_run": false,
+    "tests_run": false,
+    "wrapper_added": false
+  },
+  "skipped_failed_addresses": [
+    "Paste:0x100ac35f8",
+    "Paste:0x100ac746c"
+  ],
+  "limitations": [
+    "完整限于本body初始化顺序和typed业务合同，不提升泛型DI父函数或所有录制生命周期。",
+    "待证不是已复现用户错误；不以从未运行作为实际bug证据。",
+    "历史源码摘要用于未变绑定，不冒历史build为本轮构建；本轮不更改台账，1/2不是整体迁移率。"
+  ],
+  "functions": [
+    {
+      "function_id": "Paste:0x1001f06f8",
+      "status": "complete",
+      "evidence": "完整原C依序初始化nil Published Error、具体validator typed-keypath惰性依赖、nil eventMonitor、optional输入映射assigned或unassigned的Published state，最后保存完整onDetect closure。当前init按同序给validationError=nil、OriginalDependency(validator keypath)、eventMonitor=nil、shortcut.map(assigned)或unassigned、onDetect赋值。无额外校验、监听注册、初始回调或提前解析服务。补读历史keypath证据并实际核原thin：pattern100c33dd8+20的relative32=ff5be06c，指向f1f1e64具体getter；该getter的声明键和factory已核，不拿相似字段名当具体服务证明。",
+      "original_keypath_binding": {
+        "path": ".local/paste-arm64-static.bin",
+        "pattern": "0x100c33dd8",
+        "relative_field": "0x100c33df8",
+        "relative32": "0xff5be06c",
+        "getter": "0x1001f1e64",
+        "historical_review": ".local/shortcut-wave3-batch.json"
+      },
+      "actual_consumer": "OriginalShortcutRecorderView.f1eca94实际以Binding当前optional值构造该model并强持onDetect；StateObject首次消费才调用工厂，随后按钮、Published状态与验证路径使用同一model。",
+      "original": {
+        "path": "decompiled/Paste/part-0159.c",
+        "line": 1671
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutRecorder.swift",
+          "symbol": "class OriginalShortcutRecorder"
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutRecorder.swift",
+          "symbol": "public init(shortcut: OriginalShortcutValue?, onDetect:"
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutRecorder.swift",
+          "symbol": "OriginalDependency(\\OriginalDependencyValues.shortcutValidator)"
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutDependencies.swift",
+          "symbol": "var shortcutValidator: OriginalShortcutValidatorService"
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutDependencies.swift",
+          "symbol": "var shortcutValidator: OriginalShortcutValidatorService"
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutDependencies.swift",
+          "symbol": "func f_1001f1e64()"
+        }
+      ],
+      "historical_evidence": {
+        "path": "reports/function-migration/Paste-0x1001f06f8.json",
+        "sha256": "d236b3f604ab565464ddd9f0899bd644f1fd6856ef7a1ae6a585089b816012af",
+        "contract": "模型初始化按原版顺序构造nil Published<Error?>、具体validator服务的惰性typed-keypath依赖、nil事件monitor、绑定初值对应的Published三态，再保存onDetect回调；服务由其原始声明位置的共享cache解析。",
+        "historical_build_snapshot": "reports/replica/dev52-static-build78.json",
+        "current_build_claim": false
+      },
+      "source_binding": {
+        "replica/Sources/PastoCore/OriginalShortcutRecorder.swift": {
+          "sha256": "ba907c942f91fe336506e9a47576051f285bfce47ccd43315cb111aedbd237f2",
+          "historical_sha256": "ba907c942f91fe336506e9a47576051f285bfce47ccd43315cb111aedbd237f2",
+          "unchanged": true
+        },
+        "replica/Sources/PastoCore/OriginalShortcutDependencies.swift": {
+          "sha256": "73908ddfedcd38cb4f1f64a7a21d1499879bed195dfb13d70f1ebbbeb6ce5b51",
+          "historical_sha256": "73908ddfedcd38cb4f1f64a7a21d1499879bed195dfb13d70f1ebbbeb6ce5b51",
+          "unchanged": true
+        }
+      }
+    },
+    {
+      "function_id": "Paste:0x1001e7e50",
+      "status": "uncertain",
+      "evidence": "正常分支已核：特殊显示表优先；未命中才CopyCurrentASCIICapableInputSource及Unicode布局，缺源或属性返回空；布局存在后键码精确UInt16边界，256个零初始化UTF16，LMGetKbdType、action3、modifier0、options0、dead0，成功按真实actualLength构造String再uppercase，失败空串。原ARM1e7ef4/ef8分别初始化dead和actualLength，1e7fa8..fd0将两输出地址与缓冲传UCKeyTranslate，1e8034读取actualLength，修正C伪显示成功长度0的误导。当前正常参数与输出一致。仍待证：原CFDataGetBytePtr后直接保留指针并继续分配/转换键码/调用UCKeyTranslate，无nil字节指针返回分支；当前guard let bytes提前返回空，是否原系统property域保证非nil未独立证明，故不判全体完整。特殊键本地化表的Locale/bundle全域亦属于其独立未闭父合同。",
+      "original_arm_static_evidence": {
+        "path": ".local/paste-arm64-static.bin",
+        "start": "0x1001e7e50",
+        "end_exclusive": "0x1001e8098",
+        "byte_pointer": "0x1001e7eec..0x1001e7ef0",
+        "translate_call": "0x1001e7fd0",
+        "actual_length_load": "0x1001e8034",
+        "integer_traps": [
+          "0x1001e808c",
+          "0x1001e8090"
+        ]
+      },
+      "actual_consumer": "OriginalShortcutValue.displayName与Recorder.f1f02d8实际调用；录制f1f132c以该返回的isEmpty判断候选还是验证，菜单等效字符f1e8098也复用，不是只用于静态帮助文本。",
+      "unresolved_boundary": "CFData字节nil是否实际可达未闭，不声称正常键盘布局会造成崩溃或错误。",
+      "original": {
+        "path": "decompiled/Paste/part-0156.c",
+        "line": 1369
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutFunctions.swift",
+          "symbol": "f_1001e7e50"
+        },
+        {
+          "path": "replica/Sources/PastoCore/KeyboardShortcut.swift",
+          "symbol": "displayName"
+        }
+      ],
+      "historical_evidence": {
+        "path": "reports/function-migration/Paste-0x1001e7e50.json",
+        "sha256": "c83e0bd254ef15fcfaa0beb4a04c4d470976dbb4463a81ff3d015e293c644a93",
+        "contract": "优先特殊键显示表；其余键从当前 ASCII-capable 输入源读取 Unicode 布局，以 LMGetKbdType、action=display、modifierState=0、options=0、deadState=0 翻译最多 256 UTF16 单元，成功返回 uppercase 文本，取源/布局失败或 OSStatus 非零返回空串；布局存在时键码须可精确转换 UInt16。",
+        "historical_build_snapshot": "reports/replica/dev52-static-build78.json",
+        "current_build_claim": false
+      },
+      "source_binding": {
+        "replica/Sources/PastoCore/OriginalShortcutFunctions.swift": {
+          "sha256": "82c57689dfb20e2c4c02cd3c4ca72cf40ee7a3fd650b5fa832d79589761a9058",
+          "historical_sha256": "82c57689dfb20e2c4c02cd3c4ca72cf40ee7a3fd650b5fa832d79589761a9058",
+          "unchanged": true
+        },
+        "replica/Sources/PastoCore/KeyboardShortcut.swift": {
+          "sha256": "eba51741928fc95619585980567b617d39f3c749564cddb5dff4bbd04bf189d6",
+          "historical_sha256": "eba51741928fc95619585980567b617d39f3c749564cddb5dff4bbd04bf189d6",
+          "unchanged": true
+        }
+      }
+    }
+  ]
+}

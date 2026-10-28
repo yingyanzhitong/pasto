@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "scope": "补闭第23批工具栏空标题待证，并核原NSTextField.setText类别入口；只读成功原C和既有完整类别绑定证据。",
+  "counts": { "total": 2, "complete": 1, "gap": 0, "uncertain": 1 },
+  "records": [
+    {
+      "function_id": "Paste:0x10023ce40",
+      "status": "complete",
+      "resolves": { "report": "reports/replica/batch-image-completeness-23.json", "previous_status": "uncertain", "reason": "原setText:nil的空串投影已闭证，不改旧报告" },
+      "original": { "path": "decompiled/Paste/part-0195.c", "start_line": 1304, "address_range": "0x10023ce40..<0x10023d164" },
+      "supporting_original": { "path": "decompiled/Paste/part-0083.c", "start_line": 1604, "address_range": "0x1000f68c4..<0x1000f69b0" },
+      "category_evidence": ".local/image-compact-text-field-category-proof.json",
+      "current_implementations": [ { "path": "replica/Sources/PastoCore/OriginalToolbarButton.swift", "start_line": 118, "end_line": 138, "symbol": "public func f_10023ce40()" } ],
+      "criterion": "原完整类别表证明PastePlatform类别绑定AppKit.NSTextField，setText: IMP为f0f68c4；该成功函数nil输入采用空String small-value e000000000000000，再桥接并调用setStringValue:，非nil原文桥接不trim。因此原空title setText:nil→removeFromSuperview与当前label.stringValue空串→removeFromSuperview在内容值和顺序上相同，上轮唯一值分支待证已消除。其余已核symbol nil清image/移除、非nil双查找或单次fallback+niltrap、配置结果optional直赋、icon→label→arrow顺序保留，原完整本体与当前源码均重新读过，不凭旧migrated状态推定。",
+      "actual_consumer": "OriginalToolbarButton构造、symbol/arrow didSet和title setter真实调用；Adapter Header pin.symbol更新及Edit/Share、Cancel/Save、文本trait、图片旋转按钮均由该组件显示。",
+      "limitations": "本体内容重建的有限值/操作合同完整；原setText ObjC类别入口的executor诊断另列待证，不把被调桥的生成ABI算成本体完成。未调用UI或修改代码。"
+    },
+    {
+      "function_id": "Paste:0x1000f68c4",
+      "status": "uncertain",
+      "original": { "path": "decompiled/Paste/part-0083.c", "start_line": 1604, "address_range": "0x1000f68c4..<0x1000f69b0" },
+      "category_evidence": ".local/image-compact-text-field-category-proof.json",
+      "current_implementations": [ { "path": "replica/Sources/PastoCore/OriginalToolbarButton.swift", "symbol": "label.stringValue = \"\" / label.stringValue = super.title" } ],
+      "satisfied_business_contract": "原NSTextField类别setText:将nil转换空字符串，非nil输入按原字符串桥接，setStringValue后返回0；当前工具栏空/非空title分支分别写空stringValue和super.title，在真实可达消费上满足，nil没有变成字面null或保留旧内容。",
+      "criterion": "整个原类别入口还包含MainActor executor检查，非当前executor reportUnexpectedExecutor(PastePlatform/NSTextField+UIKit.swift,line8)，后继续内容赋值并释放actor。当前直接原生stringValue写入及@MainActor声明，没有证据表明独立App具该原类别同名系统注册/完整诊断入口；因此只确认调用点值投影，不能把整个原地址登记为完成。",
+      "actual_consumer": "原f23ce40的真实label setText调用对应当前生产工具栏label.stringValue两分支；Header/footer真实按钮均使用，没有新增未消费wrapper。",
+      "limitations": "没有发现用户可见确定差异，待证的是整个系统类别入口和诊断；不得将此记录视为完整迁移新计数。"
+    }
+  ],
+  "category_binding_summary": { "category": "PastePlatform", "category_address": "0x100f4f2c0", "bound_class": "_OBJC_CLASS_$_NSTextField", "class_dylib": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit", "weak_import": false, "effective_addend": 0, "method_list_address": "0x100c11770", "method_count": 8, "selector": "setText:", "imp": "0x1000f68c4" },
+  "excluded_failed_addresses": [ "0x100ac35f8", "0x100ac746c" ],
+  "verification_scope": "仅新增本独立报告，保留第23批原审阅历史；无产品源码、台账或旧报告修改，无编译、parse、运行应用、测试、MCP或发布，未读取两指定失败函数。complete限列明有限源码方法，不表示当前产物或一比一功能验收。"
+}

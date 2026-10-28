@@ -1,0 +1,55 @@
+{
+  "kind": "static_reuse_review",
+  "records": [
+    {
+      "function_id": "Paste:0x1002cb804",
+      "status": "complete",
+      "original_path": "decompiled/Paste/part-0231.c",
+      "original_line": 711,
+      "current_path": "replica/Sources/PastoCore/OriginalConfigurationFunctions.swift",
+      "current_symbol": "f_1002cb804",
+      "criterion": "将 Optional<Any> 通过 Swift 条件动态转换为指定 Value，转换成功保留该值，失败返回外层 nil。",
+      "consumer": "WindowSharingPolicy.swift 内屏幕共享设置的读值与观察 old/new 实际路径；函数本体按通用 Value 合同核对。",
+      "source_sha256": "d777c6848066ec198ca41739d0a785ece4df2000977cda19b230e3d4530fcb54",
+      "limitations": "只核对源码合同，不将设置存储、通知订阅或运行行为包含在此函数结论内。"
+    },
+    {
+      "function_id": "Paste:0x1002cc5a8",
+      "status": "complete",
+      "original_path": "decompiled/Paste/part-0231.c",
+      "original_line": 1303,
+      "current_path": "replica/Sources/PastoCore/OriginalConfigurationFunctions.swift",
+      "current_symbol": "f_1002cc5a8",
+      "criterion": "解码闭包入口携带已捕获的 Value 类型，向通用 Optional<Any> 条件转换函数转发。",
+      "consumer": "WindowSharingPolicy.swift 内屏幕共享设置的读值与观察 old/new 实际路径；函数本体按通用 Value 合同核对。",
+      "source_sha256": "d777c6848066ec198ca41739d0a785ece4df2000977cda19b230e3d4530fcb54",
+      "limitations": "只核对源码合同，不将设置存储、通知订阅或运行行为包含在此函数结论内。"
+    },
+    {
+      "function_id": "Paste:0x1002ca920",
+      "status": "complete",
+      "original_path": "decompiled/Paste/part-0231.c",
+      "original_line": 89,
+      "current_path": "replica/Sources/PastoCore/OriginalConfigurationFunctions.swift",
+      "current_symbol": "f_1002ca920",
+      "criterion": "恰好调用一次提供的解码器；解码器返回 some 则返回其值，不读取默认值；失败才惰性求取配置默认值。",
+      "consumer": "WindowSharingPolicy.swift 内屏幕共享设置的读值与观察 old/new 实际路径；函数本体按通用 Value 合同核对。",
+      "source_sha256": "d777c6848066ec198ca41739d0a785ece4df2000977cda19b230e3d4530fcb54",
+      "limitations": "只核对源码合同，不将设置存储、通知订阅或运行行为包含在此函数结论内。"
+    },
+    {
+      "function_id": "Paste:0x1002cb458",
+      "status": "complete",
+      "original_path": "decompiled/Paste/part-0231.c",
+      "original_line": 506,
+      "current_path": "replica/Sources/PastoCore/OriginalConfigurationFunctions.swift",
+      "current_symbol": "f_1002cb458",
+      "criterion": "独立解码配置观察的 old/new 两个原始值，按 old、new 的顺序返回 tuple，两者分别使用相同的解码和惰性默认值策略。",
+      "consumer": "WindowSharingPolicy.swift 内屏幕共享设置的读值与观察 old/new 实际路径；函数本体按通用 Value 合同核对。",
+      "source_sha256": "d777c6848066ec198ca41739d0a785ece4df2000977cda19b230e3d4530fcb54",
+      "limitations": "只核对源码合同，不将设置存储、通知订阅或运行行为包含在此函数结论内。"
+    }
+  ],
+  "build_executed": false,
+  "tests_executed": false
+}

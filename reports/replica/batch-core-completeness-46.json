@@ -1,0 +1,56 @@
+{
+  "review_kind": "read_only_compression_pipeline_recheck",
+  "counts": {"reviewed": 3, "complete": 3, "gap": 0, "uncertain": 0, "new_migrations_claimed": 0},
+  "functions": [
+    {
+      "function_id": "Paste:0x10030f5c8",
+      "status": "complete",
+      "reviewed_previously": true,
+      "previous_report": "reports/replica/batch-core-completeness-8.json",
+      "original_path": "decompiled/Paste/part-0253.c",
+      "original_line": 1875,
+      "current_path": "replica/Sources/PastoCore/OriginalPasteboardDataCodec.swift",
+      "current_symbol": "OriginalPasteboardDataCodec.f_10030f5c8(_:algorithm:)",
+      "criterion": "重读成功C：nil输入返回none；按Data有效长度分配一次同长输出，传给compression_encode_buffer，结果小于1返回none，正结果复制实际写入数量，释放临时buffer。当前无扩容重试、scratch=nil、algorithm透传、正count才构造Data，空Data返回nil，对合法Data有效范围相同。",
+      "consumer": "f31a8e8对无图像表示的编码结果真实调用，nil压缩结果以原encoded回退；Pasteboard.swift采集canonical rawItems时调用该编码器。压缩失败不会因本helper直接抛错或覆盖为nil。",
+      "boundary": "仅压缩值方法完整，不把调用者的动态Config/实体setter完整性一并签满。"
+    },
+    {
+      "function_id": "Paste:0x10030f6e8",
+      "status": "complete",
+      "reviewed_previously": true,
+      "previous_report": "reports/replica/batch-core-completeness-8.json",
+      "original_path": "decompiled/Paste/part-0253.c",
+      "original_line": 1947,
+      "current_path": "replica/Sources/PastoCore/OriginalPasteboardDataCodec.swift",
+      "current_symbol": "OriginalPasteboardDataCodec.f_10030f6e8(_:algorithm:)",
+      "criterion": "重读原inline、slice和storage全部分支：空数据输出some(empty Data)，非空调整有效offset/范围后调用f30f920，并保原algorithm。当前isEmpty返回Data()，否则withUnsafeBytes的有效buffer交f30f920，保nil与some空的区别；未把Data底层capacity或index0之前字节当有效输入。",
+      "consumer": "decodeIfValid的bvx走LZFSE、其余压缩格式走ZLIB；解压nil才回退原data，空Data结果不作为nil回退。该接口经originalPasteboardItems实际服务restore/native drag，也由Archive.decodeItems使用。",
+      "boundary": "合法Data值域完整，不声明损坏Foundation内部位型、悬空指针或原机器内存布局等价。"
+    },
+    {
+      "function_id": "Paste:0x10030f920",
+      "status": "complete",
+      "reviewed_previously": true,
+      "previous_report": "reports/replica/batch-core-completeness-8.json",
+      "original_path": "decompiled/Paste/part-0253.c",
+      "original_line": 2097,
+      "current_path": "replica/Sources/PastoCore/OriginalPasteboardDataCodec.swift",
+      "current_symbol": "OriginalPasteboardDataCodec.f_10030f920(_:algorithm:)",
+      "criterion": "原nil地址some空Data；非nil容量max(inputCount*2,0x10000)，decode结果0→nil、非满→复制实际count、满→先检查capacity>0x0fffffff再决定nil或倍增重试；所有返回/重试均释放旧buffer。当前初始算术、阈值严格性、检查时点、scratch=nil和algorithm传递均对应，没有在调用前提前把大合法结果截断。",
+      "consumer": "上述f30f6e8真实调用。当前buffer方法仍由Data.withUnsafeBytes提供合法生命周期，不作为全局持久化或NSPasteboard写入口。",
+      "boundary": "输入count乘2溢出保Swift算术trap；非法运行时Data/不合法裸指针不在可构造合法输入合同内。原C读取寄存器省略的细节沿用第8轮证据，不冒成本轮新反汇编。"
+    }
+  ],
+  "shared_consumer_evidence": [
+    "当前Pasteboard.swift originalItemDataPayloadKey存在时originalPasteboardItems调用f31aeec；f31aeec内部decodeIfValid复用上述解压，不回退其它外层payload伪造成功。",
+    "strict decodeIfValid保留nil供结构比较/归档合法性消费者，f31aeec才把最终失败映为[]；没有把strict额外接口当原方法新增错误行为。",
+    "当前f31a8e8按图像表示选择绕过压缩；有压缩时LZFSE/ZLIB选择由useBinaryPlist输入决定。其原动态偏好读取仍是父级待证，不影响这里显式algorithm值方法。"
+  ],
+  "limits": [
+    "本批3项均第8轮历史复审，跨批须去重；新增迁移0，不以此增加总完成地址。",
+    "只写本报告，不改产品源码、台账、用户数据或配置。",
+    "只读成功C、现源码和历史证据；未编译、parse、运行应用、测试、MCP、验证脚本或发布。",
+    "跳过两个指定失败地址；没有当前编译二进制或运行回归证明。"
+  ]
+}

@@ -1,0 +1,141 @@
+{
+  "kind": "batch-window-completeness-36",
+  "scope": "3项此前window批次未覆盖的快捷键录制按钮/图标文字方法；读取完整成功C及实际View消费者，未用历史migrated代替完整判断。",
+  "summary": {
+    "reviewed": 3,
+    "complete": 0,
+    "gap": 0,
+    "uncertain": 3
+  },
+  "activities": {
+    "product_source_edited": false,
+    "ledger_edited": false,
+    "compiled": false,
+    "product_run": false,
+    "tests_run": false,
+    "wrapper_added": false
+  },
+  "skipped_failed_addresses": [
+    "Paste:0x100ac35f8",
+    "Paste:0x100ac746c"
+  ],
+  "limitations": [
+    "正常显示及动作已接不等于整个原方法完整；显式Actor诊断、原状态读取及本地化解析边界仍须保留。",
+    "源码未变化仅绑定历史证据，不能把历史编译声明当本轮构建或运行验收。",
+    "未改变台账计数，0/3为本批局部分类，不是整体迁移率，也不代表正常按钮都不可用。"
+  ],
+  "functions": [
+    {
+      "function_id": "Paste:0x1001ef60c",
+      "status": "uncertain",
+      "evidence": "完整原C先逐Character查固定符号字典并compactMap成有序symbol数组，再从空Text起逐项构造Image(systemName)转Text并拼接；当前逐Character reduce忽略未知字符并按同顺序拼接，对正常符号显示合同一致。但原每个Character查表前均执行Actor检查/固定原文件行0x3c报告，随后每个已识别symbol构图前再执行Actor检查/行0x3d报告；当前单个MainActor方法内reduce不独立证明这些逐次诊断。原两阶段处理与当前融合循环的错误路径不可仅凭相同最终Text判全等。",
+      "actual_consumer": "OriginalShortcutControlFunctions.f1eda4c在presentation样式位true时实际调用并设置footnote；RecorderView从真实model取得presentation，经Controls主录制按钮label消费，非未使用helper。",
+      "original": {
+        "path": "decompiled/Paste/part-0159.c",
+        "line": 666
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutControls.swift",
+          "symbol": "enum OriginalShortcutControlFunctions"
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutControls.swift",
+          "symbol": "f_1001ef60c",
+          "qualified_symbol": "OriginalShortcutControlFunctions.f_1001ef60c"
+        }
+      ],
+      "historical_evidence": {
+        "path": "reports/function-migration/Paste-0x1001ef60c.json",
+        "sha256": "bf88ec46fa9fa1dc5c95f18e7c3165aa5b6b6848d6f41783b1a0c6e5edc4cfb7",
+        "contract": "逐Character读取修饰文本，查原版四项符号到SF Symbols名称字典；未知字符忽略；将对应Image转换Text，从空Text起依次拼接。",
+        "historical_build_snapshot": "reports/replica/dev52-static-build78.json",
+        "current_build_claim": false
+      },
+      "source_binding": {
+        "replica/Sources/PastoCore/OriginalShortcutControls.swift": {
+          "sha256": "55ecfa91d843f2305044a1558079a89d6da119edc25f5a3d1f4e5b4ffe4d82a8",
+          "historical_sha256": "55ecfa91d843f2305044a1558079a89d6da119edc25f5a3d1f4e5b4ffe4d82a8",
+          "unchanged": true
+        }
+      }
+    },
+    {
+      "function_id": "Paste:0x1001ed1c4",
+      "status": "uncertain",
+      "evidence": "完整原C总构造主toggle按钮并应用主style，读取StateObject当前Published state，仅assigned tag构造clear按钮并应用移除style和Remove本地化help。当前Controls总构造begin按钮、仅case assigned构造clear按钮，styles和回调正常对应。但是原入口有固定原文件行0xf执行器诊断，并在此函数多次取StateObject/Published状态；当前方法接受已投影的state/presentation与begin/clear闭包，原读取及诊断轨迹已拆到父View，不能将该独立原body算全体完整。原本地化资源与当前硬编码resolver的全域等价亦未闭合。",
+      "actual_consumer": "OriginalShortcutRecorderView.f1ecbc4从当前StateObject model建立Controls，ZStack(topTrailing)实际调用controls.f1ed1c4；begin为model.f1ef2bc，clear为model.f1ef434。",
+      "original": {
+        "path": "decompiled/Paste/part-0158.c",
+        "line": 1652
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutControls.swift",
+          "symbol": "public func f_1001ed1c4()",
+          "line": 85
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutRecorderView.swift",
+          "symbol": "controls.f_1001ed1c4()",
+          "line": 36
+        }
+      ],
+      "historical_evidence": {
+        "path": "reports/function-migration/Paste-0x1001ed1c4.json",
+        "sha256": "a70b53b674ffbff6bfbc8629c83b9f8b7c35fdaec0199344f4a83e8ad495c8d3",
+        "contract": "创建切换录制主按钮并应用原版主style；仅assigned态创建清除按钮，配xmark、原版移除style与本地化Remove帮助。",
+        "historical_build_snapshot": "reports/replica/dev52-static-build78.json",
+        "current_build_claim": false
+      },
+      "source_binding": {
+        "replica/Sources/PastoCore/OriginalShortcutControls.swift": {
+          "sha256": "55ecfa91d843f2305044a1558079a89d6da119edc25f5a3d1f4e5b4ffe4d82a8",
+          "historical_sha256": "55ecfa91d843f2305044a1558079a89d6da119edc25f5a3d1f4e5b4ffe4d82a8",
+          "unchanged": true
+        },
+        "replica/Sources/PastoCore/OriginalShortcutRecorderView.swift": {
+          "sha256": "881691562e6378fbadd64502b3ec893c821a1e0a463f8b0c6a5ddbdef7dd6330",
+          "historical_sha256": "881691562e6378fbadd64502b3ec893c821a1e0a463f8b0c6a5ddbdef7dd6330",
+          "unchanged": true
+        }
+      }
+    },
+    {
+      "function_id": "Paste:0x1001ee308",
+      "status": "uncertain",
+      "evidence": "完整原C先执行MainActor检查/固定原文件行0x31报告，再构造general.action.ok的LocalizedStringResource及String，随后读取StateObject model并强持到Button action清除Published错误。当前先let model=self.model再取OriginalShortcutMessages.value(ok)构造Button，action实际调用model.f1ee478，强引用与清错正常行为一致；但原诊断、localization resolver与资源先于model读取的调用顺序未完全保留。保待证，不把正常OK按钮存在当完整原方法证明。",
+      "actual_consumer": "RecorderView.f1ecbc4实际alert actions调用f1ee308；按钮动作清除当前model.validationError，下一次Published更新令.constant(error!=nil)为false。该正常链不代表已运行交互验收。",
+      "original": {
+        "path": "decompiled/Paste/part-0158.c",
+        "line": 2343
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutRecorderView.swift",
+          "symbol": "public func f_1001ee308()",
+          "line": 27
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutRecorderView.swift",
+          "symbol": "return Button(OriginalShortcutMessages.value(\"general.action.ok\")) { model.f_1001ee478() }",
+          "line": 29
+        }
+      ],
+      "historical_evidence": {
+        "path": "reports/function-migration/Paste-0x1001ee308.json",
+        "sha256": "d2cde2599f97d552e3d1da81e8828158b245fad0dea70aa94bd01cf9429c9454",
+        "contract": "构造本地化general.action.ok标题按钮，强持有当前StateObject model，动作清除Published验证错误。",
+        "historical_build_snapshot": "reports/replica/dev52-static-build78.json",
+        "current_build_claim": false
+      },
+      "source_binding": {
+        "replica/Sources/PastoCore/OriginalShortcutRecorderView.swift": {
+          "sha256": "881691562e6378fbadd64502b3ec893c821a1e0a463f8b0c6a5ddbdef7dd6330",
+          "historical_sha256": "881691562e6378fbadd64502b3ec893c821a1e0a463f8b0c6a5ddbdef7dd6330",
+          "unchanged": true
+        }
+      }
+    }
+  ]
+}

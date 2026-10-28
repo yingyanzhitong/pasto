@@ -1,0 +1,51 @@
+{
+  "kind": "static_sdk_source_level_reuse",
+  "generated_at": "2026-10-27T12:27:51.904321+00:00",
+  "historical_evidence": "reports/replica/batch-pasto-sdk-completeness-15.json",
+  "build_executed": false,
+  "tests_executed": false,
+  "product_executed": false,
+  "limitations": "确认源码直接调用Foundation API；未重新编译验证链接或运行时行为。",
+  "records": [
+    {
+      "function_id": "Paste:0x100bf93cc",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-1194.c",
+        "line": 872,
+        "sha256": "d1c141c9e80e4cbf61393945350f0ce525826a508c636be1d662c312c187bd84",
+        "stub": "0x100bf93cc"
+      },
+      "original_symbol": "_$sSy10FoundationE7compare_7options5range6localeSo18NSComparisonResultVqd___So22NSStringCompareOptionsVSnySS5IndexVGSgAA6LocaleVSgtSyRd__lF",
+      "original_dylib": "/System/Library/Frameworks/Foundation.framework/Versions/C/Foundation",
+      "source_reference": {
+        "path": "replica/Sources/Pasto/UI/ReplicaSearchSuggestionSource.swift",
+        "line": 26,
+        "text": ".sorted { $0.compare($1) == .orderedAscending }",
+        "sha256": "20d3dc7f75309c64f7d299910657971c252897363c8e3f1b8e104f4b46f76468"
+      },
+      "criterion": "StringProtocol.compare 对实际应用/设备名称按默认options排序。 历史原版SDK转发及当前Swift对同一Foundation API直接调用已对照；当前机器链接未重新验证。",
+      "scope": "仅SDK转发源码级复用，不升级搜索或持久化父函数。"
+    },
+    {
+      "function_id": "Paste:0x100bf4ba8",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-1170.c",
+        "line": 829,
+        "sha256": "7bb9e2126d8e10e4d0389c5c84a72dc95329e79b8650919880d554528c1b25c8",
+        "stub": "0x100bf4ba8"
+      },
+      "original_symbol": "_$s10Foundation4DateV1goiySbAC_ACtFZ",
+      "original_dylib": "/System/Library/Frameworks/Foundation.framework/Versions/C/Foundation",
+      "source_reference": {
+        "path": "replica/Sources/PastoCore/ClipboardStore.swift",
+        "line": 595,
+        "text": "return lhs.updatedAt > rhs.updatedAt",
+        "sha256": "630b6ccf5038fad731c8623853a0d8a7d2c881f3a63c3d544401a9ebc6449ec5"
+      },
+      "criterion": "Date.> 对按更新时间排序的记录直接比较。 历史原版SDK转发及当前Swift对同一Foundation API直接调用已对照；当前机器链接未重新验证。",
+      "scope": "仅SDK转发源码级复用，不升级搜索或持久化父函数。"
+    }
+  ]
+}

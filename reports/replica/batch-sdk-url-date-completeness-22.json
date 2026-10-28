@@ -1,0 +1,451 @@
+{
+  "kind": "static_sdk_source_level_reuse",
+  "generated_at": "2026-10-27T12:15:01.697610+00:00",
+  "historical_evidence": "reports/replica/batch-pasto-sdk-completeness-15.json",
+  "build_executed": false,
+  "tests_executed": false,
+  "product_executed": false,
+  "limitations": "确认生产源码直接调用Foundation API；未重新编译验证链接或运行时行为。清理父函数仍有已知错误处理差异。",
+  "records": [
+    {
+      "function_id": "Paste:0x100bf41d0",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-1167.c",
+        "line": 519,
+        "sha256": "bb9ce0d2ef5efa3d370b478e51de8decadaefeb23966927f253909c143608219",
+        "stub": "0x100bf41d0"
+      },
+      "original_symbol": "_$s10Foundation12NotificationV6objectypSgvg",
+      "original_dylib": "/System/Library/Frameworks/Foundation.framework/Versions/C/Foundation",
+      "source_reference": {
+        "path": "replica/Sources/PastoCore/OriginalPreviewWindows.swift",
+        "line": 121,
+        "text": "notification.object as? OriginalPreviewWindow",
+        "sha256": "4cc1f30d0de962162c6231a6207cc7623fc82e20f126f3ebc3edb326d5592c2d"
+      },
+      "criterion": "Notification.object 用于预览窗口通知。 已核历史原版SDK转发及当前生产Swift对同一Foundation API直接调用；当前机器链接未重新验证。",
+      "scope": "仅SDK转发源码级复用，不升级通知、实体、文件清理等父函数或SDK内部实现。"
+    },
+    {
+      "function_id": "Paste:0x100bf41dc",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-1167.c",
+        "line": 536,
+        "sha256": "42c2e592725a27e05ed2e32ac567140fe0c4dfa3d31f9a8e43b9bb69bfb1f871",
+        "stub": "0x100bf41dc"
+      },
+      "original_symbol": "_$s10Foundation12NotificationV8userInfoSDys11AnyHashableVypGSgvg",
+      "original_dylib": "/System/Library/Frameworks/Foundation.framework/Versions/C/Foundation",
+      "source_reference": {
+        "path": "replica/Sources/Pasto/AppMain.swift",
+        "line": 121,
+        "text": "notification.userInfo?[NSWorkspace.applicationUserInfoKey]",
+        "sha256": "f81bf026f83757bbd3cf98b56c62ec66ab94c580f2f477def71e17162ffd9c0a"
+      },
+      "criterion": "Notification.userInfo 用于前台应用通知。 已核历史原版SDK转发及当前生产Swift对同一Foundation API直接调用；当前机器链接未重新验证。",
+      "scope": "仅SDK转发源码级复用，不升级通知、实体、文件清理等父函数或SDK内部实现。"
+    },
+    {
+      "function_id": "Paste:0x100bf4758",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-1169.c",
+        "line": 373,
+        "sha256": "e57a4ba209dc551b8a33692d888f0a590cf6fd8ef655c2305063092c94e9e939",
+        "stub": "0x100bf4758"
+      },
+      "original_symbol": "_$s10Foundation3URLV06isFileB0Sbvg",
+      "original_dylib": "/System/Library/Frameworks/Foundation.framework/Versions/C/Foundation",
+      "source_reference": {
+        "path": "replica/Sources/PastoCore/OriginalPreviewSharing.swift",
+        "line": 39,
+        "text": "$0.isFileURL",
+        "sha256": "64b2623f15994676d6798fbc4702a7046826279c56249ade36f9361eef46393c"
+      },
+      "criterion": "URL.isFileURL 用于分享筛选。 已核历史原版SDK转发及当前生产Swift对同一Foundation API直接调用；当前机器链接未重新验证。",
+      "scope": "仅SDK转发源码级复用，不升级通知、实体、文件清理等父函数或SDK内部实现。"
+    },
+    {
+      "function_id": "Paste:0x100bf4788",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-1169.c",
+        "line": 438,
+        "sha256": "4536a9ccaf4b86d4573fb99f6a8bae39204ac80ddabc7a94a4ff04a0a35b31c0",
+        "stub": "0x100bf4788"
+      },
+      "original_symbol": "_$s10Foundation3URLV13pathExtensionSSvg",
+      "original_dylib": "/System/Library/Frameworks/Foundation.framework/Versions/C/Foundation",
+      "source_reference": {
+        "path": "replica/Sources/PastoCore/OriginalDiagnosticsManager.swift",
+        "line": 56,
+        "text": "$0.pathExtension == \"log\"",
+        "sha256": "afb071a98b036e3023f254c039ca1d85c4a975e79307aa3f3075b1caf21513ed"
+      },
+      "criterion": "URL.pathExtension 用于日志筛选。 已核历史原版SDK转发及当前生产Swift对同一Foundation API直接调用；当前机器链接未重新验证。",
+      "scope": "仅SDK转发源码级复用，不升级通知、实体、文件清理等父函数或SDK内部实现。"
+    },
+    {
+      "function_id": "Paste:0x100bf4794",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-1169.c",
+        "line": 458,
+        "sha256": "f06c7f02bc91959fed80d6ff7c9101111bfa4e21f1453246949ca6cdac0fcf47",
+        "stub": "0x100bf4794"
+      },
+      "original_symbol": "_$s10Foundation3URLV14absoluteStringSSvg",
+      "original_dylib": "/System/Library/Frameworks/Foundation.framework/Versions/C/Foundation",
+      "source_reference": {
+        "path": "replica/Sources/PastoCore/OriginalPasteboard.swift",
+        "line": 67,
+        "text": "url.absoluteString",
+        "sha256": "bda6fc26104af712cbf89c0e974c5d84a17b99b89f15def8b2b8c422fc0b3674"
+      },
+      "criterion": "URL.absoluteString 用于原始剪贴板项。 已核历史原版SDK转发及当前生产Swift对同一Foundation API直接调用；当前机器链接未重新验证。",
+      "scope": "仅SDK转发源码级复用，不升级通知、实体、文件清理等父函数或SDK内部实现。"
+    },
+    {
+      "function_id": "Paste:0x100bf47ac",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-1169.c",
+        "line": 493,
+        "sha256": "32d66236a8c7ffa26659635aa93c8d6a44c823a6402908e955dbb4b851a794f4",
+        "stub": "0x100bf47ac"
+      },
+      "original_symbol": "_$s10Foundation3URLV14resourceValues7forKeysAA011URLResourceD0VShySo16NSURLResourceKeyaG_tKF",
+      "original_dylib": "/System/Library/Frameworks/Foundation.framework/Versions/C/Foundation",
+      "source_reference": {
+        "path": "replica/Sources/PastoCore/OriginalPasteboardImageRestore.swift",
+        "line": 74,
+        "text": "file.resourceValues(forKeys: [.creationDateKey])",
+        "sha256": "e4479106e009de1955018b1c0ef63433a4577b80078592b05f032af71bc8cbb3"
+      },
+      "criterion": "URL.resourceValues 用于临时文件清理。 已核历史原版SDK转发及当前生产Swift对同一Foundation API直接调用；当前机器链接未重新验证。",
+      "scope": "仅SDK转发源码级复用，不升级通知、实体、文件清理等父函数或SDK内部实现。"
+    },
+    {
+      "function_id": "Paste:0x100bf47d0",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-1169.c",
+        "line": 546,
+        "sha256": "a4fba6c1af78aa6c645abed9f9cbcf92a918dd64a2698c349753f3eaaa534e09",
+        "stub": "0x100bf47d0"
+      },
+      "original_symbol": "_$s10Foundation3URLV15fileURLWithPathACSSh_tcfC",
+      "original_dylib": "/System/Library/Frameworks/Foundation.framework/Versions/C/Foundation",
+      "source_reference": {
+        "path": "replica/Sources/Pasto/UI/OriginalStackSnippetText.swift",
+        "line": 26,
+        "text": "URL(fileURLWithPath: path).lastPathComponent",
+        "sha256": "64628db702ddcd4a96961e883179e26a0a0d852dff4942f9f21d385eb217505b"
+      },
+      "criterion": "URL.init(fileURLWithPath:) 用于Stack文件摘要。 已核历史原版SDK转发及当前生产Swift对同一Foundation API直接调用；当前机器链接未重新验证。",
+      "scope": "仅SDK转发源码级复用，不升级通知、实体、文件清理等父函数或SDK内部实现。"
+    },
+    {
+      "function_id": "Paste:0x100bf47dc",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-1169.c",
+        "line": 563,
+        "sha256": "afac9d61bebce4458f30658ebb1b93e84a894a2736ada83e6c9d32116371e136",
+        "stub": "0x100bf47dc"
+      },
+      "original_symbol": "_$s10Foundation3URLV16hasDirectoryPathSbvg",
+      "original_dylib": "/System/Library/Frameworks/Foundation.framework/Versions/C/Foundation",
+      "source_reference": {
+        "path": "replica/Sources/PastoCore/OriginalPasteboardImageRestore.swift",
+        "line": 27,
+        "text": "directory.hasDirectoryPath",
+        "sha256": "e4479106e009de1955018b1c0ef63433a4577b80078592b05f032af71bc8cbb3"
+      },
+      "criterion": "URL.hasDirectoryPath 用于临时目录处理。 已核历史原版SDK转发及当前生产Swift对同一Foundation API直接调用；当前机器链接未重新验证。",
+      "scope": "仅SDK转发源码级复用，不升级通知、实体、文件清理等父函数或SDK内部实现。"
+    },
+    {
+      "function_id": "Paste:0x100bf47e8",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-1169.c",
+        "line": 581,
+        "sha256": "2c46a2d9389078592f6d5deb8e1fdaf1ad0095d5ac7812bb1e5e78335b61f7ba",
+        "stub": "0x100bf47e8"
+      },
+      "original_symbol": "_$s10Foundation3URLV17lastPathComponentSSvg",
+      "original_dylib": "/System/Library/Frameworks/Foundation.framework/Versions/C/Foundation",
+      "source_reference": {
+        "path": "replica/Sources/Pasto/UI/OriginalStackSnippetText.swift",
+        "line": 26,
+        "text": "URL(fileURLWithPath: path).lastPathComponent",
+        "sha256": "64628db702ddcd4a96961e883179e26a0a0d852dff4942f9f21d385eb217505b"
+      },
+      "criterion": "URL.lastPathComponent 用于Stack文件摘要。 已核历史原版SDK转发及当前生产Swift对同一Foundation API直接调用；当前机器链接未重新验证。",
+      "scope": "仅SDK转发源码级复用，不升级通知、实体、文件清理等父函数或SDK内部实现。"
+    },
+    {
+      "function_id": "Paste:0x100bf4818",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-1169.c",
+        "line": 646,
+        "sha256": "0af2fe77e00e4393a7277d56d80cf56c1943d15de3fc22f24c880c0c90b30992",
+        "stub": "0x100bf4818"
+      },
+      "original_symbol": "_$s10Foundation3URLV22UniformTypeIdentifiersE22appendingPathComponent_12conformingToACSS_AD6UTTypeVtF",
+      "original_dylib": "/usr/lib/swift/libswiftUniformTypeIdentifiers.dylib",
+      "source_reference": {
+        "path": "replica/Sources/PastoCore/OriginalPasteboardImageRestore.swift",
+        "line": 47,
+        "text": "directory.appendingPathComponent(name, conformingTo: type)",
+        "sha256": "e4479106e009de1955018b1c0ef63433a4577b80078592b05f032af71bc8cbb3"
+      },
+      "criterion": "UTType URL.appendingPathComponent 用于图像文件命名。 已核历史原版SDK转发及当前生产Swift对同一Foundation API直接调用；当前机器链接未重新验证。",
+      "scope": "仅SDK转发源码级复用，不升级通知、实体、文件清理等父函数或SDK内部实现。"
+    },
+    {
+      "function_id": "Paste:0x100bf4830",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-1169.c",
+        "line": 685,
+        "sha256": "8560f01af30b387222de4dfa23a26c8bf2a55ab83b491aeba9e53486bba90b48",
+        "stub": "0x100bf4830"
+      },
+      "original_symbol": "_$s10Foundation3URLV22appendingPathComponentyACSSF",
+      "original_dylib": "/System/Library/Frameworks/Foundation.framework/Versions/C/Foundation",
+      "source_reference": {
+        "path": "replica/Sources/PastoCore/OriginalPasteboardImageRestore.swift",
+        "line": 26,
+        "text": "temporaryRoot.appendingPathComponent(\"images\")",
+        "sha256": "e4479106e009de1955018b1c0ef63433a4577b80078592b05f032af71bc8cbb3"
+      },
+      "criterion": "URL.appendingPathComponent(String) 用于临时图像目录。 已核历史原版SDK转发及当前生产Swift对同一Foundation API直接调用；当前机器链接未重新验证。",
+      "scope": "仅SDK转发源码级复用，不升级通知、实体、文件清理等父函数或SDK内部实现。"
+    },
+    {
+      "function_id": "Paste:0x100bf4854",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-1169.c",
+        "line": 736,
+        "sha256": "06cd5e052c1d299b57c781e587078345e393b041fa26b329be47651cda5d232f",
+        "stub": "0x100bf4854"
+      },
+      "original_symbol": "_$s10Foundation3URLV24checkResourceIsReachableSbyKF",
+      "original_dylib": "/System/Library/Frameworks/Foundation.framework/Versions/C/Foundation",
+      "source_reference": {
+        "path": "replica/Sources/PastoCore/OriginalPreviewSharing.swift",
+        "line": 39,
+        "text": "$0.checkResourceIsReachable()",
+        "sha256": "64b2623f15994676d6798fbc4702a7046826279c56249ade36f9361eef46393c"
+      },
+      "criterion": "URL.checkResourceIsReachable 用于分享筛选。 已核历史原版SDK转发及当前生产Swift对同一Foundation API直接调用；当前机器链接未重新验证。",
+      "scope": "仅SDK转发源码级复用，不升级通知、实体、文件清理等父函数或SDK内部实现。"
+    },
+    {
+      "function_id": "Paste:0x100bf48b4",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-1169.c",
+        "line": 865,
+        "sha256": "5304b2e80b66e0ea8217a49d529434adf4fcd15d72c7a6ea36fc007a207c8ec1",
+        "stub": "0x100bf48b4"
+      },
+      "original_symbol": "_$s10Foundation3URLV4hostSSSgvg",
+      "original_dylib": "/System/Library/Frameworks/Foundation.framework/Versions/C/Foundation",
+      "source_reference": {
+        "path": "replica/Sources/PastoCore/OriginalLinkDisplay.swift",
+        "line": 6,
+        "text": "url.host",
+        "sha256": "22ddf146e091d4b1f9fb0315e95a8bfb527542b1e1f945c9c80a776e47302b20"
+      },
+      "criterion": "URL.host 用于链接显示。 已核历史原版SDK转发及当前生产Swift对同一Foundation API直接调用；当前机器链接未重新验证。",
+      "scope": "仅SDK转发源码级复用，不升级通知、实体、文件清理等父函数或SDK内部实现。"
+    },
+    {
+      "function_id": "Paste:0x100bf48cc",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-1169.c",
+        "line": 901,
+        "sha256": "d0d534f60a402579cd0badbf57b27ed4916d64d11eb2a989de57172abe2e839d",
+        "stub": "0x100bf48cc"
+      },
+      "original_symbol": "_$s10Foundation3URLV4pathSSvg",
+      "original_dylib": "/System/Library/Frameworks/Foundation.framework/Versions/C/Foundation",
+      "source_reference": {
+        "path": "replica/Sources/PastoCore/OriginalLinkDisplay.swift",
+        "line": 6,
+        "text": "url.path",
+        "sha256": "22ddf146e091d4b1f9fb0315e95a8bfb527542b1e1f945c9c80a776e47302b20"
+      },
+      "criterion": "URL.path 用于链接显示。 已核历史原版SDK转发及当前生产Swift对同一Foundation API直接调用；当前机器链接未重新验证。",
+      "scope": "仅SDK转发源码级复用，不升级通知、实体、文件清理等父函数或SDK内部实现。"
+    },
+    {
+      "function_id": "Paste:0x100bf48f0",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-1169.c",
+        "line": 951,
+        "sha256": "cbb915bd40ee5a74b3834cd1235d304dcbd653929d04b07e82e7b7e04cb8ac4d",
+        "stub": "0x100bf48f0"
+      },
+      "original_symbol": "_$s10Foundation3URLV5querySSSgvg",
+      "original_dylib": "/System/Library/Frameworks/Foundation.framework/Versions/C/Foundation",
+      "source_reference": {
+        "path": "replica/Sources/PastoCore/OriginalLinkDisplay.swift",
+        "line": 10,
+        "text": "url.query",
+        "sha256": "22ddf146e091d4b1f9fb0315e95a8bfb527542b1e1f945c9c80a776e47302b20"
+      },
+      "criterion": "URL.query 用于链接显示。 已核历史原版SDK转发及当前生产Swift对同一Foundation API直接调用；当前机器链接未重新验证。",
+      "scope": "仅SDK转发源码级复用，不升级通知、实体、文件清理等父函数或SDK内部实现。"
+    },
+    {
+      "function_id": "Paste:0x100bf48fc",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-1169.c",
+        "line": 966,
+        "sha256": "fc3776e0480a21cf5b0993742cfdbcbc311ac4e151c429e939b03b54c8221034",
+        "stub": "0x100bf48fc"
+      },
+      "original_symbol": "_$s10Foundation3URLV6schemeSSSgvg",
+      "original_dylib": "/System/Library/Frameworks/Foundation.framework/Versions/C/Foundation",
+      "source_reference": {
+        "path": "replica/Sources/PastoCore/OriginalLinkDisplay.swift",
+        "line": 7,
+        "text": "url.scheme",
+        "sha256": "22ddf146e091d4b1f9fb0315e95a8bfb527542b1e1f945c9c80a776e47302b20"
+      },
+      "criterion": "URL.scheme 用于链接显示。 已核历史原版SDK转发及当前生产Swift对同一Foundation API直接调用；当前机器链接未重新验证。",
+      "scope": "仅SDK转发源码级复用，不升级通知、实体、文件清理等父函数或SDK内部实现。"
+    },
+    {
+      "function_id": "Paste:0x100bf4908",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-1169.c",
+        "line": 981,
+        "sha256": "8edff7110066ba4f788f306fd09c52744b0fa78eb18b443f10b475059fc7aaa5",
+        "stub": "0x100bf4908"
+      },
+      "original_symbol": "_$s10Foundation3URLV6stringACSgSSh_tcfC",
+      "original_dylib": "/System/Library/Frameworks/Foundation.framework/Versions/C/Foundation",
+      "source_reference": {
+        "path": "replica/Sources/PastoCore/OriginalPasteboard.swift",
+        "line": 135,
+        "text": "URL(string: string)",
+        "sha256": "bda6fc26104af712cbf89c0e974c5d84a17b99b89f15def8b2b8c422fc0b3674"
+      },
+      "criterion": "URL.init(string:) 用于粘贴板URL解析。 已核历史原版SDK转发及当前生产Swift对同一Foundation API直接调用；当前机器链接未重新验证。",
+      "scope": "仅SDK转发源码级复用，不升级通知、实体、文件清理等父函数或SDK内部实现。"
+    },
+    {
+      "function_id": "Paste:0x100bf4b90",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-1170.c",
+        "line": 799,
+        "sha256": "19c6560255f66b9ff6fd3cdc5a5068faeeb886b0a47a84b56bc2d2c4f22c6cff",
+        "stub": "0x100bf4b90"
+      },
+      "original_symbol": "_$s10Foundation4DateV18addingTimeIntervalyACSdF",
+      "original_dylib": "/System/Library/Frameworks/Foundation.framework/Versions/C/Foundation",
+      "source_reference": {
+        "path": "replica/Sources/PastoCore/OriginalPasteboardImageRestore.swift",
+        "line": 70,
+        "text": "Date().addingTimeInterval(-86400)",
+        "sha256": "e4479106e009de1955018b1c0ef63433a4577b80078592b05f032af71bc8cbb3"
+      },
+      "criterion": "Date.addingTimeInterval 用于临时图像清理。 已核历史原版SDK转发及当前生产Swift对同一Foundation API直接调用；当前机器链接未重新验证。",
+      "scope": "仅SDK转发源码级复用，不升级通知、实体、文件清理等父函数或SDK内部实现。"
+    },
+    {
+      "function_id": "Paste:0x100bf4bb4",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-1170.c",
+        "line": 847,
+        "sha256": "9c6bb491989a4c875c6bbdb4ab17df16f1fab1bb5d4a266efe4222618b46b62d",
+        "stub": "0x100bf4bb4"
+      },
+      "original_symbol": "_$s10Foundation4DateV1loiySbAC_ACtFZ",
+      "original_dylib": "/System/Library/Frameworks/Foundation.framework/Versions/C/Foundation",
+      "source_reference": {
+        "path": "replica/Sources/PastoCore/OriginalPasteboardImageRestore.swift",
+        "line": 75,
+        "text": "created < cutoff",
+        "sha256": "e4479106e009de1955018b1c0ef63433a4577b80078592b05f032af71bc8cbb3"
+      },
+      "criterion": "Date.< 用于文件创建时间与cutoff比较。 已核历史原版SDK转发及当前生产Swift对同一Foundation API直接调用；当前机器链接未重新验证。",
+      "scope": "仅SDK转发源码级复用，不升级通知、实体、文件清理等父函数或SDK内部实现。"
+    },
+    {
+      "function_id": "Paste:0x100bf4bd8",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-1170.c",
+        "line": 899,
+        "sha256": "a9e96c448594f9a2357734fbc0ef4c0d49f863c94d1add1589f3bc6213631f46",
+        "stub": "0x100bf4bd8"
+      },
+      "original_symbol": "_$s10Foundation4DateV21timeIntervalSince1970ACSd_tcfC",
+      "original_dylib": "/System/Library/Frameworks/Foundation.framework/Versions/C/Foundation",
+      "source_reference": {
+        "path": "replica/Sources/PastoCore/OriginalSearchQuery.swift",
+        "line": 34,
+        "text": "Date(timeIntervalSince1970: start)",
+        "sha256": "4c828b16c6342387d375e6b5a3f24d28b37bbffa1c377e4cdb064ad27b5d1b28"
+      },
+      "criterion": "Date.init(timeIntervalSince1970:) 用于查询日期边界。 已核历史原版SDK转发及当前生产Swift对同一Foundation API直接调用；当前机器链接未重新验证。",
+      "scope": "仅SDK转发源码级复用，不升级通知、实体、文件清理等父函数或SDK内部实现。"
+    },
+    {
+      "function_id": "Paste:0x100bf4be4",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-1170.c",
+        "line": 916,
+        "sha256": "8bae4b25f2b0173d39604954bbccc0e9181e645c501b8717439f77a64fd9c495",
+        "stub": "0x100bf4be4"
+      },
+      "original_symbol": "_$s10Foundation4DateV21timeIntervalSince1970Sdvg",
+      "original_dylib": "/System/Library/Frameworks/Foundation.framework/Versions/C/Foundation",
+      "source_reference": {
+        "path": "replica/Sources/PastoCore/OriginalSearchDateEncoding.swift",
+        "line": 5,
+        "text": "range.lowerBound.timeIntervalSince1970",
+        "sha256": "b46fe7fca447d1089bfc7c36676ecaf13a2d77c6d665eb5f42cb37ab5d00c5c6"
+      },
+      "criterion": "Date.timeIntervalSince1970 用于日期范围编码。 已核历史原版SDK转发及当前生产Swift对同一Foundation API直接调用；当前机器链接未重新验证。",
+      "scope": "仅SDK转发源码级复用，不升级通知、实体、文件清理等父函数或SDK内部实现。"
+    },
+    {
+      "function_id": "Paste:0x100bf4c44",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-1170.c",
+        "line": 1044,
+        "sha256": "78fa76e5ae59932d736f20b36a493fd27c84b2c89644b3491ec5ff575f2a4fc7",
+        "stub": "0x100bf4c44"
+      },
+      "original_symbol": "_$s10Foundation4DateVACycfC",
+      "original_dylib": "/System/Library/Frameworks/Foundation.framework/Versions/C/Foundation",
+      "source_reference": {
+        "path": "replica/Sources/PastoCore/OriginalPasteboardImageRestore.swift",
+        "line": 70,
+        "text": "Date().addingTimeInterval(-86400)",
+        "sha256": "e4479106e009de1955018b1c0ef63433a4577b80078592b05f032af71bc8cbb3"
+      },
+      "criterion": "Date.init() 用于临时图像清理。 已核历史原版SDK转发及当前生产Swift对同一Foundation API直接调用；当前机器链接未重新验证。",
+      "scope": "仅SDK转发源码级复用，不升级通知、实体、文件清理等父函数或SDK内部实现。"
+    }
+  ]
+}

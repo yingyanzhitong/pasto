@@ -27,6 +27,7 @@ public struct ClipboardItem: Identifiable, Codable, Equatable, Sendable {
     public var sourceName: String
     public var sourceBundleID: String?
     public var sourceApplicationBundleID: String?
+    public var sourceApplicationRelationIsKnown: Bool?
     public var sourceDevice: String
     public var isInHistory: Bool
     public var payloads: [String: Data]
@@ -66,7 +67,8 @@ public struct ClipboardItem: Identifiable, Codable, Equatable, Sendable {
                 sourceDevice: String = "此Mac", isInHistory: Bool = true,
                 imagePreviewMetadata: OriginalImagePreviewMetadata? = nil,
                 rawPreview: Data? = nil, hasExplicitTitle: Bool? = nil, pinboardOrder: Int64? = nil,
-                sourceApplicationBundleID: String? = nil, pinboardOwnerID: UUID? = nil) {
+                sourceApplicationBundleID: String? = nil, pinboardOwnerID: UUID? = nil,
+                sourceApplicationRelationIsKnown: Bool? = true) {
         self.id = id
         self.createdAt = createdAt
         self.updatedAt = updatedAt ?? createdAt
@@ -77,6 +79,7 @@ public struct ClipboardItem: Identifiable, Codable, Equatable, Sendable {
         self.sourceName = sourceName
         self.sourceBundleID = sourceBundleID
         self.sourceApplicationBundleID = sourceApplicationBundleID
+        self.sourceApplicationRelationIsKnown = sourceApplicationRelationIsKnown
         self.payloads = payloads
         self.imagePreviewMetadata = imagePreviewMetadata
         self.rawPreview = rawPreview
@@ -97,7 +100,7 @@ public struct Pinboard: Identifiable, Codable, Equatable, Sendable {
     public var rawType: Int16?
     public var rawAttributes: Data?
 
-    public init(id: UUID = UUID(), name: String = "新建 Pinboard", colorHex: String = "#FF9500", sortOrder: Int = 0,
+    public init(id: UUID = UUID(), name: String = "新建 Pasto", colorHex: String = "#FF9500", sortOrder: Int = 0,
                 rawType: Int16? = nil, rawAttributes: Data? = nil) {
         self.id = id
         self.name = name
@@ -263,11 +266,11 @@ public enum ClipboardStoreError: LocalizedError {
     public var errorDescription: String? {
         switch self {
         case .itemNotFound: return "未找到剪贴板项目。"
-        case .pinboardNotFound: return "未找到 Pinboard。"
+        case .pinboardNotFound: return "未找到 Pasto。"
         case .missingPlainText: return "此项目没有可用的纯文本。"
         case .pasteboardWriteFailed: return "写入剪贴板失败。"
-        case .invalidPinboardName: return "Pinboard 名称不能为空。"
-        case .invalidPinboardOrder: return "Pinboard 项目移动位置无效。"
+        case .invalidPinboardName: return "Pasto 名称不能为空。"
+        case .invalidPinboardOrder: return "Pasto 项目移动位置无效。"
         case .invalidSourceApplication: return "来源应用记录缺失或关联无效。"
         case .unsupportedArchiveVersion: return "不支持此存档版本。"
         case .duplicateIdentifiers: return "存档中包含重复标识符。"

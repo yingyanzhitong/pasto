@@ -1,0 +1,191 @@
+{
+  "kind": "static_sdk_source_level_reuse",
+  "generated_at": "2026-10-27T12:25:31.234142+00:00",
+  "historical_evidence": "reports/replica/batch-pasto-sdk-completeness-15.json",
+  "build_executed": false,
+  "tests_executed": false,
+  "product_executed": false,
+  "limitations": "确认源码直接调用Foundation API；未重新编译验证链接或运行时行为。",
+  "records": [
+    {
+      "function_id": "Paste:0x100bf4710",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-1169.c",
+        "line": 262,
+        "sha256": "77d6bbaa8b3a18615dda3bb9103bc566072398d708c7b3e525a10fa821416d66",
+        "stub": "0x100bf4710"
+      },
+      "original_symbol": "_$s10Foundation23LocalizedStringResourceV_12defaultValue5table6locale6bundle7commentACs06StaticC0V_SSAAE012LocalizationF0VSSSgAA6LocaleVAC17BundleDescriptionOAJSgtcfC",
+      "original_dylib": "/System/Library/Frameworks/Foundation.framework/Versions/C/Foundation",
+      "source_reference": {
+        "path": "replica/Sources/PastoCore/OriginalPreviewLocalization.swift",
+        "line": 26,
+        "text": "LocalizedStringResource(\"general.until\", defaultValue:",
+        "sha256": "0163cc854b291a3341675ea525903141dc764dda4a2791b513f4a9c4515632f1"
+      },
+      "criterion": "LocalizedStringResource以StaticString和插值默认值构造资源。 历史原版SDK转发与当前Swift同一Foundation API直接调用已对照；当前机器链接未重新验证。",
+      "scope": "仅SDK转发源码级复用，不升级调用方、系统内部或运行行为。"
+    },
+    {
+      "function_id": "Paste:0x100bf471c",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-1169.c",
+        "line": 283,
+        "sha256": "5180222adfb1726aca84d84477e8c112dfb63ed5d2b04b5cdca76e07c5ae024f",
+        "stub": "0x100bf471c"
+      },
+      "original_symbol": "_$s10Foundation23LocalizedStringResourceV_5table6locale6bundle7commentACSSAAE17LocalizationValueV_SSSgAA6LocaleVAC17BundleDescriptionOs06StaticC0VSgtcfC",
+      "original_dylib": "/System/Library/Frameworks/Foundation.framework/Versions/C/Foundation",
+      "source_reference": {
+        "path": "replica/Sources/PastoCore/OriginalPreviewLocalization.swift",
+        "line": 12,
+        "text": "LocalizedStringResource(String.LocalizationValue(stringLiteral: key),",
+        "sha256": "0163cc854b291a3341675ea525903141dc764dda4a2791b513f4a9c4515632f1"
+      },
+      "criterion": "LocalizedStringResource以LocalizationValue构造资源。 历史原版SDK转发与当前Swift同一Foundation API直接调用已对照；当前机器链接未重新验证。",
+      "scope": "仅SDK转发源码级复用，不升级调用方、系统内部或运行行为。"
+    },
+    {
+      "function_id": "Paste:0x100bf4740",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-1169.c",
+        "line": 335,
+        "sha256": "53556d311a2133962201769e2b0b66c45d7f56ea79a5dd2b0df36329a1e24980",
+        "stub": "0x100bf4740"
+      },
+      "original_symbol": "_$s10Foundation27_KeyValueCodingAndObservingPAAE7observe_7options13changeHandlerAA05NSKeyC11ObservationCs0B4PathCyxqd__G_So0kcF7OptionsVyx_AA0kC14ObservedChangeVyqd__GtctlF",
+      "original_dylib": "/System/Library/Frameworks/Foundation.framework/Versions/C/Foundation",
+      "source_reference": {
+        "path": "replica/Sources/PastoCore/OriginalPreviewTextTraits.swift",
+        "line": 123,
+        "text": "editor.observe(\\.typingAttributes, options: [.new])",
+        "sha256": "819f073d5a5a633a4c7794fc0107e7bf3f015b68e74a1543d6edac7b29e31324"
+      },
+      "criterion": "Foundation KVO observe用于真实文本编辑属性观察。 历史原版SDK转发与当前Swift同一Foundation API直接调用已对照；当前机器链接未重新验证。",
+      "scope": "仅SDK转发源码级复用，不升级调用方、系统内部或运行行为。"
+    },
+    {
+      "function_id": "Paste:0x100bf7c80",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-1187.c",
+        "line": 54,
+        "sha256": "dee569cc8c45f6768afdd597ca9d9de3c2f44cca546faa7c31f5e089ed5e13b8",
+        "stub": "0x100bf7c80"
+      },
+      "original_symbol": "_$sSS10FoundationE9localizedSSAA23LocalizedStringResourceV_tcfC",
+      "original_dylib": "/System/Library/Frameworks/Foundation.framework/Versions/C/Foundation",
+      "source_reference": {
+        "path": "replica/Sources/PastoCore/OriginalPreviewTitles.swift",
+        "line": 14,
+        "text": "String(localized: resource)",
+        "sha256": "a207f688f263c9652c37d347391efd7cfcebcbe1f637125a623555dbc0d3d687"
+      },
+      "criterion": "String.init(localized:) 将标题资源本地化。 历史原版SDK转发与当前Swift同一Foundation API直接调用已对照；当前机器链接未重新验证。",
+      "scope": "仅SDK转发源码级复用，不升级调用方、系统内部或运行行为。"
+    },
+    {
+      "function_id": "Paste:0x100bf8d30",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-1192.c",
+        "line": 673,
+        "sha256": "a2004e6e72662cfebac15f3e89c0a5ceb239e7cdfae271d802b5598683e90b40",
+        "stub": "0x100bf8d30"
+      },
+      "original_symbol": "_$sSo18NSAttributedStringC10FoundationEyAbC010AttributedB0VcfC",
+      "original_dylib": "/System/Library/Frameworks/Foundation.framework/Versions/C/Foundation",
+      "source_reference": {
+        "path": "replica/Sources/Pasto/UI/OriginalCompactTextContent.swift",
+        "line": 30,
+        "text": "NSAttributedString(text)",
+        "sha256": "3f0e9a48a84507ddadbcf2c4c3fee02e166c5aee98ca0b6763286d22dc96a1d6"
+      },
+      "criterion": "NSAttributedString.init(AttributedString) 用于紧凑文本显示。 历史原版SDK转发与当前Swift同一Foundation API直接调用已对照；当前机器链接未重新验证。",
+      "scope": "仅SDK转发源码级复用，不升级调用方、系统内部或运行行为。"
+    },
+    {
+      "function_id": "Paste:0x100bf9348",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-1194.c",
+        "line": 676,
+        "sha256": "691914407d9c12065fab5d84b36edd3f8eacce64952b4744e9a500718685553c",
+        "stub": "0x100bf9348"
+      },
+      "original_symbol": "_$sSy10FoundationE10components11separatedBySaySSGAA12CharacterSetV_tF",
+      "original_dylib": "/System/Library/Frameworks/Foundation.framework/Versions/C/Foundation",
+      "source_reference": {
+        "path": "replica/Sources/PastoCore/OCR.swift",
+        "line": 121,
+        "text": "text.components(separatedBy: separators)",
+        "sha256": "05735a83412519d0a8fb4b913b17f434a235b57ec7fda6cc0fa334248223ed93"
+      },
+      "criterion": "StringProtocol.components(separatedBy: CharacterSet) 用于OCR词分隔。 历史原版SDK转发与当前Swift同一Foundation API直接调用已对照；当前机器链接未重新验证。",
+      "scope": "仅SDK转发源码级复用，不升级调用方、系统内部或运行行为。"
+    },
+    {
+      "function_id": "Paste:0x100bf9378",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-1194.c",
+        "line": 747,
+        "sha256": "c606bcec4f1d2b34d947c05101f1b7ba8e949cf9cdaf39f775308d16039fb1fb",
+        "stub": "0x100bf9378"
+      },
+      "original_symbol": "_$sSy10FoundationE18trimmingCharacters2inSSAA12CharacterSetV_tF",
+      "original_dylib": "/System/Library/Frameworks/Foundation.framework/Versions/C/Foundation",
+      "source_reference": {
+        "path": "replica/Sources/PastoCore/OriginalSearchQuery.swift",
+        "line": 16,
+        "text": "value.trimmingCharacters(in: .whitespaces)",
+        "sha256": "4c828b16c6342387d375e6b5a3f24d28b37bbffa1c377e4cdb064ad27b5d1b28"
+      },
+      "criterion": "StringProtocol.trimmingCharacters(in:) 用于搜索空白归一化。 历史原版SDK转发与当前Swift同一Foundation API直接调用已对照；当前机器链接未重新验证。",
+      "scope": "仅SDK转发源码级复用，不升级调用方、系统内部或运行行为。"
+    },
+    {
+      "function_id": "Paste:0x100bf9390",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-1194.c",
+        "line": 790,
+        "sha256": "b698ebce43d076afb5202c640d58ae66786f977776e82e760835b47ad359ba88",
+        "stub": "0x100bf9390"
+      },
+      "original_symbol": "_$sSy10FoundationE21addingPercentEncoding21withAllowedCharactersSSSgAA12CharacterSetV_tF",
+      "original_dylib": "/System/Library/Frameworks/Foundation.framework/Versions/C/Foundation",
+      "source_reference": {
+        "path": "replica/Sources/PastoCore/OriginalPasteboard.swift",
+        "line": 145,
+        "text": "string.addingPercentEncoding(withAllowedCharacters: allowed)",
+        "sha256": "bda6fc26104af712cbf89c0e974c5d84a17b99b89f15def8b2b8c422fc0b3674"
+      },
+      "criterion": "StringProtocol.addingPercentEncoding 用于URL解析回退。 历史原版SDK转发与当前Swift同一Foundation API直接调用已对照；当前机器链接未重新验证。",
+      "scope": "仅SDK转发源码级复用，不升级调用方、系统内部或运行行为。"
+    },
+    {
+      "function_id": "Paste:0x100bf93c0",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-1194.c",
+        "line": 855,
+        "sha256": "442c54dfd303ebcf600234924583a936694ccd2b3dd8ff0b3f72850e0cd5ad3f",
+        "stub": "0x100bf93c0"
+      },
+      "original_symbol": "_$sSy10FoundationE5range2of7optionsAB6localeSnySS5IndexVGSgqd___So22NSStringCompareOptionsVAiA6LocaleVSgtSyRd__lF",
+      "original_dylib": "/System/Library/Frameworks/Foundation.framework/Versions/C/Foundation",
+      "source_reference": {
+        "path": "replica/Sources/PastoCore/OCR.swift",
+        "line": 122,
+        "text": "text.range(of: word, options: [], range: cursor..<text.endIndex, locale: nil)",
+        "sha256": "05735a83412519d0a8fb4b913b17f434a235b57ec7fda6cc0fa334248223ed93"
+      },
+      "criterion": "StringProtocol.range(of:options:range:locale:) 用于OCR词范围。 历史原版SDK转发与当前Swift同一Foundation API直接调用已对照；当前机器链接未重新验证。",
+      "scope": "仅SDK转发源码级复用，不升级调用方、系统内部或运行行为。"
+    }
+  ]
+}

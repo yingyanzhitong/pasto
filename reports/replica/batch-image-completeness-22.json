@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "scope": "前轮未覆盖的四个已有原生预览按钮主操作/选中状态属性方法，逐个核完整成功原C和真实写入/读取消费者。",
+  "counts": { "total": 4, "complete": 4, "gap": 0, "uncertain": 0 },
+  "records": [
+    {
+      "function_id": "Paste:0x10023d9c8",
+      "status": "complete",
+      "original": { "path": "decompiled/Paste/part-0195.c", "start_line": 1854, "address_range": "0x10023d9c8..<0x10023da08" },
+      "current_implementations": [ { "path": "replica/Sources/PastoCore/OriginalToolbarButton.swift", "start_line": 29, "end_line": 29, "symbol": "public var isPrimary" } ],
+      "criterion": "原读取保存的isPrimary Bool并返回，只有Swift访问标记，不创建label/image、不刷新style、不推导enabled/pressed。当前stored Bool getter直接返回保存值，无didGet或额外派生条件。合法Bool全部两值覆盖，不将原动态字段偏移当高层值差异。",
+      "actual_consumer": "OriginalToolbarButton.f23f230第173行真实样式分支读取；Adapter.swift第547行实际save按钮设置主操作true。",
+      "limitations": "只确认stored getter，不升级样式分支或按钮构造。"
+    },
+    {
+      "function_id": "Paste:0x10023da08",
+      "status": "complete",
+      "original": { "path": "decompiled/Paste/part-0195.c", "start_line": 1870, "address_range": "0x10023da08..<0x10023da1c" },
+      "supporting_original": { "path": "decompiled/Paste/part-0195.c", "start_line": 1881, "address_range": "0x10023da1c..<0x10023da6c" },
+      "current_implementations": [ { "path": "replica/Sources/PastoCore/OriginalToolbarButton.swift", "start_line": 29, "end_line": 29, "symbol": "public var isPrimary = false { didSet { f_10023d784() } }" } ],
+      "criterion": "原把请求Bool和isPrimary字段地址交f23da1c，helper先写字段后无条件调用f23d784；不比旧值，相同值仍刷新，不根据enabled阻止写入。当前stored property的didSet同样在合法赋值后无条件调用同style方法，初始false是构造期字段值，不伪造一次外部setter事件。",
+      "actual_consumer": "Adapter真实编辑footer构造第547行save.isPrimary=true；随后同按钮显示使用f23f230主色分支，不是无消费setter。",
+      "limitations": "只核普通赋值setter，不升级相邻_modify协程的异常unwind分支或ABI；下游style单列。"
+    },
+    {
+      "function_id": "Paste:0x10023dab0",
+      "status": "complete",
+      "original": { "path": "decompiled/Paste/part-0195.c", "start_line": 1918, "address_range": "0x10023dab0..<0x10023daf0" },
+      "current_implementations": [ { "path": "replica/Sources/PastoCore/OriginalToolbarButton.swift", "start_line": 30, "end_line": 30, "symbol": "public var isSelected" } ],
+      "criterion": "原只读取保存的isSelected Bool，当前相同stored getter，无新建控件、不从NSButton.state回算、不修改pressed/hovered。正常两值返回完整。",
+      "actual_consumer": "f23f230第189/190行真实pressed/selected样式消费；Adapter.f2106d0第602行按选区trait集合给四个实际格式按钮写此状态。",
+      "limitations": "不把真实选区识别、toolbar格式动作或原ObjC桥算入getter完成。"
+    },
+    {
+      "function_id": "Paste:0x10023c8d4",
+      "status": "complete",
+      "original": { "path": "decompiled/Paste/part-0195.c", "start_line": 1044, "address_range": "0x10023c8d4..<0x10023c8e8" },
+      "supporting_original": { "path": "decompiled/Paste/part-0195.c", "start_line": 1881, "address_range": "0x10023da1c..<0x10023da6c" },
+      "current_implementations": [ { "path": "replica/Sources/PastoCore/OriginalToolbarButton.swift", "start_line": 30, "end_line": 30, "symbol": "public var isSelected = false { didSet { f_10023d784() } }" } ],
+      "criterion": "原与primary setter共用f23da1c但字段固定isSelected：先写请求Bool再无条件style刷新。当前同stored Bool didSet，不做distinctUntilChanged、不等batch完成再延后刷新、不影响isPrimary/pressed等其它字段。原setter本体没有执行器检查，且无可选owner分支。",
+      "actual_consumer": "Adapter.f2106d0真实按bold/italic/underline/strike顺序逐按钮赋值，每次立即触发该按钮style；该方法经storage bridge的onTraitsChange实际调用。",
+      "limitations": "仅属性赋值合同；不升级选区数据源、相邻修改协程或整按钮样式。没有运行属性赋值样本。"
+    }
+  ],
+  "excluded_failed_addresses": [ "0x100ac35f8", "0x100ac746c" ],
+  "verification_scope": "仅新增本独立报告，无产品源码、台账或旧报告修改，无编译、parse、运行产品、测试、MCP或发布，未读取指定失败函数。complete为有限源码方法合同，不表示当前机器码证明或一比一功能验收。"
+}

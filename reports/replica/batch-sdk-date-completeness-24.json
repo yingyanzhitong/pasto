@@ -1,0 +1,71 @@
+{
+  "kind": "static_sdk_source_level_reuse",
+  "generated_at": "2026-10-27T12:19:25.675958+00:00",
+  "historical_evidence": "reports/replica/batch-pasto-sdk-completeness-15.json",
+  "build_executed": false,
+  "tests_executed": false,
+  "product_executed": false,
+  "limitations": "确认源码直接调用Foundation API；未重新编译验证链接或运行时行为。",
+  "records": [
+    {
+      "function_id": "Paste:0x100bf4bcc",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-1170.c",
+        "line": 882,
+        "sha256": "079887e0a60e661775b863010514b161c0fef67688dc8d0337a2f93ebf6e3533",
+        "stub": "0x100bf4bcc"
+      },
+      "original_symbol": "_$s10Foundation4DateV20timeIntervalSinceNowSdvg",
+      "original_dylib": "/System/Library/Frameworks/Foundation.framework/Versions/C/Foundation",
+      "source_reference": {
+        "path": "replica/Sources/Pasto/AppMain.swift",
+        "line": 383,
+        "text": "date.timeIntervalSinceNow",
+        "sha256": "f81bf026f83757bbd3cf98b56c62ec66ab94c580f2f477def71e17162ffd9c0a"
+      },
+      "criterion": "Date.timeIntervalSinceNow 用于暂停恢复定时器间隔。 历史原版SDK转发及当前Swift同一Foundation API直接调用已对照；当前机器链接未重新验证。",
+      "scope": "仅SDK转发源码级复用，不升级日志或暂停监控父函数。"
+    },
+    {
+      "function_id": "Paste:0x100bf4c08",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-1170.c",
+        "line": 966,
+        "sha256": "b7a54a15d1ae4e5ac690083692d80117244fd7cc01fbbfae85d653a3e78b03ca",
+        "stub": "0x100bf4c08"
+      },
+      "original_symbol": "_$s10Foundation4DateV3nowACvgZ",
+      "original_dylib": "/System/Library/Frameworks/Foundation.framework/Versions/C/Foundation",
+      "source_reference": {
+        "path": "replica/Sources/PastoCore/OriginalDiagnosticDispatcher.swift",
+        "line": 137,
+        "text": "Date.now.formatted(Self.timestampFormat)",
+        "sha256": "7f7ca246acae9248a654db1af4973e8d48c272651a147fffc06cafaf2a103e9f"
+      },
+      "criterion": "Date.now 产生本地日志的时间戳。 历史原版SDK转发及当前Swift同一Foundation API直接调用已对照；当前机器链接未重新验证。",
+      "scope": "仅SDK转发源码级复用，不升级日志或暂停监控父函数。"
+    },
+    {
+      "function_id": "Paste:0x100bf4c38",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-1170.c",
+        "line": 1028,
+        "sha256": "f4ae93430f8b03f549905d05a712e9110b375cb832da79e3098e05450cae4293",
+        "stub": "0x100bf4c38"
+      },
+      "original_symbol": "_$s10Foundation4DateV9formattedy12FormatOutputQzxAA0D5StyleRzAC0D5InputRtzlF",
+      "original_dylib": "/System/Library/Frameworks/Foundation.framework/Versions/C/Foundation",
+      "source_reference": {
+        "path": "replica/Sources/PastoCore/OriginalDiagnosticDispatcher.swift",
+        "line": 137,
+        "text": "Date.now.formatted(Self.timestampFormat)",
+        "sha256": "7f7ca246acae9248a654db1af4973e8d48c272651a147fffc06cafaf2a103e9f"
+      },
+      "criterion": "Date.formatted(FormatStyle) 以ISO8601风格格式化本地日志。 历史原版SDK转发及当前Swift同一Foundation API直接调用已对照；当前机器链接未重新验证。",
+      "scope": "仅SDK转发源码级复用，不升级日志或暂停监控父函数。"
+    }
+  ]
+}

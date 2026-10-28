@@ -1,0 +1,72 @@
+{
+  "kind": "static_existing_diagnostics_review",
+  "generated_at": "2026-10-27T12:31:56.012815+00:00",
+  "source_sha256": {
+    "replica/Sources/PastoCore/OriginalDiagnosticDispatcher.swift": "7f7ca246acae9248a654db1af4973e8d48c272651a147fffc06cafaf2a103e9f",
+    "replica/Sources/PastoCore/OriginalDiagnosticsManager.swift": "afb071a98b036e3023f254c039ca1d85c4a975e79307aa3f3075b1caf21513ed"
+  },
+  "build_executed": false,
+  "tests_executed": false,
+  "records": [
+    {
+      "function_id": "Paste:0x1000d4958",
+      "status": "complete",
+      "original_path": "decompiled/Paste/part-0069.c",
+      "original_line": 1603,
+      "source_path": "replica/Sources/PastoCore/OriginalDiagnosticDispatcher.swift",
+      "symbol": "f_1000d4958",
+      "criterion": "初始日志level=1，返回新的配置实例；通过诊断依赖工厂实际消费。",
+      "consumer": "OriginalDiagnosticDispatcher/OriginalDiagnosticsManager的真实工厂、输出、启停路径；不升级DI、文件事务或父方法。"
+    },
+    {
+      "function_id": "Paste:0x1000d49e8",
+      "status": "complete",
+      "original_path": "decompiled/Paste/part-0069.c",
+      "original_line": 1637,
+      "source_path": "replica/Sources/PastoCore/OriginalDiagnosticDispatcher.swift",
+      "symbol": "f_1000d49e8",
+      "criterion": "新建文件输出，enabled=false，directoryURL/fileURL/fileHandle均nil；由诊断共享工厂消费。",
+      "consumer": "OriginalDiagnosticDispatcher/OriginalDiagnosticsManager的真实工厂、输出、启停路径；不升级DI、文件事务或父方法。"
+    },
+    {
+      "function_id": "Paste:0x1000d55cc",
+      "status": "complete",
+      "original_path": "decompiled/Paste/part-0070.c",
+      "original_line": 677,
+      "source_path": "replica/Sources/PastoCore/OriginalDiagnosticDispatcher.swift",
+      "symbol": "f_1000d55cc",
+      "criterion": "返回当前level字段；真实日志门槛每次调用。",
+      "consumer": "OriginalDiagnosticDispatcher/OriginalDiagnosticsManager的真实工厂、输出、启停路径；不升级DI、文件事务或父方法。"
+    },
+    {
+      "function_id": "Paste:0x1000d55fc",
+      "status": "complete",
+      "original_path": "decompiled/Paste/part-0070.c",
+      "original_line": 691,
+      "source_path": "replica/Sources/PastoCore/OriginalDiagnosticDispatcher.swift",
+      "symbol": "f_1000d55fc",
+      "criterion": "将输入level写入原字段；DiagnosticsManager启停时调用。",
+      "consumer": "OriginalDiagnosticDispatcher/OriginalDiagnosticsManager的真实工厂、输出、启停路径；不升级DI、文件事务或父方法。"
+    },
+    {
+      "function_id": "Paste:0x1000d56f8",
+      "status": "complete",
+      "original_path": "decompiled/Paste/part-0070.c",
+      "original_line": 775,
+      "source_path": "replica/Sources/PastoCore/OriginalDiagnosticDispatcher.swift",
+      "symbol": "f_1000d56f8",
+      "criterion": "赋值可选directoryURL，不更改其他字段；DiagnosticsManager启动时调用。",
+      "consumer": "OriginalDiagnosticDispatcher/OriginalDiagnosticsManager的真实工厂、输出、启停路径；不升级DI、文件事务或父方法。"
+    },
+    {
+      "function_id": "Paste:0x1000d5840",
+      "status": "complete",
+      "original_path": "decompiled/Paste/part-0070.c",
+      "original_line": 854,
+      "source_path": "replica/Sources/PastoCore/OriginalDiagnosticDispatcher.swift",
+      "symbol": "f_1000d5840",
+      "criterion": "构造日期dash、日期时间standard、时间colon、时区omitted、fraction=true、GMT0的ISO8601格式；GMT nil失败；共享静态格式器被文件日志消费。",
+      "consumer": "OriginalDiagnosticDispatcher/OriginalDiagnosticsManager的真实工厂、输出、启停路径；不升级DI、文件事务或父方法。"
+    }
+  ]
+}

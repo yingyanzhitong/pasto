@@ -1,0 +1,97 @@
+{
+  "review_kind": "read_only_existing_core_shortcut_coding_batch",
+  "selection": "从 function-map 选取 OriginalShortcutCoding.swift 对应六个既有 migrated 地址；不重复前两批已审地址，不包含未登记 witness 或 metadata/图像函数。",
+  "counts": { "reviewed": 6, "complete": 6, "gap": 0, "uncertain": 0, "new_migrations_claimed": 0 },
+  "inputs": {
+    "ledger": "replica/function-map.json",
+    "successful_original": "decompiled/Paste/part-0157.c",
+    "success_index": "reports/Paste/function-index.json",
+    "current_source": "replica/Sources/PastoCore/OriginalShortcutCoding.swift",
+    "original_arm_image": ".local/targets/Paste.arm64",
+    "previous_original_sdk_binding_evidence": "reports/function-migration/sdk-import-reuse.json"
+  },
+  "limits": [
+    "只读成功原 C、现有产品源码、现有原镜像及既有原 SDK 导入证据；有界静态反汇编用于补伪码错误块与参数/返回值失真。",
+    "未修改产品源码、台账或用户数据；仅写本独立报告。",
+    "未编译、parse、运行应用、功能或 MCP 测试，未运行验证脚本，未发布。",
+    "不声明当前编译产物与源码绑定；所引 SDK 报告只取原始导入符号字段，不复用其历史 replica binary 结论。",
+    "两失败地址 0x100ac35f8、0x100ac746c 未分析。",
+    "complete 为各地址有限源码方法合同，本批六项全满足不是项目总体完整度或新增迁移计数。",
+    "KeyboardShortcut 兼容壳只接受可转 UInt32 的键码，但 OriginalShortcutValue 编解码保留 Int/UInt 完整范围；本批不把外围 Carbon/偏好适配等同于原全部消费者。"
+  ],
+  "shared_original_evidence": {
+    "coding_keys": "原 keyCode small String 0x65646f4379656b、tag e7；internalModifiers large String length17 pointer0x8000000100d9dc30，按 Swift literal +32 在镜像 fileoffset0xd9dc50 得 ASCII internalModifiers。",
+    "typed_encoder_calls": [
+      { "call_address": "0x1001e9bbc", "stub": "0x100bfa068", "symbol": "_$ss22KeyedEncodingContainerV6encode_6forKeyySi_xtKF", "meaning": "encode Int", "dylib": "/usr/lib/swift/libswiftCore.dylib" },
+      { "call_address": "0x1001e9bf8", "stub": "0x100bfa074", "symbol": "_$ss22KeyedEncodingContainerV6encode_6forKeyySu_xtKF", "meaning": "encode UInt", "dylib": "/usr/lib/swift/libswiftCore.dylib" }
+    ],
+    "typed_decoder_calls": [
+      { "call_address": "0x1001e9e24", "stub": "0x100bf9f60", "symbol": "_$ss22KeyedDecodingContainerV6decode_6forKeyS2im_xtKF", "meaning": "decode Int", "dylib": "/usr/lib/swift/libswiftCore.dylib" },
+      { "call_address": "0x1001e9e5c", "stub": "0x100bf9f6c", "symbol": "_$ss22KeyedDecodingContainerV6decode_6forKeyS2um_xtKF", "meaning": "decode UInt", "dylib": "/usr/lib/swift/libswiftCore.dylib" }
+    ],
+    "bounded_disassembly": [
+      { "start": "0x1001e9b00", "end_exclusive": "0x1001e9c34" },
+      { "start": "0x1001e9cc8", "end_exclusive": "0x1001e9ebc" }
+    ]
+  },
+  "production_consumers": [
+    "OriginalShortcutValue.init(from:) 委托 f1e9d68，encode(to:) 委托 f1e9b00；两者使用当前 typealias 指向真实 nested CodingKeys。",
+    "KeyboardShortcut 的偏好读取新格式路径解码 OriginalShortcutValue，编码路径调用 f1e9b00；旧 modifierRawValue 兼容分支在外层，没有改动本批 Int/UInt 编码方法。",
+    "OriginalShortcutValue.description 调 f1e9cc8，displayName 委托 description；KeyboardShortcut.displayName、快捷键录制与工具栏使用这些值。",
+    "OriginalGlobalShortcutMonitor、OriginalShortcutRecorder 和 OriginalToolbarButton 真实持有 OriginalShortcutValue，不是无人调用的新包装。"
+  ],
+  "functions": [
+    {
+      "function_id": "Paste:0x1001e9990", "status": "complete",
+      "original_path": "decompiled/Paste/part-0157.c", "original_line": 630,
+      "current_path": "replica/Sources/PastoCore/OriginalShortcutCoding.swift",
+      "current_symbol": "OriginalShortcutValue.CodingKeys.f_1001e9990() / stringValue",
+      "criterion": "原两个合法 case 分别返回 keyCode/internalModifiers；当前 switch 精确对应，两者不接受其他 case 值。原 large literal 已实际读字节，不仅凭符号或台账名称。",
+      "consumer": "CodingKeys.stringValue 真实委托，参与 keyed encoder/decoder。"
+    },
+    {
+      "function_id": "Paste:0x1001e99d0", "status": "complete",
+      "original_path": "decompiled/Paste/part-0157.c", "original_line": 653,
+      "current_path": "replica/Sources/PastoCore/OriginalShortcutCoding.swift",
+      "current_symbol": "OriginalShortcutValue.CodingKeys.f_1001e99d0(_:) / init(stringValue:)",
+      "criterion": "原按 Swift String 精确相等接受 keyCode 或 internalModifiers，其他返回 optional none；当前 switch 与可失败构造同域，没有 trim、别名、大小写转换或未知键默认。",
+      "consumer": "Decoding keyed container 经 CodingKey 构造处理实际字段。"
+    },
+    {
+      "function_id": "Paste:0x1001e9b00", "status": "complete",
+      "original_path": "decompiled/Paste/part-0157.c", "original_line": 720,
+      "current_path": "replica/Sources/PastoCore/OriginalShortcutCoding.swift",
+      "current_symbol": "OriginalShortcutValue.f_1001e9b00(to:)",
+      "criterion": "先获取 keyed container，编码 case0 keyCode:Int；成功才编码 case1 internalModifiers:UInt；原错误寄存器和容器销毁路径均保留错误，当前顺序 try 无 catch 同样传播，不更换类型或夹紧值。",
+      "arm_boundaries": "1e9ba4 设置 case0，1e9bbc 调 encode Int；1e9bc0 有错误则走容器销毁后返回；无错误1e9be0 设置 case1，1e9bf8 调 encode UInt，销毁容器后保留 x21 返回。",
+      "consumer": "OriginalShortcutValue.encode(to:) 与 KeyboardShortcut.encode(to:) 实际调用。"
+    },
+    {
+      "function_id": "Paste:0x1001e9d68", "status": "complete",
+      "original_path": "decompiled/Paste/part-0157.c", "original_line": 874,
+      "current_path": "replica/Sources/PastoCore/OriginalShortcutCoding.swift",
+      "current_symbol": "OriginalShortcutValue.f_1001e9d68(from:)",
+      "criterion": "原C删1e9e2c错误块且返回寄存器失真，完整ARM补齐：先容器、再必需Int、再必需UInt，任一步错误传播；只有两次decode成功才构造值。当前无默认值/强制UInt32转换，保Int负值及UInt全范围；wrong/missing字段由对应decode抛错。",
+      "arm_boundaries": "1e9e04取得container，1e9e08错误→1e9e80；1e9e24 decode Int，1e9e28失败→1e9e2c销毁container后传播，不执行UInt；成功保存键码到x24，1e9e5c decode UInt，销毁container后1e9e7c检错误；1e9e88/8c返回x24/x25，1e9e90恢复x21错误。",
+      "consumer": "OriginalShortcutValue.init(from:) 和 KeyboardShortcut 新格式偏好解析。"
+    },
+    {
+      "function_id": "Paste:0x1001e9cc8", "status": "complete",
+      "original_path": "decompiled/Paste/part-0157.c", "original_line": 813,
+      "current_path": "replica/Sources/PastoCore/OriginalShortcutCoding.swift",
+      "current_symbol": "OriginalShortcutValue.f_1001e9cc8(keyCode:internalModifiers:)",
+      "criterion": "原按实际参数先构造非verbose修饰符串，再求键位显示标签，并直接在修饰符串后append标签，没有额外空格或分隔符；当前两函数结果以 + 拼接，求值顺序和完整Int键码输入保留。",
+      "arm_boundaries": "1e9cd8保存Int键码；1e9cdc w0=0后1e9ce0调用f1e9774；1e9ce4保存修饰符字符串；1e9ce8恢复键码、1e9cec调用f1e7e50；1e9cf8 append，1e9d04返回累积字符串。",
+      "consumer": "OriginalShortcutValue.description 真实调用；不是重新实现已审的两个格式 helper。"
+    },
+    {
+      "function_id": "Paste:0x1001e9d18", "status": "complete",
+      "original_path": "decompiled/Paste/part-0157.c", "original_line": 841,
+      "current_path": "replica/Sources/PastoCore/OriginalShortcutCoding.swift",
+      "current_symbol": "OriginalShortcutValue.description",
+      "criterion": "原方法自身从 self 读取键码和修饰位，执行与 f1e9cc8 相同非verbose字符串拼接；当前属性把同两字段委托到已核完整方法，返回相同组合且不改变自身。",
+      "arm_boundaries": "1e9d28从self成对读取key/modifiers；1e9d2c w0=0，d30格式化modifier；d3c取得keylabel；d48 append，d54返回栈上结果。",
+      "consumer": "CustomStringConvertible.description 以及 displayName 的现有生产显示链。"
+    }
+  ]
+}

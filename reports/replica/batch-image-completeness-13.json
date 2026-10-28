@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "scope": "既有文本预览字体与原生文本存储四个前轮未覆盖方法；只读完整成功原C、必要原ARM和当前生产消费者。",
+  "counts": { "total": 4, "complete": 4, "gap": 0, "uncertain": 0 },
+  "records": [
+    {
+      "function_id": "Paste:0x1000f3e48",
+      "status": "complete",
+      "original": { "path": "decompiled/Paste/part-0082.c", "start_line": 565, "address_range": "0x1000f3e48..<0x1000f3ef4" },
+      "current_implementations": [ { "path": "replica/Sources/PastoCore/OriginalPreviewAttributedText.swift", "start_line": 7, "end_line": 9, "symbol": "public static func f_1000f3e48() -> NSFont" } ],
+      "criterion": "原明确读取NSFontTextStyleBody常量，将空数组构成的空字典传preferredFontForTextStyle:options:并返回平台font；当前同.body及空options，不指定字号、字重或固定字体，不增加fallback。原本体没有executor失败分支。",
+      "actual_consumer": "OriginalCompactTextContent.swift第14行真实native label字体；OriginalPreviewTextColors.f3eb4a8对plain且非编辑的实际全文editor设字体，Adapter初始化和模型显示调用该路径。",
+      "limitations": "系统字体随OS变化属于原平台调用合同；没有截图、布局或平台字体运行验证。"
+    },
+    {
+      "function_id": "Paste:0x1000f3ef4",
+      "status": "complete",
+      "original": { "path": "decompiled/Paste/part-0082.c", "start_line": 593, "address_range": "0x1000f3ef4..<0x1000f3f6c" },
+      "current_implementations": [ { "path": "replica/Sources/PastoCore/OriginalPreviewAttributedText.swift", "start_line": 12, "end_line": 14, "symbol": "public static func f_1000f3ef4() -> NSFont" } ],
+      "criterion": "原fontWithName:size:成功直接返回，nil触发失败而不换systemFont。C未显示字体名字，已只读ARM3f00..3f1c：x0拼0x63697465766c6548，x1拼0xed00006575654e61，little-endian small String共13字节为HelveticaNeue；3f34 d0=13，3f54 nil跳3f68 brk。当前NSFont(name:HelveticaNeue,size:13)!保全部值及nil失败分支。",
+      "actual_consumer": "OriginalPreviewTextStorageBridge.f213780第131行配置实际editor；normalizedEditingText第93行创建真实编辑副本，f3c1860同样用该font保留原traits。",
+      "limitations": "没有查询或安装字体、没有触发niltrap；只是原指令和源码值合同核对。"
+    },
+    {
+      "function_id": "Paste:0x1000f3f6c",
+      "status": "complete",
+      "original": { "path": "decompiled/Paste/part-0082.c", "start_line": 619, "address_range": "0x1000f3f6c..<0x1000f405c" },
+      "current_implementations": [ { "path": "replica/Sources/PastoCore/OriginalPreviewAttributedText.swift", "start_line": 17, "end_line": 32, "symbol": "public static func f_1000f3f6c(font:traits:)" } ],
+      "criterion": "原先fontDescriptorWithSymbolicTraits:0，成功才再请求输入traits；任一步nil均用原fontDescriptor，按原pointSize创建NSFont，创建nil返回原font对象。当前cleared.flatMap(requested)、requested??descriptor及font构造??font保两级optional和不调用后续descriptor请求的短路。因本机Swift overlay把selector标nonnull，现有descriptorWithTraits通过真实公开ObjC selector+可空返回保原nil分支，不把失败强解包或换固定字号。",
+      "actual_consumer": "OriginalPreviewAttributedText.f3c1860第84行对实际富文本每run的font恢复bold/italic，normalizedEditingText第95..96行枚举使用；Adapter加载第210行与模型刷新第322行建立编辑副本。",
+      "limitations": "只确认字体值转换，不升级整个富文本编辑方法；输入为合法NSFont及其合法descriptor，不臆造不存在的selector回退。没有执行动态selector或构造字体。"
+    },
+    {
+      "function_id": "Paste:0x1000f6fec",
+      "status": "complete",
+      "original": { "path": "decompiled/Paste/part-0084.c", "start_line": 50, "address_range": "0x1000f6fec..<0x1000f7054" },
+      "current_implementations": [ { "path": "replica/Sources/PastoCore/OriginalPreviewAttributedText.swift", "start_line": 115, "end_line": 117, "symbol": "public static func f_1000f6fec(editor:)" } ],
+      "criterion": "原先取textStorage，非nil返回该对象本身而非copy；nil才分配NSTextStorage initWithString并返回，不赋回editor。原C缺字符串值，ARM6ffc读取storage、7008非nil直返回，701c x0=0/7020 x1=e000000000000000证明nil分支为空串。当前可选合并返回原storage，nil惰性创建NSTextStorage(string:空串)，每次nil独立创建、不缓存、不写editor，保持对象身份语义。",
+      "actual_consumer": "f0f6ef8→f212ccc实际内容读取及f207b54选区trait读取复用；OriginalPreviewTextStorageBridge.f214704将该原storage值交onAttributedTextChange，真实Adapter绑定document.receiveRecoveredContent。",
+      "limitations": "只确认getter对象与nil分支，不升级ObjC category注册或异步订阅链；没有运行NSTextView。"
+    }
+  ],
+  "arm_evidence": { "binary": ".local/paste-arm64-static.bin", "ranges": [ "0x1000f3ef4..<0x1000f3f6c", "0x1000f6fec..<0x1000f7054" ], "method": "只读llvm-objdump指定成功函数范围；未启动原二进制" },
+  "excluded_failed_addresses": [ "0x100ac35f8", "0x100ac746c" ],
+  "verification_scope": "只新增本报告；未修改产品源码、台账或旧报告，未编译、parse、运行应用、测试、MCP或发布，未读取两失败函数。complete仅限所列源码方法，不构成一比一功能验收或当前产物一致性声明。"
+}

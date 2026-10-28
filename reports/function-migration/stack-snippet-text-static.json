@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "kind": "static_code_migration",
+  "function_id": "Paste:0x100051ec8",
+  "original": "decompiled/Paste/part-0029.c:305",
+  "source": "replica/Sources/Pasto/UI/OriginalStackSnippetText.swift",
+  "consumer": "AuxiliaryViews.ReplicaStackTable native row Text",
+  "branches": [
+    "Canonical metadata determines branch independently of item.kind",
+    "Text returns String(attributedText.characters), including empty text",
+    "Link returns URL.absoluteString",
+    "Image, missing/bad metadata and zero files return literal Unknown",
+    "Color returns original lowercase RGB formatter output",
+    "One file uses URL(fileURLWithPath:).lastPathComponent",
+    "Multiple files preserve nonempty explicit title; fallback evaluated on demand using original raw type and file count"
+  ],
+  "static_symbol_review": {
+    "empty_text_helper": "0x1000102f8",
+    "comparison_call": "0x10001046c -> 0x100bf7a34",
+    "comparison_symbol": "_$sSL2leoiySbx_xtFZTj (Comparable.<=)",
+    "one_file_url_call": "0x100052328 -> 0x100bf47d0",
+    "one_file_component_call": "0x100052338 -> 0x100bf47e8"
+  },
+  "raw_type_mapping": {"unknown": 0, "image": 1, "color": 2, "files": 3, "link": 4, "text": 5, "richText": 5},
+  "build_executed": false,
+  "tests_executed": false,
+  "equivalence_verified": false,
+  "limitations": "Label method only. Parent cell appearance, icon, Nib, Entity storage, actor bridges and generated ABI are not promoted."
+}

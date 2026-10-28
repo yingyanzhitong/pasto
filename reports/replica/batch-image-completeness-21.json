@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "scope": "四个前轮未覆盖的已有预览工具栏事件/图层更新Swift工作体；成功原C、必要原ARM及真实消费者只读核对。",
+  "counts": { "total": 4, "complete": 3, "gap": 1, "uncertain": 0 },
+  "records": [
+    {
+      "function_id": "Paste:0x10023ea30",
+      "status": "complete",
+      "original": { "path": "decompiled/Paste/part-0196.c", "start_line": 632, "address_range": "0x10023ea30..<0x10023ea88" },
+      "current_implementations": [ { "path": "replica/Sources/PastoCore/OriginalToolbarButton.swift", "start_line": 212, "end_line": 216, "symbol": "public override func mouseEntered(with event: NSEvent)" } ],
+      "criterion": "原先super.mouseEntered传同event，然后hover=true，最后f23d784样式刷新一次；当前完全同序，不额外检查enabled、按钮类型或pressed状态，不把super调用移到最后。该原Swift工作体没有executor诊断。",
+      "actual_consumer": "真实OriginalToolbarButton通过AppKit mouseEntered接收事件；Header Edit/Pin/Share、文本编辑工具栏及图片旋转按钮均使用该组件。",
+      "limitations": "只确认Swift事件工作体，不升级相邻ObjC桥f23ea88的actor检查，也没有发送鼠标事件。"
+    },
+    {
+      "function_id": "Paste:0x10023ebac",
+      "status": "complete",
+      "original": { "path": "decompiled/Paste/part-0196.c", "start_line": 690, "address_range": "0x10023ebac..<0x10023ec10" },
+      "current_implementations": [ { "path": "replica/Sources/PastoCore/OriginalToolbarButton.swift", "start_line": 218, "end_line": 224, "symbol": "public override func mouseExited(with event: NSEvent)" } ],
+      "criterion": "原先super.mouseExited同event，再hover=false并刷新样式，随后pressed=false再次刷新。当前保留两次刷新及其可观察先后，不合并成一次、不在super前清状态、不受enabled额外门控。",
+      "actual_consumer": "AppKit对实际预览工具栏OriginalToolbarButton发送mouseExited进入；组件与同批mouseEntered使用同hover/pressed字段和f23d784。",
+      "limitations": "相邻ObjC桥f23ec10另有executor检查，不据此升整桥完整；未运行AppKit。"
+    },
+    {
+      "function_id": "Paste:0x10023ed40",
+      "status": "complete",
+      "original": { "path": "decompiled/Paste/part-0196.c", "start_line": 752, "address_range": "0x10023ed40..<0x10023edac" },
+      "current_implementations": [ { "path": "replica/Sources/PastoCore/OriginalToolbarButton.swift", "start_line": 226, "end_line": 232, "symbol": "public override func mouseDown(with event: NSEvent)" } ],
+      "criterion": "原pressed=true→f23d784→super.mouseDown同event→pressed=false→f23d784，当前逐步同序。保父NSButton同步tracking/target-action，不用自行buttonAction替代super、不新增isEnabled过滤或异步复位。",
+      "actual_consumer": "实际Header、文本工具栏和图像旋转按钮的native mouseDown override，由同构造target/action绑定完成原生按钮行为。",
+      "limitations": "仅同步工作体，不升级相邻actor桥f23edac、全鼠标tracking与动作父链。没有运行点击。"
+    },
+    {
+      "function_id": "Paste:0x10023e7e8",
+      "status": "gap",
+      "original": { "path": "decompiled/Paste/part-0196.c", "start_line": 515, "address_range": "0x10023e7e8..<0x10023e7f4" },
+      "supporting_original": { "path": "decompiled/Paste/part-0196.c", "start_line": 829, "address_range": "0x10023eedc..<0x10023ef1c" },
+      "current_implementations": [ { "path": "replica/Sources/PastoCore/OriginalToolbarButton.swift", "start_line": 198, "end_line": 198, "symbol": "public override func updateLayer()" } ],
+      "criterion": "原成功C工作体并非只调用样式更新，而是传updateLayer selector槽给共用f23eedc；后者先objc_msgSendSuper2相同selector再f23d784。原ARM23e7e8/7ec形成槽地址100f858a0，23e7f0 B至23eedc，23eefc读取该selector、23ef04调用super、23ef08调用样式更新。当前override仅f23d784，缺少父类updateLayer调用。既有function-map合同中的不额外调用super与原完整调用链矛盾，不能以旧migrated标签保完整。",
+      "actual_consumer": "OriginalToolbarButton真实NSButton override由AppKit layer更新调用，多个实际预览按钮共享此实现；不是未消费代码。",
+      "minimal_source_recommendation": "后续允许编辑时仅在updateLayer内先super.updateLayer()再f23d784；本轮禁止产品改动，未实施。",
+      "limitations": "确定的是父调用缺失，不猜父实现具体视觉后果，不称已经运行复现；相邻f23e7f4/f23ef2c的actor桥仍单独待核。"
+    }
+  ],
+  "arm_evidence": { "binary": ".local/paste-arm64-static.bin", "ranges": [ "0x10023e7e8..<0x10023e7f4", "0x10023eedc..<0x10023ef1c" ], "method": "只读llvm-objdump指定成功函数范围，未执行二进制" },
+  "excluded_failed_addresses": [ "0x100ac35f8", "0x100ac746c" ],
+  "verification_scope": "仅新增本报告。未修改产品源码、台账和旧报告，无编译、parse、运行应用、测试、MCP或发布，未读取指定失败函数。complete为有限方法静态合同，不是一比一运行验收。"
+}

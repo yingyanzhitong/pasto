@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "round": 48,
+  "scope": "预览复用的图层边框读写与圆角方法，核原成功伪码、原ARM以及真实消费者；正常副作用匹配与完整入口待证分开。",
+  "counts": {"reviewed": 3, "complete": 0, "gap": 0, "uncertain": 3},
+  "source_binding": {"path": "replica/Sources/PastoCore/OriginalLayerBackedView.swift", "sha256": "87acffa7790cb38e5715cf6ce3d4474fffb3633d3deb15635743526f6342303c", "matches_historical_source_sha256": true, "note": "全文件未变不消除原返回/actor边界，也不代表本轮构建。"},
+  "records": [
+    {
+      "function_id": "Paste:0x10021d024",
+      "status": "uncertain",
+      "historical_evidence": "reports/function-migration/Paste-0x10021d024.json",
+      "original": {"path": "decompiled/Paste/part-0184.c", "start_line": 2310, "end_line": 2355, "address_range": "0x10021d024..<0x10021d118"},
+      "current_reference": {"path": "replica/Sources/PastoCore/OriginalLayerBackedView.swift", "symbol": "OriginalViewLayerFunctions.f_10021d024(_:)", "line_range": "6..9"},
+      "criterion": "正常取值完整对应：layer不存在或borderColor不存在返回nil，不创建layer；存在CGColor则用NSColor(cgColor:)保可选结果，无缓存。原仅在CGColor存在的分支额外取得MainActor executor并诊断PasteUI/NSView+Extensions.swift line7；当前@MainActor源码声明未证明生成入口同分支检查，所以整方法仍待证。",
+      "actual_consumer": "同文件37..40的replicaBorderColor getter真实调用；f236188:67..70在appearance刷新内读取该值并转CGColor写layer，实际由OriginalLayerBackedView背景/appearance刷新及图片棋盘等派生预览视图使用。",
+      "limitations": "无已证正常颜色值差异；仅actor入口诊断未闭，不升级完整基础视图或所有appearance父。"
+    },
+    {
+      "function_id": "Paste:0x10021d1cc",
+      "status": "uncertain",
+      "historical_evidence": "reports/function-migration/Paste-0x10021d1cc.json",
+      "original": {"path": "decompiled/Paste/part-0184.c", "start_line": 2387, "end_line": 2414, "address_range": "0x10021d1cc..<0x10021d254"},
+      "current_reference": {"path": "replica/Sources/PastoCore/OriginalLayerBackedView.swift", "symbol": "OriginalViewLayerFunctions.f_10021d1cc(_:view:)", "line_range": "11..16"},
+      "criterion": "副作用对应：先wantsLayer=true，再读layer；layer存在时color=nil直接清borderColor，有color才转CGColor；layer缺失无颜色转换或赋值。当前optional chain同样保留这些分支。原ARM21d240将原color对象x19放入x0，21d250尾跳objc_release；不存在明确设置返回整数0。现显式Int0不能由Ghidra return0证明，因此不复用为固定返回值完整合同。",
+      "actual_consumer": "OriginalReplicaPreviewAdapter.swift:114实际调用本方法为非text内容设置持久预览边框并忽略返回；同文件39的replicaBorderColor setter也直接转发。原桥f21d118的actor检查单独不升级。",
+      "limitations": "当前实际调用忽略结果，没有据此宣称用户可见错误；正常setter副作用可复用，返回ABI仍待证。"
+    },
+    {
+      "function_id": "Paste:0x10021d49c",
+      "status": "uncertain",
+      "historical_evidence": "reports/function-migration/Paste-0x10021d49c.json",
+      "original": {"path": "decompiled/Paste/part-0184.c", "start_line": 2533, "end_line": 2555, "address_range": "0x10021d49c..<0x10021d528"},
+      "current_reference": {"path": "replica/Sources/PastoCore/OriginalLayerBackedView.swift", "symbol": "OriginalViewLayerFunctions.f_10021d49c(_:curve:view:)", "line_range": "18..25"},
+      "criterion": "正常副作用同序：wantsLayer=true→clipsToBounds=true→独立读layer设置cornerRadius→再读layer设置cornerCurve；没有半径clamp或合并缓存layer。原完整ARM21d4b8..21d50c证实两次layer读取及调用顺序。历史合同另写返回0，但21d510将第二次layer对象放x0，21d524尾跳objc_release，未见固定Int0；当前显式Int0不能由原C字面认定源级返回合同完整。",
+      "actual_consumer": "OriginalReplicaPreviewAdapter.swift:117实际为预览内容设置radius5/circular；OriginalLinkPreviewViewport.swift:69/71实际为图标设置12/continuous或10/circular；OriginalImageSizeBadge.swift:36实际设置4/circular。各调用均忽略结果。",
+      "limitations": "本体无另一个actor分支；待证明确是历史固定返回合同，不把其ObjC桥f21d528或视觉运行结果混入。当前真实副作用可直接复用。"
+    }
+  ],
+  "excluded_failed_addresses": ["Paste:0x100ac35f8", "Paste:0x100ac746c"],
+  "verification_scope": {"product_source_modified": false, "ledger_modified": false, "compiled": false, "application_executed": false, "functional_tests_executed": false, "mcp_executed": false, "static_original_disassembly": "仅读成功f21d1cc与f21d49c的指定ARM完整范围；未读取失败函数。", "one_to_one_acceptance_claimed": false}
+}

@@ -1,0 +1,154 @@
+{
+  "review_kind": "read_only_source_and_bounded_original_arm_followup",
+  "scope": "补查前批两个 uncertain，再核相邻 NSCoding 解码入口及十个既有快捷键 migrated 值方法。",
+  "previous_report": "reports/replica/batch-core-completeness.json",
+  "counts": {
+    "reviewed": 13,
+    "complete": 11,
+    "gap": 2,
+    "uncertain": 0,
+    "previous_uncertain_rechecked": 2,
+    "additional_existing_methods_reviewed": 11,
+    "new_migrations_claimed": 0
+  },
+  "limits": [
+    "只读当前源码、成功原伪码及现有原 arm64 镜像；对两个 uncertain 和字符串格式器进行了有界静态反汇编，不运行应用。",
+    "未修改产品源码、台账、用户数据；未编译、parse、运行功能或 MCP 测试，也未运行验证脚本。",
+    "没有核验当前编译产物；历史编译报告不作为当前源码的二进制证明。",
+    "报告的 complete 指本地址的有限源码合同；不包含外层实体、持久事务、原二进制 ABI 或 SDK 运行时等价。",
+    "跳过 0x100ac35f8 与 0x100ac746c，未读取其函数体。",
+    "本批 11/13 不代表项目总体函数迁移率；上批报告保留为当时的证据快照，由本报告补充两项结论。"
+  ],
+  "original_arm_input": ".local/targets/Paste.arm64",
+  "bounded_disassembly_ranges": [
+    { "start": "0x10037e198", "end_exclusive": "0x10037e44c" },
+    { "start": "0x10037f520", "end_exclusive": "0x10037f650" },
+    { "start": "0x10037f31c", "end_exclusive": "0x10037f4f8" },
+    { "start": "0x100c019a0", "end_exclusive": "0x100c019b4" },
+    { "start": "0x1001e9774", "end_exclusive": "0x1001e98e8" }
+  ],
+  "nscoding_key_finding": {
+    "original_types_key": "types",
+    "original_data_key": "data",
+    "pasto_types_key": "types",
+    "pasto_data_key": "dataByType",
+    "encoding_arm": [
+      "37f580 d28f2e80 MOV x0,#0x7974; 37f584 f2acae00 MOVK x0,#0x6570,LSL16; 37f588 f2c00e60 MOVK x0,#0x73,LSL32 => bytes 'types'; 37f58c tag 0xe5; 37f590 bridge NSString; 37f5a4 encodeObject:forKey:。",
+      "37f604 528c2c80 MOV w0,#0x6164; 37f608 72ac2e80 MOVK w0,#0x6174,LSL16 => 0x61746164，little-endian bytes 'data'; 37f60c tag 0xe4; 37f610 bridge NSString; 37f624 encodeObject:forKey:。"
+    ],
+    "decoding_arm": "37f3ec 528c2c82 MOV w2,#0x6164; 37f3f0 72ac2e82 MOVK w2,#0x6174,LSL16; 37f3f4 e4-tag; 37f400 调用 NSCoder.decodeDictionary，键为 'data'，不是 'dataByType'。",
+    "selector_binding": "原 stub 100c019a0..19b0 加载 selref100f87270；现有镜像该槽 raw 0x0010000000deb5ef，rebase target100deb5ef；该处 ASCII 为 encodeObject:forKey:，确认不是不同编码 selector。",
+    "current_source": "replica/Sources/PastoCore/OriginalPasteboard.swift",
+    "current_lines": { "decode_dictionary_key": 27, "encode_dictionary": 33 },
+    "codable_is_independent": "同文件私有 CodingKeys { types, dataByType } 为 Codable 正确字段，原 f37ddd8/f37de14 已明确该字符串。NSCoding 错键不意味着应重命名 Codable 字段或持久 JSON。",
+    "impact": "Pasto 自身当前 NSCoding 编解码用同一错键可能互相兼容，但不能由此推定能够读取原版以 data 键归档的项；OriginalPasteboardArchive 的原类名解码映射也不能补救对象内部缺键。未运行交叉归档测试，不声称全部既有用户记录受影响。",
+    "source_action": "仅报告已证差异，不修改源码或用户归档；若后续修复需另行考虑现 Pasto dataByType 归档兼容，不能直接批量重写数据。"
+  },
+  "functions": [
+    {
+      "function_id": "Paste:0x10037e198", "status": "complete", "previous_batch_status": "uncertain",
+      "original_path": "decompiled/Paste/part-0282.c", "original_line": 1392,
+      "current_path": "replica/Sources/PastoCore/OriginalPasteboard.swift",
+      "current_symbol": "OriginalPasteboardItem.init(from:)",
+      "criterion": "补原完整 ARM 后，初始化空 types/data 字典，顺序严格 decode 两个必需字段，全部成功后才 NSObject super.init；当前 required throws init 的初始化及 try 顺序一致。",
+      "arm_error_boundary": "37e27c container error→37e398；37e2e8 types decode error→37e384；37e380 data decode success→37e3ec，否则落37e384。37e384销毁已存在 container，37e398..3c0释放 decoder、两个字段及 partial instance，37e3c8恢复原错误 x21 后返回；不返回已初始化对象。当前 Swift throwing initializer 自动完成相同失败清理；没有添加 catch 或伪造默认值。",
+      "consumer": "JSON/PropertyListDecoder<[OriginalPasteboardItem]>，由 Pasteboard.swift 与 OriginalPasteboardDataCodec 消费；不依赖 NSCoding 的 data 键。"
+    },
+    {
+      "function_id": "Paste:0x10037f520", "status": "gap", "previous_batch_status": "uncertain",
+      "original_path": "decompiled/Paste/part-0282.c", "original_line": 2157,
+      "current_path": "replica/Sources/PastoCore/OriginalPasteboard.swift",
+      "current_symbol": "OriginalPasteboardItem.f_10037f520(with:)",
+      "criterion": "数组与字典桥接、顺序一致，但补齐原 key 实参后确认原第二键 data，当前第二键 dataByType；完整 NSCoding 方法不等价。详见 nscoding_key_finding 的具体机器码。",
+      "consumer": "encode(with:) 真实委托；OriginalPasteboardArchive.encodeItems 与 OriginalPasteboardChecksums 的 NSKeyedArchiver 实际调用本编码链。"
+    },
+    {
+      "function_id": "Paste:0x10037f31c", "status": "gap", "previous_batch_status": "not_reviewed",
+      "original_path": "decompiled/Paste/part-0282.c", "original_line": 2070,
+      "current_path": "replica/Sources/PastoCore/OriginalPasteboard.swift",
+      "current_symbol": "OriginalPasteboardItem.init?(coder:)",
+      "criterion": "NSString 数组和 NSString/NSData 字典严格转换、失败 nil 的有限控制流相符，但原字典查询键 data，当前 dataByType；原归档只有 data 时现入口不能满足原合同。",
+      "consumer": "OriginalPasteboardArchive.decodeItems 的 NSKeyedUnarchiver 经原类名映射消费该 init；JSON/PropertyList Codable 路径不受该键合同影响。"
+    },
+    {
+      "function_id": "Paste:0x1001e7d58", "status": "complete",
+      "original_path": "decompiled/Paste/part-0156.c", "original_line": 1301,
+      "current_path": "replica/Sources/PastoCore/OriginalShortcutFunctions.swift",
+      "current_symbol": "OriginalShortcutFunctions.f_1001e7d58(modifierRawValue:)",
+      "criterion": "逐原固定四项映射检查输入含位则 OR Carbon 位、其他位忽略；原镜像100fb4fc0的四项依序100000→100、80000→800、40000→1000、20000→200，与当前常量列表一致。原内部非负/UInt32范围 trap 对固定有效表不会触发，不扩大为任意外部表合同。",
+      "consumer": "OriginalShortcutRegistration 构造的 RegisterEventHotKey 修饰位；f1ebf04 系统快捷键冲突匹配。"
+    },
+    {
+      "function_id": "Paste:0x1001e9774", "status": "complete",
+      "original_path": "decompiled/Paste/part-0157.c", "original_line": 444,
+      "current_path": "replica/Sources/PastoCore/OriginalShortcutFunctions.swift",
+      "current_symbol": "OriginalShortcutFunctions.f_1001e9774(verbose:modifierRawValue:)",
+      "criterion": "原 C 失真的最终空串返回由完整 ARM 闭合：1e97a0 初始化栈空串，Control/Option/Shift/Command按次序 append，1e97f8返回栈累积 x0/x1。verbose符号/英文组合及未知位忽略与当前实现一致；各名称之间原无额外分隔，当前也不补分隔。",
+      "consumer": "OriginalShortcutValue.description 显示符号；ShortcutRecorder accessibilityValue 使用 verbose 分支。"
+    },
+    {
+      "function_id": "Paste:0x1001e94d4", "status": "complete",
+      "original_path": "decompiled/Paste/part-0157.c", "original_line": 227,
+      "current_path": "replica/Sources/PastoCore/OriginalShortcutFunctions.swift",
+      "current_symbol": "OriginalShortcutFunctions.f_1001e94d4(_:)",
+      "criterion": "两者 lazy 初始化固定 ANSI 字典，对输入执行 Swift lowercased，命中返回键码；未知值前置条件失败，不默认0或按当前键盘布局翻译。该有限查表方法不声称调试断言文案相同；固定字典初始化方法自身未在本批重复计数。",
+      "consumer": "OriginalSearchField、OriginalCollectionShortcutActions、预览工具栏及 UIController 查询 f/s/c/z 等物理键码。"
+    },
+    {
+      "function_id": "Paste:0x1001e95fc", "status": "complete",
+      "original_path": "decompiled/Paste/part-0157.c", "original_line": 282,
+      "current_path": "replica/Sources/PastoCore/OriginalShortcutFunctions.swift",
+      "current_symbol": "OriginalShortcutFunctions.f_1001e95fc()",
+      "criterion": "原完整体恒返回0x35即53，无分支和状态写入；当前 Int 返回53。",
+      "consumer": "OriginalShortcutRecorder 取消分支、OriginalReplicaPreviewAdapter 取消按钮快捷键。"
+    },
+    {
+      "function_id": "Paste:0x1001e9610", "status": "complete",
+      "original_path": "decompiled/Paste/part-0157.c", "original_line": 302,
+      "current_path": "replica/Sources/PastoCore/OriginalShortcutFunctions.swift",
+      "current_symbol": "OriginalShortcutFunctions.f_1001e9610()",
+      "criterion": "原完整体仅返回0x33即51；当前 Int 51，无附加动作。",
+      "consumer": "OriginalShortcutRecorder 删除已有录制快捷键分支。"
+    },
+    {
+      "function_id": "Paste:0x1001e9624", "status": "complete",
+      "original_path": "decompiled/Paste/part-0157.c", "original_line": 322,
+      "current_path": "replica/Sources/PastoCore/OriginalShortcutFunctions.swift",
+      "current_symbol": "OriginalShortcutFunctions.f_1001e9624()",
+      "criterion": "原完整体仅返回0x75即117；当前 Int 117，无附加动作。",
+      "consumer": "OriginalShortcutRecorder forward-delete 清除快捷键分支。"
+    },
+    {
+      "function_id": "Paste:0x1001e9638", "status": "complete",
+      "original_path": "decompiled/Paste/part-0157.c", "original_line": 342,
+      "current_path": "replica/Sources/PastoCore/OriginalShortcutFunctions.swift",
+      "current_symbol": "OriginalShortcutFunctions.f_1001e9638()",
+      "criterion": "原完整体仅返回0x7b即123；当前 Int 123，无附加动作。",
+      "consumer": "KeyboardShortcut.previousPinboardDefault 真实使用该值。"
+    },
+    {
+      "function_id": "Paste:0x1001e964c", "status": "complete",
+      "original_path": "decompiled/Paste/part-0157.c", "original_line": 362,
+      "current_path": "replica/Sources/PastoCore/OriginalShortcutFunctions.swift",
+      "current_symbol": "OriginalShortcutFunctions.f_1001e964c()",
+      "criterion": "原完整体仅返回0x7c即124；当前 Int 124，无附加动作。",
+      "consumer": "KeyboardShortcut.nextPinboardDefault 真实使用该值。"
+    },
+    {
+      "function_id": "Paste:0x1001ebc2c", "status": "complete",
+      "original_path": "decompiled/Paste/part-0158.c", "original_line": 649,
+      "current_path": "replica/Sources/PastoCore/OriginalShortcutFunctions.swift",
+      "current_symbol": "OriginalShortcutFunctions.f_1001ebc2c(keyCode:modifierRawValue:)",
+      "criterion": "原固定20项函数键任意修饰均true；其他键测试0x140000或0x80000任一位。已读镜像100fb5788..100fb5820共20个Int：122/120/99/118/96/97/98/100/101/109/103/111/105/107/113/106/64/79/80/90；当前19项集合加90，其他键mask0x1c0000吻合。负键或大Int无命中但仍可由modifier合法，与原输入域一致。",
+      "consumer": "KeyboardShortcut.isValidGlobal 与 OriginalShortcutRecorder 的实际录制验证。"
+    },
+    {
+      "function_id": "Paste:0x1001ebf04", "status": "complete",
+      "original_path": "decompiled/Paste/part-0158.c", "original_line": 791,
+      "current_path": "replica/Sources/PastoCore/OriginalShortcutFunctions.swift",
+      "current_symbol": "OriginalShortcutFunctions.f_1001ebf04(_:shortcut:)",
+      "criterion": "原三项对象条件转换 NSNumber：code.integerValue须等Int键码，modifiers.unsignedIntegerValue须等四项Carbon映射，最后enabled.boolValue；任一缺键/转换失败/不匹配false。当前两个入口委托Int值方法保持相同判定，不把disabled当冲突。",
+      "consumer": "OriginalShortcutValidation.f_1001ebce4 逐系统快捷键字典调用，实际录制验证可达。"
+    }
+  ]
+}

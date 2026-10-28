@@ -1,0 +1,59 @@
+{
+  "review_kind": "read_only_bounded_original_arm_constructor_followup",
+  "previous_report": "reports/replica/batch-core-completeness-16.json",
+  "counts": { "reviewed": 2, "complete": 2, "gap": 0, "uncertain": 0, "previous_uncertain_rechecked": 2, "new_migrations_claimed": 0 },
+  "bounded_original_disassembly": {
+    "input": ".local/targets/Paste.arm64",
+    "ranges": [
+      { "start": "0x10037f284", "end_exclusive": "0x10037f314" },
+      { "start": "0x100381540", "end_exclusive": "0x100381740" }
+    ],
+    "method": "llvm-objdump仅静态反汇编现有原镜像指定范围；未执行原/新应用，没有编译或测试。忽略最近Swift符号标签的错误归属，以指令地址为准。",
+    "generic_constructor": "3815a4以x20原类型分配对象，3815ac调用init，3815b8把新对象保存x22；3815cc调用类型getter、3815d4读identifier，381638..640将其追加types；381698..6a8以原Data的x21/x19及identifier写dataByType；3816d8 MOV x0,x22返回新对象。不存在图像校验、可选Data失败或空Data提前返回。"
+  },
+  "functions": [
+    {
+      "function_id": "Paste:0x10037f284",
+      "status": "complete",
+      "previous_status": "uncertain",
+      "original_path": "decompiled/Paste/part-0282.c",
+      "original_line": 2027,
+      "current_paths": [
+        "replica/Sources/Pasto/UI/ReplicaImagePreviewContent.swift",
+        "replica/Sources/PastoCore/ClipboardStore.swift",
+        "replica/Sources/PastoCore/Pasteboard.swift",
+        "replica/Sources/PastoCore/OriginalPasteboard.swift"
+      ],
+      "current_symbol": "PNG单Data→orderedTypes/public.png→originalPasteboardItems的新OriginalPasteboardItem构造投影",
+      "criterion": "有限方法输入为Data，固定UTType.png，输出新对象仅一个PNG类型及原样Data。当前实际preview PNG成功分支产生单PNG payload，Store写对应显式orderedTypes，decoder的新OriginalPasteboardItem(types:dataByType:)保同一类型和原bytes，清除内部JSON元数据键后恰得单PNG表示。空Data/无效图片bytes仍原样保留，构造不重编码、不附加UTF8/URL。",
+      "arm_resolves_previous_uncertain": "37f294 x19=x1、37f298 x21=x0保存原Data；37f29c/2a0从import100eaea20取固定png getter；37f2a4 BL381540；37f2a8 MOV x20,x0保存新对象返回；37f2ac/2b0恢复原Data，37f2b4调用其release helper；37f2b8 MOV x0,x20再返回。故C所打印uVar1=param1返回是寄存器恢复失真，并非原API返回Data。",
+      "consumer": "当前image preview commit→updateImagePreviewItem→originalPasteboardItems→metadata生成/持久化实际使用该单PNG对象结构。原同一具体构造亦有381528固定png转发体，原3bded4 PNG成功分支真实调用381528→381540；不把额外转发地址另计完整。",
+      "boundary": "完整只指固定PNG Data构造的源码输入/输出和所有合法Data分支。原Data被消费的ARC在当前Swift值/字典持有中实现保活，不声称当前机器释放指令与原完全一致；不升级编码/Store事务父。"
+    },
+    {
+      "function_id": "Paste:0x10037f2cc",
+      "status": "complete",
+      "previous_status": "uncertain",
+      "original_path": "decompiled/Paste/part-0282.c",
+      "original_line": 2042,
+      "current_paths": [
+        "replica/Sources/Pasto/UI/ReplicaImagePreviewContent.swift",
+        "replica/Sources/PastoCore/ClipboardStore.swift",
+        "replica/Sources/PastoCore/Pasteboard.swift",
+        "replica/Sources/PastoCore/OriginalPasteboard.swift"
+      ],
+      "current_symbol": "JPEG单Data→orderedTypes/public.jpeg→originalPasteboardItems的新OriginalPasteboardItem构造投影",
+      "criterion": "与PNG构造同一完整算法，唯固定类型为UTType.jpeg。当前JPEG成功编码后同一路径构造单public.jpeg及原Data；不验证图片、不附加其它格式、不改变Data、不将空Data视为nil。PNG优先和JPEG0.5是已读父选择条件，并非本构造函数自身的输入限制。",
+      "arm_resolves_previous_uncertain": "37f2dc/2e0保存Data；37f2e4/2e8加载import100eaea50的jpeg getter；37f2ec BL381540，37f2f0保存返回对象x20；37f2f4/2f8恢复Data，37f2fc release；37f300恢复返回x0=x20，37f310 RET。新对象返回已闭，不根据伪码错误推定返回Data。",
+      "consumer": "当前preview JPEG成功分支经Store/decoder真实消费；原3bded4在PNGnil、JPEG成功时调用381534固定jpeg转发至同一381540。双编码nil的单空item属于另一个父分支，不签入JPEG构造。",
+      "boundary": "不要求再新建同地址wrapper；实际源码多段投影已在生产链完整实现构造值合同。原动态子类机器ABI/原归档类名及JSON事务不在这两个固定构造的完整结论中。"
+    }
+  ],
+  "limits": [
+    "仅新增本独立报告，未修改产品源码、台账或用户数据。",
+    "未编译、parse、运行应用、功能/MCP测试、验证脚本或发布。",
+    "本批补充原ARM后替代第16批两个uncertain结论；汇总按function_id去重，不能把复审算新增迁移。",
+    "本批2/2完整不是项目总迁移率；项目总分母及去重计数由主智能体汇总，未核当前编译体。",
+    "失败地址0x100ac35f8、0x100ac746c跳过，未读取。"
+  ]
+}

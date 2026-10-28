@@ -1,0 +1,50 @@
+{
+  "review_kind": "read_only_source_application_snapshot_and_shared_update",
+  "counts": { "reviewed": 2, "complete": 0, "gap": 0, "uncertain": 2, "new_migrations_claimed": 0 },
+  "functions": [
+    {
+      "function_id": "Paste:0x100311e3c",
+      "status": "uncertain",
+      "original_path": "decompiled/Paste/part-0254.c",
+      "original_line": 342,
+      "current_path": "replica/Sources/PastoCore/OriginalSourceApplication.swift",
+      "current_symbol": "OriginalSourceApplication.snapshot(_:)",
+      "matching_guards": "原按bundleIdentifier→localizedName→icon顺序读取，有任一nil即返回nil；不是对字符串trim或拒绝empty。全部存在才交f310fb8取/建共享来源实体。当前guard let顺序同且不拒空字符串，icon使用同一已取得NSImage，随后真正计算/保存record数据。app本身nil的Swiftguard与对nil ObjC receiver得到nil的外层边界相容。",
+      "unresolved": "原成功分支返回f310fb8共享持久实体，当前先生成值record、由随后Store事务upsert；原factory可在icon规范值相等时直接返回既存实体，而当前snapshot在Store比较前已计算PNG/rawColor。该实际顺序/共享持有/异常路径不是只读guard投影能证明全等。不能只因为前三个Optional判断吻合签整函数完整。",
+      "consumer": "ClipboardMonitor.f37b034对同一个frontmost app调用snapshot并传captureWithInsertionResult→addWithInsertionResult(sourceApplication:)，没有额外再查一次frontmost；Store真实按bundleIdentifier共享存储，不是只定义record未接生产。"
+    },
+    {
+      "function_id": "Paste:0x100310fb8",
+      "status": "uncertain",
+      "original_path": "decompiled/Paste/part-0253.c",
+      "original_line": 3386,
+      "current_paths": [
+        "replica/Sources/PastoCore/OriginalSourceApplication.swift",
+        "replica/Sources/PastoCore/ClipboardStore.swift"
+      ],
+      "current_symbol": "OriginalSourceApplication.snapshot(_:) + ClipboardStore.upsertSourceApplication(_:in:)",
+      "matching_reviewed_branches": [
+        "按完整bundleIdentifier找共享记录；不存在则新建；原新建图标size128×128，存bundle/name、可选PNG及原ARGB色码。当前同bundle主键、同尺寸、复用实际PNG/ARGB helper。",
+        "存在时只在旧name为空才填incoming name，旧非空name不覆盖；当前相同。",
+        "原将旧rawIcon解码成NSImage，坏/空则空NSImage，再PNG规范化，与incoming规范PNG比较；相等不改icon/color。当前normalizedIcon(oldRaw)与已canonical incomingIcon比较，变化时icon/rawColor同组替换。",
+        "当前不改旧item timestamps来模拟共享source更新；多个item通过显式关系读取同一source record。"
+      ],
+      "unresolved": "原CoreData谓词上下文、返回共享实体/KVO/事务错误与当前JSON值upsert尚未全闭；原相同图标可提前返回，不做后续取色，当前snapshot预计算incoming rawColor。现legacy rawColor=nil会在真正后续capture补色，是为旧JSON显式兼容，不能冒原同图标分支原样行为。Archive/add还可带任意原始rawIcon bytes，保留坏blob用于roundtrip属于独立输入适配，不等同本原NSImage参数合同。",
+      "important_read_boundary": "原C部分Data/NSImage寄存器恢复存在伪变量混用，本轮没有据C中重复函数名猜实际receiver或声称每条路径PNG编码次数完全一致；已存在的预计算时点差异保留，不凭性能猜测直接判已证用户错误。",
+      "consumer": "实际采集add在同一mutate/flock合并事务内调用upsert；Archive导入也复用upsert但为独立兼容域。Header依SourceApplicationRecord/rawIcon/rawColor读取共享值，真实消费者存在。"
+    }
+  ],
+  "reused_historical_evidence": [
+    ".local/pasteboard-source-icon-implementation-review.json",
+    ".local/pasteboard-source-color-implementation-review.json",
+    "reports/replica/batch-core-completeness-10.json",
+    "reports/replica/batch-core-completeness-30.json"
+  ],
+  "limits": [
+    "本轮重读两个完整成功C以及当前snapshot/upsert/生产调用，复用既存逐地址实现边界；不把历史SourceSHA自动当当前摘要。",
+    "只新增本独立报告，未修改产品源码、台账或用户数据。",
+    "未编译、parse、运行应用、功能/MCP测试、验证脚本或发布；未核当前编译体。",
+    "本批0/2完整不是项目总体迁移率；主智能体汇总分母与跨批去重，新增迁移0；独立PNG/ARGB/覆盖表函数的完整结论不因父待证撤回。",
+    "两个指定失败地址0x100ac35f8、0x100ac746c跳过，未读取。"
+  ]
+}

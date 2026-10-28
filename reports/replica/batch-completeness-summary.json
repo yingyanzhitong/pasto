@@ -1,0 +1,942 @@
+{
+  "kind": "existing_migration_batch_completeness_review",
+  "generated_at": "2026-10-27T11:10:15.479115+00:00",
+  "product_source_edited": false,
+  "build_executed": false,
+  "tests_executed": false,
+  "inventory_scanned": 81134,
+  "eligible_denominator": 81123,
+  "mapping_records_checked": 2065,
+  "ledger_marked_migrated": 1648,
+  "ledger_marked_migration_percent": 2.0315,
+  "unchanged_source_and_original_bindings": 354,
+  "unchanged_sdk_report_and_original_bindings": 960,
+  "raw_review_count": 60,
+  "unique_method_review_count": 59,
+  "counts": {
+    "complete": 52,
+    "uncertain": 7
+  },
+  "fresh_review_percent_of_denominator": 0.0727,
+  "reports": [
+    "batch-core-completeness.json",
+    "batch-image-completeness.json",
+    "batch-window-completeness.json"
+  ],
+  "source_sha256": {
+    "replica/Sources/Pasto/UI/OriginalCollectionScrollAnimator.swift": "6a406ef43ba78b00f7acb7c184926c3d0341ef84a3e070e7eda6bc8166fa72b4",
+    "replica/Sources/Pasto/UI/OriginalCompactTextFooter.swift": "cd31a6dd52715f0f376365665dabba599bd190358ba6b9d23d4f6d0b4c284d2b",
+    "replica/Sources/Pasto/UI/OriginalImageCheckerboardView.swift": "956e55f5c723f031c762c58571098682af9a07055a4ded76af2be684941dd68e",
+    "replica/Sources/Pasto/UI/OriginalImageTextSelection.swift": "930ceb4220aaba298f30eac0642bbcdebfab4d143390be8edd9d903515e1f21d",
+    "replica/Sources/Pasto/UI/OriginalNavigationKey.swift": "63c828be06065a20f1956fb2c4cb346e81990872ff089a13e5af2ecad2c61ded",
+    "replica/Sources/Pasto/UI/OriginalPreviewColorFormatting.swift": "38754162d394bae0d27932eb73389f8c5ac0f1de6c7be24fd7e16a8656774fa9",
+    "replica/Sources/Pasto/UI/PanelViews.swift": "8d21f76aef6761a3e07666782d4941efdda201c6ac087127875731e8742f0118",
+    "replica/Sources/Pasto/UI/ReplicaCanonicalCardContent.swift": "366ac2b62df5d28f46fc9264538503dcabf1159f06fefbcbea8b038bdc8cc928",
+    "replica/Sources/Pasto/UI/ReplicaColorPreviewContent.swift": "15c9c007c5291e635ce8844f7dee43aad448ec450cd47eaa475345da530156f3",
+    "replica/Sources/Pasto/UI/ReplicaNativeCardCollection.swift": "460f0a746b1b3b69df20083aeeb6c806a3f9a338d96796571ab179640aeeea03",
+    "replica/Sources/Pasto/UI/ReplicaSearchSuggestionsMenu.swift": "fe798a4855021674aef0c99a6c1287375ddcbc12a92f3d981cf085952e51090b",
+    "replica/Sources/Pasto/UI/ReplicaUIController.swift": "cd206564d515a6cada104e154140d47cc6fa11dce8ab676617ec31b7e08d7531",
+    "replica/Sources/PastoCore/OriginalColorPreviewMetadata.swift": "b78c20f7a126322c3be604b7a26fc7d630384f31265969e4d17c5cf0887f60b2",
+    "replica/Sources/PastoCore/OriginalImagePreviewMetadata.swift": "90bfbfd6d413e25d446b47346935f15c53d80dc44028d6630d19331b06908ffa",
+    "replica/Sources/PastoCore/OriginalPasteboard.swift": "bda6fc26104af712cbf89c0e974c5d84a17b99b89f15def8b2b8c422fc0b3674",
+    "replica/Sources/PastoCore/OriginalSearchCommands.swift": "cf7409e5f4bf47f0e1052ac3ae42c5af43812c37407bfc77eca62ba864ca1bf8",
+    "replica/Sources/PastoCore/OriginalSelectionAppearance.swift": "5872178f7e902aa92c57626c3a2201be08ee9fcda85d1d7b1b90e11baff84588",
+    "replica/Sources/PastoCore/Pasteboard.swift": "5692ecba54fe728957be424c4711ee2275594257a6a8f696aa38b7d0a28b3dc1"
+  },
+  "duplicate_resolution": {
+    "Paste:0x100218b08": "两个审阅结论不一致；缺少本轮独立返回寄存器证据，保守取uncertain，不改源码/台账。"
+  },
+  "limitations": "引用扫描100%不代表完整迁移100%。历史证据摘要一致可沿用既有审阅，不新增运行等价认证；未登记不直接等于未实现。",
+  "records": [
+    {
+      "function_id": "Paste:0x10037c4a8",
+      "status": "complete",
+      "original_path": "decompiled/Paste/part-0282.c",
+      "original_line": 138,
+      "current_symbol": "OriginalPasteboardItem.f_10037c4a8(_:forType:)",
+      "criterion": "原体严格 UTF8、allowLossy=false；无论编码结果均追加 type，some Data 覆盖、nil 删除 data 键。当前委托 f37d8c8 保留该顺序、重复类型及失败分支。"
+    },
+    {
+      "function_id": "Paste:0x10037c6d4",
+      "status": "complete",
+      "original_path": "decompiled/Paste/part-0282.c",
+      "original_line": 224,
+      "current_symbol": "OriginalPasteboardItem.f_10037c6d4(_:)",
+      "criterion": "两者新建空项，以 UTType.utf8PlainText.identifier 委托字符串 setter，然后返回该项；不拒绝空字符串，不增加其他格式。"
+    },
+    {
+      "function_id": "Paste:0x10037c7bc",
+      "status": "complete",
+      "original_path": "decompiled/Paste/part-0282.c",
+      "original_line": 258,
+      "current_symbol": "OriginalPasteboardItem.f_10037c7bc(_:title:)",
+      "criterion": "原体依序两次读取 URL.absoluteString 写 UTF8 plain 和 public.url；仅 title 为 some 才写 public.url-name，空 title 有效。当前调用、顺序和 optional 分支相同。"
+    },
+    {
+      "function_id": "Paste:0x10037c9a8",
+      "status": "complete",
+      "original_path": "decompiled/Paste/part-0282.c",
+      "original_line": 316,
+      "current_symbol": "OriginalPasteboardItem.f_10037c9a8()",
+      "criterion": "原体按 plainText、utf8PlainText、text、url 四项顺序严格 UTF8 解码；缺数据或解码 nil 继续，首个 some（包括空串）返回，全失败 nil。当前循环通过相同严格 getter 逐项实现。"
+    },
+    {
+      "function_id": "Paste:0x10037cc6c",
+      "status": "complete",
+      "original_path": "decompiled/Paste/part-0282.c",
+      "original_line": 435,
+      "current_symbol": "OriginalPasteboardItem.f_10037cc6c()",
+      "criterion": "读取 UTType.fileURL 的严格 UTF8；无字符串返回 nil，否则调用 URL(string:) 并保留可失败结果；当前没有额外 isFileURL、可达性或非空限制。"
+    },
+    {
+      "function_id": "Paste:0x10037d210",
+      "status": "complete",
+      "original_path": "decompiled/Paste/part-0282.c",
+      "original_line": 669,
+      "current_symbol": "OriginalPasteboardItem.f_10037d210()",
+      "criterion": "原体 public.url-name 数据字典查询后严格 UTF8；缺失/无效返回 nil，空数据解码空串。当前委托相同 f37e4b8，无 title 推导回退。"
+    },
+    {
+      "function_id": "Paste:0x10037d810",
+      "status": "complete",
+      "original_path": "decompiled/Paste/part-0282.c",
+      "original_line": 917,
+      "current_symbol": "OriginalPasteboardItem.f_10037d810(forType:)",
+      "criterion": "原体直接查询 dataByType，空字典/未命中 nil，命中原 Data；不检查 types 列表、不跳过空 Data。当前字典下标保持全部值分支。"
+    },
+    {
+      "function_id": "Paste:0x10037d8c8",
+      "status": "complete",
+      "original_path": "decompiled/Paste/part-0282.c",
+      "original_line": 960,
+      "current_symbol": "OriginalPasteboardItem.f_10037d8c8(_:forType:)",
+      "criterion": "先无条件追加有序 type，允许重复；some Data 覆盖 dataByType，nil 删除该键但不删除 types。当前 append 后 Dictionary optional 赋值正对应原两分支。"
+    },
+    {
+      "function_id": "Paste:0x10037da6c",
+      "status": "complete",
+      "original_path": "decompiled/Paste/part-0282.c",
+      "original_line": 1025,
+      "current_symbol": "OriginalPasteboardItem.f_10037da6c()",
+      "criterion": "原体 retain 并返回 types 的 Swift 数组值；当前返回 orderedTypes，同样依 Swift 值语义保顺序、重复与外部修改隔离，不暴露可变引用。"
+    },
+    {
+      "function_id": "Paste:0x10037dab0",
+      "status": "complete",
+      "original_path": "decompiled/Paste/part-0282.c",
+      "original_line": 1042,
+      "current_symbol": "OriginalPasteboardItem.f_10037dab0(_:)",
+      "criterion": "原体稳定压缩所有不等于目标的 types，随后独立删除 dataByType 键；空数组/无匹配仍执行字典删除。当前 removeAll 相等谓词再 removeValue，保非匹配相对顺序及重复删除。"
+    },
+    {
+      "function_id": "Paste:0x10037e4b8",
+      "status": "complete",
+      "original_path": "decompiled/Paste/part-0282.c",
+      "original_line": 1504,
+      "current_symbol": "OriginalPasteboardItem.f_10037e4b8(forType:)",
+      "criterion": "原体按指定键取 Data 后 String(data:encoding:utf8)；未命中 nil，无效编码 nil，空 Data 为空串。当前没有有损解码或其他编码回退。"
+    },
+    {
+      "function_id": "Paste:0x10037e5e0",
+      "status": "complete",
+      "original_path": "decompiled/Paste/part-0282.c",
+      "original_line": 1554,
+      "current_symbol": "OriginalPasteboardItem.f_10037e5e0(forType:)",
+      "criterion": "原体命中 Data 桥接 NSData，未命中返回 nil。当前 optional.map 桥接保持 nil 与零长度值的区别，未按 types 或内容过滤。"
+    },
+    {
+      "function_id": "Paste:0x10037df78",
+      "status": "complete",
+      "original_path": "decompiled/Paste/part-0282.c",
+      "original_line": 1324,
+      "current_symbol": "OriginalPasteboardItem.f_10037df78(to:)",
+      "criterion": "原体 keyed container 先 encode [String] types，错误时不执行 dataByType，成功才 encode [String:Data]。当前两个顺序 try 保相同错误传播与独立字段，不根据 types 裁剪字典。CodingKeys 字符串由本批另两项核对。"
+    },
+    {
+      "function_id": "Paste:0x10037e198",
+      "status": "uncertain",
+      "original_path": "decompiled/Paste/part-0282.c",
+      "original_line": 1392,
+      "current_symbol": "OriginalPasteboardItem.init(from:)",
+      "criterion": "原可见成功路径严格依序解码必需 types:[String]、dataByType:[String:Data] 后 super.init，当前相符；当前 throws 不返回半成品。",
+      "unresolved": "成功原伪码明确删除错误块 0x10037e384，剩余 C 在 decode 后混有错误寄存器失真。本轮没有完整该异常块机器证据，不能仅以当前 try 或旧 migrated 状态独立确认所有初始化失败清理分支；不据此判当前有缺陷。"
+    },
+    {
+      "function_id": "Paste:0x10037e498",
+      "status": "complete",
+      "original_path": "decompiled/Paste/part-0282.c",
+      "original_line": 1493,
+      "current_symbol": "OriginalPasteboardItem.encode(to:)",
+      "criterion": "原函数完整体仅调用 f37df78 后返回，没有其他操作或 catch；当前 try 委托同一已核 encoder，保正常返回和错误传播。"
+    },
+    {
+      "function_id": "Paste:0x10037f314",
+      "status": "complete",
+      "original_path": "decompiled/Paste/part-0282.c",
+      "original_line": 2055,
+      "current_symbol": "OriginalPasteboardItem.f_10037f314() / supportsSecureCoding",
+      "criterion": "原 supportsSecureCoding 全体恒返回 true；当前 helper 恒 true 且实际 NSSecureCoding 静态属性委托该方法。该有限布尔方法不等于归档类名完整等价。"
+    },
+    {
+      "function_id": "Paste:0x10037ddd8",
+      "status": "complete",
+      "original_path": "decompiled/Paste/part-0282.c",
+      "original_line": 1218,
+      "current_symbol": "OriginalPasteboardItem.CodingKeys.stringValue",
+      "criterion": "原合法 case0 返回小字符串 types、case1 返回 dataByType；当前私有 String raw-value CodingKeys 恰为这两个 case，实际 encoder/decoder 使用它。非法 enum bit pattern 非合法源码值域。"
+    },
+    {
+      "function_id": "Paste:0x10037de14",
+      "status": "complete",
+      "original_path": "decompiled/Paste/part-0282.c",
+      "original_line": 1243,
+      "current_symbol": "OriginalPasteboardItem.CodingKeys.init(stringValue:)",
+      "criterion": "原两次精确 Swift String 比较依次接受 types/dataByType，否则 optional none；当前 String CodingKey 合成构造接受完全相同两值，不 trim、不大小写归一或接受别名。"
+    },
+    {
+      "function_id": "Paste:0x10037dd00",
+      "status": "complete",
+      "original_path": "decompiled/Paste/part-0282.c",
+      "original_line": 1168,
+      "current_symbol": "OriginalPasteboardItem.init()",
+      "criterion": "原普通 Swift 初始化将 types 设空数组、dataByType 设空字典，然后 NSObject super.init；当前两个存储属性空默认值及 override init 的 super.init 对应，没有额外字段或动作。"
+    },
+    {
+      "function_id": "Paste:0x10037f520",
+      "status": "uncertain",
+      "original_path": "decompiled/Paste/part-0282.c",
+      "original_line": 2157,
+      "current_symbol": "OriginalPasteboardItem.f_10037f520(with:)",
+      "criterion": "原可见体依序桥接完整 types→NSArray、完整 dataByType→NSDictionary 后两次向同一 NSCoder 编码；当前顺序、完整字段和独立数据表相符，且真实 encode(with:) 委托。",
+      "unresolved": "原 C 的两次 String._bridgeToObjectiveC() 均省略输入实参，不能仅凭该体确定分别是 types/dataByType 键。解码体及既有审阅支持当前做法，但本轮未逐指令补原编码键证据，保 uncertain；不声称存在已证源码差异。"
+    },
+    {
+      "function_id": "Paste:0x100240838",
+      "status": "complete",
+      "mapping_state_observed": "migrated",
+      "original": {
+        "path": "decompiled/Paste/part-0197.c",
+        "start_line": 82,
+        "end_line": 109
+      },
+      "current_implementations": [
+        {
+          "path": "replica/Sources/Pasto/UI/OriginalImageTextSelection.swift",
+          "symbol": "func f_100240838()",
+          "line": 68
+        }
+      ],
+      "criterion": "缓存非nil直接返回；首次创建NSImageView，raw scaling3和wantsLayer=true，缓存同实例；当前子类构造保持两属性。",
+      "actual_consumer": "OriginalZoomableImageView.init→f24095c→f2408c0→f240838"
+    },
+    {
+      "function_id": "Paste:0x1002408c0",
+      "status": "complete",
+      "mapping_state_observed": "migrated",
+      "original": {
+        "path": "decompiled/Paste/part-0197.c",
+        "start_line": 110,
+        "end_line": 140
+      },
+      "current_implementations": [
+        {
+          "path": "replica/Sources/Pasto/UI/OriginalImageTextSelection.swift",
+          "symbol": "func f_1002408c0()",
+          "line": 75
+        }
+      ],
+      "criterion": "缓存返回；首次创建clip，documentView使用同lazy imageView，drawsBackground=false后缓存。",
+      "actual_consumer": "f24095c.contentView"
+    },
+    {
+      "function_id": "Paste:0x10024095c",
+      "status": "complete",
+      "mapping_state_observed": "migrated",
+      "original": {
+        "path": "decompiled/Paste/part-0197.c",
+        "start_line": 141,
+        "end_line": 173
+      },
+      "current_implementations": [
+        {
+          "path": "replica/Sources/Pasto/UI/OriginalImageTextSelection.swift",
+          "symbol": "func f_10024095c()",
+          "line": 84
+        }
+      ],
+      "criterion": "缓存返回；首次双scroller、magnification开启、透明背景、同lazy clip后缓存，顺序符合。",
+      "actual_consumer": "OriginalZoomableImageView.init及缩放更新"
+    },
+    {
+      "function_id": "Paste:0x100240a18",
+      "status": "complete",
+      "mapping_state_observed": "migrated",
+      "original": {
+        "path": "decompiled/Paste/part-0197.c",
+        "start_line": 174,
+        "end_line": 191
+      },
+      "current_implementations": [
+        {
+          "path": "replica/Sources/Pasto/UI/OriginalImageTextSelection.swift",
+          "symbol": "func f_100240a18()",
+          "line": 96
+        }
+      ],
+      "criterion": "原只返回当前可空image存储；现getter返回同image，不触发分析或布局。",
+      "actual_consumer": "ReplicaImagePreviewContent旋转及提交"
+    },
+    {
+      "function_id": "Paste:0x100240a64",
+      "status": "complete",
+      "mapping_state_observed": "migrated",
+      "original": {
+        "path": "decompiled/Paste/part-0197.c",
+        "start_line": 192,
+        "end_line": 215
+      },
+      "current_implementations": [
+        {
+          "path": "replica/Sources/Pasto/UI/OriginalImageTextSelection.swift",
+          "symbol": "func f_100240a64(",
+          "line": 98
+        }
+      ],
+      "criterion": "先存可空image，再以当前存储值设置lazy imageView.image，无额外分析重建或layout。",
+      "actual_consumer": "replaceDisplayedItem/rotateDisplayedImage"
+    },
+    {
+      "function_id": "Paste:0x100240be8",
+      "status": "complete",
+      "mapping_state_observed": "migrated",
+      "original": {
+        "path": "decompiled/Paste/part-0197.c",
+        "start_line": 289,
+        "end_line": 315
+      },
+      "current_implementations": [
+        {
+          "path": "replica/Sources/Pasto/UI/OriginalImageTextSelection.swift",
+          "symbol": "func f_100240be8(",
+          "line": 103
+        }
+      ],
+      "criterion": "先保存Bool；false调用重建overlay，true移除首overlay；当前没有相等值短路。",
+      "actual_consumer": "图片begin/replaceDisplayedItem及只读图片wrapper"
+    },
+    {
+      "function_id": "Paste:0x100240d24",
+      "status": "complete",
+      "mapping_state_observed": "migrated",
+      "original": {
+        "path": "decompiled/Paste/part-0197.c",
+        "start_line": 373,
+        "end_line": 460
+      },
+      "current_implementations": [
+        {
+          "path": "replica/Sources/Pasto/UI/OriginalImageTextSelection.swift",
+          "symbol": "    init() {",
+          "line": 49
+        }
+      ],
+      "criterion": "初始三个lazy槽、image为nil，flag=false；super零frame；加入lazy scroll并关闭autoresizing、四边0约束。只判业务构造状态，不判原对象布局/执行器诊断ABI。",
+      "actual_consumer": "OriginalImageTextSelection.makeNSView及图片预览zoomView"
+    },
+    {
+      "function_id": "Paste:0x100241194",
+      "status": "complete",
+      "mapping_state_observed": "migrated",
+      "original": {
+        "path": "decompiled/Paste/part-0197.c",
+        "start_line": 532,
+        "end_line": 544
+      },
+      "current_implementations": [
+        {
+          "path": "replica/Sources/Pasto/UI/OriginalImageTextSelection.swift",
+          "symbol": "override func viewDidEndLiveResize()",
+          "line": 122
+        }
+      ],
+      "criterion": "完整纯方法是先super.viewDidEndLiveResize后f2411cc；当前override同顺序。被调缩放函数的边界另行审阅。",
+      "actual_consumer": "NSView live-resize系统回调"
+    },
+    {
+      "function_id": "Paste:0x100241380",
+      "status": "complete",
+      "mapping_state_observed": "migrated",
+      "original": {
+        "path": "decompiled/Paste/part-0197.c",
+        "start_line": 634,
+        "end_line": 654
+      },
+      "current_implementations": [
+        {
+          "path": "replica/Sources/Pasto/UI/OriginalImageTextSelection.swift",
+          "symbol": "override func layout()",
+          "line": 127
+        }
+      ],
+      "criterion": "先super.layout，再设置lazy imageView.frame=self.frame，最后f2411cc；当前确为frame而非bounds。",
+      "actual_consumer": "NSView.layout系统回调"
+    },
+    {
+      "function_id": "Paste:0x1002411cc",
+      "status": "uncertain",
+      "mapping_state_observed": "migrated",
+      "original": {
+        "path": "decompiled/Paste/part-0197.c",
+        "start_line": 545,
+        "end_line": 594
+      },
+      "current_implementations": [
+        {
+          "path": "replica/Sources/Pasto/UI/OriginalImageTextSelection.swift",
+          "symbol": "func f_1002411cc()",
+          "line": 111
+        }
+      ],
+      "criterion": "image=nil无副作用、ratio/min/max/magnification正常有限值路径一致；原C浮点寄存器与比较展示不完整，且C显示严格比较而既有合同说明arm为<=/>=。本轮未重新读取对应原指令，不能仅据C确认NaN/等号全边界，不认定代码缺口。",
+      "actual_consumer": "layout/viewDidEndLiveResize"
+    },
+    {
+      "function_id": "Paste:0x10021a8a8",
+      "status": "complete",
+      "mapping_state_observed": "migrated",
+      "original": {
+        "path": "decompiled/Paste/part-0184.c",
+        "start_line": 154,
+        "end_line": 239
+      },
+      "current_implementations": [
+        {
+          "path": "replica/Sources/Pasto/UI/OriginalImageTextSelection.swift",
+          "symbol": "static func f_10021a8a8(_ image: NSImage) -> UInt32",
+          "line": 216
+        }
+      ],
+      "criterion": "TIFF、CGImageSource、首properties、orientation UInt32转换逐层失败返回1；成功保原UInt32，不提前限制orientation合法枚举。",
+      "actual_consumer": "ImageAnalyzer.analyze方向参数"
+    },
+    {
+      "function_id": "Paste:0x10021aabc",
+      "status": "complete",
+      "mapping_state_observed": "migrated",
+      "original": {
+        "path": "decompiled/Paste/part-0184.c",
+        "start_line": 240,
+        "end_line": 331
+      },
+      "current_implementations": [
+        {
+          "path": "replica/Sources/Pasto/UI/OriginalImageTextSelection.swift",
+          "symbol": "func f_10021aabc()",
+          "line": 225
+        }
+      ],
+      "criterion": "按subviews顺序找首个ImageAnalysisOverlayView并remove；无匹配无动作，其它子view保留；MainActor上下文由当前类型承载。",
+      "actual_consumer": "f240be8(true)/wrapper dismantle"
+    },
+    {
+      "function_id": "Paste:0x100308ea0",
+      "status": "complete",
+      "mapping_state_observed": "migrated",
+      "original": {
+        "path": "decompiled/Paste/part-0251.c",
+        "start_line": 722,
+        "end_line": 746
+      },
+      "current_implementations": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalColorPreviewMetadata.swift",
+          "symbol": "public static func color(_ code: UInt64) -> NSColor",
+          "line": 20
+        }
+      ],
+      "criterion": "所有高于bit23均0则alpha1，否则仅bits24..31/255；RGB低24字节/255，当前NSColor(red:green:blue:alpha:)同构造，无mask高位误判。",
+      "actual_consumer": "color card/preview及source color解码"
+    },
+    {
+      "function_id": "Paste:0x100312538",
+      "status": "complete",
+      "mapping_state_observed": "migrated",
+      "original": {
+        "path": "decompiled/Paste/part-0254.c",
+        "start_line": 768,
+        "end_line": 779
+      },
+      "current_implementations": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalColorPreviewMetadata.swift",
+          "symbol": "public static func color(_ code: UInt64) -> NSColor"
+        }
+      ],
+      "criterion": "原有限方法只建立NSColor类型后原样转发UInt64到f308ea0；当前public color同一个实现直接消费，不增加第二套通道算法。",
+      "actual_consumer": "decodedColorPreviewMetadata消费者"
+    },
+    {
+      "function_id": "Paste:0x100206b5c",
+      "status": "uncertain",
+      "mapping_state_observed": "migrated",
+      "original": {
+        "path": "decompiled/Paste/part-0170.c",
+        "start_line": 3189,
+        "end_line": 3367
+      },
+      "current_implementations": [
+        {
+          "path": "replica/Sources/Pasto/UI/OriginalPreviewColorFormatting.swift",
+          "symbol": "f_100206b5c"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaColorPreviewContent.swift",
+          "symbol": "OriginalPreviewColorFormatting.f_100206b5c"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaCanonicalCardContent.swift",
+          "symbol": "OriginalPreviewColorFormatting.f_100206b5c"
+        }
+      ],
+      "criterion": "deviceRGB失败三个0、成功读取RGB/alpha、各通道乘255并Int截断/trap当前可见；原C隐藏String._init的format实参，本轮不凭既有名称确认%02x字面及全部浮点边界，需复用原常量/arm证据后再确认。没有确定差异。",
+      "actual_consumer": "ColorPreview与CanonicalCard两处uppercased显示"
+    },
+    {
+      "function_id": "Paste:0x100218b08",
+      "status": "uncertain",
+      "mapping_state_observed": "migrated",
+      "original": {
+        "path": "decompiled/Paste/part-0182.c",
+        "start_line": 1298,
+        "end_line": 1331
+      },
+      "current_implementations": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSelectionAppearance.swift",
+          "symbol": "f_100218b08"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/PanelViews.swift",
+          "symbol": "OriginalSelectionAppearance.f_100218b08"
+        }
+      ],
+      "criterion": "当前sRGB失败回原色、非RGB回原色、genericGray失败回原色；原C声明void且返回寄存器丢失，单凭本轮C不足以确认这三返回对象。既有arm返回值审阅本轮未重读，不改原台账结论。",
+      "actual_consumer": "PanelViews selection颜色"
+    },
+    {
+      "function_id": "Paste:0x1003c8b58",
+      "status": "complete",
+      "mapping_state_observed": "migrated",
+      "original": {
+        "path": "decompiled/Paste/part-0300.c",
+        "start_line": 660,
+        "end_line": 719
+      },
+      "current_implementations": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalImagePreviewMetadata.swift",
+          "line": 80,
+          "symbol": "f_1003c8b58"
+        }
+      ],
+      "criterion": "CGImage缺失nil；以CGImage建bitmaprep，JPEG raw3，单compressionFactor属性，representation失败nil；当前压缩参数不被固定或吞错替代。",
+      "actual_consumer": "image metadata JPEG0.6及图片提交JPEG0.5"
+    },
+    {
+      "function_id": "Paste:0x1003ca024",
+      "status": "complete",
+      "mapping_state_observed": "migrated",
+      "original": {
+        "path": "decompiled/Paste/part-0300.c",
+        "start_line": 1815,
+        "end_line": 1847
+      },
+      "current_implementations": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalImagePreviewMetadata.swift",
+          "line": 50,
+          "symbol": "f_1003ca024"
+        }
+      ],
+      "criterion": "isValid与两维>0守卫保留，bestRepresentation=nil返回nil；成功按目标size创建NSImage，lockFocus→rep.draw(copy/1/respectFlipped/nil)→unlockFocus。",
+      "actual_consumer": "缩略生成及Header raster消费"
+    },
+    {
+      "function_id": "Paste:0x1003c9f3c",
+      "status": "uncertain",
+      "mapping_state_observed": "migrated",
+      "original": {
+        "path": "decompiled/Paste/part-0300.c",
+        "start_line": 1767,
+        "end_line": 1814
+      },
+      "current_implementations": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalImagePreviewMetadata.swift",
+          "line": 30,
+          "symbol": "f_1003c9f3c"
+        }
+      ],
+      "criterion": "bestRepresentation失败nil与fit长宽分支正常值一致；原C把短边处理显示long截断，既有合同为frinta，源码rounded(.toNearestOrAwayFromZero)，NaN比较也无法单凭C消除。未重核原机器码，不能将C伪类型当确定gap。",
+      "actual_consumer": "f313548缩略预览生成"
+    },
+    {
+      "function_id": "Paste:0x1001fe000",
+      "status": "complete",
+      "mapping_state_observed": "migrated",
+      "original": {
+        "path": "decompiled/Paste/part-0166.c",
+        "start_line": 1945,
+        "end_line": 1974
+      },
+      "current_implementations": [
+        {
+          "path": "replica/Sources/Pasto/UI/OriginalImageCheckerboardView.swift",
+          "symbol": "private static func f_1001fe000(",
+          "line": 17
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/OriginalImageCheckerboardView.swift",
+          "symbol": "let tile = Self.f_1001fe000(",
+          "line": 11
+        }
+      ],
+      "criterion": "目标image为(2w,2h)，lockFocus、传入颜色setFill，依次fill原点与(w,h)两个w×h矩形，unlock返回；当前未填额外两个格。",
+      "actual_consumer": "OriginalImageCheckerboardView.layout生成tile"
+    },
+    {
+      "function_id": "Paste:0x100236910",
+      "mapping_state_at_review": "migrated",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-0193.c",
+        "line": 124
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaNativeCardCollection.swift",
+          "symbol": "override func scrollWheel(with event: NSEvent)"
+        }
+      ],
+      "evidence": "scrollWheel 调真实 remappedWheelEvent；返回 nil 才用原 event；随后一次 super.scrollWheel，保 Void 返回和调用次序。",
+      "actual_consumer": "ReplicaNativeCollectionHost 初始化真实 ReplicaNativeHorizontalScrollView。",
+      "supplementary_original_boundary": "既有原成功C及本轮此前读取的原arm：2369a4..9b4 passthrough返回原event；23692c..93c nil fallback。"
+    },
+    {
+      "function_id": "Paste:0x100236978",
+      "mapping_state_at_review": "migrated",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-0193.c",
+        "line": 147
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaNativeCardCollection.swift",
+          "symbol": "private func remappedWheelEvent"
+        }
+      ],
+      "evidence": "X 非零、Y 为零、CGEvent 缺失返回原 event；转换分支再读 Y，Int64 转换后先写轴2再清轴1，直接返回可空重建事件。",
+      "actual_consumer": "scrollWheel 实际调用该 optional helper。",
+      "supplementary_original_boundary": "既有原成功C及本轮此前读取的原arm：2369a4..9b4 passthrough返回原event；23692c..93c nil fallback。"
+    },
+    {
+      "function_id": "Paste:0x100226764",
+      "mapping_state_at_review": "migrated",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-0188.c",
+        "line": 278
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaNativeCardCollection.swift",
+          "symbol": "private func dragEdgeDelta(windowX x: CGFloat)"
+        }
+      ],
+      "evidence": "先读 minX 算左阈值，再预读第二个 bounds；左用第二 minX，右才第三次读 maxX；右 unordered 返回0；最后严格 sign*((30-distance)/30*15)。",
+      "actual_consumer": "draggingUpdated 将真实 draggingLocation.x 传入，再修改 clip origin.x；父鉴权/indicator不在本合同。",
+      "supplementary_original_boundary": ".local/window-native-edge-delta-arm64.txt，226778/78c/7b4 bounds轨迹与2267a8/ac unordered分支。"
+    },
+    {
+      "function_id": "Paste:0x100225cfc",
+      "mapping_state_at_review": "migrated",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-0187.c",
+        "line": 3613
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaNativeCardCollection.swift",
+          "symbol": "sourceOperationMaskFor context"
+        }
+      ],
+      "evidence": "context 原值0返回copy(1)，其余返回move(16)，忽略session，无额外动作。当前 outsideApplication 比较对应同一0分支。",
+      "actual_consumer": "真实 NSDraggingSource sourceOperationMaskFor 回调。"
+    },
+    {
+      "function_id": "Paste:0x100225db8",
+      "mapping_state_at_review": "migrated",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-0187.c",
+        "line": 3666
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaNativeCardCollection.swift",
+          "symbol": "private weak var draggingSession: NSDraggingSession?"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaNativeCardCollection.swift",
+          "symbol": "willBeginAt screenPoint"
+        }
+      ],
+      "evidence": "输入可选session赋给 weak 槽；替换与清空不延长session生命，nil原样保留；Swift weak 属性是实际存储，不是UUID假引用。",
+      "actual_consumer": "真实 willBeginAt 回调与 beginNativeDrag 写同一weak槽。"
+    },
+    {
+      "function_id": "Paste:0x1001f8858",
+      "mapping_state_at_review": "migrated",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-0164.c",
+        "line": 474
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/OriginalCollectionScrollAnimator.swift",
+          "symbol": "func value(at x: Double, epsilon: Double)"
+        }
+      ],
+      "evidence": "通用六系数值读取X参数求解结果t，再返回t*(cy+t*(t*ay+by))；没有把scroll固定系数冒通用输入。",
+      "actual_consumer": "scroll timing 构造系数值并调用 value，实际由动画 tick 消费。"
+    },
+    {
+      "function_id": "Paste:0x1001f8a84",
+      "mapping_state_at_review": "migrated",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-0164.c",
+        "line": 733
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/OriginalCollectionScrollAnimator.swift",
+          "symbol": "func parameter(x: Double, epsilon: Double)"
+        }
+      ],
+      "evidence": "初始误差提前返回；最多7次Newton更新，每次检查误差与1e-6导数门槛；失败进入原0/1边界及二分；不增加迭代上限、clamp或epsilon替代。",
+      "actual_consumer": "value(at:epsilon:)实际调用 parameter；NaN比较及原潜在不终止边界没有擅改。"
+    },
+    {
+      "function_id": "Paste:0x100219ddc",
+      "mapping_state_at_review": "migrated",
+      "status": "uncertain",
+      "original": {
+        "path": "decompiled/Paste/part-0183.c",
+        "line": 914
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/OriginalNavigationKey.swift",
+          "symbol": "static func f_100219ddc"
+        }
+      ],
+      "evidence": "原成功C显示一次keyCode读取后调用f219df4，当前同样读取并返回分类；但C把本方法声明void，丢失返回寄存器合同，本批未独立复核该入口原机器返回边界，不能只凭函数名判完整。",
+      "actual_consumer": "ReplicaSearchSuggestionsMenu.handleKeyDown实际消费返回分类；值算法f219df4另项完整。"
+    },
+    {
+      "function_id": "Paste:0x100219df4",
+      "mapping_state_at_review": "migrated",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-0183.c",
+        "line": 929
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/OriginalNavigationKey.swift",
+          "symbol": "static func f_100219df4"
+        }
+      ],
+      "evidence": "逐case核对UInt16键码：24→0、30→1、31→2、35→3、73→4、74→5、77→6、79→7、7b→8、7c→9、7d→10、7e→11，其余12；enum声明raw顺序相同。",
+      "actual_consumer": "f219ddc→菜单 handleKeyDown；未把导航分类器当整套键盘事件等价。"
+    },
+    {
+      "function_id": "Paste:0x100206f0c",
+      "mapping_state_at_review": "migrated",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-0170.c",
+        "line": 3466
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/OriginalCompactTextFooter.swift",
+          "symbol": "color.alphaComponent < 1"
+        }
+      ],
+      "evidence": "原只取alphaComponent后严格<1；当前background(for:)使用同一严格比较，不改为<=、clamp或色空间转换后再判断。",
+      "actual_consumer": "OriginalCompactTextCardAppearance.background真实卡片背景分支消费此Bool；只核该谓词，非整个背景函数。"
+    },
+    {
+      "function_id": "Paste:0x100206ecc",
+      "mapping_state_at_review": "migrated",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-0170.c",
+        "line": 3440
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaColorPreviewContent.swift",
+          "symbol": "codeLabel.textColor = OriginalPreviewTextColors.f_1002067d4(color) ? .black : .white"
+        }
+      ],
+      "evidence": "原调用f2067d4后false选white、true选black；实际display(color)同一谓词的三元分支，无额外灰度或alpha调整。",
+      "actual_consumer": "ReplicaColorPreviewContent.display给真实codeLabel.textColor赋值；外层display非本项范围。"
+    },
+    {
+      "function_id": "Paste:0x10004867c",
+      "mapping_state_at_review": "migrated",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-0026.c",
+        "line": 1351
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchCommands.swift",
+          "symbol": "f_10004867c"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "OriginalSearchCommands.f_10004867c"
+        }
+      ],
+      "evidence": "insertNewline与cancelOperation各调用其可选回调，回调nil仍true；其它selector返回false；顺序与成功原C一致。",
+      "actual_consumer": "SearchEditor/OriginalSearchField及UIController真实调用；只核selector分发，不核整个responder父。"
+    },
+    {
+      "function_id": "Paste:0x100385ac4",
+      "mapping_state_at_review": "migrated",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-0284.c",
+        "line": 779
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchSuggestionsMenu.swift",
+          "symbol": "func invalidate() { timer.invalidate() }"
+        }
+      ],
+      "evidence": "无条件调用持有的timer.invalidate，无nil门槛、runloop更改或额外selection动作。",
+      "actual_consumer": "SuggestionsScrollIndicator持有OriginalSuggestionScrollTimer并在停止滚动时调用invalidate。"
+    },
+    {
+      "function_id": "Paste:0x100385acc",
+      "mapping_state_at_review": "migrated",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-0284.c",
+        "line": 792
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchSuggestionsMenu.swift",
+          "symbol": "deinit { invalidate() }"
+        }
+      ],
+      "evidence": "析构时使同一保存timer失效；当前deinit调用invalidate，且invalidate本体是无条件同timer.invalidate；ARC负责释放保存的timer。",
+      "actual_consumer": "真实hover timer owner的deinit；不声称整个计时器factory及Actor桥已完整。"
+    },
+    {
+      "function_id": "Paste:0x10000ed50",
+      "mapping_state_at_review": "migrated",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-0006.c",
+        "line": 675
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchSuggestionsMenu.swift",
+          "symbol": "private func f_10000ed50"
+        }
+      ],
+      "evidence": "缓存有值返回同实例；无值由item.title建label，tail截断、最多1行、原body字体，写缓存并返回；顺序相同。",
+      "actual_consumer": "Suggestion row的title计算属性及实际stack/selection样式消费该惰性getter。"
+    },
+    {
+      "function_id": "Paste:0x10000ee38",
+      "mapping_state_at_review": "migrated",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-0006.c",
+        "line": 710
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchSuggestionsMenu.swift",
+          "symbol": "private func f_10000ee38"
+        }
+      ],
+      "evidence": "缓存命中返回同实例；否则创建NSImageView，scaling raw0即proportionallyDown，赋item.image，nil隐藏，保存并返回。item.image为保存值。",
+      "actual_consumer": "真实Suggestion row图标及样式消费，不替换图像为空壳。"
+    },
+    {
+      "function_id": "Paste:0x10000eedc",
+      "mapping_state_at_review": "migrated",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-0006.c",
+        "line": 741
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchSuggestionsMenu.swift",
+          "symbol": "private func f_10000eedc"
+        }
+      ],
+      "evidence": "缓存命中返回同实例；无值建NSStackView，horizontal(raw0)、centerY(raw10)、spacing7，保存并返回；没有增加子视图操作。",
+      "actual_consumer": "真实Suggestion row布局从stack惰性属性取该实例。"
+    },
+    {
+      "function_id": "Paste:0x10002fe24",
+      "mapping_state_at_review": "migrated",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-0018.c",
+        "line": 2828
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchSuggestionsMenu.swift",
+          "symbol": "func scrollDownOneRow()"
+        }
+      ],
+      "evidence": "缺scroll/document均无操作；取visible originY+首row高度(无row为0)，按严格candidate<maximum选值，否则maximum；之后再次可选document.scroll与reflect。",
+      "actual_consumer": "真实down indicator.onScroll→list.scrollDownOneRow，不新增动画/取0夹取。"
+    },
+    {
+      "function_id": "Paste:0x100030134",
+      "mapping_state_at_review": "migrated",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-0018.c",
+        "line": 2972
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchSuggestionsMenu.swift",
+          "symbol": "func revealSelection()"
+        }
+      ],
+      "evidence": "nil或index>=rows.count无操作，负index进入precondition失败；取目标row.bounds，originY减首row高、height加两倍首row高，调用row.scrollToVisible。",
+      "actual_consumer": "菜单选择变更实际调用list.revealSelection；不等同主面板card reveal。"
+    }
+  ]
+}

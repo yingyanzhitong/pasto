@@ -1,0 +1,42 @@
+{
+  "review_kind": "read_only_capture_timer_entry_and_snapshot_boundaries",
+  "counts": { "reviewed": 2, "complete": 1, "gap": 0, "uncertain": 1, "new_migrations_claimed": 0 },
+  "functions": [
+    {
+      "function_id": "Paste:0x100378c90",
+      "status": "complete",
+      "original_path": "decompiled/Paste/part-0281.c",
+      "original_line": 342,
+      "current_path": "replica/Sources/PastoCore/Pasteboard.swift",
+      "current_symbol": "ClipboardMonitor.handlePollTimer(_:)→poll()→f_10037a028()",
+      "criterion": "原ObjC handlePollTimer:入口不读取timer参数，保持接收者存活，直接调用f37a028一次后返回；自身没有日志、重设timer、读取token或错误分支。当前@objc回调只调用poll一次，poll只转发f37a028一次；不把timer.userInfo/重复状态或其它回调加入分支。",
+      "consumer": "真实f378ac0创建0.25秒timer，target为弱monitor代理TimerTarget，代理成功weak load后调用本方法；本方法有生产调用并最终进入轮询。",
+      "boundary": "只签该接收者已存在时的回调转发体，不改变第5批对f378ac0原target=self/current弱代理的生命周期uncertain，亦不把f37a028内部timer状态算法升级完整。TimerTarget在monitor不存在时的跳过属于新增外层适配，未冒成本地址原方法里的条件。未核当前编译ObjC入口。"
+    },
+    {
+      "function_id": "Paste:0x100378df4",
+      "status": "uncertain",
+      "original_path": "decompiled/Paste/part-0281.c",
+      "original_line": 415,
+      "current_path": "replica/Sources/PastoCore/Pasteboard.swift",
+      "current_symbol": "ClipboardMonitor.synchronizePasteboard()",
+      "matching_reviewed_branches": [
+        "先记录当前frontmost来源，再保存系统changeCount并清临时items；macOS15.4+ accessBehavior!=2时向现存delegate发送请求访问通知并return，不继续读items。",
+        "pasteboardItems nil记错误后退出；非nil先展开全部types供delegate veto，再处理每个表示。类型级排除及Data缺失不生成该type。",
+        "已读原local_118在外层items循环之前清零，按实际接纳Data累加；超过0x40000000时跳过该type，不把累计和重置成每item单独上限；当前totalBytes及加法overflow precondition同有限值路径。",
+        "原仅在构造后的types非空时追加snapshot；当前同样过滤types空项。不是所有系统empty表示都必然原样进入后续Store。",
+        "原完成后回调delegate，再清临时items；当前snapshot赋captureState.items并在真实delegate回调后defer清空。"
+      ],
+      "unresolved": "本原方法还包含多次lazy日志解析、weak delegate分阶段读取、原ObjC系统数据调用和异常退出，当前为Swift协议throwing回调/catch→lastError及本地诊断适配。尚未闭合全部错误/日志/动态delegate变化副作用；本轮列的是已核具体正常/过滤分支，不把大型父函数当全体完整。原类型级f37c22c调用受weak delegate有无控制，现直接调用策略helper；当前正常monitor已设置delegate，但无delegate域和完整委托异常域尚未逐分支证明。",
+      "consumer": "真实sync TimerTarget→handleSyncTimer→synchronizePasteboard，captureState.delegate通常为monitor；didRead随后f37b428保存token/counter、同步通知及f37ae9c→f37b034真实Store采集。callback/Store父的完整合同未由本次值匹配自动闭合。",
+      "decision": "uncertain，不以已确认空types过滤或1GiB上限匹配签整个采集函数，也不声称本轮已找到确定用户可见缺陷。"
+    }
+  ],
+  "limits": [
+    "仅阅读成功原C和当前源码并新增本独立报告；未修改产品源码、台账、用户数据。",
+    "未编译、parse、运行产品、功能/MCP测试、验证脚本或发布。",
+    "本轮未进行新ARM扫描，未核当前二进制；大型采集方法的未知错误域明确保留。",
+    "本批1/2完整不是项目总体迁移率；总分母/跨批去重由主智能体汇总，新增迁移0。",
+    "指定失败地址0x100ac35f8、0x100ac746c跳过，未读取。"
+  ]
+}

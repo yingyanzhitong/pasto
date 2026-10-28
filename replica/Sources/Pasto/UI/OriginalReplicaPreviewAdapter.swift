@@ -93,13 +93,16 @@ private func connectReplicaPreviewHeader(_ header: ReplicaInlinePreviewHeader,
                                          view: OriginalItemPreviewView,
                                          state: ReplicaUIState, item: ClipboardItem) {
     header.onEdit = { [weak view] in view?.f_10007be8c() }
-    header.onClose = { [weak header, weak view] in
-        header?.titleLabel.f_100011d28()
-        view?.window?.performClose(nil)
+    header.onClose = { [weak view] in
+        guard let view else { return }
+        (view.previewHeader as! ReplicaInlinePreviewHeader).titleLabel.f_100011d28()
+        view.window?.performClose(nil)
     }
-    header.titleLabel.onCommitEditing = { [weak state] title in
-        guard let state else { return }
-        state.perform { try state.store.updateItem(id: item.id, title: title, text: nil) }
+    header.titleLabel.onCommitEditing = { [weak view, weak state] title in
+        guard let view, let state else { return }
+        withExtendedLifetime(view) {
+            state.perform { try state.store.updateItem(id: item.id, title: title, text: nil) }
+        }
     }
 }
 
@@ -121,15 +124,25 @@ private final class ReplicaInlinePreviewContainer: OriginalItemPreviewView {
     }
 
     override func performKeyEquivalent(with event: NSEvent) -> Bool {
-        let modifiers = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
-        if modifiers == .command, event.charactersIgnoringModifiers == "e", editorHeader.isHidden {
-            guard itemContentView is OriginalPreviewEditableContent else { return super.performKeyEquivalent(with: event) }
+        let shortcut = OriginalShortcutFunctions.f_1001e7d18(event)
+        if shortcut.modifierRawValue == NSEvent.ModifierFlags.command.rawValue,
+           shortcut.keyCode == OriginalShortcutFunctions.f_1001e94d4("r"),
+           editorHeader.isHidden {
+            (previewHeader as! ReplicaInlinePreviewHeader).titleLabel.f_100011c78()
+            return true
+        }
+        if shortcut.modifierRawValue == NSEvent.ModifierFlags.command.rawValue,
+           shortcut.keyCode == OriginalShortcutFunctions.f_1001e94d4("e"),
+           editorHeader.isHidden {
             f_10007be8c()
             return true
         }
-        if modifiers.isEmpty, event.keyCode == 53 {
+        if shortcut.modifierRawValue == 0, shortcut.keyCode == 0x35 {
             if !editorHeader.isHidden { f_10007c1fc() }
-            else { window?.performClose(nil) }
+            else {
+                (previewHeader as! ReplicaInlinePreviewHeader).titleLabel.f_100011d28()
+                window?.performClose(nil)
+            }
             return true
         }
         return super.performKeyEquivalent(with: event)
@@ -242,9 +255,8 @@ private final class ReplicaInlineTextPreviewContent: NSScrollView, OriginalPrevi
                     self.window?.performClose(nil)
                     return
                 }
-                if !self.text.isEditable {
-                    self.replaceModelAndDisplay(current)
-                }
+                self.replaceStoredModel(current)
+                if !self.text.isEditable { self.displayStoredModel() }
             }
         }
     }
@@ -264,11 +276,16 @@ private final class ReplicaInlineTextPreviewContent: NSScrollView, OriginalPrevi
         let screenSize = NSScreen.main?.frame.size
         let maximum = NSSize(width: (screenSize?.width ?? 2000) * 0.5,
                              height: (screenSize?.height ?? 2000) * 0.5)
-        let attributed = document.content
+        // Paste f_1003ec168 measures the stored original (VM +0x20), not the editing text.
+        let attributed = originalText
         let sample = attributed.length > 2000
             ? attributed.attributedSubstring(from: NSRange(location: 0, length: 2000)) : attributed
         let bounds = sample.boundingRect(with: maximum, options: [.usesLineFragmentOrigin, .usesFontLeading])
-        return .init(width: max(380, bounds.width), height: max(240, bounds.height))
+        let insets = text.textContainerInset
+        let width = bounds.width + (insets.width + insets.width + 20)
+        let height = bounds.height + (insets.height + insets.height)
+        return .init(width: maximum.width < width ? maximum.width : width,
+                     height: maximum.height < height ? maximum.height : height)
     }
 
     func beginPreviewEditing() {
@@ -286,7 +303,7 @@ private final class ReplicaInlineTextPreviewContent: NSScrollView, OriginalPrevi
         text.isEditable = false
         guard let state else { return }
         do {
-            try state.store.updateRichTextItem(id: itemID,
+            try state.store.updateTextPreviewItem(id: itemID,
                 attributedString: OriginalPreviewAttributedText.f_100212ccc(editor: text))
             state.normalizeSelection()
         } catch { state.controller?.presentError(error) }
@@ -295,28 +312,26 @@ private final class ReplicaInlineTextPreviewContent: NSScrollView, OriginalPrevi
 
     private func reloadStoredContent() {
         guard let item = state?.store.items.first(where: { $0.id == itemID }) else { return }
-        replaceModelAndDisplay(item)
+        replaceStoredModel(item)
+        displayStoredModel()
     }
 
-    private func replaceModelAndDisplay(_ item: ClipboardItem) {
+    private func replaceStoredModel(_ item: ClipboardItem) {
+        // Paste f_1003c04f0 refreshes both model values even while the editor is active.
         originalText = Self.attributedContent(item)
         editingText = OriginalPreviewAttributedText.normalizedEditingText(originalText)
+    }
+
+    private func displayStoredModel() {
         OriginalPreviewAttributedText.f_1003eb330(original: originalText, editing: editingText, editor: text)
         OriginalPreviewTextColors.f_1003eb4a8(original: originalText, editor: text)
     }
 
     private static func attributedContent(_ item: ClipboardItem) -> NSAttributedString {
-        for type in ["com.apple.flat-rtfd", "com.apple.rtfd"] {
-            if let data = item.payloads[type],
-               let content = NSAttributedString(rtfd: data, documentAttributes: nil) {
-                return OriginalPreviewAttributedText.f_1003097c0(content)
-            }
-        }
-        if let data = item.payloads["public.rtf"],
-           let content = NSAttributedString(rtf: data, documentAttributes: nil) {
-            return OriginalPreviewAttributedText.f_1003097c0(content)
-        }
-        return NSAttributedString(string: item.plainText ?? "")
+        // Paste f_1003c05d4 reads only the first original representation.
+        // Its rich-text priority, table removal and same-item plain fallback are shared here.
+        let items = (try? ClipboardStore.originalPasteboardItems(from: item.payloads)) ?? []
+        return items.first?.f_10037d33c() ?? NSAttributedString(string: "")
     }
 }
 
@@ -391,7 +406,7 @@ private final class ReplicaInlinePreviewHeader: NSView {
                 let defaultTitle = OriginalPreviewTitles.f_100309008(rawType: rawType,
                     fileCount: current.kind == .files ? current.decodedFilePreviewMetadata?.paths.count : nil)
                 field.f_10023b600(defaultTitle)
-                field.f_10023b214(OriginalPreviewTitles.f_100308f88(current.title, defaultTitle: defaultTitle))
+                field.f_10023b214(OriginalPreviewTitles.f_100308f88(current.originalTitle, defaultTitle: defaultTitle))
                 share?.isEnabled = (try? Self.sharingContent(current))
                     .map { OriginalPreviewSharing.f_100320cc0($0) } ?? false
                 self.refreshPinAppearance(current)
@@ -407,9 +422,18 @@ private final class ReplicaInlinePreviewHeader: NSView {
     required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
 
     private func refreshPinAppearance(_ item: ClipboardItem, boards: [Pinboard]? = nil) {
-        let pinboard = (boards ?? state?.store.pinboards ?? []).first { item.pinboardIDs.contains($0.id) }
-        pinButton?.symbol = item.pinboardIDs.isEmpty ? "circle.dashed" : "circle.fill"
-        pinButton?.contentTintColor = pinboard.flatMap { Self.pinColor($0.colorHex) }
+        let owner: Pinboard?
+        if let boards {
+            owner = item.pinboardOwnerID.flatMap { ownerID in boards.first { $0.id == ownerID } }
+        } else {
+            owner = state?.store.pinboardOwner(for: item)
+        }
+        let pinboard = owner?.rawType == 2 ? owner : nil
+        pinButton?.symbol = pinboard == nil ? "circle.dashed" : "circle.fill"
+        pinButton?.contentTintColor = pinboard.flatMap { board in
+            guard let code = OriginalPinboardAttributes.colorCode(from: board.rawAttributes) else { return nil }
+            return OriginalPinboardColor(canonicalColorCode: code).color()
+        }
     }
 
     private static func pinColor(_ hex: String) -> NSColor? {
@@ -439,7 +463,7 @@ private final class ReplicaInlinePreviewHeader: NSView {
             menu.addItem(entry)
         }
         menu.addItem(.separator())
-        menu.addItem(ReplicaPreviewActionMenuItem(title: String(localized: OriginalPreviewLocalization.f_1001c0f08()) + "...") { [weak self] in
+        menu.addItem(ReplicaPreviewActionMenuItem(title: OriginalSearchLocalization.text("pasto.action.create-group") + "...") { [weak self] in
             self?.createPinboardForCurrentItem()
         })
         if !item.pinboardIDs.isEmpty {
@@ -454,7 +478,7 @@ private final class ReplicaInlinePreviewHeader: NSView {
     private func createPinboardForCurrentItem() {
         guard let state else { return }
         let alert = NSAlert()
-        alert.messageText = String(localized: OriginalPreviewLocalization.f_1001c0f08())
+        alert.messageText = OriginalSearchLocalization.text("pasto.action.create-group")
         let input = NSTextField(frame: NSRect(x: 0, y: 0, width: 260, height: 24))
         alert.accessoryView = input
         alert.addButton(withTitle: String(localized: OriginalPreviewLocalization.f_1001c3908()))

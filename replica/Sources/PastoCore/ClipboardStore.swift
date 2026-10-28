@@ -181,8 +181,10 @@ public final class ClipboardStore: ObservableObject {
             if local.plainText != base.plainText { value.plainText = local.plainText }
             if local.sourceName != base.sourceName { value.sourceName = local.sourceName }
             if local.sourceBundleID != base.sourceBundleID { value.sourceBundleID = local.sourceBundleID }
-            if local.sourceApplicationBundleID != base.sourceApplicationBundleID {
+            if local.sourceApplicationBundleID != base.sourceApplicationBundleID ||
+                local.sourceApplicationRelationIsKnown != base.sourceApplicationRelationIsKnown {
                 value.sourceApplicationBundleID = local.sourceApplicationBundleID
+                value.sourceApplicationRelationIsKnown = local.sourceApplicationRelationIsKnown
             }
             if local.sourceDevice != base.sourceDevice { value.sourceDevice = local.sourceDevice }
             if local.isInHistory != base.isInHistory { value.isInHistory = local.isInHistory }
@@ -357,7 +359,9 @@ public final class ClipboardStore: ObservableObject {
             if local == baseline, try revision() == diskRevision { return }
             let remote = try latestState()
             // A timer refresh must not discard edits that have not reached save() yet.
-            let merged = merge(local, onto: remote)
+            var merged = merge(local, onto: remote)
+            // Entity merging uses dictionaries; restore persisted group/item ordering on reopen.
+            normalize(&merged)
             publish(merged, persisted: remote)
             diskRevision = try revision()
         }
@@ -407,10 +411,16 @@ public final class ClipboardStore: ObservableObject {
 
     func addWithInsertionResult(_ item: ClipboardItem,
                                 sourceApplication: SourceApplicationRecord? = nil) throws -> (id: UUID, isNew: Bool) {
-        var item = Self.withPreviewMetadata(item, binaryPropertyList: preferences.useBinaryPlist, preferQuickLookThumbnails: preferences.fileQuickLookThumbnailsEnabled, generateMissingContentPreview: true)
-        if let sourceApplication { item.sourceApplicationBundleID = sourceApplication.bundleIdentifier }
+        var item = item
+        if let sourceApplication {
+            item.sourceApplicationBundleID = sourceApplication.bundleIdentifier
+            item.sourceApplicationRelationIsKnown = true
+        }
         let checksum = try? Self.knownPasteboardChecksum(from: item.payloads)
         return try mutate(historyAction: item.isInHistory) { state in
+            item = Self.withPreviewMetadata(item, binaryPropertyList: state.preferences.useBinaryPlist,
+                preferQuickLookThumbnails: state.preferences.fileQuickLookThumbnailsEnabled,
+                generateMissingContentPreview: true)
             if let sourceApplication { Self.upsertSourceApplication(sourceApplication, in: &state) }
             if let owner = item.pinboardOwnerID,
                !item.pinboardIDs.contains(owner) || !state.pinboards.contains(where: { $0.id == owner }) {
@@ -420,9 +430,10 @@ public final class ClipboardStore: ObservableObject {
                 if let checksum, let previousChecksum = try? Self.knownPasteboardChecksum(from: previous.payloads) {
                     return checksum == previousChecksum
                 }
-                return previous.kind == item.kind && previous.plainText == item.plainText
-                    && Self.normalizedPasteboardPayloads(previous.payloads)
-                    == Self.normalizedPasteboardPayloads(item.payloads)
+                let explicitIdentity = Self.hasValidExplicitPasteboardRepresentations(previous.payloads)
+                    && Self.hasValidExplicitPasteboardRepresentations(item.payloads)
+                return (explicitIdentity || previous.kind == item.kind && previous.plainText == item.plainText)
+                    && Self.hasSamePasteboardRepresentations(previous.payloads, item.payloads)
             }) {
                 let analysis = state.items[i].kind == .image && item.kind == .image
                     ? state.items[i].payloads.filter { Self.analysisPayloadKeys.contains($0.key) } : [:]
@@ -438,6 +449,7 @@ public final class ClipboardStore: ObservableObject {
                 state.items[i].sourceName = item.sourceName
                 state.items[i].sourceBundleID = item.sourceBundleID
                 state.items[i].sourceApplicationBundleID = item.sourceApplicationBundleID
+                state.items[i].sourceApplicationRelationIsKnown = item.sourceApplicationRelationIsKnown
                 state.items[i].sourceDevice = item.sourceDevice
                 if item.isInHistory { state.items[i].createdAt = item.createdAt }
                 state.items[i].isInHistory = state.items[i].isInHistory || item.isInHistory
@@ -465,6 +477,92 @@ public final class ClipboardStore: ObservableObject {
         }
     }
 
+    public enum IntentTextDestination: Sendable {
+        case history
+        case pinboard(UUID)
+    }
+
+    /// CreateItem differs from capture: a checksum hit retains its title and source relationships.
+    public func createIntentText(_ content: String, destination: IntentTextDestination) throws -> ClipboardItem {
+        guard !content.isEmpty else { throw OriginalPasteboardItemCreationError.emptyContent }
+        let representation = OriginalPasteboardItem.f_10037c6d4(content)
+        let rawKind = OriginalPasteboardClassification.f_10032362c([representation])
+        let kind: ClipboardKind
+        switch rawKind {
+        case .text: kind = .text
+        case .link: kind = .link
+        case .color: kind = .color
+        case .image: kind = .image
+        case .files: kind = .files
+        case .unknown: kind = .unknown
+        }
+        let payloads = [NSPasteboard.PasteboardType.string.rawValue: Data(content.utf8),
+                        Self.orderedPasteboardTypesPayloadKey: try JSONEncoder().encode(representation.f_10037da6c())]
+        let checksum = try Self.knownPasteboardChecksum(from: payloads)
+        let historyAction: Bool
+        switch destination {
+        case .history: historyAction = true
+        case .pinboard: historyAction = false
+        }
+        return try mutate(historyAction: historyAction) { state in
+            let destinationOrder: [UUID]
+            if case let .pinboard(id) = destination {
+                guard state.pinboards.contains(where: { $0.id == id }) else {
+                    throw ClipboardStoreError.pinboardNotFound
+                }
+                destinationOrder = Self.sortedPinboardItems(state.items.filter { !$0.isDeleted && $0.pinboardIDs.contains(id) }).map(\.id)
+            } else {
+                destinationOrder = []
+            }
+            let existing = state.items.firstIndex { previous in
+                guard !previous.isDeleted else { return false }
+                if let checksum, let previousChecksum = try? Self.knownPasteboardChecksum(from: previous.payloads) {
+                    return checksum == previousChecksum
+                }
+                let explicitIdentity = Self.hasValidExplicitPasteboardRepresentations(previous.payloads)
+                    && Self.hasValidExplicitPasteboardRepresentations(payloads)
+                return (explicitIdentity || previous.kind == kind && previous.plainText == content)
+                    && Self.hasSamePasteboardRepresentations(previous.payloads, payloads)
+            }
+            let index: Int
+            if let existing {
+                index = existing
+                state.items[index].kind = kind
+                state.items[index].plainText = content
+                state.items[index].payloads = payloads
+                state.items[index].imagePreviewMetadata = nil
+                state.items[index].rawPreview = nil
+                state.items[index].updatedAt = Date()
+            } else {
+                index = state.items.count
+                state.items.append(ClipboardItem(kind: kind, plainText: content, sourceName: "",
+                                                 payloads: payloads, isInHistory: false))
+            }
+            state.items[index] = Self.withPreviewMetadata(state.items[index],
+                binaryPropertyList: state.preferences.useBinaryPlist,
+                preferQuickLookThumbnails: state.preferences.fileQuickLookThumbnailsEnabled,
+                generateMissingContentPreview: true)
+            switch destination {
+            case .history:
+                let timestamp = Date()
+                state.items[index].createdAt = timestamp
+                state.items[index].updatedAt = timestamp
+                state.items[index].isInHistory = true
+            case let .pinboard(id):
+                var ordered = destinationOrder
+                let itemID = state.items[index].id
+                if let owner = state.items[index].pinboardOwnerID, owner != id {
+                    ordered.removeAll { $0 == itemID }
+                }
+                if !ordered.contains(itemID) { ordered.insert(itemID, at: 0) }
+                state.items[index].pinboardIDs = [id]
+                state.items[index].pinboardOwnerID = id
+                Self.writePinboardOrder(ordered, into: &state)
+            }
+            return state.items[index]
+        }
+    }
+
     public func search(query: String, kind: ClipboardKind? = nil, pinboardID: UUID? = nil,
                        includeDeleted: Bool = false) -> [ClipboardItem] {
         func folded(_ string: String) -> String {
@@ -479,6 +577,9 @@ public final class ClipboardStore: ObservableObject {
             return terms.allSatisfy { haystack.contains($0) }
         }
         if pinboardID != nil, terms.isEmpty { return Self.sortedPinboardItems(matches) }
+        if pinboardID == nil, terms.isEmpty, !includeDeleted {
+            return matches.sorted { $0.createdAt > $1.createdAt }
+        }
         return matches.sorted { $0.updatedAt > $1.updatedAt }
     }
 
@@ -545,6 +646,37 @@ public final class ClipboardStore: ObservableObject {
         }
     }
 
+    public func updateTextPreviewItem(id: UUID, attributedString: NSAttributedString) throws {
+        let representation = OriginalTextPreviewSubmission.makeItem(attributedString)
+        let types = representation.f_10037da6c()
+        var payloads: [String: Data] = [:]
+        for type in types {
+            if let data = representation.f_10037d810(forType: type) { payloads[type] = data }
+        }
+        payloads[Self.orderedPasteboardTypesPayloadKey] = try JSONEncoder().encode(types)
+        let kind: ClipboardKind
+        switch OriginalPasteboardClassification.f_10032362c([representation]) {
+        case .unknown: kind = .unknown
+        case .image: kind = .image
+        case .color: kind = .color
+        case .files: kind = .files
+        case .link: kind = .link
+        case .text: kind = types.contains(NSPasteboard.PasteboardType.rtf.rawValue) ? .richText : .text
+        }
+        try mutate { state in
+            guard let i = state.items.firstIndex(where: { $0.id == id }) else { throw ClipboardStoreError.itemNotFound }
+            var item = state.items[i]
+            item.payloads = payloads
+            item.plainText = attributedString.string
+            item.kind = kind
+            item.imagePreviewMetadata = nil
+            item.rawPreview = nil
+            item.updatedAt = Date()
+            state.items[i] = Self.withPreviewMetadata(item, binaryPropertyList: state.preferences.useBinaryPlist,
+                preferQuickLookThumbnails: state.preferences.fileQuickLookThumbnailsEnabled, generateMissingContentPreview: true)
+        }
+    }
+
     public func updateRichTextItem(id: UUID, attributedString: NSAttributedString) throws {
         let rtf = try attributedString.data(from: NSRange(location: 0, length: attributedString.length),
                                             documentAttributes: [.documentType: NSAttributedString.DocumentType.rtf])
@@ -565,9 +697,19 @@ public final class ClipboardStore: ObservableObject {
     }
 
     public func updateImageItem(id: UUID, payloads: [String: Data]) throws {
+        try updateImageItem(id: id, payloads: payloads, allowingEmptyRepresentation: false)
+    }
+
+    public func updateImagePreviewItem(id: UUID, payloads: [String: Data]) throws {
+        try updateImageItem(id: id, payloads: payloads, allowingEmptyRepresentation: true)
+    }
+
+    private func updateImageItem(id: UUID, payloads: [String: Data], allowingEmptyRepresentation: Bool) throws {
         let imageTypes = ["public.png", "public.jpeg", "public.heic", "public.tiff", "com.apple.icns", "com.compuserve.gif"]
         let types = imageTypes.filter { payloads[$0] != nil }
-        guard !types.isEmpty else { throw OriginalPasteboardItemCreationError.unsupportedContent }
+        guard !types.isEmpty || (allowingEmptyRepresentation && payloads.isEmpty) else {
+            throw OriginalPasteboardItemCreationError.unsupportedContent
+        }
         var replacement = payloads.filter { imageTypes.contains($0.key) }
         replacement[Self.orderedPasteboardTypesPayloadKey] = try JSONEncoder().encode(types)
         let metadata = (try? Self.originalPasteboardItems(from: replacement))
@@ -583,7 +725,7 @@ public final class ClipboardStore: ObservableObject {
             state.items[i].imagePreviewMetadata = rawPreview == nil ? nil : metadata
             state.items[i].rawPreview = rawPreview
             state.items[i].plainText = nil
-            state.items[i].kind = .image
+            state.items[i].kind = types.isEmpty ? .unknown : .image
             state.items[i].updatedAt = Date()
         }
         startBackgroundTextRecognition(id: id)
@@ -660,6 +802,17 @@ public final class ClipboardStore: ObservableObject {
     @discardableResult
     public func createPinboard(name: String, colorHex: String? = nil) throws -> Pinboard {
         guard !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { throw ClipboardStoreError.invalidPinboardName }
+        return try insertPinboard(name: name, colorHex: colorHex)
+    }
+
+    /// The original AppIntent rejects an empty string without trimming the supplied name.
+    @discardableResult
+    public func createPinboardFromIntent(name: String) throws -> Pinboard {
+        guard !name.isEmpty else { throw ClipboardStoreError.invalidPinboardName }
+        return try insertPinboard(name: name, colorHex: nil)
+    }
+
+    private func insertPinboard(name: String, colorHex: String?) throws -> Pinboard {
         return try mutate { state in
             let code: UInt64?
             let value: String
@@ -680,6 +833,13 @@ public final class ClipboardStore: ObservableObject {
     }
     public func renamePinboard(id: UUID, name: String) throws {
         guard !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { throw ClipboardStoreError.invalidPinboardName }
+        try mutate { state in
+            guard let i = state.pinboards.firstIndex(where: { $0.id == id }) else { throw ClipboardStoreError.pinboardNotFound }
+            state.pinboards[i].name = name
+        }
+    }
+    public func renamePinboardFromTab(id: UUID, rawName: String) throws {
+        let name = OriginalPinboardTitle.normalizedRename(rawName)
         try mutate { state in
             guard let i = state.pinboards.firstIndex(where: { $0.id == id }) else { throw ClipboardStoreError.pinboardNotFound }
             state.pinboards[i].name = name
@@ -722,7 +882,9 @@ public final class ClipboardStore: ObservableObject {
             for id in orderedIDs where seen.insert(id).inserted {
                 guard let i = state.items.firstIndex(where: { $0.id == id }) else { continue }
                 if let pinboardID {
-                    if !state.items[i].pinboardIDs.contains(pinboardID) { destination.insert(id, at: 0) }
+                    let movingFromOtherOwner = state.items[i].pinboardOwnerID.map { $0 != pinboardID } ?? false
+                    if movingFromOtherOwner { destination.removeAll { $0 == id } }
+                    if movingFromOtherOwner || !state.items[i].pinboardIDs.contains(pinboardID) { destination.insert(id, at: 0) }
                     state.items[i].pinboardIDs = [pinboardID]
                     state.items[i].pinboardOwnerID = pinboardID
                 } else {
@@ -807,6 +969,38 @@ public final class ClipboardStore: ObservableObject {
             try writeAtomically(encoder.encode(current), to: url)
         }
     }
+
+    /// Additive, atomic import; stable migration IDs keep local edits intact on subsequent runs.
+    public func importPasteGroups(_ snapshot: PasteGroupMigration.Snapshot) throws -> PasteGroupMigration.Result {
+        let imported = StoreState(items: snapshot.items, pinboards: snapshot.pinboards,
+                                  sourceApplications: snapshot.sourceApplications)
+        try validate(imported)
+        return try mutate { state in
+            var groupIDs = Set(state.pinboards.map(\.id))
+            var itemIDs = Set(state.items.map(\.id))
+            var applicationIDs = Set(state.sourceApplications.map(\.bundleIdentifier))
+            var result = PasteGroupMigration.Result(addedGroups: 0, addedItems: 0,
+                existingGroups: 0, existingItems: 0, unavailableItems: snapshot.unavailableItemCount)
+            var order = state.pinboards.map(\.sortOrder).max() ?? -1
+            for var board in snapshot.pinboards {
+                guard groupIDs.insert(board.id).inserted else { result.existingGroups += 1; continue }
+                order += 1
+                board.sortOrder = order
+                state.pinboards.append(board)
+                result.addedGroups += 1
+            }
+            for application in snapshot.sourceApplications where applicationIDs.insert(application.bundleIdentifier).inserted {
+                state.sourceApplications.append(application)
+            }
+            for item in snapshot.items {
+                guard itemIDs.insert(item.id).inserted else { result.existingItems += 1; continue }
+                state.items.append(item)
+                result.addedItems += 1
+            }
+            return result
+        }
+    }
+
     public func importArchive(from url: URL) throws {
         let data = try Data(contentsOf: url)
         let archive: StoreState

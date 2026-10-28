@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "kind": "static_code_migration",
+  "implementation_origin": "existing_reused",
+  "source": "replica/Sources/PastoCore/OriginalPreviewLocalization.swift",
+  "original_pseudocode": "decompiled/Paste/part-0155.c:333..520",
+  "original_bytes_read": ".local/targets/Paste.arm64 file offset 0x1e69bc, 68 bytes",
+  "functions": [
+    {"function_id": "Paste:0x1001e69bc", "instruction_hex": "5f000014", "target": "f_1001e6b38", "key": "editor.character-count", "consumer": "OriginalCompactTextFooter and OriginalPreviewTextMetaView"},
+    {"function_id": "Paste:0x1001e69c4", "instruction_hex": "65000014", "target": "f_1001e6b58", "key": "editor.line-count", "consumer": "OriginalPreviewTextMetaView"},
+    {"function_id": "Paste:0x1001e69cc", "instruction_hex": "6b000014", "target": "f_1001e6b78", "key": "editor.word-count", "consumer": "OriginalPreviewTextMetaView"},
+    {"function_id": "Paste:0x1001e69d4", "instruction_hex": "71000014", "target": "f_1001e6b98", "key": "general.action.open-in", "consumer": "ReplicaLinkPreviewContent open button"},
+    {"function_id": "Paste:0x1001e69f4", "instruction_hex": "89000014", "target": "f_1001e6c18", "key": "general.until", "consumer": "ReplicaCopiedOSD.showPaused"},
+    {"function_id": "Paste:0x1001e69fc", "instruction_hex": "8f000014", "target": "f_1001e6c38", "key": "item-type.file-count", "consumer": "OriginalPreviewTitles"}
+  ],
+  "review": "Successful pseudocode, current original B instructions, destination source-level argument/resource contracts and actual consumers were read. Reuse the existing destination implementation; do not create duplicate wrappers merely to represent original addresses.",
+  "build_executed": false,
+  "tests_executed": false,
+  "equivalence_verified": false,
+  "limitations": "Source-level behavior migration only. No claim of preserved original machine addresses, generated ABI or current runtime equivalence. Earlier tailjump candidate report remains historical."
+}

@@ -1,0 +1,46 @@
+{
+  "review_kind": "read_only_native_writer_objc_protocol_entrypoints",
+  "counts": { "reviewed": 2, "complete": 1, "gap": 0, "uncertain": 1, "new_migrations_claimed": 0 },
+  "functions": [
+    {
+      "function_id": "Paste:0x1003ca2fc",
+      "status": "complete",
+      "original_path": "decompiled/Paste/part-0300.c",
+      "original_line": 1968,
+      "current_path": "replica/Sources/PastoCore/OriginalNativeDragPasteboardWriter.swift",
+      "current_symbol": "OriginalNativeDragPasteboardWriter的NSPasteboardWriting.writableTypes(for:)协议入口",
+      "criterion": "原Objective-C入口调用f3ca700取得类型数组，桥为NSArray返回，释放临时Swift数组；不按pasteboard输入改类型、不去重、不进行全局pasteboard写入。当前NSObject子类明确遵循同一Objective-C NSPasteboardWriting协议，Swift方法返回[NSPasteboard.PasteboardType]，对应SDK的NSArray<NSPasteboardType>*，由语言互操作桥接；实际返回算法已在第11批完整核对。不是仅名称相同：协议selector、输入类型和数组元素NSString语义均有本机SDK声明支持。",
+      "consumer": "ReplicaNativeCardCollection以any NSPasteboardWriting持有本writer（或仅增加独立marker的装饰writer），再构造NSDraggingItem及真实NSDraggingSession，AppKit可按此协议调用。装饰层委托原数组后另追加marker，未修改本入口数组算法。",
+      "boundary": "签源码级协议方法及标准Swift/Objective-C数组桥接合同，不声称已验证当前编译入口地址、autorelease机器尾调用或原类布局；不要求为SDK协议再手写一份ObjC桥。"
+    },
+    {
+      "function_id": "Paste:0x1003ca608",
+      "status": "uncertain",
+      "original_path": "decompiled/Paste/part-0300.c",
+      "original_line": 2109,
+      "current_path": "replica/Sources/PastoCore/OriginalNativeDragPasteboardWriter.swift",
+      "current_symbol": "OriginalNativeDragPasteboardWriter的NSPasteboardWriting.pasteboardPropertyList(forType:)协议入口",
+      "matching_bridge": "原先调用f3ca374，Optional.none直接ObjC nil；some Any经动态桥接为Objective-C属性列表对象，并清理临时existential。原下游只返回String/Data/nil，当前Any?协议方法也只返回对应String/Data/nil，标准ObjC桥对应NSString/NSData/nil，不改Data为空时命中语义。SDK要求nullable id，未把空Data当nil或强转String。",
+      "unresolved": "第11批f3ca374的ownID实体.identifier读取与当前真实UUID值快照的nil/异常/生命周期域仍未闭合；本入口完整输出依赖该结果，故不因桥接本身匹配而升级整入口。这里只保留该既存待证，不声称桥接已有已证错误。",
+      "consumer": "同一真实拖拽session消费；本地marker装饰writer仅拦截独立marker类型，其余请求委托本writer。没有用全局writeToPasteboard替代provider回调。",
+      "original_existing_arm_evidence": ".local/pasteboard-native-drag-writer-closure.json：原完整1003ca608..1003ca700共248B，既有sha256=8e4bac190919b96bc7d46de984a9bc3522b3b32626340e08813f09563c5bd637。引用既存原证据，不冒当前编译验证。"
+    }
+  ],
+  "local_sdk_evidence": {
+    "path": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/AppKit.framework/Headers/NSPasteboard.h",
+    "lines": [193, 198, 210],
+    "declarations": [
+      "@protocol NSPasteboardWriting <NSObject>",
+      "- (NSArray<NSPasteboardType> *)writableTypesForPasteboard:(NSPasteboard *)pasteboard;",
+      "- (nullable id)pasteboardPropertyListForType:(NSPasteboardType)type;"
+    ],
+    "type_alias": "同头文件NSPasteboardType声明为NSString* typed extensible enum；当前NSPasteboard.PasteboardType为该原生类型的Swift表示。"
+  },
+  "limits": [
+    "只阅读成功C、既存原ARM、当前源码及本机SDK头，新增本独立报告。",
+    "未修改产品源码、台账、用户数据；未编译、parse、运行产品、功能/MCP测试、验证脚本或发布。",
+    "本批1/2完整不是项目总体迁移率；主智能体汇总分母/跨批去重，新增迁移0。",
+    "本轮未检查当前二进制，语言协议契约不冒实际机器selector导出检查。",
+    "指定失败地址0x100ac35f8、0x100ac746c跳过，未读取。"
+  ]
+}

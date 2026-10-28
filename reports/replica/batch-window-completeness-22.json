@@ -1,0 +1,30 @@
+{
+  "kind": "batch-window-completeness-22",
+  "scope": "2个完整搜索谓词生成方法，核输入清理、分组/转义、日期失败及真实CSSearchQuery消费。",
+  "summary": {"reviewed": 2, "complete": 2, "gap": 0, "uncertain": 0},
+  "prior_inventory": "reports/replica/batch-completeness-round21.json",
+  "definite_product_differences": [],
+  "activities": {"product_source_edited": false, "ledger_edited": false, "compiled": false, "product_run": false, "tests_run": false, "wrapper_added": false},
+  "skipped_failed_addresses": ["Paste:0x100ac35f8", "Paste:0x100ac746c"],
+  "limitations": [
+    "完整指有限谓词String生成业务合同，不是当前构建或Spotlight查询、索引结果、跨应用搜索运行验收。",
+    "UInt8分组使用原同类Swift Dictionary遍历语义，不增加排序，也不承诺不同进程/Swift运行时的随机hash分组字节顺序固定。",
+    "原私有String/Substring解析与字典分配ABI由当前Swift类型承接，不声称机器码一致；不修改台账计数。"
+  ],
+  "functions": [
+    {
+      "function_id": "Paste:0x1002f3d94", "status": "complete",
+      "original": {"path": "decompiled/Paste/part-0244.c", "line": 84},
+      "source_references": [{"path": "replica/Sources/PastoCore/OriginalSearchQuery.swift", "symbol": "f_1002f3d94"}],
+      "evidence": "先trim(.whitespaces)，空nil。tag0/1分别pasteApp/pasteType精确等值cd，tag2/4为title/pasteDevice两侧通配cd，其余pastePinboard精确等值cd；所有字符串依次反斜杠、双引号、星号、问号转义，不对已加的通配做二次转义。tag3仅按ASCII空格split省空，必须两段Double epoch，任一解析失败nil；新建NSISO8601DateFormatter分别转日期，生成>=start和<end，不擅加start<end。已读完整C及原MachO大型字符串：0x100da1660为(contentModificationDate >= $time.iso(，0x100da1690为) && contentModificationDate < $time.iso(，结尾原小串为))；0x100da16c0/16e0分别pinboard/device字段前缀，与当前Swift插值括号精确对应。",
+      "actual_consumer": "f2f45b0遍历真实filter节点时调用，仅收非nil谓词；ReplicaSearchIndex最终使用其组装queryString创建CSSearchQuery，不是只显示诊断文本。"
+    },
+    {
+      "function_id": "Paste:0x1002f45b0", "status": "complete",
+      "original": {"path": "decompiled/Paste/part-0244.c", "line": 413},
+      "source_references": [{"path": "replica/Sources/PastoCore/OriginalSearchQuery.swift", "symbol": "f_1002f45b0"}, {"path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift", "symbol": "queryString = OriginalSearchQuery.f_1002f45b0(nodes)"}],
+      "evidence": "完整主C读至下一函数：text节点各自trim(.whitespaces)并丢空，按原序单空格join，按四步转义后对title/textContent形成单侧后缀通配的=值cwdt OR组；OS>=26.4才增加contentDescription，原MachO0x100da1640直接解出该字段。然后原UInt8键字典逐filter调用f2f3d94，丢nil，组内保原输入顺序；单项不包括号，多项OR加括号；按字典值迭代追加到自由文本组后，最终AND join。当前无固定组排序、无filter去重、无把text拆成逐词AND；空有效输入返回空String。原栈/数组下标及hash一致性防御属于合法Swift容器不变量，当前不引额外外部输入分支。",
+      "actual_consumer": "ReplicaSearchIndex.update收到真实nodes后生成queryString；drain在非空时创建CSSearchQuery(queryString:predicate,queryContext:context)，并异步读取results。该外层索引/取消/存储域过滤事务不并入本方法完整结论。"
+    }
+  ]
+}

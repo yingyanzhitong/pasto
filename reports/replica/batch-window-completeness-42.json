@@ -1,0 +1,127 @@
+{
+  "kind": "batch-window-completeness-42",
+  "scope": "2项已有窗口通知注册与录制View父方法，核完整成功C及真实生产入口；未以同名或历史migrated直接判完整。",
+  "summary": {
+    "reviewed": 2,
+    "complete": 0,
+    "gap": 0,
+    "uncertain": 2
+  },
+  "activities": {
+    "product_source_edited": false,
+    "ledger_edited": false,
+    "compiled": false,
+    "product_run": false,
+    "tests_run": false,
+    "wrapper_added": false
+  },
+  "skipped_failed_addresses": [
+    "Paste:0x100ac35f8",
+    "Paste:0x100ac746c"
+  ],
+  "limitations": [
+    "正常生产链一致与完整原方法轨迹是两个层面；本批没有复现窗口或录制界面错误。",
+    "仅静态读取和指定报告落盘，不新增wrapper，不修改产品或台账；历史编译声明不冒充当前构建。",
+    "0/2是本批分类，不是整体项目完成率。"
+  ],
+  "functions": [
+    {
+      "function_id": "Paste:0x10004f7d4",
+      "status": "uncertain",
+      "evidence": "完整原C从default NotificationCenter注册didBecomeKey，object=nil、NSOperationQueue.main、弱manager上下文并保存token；当前observeKeyWindow对应同中心/name/object/main queue及weak self，回调同步MainActor.assumeIsolated后应用keyWindow策略。已续读原block thunk f4fd44→f4fce4→MainActor同步wrapper→f4fd68，非无证假定原新建异步Task。未闭合的是token存储生命周期：原将新token覆盖唯一slot+0x50并release旧值，当前append到承载多个通知token的数组，未对应覆盖旧slot；当前实际仅在init调用一次，初始空集合正常注册一致，但无法将重复调用/已有token域整个body判满。原callback固定文件/行Actor诊断也不由当前静态MainActor单独证明。",
+      "actual_consumer": "ReplicaUIController.init真实创建并持有WindowSharingPolicy；其init调用observeKeyWindow一次。真实通知callback读NSApp.keyWindow并写sharingType，deinit统一removeObserver；不是仅声明未注册。",
+      "extra_original_evidence": [
+        {
+          "path": "decompiled/Paste/part-0028.c",
+          "line": 1133,
+          "symbol": "FUN_10004fce4"
+        },
+        {
+          "path": "decompiled/Paste/part-0028.c",
+          "line": 1145,
+          "symbol": "FUN_10004fd44"
+        },
+        {
+          "path": "decompiled/Paste/part-0028.c",
+          "line": 1189,
+          "symbol": "FUN_10004fd68"
+        }
+      ],
+      "original": {
+        "path": "decompiled/Paste/part-0028.c",
+        "line": 876
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/WindowSharingPolicy.swift",
+          "symbol": "observeKeyWindow"
+        }
+      ],
+      "historical_evidence": {
+        "path": "reports/function-migration/Paste-0x10004f7d4.json",
+        "sha256": "00238e9b765f5108e7c5ccf654d383aa4cdf54f4cf1a9f183b3d90ec0ce97e96",
+        "contract": "向默认通知中心注册 NSWindow.didBecomeKeyNotification 观察者，object 为 nil、队列为主队列，弱捕获隐私管理器，同步进入 MainActor 后应用 keyWindow 共享策略；保留观察令牌。",
+        "historical_build_snapshot": "reports/replica/dev52-static-build78.json",
+        "current_build_claim": false
+      },
+      "source_binding": {
+        "replica/Sources/Pasto/WindowSharingPolicy.swift": {
+          "sha256": "d1d69c1996b68c50240bfc952ea9bb9fc8c2f88185e3706daf7ad120af2705fc",
+          "historical_sha256": "d1d69c1996b68c50240bfc952ea9bb9fc8c2f88185e3706daf7ad120af2705fc",
+          "unchanged": true
+        }
+      }
+    },
+    {
+      "function_id": "Paste:0x1001ecbc4",
+      "status": "uncertain",
+      "evidence": "完整原C的正常父结构已对应：topTrailing ZStack构造按钮、完整state为id、外部Binding onChange initial=false、读取error.localizedDescription或空为标题、再独立读error构造constant(error!=nil)绑定、OK动作清错。当前f1ecbc4保留这些正常数据和两个错误读取。仍待证的完整轨迹：当前先从model读取presentation及state快照构造Controls，然后由Controls生成按钮；原先构造f1ed1c4子body并在子方法内部读StateObject/Published，之后再读state构造id，未闭合所有getter时点及子方法Actor诊断。当前View.body还额外挂recordingChanged、errorChanged和绑定拒绝后state协调，这些应用适配不冒原本父体所有分支完全一致。",
+      "actual_consumer": "ReplicaShortcutRecorder在Settings快捷键行实际构造OriginalShortcutRecorderView；body调用f1ecbc4后挂适配订阅，alert及按钮真实使用同一StateObject model。正常Binding onChange进入f1ee19c，该回调本身既有Actor诊断待证仍保留。",
+      "original": {
+        "path": "decompiled/Paste/part-0158.c",
+        "line": 1430
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutRecorderView.swift",
+          "symbol": "public func f_1001ecbc4()",
+          "line": 32
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutRecorderView.swift",
+          "symbol": "let content = ZStack(alignment: .topTrailing)",
+          "line": 36
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutRecorderView.swift",
+          "symbol": ".onChange(of: shortcut, initial: false)",
+          "line": 38
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutRecorderView.swift",
+          "symbol": "let title = Text(model.f_1001f04e8()?.localizedDescription ?? \"\")",
+          "line": 39
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutRecorderView.swift",
+          "symbol": "let isPresented = model.f_1001f04e8() != nil",
+          "line": 40
+        }
+      ],
+      "historical_evidence": {
+        "path": "reports/function-migration/Paste-0x1001ecbc4.json",
+        "sha256": "1e89701df7c7498447178d5f567e0bea8e35816a4348a2be51192cadd77d1126",
+        "contract": "父View以StateObject读取状态/错误，topTrailing ZStack构建双按钮，id完整状态；Binding onChange(initial:false)无条件发布新值；读error.localizedDescription为alert标题，再次读error构造constant(error!=nil)绑定，OK清错误。",
+        "historical_build_snapshot": "reports/replica/dev52-static-build78.json",
+        "current_build_claim": false
+      },
+      "source_binding": {
+        "replica/Sources/PastoCore/OriginalShortcutRecorderView.swift": {
+          "sha256": "881691562e6378fbadd64502b3ec893c821a1e0a463f8b0c6a5ddbdef7dd6330",
+          "historical_sha256": "881691562e6378fbadd64502b3ec893c821a1e0a463f8b0c6a5ddbdef7dd6330",
+          "unchanged": true
+        }
+      }
+    }
+  ]
+}

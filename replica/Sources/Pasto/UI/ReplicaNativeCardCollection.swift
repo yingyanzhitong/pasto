@@ -27,6 +27,7 @@ struct ReplicaNativeCollection: NSViewRepresentable {
 final class ReplicaNativeCollectionHost: NSView, NSDraggingSource {
     private let scrollView = ReplicaNativeHorizontalScrollView(frame: .zero)
     private let document = ReplicaNativeCardDocument(frame: .zero)
+    private let scrollAnimator = OriginalCollectionScrollAnimator()
     private weak var state: ReplicaUIState?
     private weak var focusPanel: ReplicaPanel?
     private var collectionIsFirstResponder = false
@@ -89,6 +90,11 @@ final class ReplicaNativeCollectionHost: NSView, NSDraggingSource {
     }
 
     override var acceptsFirstResponder: Bool { true }
+    override var canBecomeKeyView: Bool { true }
+
+    override func selectAll(_ sender: Any?) {
+        state?.selectAll()
+    }
 
     override func becomeFirstResponder() -> Bool {
         let success = super.becomeFirstResponder()
@@ -107,6 +113,7 @@ final class ReplicaNativeCollectionHost: NSView, NSDraggingSource {
     private func clearFocusTarget() {
         guard let panel = focusPanel else { return }
         if panel.collectionFocusTarget === self { panel.collectionFocusTarget = nil }
+        if panel.initialFirstResponder === self { panel.initialFirstResponder = nil }
         if panel.firstResponder === self { panel.makeFirstResponder(nil) }
         focusPanel = nil
     }
@@ -117,6 +124,7 @@ final class ReplicaNativeCollectionHost: NSView, NSDraggingSource {
         if let panel = window as? ReplicaPanel {
             focusPanel = panel
             panel.collectionFocusTarget = self
+            panel.initialFirstResponder = self
             if panel.firstResponder === panel || panel.firstResponder === panel.contentView {
                 panel.makeFirstResponder(self)
             }
@@ -161,8 +169,40 @@ final class ReplicaNativeCollectionHost: NSView, NSDraggingSource {
         }
     }
 
-    /// The finite horizontal target from f22c9c4; scroll animation remains a separate contract.
-    private func revealPrimaryCard(at index: Int) {
+    func previewAnchor(for itemID: UUID, revealIfNeeded: Bool = true) -> NSView? {
+        guard let state, let hostWindow = window, !bounds.isEmpty, cardSide > 0 else { return nil }
+        update(state: state, cardSide: cardSide)
+        guard let index = items.firstIndex(where: { $0.id == itemID }) else { return nil }
+        if cells[index]?.itemID != itemID {
+            guard revealIfNeeded else { return nil }
+            revealPrimaryCard(at: index, animated: false)
+            tileCells()
+        }
+        guard let cell = cells[index], cell.itemID == itemID,
+              cell.superview === document, cell.window === hostWindow else { return nil }
+        return cell
+    }
+
+    func revealSelection(state: ReplicaUIState, itemID: UUID, animated: Bool,
+        completion: @escaping (Bool) -> Void) {
+        // This input selection owns its reveal. Do not also enqueue the primary-ID observer's reveal.
+        lastPrimaryID = state.primaryID
+        needsPrimaryReveal = false
+        update(state: state, cardSide: cardSide)
+        guard let index = items.firstIndex(where: { $0.id == itemID }) else { return }
+        revealPrimaryCard(at: index, animated: animated, completion: completion)
+    }
+
+    func visibleSelectionAnchor(at index: Int, itemID: UUID) -> NSView? {
+        guard items.indices.contains(index), items[index].id == itemID,
+              let cell = cells[index], cell.itemID == itemID,
+              cell.superview === document, let window, cell.window === window else { return nil }
+        return cell
+    }
+
+    /// f22c9c4: intersecting cards report immediately; offscreen cards use the animator result.
+    private func revealPrimaryCard(at index: Int, animated: Bool = true,
+        completion: ((Bool) -> Void)? = nil) {
         let clip = scrollView.contentView
         var viewport = clip.bounds
         let card = cardFrame(index)
@@ -173,7 +213,13 @@ final class ReplicaNativeCollectionHost: NSView, NSDraggingSource {
             viewport.origin.x = card.minX - (gap * 1.5 + gap)
         }
         // This document is horizontal only; preserve its existing vertical clip origin.
-        if viewport != clip.bounds { clip.bounds = viewport }
+        if card.intersects(clip.bounds) {
+            scrollAnimator.setContentOffset(viewport.origin, in: clip, animated: animated)
+            completion?(true)
+        } else {
+            scrollAnimator.setContentOffset(viewport.origin, in: clip, animated: animated,
+                completion: completion)
+        }
     }
 
     private func cardFrame(_ index: Int) -> NSRect {
@@ -222,9 +268,11 @@ final class ReplicaNativeCollectionHost: NSView, NSDraggingSource {
 
     private func index(at point: NSPoint) -> Int? {
         let position = document.convert(point, from: self)
-        let candidate = Int(floor((position.x - 24) / (cardSide + 24)))
-        guard items.indices.contains(candidate), cardFrame(candidate).contains(position) else { return nil }
-        return candidate
+        // f228568 resolves the actual visible cell frames, rather than a layout-derived slot.
+        for (index, cell) in cells where items.indices.contains(index) && cell.itemID == items[index].id {
+            if cell.frame.contains(position) { return index }
+        }
+        return nil
     }
 
     private func select(_ index: Int, modifiers: NSEvent.ModifierFlags = []) {
@@ -236,20 +284,23 @@ final class ReplicaNativeCollectionHost: NSView, NSDraggingSource {
 
     override func mouseDown(with event: NSEvent) {
         guard let state else { super.mouseDown(with: event); return }
-        if event.modifierFlags.contains(.control) {
-            super.rightMouseDown(with: event)
-            return
-        }
-        window?.makeFirstResponder(self)
         let point = convert(event.locationInWindow, from: nil)
         guard let index = index(at: point), event.clickCount <= 2 else {
-            state.deselectAll()
             super.mouseDown(with: event)
             return
         }
+        // f227cd4 only redirects Control-click after a visible-cell hit and click-count gate.
+        if event.modifierFlags.contains(.control) {
+            rightMouseDown(with: event)
+            return
+        }
+        window?.makeFirstResponder(self)
         if event.clickCount == 2 {
             dragWaitTimer?.invalidate()
-            select(index)
+            state.selectForDoubleClick(at: index)
+            lastPrimaryID = state.primaryID
+            needsPrimaryReveal = false
+            refreshCellRoots()
             let current = state.visibleItems
             if current.indices.contains(index) {
                 let plain = NSEvent.ModifierFlags(rawValue: state.store.preferences.plainTextModifierRawValue)
@@ -264,7 +315,7 @@ final class ReplicaNativeCollectionHost: NSView, NSDraggingSource {
         } else {
             // A new press replaces the stored reference, without inventing an old-timer debounce.
             dragWaitTimer = Timer.scheduledTimer(withTimeInterval: 0.45, repeats: false) { [weak self] _ in
-                MainActor.assumeIsolated { self?.select(index) }
+                MainActor.assumeIsolated { self?.state?.selectAfterPressDelay(at: index) }
             }
         }
     }
@@ -276,6 +327,7 @@ final class ReplicaNativeCollectionHost: NSView, NSDraggingSource {
         guard hypot(point.x - initialDragLocation.x, point.y - initialDragLocation.y) > 3,
               let state, !state.selectedItems.isEmpty else { return }
         beginNativeDrag(event, state: state)
+        self.initialDragLocation = nil
     }
 
     private func beginNativeDrag(_ event: NSEvent, state: ReplicaUIState) {
@@ -311,7 +363,6 @@ final class ReplicaNativeCollectionHost: NSView, NSDraggingSource {
             let session = beginDraggingSession(with: dragItems, event: event, source: self)
             session.draggingFormation = event.modifierFlags.contains(.control) ? .stack : .pile
             draggingSession = session
-            self.initialDragLocation = nil
         } catch {
             localMarker = nil
             draggingWriters.removeAll()
@@ -373,13 +424,20 @@ final class ReplicaNativeCollectionHost: NSView, NSDraggingSource {
 
     /// f226764 receives the original window-space draggingLocation, without a conversion.
     private func dragEdgeDelta(windowX x: CGFloat) -> CGFloat {
-        if x <= bounds.minX + 30 {
-            return -((30 - (x - bounds.minX)) / 30) * 15
+        let leftThreshold = bounds.minX + 30
+        let secondBounds = bounds
+        let distance: CGFloat
+        let sign: CGFloat
+        if x <= leftThreshold {
+            distance = x - secondBounds.minX
+            sign = -1
+        } else {
+            // Original B.HI after FCMP(rightThreshold, x) also returns zero when unordered.
+            guard secondBounds.maxX + -30 <= x else { return 0 }
+            distance = bounds.maxX - x
+            sign = 1
         }
-        if x >= bounds.maxX - 30 {
-            return ((30 - (bounds.maxX - x)) / 30) * 15
-        }
-        return 0
+        return sign * (((30 - distance) / 30) * 15)
     }
 
     override func draggingEntered(_ sender: NSDraggingInfo) -> NSDragOperation {
@@ -571,13 +629,17 @@ private final class ReplicaNativeLocalDragWriter: NSObject, NSPasteboardWriting 
 private final class ReplicaNativeHorizontalScrollView: NSScrollView {
     override class var isCompatibleWithResponsiveScrolling: Bool { true }
 
+    // f236910 preserves the original event if reconstruction returns nil.
     override func scrollWheel(with event: NSEvent) {
-        var forwarded = event
-        if event.scrollingDeltaX == 0, event.scrollingDeltaY != 0, let cgEvent = event.cgEvent {
-            cgEvent.setIntegerValueField(.scrollWheelEventDeltaAxis2, value: Int64(event.scrollingDeltaY))
-            cgEvent.setIntegerValueField(.scrollWheelEventDeltaAxis1, value: 0)
-            forwarded = NSEvent(cgEvent: cgEvent) ?? event
-        }
-        super.scrollWheel(with: forwarded)
+        super.scrollWheel(with: remappedWheelEvent(event) ?? event)
+    }
+
+    // f236978 returns the original event on passthrough, and the optional reconstruction on remap.
+    private func remappedWheelEvent(_ event: NSEvent) -> NSEvent? {
+        guard event.scrollingDeltaX == 0, event.scrollingDeltaY != 0,
+              let cgEvent = event.cgEvent else { return event }
+        cgEvent.setIntegerValueField(.scrollWheelEventDeltaAxis2, value: Int64(event.scrollingDeltaY))
+        cgEvent.setIntegerValueField(.scrollWheelEventDeltaAxis1, value: 0)
+        return NSEvent(cgEvent: cgEvent)
     }
 }

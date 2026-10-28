@@ -1,0 +1,41 @@
+{
+  "review_kind": "read_only_native_writer_initialization_and_field_teardown",
+  "counts": { "reviewed": 2, "complete": 1, "gap": 0, "uncertain": 1, "new_migrations_claimed": 0 },
+  "functions": [
+    {
+      "function_id": "Paste:0x1003ca230",
+      "status": "complete",
+      "original_path": "decompiled/Paste/part-0300.c",
+      "original_line": 1905,
+      "current_path": "replica/Sources/PastoCore/OriginalNativeDragPasteboardWriter.swift",
+      "current_symbol": "OriginalNativeDragPasteboardWriter.init(source:pasteboardItems:)",
+      "criterion": "原指定初始化器将输入的item身份对象及PasteboardItem数组直接存入自身两个持有字段，再调用NSObject.init，返回初始化对象；没有查询identifier、枚举groups、验证非空、写剪贴板、建立通知或修改Data。当前先强持source身份对象、再持有pasteboardItems引用数组，最后super.init，同输入字段顺序和全部空groups分支；不把source复制成String、不深拷贝原表示对象。",
+      "bounded_original_arm": "1003ca230..1003ca294完整已静态读取：3ca244/248保存输入数组/身份对象；3ca250动态类型读取，3ca25c/268依次写item、pasteboardItems字段；3ca26c保存receiver/super，3ca27c super init；3ca290 return。原存的是传入对象，不调用它的getter。",
+      "consumer": "真实beginNativeDrag由selected建立强持ClipboardItem值快照的ReplicaNativeDragItemReference，再writers zip→本init；会话期间draggingWriters以及NSDraggingItem持有结果。source适配器自身不是String，此init确实持有对象直到writer释放。",
+      "boundary": "原实体identity与当前UUID快照的读取差异仍保留第11批f3ca374待证，不把本构造函数无读取副作用的完整结论扩大至getter。原类名/内存字段offset不是否定此独立持有/初始化源码合同的理由；不声称当前编译ABI完全相同。"
+    },
+    {
+      "function_id": "Paste:0x1003ca2c0",
+      "status": "uncertain",
+      "original_path": "decompiled/Paste/part-0300.c",
+      "original_line": 1941,
+      "current_path": "replica/Sources/PastoCore/OriginalNativeDragPasteboardWriter.swift",
+      "current_symbol": "OriginalNativeDragPasteboardWriter合成字段析构",
+      "matching_lifetime": "当前source为非weak强引用，pasteboardItems为强持数组；没有额外全局缓存或手写deinit回调。draggingWriters在结束/失败路径removeAll，外层drag session释放时标准ARC可释放writer及两个字段。",
+      "original_existing_arm": ".local/pasteboard-native-drag-writer-closure.json已存完整1003ca2c0..1003ca2f8共56B，sha256=2427cb31e6c53791ad114ae24060465ffbb8f5365ad51b8a2aaceffb3f2b0901。该机器证据补足C漏写的item release：3ca2d8装载item→3ca2dc objc_release，再3ca2e8装载数组→3ca2f4 tail swift_bridgeObjectRelease。",
+      "unresolved": "本次禁止编译，当前类只有合成析构，源码确认两个字段最终释放，不能由此静态保证当前最终机器体仍与原先释放item、再释放groups的精确顺序及存活边界一致。source协议允许自定义对象，其deinit可有可观察动作，故不把这种顺序自动视为不可观察；无当前编译体或明确源码顺序证明，保持uncertain。",
+      "boundary": "不是声称存在泄漏/当前释放顺序错误，也不因仅依赖ARC就全盘否认持有语义；只保留完整原析构先后合同未证。"
+    }
+  ],
+  "supporting_original_reads": {
+    "original_image": ".local/targets/Paste.arm64",
+    "fresh_static_disassembly_range": { "start": "0x1003ca1cc", "end_exclusive": "0x1003ca294" },
+    "note": "顺带读到前置分配入口3ca1cc，与指定初始化器区分；未把它作为本批额外完整计数。析构机体引用既存原证据，不冒当前编译证明。"
+  },
+  "limits": [
+    "只新增独立报告，未修改产品源码、台账或用户数据。",
+    "未编译、parse、运行产品、功能/MCP测试、验证脚本或发布。",
+    "本批1/2完整不是项目总体迁移率；总分母和跨批去重由主智能体汇总，新增迁移0。",
+    "指定失败地址0x100ac35f8、0x100ac746c跳过，未读取。"
+  ]
+}

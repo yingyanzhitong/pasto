@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "scope": "收口一个前轮尚未覆盖、实际生产使用的全文预览颜色刷新完整工作方法；成功原C、完整指定原ARM与当前源码逐分支核对，不为数量扩查其它父方法。",
+  "counts": { "total": 1, "complete": 1, "gap": 0, "uncertain": 0 },
+  "records": [
+    {
+      "function_id": "Paste:0x1003eb4a8",
+      "status": "complete",
+      "original": { "path": "decompiled/Paste/part-0312.c", "start_line": 512, "address_range": "0x1003eb4a8..<0x1003eb64c" },
+      "current_implementations": [ { "path": "replica/Sources/PastoCore/OriginalPreviewTextColors.swift", "start_line": 93, "end_line": 109, "symbol": "public static func f_1003eb4a8(original:editor:)" } ],
+      "criterion": "原对原original而非editing/candidate作f3095bc判断。plain时从f219bc4槽取背景并取默认前景；rich时调用f1ffc58取得背景，再用f1ffac0判断缺前景，只有缺失才取默认前景，否则foreground=nil。随后无条件设置真实editor背景，有前景才写textColor；最后只有plain且editor非editable时取preferred.body并写font。当前同分支与顺序，不在rich已有前景时清旧textColor，不在editing时重置font，也不更新原文/提交状态/焦点。",
+      "arm_branch_evidence": [
+        "3eb4f8调用f3095bc，3eb4fc把plain结果保存x24；3eb500 false跳rich分支。",
+        "3eb504 f219bc4并3eb508解引用slot；rich 3eb51c f1ffc58保存背景x23，3eb524 f1ffac0；3eb528 false跳3eb540令foreground x22=0，否则3eb52c取默认色slot。",
+        "3eb560调用f2134d4写背景；3eb56c前景nil直接跳过，非nil3eb598调用f213390写前景，保背景先于前景。",
+        "3eb5ac rich直接跳结束；plain才3eb5bc读isEditable，3eb5cc false进入字体设置，3eb604取f0f3e48并3eb60c f213290写font。原C的若干puVar低bit判断是getter覆盖寄存器，ARM消除歧义。"
+      ],
+      "actual_consumer": "OriginalReplicaPreviewAdapter.swift第232行真实文本预览初始化、第272行appearance/display更新、第327行displayStoredModel在文本内容写入后依次调用该颜色刷新方法；使用现有originalText基线和同一NSTextView，不是未消费值投影。",
+      "satisfied_boundaries": "plain动态背景和默认色、rich无前景与已有前景、editable与noneditable、空original均通过上述分支覆盖；默认背景及Bool判断由前批已审方法复用，未重写。原本体无inline MainActor executor诊断。",
+      "limitations": "确认本颜色刷新方法对所给基线/editor的完整本地业务分支；上游原VM/模型身份、lazy editor构造、子getter/setter ObjC actor桥及f1ffc58内部主色选择另列，不因本记录升级。当前返回Int0是本地调用适配、实际调用忽略，不声明原机器码返回寄存器ABI相同。未执行颜色/文本或UI测试。"
+    }
+  ],
+  "arm_evidence": { "binary": ".local/paste-arm64-static.bin", "range": "0x1003eb4a8..<0x1003eb64c", "method": "只读llvm-objdump完整指定成功函数范围，未运行二进制" },
+  "excluded_failed_addresses": [ "0x100ac35f8", "0x100ac746c" ],
+  "verification_scope": "仅新增本报告，没有产品源码、台账或旧报告修改，没有编译、parse、运行应用、测试、MCP或发布，未读取两指定失败函数。complete为有限源码工作方法合同，不表示当前产物证明或一比一功能验收。"
+}

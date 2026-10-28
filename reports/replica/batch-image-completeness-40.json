@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "round": 40,
+  "scope": "完整预览 footer 的内容贴边约束方法；仅核有限布局合同，外围替换生命周期不重复升级。",
+  "counts": {"reviewed": 1, "complete": 1, "gap": 0, "uncertain": 0},
+  "records": [
+    {
+      "function_id": "Paste:0x1003df260",
+      "status": "complete",
+      "historical_evidence": "reports/function-migration/Paste-0x1003df260.json",
+      "original": {
+        "path": "decompiled/Paste/part-0308.c",
+        "start_line": 91,
+        "end_line": 145,
+        "address_range": "0x1003df260..<0x1003df37c",
+        "pseudocode_file_sha256": "5014aaa3a5960d50ed24c8b34ec74a4f082cfd8c06852e443653840b90d9946d"
+      },
+      "current_reference": {
+        "path": "replica/Sources/PastoCore/OriginalPreviewFooter.swift",
+        "symbol": "OriginalPreviewFooterView.f_1003df260(_:)",
+        "line_range": "93..98",
+        "sha256": "97d14915cc4fa873a0d526a42f168ea5487864d0b8327e825bee18e28bd2e25c",
+        "matches_historical_source_sha256": true
+      },
+      "criterion": [
+        "原方法读取当前 FooterView.containerView，以传入内容 view 与该 container 构造四条边相等约束；没有激活、替换视图或调用 layout 的副作用。当前同样仅返回四边 equality 约束，常量全零。",
+        "原 ARM 3df278..3df280 读取 container ivar；3df2a8 调 f1f9774，随后 d0..d3 从该返回地址读取四个 inset，再于 3df2c4 调 f1f97b4。不是从 C 伪参数外观猜零常量。",
+        "成功原 part-0164.c:2005..2084 的 f1f9774/f1f97b4 表明读取共享 edge inset 后构造四边 equality；part-0165.c:33..43 的 f1f9ff4 明确来源 NSDirectionalEdgeInsetsZero。trailing/bottom 原取负零与当前默认零在此 NSLayoutConstraint 布局合同等价，不扩大到浮点位型或数组内存布局合同。",
+        "原方法完整范围没有 actor executor 诊断或额外条件分支。确认四边约束集合的布局合同；不声称原 existential builder 的返回 ABI、分配方式或约束数组对象身份等价。"
+      ],
+      "actual_consumer": {
+        "path": "replica/Sources/PastoCore/OriginalPreviewFooter.swift",
+        "line_range": "85..90",
+        "symbol": "OriginalPreviewFooterView.f_1003df0b0(_:)",
+        "call": "移除旧内容、设置新内容 autoresizing=false 并 addSubview 后，NSLayoutConstraint.activate(f_1003df260(view))，随后 layout；统计 footer 的生产入口为 OriginalReplicaPreviewAdapter.swift:609..617 的 document content observer。"
+      },
+      "limitations": "完整仅指已有有限四边布局合同。外围 f3df0b0 的原循环 actor 诊断仍按第19轮待证；不会因本方法完整而升级其父。历史源码摘要相同不代表当前构建或运行等价。"
+    }
+  ],
+  "excluded_failed_addresses": ["Paste:0x100ac35f8", "Paste:0x100ac746c"],
+  "verification_scope": {
+    "product_source_modified": false,
+    "ledger_modified": false,
+    "compiled": false,
+    "application_executed": false,
+    "functional_tests_executed": false,
+    "mcp_executed": false,
+    "static_original_disassembly": "只读取成功函数 0x1003df260..<0x1003df37c 的原 ARM。",
+    "one_to_one_acceptance_claimed": false
+  }
+}

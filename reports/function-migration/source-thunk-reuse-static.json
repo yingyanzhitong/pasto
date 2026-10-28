@@ -1,0 +1,330 @@
+{
+  "schema_version": 1,
+  "kind": "static_code_migration",
+  "implementation_origin": "existing_reused",
+  "functions": [
+    {
+      "function_id": "Paste:0x1000d4d6c",
+      "original_pseudocode": {
+        "path": "decompiled/Paste/part-0069.c",
+        "line": 1872,
+        "sha256": "decd2eedafa7dd159e906c611c554621ee54effe001c152ede0445ffc285a329"
+      },
+      "original_hops": [
+        {
+          "address": "0x1000d4d6c",
+          "instruction_hex": "4affff17",
+          "target": "0x1000d4a94"
+        }
+      ],
+      "target": "Paste:0x1000d4a94",
+      "implementations": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalDiagnosticDispatcher.swift",
+          "symbol": "f_1000d4a94"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1000d4d70",
+      "original_pseudocode": {
+        "path": "decompiled/Paste/part-0070.c",
+        "line": 6,
+        "sha256": "4a761e4883b37d991144536fd3b8d8561d5a0e75fb70eb82b31522b244bc3c0e"
+      },
+      "original_hops": [
+        {
+          "address": "0x1000d4d70",
+          "instruction_hex": "ffffff17",
+          "target": "0x1000d4d6c"
+        },
+        {
+          "address": "0x1000d4d6c",
+          "instruction_hex": "4affff17",
+          "target": "0x1000d4a94"
+        }
+      ],
+      "target": "Paste:0x1000d4a94",
+      "implementations": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalDiagnosticDispatcher.swift",
+          "symbol": "f_1000d4a94"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1001ee744",
+      "original_pseudocode": {
+        "path": "decompiled/Paste/part-0158.c",
+        "line": 2531,
+        "sha256": "25cfa68098ae9440d30b7341ba08a56fea698c599306003fbcb27589b23ff22c"
+      },
+      "original_hops": [
+        {
+          "address": "0x1001ee744",
+          "instruction_hex": "b0ffff17",
+          "target": "0x1001ee604"
+        }
+      ],
+      "target": "Paste:0x1001ee604",
+      "implementations": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutControls.swift",
+          "symbol": "struct OriginalShortcutRemoveButtonStyle"
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutControls.swift",
+          "symbol": "f_1001ee604",
+          "qualified_symbol": "OriginalShortcutRemoveButtonStyle.f_1001ee604"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1001eeaa8",
+      "original_pseudocode": {
+        "path": "decompiled/Paste/part-0158.c",
+        "line": 2688,
+        "sha256": "26105b6446b5ff8a2f736d724b386385c453342ea6662c9059146ac12eb00ed8"
+      },
+      "original_hops": [
+        {
+          "address": "0x1001eeaa8",
+          "instruction_hex": "28ffff17",
+          "target": "0x1001ee748"
+        }
+      ],
+      "target": "Paste:0x1001ee748",
+      "implementations": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutControls.swift",
+          "symbol": "struct OriginalShortcutPrimaryButtonStyle"
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutControls.swift",
+          "symbol": "f_1001ee748",
+          "qualified_symbol": "OriginalShortcutPrimaryButtonStyle.f_1001ee748"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1001f0674",
+      "original_pseudocode": {
+        "path": "decompiled/Paste/part-0159.c",
+        "line": 1601,
+        "sha256": "9d4dc7828aeb2a0b288f526f423589371d1f32a44dc22cb26fd17c15fe27c14e"
+      },
+      "original_hops": [
+        {
+          "address": "0x1001f0674",
+          "instruction_hex": "b9ffff17",
+          "target": "0x1001f0558"
+        }
+      ],
+      "target": "Paste:0x1001f0558",
+      "implementations": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutRecorder.swift",
+          "symbol": "public func f_1001f0558(into hasher: inout Hasher)",
+          "line": 21
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutRecorderView.swift",
+          "symbol": ".id(model.state)",
+          "line": 37
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1001ff514",
+      "original_pseudocode": {
+        "path": "decompiled/Paste/part-0168.c",
+        "line": 242,
+        "sha256": "e1eacf7489b1ce06300bb8a5775a3e49d0083f233a728d2e417eb93bf55b79fb"
+      },
+      "original_hops": [
+        {
+          "address": "0x1001ff514",
+          "instruction_hex": "e2ffff17",
+          "target": "0x1001ff49c"
+        }
+      ],
+      "target": "Paste:0x1001ff49c",
+      "implementations": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchAppearance.swift",
+          "symbol": "f_1001ff49c"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/SearchEditor.swift",
+          "symbol": "OriginalSearch"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x100201b84",
+      "original_pseudocode": {
+        "path": "decompiled/Paste/part-0169.c",
+        "line": 2032,
+        "sha256": "b25dc31ef5010c7103eaa32833f8eb8e7fa662def2b4ac42329a39fb2a0e0319"
+      },
+      "original_hops": [
+        {
+          "address": "0x100201b84",
+          "instruction_hex": "cbfaff17",
+          "target": "0x1002006b0"
+        }
+      ],
+      "target": "Paste:0x1002006b0",
+      "implementations": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPreviewTextColors.swift",
+          "symbol": "f_1002006b0"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1002363dc",
+      "original_pseudocode": {
+        "path": "decompiled/Paste/part-0192.c",
+        "line": 2252,
+        "sha256": "f1f4465f7871510469440c59b496497346340a94891258763016b66725ea27b8"
+      },
+      "original_hops": [
+        {
+          "address": "0x1002363dc",
+          "instruction_hex": "4b1fff17",
+          "target": "0x1001fe108"
+        }
+      ],
+      "target": "Paste:0x1001fe108",
+      "implementations": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalLayerBackedView.swift",
+          "symbol": "f_1001fe108"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/SearchEditor.swift",
+          "symbol": "ReplicaSearchEditor"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x10023c780",
+      "original_pseudocode": {
+        "path": "decompiled/Paste/part-0195.c",
+        "line": 967,
+        "sha256": "de6daa99f8bc1a4e7a54b508b5ad3e288f9c2810a2e5d0e404a2eaceed761c0d"
+      },
+      "original_hops": [
+        {
+          "address": "0x10023c780",
+          "instruction_hex": "27feff17",
+          "target": "0x10023c01c"
+        }
+      ],
+      "target": "Paste:0x10023c01c",
+      "implementations": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPreviewTitleLabel.swift",
+          "symbol": "f_10023c01c"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1002f50fc",
+      "original_pseudocode": {
+        "path": "decompiled/Paste/part-0244.c",
+        "line": 947,
+        "sha256": "3f92569450c92c3b61f19a3f2151c5d7767a9eddc523f061472016301c7f769f"
+      },
+      "original_hops": [
+        {
+          "address": "0x1002f50fc",
+          "instruction_hex": "93010014",
+          "target": "0x1002f5748"
+        }
+      ],
+      "target": "Paste:0x1002f5748",
+      "implementations": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchSuggestions.swift",
+          "symbol": "f_1002f5748"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1002fe3f4",
+      "original_pseudocode": {
+        "path": "decompiled/Paste/part-0248.c",
+        "line": 1680,
+        "sha256": "dbc2dd3fb3ac4d5be343430180e3c7380bde033f0616cdc056112a7a691e869b"
+      },
+      "original_hops": [
+        {
+          "address": "0x1002fe3f4",
+          "instruction_hex": "4ff2ff17",
+          "target": "0x1002fad30"
+        }
+      ],
+      "target": "Paste:0x1002fad30",
+      "implementations": [
+        {
+          "path": "replica/Sources/PastoCore/Pasteboard.swift",
+          "symbol": "f_1002fad30"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x10035f2c4",
+      "original_pseudocode": {
+        "path": "decompiled/Paste/part-0274.c",
+        "line": 543,
+        "sha256": "3ded396e7f12c019b4376dda4c32aff8503daafdf7f424f5130672f45c466881"
+      },
+      "original_hops": [
+        {
+          "address": "0x10035f2c4",
+          "instruction_hex": "9b6efe17",
+          "target": "0x1002fad30"
+        }
+      ],
+      "target": "Paste:0x1002fad30",
+      "implementations": [
+        {
+          "path": "replica/Sources/PastoCore/Pasteboard.swift",
+          "symbol": "f_1002fad30"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x100481754",
+      "original_pseudocode": {
+        "path": "decompiled/Paste/part-0367.c",
+        "line": 573,
+        "sha256": "04a21871a91ddd662755172908694774041606705eef2c05faa6f22143bc2964"
+      },
+      "original_hops": [
+        {
+          "address": "0x100481754",
+          "instruction_hex": "2e33f117",
+          "target": "0x1000ce40c"
+        }
+      ],
+      "target": "Paste:0x1000ce40c",
+      "implementations": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutRecorder.swift",
+          "symbol": "public var errorDescription: String? { message }"
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutDependencies.swift",
+          "symbol": "return OriginalShortcutRecorderError(message)"
+        }
+      ]
+    }
+  ],
+  "build_executed": false,
+  "tests_executed": false,
+  "equivalence_verified": false,
+  "limitations": "Source-level forwarding only. No claim of preserved generated machine ABI or current runtime equivalence. Destination methods and actual consumers were reviewed; historical candidate records remain unchanged."
+}

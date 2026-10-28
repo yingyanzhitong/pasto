@@ -1,0 +1,171 @@
+{
+  "kind": "static_sdk_source_level_reuse",
+  "generated_at": "2026-10-27T12:06:18.196845+00:00",
+  "historical_evidence": "reports/replica/batch-pasto-sdk-completeness-15.json",
+  "build_executed": false,
+  "tests_executed": false,
+  "product_executed": false,
+  "limitations": "确认源码直接调用Foundation API，未重新编译验证链接或运行时行为，不覆盖SDK内部实现。",
+  "records": [
+    {
+      "function_id": "Paste:0x100bf40a4",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-1167.c",
+        "line": 107,
+        "sha256": "baddb71a6799a3f41d067fd21d04b02b5eca05a20908f46e92986ab0209e2df6",
+        "stub": "0x100bf40a4"
+      },
+      "original_symbol": "_$s10Foundation12CharacterSetV11whitespacesACvgZ",
+      "original_dylib": "/System/Library/Frameworks/Foundation.framework/Versions/C/Foundation",
+      "source_reference": {
+        "path": "replica/Sources/PastoCore/OriginalSearchQuery.swift",
+        "line": 16,
+        "text": "value.trimmingCharacters(in: .whitespaces)",
+        "sha256": "4c828b16c6342387d375e6b5a3f24d28b37bbffa1c377e4cdb064ad27b5d1b28"
+      },
+      "criterion": "CharacterSet.whitespaces 用于原搜索空白与query归一化。 已核历史原版SDK转发及当前生产Swift对同一Foundation API的直接调用；当前机器链接未重新验证。",
+      "scope": "仅SDK转发的源码级复用，不升级搜索、日期或系统内部完整合同。"
+    },
+    {
+      "function_id": "Paste:0x100bf40f8",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-1167.c",
+        "line": 214,
+        "sha256": "9322a0cfa2bd4c8303b1336b692d9b89dc624b296f0d73104892acb0ed4bab75",
+        "stub": "0x100bf40f8"
+      },
+      "original_symbol": "_$s10Foundation12CharacterSetV22whitespacesAndNewlinesACvgZ",
+      "original_dylib": "/System/Library/Frameworks/Foundation.framework/Versions/C/Foundation",
+      "source_reference": {
+        "path": "replica/Sources/PastoCore/OriginalSearchSuggestions.swift",
+        "line": 100,
+        "text": "text.trimmingCharacters(in: .whitespacesAndNewlines)",
+        "sha256": "b2c9551988e8a65042886a6d731e3c5eb80c8f6ad48af1f076f8c8f9fe90b602"
+      },
+      "criterion": "CharacterSet.whitespacesAndNewlines 用于搜索建议。 已核历史原版SDK转发及当前生产Swift对同一Foundation API的直接调用；当前机器链接未重新验证。",
+      "scope": "仅SDK转发的源码级复用，不升级搜索、日期或系统内部完整合同。"
+    },
+    {
+      "function_id": "Paste:0x100bf441c",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-1168.c",
+        "line": 258,
+        "sha256": "c81c23ce85d3207cd4ffae3c61ff741df5794d9eb93baa04dd54bf18e8059077",
+        "stub": "0x100bf441c"
+      },
+      "original_symbol": "_$s10Foundation14DateComponentsV4dateAA0B0VSgvg",
+      "original_dylib": "/System/Library/Frameworks/Foundation.framework/Versions/C/Foundation",
+      "source_reference": {
+        "path": "replica/Sources/PastoCore/OriginalSearchDateRanges.swift",
+        "line": 32,
+        "text": "let start = components.date!",
+        "sha256": "91f2f941e01c03dc575e29edb80144c4e268174528e551deb72642b4a7743451"
+      },
+      "criterion": "DateComponents.date 用于本周范围开始。 已核历史原版SDK转发及当前生产Swift对同一Foundation API的直接调用；当前机器链接未重新验证。",
+      "scope": "仅SDK转发的源码级复用，不升级搜索、日期或系统内部完整合同。"
+    },
+    {
+      "function_id": "Paste:0x100bf4d40",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-1171.c",
+        "line": 339,
+        "sha256": "3d5a519c9f0e751dcff746ffb119ac9b96da8cfc6a1aa52dddb04673d188d62d",
+        "stub": "0x100bf4d40"
+      },
+      "original_symbol": "_$s10Foundation6LocaleV7currentACvgZ",
+      "original_dylib": "/System/Library/Frameworks/Foundation.framework/Versions/C/Foundation",
+      "source_reference": {
+        "path": "replica/Sources/PastoCore/OriginalPreviewLocalization.swift",
+        "line": 13,
+        "text": "table: \"Localizable\", locale: .current",
+        "sha256": "0163cc854b291a3341675ea525903141dc764dda4a2791b513f4a9c4515632f1"
+      },
+      "criterion": "Locale.current 用于本地化资源构造。 已核历史原版SDK转发及当前生产Swift对同一Foundation API的直接调用；当前机器链接未重新验证。",
+      "scope": "仅SDK转发的源码级复用，不升级搜索、日期或系统内部完整合同。"
+    },
+    {
+      "function_id": "Paste:0x100bf4d94",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-1171.c",
+        "line": 453,
+        "sha256": "34eeafa856b9520f35c16e1724446b13654c00daf1adce55e4900c9e41562a68",
+        "stub": "0x100bf4d94"
+      },
+      "original_symbol": "_$s10Foundation8CalendarV10startOfDay3forAA4DateVAG_tF",
+      "original_dylib": "/System/Library/Frameworks/Foundation.framework/Versions/C/Foundation",
+      "source_reference": {
+        "path": "replica/Sources/PastoCore/OriginalSearchDateRanges.swift",
+        "line": 20,
+        "text": "Calendar.current.startOfDay(for: Date())",
+        "sha256": "91f2f941e01c03dc575e29edb80144c4e268174528e551deb72642b4a7743451"
+      },
+      "criterion": "Calendar.startOfDay 用于日期范围计算。 已核历史原版SDK转发及当前生产Swift对同一Foundation API的直接调用；当前机器链接未重新验证。",
+      "scope": "仅SDK转发的源码级复用，不升级搜索、日期或系统内部完整合同。"
+    },
+    {
+      "function_id": "Paste:0x100bf4db8",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-1171.c",
+        "line": 500,
+        "sha256": "1b65f46d4aa10324cc282a370fd9b4c931ad7d2c9b8e468c8c9d6f3a1d89fc68",
+        "stub": "0x100bf4db8"
+      },
+      "original_symbol": "_$s10Foundation8CalendarV14dateComponents_4fromAA04DateD0VShyAC9ComponentOG_AA0F0VtF",
+      "original_dylib": "/System/Library/Frameworks/Foundation.framework/Versions/C/Foundation",
+      "source_reference": {
+        "path": "replica/Sources/PastoCore/OriginalSearchDateRanges.swift",
+        "line": 31,
+        "text": "Calendar.current.dateComponents([.calendar, .yearForWeekOfYear, .weekOfYear], from: now)",
+        "sha256": "91f2f941e01c03dc575e29edb80144c4e268174528e551deb72642b4a7743451"
+      },
+      "criterion": "Calendar.dateComponents(_:from:) 用于周范围。 已核历史原版SDK转发及当前生产Swift对同一Foundation API的直接调用；当前机器链接未重新验证。",
+      "scope": "仅SDK转发的源码级复用，不升级搜索、日期或系统内部完整合同。"
+    },
+    {
+      "function_id": "Paste:0x100bf4ddc",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-1171.c",
+        "line": 552,
+        "sha256": "53b48a9bf319381747942c35081233fa10aae1c637ee898c5715b4e79bd6f6d2",
+        "stub": "0x100bf4ddc"
+      },
+      "original_symbol": "_$s10Foundation8CalendarV4date8byAdding5value2to18wrappingComponentsAA4DateVSgAC9ComponentO_SiAJSbtF",
+      "original_dylib": "/System/Library/Frameworks/Foundation.framework/Versions/C/Foundation",
+      "source_reference": {
+        "path": "replica/Sources/PastoCore/OriginalSearchDateRanges.swift",
+        "line": 21,
+        "text": "Calendar.current.date(byAdding: .day, value: 1, to: start)",
+        "sha256": "91f2f941e01c03dc575e29edb80144c4e268174528e551deb72642b4a7743451"
+      },
+      "criterion": "Calendar.date(byAdding:value:to:wrappingComponents:) 默认 wrappingComponents=false，用于日界限。 已核历史原版SDK转发及当前生产Swift对同一Foundation API的直接调用；当前机器链接未重新验证。",
+      "scope": "仅SDK转发的源码级复用，不升级搜索、日期或系统内部完整合同。"
+    },
+    {
+      "function_id": "Paste:0x100bf4de8",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-1171.c",
+        "line": 569,
+        "sha256": "5eddcdd8b5db0a526344c7fe76ead42dec455e2d14ff339f86a16d5dd6f44ce2",
+        "stub": "0x100bf4de8"
+      },
+      "original_symbol": "_$s10Foundation8CalendarV7currentACvgZ",
+      "original_dylib": "/System/Library/Frameworks/Foundation.framework/Versions/C/Foundation",
+      "source_reference": {
+        "path": "replica/Sources/PastoCore/OriginalSearchDateRanges.swift",
+        "line": 20,
+        "text": "Calendar.current.startOfDay(for: Date())",
+        "sha256": "91f2f941e01c03dc575e29edb80144c4e268174528e551deb72642b4a7743451"
+      },
+      "criterion": "Calendar.current 在日期范围中直接调用。 已核历史原版SDK转发及当前生产Swift对同一Foundation API的直接调用；当前机器链接未重新验证。",
+      "scope": "仅SDK转发的源码级复用，不升级搜索、日期或系统内部完整合同。"
+    }
+  ]
+}

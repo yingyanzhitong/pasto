@@ -1,0 +1,77 @@
+{
+  "kind": "batch-window-history-reuse-29",
+  "scope": "从batch-unchanged-static-evidence选6个round28未覆盖的快捷键录制历史记录，重读原C、历史合同、当前方法及实际SwiftUI/事件消费者。",
+  "summary": {"reviewed": 6, "complete": 5, "gap": 0, "uncertain": 1, "not_in_round28": 6},
+  "candidate_inventory": "reports/replica/batch-unchanged-static-evidence.json",
+  "prior_inventory": "reports/replica/batch-completeness-round28.json",
+  "current_source_bindings": {
+    "replica/Sources/PastoCore/OriginalShortcutRecorder.swift": {"current_sha256": "ba907c942f91fe336506e9a47576051f285bfce47ccd43315cb111aedbd237f2", "same_as_inventory_and_history": true},
+    "replica/Sources/PastoCore/OriginalShortcutRecorderView.swift": {"current_sha256": "881691562e6378fbadd64502b3ec893c821a1e0a463f8b0c6a5ddbdef7dd6330", "same_as_inventory_and_history": true}
+  },
+  "reuse_policy": "文件SHA相同仅用于确认历史输入未变；每条另核原C及当前生产引用，不将历史build_succeeded/build76当本轮编译，也不把历史migrated自动判完整。",
+  "production_route": "Pasto/UI/ShortcutRecorder.swift实际构造OriginalShortcutRecorderView；StateObject持有model，按钮/快捷键录制事件/Binding.onChange/alert通过下列方法读写Published状态。",
+  "definite_product_differences": [],
+  "activities": {"product_source_edited": false, "ledger_edited": false, "compiled": false, "product_run": false, "tests_run": false, "wrapper_added": false},
+  "skipped_failed_addresses": ["Paste:0x100ac35f8", "Paste:0x100ac746c"],
+  "limitations": [
+    "complete仅表示列明有限静态合同，未以摘要替代行为核对；不是新构建、录制运行或完整快捷键父验收。",
+    "原Published包装、可选完整值语义由当前真实@Published状态承接，不主张私有ABI布局相同。",
+    "原Actor诊断尚未证明者即使源摘要相同仍保待证；不修改台账数量。"
+  ],
+  "functions": [
+    {
+      "function_id": "Paste:0x1001f1150", "status": "complete",
+      "historical_evidence": "reports/function-migration/Paste-0x1001f1150.json",
+      "historical_contract": "可选新状态非nil时发布；nil保当前；事件monitor存在则remove并清存储。",
+      "original": {"path": "decompiled/Paste/part-0160.c", "line": 235},
+      "source_references": [{"path": "replica/Sources/PastoCore/OriginalShortcutRecorder.swift", "symbol": "f_1001f1150"}],
+      "evidence": "原先判Optional完整state哨兵，some才Published.set，nil跳过；之后不依赖新状态是否存在，总会检查monitor，存在则桥Any并NSEvent.removeMonitor，再清持有；不存在无remove。当前if let newState与独立monitor条件同序，nil不错误变unassigned，不把remove提前到Published前。当前文件与历史绑定完全相同，原C重读确认合同仍成立。",
+      "actual_consumer": "录制toggle取消、clear、CmdW/Q退出以及验证后状态设置真实调用，非仅定义setter。"
+    },
+    {
+      "function_id": "Paste:0x1001ef434", "status": "complete",
+      "historical_evidence": "reports/function-migration/Paste-0x1001ef434.json",
+      "historical_contract": "先onDetect(nil)，后发布unassigned并移monitor。",
+      "original": {"path": "decompiled/Paste/part-0159.c", "line": 558},
+      "source_references": [{"path": "replica/Sources/PastoCore/OriginalShortcutRecorder.swift", "symbol": "f_1001ef434"}],
+      "evidence": "原非可选onDetect先收到可选快捷键nil，再构造unassigned完整state交f1f1150。当前onDetect(nil)之后才f1f1150(.unassigned)，顺序保留，未先更新UI再通知绑定；不存在额外条件或独立清错误。历史合同/当前正文/原C一致。",
+      "actual_consumer": "OriginalShortcutRecorderView.controls的clear按钮调用；录制无修饰Delete分支也进入同方法，Binding工厂onDetect回写实际偏好。"
+    },
+    {
+      "function_id": "Paste:0x1001f0460", "status": "complete",
+      "historical_evidence": "reports/function-migration/Paste-0x1001f0460.json",
+      "historical_contract": "Published完整三态值读取，返回独立值语义副本。",
+      "original": {"path": "decompiled/Paste/part-0159.c", "line": 1477},
+      "source_references": [{"path": "replica/Sources/PastoCore/OriginalShortcutRecorder.swift", "symbol": "f_1001f0460"}, {"path": "replica/Sources/PastoCore/OriginalShortcutRecorderView.swift", "symbol": "state: model.f_1001f0460()"}],
+      "evidence": "原Published.get后复制整个payload及判别字节到返回存储，不仅返回是否recording。当前返回完整OriginalShortcutRecorderState，保assigned键/修饰、recording previous/candidate各自可空、unassigned的值语义，无修改和分支。源未变且实际UI仍调用该getter。",
+      "actual_consumer": "真实View.f1ecbc4构造OriginalShortcutControls，把完整state传入按钮内容及交互显示。"
+    },
+    {
+      "function_id": "Paste:0x1001f04e8", "status": "complete",
+      "historical_evidence": "reports/function-migration/Paste-0x1001f04e8.json",
+      "historical_contract": "读取Published可选验证Error。",
+      "original": {"path": "decompiled/Paste/part-0159.c", "line": 1509},
+      "source_references": [{"path": "replica/Sources/PastoCore/OriginalShortcutRecorder.swift", "symbol": "f_1001f04e8"}, {"path": "replica/Sources/PastoCore/OriginalShortcutRecorderView.swift", "symbol": "model.f_1001f04e8()"}],
+      "evidence": "原Published.get返回同一可选Error，不清错误、不转String或替换具体类型。当前直接读validationError原样返回，nil保持nil；同一UI两次getter读取未被合并缓存。历史/当前两个文件绑定均相同。",
+      "actual_consumer": "View先读error.localizedDescription形成alert标题，再读error!=nil形成.constant展示绑定，实际错误弹窗消费。"
+    },
+    {
+      "function_id": "Paste:0x1001ee478", "status": "complete",
+      "historical_evidence": "reports/function-migration/Paste-0x1001ee478.json",
+      "historical_contract": "Published验证错误清nil并发布。",
+      "original": {"path": "decompiled/Paste/part-0158.c", "line": 2391},
+      "source_references": [{"path": "replica/Sources/PastoCore/OriginalShortcutRecorder.swift", "symbol": "f_1001ee478"}, {"path": "replica/Sources/PastoCore/OriginalShortcutRecorderView.swift", "symbol": "model.f_1001ee478()"}],
+      "evidence": "原只构造nil Error并Published.set，未改state或monitor。当前validationError=nil触发真实Published更新，不加if非nil guard或顺带结束录制。历史绑定及当前业务体相同。",
+      "actual_consumer": "View.f1ee308真实本地化OK Button强持model并调用该清错方法。"
+    },
+    {
+      "function_id": "Paste:0x1001ee19c", "status": "uncertain",
+      "historical_evidence": "reports/function-migration/Paste-0x1001ee19c.json",
+      "historical_contract": "外部Binding变化，无条件将nil映成unassigned、some映成assigned，不移monitor或忽略recording。",
+      "original": {"path": "decompiled/Paste/part-0158.c", "line": 2276},
+      "source_references": [{"path": "replica/Sources/PastoCore/OriginalShortcutRecorder.swift", "symbol": "f_1001ee19c"}, {"path": "replica/Sources/PastoCore/OriginalShortcutRecorderView.swift", "symbol": ".onChange(of: shortcut, initial: false)"}],
+      "evidence": "当前normal分支确保完整optional值投影且无recording guard或removeMonitor，真实onChange也不跳过。尽管源SHA与历史相同，原C入口先执行MainActor检查及PasteShortcut/ShortcutRecorderButton.swift行0x27固定诊断，还通过StateObject.wrappedValue取model。当前拆成View closure和model方法，正常业务等价，但原诊断错误路径未独立证明，不据历史migrated/SHA相同判完整。",
+      "actual_consumer": "实际View Binding.onChange(initial:false)调用；另外绑定拒绝赋值时当前model.state变化回写路径复用，不将这个新增外层消费者冒原函数分支。"
+    }
+  ]
+}

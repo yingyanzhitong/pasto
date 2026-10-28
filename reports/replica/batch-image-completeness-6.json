@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "input_summary": "reports/replica/batch-completeness-round5.json",
+  "scope": "四个尚未纳入round5的已有migrated图像取色与卡片几何方法；只读复用完整有限合同，不新增源码或迁移计数。",
+  "counts": { "total": 4, "complete": 4, "gap": 0, "uncertain": 0 },
+  "records": [
+    {
+      "function_id": "Paste:0x1003c7c4c",
+      "status": "complete",
+      "original": { "path": "decompiled/Paste/part-0299.c", "start_line": 2539, "address_range": "0x1003c7c4c..<0x1003c7e74" },
+      "arm_evidence": ".local/source-image-raster-parameter-original-arm64.txt",
+      "current_implementations": [ { "path": "replica/Sources/PastoCore/OriginalSourceApplicationImageColor.swift", "symbol": "public static func f_1003c7c4c" } ],
+      "criterion": "bestRepresentation以原目标rect、nil context/hints读取，nil返回nil。ARM 3c7ca8/cac及高度对应fcsel mi明确按target<representation取target，否则rep值，当前两个有序小于条件一致，包括NaN选rep再由Int转换处理。宽高分别Int向零转换，保非有限/越域及width*4溢出trap。位图nil planes、8bit、4sample、alpha、nonplanar、deviceRGB、row=width*4、32bit；bitmap/context失败nil。成功saveGraphicsState、设bitmap context、按原目标rect画representation、flush、restore并返回bitmap，当前同序。",
+      "supporting_evidence": [ ".local/pasteboard-source-color-raster-peer.json" ],
+      "actual_consumer": "OriginalSourceApplicationImageColor.prominentColor调用该方法生成实际像素输入；OriginalSourceApplicationColors.rawColor消费主色并持久化来源色。",
+      "limitations": "有限栅格化方法已满足；不声称系统图标来源、NSImageRep实现或图像像素运行结果已经对照验收。"
+    },
+    {
+      "function_id": "Paste:0x1003c7f84",
+      "status": "complete",
+      "original": { "path": "decompiled/Paste/part-0299.c", "start_line": 2691, "address_range": "0x1003c7f84..<0x1003c8054" },
+      "arm_evidence": ".local/source-color-adjust-original-arm64.txt",
+      "current_implementations": [ { "path": "replica/Sources/PastoCore/OriginalSourceApplicationImageColor.swift", "symbol": "public static func f_1003c7f84" } ],
+      "criterion": "按原顺序读取saturation一次、brightness两次、hue及alpha。3c7fdc GT实现B2>0.96取0.96否则B2；3c7fe8 HI实现有序<=0.75时取0.75，NaN保原；3c7ff0 LE在B1<=0.4或unordered时保B2，否则用调整值；3c8004 LS在sat<=0.85取0.85，NaN保原。当前三元表达式逐个对应，不能以伪代码简写的普通clamp替换。0x100bff720已绑定colorWithCalibratedHue:saturation:brightness:alpha:，当前构造相同。",
+      "supporting_evidence": [ ".local/window-next-source-color-review.json:selectors" ],
+      "actual_consumer": "prominentColor的实际胜出NSColor传入f_1003c7f84，返回色由rawColor编码并持久保存，Header真实消费该来源色。",
+      "limitations": "不升级来源应用创建/更新生命周期；只确认任意输入颜色的读取、分支与返回合同。"
+    },
+    {
+      "function_id": "Paste:0x1003c8664",
+      "status": "complete",
+      "original": { "path": "decompiled/Paste/part-0300.c", "start_line": 438, "end_line": 586, "address_range": "0x1003c8664..<0x1003c89c8" },
+      "current_implementations": [ { "path": "replica/Sources/PastoCore/OriginalSourceApplicationImageColor.swift", "symbol": "public static func prominentColor(_ image: NSImage)" } ],
+      "criterion": "内部目标固定128乘128，raster nil返回nil；按实际pixelsWide乘pixelsHigh checked capacity，外x内y逐像素读取。仅color非nil、alpha严格等于1、saturation严格大于0.25进入NSCountedSet；不增加量化、采样stride或亮度门槛。按该set的distinct枚举顺序生成(color,count)，仅按count降序稳定排序保同票顺序；空候选返回系统grayColor，否则只取首胜者交f3c7f84。当前全部路径和实际helper调用一致；原grayColor selector亦有已有绑定。",
+      "supporting_evidence": [ ".local/window-next-source-color-review.json:selectors", ".local/pasteboard-source-color-raster-peer.json" ],
+      "actual_consumer": "OriginalSourceApplicationColors.rawColor在bundle override未命中时直接调用prominentColor，失败再按其外层合同回退gray；该结果经encoded保存到SourceApplicationRecord.rawColor供Header读取。",
+      "limitations": "同票合同只保各次NSSet枚举顺序，不承诺不同进程或系统版本的NSSet枚举完全相同；未执行图标或色值功能测试。"
+    },
+    {
+      "function_id": "Paste:0x1003d8588",
+      "status": "complete",
+      "original": { "path": "decompiled/Paste/part-0306.c", "start_line": 385, "address_range": "0x1003d8588..<0x1003d868c" },
+      "arm_evidence": ".local/image-dev25-card-header-arm64.txt",
+      "current_implementations": [ { "path": "replica/Sources/PastoCore/OriginalCardPresentation.swift", "symbol": "public func geometry(sizeClass: UInt8, modernOS: Bool) -> Geometry" } ],
+      "criterion": "ARM明确返回d0/d1/d2三值，非伪代码仅保留的d0。sizeClass raw0为56/56/-10，raw1为52/52/-10，raw2为48/48/-10；所有其它UInt8类读取fullsize和OS26。非fullsize为34或36的body/header及-10；fullsize为body0、header34或36、lock7或8。当前switch覆盖同样全部UInt8范围及布尔组合。Panel caller modernCardOS实际用macOS26 availability生成，未从截图或任意默认值推断。",
+      "actual_consumer": "PanelViews.cardGeometry由presentation.geometry取得，bodyTop/headerHeight/lockCenterOffset真实用于卡片内容和Header约束，不是未消费wrapper。",
+      "limitations": "只确认三个几何值方法，不升级sizeClass生产布局、Header样式选择、LockView父对象或卡片动画。"
+    }
+  ],
+  "actions": { "product_source_modified": false, "ledger_modified": false, "compiled": false, "parsed": false, "tests_executed": false, "product_executed": false, "mcp_executed": false, "new_disassembly_executed": false },
+  "skipped_failed_addresses": [ "0x100ac35f8", "0x100ac746c" ],
+  "limitations": [ "没有改写原报告、round5汇总或function-map。", "仅复读成功原C、已有ARM文本及生产源码，不生成或绑定当前构建证据。", "文件metadata父链本轮未作全体判定；没有为数量扩大未证分支。", "complete是各有限方法源码合同，不代表用户可见功能或整个应用一比一验收。" ]
+}

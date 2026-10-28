@@ -1,0 +1,383 @@
+{
+  "kind": "batch-window-completeness",
+  "scope": "20个既有migrated有限UI/窗口合同的当前源码只读批审，不改迁移台账，不增加完成数量，不等同产品验收。",
+  "source_snapshot": "当前工作树；无新编译，既有build84或其他旧构建不得当作当前源码编译证明。",
+  "activities": {
+    "source_edited": false,
+    "ledger_edited": false,
+    "compiled": false,
+    "product_run": false,
+    "tests_run": false,
+    "wrapper_added": false
+  },
+  "excluded_failed_addresses": [
+    "Paste:0x100ac35f8",
+    "Paste:0x100ac746c"
+  ],
+  "selection_basis": "选择已migrated且有实际UI消费者的较小输入/返回/缓存/数值/转发合同；逐段读取原C与当前实现，避免按命名判断。",
+  "summary": {
+    "reviewed": 20,
+    "complete": 19,
+    "gap": 0,
+    "uncertain": 1
+  },
+  "complete_meaning": "仅列明有限合同在当前源码中的静态完整性；原Actor桥、泛型父、CoreData/DI、渲染及运行表现没有因此升级。",
+  "functions": [
+    {
+      "function_id": "Paste:0x100236910",
+      "mapping_state_at_review": "migrated",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-0193.c",
+        "line": 124
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaNativeCardCollection.swift",
+          "symbol": "override func scrollWheel(with event: NSEvent)"
+        }
+      ],
+      "evidence": "scrollWheel 调真实 remappedWheelEvent；返回 nil 才用原 event；随后一次 super.scrollWheel，保 Void 返回和调用次序。",
+      "actual_consumer": "ReplicaNativeCollectionHost 初始化真实 ReplicaNativeHorizontalScrollView。",
+      "supplementary_original_boundary": "既有原成功C及本轮此前读取的原arm：2369a4..9b4 passthrough返回原event；23692c..93c nil fallback。"
+    },
+    {
+      "function_id": "Paste:0x100236978",
+      "mapping_state_at_review": "migrated",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-0193.c",
+        "line": 147
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaNativeCardCollection.swift",
+          "symbol": "private func remappedWheelEvent"
+        }
+      ],
+      "evidence": "X 非零、Y 为零、CGEvent 缺失返回原 event；转换分支再读 Y，Int64 转换后先写轴2再清轴1，直接返回可空重建事件。",
+      "actual_consumer": "scrollWheel 实际调用该 optional helper。",
+      "supplementary_original_boundary": "既有原成功C及本轮此前读取的原arm：2369a4..9b4 passthrough返回原event；23692c..93c nil fallback。"
+    },
+    {
+      "function_id": "Paste:0x100226764",
+      "mapping_state_at_review": "migrated",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-0188.c",
+        "line": 278
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaNativeCardCollection.swift",
+          "symbol": "private func dragEdgeDelta(windowX x: CGFloat)"
+        }
+      ],
+      "evidence": "先读 minX 算左阈值，再预读第二个 bounds；左用第二 minX，右才第三次读 maxX；右 unordered 返回0；最后严格 sign*((30-distance)/30*15)。",
+      "actual_consumer": "draggingUpdated 将真实 draggingLocation.x 传入，再修改 clip origin.x；父鉴权/indicator不在本合同。",
+      "supplementary_original_boundary": ".local/window-native-edge-delta-arm64.txt，226778/78c/7b4 bounds轨迹与2267a8/ac unordered分支。"
+    },
+    {
+      "function_id": "Paste:0x100225cfc",
+      "mapping_state_at_review": "migrated",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-0187.c",
+        "line": 3613
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaNativeCardCollection.swift",
+          "symbol": "sourceOperationMaskFor context"
+        }
+      ],
+      "evidence": "context 原值0返回copy(1)，其余返回move(16)，忽略session，无额外动作。当前 outsideApplication 比较对应同一0分支。",
+      "actual_consumer": "真实 NSDraggingSource sourceOperationMaskFor 回调。"
+    },
+    {
+      "function_id": "Paste:0x100225db8",
+      "mapping_state_at_review": "migrated",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-0187.c",
+        "line": 3666
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaNativeCardCollection.swift",
+          "symbol": "private weak var draggingSession: NSDraggingSession?"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaNativeCardCollection.swift",
+          "symbol": "willBeginAt screenPoint"
+        }
+      ],
+      "evidence": "输入可选session赋给 weak 槽；替换与清空不延长session生命，nil原样保留；Swift weak 属性是实际存储，不是UUID假引用。",
+      "actual_consumer": "真实 willBeginAt 回调与 beginNativeDrag 写同一weak槽。"
+    },
+    {
+      "function_id": "Paste:0x1001f8858",
+      "mapping_state_at_review": "migrated",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-0164.c",
+        "line": 474
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/OriginalCollectionScrollAnimator.swift",
+          "symbol": "func value(at x: Double, epsilon: Double)"
+        }
+      ],
+      "evidence": "通用六系数值读取X参数求解结果t，再返回t*(cy+t*(t*ay+by))；没有把scroll固定系数冒通用输入。",
+      "actual_consumer": "scroll timing 构造系数值并调用 value，实际由动画 tick 消费。"
+    },
+    {
+      "function_id": "Paste:0x1001f8a84",
+      "mapping_state_at_review": "migrated",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-0164.c",
+        "line": 733
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/OriginalCollectionScrollAnimator.swift",
+          "symbol": "func parameter(x: Double, epsilon: Double)"
+        }
+      ],
+      "evidence": "初始误差提前返回；最多7次Newton更新，每次检查误差与1e-6导数门槛；失败进入原0/1边界及二分；不增加迭代上限、clamp或epsilon替代。",
+      "actual_consumer": "value(at:epsilon:)实际调用 parameter；NaN比较及原潜在不终止边界没有擅改。"
+    },
+    {
+      "function_id": "Paste:0x100219ddc",
+      "mapping_state_at_review": "migrated",
+      "status": "uncertain",
+      "original": {
+        "path": "decompiled/Paste/part-0183.c",
+        "line": 914
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/OriginalNavigationKey.swift",
+          "symbol": "static func f_100219ddc"
+        }
+      ],
+      "evidence": "原成功C显示一次keyCode读取后调用f219df4，当前同样读取并返回分类；但C把本方法声明void，丢失返回寄存器合同，本批未独立复核该入口原机器返回边界，不能只凭函数名判完整。",
+      "actual_consumer": "ReplicaSearchSuggestionsMenu.handleKeyDown实际消费返回分类；值算法f219df4另项完整。"
+    },
+    {
+      "function_id": "Paste:0x100219df4",
+      "mapping_state_at_review": "migrated",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-0183.c",
+        "line": 929
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/OriginalNavigationKey.swift",
+          "symbol": "static func f_100219df4"
+        }
+      ],
+      "evidence": "逐case核对UInt16键码：24→0、30→1、31→2、35→3、73→4、74→5、77→6、79→7、7b→8、7c→9、7d→10、7e→11，其余12；enum声明raw顺序相同。",
+      "actual_consumer": "f219ddc→菜单 handleKeyDown；未把导航分类器当整套键盘事件等价。"
+    },
+    {
+      "function_id": "Paste:0x100206f0c",
+      "mapping_state_at_review": "migrated",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-0170.c",
+        "line": 3466
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/OriginalCompactTextFooter.swift",
+          "symbol": "color.alphaComponent < 1"
+        }
+      ],
+      "evidence": "原只取alphaComponent后严格<1；当前background(for:)使用同一严格比较，不改为<=、clamp或色空间转换后再判断。",
+      "actual_consumer": "OriginalCompactTextCardAppearance.background真实卡片背景分支消费此Bool；只核该谓词，非整个背景函数。"
+    },
+    {
+      "function_id": "Paste:0x100206ecc",
+      "mapping_state_at_review": "migrated",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-0170.c",
+        "line": 3440
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaColorPreviewContent.swift",
+          "symbol": "codeLabel.textColor = OriginalPreviewTextColors.f_1002067d4(color) ? .black : .white"
+        }
+      ],
+      "evidence": "原调用f2067d4后false选white、true选black；实际display(color)同一谓词的三元分支，无额外灰度或alpha调整。",
+      "actual_consumer": "ReplicaColorPreviewContent.display给真实codeLabel.textColor赋值；外层display非本项范围。"
+    },
+    {
+      "function_id": "Paste:0x100218b08",
+      "mapping_state_at_review": "migrated",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-0182.c",
+        "line": 1298
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSelectionAppearance.swift",
+          "symbol": "f_100218b08"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/PanelViews.swift",
+          "symbol": "OriginalSelectionAppearance.f_100218b08"
+        }
+      ],
+      "evidence": "sRGB转换失败以原色做候选，非RGB返回最初原色；RGB才转genericGray，失败仍返回最初原色。成功C的返回变量恢复不全，既有完整原机器证据补足该fallback。",
+      "actual_consumer": "PanelViews选中且dimmed分支实际调用；辅助原证据.local/pasteboard-dimming-selection-color-audit.json含完整288B体，未借用旧构建证明当前编译。"
+    },
+    {
+      "function_id": "Paste:0x10004867c",
+      "mapping_state_at_review": "migrated",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-0026.c",
+        "line": 1351
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchCommands.swift",
+          "symbol": "f_10004867c"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "OriginalSearchCommands.f_10004867c"
+        }
+      ],
+      "evidence": "insertNewline与cancelOperation各调用其可选回调，回调nil仍true；其它selector返回false；顺序与成功原C一致。",
+      "actual_consumer": "SearchEditor/OriginalSearchField及UIController真实调用；只核selector分发，不核整个responder父。"
+    },
+    {
+      "function_id": "Paste:0x100385ac4",
+      "mapping_state_at_review": "migrated",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-0284.c",
+        "line": 779
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchSuggestionsMenu.swift",
+          "symbol": "func invalidate() { timer.invalidate() }"
+        }
+      ],
+      "evidence": "无条件调用持有的timer.invalidate，无nil门槛、runloop更改或额外selection动作。",
+      "actual_consumer": "SuggestionsScrollIndicator持有OriginalSuggestionScrollTimer并在停止滚动时调用invalidate。"
+    },
+    {
+      "function_id": "Paste:0x100385acc",
+      "mapping_state_at_review": "migrated",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-0284.c",
+        "line": 792
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchSuggestionsMenu.swift",
+          "symbol": "deinit { invalidate() }"
+        }
+      ],
+      "evidence": "析构时使同一保存timer失效；当前deinit调用invalidate，且invalidate本体是无条件同timer.invalidate；ARC负责释放保存的timer。",
+      "actual_consumer": "真实hover timer owner的deinit；不声称整个计时器factory及Actor桥已完整。"
+    },
+    {
+      "function_id": "Paste:0x10000ed50",
+      "mapping_state_at_review": "migrated",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-0006.c",
+        "line": 675
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchSuggestionsMenu.swift",
+          "symbol": "private func f_10000ed50"
+        }
+      ],
+      "evidence": "缓存有值返回同实例；无值由item.title建label，tail截断、最多1行、原body字体，写缓存并返回；顺序相同。",
+      "actual_consumer": "Suggestion row的title计算属性及实际stack/selection样式消费该惰性getter。"
+    },
+    {
+      "function_id": "Paste:0x10000ee38",
+      "mapping_state_at_review": "migrated",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-0006.c",
+        "line": 710
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchSuggestionsMenu.swift",
+          "symbol": "private func f_10000ee38"
+        }
+      ],
+      "evidence": "缓存命中返回同实例；否则创建NSImageView，scaling raw0即proportionallyDown，赋item.image，nil隐藏，保存并返回。item.image为保存值。",
+      "actual_consumer": "真实Suggestion row图标及样式消费，不替换图像为空壳。"
+    },
+    {
+      "function_id": "Paste:0x10000eedc",
+      "mapping_state_at_review": "migrated",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-0006.c",
+        "line": 741
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchSuggestionsMenu.swift",
+          "symbol": "private func f_10000eedc"
+        }
+      ],
+      "evidence": "缓存命中返回同实例；无值建NSStackView，horizontal(raw0)、centerY(raw10)、spacing7，保存并返回；没有增加子视图操作。",
+      "actual_consumer": "真实Suggestion row布局从stack惰性属性取该实例。"
+    },
+    {
+      "function_id": "Paste:0x10002fe24",
+      "mapping_state_at_review": "migrated",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-0018.c",
+        "line": 2828
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchSuggestionsMenu.swift",
+          "symbol": "func scrollDownOneRow()"
+        }
+      ],
+      "evidence": "缺scroll/document均无操作；取visible originY+首row高度(无row为0)，按严格candidate<maximum选值，否则maximum；之后再次可选document.scroll与reflect。",
+      "actual_consumer": "真实down indicator.onScroll→list.scrollDownOneRow，不新增动画/取0夹取。"
+    },
+    {
+      "function_id": "Paste:0x100030134",
+      "mapping_state_at_review": "migrated",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-0018.c",
+        "line": 2972
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchSuggestionsMenu.swift",
+          "symbol": "func revealSelection()"
+        }
+      ],
+      "evidence": "nil或index>=rows.count无操作，负index进入precondition失败；取目标row.bounds，originY减首row高、height加两倍首row高，调用row.scrollToVisible。",
+      "actual_consumer": "菜单选择变更实际调用list.revealSelection；不等同主面板card reveal。"
+    }
+  ],
+  "uncertain_followup": "仅f219ddc需补核原keyCode调用后的返回寄存器/尾调用边界；当前C为void而生产源码返回enum。保持源码冻结，本报告不做登记或降级。"
+}

@@ -1,6 +1,14 @@
 # Pasto
 
-独立 Swift 原生实现。主面板参考 Paste 6.6.6；静态函数、MCP 参数及部分行为由 REA/Ghidra 证据核对。应用不载入原版私有历史数据库。
+独立 Swift 原生实现。主面板参考 Paste 6.6.6；静态函数、MCP 参数及部分行为由 REA/Ghidra 证据核对。日常运行使用 Pasto 自己的数据；只有手动选择“从 Paste 迁移分组…”时，才只读访问原版的本地分组数据。
+
+## 从 Paste 迁移分组
+
+在底部面板的“更多”菜单或菜单栏“文件”中选择 **从 Paste 迁移分组…**。应用会检测本机 Paste 数据，显示可迁移的分组和项目数量，确认后导入。
+
+迁移保留分组名称、颜色、排列顺序，以及项目内容、标题、来源和组内顺序，包括空分组。只迁移分组内的项目，不导入原版整个剪贴板历史、账号或云同步设置。再次迁移只添加缺失内容，不覆盖 Pasto 中的改名、编辑和偏好设置；已有同名分组保留独立。
+
+读取需要与数据匹配的已安装 Paste，支持读取正在使用 WAL 和外部二进制附件的本地数据库，不修改或升级原版数据。尚未在本机下载或无法解码的项目会明确统计并跳过，恢复本地内容后可重新迁移。未自动找到数据库时，可手动选择 `db.sqlite`，并保留同目录的 WAL 和附件目录。
 
 ## 构建运行
 
@@ -19,7 +27,7 @@ npm run build:dmg
 
 `npm run build:dmg` 调用 `release-ci.py package` 完成两个架构的构建和打包。只处理已有应用时，可运行 `bash replica/scripts/build-dmg.sh replica/dist/Pasto.app replica/dist/Pasto.dmg` 制作本机安装镜像。`npm run build:icon` 根据独立前景素材和标准画布重新生成应用图标。
 
-Releases 按芯片分别提供 `Pasto-<版本号>-macos-arm64.dmg` 与 `Pasto-<版本号>-macos-x86_64.dmg`。例如 `0.8.0-dev.51` 的 Apple 芯片包为 `Pasto-0.8.0-dev.51-macos-arm64.dmg`，Intel 包为 `Pasto-0.8.0-dev.51-macos-x86_64.dmg`；每个包中的主程序、登录项辅助程序和 `pasto-mcp` 均应匹配其目标架构。打开对应 DMG 后，将 `Pasto.app` 拖到 `Applications` 快捷入口，复制完成后从应用程序目录启动，并在 Finder 中推出磁盘映像。Release 另附 `SHA256SUMS.txt` 和 `release-manifest.json`。
+Releases 按芯片分别提供 `Pasto-<版本号>-macos-arm64.dmg` 与 `Pasto-<版本号>-macos-x86_64.dmg`。1.0.0 的 Apple 芯片包为 `Pasto-1.0.0-macos-arm64.dmg`，Intel 包为 `Pasto-1.0.0-macos-x86_64.dmg`；每个包中的主程序、登录项辅助程序和 `pasto-mcp` 均应匹配其目标架构。打开对应 DMG 后，将 `Pasto.app` 拖到 `Applications` 快捷入口，复制完成后从应用程序目录启动，并在 Finder 中推出磁盘映像。Release 另附 `SHA256SUMS.txt` 和 `release-manifest.json`。
 
 页面上的 `Source code (zip)` / `Source code (tar.gz)` 是 GitHub 自动生成的标签源码链接，不是流程上传的安装附件。
 
@@ -68,6 +76,8 @@ open -n 'replica/dist/Pasto.app' --args \
 多选纯文本目前以换行合并，尚未证明分隔规则等同原版；窗口共享测试验证 NSWindow 状态，不代表会议或录屏软件实际遮蔽。
 
 完整本地验证入口：`bash replica/scripts/validate.sh`。报告默认写入被 Git 忽略的 `.local/replica-validation/`。
+
+用户授权在迁移期间执行功能回归时，使用 `bash replica/scripts/regress-local.sh`。此入口构建当前源码，串行运行核心、快捷键、窗口、界面、隔离剪贴板监控及辅助程序测试，保存每组日志和 `summary.json`，一组失败仍继续收集其他结果。它不要求迁移台账已完成，也不运行 MCP 或发布流程；通过结果仅代表这些用例覆盖的本地功能。
 
 从 0.7.0 起按用户要求不运行 MCP 测试；验证集中于原版机器码/复刻代码对照、核心功能和原生界面行为。已有 MCP 实现保留，历史 MCP 结果与当前测试分开记录。
 

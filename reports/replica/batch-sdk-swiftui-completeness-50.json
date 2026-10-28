@@ -1,0 +1,107 @@
+{
+  "kind": "static_sdk_source_reuse",
+  "records": [
+    {
+      "function_id": "Paste:0x100bf5d78",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-1176.c",
+        "line": 769,
+        "sha256": "b514aff8a0f9822e09edc78dfda85c93483e2a33107c5b24b55e3ff68e4da3a8",
+        "stub": "0x100bf5d78"
+      },
+      "sdk_symbol": "_$s7SwiftUI13NSHostingViewC04rootD0ACyxGx_tcfc",
+      "sdk_dylib": "/System/Library/Frameworks/SwiftUI.framework/Versions/A/SwiftUI",
+      "historical_replica_stub": "0x1001d34a0",
+      "current_source": {
+        "path": "replica/Sources/Pasto/UI/OriginalAccessibilityModals.swift",
+        "line": 64,
+        "sha256": "487740ec4f16e38e4c175eec49445273fb13d07c9e71f2669a68266fbd906d86"
+      },
+      "criterion": "显式使用NSHostingView(rootView: content)。 原stub与历史Pasto二进制绑定同一SwiftUI符号；当前源码显式调用对应公开API。",
+      "limitations": "仅源码级SDK API复用；当前二进制链接、运行和外层界面行为未验证。"
+    },
+    {
+      "function_id": "Paste:0x100bf66f0",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-1179.c",
+        "line": 868,
+        "sha256": "15dda73cfe75eafbb90c376fe5c5155fd3e7d2b6577c5701ec6f735e14706c5c",
+        "stub": "0x100bf66f0"
+      },
+      "sdk_symbol": "_$s7SwiftUI4TextVyAcA5ImageVcfC",
+      "sdk_dylib": "/System/Library/Frameworks/SwiftUI.framework/Versions/A/SwiftUI",
+      "historical_replica_stub": "0x1001d3b24",
+      "current_source": {
+        "path": "replica/Sources/PastoCore/OriginalShortcutControls.swift",
+        "line": 12,
+        "sha256": "55ecfa91d843f2305044a1558079a89d6da119edc25f5a3d1f4e5b4ffe4d82a8"
+      },
+      "criterion": "显式将Image(systemName:)包装为Text。 原stub与历史Pasto二进制绑定同一SwiftUI符号；当前源码显式调用对应公开API。",
+      "limitations": "仅源码级SDK API复用；当前二进制链接、运行和外层界面行为未验证。"
+    },
+    {
+      "function_id": "Paste:0x100bf69e4",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-1180.c",
+        "line": 865,
+        "sha256": "3a7eb3be471a70eb756322500f686ff08e0a6db2d619cde80f3fc519d9dfb91a",
+        "stub": "0x100bf69e4"
+      },
+      "sdk_symbol": "_$s7SwiftUI5ColorV02nsC0ACSo7NSColorC_tcfC",
+      "sdk_dylib": "/System/Library/Frameworks/SwiftUI.framework/Versions/A/SwiftUI",
+      "historical_replica_stub": "0x1001d3ce0",
+      "current_source": {
+        "path": "replica/Sources/PastoCore/OriginalShortcutControls.swift",
+        "line": 46,
+        "sha256": "55ecfa91d843f2305044a1558079a89d6da119edc25f5a3d1f4e5b4ffe4d82a8"
+      },
+      "criterion": "显式使用Color(nsColor: .controlColor)。 原stub与历史Pasto二进制绑定同一SwiftUI符号；当前源码显式调用对应公开API。",
+      "limitations": "仅源码级SDK API复用；当前二进制链接、运行和外层界面行为未验证。"
+    },
+    {
+      "function_id": "Paste:0x100bf6a68",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-1181.c",
+        "line": 21,
+        "sha256": "bee53616a41ca882ead46291c5b8f3a08ca8cc896e7e79b8b6f97bc264e0dfb6",
+        "stub": "0x100bf6a68"
+      },
+      "sdk_symbol": "_$s7SwiftUI5ColorV7opacityyACSdF",
+      "sdk_dylib": "/System/Library/Frameworks/SwiftUI.framework/Versions/A/SwiftUI",
+      "historical_replica_stub": "0x1001d3d58",
+      "current_source": {
+        "path": "replica/Sources/Pasto/UI/PanelViews.swift",
+        "line": 188,
+        "sha256": "8d21f76aef6761a3e07666782d4941efdda201c6ac087127875731e8742f0118"
+      },
+      "criterion": "对明确的Color.primary调用opacity(0.10)。 原stub与历史Pasto二进制绑定同一SwiftUI符号；当前源码显式调用对应公开API。",
+      "limitations": "仅源码级SDK API复用；当前二进制链接、运行和外层界面行为未验证。"
+    },
+    {
+      "function_id": "Paste:0x100bf6540",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-1179.c",
+        "line": 306,
+        "sha256": "1f15533bf14b16829944dd7714133c529b8cf7e79ca7e4dde6ad205902ffebe6",
+        "stub": "0x100bf6540"
+      },
+      "sdk_symbol": "_$s7SwiftUI4FontV4boldACyF",
+      "sdk_dylib": "/System/Library/Frameworks/SwiftUI.framework/Versions/A/SwiftUI",
+      "historical_replica_stub": "0x1001d39ec",
+      "current_source": {
+        "path": "replica/Sources/Pasto/UI/OriginalAccessibilityModals.swift",
+        "line": 96,
+        "sha256": "487740ec4f16e38e4c175eec49445273fb13d07c9e71f2669a68266fbd906d86"
+      },
+      "criterion": "对Font.title2显式调用bold()。 原stub与历史Pasto二进制绑定同一SwiftUI符号；当前源码显式调用对应公开API。",
+      "limitations": "仅源码级SDK API复用；当前二进制链接、运行和外层界面行为未验证。"
+    }
+  ],
+  "build_executed": false,
+  "tests_executed": false
+}

@@ -1,0 +1,86 @@
+{
+  "kind": "batch-window-completeness-50",
+  "scope": "2项已有预览窗口Edit与Close弱回调，核成功原完整C、当前生产工厂和实际按钮consumer。未凭尾跳目标推算入口完整。",
+  "summary": {
+    "reviewed": 2,
+    "complete": 2,
+    "gap": 0,
+    "uncertain": 0
+  },
+  "activities": {
+    "product_source_edited": false,
+    "ledger_edited": false,
+    "compiled": false,
+    "product_run": false,
+    "tests_run": false,
+    "wrapper_added": false
+  },
+  "skipped_failed_addresses": [
+    "Paste:0x100ac35f8",
+    "Paste:0x100ac746c"
+  ],
+  "limitations": [
+    "完整为真实Void按钮动作消费者中的弱回调业务合同；不宣称生成ABI、残留返回寄存器或任意外部恶意构造NSView类型等价。",
+    "原Header/标题取消方法及预览工厂父函数各自独立，不因本回调完整自动升级。",
+    "历史batch未提供逐项source SHA时明确不声称未变；本批以重读源码绑定当前快照，不做编译或运行验收。",
+    "未改台账，2/2仅本批局部分类，不是项目整体迁移率。"
+  ],
+  "functions": [
+    {
+      "function_id": "Paste:0x1000124f4",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-0007.c",
+        "line": 1575
+      },
+      "evidence": "完整原C弱load Header失败无动作；成功但onEdit为nil无动作；存在则保有closure上下文、调用后释放，除此无状态写入。当前真实Edit按钮weak self闭包self?.onEdit?()同样保持活Header和所取可选closure到调用结束，不强持Header造成循环，不添加enabled或窗口存在门槛。原C残留code指针返回在唯一已知Void按钮action f13a94中不被消费；本结论只对应该真实Void副作用合同，不把寄存器残值当产品输出。",
+      "actual_consumer": "ReplicaInlinePreviewHeader.init创建OriginalToolbarButton Edit并保存该弱闭包；connectReplicaPreviewHeader再给onEdit实际绑定weak view的f7be8c编辑动作，按钮确实消费而非仅有未调用property。",
+      "historical_report": "reports/function-migration/tracking-edit-callback-source-override-static.json",
+      "historical_source_sha_available": false,
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift",
+          "symbol": "self?.onEdit?()"
+        }
+      ],
+      "current_source_sha256": {
+        "replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift": "acc091392974dda3bc855c73d8b866e4f672dbd91d7ef9fb20df5eb741e1c3a1"
+      },
+      "historical_evidence": {
+        "path": "reports/function-migration/tracking-edit-callback-source-override-static.json",
+        "sha256": "a71d78db228dba00746a9dc5b29eec0ee48b7bbf6502dfe5df39be609a7fd675",
+        "contract": "弱Header nil无操作；存活且onEdit nil无操作；存在回调则保持并调用，无额外动作。",
+        "source_snapshot_unchanged_claim": false,
+        "current_build_claim": false
+      }
+    },
+    {
+      "function_id": "Paste:0x10007a830",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-0040.c",
+        "line": 1570
+      },
+      "evidence": "完整原C弱load预览View失败无动作；活View先取其Header及titleLabel并执行f11d28取消，随后取同View.window，存在才performClose(nil)；无window也先完成标题取消。当前onClose只weak捕获view，guard活引用后从view.previewHeader取同一Header取消titleLabel，再view.window?.performClose(nil)，没有分别weak header引入额外失效域或提前window guard。已核两个生产工厂均创建ReplicaInlinePreviewHeader并传入OriginalItemPreviewView不可变let previewHeader后接该闭包，所以force cast对应真实具体Header域，不是凭名称假设。",
+      "actual_consumer": "connectReplicaPreviewHeader被文本和非文本预览工厂真实调用；Header.closeAction转onClose，实际关闭按钮的action/target已设置；该callback不负责其它modal或面板Esc策略。",
+      "historical_report": "reports/function-migration/attributes-codable-preview-close-selection-static.json",
+      "historical_source_sha_available": false,
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift",
+          "symbol": "header.onClose = { [weak view]"
+        }
+      ],
+      "current_source_sha256": {
+        "replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift": "acc091392974dda3bc855c73d8b866e4f672dbd91d7ef9fb20df5eb741e1c3a1"
+      },
+      "historical_evidence": {
+        "path": "reports/function-migration/attributes-codable-preview-close-selection-static.json",
+        "sha256": "98f43c756449a939ea4010c966a0c34ffa4fd106f9b58b316c2c90972395574a",
+        "contract": "弱预览View缺失无操作；存活先从该View取Header取消标题，再有window时关闭；无window仍完成取消。",
+        "source_snapshot_unchanged_claim": false,
+        "current_build_claim": false
+      }
+    }
+  ]
+}

@@ -1,0 +1,35 @@
+{
+  "kind": "batch-window-completeness-25",
+  "scope": "集中核对1个多分支有序集合选择值方法，读完整主C及分组/相交/反转/范围生成辅助体，不为数量拆分计数。",
+  "summary": {"reviewed": 1, "complete": 1, "gap": 0, "uncertain": 0},
+  "prior_inventory": "reports/replica/batch-completeness-round24.json",
+  "definite_product_differences": [],
+  "activities": {"product_source_edited": false, "ledger_edited": false, "compiled": false, "product_run": false, "tests_run": false, "wrapper_added": false},
+  "skipped_failed_addresses": ["Paste:0x100ac35f8", "Paste:0x100ac746c"],
+  "limitations": [
+    "完整仅指合法Swift有序索引/Int?/UInt8值域中的f22df78有限业务合同，不是CollectionView整父、鼠标/键盘或预览/滚动运行验收。",
+    "外部UIState的ID重映射、same-singleton早退及selection发布属于调用父，未据纯值方法完成冒称这些父全体同构。",
+    "原Optional锚点非法ABI判别字节不在合法Int?值域；数组COW/Set哈希/分配布局不主张机器码相同，不改变台账计数。"
+  ],
+  "functions": [
+    {
+      "function_id": "Paste:0x10022df78", "status": "complete",
+      "original": {"path": "decompiled/Paste/part-0190.c", "line": 1432},
+      "source_references": [{"path": "replica/Sources/PastoCore/OriginalOrderedSelection.swift", "symbol": "public mutating func select(_ index: Int, mode: UInt8)"}, {"path": "replica/Sources/Pasto/UI/ReplicaUIController.swift", "symbol": "value.select(index, mode: mode)"}],
+      "evidence": "完整原C读至f22e5b4，并读f1b7c4c、f22e638、f22e780、f22e850：clicked负值或>=itemCount不改任何字段；mode0写singleton和clicked anchor；mode1从原数组首匹配移除，唯一1项时先返回不改anchor，移除后anchor=剩余last，未命中按原序append clicked并更新anchor。其它全部UInt8 mode只在anchor非nil进入范围逻辑，nil原样返回。范围用min/max闭区间，按原selected数组相邻abs(diff)==1划分连续group（并不排序且允许降序/重复值），与范围有交集则移除整group，无交集保原group/组间序，末尾附anchor到clicked定向含端点范围；anchor保留、itemCount只读。当前完整同分支，不用Set直接union、不把方向改可见升序、不把primary焦点混为anchor。原checked subtraction/abs和范围计数overflow终止，当前Int减法/abs及ClosedRange计数/append同属checked Swift值边界，不使用wrapping运算或钳取。原空selected分组返回一个空组，与当前无组最终flatten都空，不产生外部状态差异。",
+      "actual_consumer": "UIState.selectIndex将当前orderedSelectionIDs按真实visibleItems位置映成有序indexes，把rangeAnchorID独立映成Int?后调用本方法，再映回UUID；native mouseDown依据实际modifier取mode，键盘范围移动也进入该选择入口。父是否进入值方法的额外门控另留原父边界，本项不是无消费wrapper。",
+      "field_review": {
+        "selectedIndexes": "所有写入保数组顺序；Cmd删除首匹配而非删全部，Shift剔除整交集组后追加定向range。",
+        "itemCount": "只用于clicked上下界，所有分支不写。",
+        "anchor": "normal/Cmd新增写clicked；Cmd删除写剩余last；singleton拒删不写；range分支保原anchor。",
+        "optionalAnchor": "Swift nil对应原tag1；非nil负值或超itemCount并未被好心重置，范围算法仍按原stored anchor值计算。"
+      },
+      "supporting_original": [
+        {"path": "decompiled/Paste/part-0146.c", "line": 710, "function_id": "Paste:0x1001b7c4c", "purpose": "原序按相邻绝对差1分组；signed差/取负溢出检查"},
+        {"path": "decompiled/Paste/part-0190.c", "function_id": "Paste:0x10022e638", "purpose": "组Set与闭区间Set有交集返回false、无交集true，决定保留整组"},
+        {"path": "decompiled/Paste/part-0190.c", "function_id": "Paste:0x10022e780", "purpose": "anchor>=clicked时反转生成的升序range"},
+        {"path": "decompiled/Paste/part-0190.c", "function_id": "Paste:0x10022e850", "purpose": "含端点整数范围生成，不作半开区间近似"}
+      ]
+    }
+  ]
+}

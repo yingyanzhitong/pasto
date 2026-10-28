@@ -1,0 +1,62 @@
+{
+  "kind": "static_existing_stack_window_review",
+  "generated_at": "2026-10-27T11:27:13.063298+00:00",
+  "source_sha256": {
+    "replica/Sources/PastoCore/OriginalStackFunctions.swift": "e408e508e9bc0bf2b7477ab142e29e4b1c1087daa63cd402c312f145e6cf16a4",
+    "replica/Sources/Pasto/UI/ReplicaUIController.swift": "cd206564d515a6cada104e154140d47cc6fa11dce8ab676617ec31b7e08d7531"
+  },
+  "build_executed": false,
+  "tests_executed": false,
+  "records": [
+    {
+      "function_id": "Paste:0x100011138",
+      "status": "complete",
+      "criterion": "先super，再对存在的window设置statusBar level、全空间及全屏辅助、背景可移动、归档frame名；实际Stack创建window controller。",
+      "original_path": "decompiled/Paste/part-0007.c",
+      "original_line": 480,
+      "source_path": "replica/Sources/PastoCore/OriginalStackFunctions.swift",
+      "symbol": "f_100011138",
+      "consumer": "ReplicaUIController中的Stack窗口或栈操作；f_100011138由NSWindowController.windowDidLoad回调。"
+    },
+    {
+      "function_id": "Paste:0x10008468c",
+      "status": "complete",
+      "criterion": "对可变数组使用Swift reverse，空/单项不变并保写时复制；stackIDs由真实reverseStack调用。",
+      "original_path": "decompiled/Paste/part-0043.c",
+      "original_line": 1835,
+      "source_path": "replica/Sources/PastoCore/OriginalStackFunctions.swift",
+      "symbol": "f_10008468c",
+      "consumer": "ReplicaUIController中的Stack窗口或栈操作；f_100011138由NSWindowController.windowDidLoad回调。"
+    },
+    {
+      "function_id": "Paste:0x1000114fc",
+      "status": "uncertain",
+      "criterion": "主线程正常路径返回false；原函数含非当前executor报告及调用者传入的诊断行号，当前仅源级隔离尚未证该分支。",
+      "original_path": "decompiled/Paste/part-0007.c",
+      "original_line": 710,
+      "source_path": "replica/Sources/PastoCore/OriginalStackFunctions.swift",
+      "symbol": "f_1000114fc",
+      "consumer": "ReplicaUIController中的Stack窗口或栈操作；f_100011138由NSWindowController.windowDidLoad回调。"
+    },
+    {
+      "function_id": "Paste:0x1000114ec",
+      "status": "uncertain",
+      "criterion": "canBecomeMain正常路径调用helper并返回false；原helper的执行器报告边界待证。",
+      "original_path": "decompiled/Paste/part-0007.c",
+      "original_line": 678,
+      "source_path": "replica/Sources/PastoCore/OriginalStackFunctions.swift",
+      "symbol": "f_1000114ec",
+      "consumer": "ReplicaUIController中的Stack窗口或栈操作；f_100011138由NSWindowController.windowDidLoad回调。"
+    },
+    {
+      "function_id": "Paste:0x1000114f4",
+      "status": "uncertain",
+      "criterion": "canBecomeKey正常路径调用helper并返回false；原helper的执行器报告边界待证。",
+      "original_path": "decompiled/Paste/part-0007.c",
+      "original_line": 694,
+      "source_path": "replica/Sources/PastoCore/OriginalStackFunctions.swift",
+      "symbol": "f_1000114f4",
+      "consumer": "ReplicaUIController中的Stack窗口或栈操作；f_100011138由NSWindowController.windowDidLoad回调。"
+    }
+  ]
+}

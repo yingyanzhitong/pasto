@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "scope": "五个历史未变化的预览默认标题本地化访问器；逐地址核原成功C精确键值、当前公共构造器和实际标题消费。",
+  "counts": { "total": 5, "complete": 5, "gap": 0, "uncertain": 0 },
+  "source_binding": { "path": "replica/Sources/PastoCore/OriginalPreviewLocalization.swift", "historical_sha256": "0163cc854b291a3341675ea525903141dc764dda4a2791b513f4a9c4515632f1", "current_read_sha256": "0163cc854b291a3341675ea525903141dc764dda4a2791b513f4a9c4515632f1", "whole_file_unchanged": true },
+  "shared_contract": {
+    "original": "decompiled/Paste/part-0155.c:199 f1e681c完整体用传入String构造LocalizationValue、取进程一次BundleDescription、Locale.current，调用LocalizedStringResource构造。前四条短helper直接转该构造器；unknown内联相同构造。",
+    "current": "OriginalPreviewLocalization.resource第11..15行构造相同字面LocalizationValue、table=Localizable、locale.current及.atURL bundle；resourceBundle用实际Pasto_PastoCore.bundle，找不到才Bundle.module。这是明确独立产品部署资源身份适配，不冒原Bundle地址相同。",
+    "actual_consumer": "OriginalPreviewTitles.f309008按合法内容rawType调用五helper，再String(localized:resource)；PanelViews.cardTitle及OriginalReplicaPreviewAdapter模型标题均真实消费，helper不读取payload、不联网。",
+    "limits": "仅资源访问器有限合同，不重新宣称全部17语言翻译已逐项运行验收；本轮读取en/zh-Hans五键均存在。历史编译不作为本轮编译。"
+  },
+  "records": [
+    {
+      "function_id": "Paste:0x1001c6f44", "status": "complete", "historical_contract_reusable": true,
+      "historical_evidence": "reports/function-migration/Paste-0x1001c6f44.json",
+      "original": { "path": "decompiled/Paste/part-0149.c", "start_line": 1711, "address_range": "0x1001c6f44..<0x1001c6f68" },
+      "current_symbol": "OriginalPreviewLocalization.f_1001c6f44()", "current_line": 130,
+      "criterion": "原short String两字0x7079742d6d657469/0xef726f6c6f632e65小端合并为精确15字节item-type.color，直接转f1e681c，无额外分支。当前相同键，供rawType2默认颜色标题，非general.color或通用色名。"
+    },
+    {
+      "function_id": "Paste:0x1001c6f68", "status": "complete", "historical_contract_reusable": true,
+      "historical_evidence": "reports/function-migration/Paste-0x1001c6f68.json",
+      "original": { "path": "decompiled/Paste/part-0149.c", "start_line": 1722, "address_range": "0x1001c6f68..<0x1001c6f8c" },
+      "current_symbol": "OriginalPreviewLocalization.f_1001c6f68()", "current_line": 131,
+      "criterion": "原两字0x7079742d6d657469/0xef6567616d692e65为精确item-type.image，转同构造器；当前键/无参数返回同资源合同，rawType1真实默认图片标题消费。"
+    },
+    {
+      "function_id": "Paste:0x1001c6f8c", "status": "complete", "historical_contract_reusable": true,
+      "historical_evidence": "reports/function-migration/Paste-0x1001c6f8c.json",
+      "original": { "path": "decompiled/Paste/part-0149.c", "start_line": 1733, "address_range": "0x1001c6f8c..<0x1001c6fb0" },
+      "current_symbol": "OriginalPreviewLocalization.f_1001c6f8c()", "current_line": 132,
+      "criterion": "原两字0x7079742d6d657469/0xee006b6e696c2e65的长度14键为item-type.link，非HTTP页面标题；当前相同本地资源访问，rawType4默认链接标题真实使用。"
+    },
+    {
+      "function_id": "Paste:0x1001c7130", "status": "complete", "historical_contract_reusable": true,
+      "historical_evidence": "reports/function-migration/Paste-0x1001c7130.json",
+      "original": { "path": "decompiled/Paste/part-0149.c", "start_line": 1790, "address_range": "0x1001c7130..<0x1001c7154" },
+      "current_symbol": "OriginalPreviewLocalization.f_1001c7130()", "current_line": 133,
+      "criterion": "原两字0x7079742d6d657469/0xee00747865742e65为item-type.text，直接转同构造器；当前rawType5 text/richText真实共享此默认标题，无额外richtext键或内容截断。"
+    },
+    {
+      "function_id": "Paste:0x1001c7154", "status": "complete", "historical_contract_reusable": true,
+      "historical_evidence": "reports/function-migration/Paste-0x1001c7154.json",
+      "original": { "path": "decompiled/Paste/part-0149.c", "start_line": 1801, "address_range": "0x1001c7154..<0x1001c72d4" },
+      "current_symbol": "OriginalPreviewLocalization.f_1001c7154()", "current_line": 134,
+      "criterion": "原内联资源构造键是17字节长String指针0x8000000100d99790，本轮按Mach-O映射只读实际字节100d997b0为item-type.unknown；table/locale/bundle构造与公共helper相同。当前同键，真实unknown/非法归一类型默认标题使用，不是preview.unavailable文案。"
+    }
+  ],
+  "literal_evidence": { "binary": ".local/paste-arm64-static.bin", "virtual_address": "0x100d997b0", "read_length": 17, "bytes_as_utf8": "item-type.unknown", "method": "只读Mach-O段虚址映射，不运行产品或引擎" },
+  "excluded_failed_addresses": [ "0x100ac35f8", "0x100ac746c" ],
+  "verification_scope": "仅新增本报告，无产品源码、台账和历史报告修改，无编译、parse、运行应用、测试、MCP或发布，未读取指定失败函数。complete为有限资源访问器静态合同，不表示一比一运行验收或当前产物证明。"
+}

@@ -1,0 +1,87 @@
+{
+  "schema_version": 1,
+  "kind": "static_code_migration",
+  "functions": [
+    {
+      "function_id": "Paste:0x10004a994",
+      "state": "migrated",
+      "contract": "无scroll layer无操作；两端均不需要渐隐时清mask；否则按bounds建mask与白色中央body，各启用端留18pt并加clear/white或white/clear渐变，最终一次setMask。",
+      "implementations": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchSuggestionsMenu.swift",
+          "symbol": "private func f_10004a994"
+        }
+      ],
+      "source": {
+        "path": "decompiled/Paste/part-0027.c",
+        "line": 378
+      },
+      "review": "补真实layer mask并由bounds/layout更新consumer调用；原ARM证明nonnull分支仅4acc4一次setMask，Ghidra重复调用为误译，未照抄；低/高端任意Bool组合及空layer分支完整。",
+      "remaining": "仅此mask业务方法完整，gradient helper内actor报告与完整Scroller flipped/布局/事件父不升级。"
+    },
+    {
+      "function_id": "Paste:0x100226764",
+      "state": "migrated",
+      "contract": "windowX按30pt边缘/15步长求delta：两次bounds读取后判断左，右分支才第三次bounds；unordered右门槛回0；严格sign*(((30-distance)/30)*15)，不加clamp/坐标转换。",
+      "implementations": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaNativeCardCollection.swift",
+          "symbol": "private func dragEdgeDelta(windowX x: CGFloat)"
+        }
+      ],
+      "source": {
+        "path": "decompiled/Paste/part-0188.c",
+        "line": 278
+      },
+      "review": "既有完整ARM逐地址确认bounds读取、LS/HI浮点门槛与共同乘法顺序；恢复完整独立函数并由draggingUpdated实际消费，非仅左/右有限数值近似。",
+      "remaining": "本边缘值方法完整，不升级原marker/context/指示器/clip更新拖拽父。"
+    },
+    {
+      "function_id": "Paste:0x100316490",
+      "state": "migrated",
+      "contract": "合法Data先PropertyList解码完整13optional Stored；失败才JSON解码；任一成功返回Stored，双失败nil，错误不发布部分值。",
+      "implementations": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalImagePreviewMetadataCodec.swift",
+          "symbol": "private static func decodeStored"
+        }
+      ],
+      "source": {
+        "path": "decompiled/Paste/part-0255.c",
+        "line": 1411
+      },
+      "review": "原完整ARM补回Ghidra删去的异常块：3166c8 PL成功短路，31674c JSON，316750成功，双失败Optional nil。现PL try? ?? JSON try?完整覆盖，五种metadata/Models/预览真实消费；本函数没有Config/DI/Entity访问，直接复用既有源码。",
+      "remaining": "仅此decoder完整，外层optional raw nil适配与f3168a8动态Config编码器/实体父不升级。"
+    },
+    {
+      "function_id": "Paste:0x10004ad10",
+      "state": "partial",
+      "contract": "按任意bounds宽度、y/height和NSColor数组构造CAGradientLayer，转换CGColor，start(.5,0)/end(.5,1)。",
+      "implementations": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchSuggestionsMenu.swift",
+          "symbol": "private func f_10004ad10"
+        }
+      ],
+      "source": {
+        "path": "decompiled/Paste/part-0027.c",
+        "line": 482
+      },
+      "review": "完整渐变业务已实际被低/高端mask消费，保空数组及颜色顺序，不写死两色单一wrapper。",
+      "remaining": "原函数本体含逐颜色MainActor执行器报告，尚未同构该诊断，保留partial。"
+    }
+  ],
+  "updated_rotation_parents": [
+    "Paste:0x1003e51b4",
+    "Paste:0x1003e53a0"
+  ],
+  "original_arm_evidence": [
+    ".local/suggestion-scroll-mask-original-arm64.txt",
+    ".local/window-native-edge-delta-arm64.txt",
+    ".local/image-dev19-decode-arm64.txt"
+  ],
+  "build_executed": false,
+  "tests_executed": false,
+  "equivalence_verified": false,
+  "limitations": "Source migration/manual static comparison and original instruction reads only; no compile, parse, product execution, tests, install, commit or release. Original parent actor/object/DI/config domains and historical evidence freshness remain separate."
+}

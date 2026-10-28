@@ -1,0 +1,86 @@
+{
+  "schema_version": 1,
+  "kind": "static_code_migration",
+  "functions": [
+    {
+      "function_id": "Paste:0x1003eb8cc",
+      "state": "migrated",
+      "contract": "弱owner不存在时无操作；owner存在且editor.isEditable为true时不重绘；false时严格依次调用f3eb330与f3eb4a8，不额外更新提交状态、焦点或回调。",
+      "implementations": [
+        {
+          "path": "replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift",
+          "symbol": "if !self.text.isEditable { self.displayStoredModel() }"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift",
+          "symbol": "private func displayStoredModel()"
+        }
+      ],
+      "source": {
+        "path": "decompiled/Paste/part-0312.c",
+        "line": 667
+      },
+      "review": "成功原callback全部owner/编辑状态分支与真实弱捕获观察回调及两次显示调用顺序对应。模型读取、刷新两基线及删除记录策略属于父f3c04f0，不混入本方法完整计数。",
+      "remaining": "此显示callback业务合同完整；外围Entity观察/生命周期仍单列，不声明运行等价。"
+    },
+    {
+      "function_id": "Paste:0x1003ec3e0",
+      "state": "migrated",
+      "contract": "无额外分支与副作用，直接转发完整callback0x1003eb8cc。",
+      "implementations": [
+        {
+          "path": "replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift",
+          "symbol": "if !self.text.isEditable { self.displayStoredModel() }"
+        }
+      ],
+      "source": {
+        "path": "decompiled/Paste/part-0312.c",
+        "line": 1319
+      },
+      "review": "成功原完整方法仅尾转发；在真实观察消费链直接复用同一完整callback源码，不另造重复包装。",
+      "remaining": "仅源码转发合同完成，不升级父观察机制或生成ABI。"
+    },
+    {
+      "function_id": "Paste:0x1003c04f0",
+      "state": "partial",
+      "contract": "非deleted实体更新VM记录及original/normalized编辑基线，然后通知view；view编辑时不重绘。",
+      "implementations": [
+        {
+          "path": "replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift",
+          "symbol": "private func replaceStoredModel(_ item: ClipboardItem)"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift",
+          "symbol": "itemObservation = state.store.$items.sink"
+        }
+      ],
+      "source": {
+        "path": "decompiled/Paste/part-0297.c",
+        "line": 425
+      },
+      "review": "拆开模型基线刷新与显示刷新：有效记录无条件刷新两基线，编辑时保留输入内容且不额外计算canCommit；初始化/重载实际消费相同方法。",
+      "remaining": "原deleted仅忽略，而现deleted/missing关闭预览；原VM实体观察机制未闭合，保留partial。"
+    }
+  ],
+  "partial_updates": {
+    "Paste:0x100322504": {
+      "review": "补迁移实际capture/add事务偏好读取：withPreviewMetadata移入mutate闭包，在latestState/merge后读取state.preferences的格式和QuickLook选择；已有rawPreview不重生，checksum/owner/来源/查重保持。原f3611b0→f360ff8→f322504→f3168a8的当次Config选择作为静态依据。",
+      "remaining": "动态偏好在真实消费处读取已补；完整多case/异步/原Config存储身份、CoreData事务与ABI仍未闭合。",
+      "migration_evidence": "reports/function-migration/text-baseline-capture-preferences-static.json"
+    },
+    "Paste:0x10005ad00": {
+      "review": "对照成功原body补回首轮按fittingWidth设置宽度(display=false)、layout后读取内容高度；无父窗口或找不到包含anchor点的屏幕只return，不调用dismiss/escape；删除额外height>0取消分支。其他已落原向下定位及标题横向校正保留。",
+      "remaining": "给定anchorRect与原anchor.bounds/原通用窗口构造仍为适配，原actor报告和完整原native几何未闭合，保留partial。",
+      "migration_evidence": "reports/function-migration/text-baseline-capture-preferences-static.json"
+    }
+  },
+  "source_changes": [
+    "replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift",
+    "replica/Sources/PastoCore/ClipboardStore.swift",
+    "replica/Sources/Pasto/UI/ReplicaSearchSuggestionsMenu.swift"
+  ],
+  "build_executed": false,
+  "tests_executed": false,
+  "equivalence_verified": false,
+  "limitations": "Manual successful-pseudocode/source comparison only. No compile, parse, execution, tests, install, commit or release. Parent callbacks, source data adapters and historical evidence freshness remain separate."
+}

@@ -1,0 +1,53 @@
+{
+  "review_kind": "read_only_checksum_and_archive_dependency_batch",
+  "scope": "round12未覆盖的两个既有校验和方法；区分自身值算法与已证NSCoding依赖缺口，不重复把下游缺口当新的独立产品问题。",
+  "counts": { "reviewed": 2, "complete": 0, "gap": 2, "uncertain": 0, "new_migrations_claimed": 0, "new_independent_defects": 0 },
+  "inputs": {
+    "original_success_index": "reports/Paste/function-index.json",
+    "original_success_c": "decompiled/Paste/part-0258.c",
+    "current_source": "replica/Sources/PastoCore/OriginalPasteboardChecksums.swift",
+    "known_dependency_arm_review": "reports/replica/batch-core-completeness-followup.json",
+    "existing_original_empty_archive_error_proof": ".local/image-empty-save-original-checksum.txt"
+  },
+  "functions": [
+    {
+      "function_id": "Paste:0x100322ae4",
+      "status": "gap",
+      "gap_kind": "inherited_confirmed_archive_wire_dependency",
+      "original_path": "decompiled/Paste/part-0258.c",
+      "original_line": 1107,
+      "current_path": "replica/Sources/PastoCore/OriginalPasteboardChecksums.swift",
+      "current_symbol": "OriginalPasteboardChecksums.f_100322ae4(_:)",
+      "matching_body": "原把原PasteboardItem数组桥成NSArray，调用NSKeyedArchiver且requiringSecureCoding=false；NSError失败释放错误并以空Data继续MD5，不把归档失败返回nil；最后逐字节小写两位HEX无分隔拼接。当前try? archive??Data()→相同MD5/helpers/joined同控制流，不将异常当Swift Error吞掉的更大合同。",
+      "confirmed_gap": "归档的实际元素调用NSCoding。前批原ARM已证原f37f520第二键是data，当前OriginalPasteboardItem.encode(with:)仍经f37f520写dataByType；原归档输入结构未复现，不能据外层同一个NSKeyedArchiver调用就签归档MD5全域一致。原/新类名等wire身份尚有独立未知，不作为本项唯一缺口依据。",
+      "dependency_evidence": "原37f604/37f608构成little-endian字符串data，37f624通过已核encodeObject:forKey: selector写出；当前OriginalPasteboard.swift的同一编码分支写dataByType。详情引用followup报告，不重跑反汇编或摘要。",
+      "consumer": "f3216bc的unknown及files无有效URL分支实际调用；不是无人消费formatter。",
+      "boundary": "本轮未生成归档或MD5，不声称所有输入摘要都必然不同，也不声称具体碰撞与否；明确无法满足原归档字节输入的完整合同。"
+    },
+    {
+      "function_id": "Paste:0x1003216bc",
+      "status": "gap",
+      "gap_kind": "inherited_confirmed_archive_wire_dependency",
+      "original_path": "decompiled/Paste/part-0258.c",
+      "original_line": 202,
+      "current_path": "replica/Sources/PastoCore/OriginalPasteboardChecksums.swift",
+      "current_symbol": "OriginalPasteboardChecksums.f_1003216bc(_:kind:)",
+      "matching_branches": [
+        "unknown→f322ae4，归档失败仍非nil校验字符串；不是unknown直接nil。",
+        "image→各item按固定类型getter取可选Data，选首个存在Data再MD5；全无图数据nil，空Data仍可算摘要。原先遍历全数组构造Data候选，当前lazy在首个命中停；该getter已核为自身字典只读，未发现因此新增可观察副作用。",
+        "color/link/text→只读第一个item的普通文本getter，有值（含空串）才f322d94；不在首项无文本后继续搜索其它item。",
+        "files→保序过滤有效UTF8及URL构造所得path，不要求isFileURL/reachable；有路径时FileSnippet:加无分隔路径拼接后算文本MD5，无路径时回f322ae4。原前缀smallString字面与当前相符。"
+      ],
+      "confirmed_gap": "unknown及无有效文件路径分支依赖上项归档字节合同，因此整个多分支方法不能标complete；这是同一已证NSCoding缺口的传递影响，不是第二个独立缺陷。其它值分支本轮未发现明确算法差异。",
+      "consumer": "ClipboardMonitor.f37b034真实调用本方法作checksum非nil的创建门槛；此门槛在unknown路径只观察是否非nil，不据此夸称该处当前已出现摘要比对错误。ClipboardStore.knownPasteboardChecksum通过Pasteboard.swift先排除unknown及files全无URL，再供add/createIntentText去重，因此其当前去重调用不直接走已证归档缺口分支。",
+      "boundary": "仅核公开枚举合法kind域，不推定损坏原enum任意rawbyte ABI；不把原归档MD5与现JSON结构去重替代策略当全等。"
+    }
+  ],
+  "limits": [
+    "只新增本独立报告，未修改产品源码、台账、用户数据。",
+    "未编译、parse、运行产品、功能/MCP测试或验证脚本；未发布。",
+    "两个gap均追溯同一已确认NSCoding键差异，不增加独立缺陷数，不冒充新迁移。",
+    "本批0/2完整不能代替项目整体迁移率；总分母与跨批去重由主智能体汇总，未核当前编译二进制。",
+    "指定失败地址0x100ac35f8、0x100ac746c均跳过，未读取。"
+  ]
+}

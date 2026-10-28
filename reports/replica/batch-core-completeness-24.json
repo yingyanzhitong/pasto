@@ -1,0 +1,48 @@
+{
+  "review_kind": "read_only_plain_projection_and_multiformat_processor_boundaries",
+  "counts": { "reviewed": 2, "complete": 0, "gap": 0, "uncertain": 2, "new_migrations_claimed": 0 },
+  "functions": [
+    {
+      "function_id": "Paste:0x10031bcdc",
+      "status": "uncertain",
+      "original_path": "decompiled/Paste/part-0257.c",
+      "original_line": 48,
+      "current_path": "replica/Sources/PastoCore/OriginalPasteboardRestore.swift",
+      "current_symbol": "OriginalPasteboardRestore.f_10031bcdc(_:)",
+      "matching_array_algorithm": "原先从所有表示按原序用f37c9a8取可选普通文本，忽略nil但保留空字符串，再逐字符串新建只含public.utf8-plain-text的PasteboardItem；严格UTF8可选Data写入，types与Data独立。当前compactMap文本→map f37c6d4完全同两阶段顺序，不把RTF-only转为普通文本、不取OCR、不把空字符串当缺失、不只取首个文本。",
+      "unresolved": "原完整方法开头读取自身ItemEntity.data并调用f31b218解码，现同名方法直接接预解码数组；第19批已保留原raw读取/ObjC异常边界未闭。数组算法完整不等于原整个实体方法完整，此项保持uncertain，不仅因类名或ABI不同。",
+      "consumer": "f38222c纯文本分支实际调用；Store.ordinaryRestoreRepresentations的legacy兼容判定也实际调用同helper，不与显式OCR API混同。"
+    },
+    {
+      "function_id": "Paste:0x10038222c",
+      "status": "uncertain",
+      "original_path": "decompiled/Paste/part-0283.c",
+      "original_line": 1663,
+      "current_path": "replica/Sources/PastoCore/OriginalPasteboardRestore.swift",
+      "current_symbol": "OriginalPasteboardRestore.f_10038222c(_:options:removingTypesContaining:)",
+      "matching_reviewed_value_branches": [
+        "输入数量>1才多选；先检查是否存在原rawType5或4决定文本聚合域；当前kind text/link对应。",
+        "text/link按options bit1选择plain，其它kind按bit0选择plain；两bit独立，未把global alwaysPlain误扩大为两bit。",
+        "每个输出表示先过滤指定类型，再写显式sourceApplication.bundleIdentifier来源（无关系空字符串），随后处理原有PNG/TIFF等表示清理；当前对应同三个helper顺序。",
+        "单选返回一个group而非提前flatMap；多选有text/link时保空group位置并另加聚合组。最终以换行组合文本，仅组合length>0才插入头部aggregate；bit1未置且RTF编码成功才RTF，否则UTF8。当前对应分支存在并由实际调用消费。"
+      ],
+      "unresolved": "原本体循环读取每个实体rawType/data/sourceApplication，普通表示读取还调用实体图像准备方法；当前Selection为预解码/预准备值，Store先完成整次selected.map，再进入processor。原实体取数/错误、弱依赖和每项准备/标记副作用的全部时序未闭，原source getter可能逐表示读取而当前once投影。不能只靠二维数组结果常见路径匹配签完整，也不在本轮凭这些适配边界断言确定用户错误。",
+      "consumer": "Store.writeToPasteboard与dragPasteboardGroups都真实调用本方法；restore之后flatMap并clear/write/token/recency/Undo/DidRestore，drag保持二维group交有序zip工厂。没有让drag调用restore副作用入口。普通legacy fallback和显式OCR替换属于Store入口适配，不能冒原处理器自身功能。",
+      "boundary": "本轮核原选项/来源/分组/聚合关键分支，不声称原大函数全部实体异常及图像准备父已证明；保已完整的过滤、清理、字符串组合与RTF编码独立方法结论，不将父待证反向撤销它们。"
+    }
+  ],
+  "inputs": {
+    "success_index": "reports/Paste/function-index.json",
+    "current_consumer": "replica/Sources/PastoCore/Pasteboard.swift",
+    "related_prior_reviews": [
+      "reports/replica/batch-core-completeness-19.json",
+      "reports/replica/batch-core-completeness-23.json"
+    ]
+  },
+  "limits": [
+    "仅阅读成功原C及现有生产源码，新增本独立报告；未修改产品源码、台账或用户数据。",
+    "未编译、parse、运行产品、功能/MCP测试、验证脚本或发布；未核当前编译产物。",
+    "本批0/2完整不是项目总体迁移率；主智能体汇总总分母及跨批去重，新增迁移0。",
+    "两个失败地址0x100ac35f8、0x100ac746c跳过，未读取。"
+  ]
+}

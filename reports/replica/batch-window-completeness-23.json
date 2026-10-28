@@ -1,0 +1,37 @@
+{
+  "kind": "batch-window-completeness-23",
+  "scope": "3个剩余窗口焦点、文本字段读取及搜索筛选按钮配置方法。",
+  "summary": {"reviewed": 3, "complete": 2, "gap": 0, "uncertain": 1},
+  "prior_inventory": "reports/replica/batch-completeness-round22.json",
+  "definite_product_differences": [],
+  "activities": {"product_source_edited": false, "ledger_edited": false, "compiled": false, "product_run": false, "tests_run": false, "wrapper_added": false},
+  "skipped_failed_addresses": ["Paste:0x100ac35f8", "Paste:0x100ac746c"],
+  "limitations": [
+    "complete仅指列明有限静态合同，不是当前构建、焦点运行或整个窗口生命周期验收。",
+    "历史build44父类证据只说明原类身份，未伪称历史编译产物是当前源码的新构建。",
+    "不修改台账计数；原额外Actor桥及通用本地化资源构造不因业务体完整提升。"
+  ],
+  "functions": [
+    {
+      "function_id": "Paste:0x1000f6874", "status": "complete",
+      "original": {"path": "decompiled/Paste/part-0083.c", "line": 1585},
+      "source_references": [{"path": "replica/Sources/Pasto/UI/ReplicaUIController.swift", "symbol": "input.stringValue"}],
+      "evidence": "原接收者读取NSTextField.stringValue，桥为Swift String直接返回，无条件分支、nil后备、trim或格式副作用。当前生产同一input.stringValue读操作就是该导入属性的Swift String返回；紧接的trim发生调用方，未误算成原getter内部行为。",
+      "actual_consumer": "UIController名称输入modal确认后真实读取input.stringValue再由调用者处理名称，非未消费扩展getter。"
+    },
+    {
+      "function_id": "Paste:0x1000778c0", "status": "complete",
+      "original": {"path": "decompiled/Paste/part-0039.c", "line": 1020},
+      "source_references": [{"path": "replica/Sources/Pasto/UI/ReplicaUIController.swift", "symbol": "override func makeFirstResponder(_ responder: NSResponder?) -> Bool"}],
+      "evidence": "原nonnil responder原样传super；nil先读initialFirstResponder，仅其nil才读contentView，仍nil也传super，返回同一super BOOL。当前已无曾有的collection优先额外分支，完全同序。ARM 0x1000778e4分nil、7908初始目标、7918仅nil继续content、7944调用super、7948保存x0且7954恢复，证明返回未被ARC释放覆写；非nil分支78fc后直接共同返回。当前ReplicaPanel直接继承NSPanel；原MainWindow superclass NSPanel的既有原元数据证据见.local/window-dev23-audit.json original_class 100f91838，不把原f07796c Actor桥并入本方法。",
+      "actual_consumer": "UIController生产show/焦点结束等调用panel.makeFirstResponder(nil)，其它明确目标也调用同override；真实系统窗口对象为ReplicaPanel。"
+    },
+    {
+      "function_id": "Paste:0x100045edc", "status": "uncertain",
+      "original": {"path": "decompiled/Paste/part-0025.c", "line": 2154},
+      "source_references": [{"path": "replica/Sources/PastoCore/OriginalSearchField.swift", "symbol": "f_100045edc"}],
+      "evidence": "原系统符号探测后再次加载，失败后备用图并强制非nil；依次image、didClickFiltersButton action、weak owner target、refusesFirstResponder=true、bordered=false、wantsLayer=true；tooltip由f1db854本地化标题加空格左括号、ANSI f键当前布局Cmd显示、右括号。当前业务顺序及快捷键构造匹配。但当前filtersTitle以17值字典+Locale.current.identifier选择语言，原f1db854用LocalizedStringResource及原bundle描述/Locale.current；未完整证明用户语言覆盖、资源缺失和bundle fallback全域相同，符号槽f20d37c也未在本批重解，故不以按钮正常可见判完整。",
+      "actual_consumer": "f045730首次构造真实filtersButton调用本方法，SearchField添加到视图，SearchEditor.onShowFilters最终打开真实FilterBrowser。"
+    }
+  ]
+}

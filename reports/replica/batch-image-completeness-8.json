@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "scope": "第7批未核过的三个已有图片还原清理与文件copy-time元数据方法；逐分支只读静态审查，不以既有migrated状态代替判据。",
+  "counts": { "total": 3, "complete": 2, "gap": 1, "uncertain": 0 },
+  "records": [
+    {
+      "function_id": "Paste:0x100384aac",
+      "status": "complete",
+      "original": { "path": "decompiled/Paste/part-0284.c", "start_line": 4, "end_line": 135, "address_range": "0x100384aac..<0x100384e6c" },
+      "arm_evidence": ".local/pasteboard-dev8-image-cleanup-arm64.txt",
+      "current_implementations": [ { "path": "replica/Sources/PastoCore/OriginalPasteboardImageRestore.swift", "start_line": 62, "end_line": 67, "symbol": "public func f_100384aac()" } ],
+      "criterion": "先调用目录getter，optional为nil直接返回；非nil把目录值捕获进global background异步任务，owner为weak。当前目录强值捕获和weak self使成功文件处理不要求owner存活，只有错误日志读取owner；async默认unspecified任务QoS及空flags与原一致。ARM384c10调用目录getter、384c2c nil分支，384ccc weak初始化、384d28目录及weak上下文装配、384df0调度。此处完整性仅针对调度方法，不把被调清理函数的已知差异吞并。",
+      "actual_consumer": "同文件f_100383df4在每次实际图片表示临时文件写入遍历后第58行调用本方法；Pasteboard.swift第292、370行的真实还原分支经imageRestore.prepare进入该链。",
+      "limitations": "未执行异步任务或文件I/O；下游f384e6c另列gap，原实体/还原父链不在本方法结论内。"
+    },
+    {
+      "function_id": "Paste:0x100384e6c",
+      "status": "gap",
+      "original": { "path": "decompiled/Paste/part-0284.c", "start_line": 136, "address_range": "0x100384e6c..<0x100385598" },
+      "arm_evidence": ".local/pasteboard-dev8-image-cleanup-arm64.txt",
+      "current_implementations": [ { "path": "replica/Sources/PastoCore/OriginalPasteboardImageRestore.swift", "start_line": 69, "end_line": 82, "symbol": "public static func f_100384e6c(directory:diagnostics:)" } ],
+      "satisfied_branches": "当前与原均以Date.now-86400为截止，按目录有序返回值遍历；创建日期缺失跳过，严格早于截止才删除，等于截止保留；目录枚举失败或删除失败结束整个处理并仅在weak owner仍存在时记录同一固定前缀与localizedDescription。",
+      "criterion": "原伪代码删除了资源读取错误块，现有完整ARM补齐：385258调用URL.resourceValues，38525c在Swift错误寄存器x21非零时跳385130；385130..385174释放该错误并构造nil日期，随后385178..385190清理optional并递增索引，3851a0只在数组末端结束。此失败不进入3853d8的weak日志路径。当前第74行try resourceValues被包在整个for外的do/catch中，任一文件读取资源失败即跳第79行，记录错误并停止后续文件，丢失原逐文件容错分支。原目录枚举错误由3850ac进入3853b0，删除错误由38534c进入385534后转3853d8，二者须继续保留整批结束语义。",
+      "actual_consumer": "f_100384aac的真实background闭包第65行调用本方法；上游为Pasteboard.writeToPasteboard的图片临时表示生成，不是未消费helper。",
+      "minimal_source_recommendation": "后续获准编辑时，仅把单文件resourceValues读取改为try?并对nil创建日期继续下一项；目录枚举和removeItem继续留在外层throw/catch。当前任务禁止改产品，未实施。",
+      "limitations": "差异由成功原函数现有ARM和生产源码静态确定，没有触碰文件系统、制造错误或执行清理。"
+    },
+    {
+      "function_id": "Paste:0x100312ae4",
+      "status": "complete",
+      "original": { "path": "decompiled/Paste/part-0254.c", "start_line": 1066, "address_range": "0x100312ae4..<0x100313308" },
+      "arm_evidence": ".local/image-dev20-files-generation-arm64.txt",
+      "current_implementations": [ { "path": "replica/Sources/PastoCore/OriginalFilePreviewMetadata.swift", "start_line": 18, "end_line": 32, "symbol": "public static func generate(_ items:preferQuickLookThumbnails:)" } ],
+      "criterion": "逐输入调用既有f37cc6c严格UTF8的URL(string:)投影，失败丢弃、有序及重复保留，不额外要求fileURL或可达性。只读取首有效URL的totalFileSize，缺值与错误均0，仍为该URL生成可选预览；无有效URL返回paths空数组、size0、preview nil。最后所有有效URL按原序映射path，size不是所有文件总和。ARM31303c..313068证明resourceValues错误释放后size0且继续首URL预览；3130a4..3130d0证明缺totalFileSize为0；313138..313144证明无首URL的nil Data；3132b4返回paths/size/optional Data。当前每个输入、optional和失败分支相同。显式偏好来自真实Store，原本体不读取配置，配置读取属于f312874子方法。",
+      "actual_consumer": "ClipboardStore.swift第375行withPreviewMetadata在files且无rawPreview并获准生成copy-time元数据时真实调用本方法，随后encodeFiles持久化rawPreview；图片/文件卡片与完整文件预览读取decodedFilePreviewMetadata。getter不重算文件系统数据。",
+      "limitations": "只确认文件元数据生成方法的有限值合同；不升级子方法配置DI、CoreData工厂、旧archive缺raw不补算的兼容策略或预览VM。没有运行QuickLook、文件读取或产品。"
+    }
+  ],
+  "excluded_failed_addresses": [ "0x100ac35f8", "0x100ac746c" ],
+  "verification_scope": "只读成功原C、既有指定地址ARM文本及当前生产源码。本轮只新增本报告，没有改产品源码、台账、旧报告，没有编译、parse、运行应用、执行测试、MCP、发布或读取两失败函数。complete是所列有限方法静态分支结论，不是一比一功能验收，也不是当前产物构建一致性声明。"
+}

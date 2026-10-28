@@ -1,0 +1,43 @@
+{
+  "kind": "static_reuse_review",
+  "records": [
+    {
+      "function_id": "Paste:0x100ae5e74",
+      "status": "complete",
+      "original_path": "decompiled/Paste/part-1008.c",
+      "original_line": 90,
+      "current_path": "replica/Sources/PastoCore/OriginalAccessibilityService.swift",
+      "current_symbol": "public func f_100ae5e74() -> Bool",
+      "criterion": "AXIsProcessTrusted normalized Bool only; no request or DirectPaste preference setter.",
+      "consumer": "AppMain.swift 检查自动粘贴权限，OriginalAccessibilityService 的权限订阅读取初值。",
+      "source_sha256": "e015554a40a64837f284fb9a0dc08a2639e8606b4e34b5930234cf1751e40073",
+      "limitations": "仅原地址对应源码级有限合同；不推断当前编译产物或外部系统状态。"
+    },
+    {
+      "function_id": "Paste:0x1000d44e8",
+      "status": "complete",
+      "original_path": "decompiled/Paste/part-0069.c",
+      "original_line": 1338,
+      "current_path": "replica/Sources/PastoCore/OriginalLocalDiagnostics.swift",
+      "current_symbol": "factoryDependency",
+      "criterion": "全局惰性factory Dependency初始化：取得对应KeyPath，建立未解析的OriginalDependency并保存；不调用factory。",
+      "consumer": "OriginalNamedDiagnostic 工厂依赖，ClipboardMonitor 和背景服务调用。",
+      "source_sha256": "95baca2d0ee25cb9ca5a7bcbc111a820bbe70d29feecf46e5d8cd0c1f6d5c911",
+      "limitations": "仅原地址对应源码级有限合同；不推断当前编译产物或外部系统状态。"
+    },
+    {
+      "function_id": "Paste:0x1000d8280",
+      "status": "complete",
+      "original_path": "decompiled/Paste/part-0071.c",
+      "original_line": 1115,
+      "current_path": "replica/Sources/PastoCore/OriginalSharedDependencyCache.swift",
+      "current_symbol": "private static let globalSharedCache",
+      "criterion": "全局共享服务cache首次初始化为NSRecursiveLock加空[String:Any]字典，后续返回同一对象。",
+      "consumer": "OriginalDependencies.f_1000d80e0 在无覆盖上下文时访问全局缓存。",
+      "source_sha256": "d83f199826f661090cdd74b9d05e185e295bf3570ba2f8e8dc868f9dac219cbf",
+      "limitations": "仅原地址对应源码级有限合同；不推断当前编译产物或外部系统状态。"
+    }
+  ],
+  "build_executed": false,
+  "tests_executed": false
+}

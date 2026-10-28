@@ -40,30 +40,34 @@ public struct OriginalShortcutValue: Codable, Equatable, Hashable, CustomStringC
     public var displayName: String { description }
 }
 
-public enum OriginalShortcutCodingKey: CodingKey, Sendable {
-    case keyCode
-    case internalModifiers
+public typealias OriginalShortcutCodingKey = OriginalShortcutValue.CodingKeys
 
-    public func f_1001e9990() -> String {
-        switch self {
-        case .keyCode: return "keyCode"
-        case .internalModifiers: return "internalModifiers"
+extension OriginalShortcutValue {
+    public enum CodingKeys: CodingKey, Sendable {
+        case keyCode
+        case internalModifiers
+
+        public func f_1001e9990() -> String {
+            switch self {
+            case .keyCode: return "keyCode"
+            case .internalModifiers: return "internalModifiers"
+            }
         }
-    }
 
-    public static func f_1001e99d0(_ string: String) -> Self? {
-        switch string {
-        case "keyCode": return .keyCode
-        case "internalModifiers": return .internalModifiers
-        default: return nil
+        public static func f_1001e99d0(_ string: String) -> Self? {
+            switch string {
+            case "keyCode": return .keyCode
+            case "internalModifiers": return .internalModifiers
+            default: return nil
+            }
         }
-    }
 
-    public var stringValue: String { f_1001e9990() }
-    public init?(stringValue: String) {
-        guard let key = Self.f_1001e99d0(stringValue) else { return nil }
-        self = key
+        public var stringValue: String { f_1001e9990() }
+        public init?(stringValue: String) {
+            guard let key = Self.f_1001e99d0(stringValue) else { return nil }
+            self = key
+        }
+        public var intValue: Int? { nil }
+        public init?(intValue: Int) { return nil }
     }
-    public var intValue: Int? { nil }
-    public init?(intValue: Int) { return nil }
 }

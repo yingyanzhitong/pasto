@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "scope": "同一历史未变化预览popover文件三个已有编辑结束/销毁/拆离允许方法；逐项重读原成功C和当前生产路径。",
+  "counts": { "total": 3, "complete": 2, "gap": 0, "uncertain": 1 },
+  "source_binding": { "path": "replica/Sources/PastoCore/OriginalPreviewPopover.swift", "historical_sha256": "352554008c692f89091bf3cb700b0cfee1b55768b5a709c3b4320951a154a46e", "current_read_sha256": "352554008c692f89091bf3cb700b0cfee1b55768b5a709c3b4320951a154a46e", "whole_file_unchanged": true },
+  "records": [
+    {
+      "function_id": "Paste:0x10002a424",
+      "status": "complete",
+      "historical_contract_reusable": true,
+      "historical_evidence": "reports/function-migration/Paste-0x10002a424.json",
+      "original": { "path": "decompiled/Paste/part-0016.c", "start_line": 1374, "address_range": "0x10002a424..<0x10002a438" },
+      "current_reference": { "path": "replica/Sources/PastoCore/OriginalPreviewPopover.swift", "start_line": 114, "end_line": 116, "symbol": "preview.onEndEditing closure" },
+      "criterion": "原closure捕获keepOpen Bool和所创建window，true直接返回，false对该window.close，不访问当前popover.window，不按保存/取消成功状态区分，不释放全局selection。当前相同强窗口捕获和if !keepOpenAfterEditing close两个分支，没有弱窗口替代或额外条件。原本体无actor诊断或返回值。",
+      "actual_consumer": "f029a80真实构造preview后安装该closure；detachableWindow(for:)传keepOpen=true，detachForEditing传false。实际preview编辑结束会执行其onEndEditing，不是独立无消费闭包。UIController.makePreviewPopover提供真实content factory。",
+      "limitations": "仅这个编辑结束closure完整，不升级父f029a80原CoreData/DI/window生成或系统拆离交互。未执行close。"
+    },
+    {
+      "function_id": "Paste:0x10002948c",
+      "status": "complete",
+      "historical_contract_reusable": true,
+      "historical_evidence": "reports/function-migration/Paste-0x10002948c.json",
+      "original": { "path": "decompiled/Paste/part-0016.c", "start_line": 623, "address_range": "0x10002948c..<0x100029514" },
+      "current_reference": { "path": "replica/Sources/PastoCore/OriginalPreviewPopover.swift", "line": 141, "symbol": "deinit" },
+      "criterion": "原从default NotificationCenter移除self全部观察，再调用NSPopover.super.dealloc；当前deinit同removeObserver(self)，随后由Swift/NSObject析构完成。没有只移某一个通知、主动关其它预览或调用onWillClose。Combine令牌按字段生命周期自动析构，不伪称原cxx_destruct字节相同。",
+      "actual_consumer": "真实OriginalPreviewPopover.init注册mainWindowWillClose的selector，UIController持有并使用该popover；deinit对应真实已注册对象生命周期，不是未创建类。",
+      "limitations": "仅观察者移除/析构方法有限合同完整；没有销毁对象或运行通知测试。"
+    },
+    {
+      "function_id": "Paste:0x10002a1e8",
+      "status": "uncertain",
+      "historical_contract_reusable": false,
+      "historical_evidence": "reports/function-migration/Paste-0x10002a1e8.json",
+      "original": { "path": "decompiled/Paste/part-0016.c", "start_line": 1221, "address_range": "0x10002a1e8..<0x10002a26c" },
+      "current_reference": { "path": "replica/Sources/PastoCore/OriginalPreviewPopover.swift", "symbol": "public func popoverShouldDetach(_ popover: NSPopover) -> Bool" },
+      "satisfied_business_contract": "原正常分支无条件true，不依据item、popover属性、editing或窗口存在判断；当前同true方法，实际delegate=self可被系统调用。",
+      "criterion": "原ObjC方法本体先获取MainActor executor并在非当前时reportUnexpectedExecutor(Paste/ItemCollectionView.PreviewPopover.swift,line129)，之后释放actor返回true。当前只有@MainActor类与Swift delegate方法源码，尚未证生成ObjC入口同检查，不能因文件摘要一致把整个旧MainActor合同自动复用为complete。",
+      "actual_consumer": "OriginalPreviewPopover.init真实delegate=self；UIController.makePreviewPopover创建并接真实item view，系统可询问detach并进入已存在detachableWindow(for:)链。",
+      "limitations": "待证仅整入口诊断，不是已确认拆离不可用；未运行系统popover或编译补证。"
+    }
+  ],
+  "excluded_failed_addresses": [ "0x100ac35f8", "0x100ac746c" ],
+  "verification_scope": "仅新增本独立报告，无产品源码、台账或历史报告修改，无编译、parse、运行应用、测试、MCP或发布，未读取两指定失败函数。历史编译不冒充本轮构建，complete为有限源码方法，不是一比一运行验收。"
+}

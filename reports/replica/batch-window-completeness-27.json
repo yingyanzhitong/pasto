@@ -1,0 +1,52 @@
+{
+  "kind": "batch-window-completeness-27",
+  "scope": "4个未覆盖通用视图动画方法及1个OSD fade旧待证复核；闭正常调度、可选值和完成回调边界。",
+  "summary": {"reviewed": 5, "complete": 2, "gap": 0, "uncertain": 3},
+  "prior_inventory": "reports/replica/batch-completeness-round26.json",
+  "definite_product_differences": [],
+  "activities": {"product_source_edited": false, "ledger_edited": false, "compiled": false, "product_run": false, "tests_run": false, "wrapper_added": false},
+  "skipped_failed_addresses": ["Paste:0x100ac35f8", "Paste:0x100ac746c"],
+  "limitations": [
+    "complete只指有限静态合同，不是当前构建、动画时序/显示或整个窗口生命周期运行验收。",
+    "原escaping-closure检查与Actor诊断保待证；不把Swift源码非逃逸/@MainActor声明自动当作原固定错误分支证明。",
+    "不改台账或迁移计数。"
+  ],
+  "functions": [
+    {
+      "function_id": "Paste:0x10021ccd4", "status": "complete",
+      "original": {"path": "decompiled/Paste/part-0184.c", "line": 2050},
+      "source_references": [{"path": "replica/Sources/PastoCore/OriginalViewAnimation.swift", "symbol": "f_10021ccd4"}],
+      "evidence": "原直接CAMediaTimingFunction.functionWithName(kCAMediaTimingFunctionEaseOut)，返回该对象，没有自定义Bezier/缓存/额外参数或分支。当前CAMediaTimingFunction(name:.easeOut)保同一SDK工厂语义及非可选类型。",
+      "actual_consumer": "OriginalSearchInputView.f042b50显示/隐藏clear按钮均调用此getter，把结果交f21cadc。"
+    },
+    {
+      "function_id": "Paste:0x10021ce98", "status": "complete",
+      "original": {"path": "decompiled/Paste/part-0184.c", "line": 2184},
+      "source_references": [{"path": "replica/Sources/PastoCore/OriginalViewAnimation.swift", "symbol": "f_10021ce98"}],
+      "evidence": "原从捕获上下文读取可选completion，nil不动、存在调用一次，无额外动作或参数。当前显式可选closure参数completion?()承接同一输入/输出和分支，捕获上下文私有字段由Swift保存，不新增异步排队。",
+      "actual_consumer": "f21cadc真实NSAnimationContext completionHandler调用；clear隐藏完成通过本方法继续进入weak InputView f042dfc。"
+    },
+    {
+      "function_id": "Paste:0x10021cd10", "status": "uncertain",
+      "original": {"path": "decompiled/Paste/part-0184.c", "line": 2069},
+      "source_references": [{"path": "replica/Sources/PastoCore/OriginalViewAnimation.swift", "symbol": "f_10021cd10"}],
+      "evidence": "原duration Optional判别为1时不setDuration，存在时先setDuration；随后可空timingFunction原样写入、allowsImplicitAnimation=true，最后调用animations一次。当前同序全部业务分支一致，没有nil时清duration或跳过timingFunction。但原先执行Actor检查及PasteUI/NSView+Animation.swift行0x1c错误报告，当前未独立证明该诊断路径，完整父保待证。",
+      "actual_consumer": "f21cadc的实际动画组闭包调用，原f208b84捕获字段转交顺序已读（part-0171.c:1370）；非未消费辅助体。"
+    },
+    {
+      "function_id": "Paste:0x10021cadc", "status": "uncertain",
+      "original": {"path": "decompiled/Paste/part-0184.c", "line": 1965},
+      "source_references": [{"path": "replica/Sources/PastoCore/OriginalViewAnimation.swift", "symbol": "f_10021cadc"}],
+      "evidence": "原animated=false同步animations再可选completion，无动画组；true构造捕获，把duration/timing/animations交f21cd10，把completion交f21ce98，调用NSAnimationContext.runAnimationGroup。当前全部正常分支/顺序一致。原true尾还执行_swift_isEscapingClosureAtFileLocation和条件brk，当前非逃逸参数转系统closure的生成检查未在本批证明，且配置回调Actor诊断未闭，不因正常路径相同判完整。",
+      "actual_consumer": "InputView.clear可见状态变化调用duration.12/easeOut/animatedtrue；真实animations和weak completion都通过本组实现。"
+    },
+    {
+      "function_id": "Paste:0x100236e48", "status": "uncertain",
+      "previous_review": "reports/replica/batch-window-completeness-7.json",
+      "original": {"path": "decompiled/Paste/part-0193.c", "line": 368},
+      "source_references": [{"path": "replica/Sources/Pasto/UI/ReplicaCopiedOSD.swift", "symbol": "NSAnimationContext.runAnimationGroup"}],
+      "evidence": "关闭旧报告的descriptor含义疑点：原0x38捕获对象+0x10=.5、+0x18=0，经f208b84明确传给f21cd10的duration值/Optional判别位，0表示duration存在，不是allowsImplicitAnimation=false；原配置体始终allowsImplicitAnimation=true，当前写true正确。原easeOut、alpha0、完成orderOut正常路径仍同。原fade自己的Actor诊断和尾逃逸检查尚未独立证明，故仍uncertain，不把局部疑点关闭提升整个父。",
+      "actual_consumer": "ReplicaCopiedOSD真实显示后asyncAfter回调调用当前fade，窗口由两闭包持有；没有把已展示窗口对象换成空包装。"
+    }
+  ]
+}

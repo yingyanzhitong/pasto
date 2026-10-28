@@ -1,0 +1,173 @@
+{
+  "kind": "batch-window-completeness-44",
+  "scope": "4项已有快捷键注册字典与manager析构方法，核完整成功C、必要ARM及实际注册/注销消费者。",
+  "summary": {
+    "reviewed": 4,
+    "complete": 2,
+    "gap": 0,
+    "uncertain": 2
+  },
+  "activities": {
+    "product_source_edited": false,
+    "ledger_edited": false,
+    "compiled": false,
+    "product_run": false,
+    "tests_run": false,
+    "wrapper_added": false
+  },
+  "skipped_failed_addresses": [
+    "Paste:0x100ac35f8",
+    "Paste:0x100ac746c"
+  ],
+  "limitations": [
+    "字典完整指有效OriginalShortcutValue与registration引用的Swift值语义，不承诺内部桶布局、容量和Hashable损坏输入的机器ABI。",
+    "析构确实存在不代表所有释放时点已证明，不能用当前自动ARC替代逐地址完整body的证据。",
+    "不修改台账或产品，历史build不作为本轮构建，2/4只是局部分类而非整体迁移率。"
+  ],
+  "functions": [
+    {
+      "function_id": "Paste:0x1001eb160",
+      "status": "complete",
+      "evidence": "完整原C按完整(keyCode,modifier)查找，缺项返回0且不变；命中时按唯一引用性做COW，取出原registration引用、移除桶并将新字典写回，返回该对象。当前registrations.removeValue(forKey:shortcut)具同Swift Dictionary值语义和Optional引用返回，不提前销毁返回值，不按keyCode或Carbon ID单独匹配。OriginalShortcutValue仅两个值字段且合成Equatable/Hashable，原有效键域未缩小。",
+      "actual_consumer": "manager.f1eae90在lock内实际调用，得到可选removed后先unlock，再读取identifier/写注销日志并延长对象寿命，最终释放触发registration注销。",
+      "original": {
+        "path": "decompiled/Paste/part-0157.c",
+        "line": 1800
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalGlobalShortcutMonitor.swift",
+          "symbol": "f_1001eb160"
+        }
+      ],
+      "historical_evidence": {
+        "path": "reports/function-migration/Paste-0x1001eb160.json",
+        "sha256": "7346dc6a5c15bd453d1085f05874453d79359e8bb87bfe2ffedd6388db635b19",
+        "contract": "按完整快捷键值查找并移除字典项，缺失返回nil，存在返回原注册对象并保持其他值语义副本不变。",
+        "historical_build_snapshot": "reports/replica/dev52-static-build78.json",
+        "current_build_claim": false
+      },
+      "source_binding": {
+        "replica/Sources/PastoCore/OriginalGlobalShortcutMonitor.swift": {
+          "sha256": "277dc405a3e660b36ec808e301ccfa3fa48568c8291295e02dafe84e595325b4",
+          "historical_sha256": "277dc405a3e660b36ec808e301ccfa3fa48568c8291295e02dafe84e595325b4",
+          "unchanged": true
+        }
+      }
+    },
+    {
+      "function_id": "Paste:0x1001eb1e4",
+      "status": "complete",
+      "evidence": "完整原C按完整快捷键查找，必要扩容/COW；存在时原位替换并release旧registration，不存在时写完整双字段key和新对象、计数加一。当前Dictionary下标赋值保相同强引用替换/新增和Swift值语义，其他键不变。原count溢出和hash不稳定trap对应容器自身有效域检查；当前固定不可变值键没有用户自定义Hashable回调，未以空壳替换实际存储。",
+      "actual_consumer": "manager.f1eaa64仅registration.status==noErr时在lock内调用，然后unlock并记录注册；失败不插入。registration字典真实持有Carbon handle对象，后续事件查找与注销消费它。",
+      "original": {
+        "path": "decompiled/Paste/part-0157.c",
+        "line": 1830
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalGlobalShortcutMonitor.swift",
+          "symbol": "f_1001eb1e4"
+        }
+      ],
+      "historical_evidence": {
+        "path": "reports/function-migration/Paste-0x1001eb1e4.json",
+        "sha256": "bbd47a88428d3d79fef61b351e83ee3824ac39636fda56d229702616b607019c",
+        "contract": "在注册字典按完整快捷键写入注册对象；存在时替换并释放旧值，缺失时插入，必要扩容/COW保留其他元素。",
+        "historical_build_snapshot": "reports/replica/dev52-static-build78.json",
+        "current_build_claim": false
+      },
+      "source_binding": {
+        "replica/Sources/PastoCore/OriginalGlobalShortcutMonitor.swift": {
+          "sha256": "277dc405a3e660b36ec808e301ccfa3fa48568c8291295e02dafe84e595325b4",
+          "historical_sha256": "277dc405a3e660b36ec808e301ccfa3fa48568c8291295e02dafe84e595325b4",
+          "unchanged": true
+        }
+      }
+    },
+    {
+      "function_id": "Paste:0x1001ea9b0",
+      "status": "uncertain",
+      "evidence": "正常清理已接：当前manager.deinit调用helper，非nil handler才RemoveEventHandler。原完整ARM还在该body中顺序release slot18的NSLock、bridge-release slot20的registrations、release slot28的DI依赖，最后x0=self返回而不dealloc。当前私有helper只RemoveEventHandler和清nil，其余stored fields依赖Swift析构尾自动释放；源码可证明对象最终释放，不能独立证明该原非dealloc body的释放归属、准确顺序和返回边界均保留。保待证，不声称日常卸载handler失效。",
+      "original_arm_static_evidence": {
+        "path": ".local/paste-arm64-static.bin",
+        "start": "0x1001ea9b0",
+        "end_exclusive": "0x1001eaa04",
+        "field_releases": [
+          "0x1001ea9dc..0x1001ea9e0: slot18",
+          "0x1001ea9e4..0x1001ea9e8: slot20",
+          "0x1001ea9ec..0x1001ea9f0: slot28"
+        ]
+      },
+      "actual_consumer": "OriginalGlobalShortcutMonitor.deinit真实调用f1ea9b0；GlobalHotKey.unregister移除单registration，manager本体由共享DI服务和持有它的适配器共同管理寿命。",
+      "original": {
+        "path": "decompiled/Paste/part-0157.c",
+        "line": 1470
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalGlobalShortcutMonitor.swift",
+          "symbol": "deinit { f_1001ea9b0() }"
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalGlobalShortcutMonitor.swift",
+          "symbol": "private func f_1001ea9b0()"
+        }
+      ],
+      "historical_evidence": {
+        "path": "reports/function-migration/Paste-0x1001ea9b0.json",
+        "sha256": "03781871670c66af50372a2b4b44cca4c068caef702553eaecdf47c80b1c16ef",
+        "contract": "manager析构：可选RemoveEventHandler后，释放NSLock、注册字典和DI诊断依赖。",
+        "historical_build_snapshot": "reports/replica/dev52-static-build78.json",
+        "current_build_claim": false
+      },
+      "source_binding": {
+        "replica/Sources/PastoCore/OriginalGlobalShortcutMonitor.swift": {
+          "sha256": "277dc405a3e660b36ec808e301ccfa3fa48568c8291295e02dafe84e595325b4",
+          "historical_sha256": "277dc405a3e660b36ec808e301ccfa3fa48568c8291295e02dafe84e595325b4",
+          "unchanged": true
+        }
+      }
+    },
+    {
+      "function_id": "Paste:0x1001eaa04",
+      "status": "uncertain",
+      "evidence": "完整原ARM是可选RemoveEventHandler→释放NSLock→释放registrations→释放DI依赖→按size48/alignment7 dealloc。当前deinit加自动ARC可表达移除handler和最终释放所有stored fields，实际类布局不同不单独判业务失败；但本轮没有当前生成析构体边界，无法确认释放顺序和外部registration/action析构效应的准确时点，不能直接复用旧migrated为该完整地址证明。",
+      "original_arm_static_evidence": {
+        "path": ".local/paste-arm64-static.bin",
+        "start": "0x1001eaa04",
+        "end_exclusive": "0x1001eaa64",
+        "deallocation": "0x1001eaa48..0x1001eaa54"
+      },
+      "actual_consumer": "映射到真实OriginalGlobalShortcutMonitor类的Swift deinit及其stored-field释放，不新增手动dealloc或未消费wrapper；当前共享实例的实际销毁时点未运行验证。",
+      "original": {
+        "path": "decompiled/Paste/part-0157.c",
+        "line": 1491
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalGlobalShortcutMonitor.swift",
+          "symbol": "class OriginalGlobalShortcutMonitor"
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalGlobalShortcutMonitor.swift",
+          "symbol": "deinit { f_1001ea9b0() }"
+        }
+      ],
+      "historical_evidence": {
+        "path": "reports/function-migration/Paste-0x1001eaa04.json",
+        "sha256": "2c070dad118cf146ce21462441182b4a47150bec62b2472f18d8c459337f3542",
+        "contract": "manager销毁并释放对象：可选RemoveEventHandler，再释放锁、注册字典和DI依赖，最后按当前类实际布局deallocClassInstance。",
+        "historical_build_snapshot": "reports/replica/dev52-static-build78.json",
+        "current_build_claim": false
+      },
+      "source_binding": {
+        "replica/Sources/PastoCore/OriginalGlobalShortcutMonitor.swift": {
+          "sha256": "277dc405a3e660b36ec808e301ccfa3fa48568c8291295e02dafe84e595325b4",
+          "historical_sha256": "277dc405a3e660b36ec808e301ccfa3fa48568c8291295e02dafe84e595325b4",
+          "unchanged": true
+        }
+      }
+    }
+  ]
+}

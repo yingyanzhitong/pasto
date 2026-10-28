@@ -10,6 +10,12 @@ public final class OriginalPasteboardItem: NSObject, Codable, NSSecureCoding {
 
     public override init() { super.init() }
 
+    init(types: [String], dataByType: [String: Data]) {
+        orderedTypes = types
+        self.dataByType = dataByType
+        super.init()
+    }
+
     public static var supportsSecureCoding: Bool { f_10037f314() }
     public static func f_10037f314() -> Bool { true }
 

@@ -1,0 +1,51 @@
+{
+  "kind": "batch-window-completeness-16",
+  "scope": "只读核5个搜索相对日期范围方法；均不在round15聚合已审地址中。",
+  "summary": {"reviewed": 5, "complete": 5, "gap": 0, "uncertain": 0, "new_to_round15": 5},
+  "prior_inventory": "reports/replica/batch-completeness-round15.json",
+  "definite_product_differences": [],
+  "activities": {"product_source_edited": false, "ledger_edited": false, "compiled": false, "product_run": false, "tests_run": false, "wrapper_added": false},
+  "skipped_failed_addresses": ["Paste:0x100ac35f8", "Paste:0x100ac746c"],
+  "limitations": [
+    "完整为有限日历/范围计算静态合同，不是当前构建、跨时区/DST运行验收或整个日期搜索功能完成。",
+    "依原读取Calendar.current，不改为固定Gregorian、固定周一、86400秒加减或缓存整组单一日历。",
+    "Swift保存原可选日期强解包与严格start<end前置条件；不声称原私有Date/Range ABI和优化ARC同构，不修改台账数量。"
+  ],
+  "functions": [
+    {
+      "function_id": "Paste:0x1002d7694", "status": "complete",
+      "original": {"path": "decompiled/Paste/part-0236.c", "line": 775},
+      "source_references": [{"path": "replica/Sources/PastoCore/OriginalSearchDateRanges.swift", "symbol": "f_1002d7694"}],
+      "evidence": "先当前日历、Date()、startOfDay得到下界；再次当前日历以day+1及非wrapping计算上界，nil终止；必须下界严格小于上界否则终止。当前表达式和独立range辅助恢复相同顺序、两次日历读取、强解包、半开Range，没有固定24小时近似。",
+      "actual_consumer": "f2d8ce0第一项Today实际调用；FilterBrowser日期section用该预设数组构造可选项，DateEncoding相对标题匹配也消费它。"
+    },
+    {
+      "function_id": "Paste:0x1002d7a14", "status": "complete",
+      "original": {"path": "decompiled/Paste/part-0236.c", "line": 902},
+      "source_references": [{"path": "replica/Sources/PastoCore/OriginalSearchDateRanges.swift", "symbol": "f_1002d7a14"}],
+      "evidence": "先当前日历当天startOfDay为上界，再次当前日历day-1强解包为下界；严格下界<上界并返回半开范围。当前没有按当前时刻减一天，也不把上界设昨日结束的闭区间；nil/非递增均不可继续。",
+      "actual_consumer": "f2d8ce0第二项Yesterday调用，经FilterBrowser及DateEncoding真实消费。"
+    },
+    {
+      "function_id": "Paste:0x1002d7db8", "status": "complete",
+      "original": {"path": "decompiled/Paste/part-0236.c", "line": 1037},
+      "source_references": [{"path": "replica/Sources/PastoCore/OriginalSearchDateRanges.swift", "symbol": "f_1002d7db8"}],
+      "evidence": "先Date()再当前日历，恰取calendar/yearForWeekOfYear/weekOfYear三个components；components.date强解包作下界，再当前日历day+7强解包作上界，严格递增半开范围。当前同三components与读取顺序，不擅自用year或固定周一/最近七天替代。",
+      "actual_consumer": "f2d8ce0第三项This week调用，经实际日期筛选选项及日期标题匹配消费。"
+    },
+    {
+      "function_id": "Paste:0x1002d8300", "status": "complete",
+      "original": {"path": "decompiled/Paste/part-0236.c", "line": 1236},
+      "source_references": [{"path": "replica/Sources/PastoCore/OriginalSearchDateRanges.swift", "symbol": "f_1002d8300"}],
+      "evidence": "先Date()，当前日历同三个周components形成本周起点并强解包为上界；再次当前日历用weekOfYear-1而非day-7求下界并强解包，严格递增返回半开范围。原Component明确来自weekOfYear导入槽，当前同一component及边界顺序，不按标题猜实现。",
+      "actual_consumer": "f2d8ce0第四项Last week调用，真实FilterBrowser选项和DateEncoding匹配使用。"
+    },
+    {
+      "function_id": "Paste:0x1002d8860", "status": "complete",
+      "original": {"path": "decompiled/Paste/part-0236.c", "line": 1433},
+      "source_references": [{"path": "replica/Sources/PastoCore/OriginalSearchDateRanges.swift", "symbol": "f_1002d8860"}],
+      "evidence": "当前日历当天startOfDay一次；再分别两次读当前日历，以同一天起点day-30求下界、day+1求上界，各自nil终止；下界严格小于上界后返回半开范围。原C明确-0x1e和+1，当前保包含今天及此前30日，不能按Last30days标题改-29，也不从已减30日起点再加1。",
+      "actual_consumer": "f2d8ce0第五项Last 30 days调用；真实UI日期选项和DateEncoding预设识别共用同一范围方法。"
+    }
+  ]
+}

@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "input_summary": "reports/replica/batch-completeness-round4.json",
+  "scope": "复核两项图像/OCR待证及三项已有图像footer、背景、布局方法；仅静态有限源码业务合同。",
+  "counts": { "total": 5, "resolved_previous": 2, "additional": 3, "complete": 5, "gap": 0, "uncertain": 0 },
+  "records": [
+    {
+      "function_id": "Paste:0x1002d576c",
+      "review_kind": "resolved",
+      "previous_status": "uncertain",
+      "status": "complete",
+      "original": { "path": "decompiled/Paste/part-0235.c", "address_range": "0x1002d576c..0x1002d5ed0" },
+      "arm_evidence": ".local/batch5-ocr-2d576c-arm64.txt",
+      "current_implementations": [ { "path": "replica/Sources/PastoCore/OCR.swift", "symbol": "f_1002d576c" } ],
+      "criterion": "原ARM 2d5bf0把x24作为下次搜索起点；2d5c04取[cursor,end) substring，2d5c7c以options0、nil Locale找词，2d5c84/c88保存lower/upper，upper留x24供下轮，故重复词前向匹配。可选range缺失2d5cb4跳5e04退出该观察余词。2d5cc4调用boundingBox，错误x21非nil走5ccc释放错误、5ce0置nilbox；成功但nilbox也走5ce8。这些路径仍读置信度并在5d54..68保存word、Float、CGRect?。当前try? bbox及cursor=range.upperBound对应全部路径。空观察、无候选、空token的原C和当前分支亦相同。",
+      "actual_consumer": "f2d4830生成document.words，Store保存后由实际搜索索引词数组投影消费。",
+      "limitations": "只判词值、顺序、范围推进和可选位置合同；未执行Vision或样本，不证明所有语言的识别质量。"
+    },
+    {
+      "function_id": "Paste:0x100207054",
+      "review_kind": "resolved",
+      "previous_status": "uncertain",
+      "status": "complete",
+      "original": { "path": "decompiled/Paste/part-0171.c", "address_range": "0x100207054..0x10020729c" },
+      "arm_evidence": ".local/batch5-image-207054-arm64.txt",
+      "current_implementations": [ { "path": "replica/Sources/Pasto/UI/ReplicaImagePreviewContent.swift", "symbol": "static func f_100207054" } ],
+      "criterion": "2070a4先保存原size到v8/v9供绘制源rect；2070b4保存原height到v12，2070c0保存原width到v11，2070d4/d8明确以(height,width)创建画布。207078..9c按角度乘pi后除180；20711c/128新中心平移，20715c旋转，再207174..1a8原width/height负半平移。207234 concat CTM；207240..264源(0,0,v8,v9)、copy1、fraction1绘图，unlock后返回新图。当前始终交换画布、保存原size、两个可空currentContext及操作顺序一致，补清原C向量槽缺失。",
+      "actual_consumer": "ReplicaImagePreviewContent.rotateDisplayedImage由左右旋转按钮及Undo反向动作调用并设置当前显示图像。",
+      "limitations": "不升级原旋转配置字典、VM任务取消或Undo管理器父链；未比较运行时栅格质量。"
+    },
+    {
+      "function_id": "Paste:0x1003e45f8",
+      "review_kind": "additional",
+      "status": "complete",
+      "original": { "path": "decompiled/Paste/part-0310.c", "address_range": "0x1003e45f8..0x1003e48f4" },
+      "current_implementations": [ { "path": "replica/Sources/Pasto/UI/ReplicaImagePreviewContent.swift", "symbol": "ReplicaImageDimensionsView.init(image:)" } ],
+      "criterion": "零frame NSStackView；一次image.size读取，两通道向零Int转换并保非有限和越界trap，以空格乘号空格连接。原body字体f1ff928，动态色f1fe19c至f1fec34明确黑alpha0.5、白alpha0.55；当前复用同字体和色resolver。label不可编辑、选中、边框或背景，随后加入横向hugging和compression均250的空spacer，当前所有构造副作用一致。",
+      "supporting_evidence": [ "decompiled/Paste/part-0167.c:664 f1fec34", "replica/Sources/PastoCore/OriginalToolbarButton.swift:OriginalToolbarAppearance.secondaryForeground", "replica/Sources/PastoCore/OriginalSearchAppearance.swift:f_1001ff928" ],
+      "actual_consumer": "ReplicaImagePreviewContent.updateMetadataAndCommitState以当前有效图像实际创建metadata footer。",
+      "limitations": "不升级原ImageItemContentView、VM和整体footer替换父方法。"
+    },
+    {
+      "function_id": "Paste:0x1003e57b8",
+      "review_kind": "additional",
+      "status": "complete",
+      "original": { "path": "decompiled/Paste/part-0310.c", "address_range": "0x1003e57b8..0x1003e5978" },
+      "arm_evidence": ".local/image-dev8-checkerboard-arm64.txt",
+      "current_implementations": [ { "path": "replica/Sources/Pasto/UI/ReplicaImagePreviewContent.swift", "symbol": "private func f_1003e57b8()" } ],
+      "criterion": "原先checkerboard后zoom，两次共同DirectionalEdgeInsetsZero四边约束再拼接；已有ARM 3e580c..5844及3e5868..58a4确认两组相同四个inset值，父均为实际content。当前同顺序八条top/leading零、bottom/trailing负零约束，constructor真实activate；不是仅声明未消费数组。",
+      "supporting_evidence": [ ".local/image-dev8-audit.json", ".local/image-edit-next-checkerboard-preparation.json" ],
+      "actual_consumer": "ReplicaImagePreviewContent.init的NSLayoutConstraint.activate(f_1003e57b8())实际布局checkerboard与zoomView。",
+      "limitations": "不升级content构造器的VM、编辑配置、任务生命周期。"
+    },
+    {
+      "function_id": "Paste:0x1001fdae8",
+      "review_kind": "additional",
+      "status": "complete",
+      "original": { "path": "decompiled/Paste/part-0166.c", "address_range": "0x1001fdae8..0x1001fdd28" },
+      "arm_evidence": ".local/image-dev8-checkerboard-arm64.txt",
+      "current_implementations": [ { "path": "replica/Sources/Pasto/UI/OriginalImageCheckerboardView.swift", "symbol": "private func f_1001fdae8()" }, { "path": "replica/Sources/PastoCore/OriginalLayerBackedView.swift", "symbol": "f_1002359f4" } ],
+      "criterion": "先super.layout，按8乘8格生成16乘16 pattern，共享动态色黑白alpha均0.05；保存背景后在effectiveAppearance刷新layer background和border，最后可空layer gravity设resizeAspectFill。当前layout到f1fdae8、borderAndHover、pattern及backgroundColor setter到f2359f4到f236188为同一真实链。原不可逃逸检查对应Swift非逃逸闭包保证，本轮只确认可调用业务，不主张原编译器闭包ABI或诊断文本相同。",
+      "supporting_evidence": [ ".local/image-edit-next-checkerboard-preparation.json", "replica/Sources/PastoCore/OriginalToolbarButton.swift:OriginalToolbarAppearance.borderAndHover" ],
+      "actual_consumer": "ReplicaImagePreviewContent持有checkerboard作为实际zoom背景，系统layout调用该方法。",
+      "limitations": "不证明像素截图或窗口合成等价，不升级上游完整图片预览。"
+    }
+  ],
+  "static_disassembly": {
+    "input": ".local/paste-arm64-static.bin",
+    "tool": "/Library/Developer/CommandLineTools/usr/bin/llvm-objdump",
+    "ranges": [ "0x100207054..<0x1002072a0", "0x1002d576c..<0x1002d5ed4" ],
+    "note": "只读取指定成功函数原始机器码；最近符号标签不作为函数地址归属证明。"
+  },
+  "actions": { "product_source_modified": false, "ledger_modified": false, "compiled": false, "parsed": false, "tested": false, "product_executed": false, "mcp_executed": false, "static_disassembly_read": true, "engine_redecompile_executed": false },
+  "skipped_failed_addresses": [ "0x100ac35f8", "0x100ac746c" ],
+  "limitations": [ "未修改旧报告、批量汇总或台账。", "未生成或绑定新构建，不将历史差分用例冒充当前测试。", "complete只限所列原方法的业务分支、值和副作用，不是整个图像/OCR功能一比一验收。" ]
+}

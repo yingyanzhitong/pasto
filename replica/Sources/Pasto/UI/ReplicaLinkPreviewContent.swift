@@ -100,13 +100,15 @@ final class ReplicaLinkPreviewContent: NSView, OriginalPreviewEditableContent, N
     private func updateCanCommit() { onCanCommitEditing?(Self.normalizedURL(textView.string) != nil) }
 
     private func currentURL() -> URL? {
-        state?.store.items.first(where: { $0.id == itemID }).flatMap(Self.itemURL)
+        state?.store.items.first(where: { $0.id == itemID }).map(Self.itemURL)
     }
 
-    private static func itemURL(_ item: ClipboardItem) -> URL? {
-        // The original VM requires canonical link metadata and traps if it is absent.
-        // This optional UI adapter leaves missing metadata empty rather than rebuilding it from payloads.
-        item.decodedLinkPreviewMetadata?.url
+    private static func itemURL(_ item: ClipboardItem) -> URL {
+        // Paste f_1003bf65c traps when canonical metadata is absent or is not a link.
+        guard let metadata = item.decodedLinkPreviewMetadata else {
+            preconditionFailure("Link preview requires canonical link metadata")
+        }
+        return metadata.url
     }
 
     private func updateMetadata(_ url: URL?) {

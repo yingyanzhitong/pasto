@@ -1,0 +1,48 @@
+{
+  "review_kind": "read_only_native_drag_pasteboard_provider_contracts",
+  "scope": "round10未覆盖的两个原生拖拽数据提供方法；只核已存在实现，不新增包装或迁移计数。",
+  "counts": { "reviewed": 2, "complete": 1, "gap": 0, "uncertain": 1, "new_migrations_claimed": 0 },
+  "inputs": {
+    "original_success_index": "reports/Paste/function-index.json",
+    "original_success_c": "decompiled/Paste/part-0300.c",
+    "existing_original_arm_proof": ".local/pasteboard-native-drag-writer-closure.json",
+    "current_sources": [
+      "replica/Sources/PastoCore/OriginalNativeDragPasteboardWriter.swift",
+      "replica/Sources/PastoCore/OriginalPasteboard.swift",
+      "replica/Sources/Pasto/UI/ReplicaNativeCardCollection.swift"
+    ]
+  },
+  "functions": [
+    {
+      "function_id": "Paste:0x1003ca700",
+      "status": "complete",
+      "original_path": "decompiled/Paste/part-0300.c",
+      "original_line": 2145,
+      "current_path": "replica/Sources/PastoCore/OriginalNativeDragPasteboardWriter.swift",
+      "current_symbol": "OriginalNativeDragPasteboardWriter.writableTypes(for:)",
+      "criterion": "原逐个读取持有的PasteboardItem.types，按外层表示顺序及内层types顺序拼接，再追加一次com.wiheads.paste.item-id。空group也返回该私有类型；重复类型包括输入已有的同名私有类型均不去重；与dataByType是否存在数据无关。当前flatMap每个f37da6c()的orderedTypes再append同一私有类型，保持全部顺序、空与重复边界。传入pasteboard不参与算法，当前也未查询或写入它。",
+      "original_arm_evidence": "既有完整body1003ca700..1003ca9c0，704B，sha256=13f865a90bae226eccb63c348d853776d3b297bb8447a101d46611ee087c4621；既有f3ca118常量证据定位字符串100da5130，长度25。本轮重读完整成功C及当前真实实现，未重新计算机器摘要。",
+      "consumer": "ReplicaNativeCardCollection.beginNativeDrag实际从ordered selected→dragPasteboardGroups→writers创建本类并传NSDraggingItem；本地重排情形的ReplicaNativeLocalDragWriter.writableTypes先委托此方法，再另追加Pasto本地marker，不替换或排序本方法输出。",
+      "boundary": "完整指独立types返回方法，不包括原writer的实体identity、拖拽父处理器、CoreData异常或Objective-C桥接入口机器ABI；本轮未核当前编译产物。"
+    },
+    {
+      "function_id": "Paste:0x1003ca374",
+      "status": "uncertain",
+      "original_path": "decompiled/Paste/part-0300.c",
+      "original_line": 1989,
+      "current_path": "replica/Sources/PastoCore/OriginalNativeDragPasteboardWriter.swift",
+      "current_symbol": "OriginalNativeDragPasteboardWriter.pasteboardPropertyList(forType:)",
+      "criterion": "普通类型的全部值分支吻合：按group顺序直接查每个dataByType，首个存在的Data立即返回，空Data仍命中，不要求该key出现在types中；所有字典缺key才nil。当前for循环f37d810正是字典直接查找，不经types过滤，也无文件/文本额外回退。ownID类型优先于任何表示数据，原返回所持item.identifier，当前返回强持source.pasteboardIdentifier。",
+      "original_arm_evidence": "既有完整body1003ca374..1003ca608，原成功C有identifier Objective-C getter及Data/String两种返回动态类型；本轮不依据C注入后的ARC省略推定原对象生命周期完整。",
+      "consumer": "同一beginNativeDrag真实消费，local marker装饰层只拦截Pasto专用marker，其余委托本方法。当前ReplicaNativeDragItemReference强持ClipboardItem值快照，pasteboardIdentifier由item.id.uuidString计算；Core协议本身每次请求都会调用getter。",
+      "unresolved": "原ownID分支每次读取持有的ItemEntity.identifier，当前实际生产source是ClipboardItem值快照。UUID字符串普通路径可对应，但原identifier的nil/异常/实体生命周期可观察域和当前非可选UUID getter之间尚未有完整证据闭合。不能把协议允许动态getter当成实际CoreData数据读取已迁移，也不因仅数组Data分支吻合就签整个函数完整。尚未证明普通拖拽出现具体用户可见错误，因此保持uncertain而非gap。"
+    }
+  ],
+  "limits": [
+    "只新增本独立报告，未修改产品源码、台账或用户数据。",
+    "未编译、parse、运行产品、功能/MCP测试或验证脚本；未发布。",
+    "已有静态ARM文件仅作原函数证据引用，其中历史源码/旧build摘要不当成当前构建绑定。",
+    "不把一个独立方法完整升级为整个native拖拽或仓库链完整；不将本批1/2比例冒充全项目函数迁移百分比。全项目分母与去重计数由主智能体汇总，本批新增迁移0。",
+    "指定失败地址0x100ac35f8、0x100ac746c均跳过，未读取。"
+  ]
+}

@@ -1,0 +1,86 @@
+{
+  "schema_version": 1,
+  "kind": "static_code_migration",
+  "functions": [
+    {
+      "function_id": "Paste:0x100010984",
+      "state": "migrated",
+      "contract": "query nil/empty或无匹配返回整串primary色的NSAttributedString；有有序匹配则逐段追加secondary间隔、primary匹配及secondary尾部，返回NSMutableAttributedString，不添加其它属性。",
+      "implementations": [
+        {
+          "path": "replica/Sources/Pasto/UI/OriginalSuggestionAttributedTitle.swift",
+          "symbol": "static func f_100010984"
+        }
+      ],
+      "source": {
+        "path": "decompiled/Paste/part-0007.c",
+        "line": 199
+      },
+      "review": "从原成功完整体恢复独立标题组装，原nil/空/无匹配fallback及可变/不可变返回分支全部保留，真实建议行布局样式实际调用；匹配复用已完成f2f5748。",
+      "remaining": "此富文本值方法完整，Row Invalidating/actor/构造与全菜单父不升级。"
+    },
+    {
+      "function_id": "Paste:0x1003c7c4c",
+      "state": "migrated",
+      "contract": "输入任意NSImage与目标宽高；无bestRepresentation/bitmap/context返回nil；尺寸按原target<rep选取、Int转换/width*4保trap；设备RGB四通道位图，save/set current/draw原目标rect/flush/restore后返回。",
+      "implementations": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSourceApplicationImageColor.swift",
+          "symbol": "public static func f_1003c7c4c"
+        }
+      ],
+      "source": {
+        "path": "decompiled/Paste/part-0299.c",
+        "line": 2539
+      },
+      "review": "将固定128私有方法恢复完整目标宽高API，真实prominent仍传128；读取原ARM ca8/cac与cf0/cf4的FCMP/FCSEL MI确认IEEE方向，避免Ghidra把NaN条件误译为反向<=。bitmap/context失败、两次size读取、目标绘制rect与Int/乘法失败均对应。",
+      "remaining": "此独立位图方法业务完整，不升级原NSImage ABI/上游取色父或全部图像流程。"
+    },
+    {
+      "function_id": "Paste:0x1003c7f84",
+      "state": "migrated",
+      "contract": "任意NSColor按饱和度一次、亮度两次、hue、alpha顺序读取；保原.96/.75/.4/.85及GT/HI/LE/LS浮点选择，构造calibratedHSB返回。",
+      "implementations": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSourceApplicationImageColor.swift",
+          "symbol": "public static func f_1003c7f84"
+        }
+      ],
+      "source": {
+        "path": "decompiled/Paste/part-0299.c",
+        "line": 2691
+      },
+      "review": "把既有完整数学从winner提为独立任意颜色方法并由真实prominent调用，未复制算法；原完整ARM fd8..8004条件独立复读，NaN域以原指令为准，非Ghidra关系重写。",
+      "remaining": "此颜色调整值合同完整，不升级原取色父及其它颜色方法。"
+    }
+  ],
+  "partial_updates": {
+    "Paste:0x1003e5dd4": {
+      "review": "真实图片提交移除原方法没有的canCommit拦截：直接可选image/state交现Store，保存按钮启用控制及finishEditing/错误策略保持；原下游f3bde74仅以image nil决定是否持久化。",
+      "remaining": "原VM取数/任务与同步Store、force reload/Undo及错误结束策略仍partial，不计完整。"
+    },
+    "Paste:0x100227cd4": {
+      "review": "mouseDown先真实visible-cell命中/clickCount<=2，否则super.mouseDown；有效分支再Ctrl→自身rightMouseDown，之后正常focus/选择/双击。不是先Ctrl全局转super.rightMouseDown。",
+      "remaining": "原super/SwiftUI菜单和完整事件/manager/DI父仍partial，不声称空白最终焦点已经运行等价。"
+    },
+    "Paste:0x10000f460": {
+      "review": "真实建议行updateSelectionAppearance改用完整f010984分段富文本标题构造，恢复无query/无匹配不可变返回和有匹配可变片段返回；布局/初始样式/选中状态消费者保持。",
+      "remaining": "独立标题组装已完整；原Invalidating对象/完整Row模型及actor父仍partial。",
+      "implementations": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchSuggestionsMenu.swift",
+          "symbol": "private func updateSelectionAppearance()"
+        }
+      ]
+    }
+  },
+  "original_arm_evidence": [
+    ".local/pasteboard-source-color-raster-peer.json",
+    ".local/source-image-raster-parameter-original-arm64.txt",
+    ".local/source-color-adjust-original-arm64.txt"
+  ],
+  "build_executed": false,
+  "tests_executed": false,
+  "equivalence_verified": false,
+  "limitations": "Only source migration/manual static comparison and static disassembly of the original binary. No compile, parse, product execution, tests, install, commit or release. Parent VM/DI/actor and historical source-evidence freshness remain separate."
+}

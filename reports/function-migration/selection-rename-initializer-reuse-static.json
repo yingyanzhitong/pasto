@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "kind": "static_code_migration",
+  "implementation_origin": "existing_reused",
+  "functions": [
+    {"function_id": "Paste:0x100218b08", "original": "decompiled/Paste/part-0182.c:1298", "machine_review": ".local/image-selection-return-original-static.txt", "source": "replica/Sources/PastoCore/OriginalSelectionAppearance.swift", "consumer": "PanelViews.selectionBackground", "branches": "sRGB failure continues with original; nonRGB returns original; genericGray success returns result; failure returns original"},
+    {"function_id": "Paste:0x1003c4b2c", "original": "decompiled/Paste/part-0299.c:182", "source": "replica/Sources/PastoCore/OriginalPinboardTitle.swift", "consumer": "renamePinboardFromTab and History tab title commit", "branches": "Empty input uses localized general.untitled; nonempty input preserved without trimming; caller writes returned value"},
+    {"function_id": "Paste:0x100087ffc", "original": "decompiled/Paste/part-0045.c:960", "source": "replica/Sources/PastoCore/OriginalPreviewWindows.swift", "consumer": "ReplicaUIController.previewRegistry", "branches": "Delegate to complete 0x100087ef0 and return object; preserve empty/nil defaults"}
+  ],
+  "build_executed": false,
+  "tests_executed": false,
+  "equivalence_verified": false,
+  "limitations": "Source-level methods only. No claim of original binary ABI, entire parent migration or runtime equivalence."
+}

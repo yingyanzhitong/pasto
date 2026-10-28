@@ -1,0 +1,131 @@
+{
+  "kind": "batch-window-completeness-35",
+  "scope": "3项已有快捷键validator与View/model工厂方法，核成功完整C、当前实现、惰性消费入口及历史证据。",
+  "summary": {
+    "reviewed": 3,
+    "complete": 3,
+    "gap": 0,
+    "uncertain": 0
+  },
+  "activities": {
+    "product_source_edited": false,
+    "ledger_edited": false,
+    "compiled": false,
+    "product_run": false,
+    "tests_run": false,
+    "wrapper_added": false
+  },
+  "skipped_failed_addresses": [
+    "Paste:0x100ac35f8",
+    "Paste:0x100ac746c"
+  ],
+  "limitations": [
+    "完整指有限构造与强引用/惰性合同，不是原Swift对象布局、全部DI或录制model父函数完整性。",
+    "原initializer无显式执行器错误分支，未凭当前MainActor直接推断其它带诊断方法已完整。",
+    "静态未变证据可复用，不将历史build声明当本轮构建；不增加台账完成数，3/3不是全项目迁移率。"
+  ],
+  "functions": [
+    {
+      "function_id": "Paste:0x1001e75e4",
+      "status": "complete",
+      "evidence": "完整成功C仅解析具体validator元数据f1ec904、分配对象并返回，无输入或分支，也不访问共享cache。当前OriginalShortcutValidatorService.f1e75e4每次直接创建新的无字段服务实例，不把工厂本身改成单例。具体服务共享由外层DI cache负责，未混入该独立工厂。",
+      "actual_consumer": "OriginalDependencyValues.f1f1e64将本工厂传入f1e7580及共享service cache，miss才分配；Recorder持有typed OriginalDependency，实际校验时解析并调用validate。",
+      "original": {
+        "path": "decompiled/Paste/part-0156.c",
+        "line": 791
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutDependencies.swift",
+          "symbol": "public static func f_1001e75e4()"
+        }
+      ],
+      "historical_evidence": {
+        "path": "reports/function-migration/Paste-0x1001e75e4.json",
+        "sha256": "f539a890293e13d30f9485274b9da1e70e0f23962e7edceda352ae8b7d113dd0",
+        "contract": "分配新的无字段validator服务实例并返回；每次factory调用返回独立强引用对象。",
+        "historical_build_snapshot": "reports/replica/dev52-static-build78.json",
+        "current_build_claim": false
+      },
+      "source_binding": {
+        "replica/Sources/PastoCore/OriginalShortcutDependencies.swift": {
+          "sha256": "73908ddfedcd38cb4f1f64a7a21d1499879bed195dfb13d70f1ebbbeb6ce5b51",
+          "historical_sha256": "73908ddfedcd38cb4f1f64a7a21d1499879bed195dfb13d70f1ebbbeb6ce5b51",
+          "unchanged": true
+        }
+      }
+    },
+    {
+      "function_id": "Paste:0x1001ec9ec",
+      "status": "complete",
+      "evidence": "完整原C复制输入Binding全部存储及tag到返回View和工厂capture，保存f1ecb80惰性工厂和未初始化StateObject标记；本body不读取wrappedValue、不创建model。当前View initializer保存_shortcut原Binding，并通过StateObject(wrappedValue:)的autoclosure包装Self.f1eca94(shortcut)，没有提前let求model或读取shortcut.wrappedValue；额外errorChanged/recordingChanged回调只保存，构造期间不调用。保持有限惰性和值/引用保有合同，不承诺原StateObject内部ABI。",
+      "actual_consumer": "ReplicaShortcutRecorder.body实际构造OriginalShortcutRecorderView；其f1ecbc4首次取model时才由SwiftUI StateObject求工厂，view后续更新沿同一StateObject身份消费。",
+      "original": {
+        "path": "decompiled/Paste/part-0158.c",
+        "line": 1294
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutRecorderView.swift",
+          "symbol": "public init(shortcut: Binding<OriginalShortcutValue?>",
+          "line": 10
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutRecorderView.swift",
+          "symbol": "_model = StateObject(wrappedValue: Self.f_1001eca94(shortcut))",
+          "line": 16
+        }
+      ],
+      "historical_evidence": {
+        "path": "reports/function-migration/Paste-0x1001ec9ec.json",
+        "sha256": "4fa70a7755c7d2bc51888aa71446bf00e2d8390312110714c295efcf64eb6eb7",
+        "contract": "构造录制View，保存完整可选快捷键Binding与惰性StateObject初始化工厂；不在View值初始化时读取绑定或创建model。",
+        "historical_build_snapshot": "reports/replica/dev52-static-build78.json",
+        "current_build_claim": false
+      },
+      "source_binding": {
+        "replica/Sources/PastoCore/OriginalShortcutRecorderView.swift": {
+          "sha256": "881691562e6378fbadd64502b3ec893c821a1e0a463f8b0c6a5ddbdef7dd6330",
+          "historical_sha256": "881691562e6378fbadd64502b3ec893c821a1e0a463f8b0c6a5ddbdef7dd6330",
+          "unchanged": true
+        }
+      }
+    },
+    {
+      "function_id": "Paste:0x1001eca94",
+      "status": "complete",
+      "evidence": "完整原C在工厂真正调用时才读取捕获Binding.wrappedValue，另强持同一完整Binding作为onDetect闭包上下文，并以读取的optional初值调用model initializer。当前Self.f1eca94同样读取shortcut.wrappedValue一次，创建OriginalShortcutRecorder并传入捕获原Binding、原样赋wrappedValue的closure；nil与some均传递，不增加拒绝/等值/过滤。目标model内部Published/DI初始化是其独立父合同，不借工厂一致宣称整个录制生命周期等价。",
+      "actual_consumer": "OriginalShortcutRecorderView.init由StateObject惰性持有本工厂；model保存onDetect，成功录制和清除分别回写some及nil，实际外部Binding可收到值。",
+      "original": {
+        "path": "decompiled/Paste/part-0158.c",
+        "line": 1342
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutRecorderView.swift",
+          "symbol": "public static func f_1001eca94(",
+          "line": 21
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutRecorderView.swift",
+          "symbol": "OriginalShortcutRecorder(shortcut: shortcut.wrappedValue)",
+          "line": 22
+        }
+      ],
+      "historical_evidence": {
+        "path": "reports/function-migration/Paste-0x1001eca94.json",
+        "sha256": "724c09314197d71ecd70f72cf9ba5be270d7551c38a03c5e6f918ed7ac310fb7",
+        "contract": "惰性model工厂读取Binding当前值，创建录制model并保存向同一Binding回写的onDetect闭包。",
+        "historical_build_snapshot": "reports/replica/dev52-static-build78.json",
+        "current_build_claim": false
+      },
+      "source_binding": {
+        "replica/Sources/PastoCore/OriginalShortcutRecorderView.swift": {
+          "sha256": "881691562e6378fbadd64502b3ec893c821a1e0a463f8b0c6a5ddbdef7dd6330",
+          "historical_sha256": "881691562e6378fbadd64502b3ec893c821a1e0a463f8b0c6a5ddbdef7dd6330",
+          "unchanged": true
+        }
+      }
+    }
+  ]
+}

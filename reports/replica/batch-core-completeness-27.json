@@ -1,0 +1,34 @@
+{
+  "review_kind": "read_only_local_checksum_lookup_boundary",
+  "counts": { "reviewed": 1, "complete": 0, "gap": 0, "uncertain": 1, "new_migrations_claimed": 0 },
+  "functions": [
+    {
+      "function_id": "Paste:0x1003214c8",
+      "status": "uncertain",
+      "original_path": "decompiled/Paste/part-0258.c",
+      "original_line": 84,
+      "current_paths": [
+        "replica/Sources/PastoCore/ClipboardStore.swift",
+        "replica/Sources/PastoCore/Pasteboard.swift",
+        "replica/Sources/PastoCore/OriginalPasteboardChecksums.swift"
+      ],
+      "current_symbol": "ClipboardStore.add的锁内重复项匹配及knownPasteboardChecksum(from:)",
+      "matching_value_path": "原对输入表示先f32362c分类，再f3216bc取可选checksum；无checksum返回nil，不构造查询；有值构造唯一checksum键值的字典并交f3c92b8/f328950仓库查找链。当前add实际计算内容checksum，并在mutate锁内匹配state.items：两边有效checksum时用字符串相等；创建时先查重复并复用已存在UUID，而不是无条件插入。",
+      "unresolved": "原由checksum谓词进入仓库查询，当前knownChecksum刻意排除unknown及files无有效路径域，无法计算时改用结构表示比较（部分legacy还含kind/plainText保护）。原查找链的完整取数范围、返回顺序/删除项/上下文条件未在本轮闭合，不能由checksum相等分支及普通重复行为匹配就称整方法完整；同样不能把当前结构回退冒原NSKeyedArchiver MD5等价。",
+      "consumer": "原真实本地f3611b0对非空输入调用本方法，返回nil走f360d9c新建，否则f360ff8更新命中对象；当前captureWithInsertionResult经add真实写入，已存在项目保留UUID。createIntentText另有未删除及目标board适配，不把它的过滤泛化成原本方法范围。",
+      "known_dependencies": "f3216bc归档分支的NSCoding键差异已在第13批登记为依赖缺口，本轮不重复增加独立缺陷数；这里继续保留原查找完整域未证。未修改或重新计算任何历史数据。"
+    }
+  ],
+  "not_counted_in_this_local_batch": [
+    {
+      "function_id": "Paste:0x1003215dc",
+      "reason": "读到其原直接调用处part-0284.c:2119，在CKRecord写checksum流程；本轮未证另一个本地生产consumer。该helper自身为raw Data→decode→classify/checksum，并非只凭邻近CloudKit调用就应整函数排除；暂不作为本地完整实现或新的gap计数，也不修改scope。"
+    }
+  ],
+  "limits": [
+    "只阅读成功原C与当前源码，新增本独立报告；未修改产品源码、台账或用户数据。",
+    "未编译、parse、运行产品、功能/MCP测试、验证脚本或发布；未核当前编译产物。",
+    "本批0/1完整不是项目总迁移率；主智能体汇总总分母及跨批去重，新增迁移0。",
+    "指定失败地址0x100ac35f8、0x100ac746c跳过，未读取。"
+  ]
+}

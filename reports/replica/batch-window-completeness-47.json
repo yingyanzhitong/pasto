@@ -1,0 +1,133 @@
+{
+  "kind": "batch-window-completeness-47",
+  "scope": "集中逐分支核对1个尚未覆盖的完整录制事件回调，不为数量扩查未读方法。",
+  "summary": {
+    "reviewed": 1,
+    "complete": 0,
+    "gap": 1,
+    "uncertain": 0
+  },
+  "activities": {
+    "product_source_edited": false,
+    "ledger_edited": false,
+    "compiled": false,
+    "product_run": false,
+    "tests_run": false,
+    "wrapper_added": false
+  },
+  "skipped_failed_addresses": [
+    "Paste:0x100ac35f8",
+    "Paste:0x100ac746c"
+  ],
+  "limitations": [
+    "gap按完整静态调用轨迹分类，未证明普通不可变NSEvent或当前系统版本会造成用户可见故障。",
+    "原Actor错误路径、跨方法本地化/DI诊断副作用仍待证，不因已有正常分支实现而提升整个回调。",
+    "不修改台账计数，0/1仅本批分类，不是项目迁移率；历史build不作为本轮构建。"
+  ],
+  "functions": [
+    {
+      "function_id": "Paste:0x1001f132c",
+      "status": "gap",
+      "evidence": "已读取part-0160.c完整原函数，含所有终止标签与失败分支，核当前Recorder及其实际local monitor closure。主要业务分支有生产实现，但完整getter/诊断轨迹存在差异，因此不复用历史migrated判完整。",
+      "branches": [
+        {
+          "branch": "weak owner与事件值",
+          "assessment": "原入口先显式MainActor检查及固定文件/行报告，再weakLoadStrong；无owner返回nil。当前monitor先weak self guard再调MainActor model方法，缺owner同nil，但原诊断时点未独立证明。原活owner先读event.modifierFlags再keyCode；当前f1e7d18先keyCode后modifierFlags，读序差异已由round30原ARM确认。两者均用0xff5f0000掩码。"
+        },
+        {
+          "branch": "无修饰Delete/forwardDelete",
+          "assessment": "当前及原版均先onDetect(nil)，后state=unassigned并移除monitor，最终吞事件nil；没有额外error清除。"
+        },
+        {
+          "branch": "无修饰Escape",
+          "assessment": "原及当前都toggle恢复previous状态并结束监听，返回nil；不把此录制器专用行为推广为面板Esc政策。"
+        },
+        {
+          "branch": "精确Cmd-W/Q",
+          "assessment": "固定ANSI表取w/q，只有精确Command匹配才unassigned并结束监听，同时返回原事件；当前没有以contains(command)放宽组合。未知字面表失败诊断属于既有f1e94d4差异，但生产w/q固定有效。"
+        },
+        {
+          "branch": "空键显示候选",
+          "assessment": "原及当前均保留previous，将当前完整key/modifier保存为recording candidate，吞事件；不提前执行validator。"
+        },
+        {
+          "branch": "修饰键非法",
+          "assessment": "原先resolve并释放validator，再按20功能键或Command/Control/Option门槛判断；失败beep且放行原事件。当前先一次_ = validator.resolve，再判已恢复的同谓词，失败beep和return event顺序对应。"
+        },
+        {
+          "branch": "冲突验证失败",
+          "assessment": "原合法后再次resolve，执行系统/菜单validator，错误时先toggle恢复previous及结束监听，再Published error并吞事件。当前同业务顺序；被调用validator本体此前已列的菜单读取/诊断适配差异不在此隐藏。"
+        },
+        {
+          "branch": "成功保存",
+          "assessment": "原及当前先调用onDetect(shortcut)，再发布assigned并移除monitor；不将两者反序，也没有成功时统一清旧error。"
+        },
+        {
+          "branch": "Option兼容警告",
+          "assessment": "值谓词一致：含Option且无Command/Control，major15且minor<2才赋optionKey警告。原仅modifier门槛成立时读取NSProcessInfo，major15后再次读取operatingSystemVersion检查minor；当前调用requiresOptionCompatibilityWarning之前无条件求version实参一次，所以任何成功快捷键都会先读version，且满足门槛时也复用同一快照。完整getter门控及次数不同，不能只凭版本值通常稳定判全体相同。"
+        }
+      ],
+      "actual_consumer": "OriginalShortcutRecorder.f1eff84实际注册keyDown与flagsChanged的本地monitor，其weak self closure直接调用此方法；真实Settings ReplicaShortcutRecorder→StateObject model的begin按钮启动监听，返回NSEvent?决定实际吞或放行。",
+      "related_static_evidence": [
+        "reports/replica/batch-window-completeness-30.json",
+        "reports/replica/batch-window-completeness-33.json",
+        "reports/replica/batch-window-completeness-38.json"
+      ],
+      "unresolved_boundary": "未独立证明当前生成闭包有相同固定原文件/行unexpectedExecutor诊断，未将此未知说成已经发生的用户问题。",
+      "original": {
+        "path": "decompiled/Paste/part-0160.c",
+        "line": 324
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutRecorder.swift",
+          "symbol": "f_1001f132c"
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutRecorder.swift",
+          "symbol": "let validate = validator.f_1000da768()"
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutRecorder.swift",
+          "symbol": "_ = validator.f_1000da768()"
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutDependencies.swift",
+          "symbol": "public func validate(_ shortcut: OriginalShortcutValue)"
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutRecorder.swift",
+          "symbol": "validationError = OriginalShortcutRecorderValidationError.optionKey"
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutValidation.swift",
+          "symbol": "public static func requiresOptionCompatibilityWarning"
+        }
+      ],
+      "historical_evidence": {
+        "path": "reports/function-migration/Paste-0x1001f132c.json",
+        "sha256": "4e0aa887c94f9c13da71875dd78bf8c8f14d0248c757b74335623ae9b39c4f25",
+        "contract": "录制回调完整分支：无修饰Delete清除/Escape取消；精确Cmd-W/Q经固定ANSI表匹配，结束录制为unassigned且放行；无显示键保存candidate；非法修饰beep且放行；validator失败恢复previous并发error；成功先onDetect后assigned；macOS15.0/15.1 Option-only提示。 非空显示键先resolve并释放validator，再判修饰键；合法后再次resolve并调用服务。",
+        "historical_build_snapshot": "reports/replica/dev52-static-build78.json",
+        "current_build_claim": false
+      },
+      "source_binding": {
+        "replica/Sources/PastoCore/OriginalShortcutRecorder.swift": {
+          "sha256": "ba907c942f91fe336506e9a47576051f285bfce47ccd43315cb111aedbd237f2",
+          "historical_sha256": "ba907c942f91fe336506e9a47576051f285bfce47ccd43315cb111aedbd237f2",
+          "unchanged": true
+        },
+        "replica/Sources/PastoCore/OriginalShortcutDependencies.swift": {
+          "sha256": "73908ddfedcd38cb4f1f64a7a21d1499879bed195dfb13d70f1ebbbeb6ce5b51",
+          "historical_sha256": "73908ddfedcd38cb4f1f64a7a21d1499879bed195dfb13d70f1ebbbeb6ce5b51",
+          "unchanged": true
+        },
+        "replica/Sources/PastoCore/OriginalShortcutValidation.swift": {
+          "sha256": "094cb536243bcfa19d37564a409c032728c4c5756e98b21b375858394ad2d5cc",
+          "historical_sha256": "094cb536243bcfa19d37564a409c032728c4c5756e98b21b375858394ad2d5cc",
+          "unchanged": true
+        }
+      }
+    }
+  ]
+}

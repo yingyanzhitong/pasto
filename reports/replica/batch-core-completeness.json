@@ -1,0 +1,153 @@
+{
+  "review_kind": "read_only_source_completeness_batch",
+  "selection": "function-map 中引用 OriginalPasteboard.swift 的既有 migrated 方法，选取 20 项简单剪贴板值方法及编码方法；不涉及 image/metadata 组。",
+  "inputs": {
+    "ledger": "replica/function-map.json",
+    "successful_original_index": "reports/Paste/function-index.json",
+    "current_source": "replica/Sources/PastoCore/OriginalPasteboard.swift"
+  },
+  "status_meaning": {
+    "complete": "本次已读成功原伪码与当前方法体，有限源码行为合同完整对应，可直接复用；不表示原机器 ABI、归档字节或运行结果已验证。",
+    "gap": "发现可具体指出的当前源码行为缺口。",
+    "uncertain": "本次原证据存在被删除或省略的关键部分，无法独立确认整项完整；不是已证源码缺陷，不自动降级台账。"
+  },
+  "counts": { "reviewed": 20, "complete": 18, "gap": 0, "uncertain": 2 },
+  "scope_limits": [
+    "仅源码与已有成功伪码阅读；未执行编译、parse、应用、功能或 MCP 测试，也未运行验证脚本。",
+    "未修改产品源码、台账或既有用户数据；仅新增本报告。",
+    "未重新核验二进制或旧构建摘要；不能将本报告作为当前构建绑定。",
+    "跳过用户指定失败地址 0x100ac35f8 与 0x100ac746c，未读取其函数体。",
+    "完整率仅指本批 20 项有限方法的 18/20（90%），不代表项目总体函数迁移率；没有新增迁移计数。",
+    "NSKeyedArchiver 的跨模块类名与字节级 MD5 等价不属于本批有限方法完成结论。"
+  ],
+  "production_paths": [
+    "Pasteboard.swift 捕获、恢复与 native drag 调用有序类型及数据 getter/setter；OriginalPasteboardWriter 使用 NSData getter 构建系统项。",
+    "OriginalPasteboardRestore 与 OriginalTextPreviewSubmission 消费文本构造及文本优先级 getter。",
+    "ClipboardStore 创建文本、编辑链接实际调用文本及 URL 工厂。",
+    "Pasteboard.swift 与 OriginalPasteboardDataCodec 通过 JSON/PropertyList Codable 解码原表示数组；OriginalPasteboardArchive/Checksums 使用 NSKeyedArchiver。"
+  ],
+  "functions": [
+    {
+      "function_id": "Paste:0x10037c4a8", "status": "complete",
+      "original_path": "decompiled/Paste/part-0282.c", "original_line": 138,
+      "current_symbol": "OriginalPasteboardItem.f_10037c4a8(_:forType:)",
+      "criterion": "原体严格 UTF8、allowLossy=false；无论编码结果均追加 type，some Data 覆盖、nil 删除 data 键。当前委托 f37d8c8 保留该顺序、重复类型及失败分支。"
+    },
+    {
+      "function_id": "Paste:0x10037c6d4", "status": "complete",
+      "original_path": "decompiled/Paste/part-0282.c", "original_line": 224,
+      "current_symbol": "OriginalPasteboardItem.f_10037c6d4(_:)",
+      "criterion": "两者新建空项，以 UTType.utf8PlainText.identifier 委托字符串 setter，然后返回该项；不拒绝空字符串，不增加其他格式。"
+    },
+    {
+      "function_id": "Paste:0x10037c7bc", "status": "complete",
+      "original_path": "decompiled/Paste/part-0282.c", "original_line": 258,
+      "current_symbol": "OriginalPasteboardItem.f_10037c7bc(_:title:)",
+      "criterion": "原体依序两次读取 URL.absoluteString 写 UTF8 plain 和 public.url；仅 title 为 some 才写 public.url-name，空 title 有效。当前调用、顺序和 optional 分支相同。"
+    },
+    {
+      "function_id": "Paste:0x10037c9a8", "status": "complete",
+      "original_path": "decompiled/Paste/part-0282.c", "original_line": 316,
+      "current_symbol": "OriginalPasteboardItem.f_10037c9a8()",
+      "criterion": "原体按 plainText、utf8PlainText、text、url 四项顺序严格 UTF8 解码；缺数据或解码 nil 继续，首个 some（包括空串）返回，全失败 nil。当前循环通过相同严格 getter 逐项实现。"
+    },
+    {
+      "function_id": "Paste:0x10037cc6c", "status": "complete",
+      "original_path": "decompiled/Paste/part-0282.c", "original_line": 435,
+      "current_symbol": "OriginalPasteboardItem.f_10037cc6c()",
+      "criterion": "读取 UTType.fileURL 的严格 UTF8；无字符串返回 nil，否则调用 URL(string:) 并保留可失败结果；当前没有额外 isFileURL、可达性或非空限制。"
+    },
+    {
+      "function_id": "Paste:0x10037d210", "status": "complete",
+      "original_path": "decompiled/Paste/part-0282.c", "original_line": 669,
+      "current_symbol": "OriginalPasteboardItem.f_10037d210()",
+      "criterion": "原体 public.url-name 数据字典查询后严格 UTF8；缺失/无效返回 nil，空数据解码空串。当前委托相同 f37e4b8，无 title 推导回退。"
+    },
+    {
+      "function_id": "Paste:0x10037d810", "status": "complete",
+      "original_path": "decompiled/Paste/part-0282.c", "original_line": 917,
+      "current_symbol": "OriginalPasteboardItem.f_10037d810(forType:)",
+      "criterion": "原体直接查询 dataByType，空字典/未命中 nil，命中原 Data；不检查 types 列表、不跳过空 Data。当前字典下标保持全部值分支。"
+    },
+    {
+      "function_id": "Paste:0x10037d8c8", "status": "complete",
+      "original_path": "decompiled/Paste/part-0282.c", "original_line": 960,
+      "current_symbol": "OriginalPasteboardItem.f_10037d8c8(_:forType:)",
+      "criterion": "先无条件追加有序 type，允许重复；some Data 覆盖 dataByType，nil 删除该键但不删除 types。当前 append 后 Dictionary optional 赋值正对应原两分支。"
+    },
+    {
+      "function_id": "Paste:0x10037da6c", "status": "complete",
+      "original_path": "decompiled/Paste/part-0282.c", "original_line": 1025,
+      "current_symbol": "OriginalPasteboardItem.f_10037da6c()",
+      "criterion": "原体 retain 并返回 types 的 Swift 数组值；当前返回 orderedTypes，同样依 Swift 值语义保顺序、重复与外部修改隔离，不暴露可变引用。"
+    },
+    {
+      "function_id": "Paste:0x10037dab0", "status": "complete",
+      "original_path": "decompiled/Paste/part-0282.c", "original_line": 1042,
+      "current_symbol": "OriginalPasteboardItem.f_10037dab0(_:)",
+      "criterion": "原体稳定压缩所有不等于目标的 types，随后独立删除 dataByType 键；空数组/无匹配仍执行字典删除。当前 removeAll 相等谓词再 removeValue，保非匹配相对顺序及重复删除。"
+    },
+    {
+      "function_id": "Paste:0x10037e4b8", "status": "complete",
+      "original_path": "decompiled/Paste/part-0282.c", "original_line": 1504,
+      "current_symbol": "OriginalPasteboardItem.f_10037e4b8(forType:)",
+      "criterion": "原体按指定键取 Data 后 String(data:encoding:utf8)；未命中 nil，无效编码 nil，空 Data 为空串。当前没有有损解码或其他编码回退。"
+    },
+    {
+      "function_id": "Paste:0x10037e5e0", "status": "complete",
+      "original_path": "decompiled/Paste/part-0282.c", "original_line": 1554,
+      "current_symbol": "OriginalPasteboardItem.f_10037e5e0(forType:)",
+      "criterion": "原体命中 Data 桥接 NSData，未命中返回 nil。当前 optional.map 桥接保持 nil 与零长度值的区别，未按 types 或内容过滤。"
+    },
+    {
+      "function_id": "Paste:0x10037df78", "status": "complete",
+      "original_path": "decompiled/Paste/part-0282.c", "original_line": 1324,
+      "current_symbol": "OriginalPasteboardItem.f_10037df78(to:)",
+      "criterion": "原体 keyed container 先 encode [String] types，错误时不执行 dataByType，成功才 encode [String:Data]。当前两个顺序 try 保相同错误传播与独立字段，不根据 types 裁剪字典。CodingKeys 字符串由本批另两项核对。"
+    },
+    {
+      "function_id": "Paste:0x10037e198", "status": "uncertain",
+      "original_path": "decompiled/Paste/part-0282.c", "original_line": 1392,
+      "current_symbol": "OriginalPasteboardItem.init(from:)",
+      "criterion": "原可见成功路径严格依序解码必需 types:[String]、dataByType:[String:Data] 后 super.init，当前相符；当前 throws 不返回半成品。",
+      "unresolved": "成功原伪码明确删除错误块 0x10037e384，剩余 C 在 decode 后混有错误寄存器失真。本轮没有完整该异常块机器证据，不能仅以当前 try 或旧 migrated 状态独立确认所有初始化失败清理分支；不据此判当前有缺陷。"
+    },
+    {
+      "function_id": "Paste:0x10037e498", "status": "complete",
+      "original_path": "decompiled/Paste/part-0282.c", "original_line": 1493,
+      "current_symbol": "OriginalPasteboardItem.encode(to:)",
+      "criterion": "原函数完整体仅调用 f37df78 后返回，没有其他操作或 catch；当前 try 委托同一已核 encoder，保正常返回和错误传播。"
+    },
+    {
+      "function_id": "Paste:0x10037f314", "status": "complete",
+      "original_path": "decompiled/Paste/part-0282.c", "original_line": 2055,
+      "current_symbol": "OriginalPasteboardItem.f_10037f314() / supportsSecureCoding",
+      "criterion": "原 supportsSecureCoding 全体恒返回 true；当前 helper 恒 true 且实际 NSSecureCoding 静态属性委托该方法。该有限布尔方法不等于归档类名完整等价。"
+    },
+    {
+      "function_id": "Paste:0x10037ddd8", "status": "complete",
+      "original_path": "decompiled/Paste/part-0282.c", "original_line": 1218,
+      "current_symbol": "OriginalPasteboardItem.CodingKeys.stringValue",
+      "criterion": "原合法 case0 返回小字符串 types、case1 返回 dataByType；当前私有 String raw-value CodingKeys 恰为这两个 case，实际 encoder/decoder 使用它。非法 enum bit pattern 非合法源码值域。"
+    },
+    {
+      "function_id": "Paste:0x10037de14", "status": "complete",
+      "original_path": "decompiled/Paste/part-0282.c", "original_line": 1243,
+      "current_symbol": "OriginalPasteboardItem.CodingKeys.init(stringValue:)",
+      "criterion": "原两次精确 Swift String 比较依次接受 types/dataByType，否则 optional none；当前 String CodingKey 合成构造接受完全相同两值，不 trim、不大小写归一或接受别名。"
+    },
+    {
+      "function_id": "Paste:0x10037dd00", "status": "complete",
+      "original_path": "decompiled/Paste/part-0282.c", "original_line": 1168,
+      "current_symbol": "OriginalPasteboardItem.init()",
+      "criterion": "原普通 Swift 初始化将 types 设空数组、dataByType 设空字典，然后 NSObject super.init；当前两个存储属性空默认值及 override init 的 super.init 对应，没有额外字段或动作。"
+    },
+    {
+      "function_id": "Paste:0x10037f520", "status": "uncertain",
+      "original_path": "decompiled/Paste/part-0282.c", "original_line": 2157,
+      "current_symbol": "OriginalPasteboardItem.f_10037f520(with:)",
+      "criterion": "原可见体依序桥接完整 types→NSArray、完整 dataByType→NSDictionary 后两次向同一 NSCoder 编码；当前顺序、完整字段和独立数据表相符，且真实 encode(with:) 委托。",
+      "unresolved": "原 C 的两次 String._bridgeToObjectiveC() 均省略输入实参，不能仅凭该体确定分别是 types/dataByType 键。解码体及既有审阅支持当前做法，但本轮未逐指令补原编码键证据，保 uncertain；不声称存在已证源码差异。"
+    }
+  ]
+}

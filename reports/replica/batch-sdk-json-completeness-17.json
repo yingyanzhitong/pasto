@@ -1,0 +1,131 @@
+{
+  "kind": "static_sdk_source_level_reuse",
+  "generated_at": "2026-10-27T12:02:12.495621+00:00",
+  "historical_evidence": "reports/replica/batch-pasto-sdk-completeness-15.json",
+  "build_executed": false,
+  "tests_executed": false,
+  "product_executed": false,
+  "limitations": "确认生产源码直接使用相同Foundation API；未重新编译验证链接或运行时行为，SDK内部实现不计入本结论。",
+  "records": [
+    {
+      "function_id": "Paste:0x100bf3ffc",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-1166.c",
+        "line": 970,
+        "sha256": "2331d594d326fe27c328fa6d3f4ea8d9d3cc7ceb51d8f2ba350a89754389d655",
+        "stub": "0x100bf3ffc"
+      },
+      "original_symbol": "_$s10Foundation11JSONDecoderC6decode_4fromxxm_AA4DataVtKSeRzlFTj",
+      "original_dylib": "/System/Library/Frameworks/Foundation.framework/Versions/C/Foundation",
+      "source_reference": {
+        "path": "replica/Sources/PastoCore/OriginalImagePreviewMetadataCodec.swift",
+        "line": 43,
+        "text": "JSONDecoder().decode(Stored.self, from: rawPreview)",
+        "sha256": "1620a024a011c19294f16680ae2a8d6e92afac426d4ebbe1dd4e1fac1e364ca0"
+      },
+      "criterion": "Foundation.JSONDecoder.decode: 实际以Stored和Data调用，错误在调用者按原回退路径处理。 已核历史原版SDK纯转发及当前生产Swift对同一Foundation API的直接调用；当前编译产物是否仍保留同一机器指令未验证。",
+      "scope": "仅原SDK转发的源码级复用，不升级相关原VM、持久化或整条调用链。"
+    },
+    {
+      "function_id": "Paste:0x100bf4008",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-1166.c",
+        "line": 986,
+        "sha256": "7b9ec88fe276bd136d6afe02837abe17b3c671d0224f968b7a2a5abf34ce0e71",
+        "stub": "0x100bf4008"
+      },
+      "original_symbol": "_$s10Foundation11JSONDecoderCACycfc",
+      "original_dylib": "/System/Library/Frameworks/Foundation.framework/Versions/C/Foundation",
+      "source_reference": {
+        "path": "replica/Sources/PastoCore/OriginalImagePreviewMetadataCodec.swift",
+        "line": 43,
+        "text": "JSONDecoder().decode(Stored.self, from: rawPreview)",
+        "sha256": "1620a024a011c19294f16680ae2a8d6e92afac426d4ebbe1dd4e1fac1e364ca0"
+      },
+      "criterion": "Foundation.JSONDecoder.init: 实际构造解码器供metadata读取。 已核历史原版SDK纯转发及当前生产Swift对同一Foundation API的直接调用；当前编译产物是否仍保留同一机器指令未验证。",
+      "scope": "仅原SDK转发的源码级复用，不升级相关原VM、持久化或整条调用链。"
+    },
+    {
+      "function_id": "Paste:0x100bf4020",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-1166.c",
+        "line": 1020,
+        "sha256": "9f9da8c6814e608dc09e18d8c38fb51fa5be762e8d20be88033c3ae374a8e809",
+        "stub": "0x100bf4020"
+      },
+      "original_symbol": "_$s10Foundation11JSONEncoderC16OutputFormattingV10sortedKeysAEvgZ",
+      "original_dylib": "/System/Library/Frameworks/Foundation.framework/Versions/C/Foundation",
+      "source_reference": {
+        "path": "replica/Sources/PastoCore/ClipboardStore.swift",
+        "line": 330,
+        "text": "encoder.outputFormatting = [.sortedKeys]",
+        "sha256": "630b6ccf5038fad731c8623853a0d8a7d2c881f3a63c3d544401a9ebc6449ec5"
+      },
+      "criterion": "Foundation.JSONEncoder.OutputFormatting.sortedKeys: 实际归档路径选择sortedKeys。 已核历史原版SDK纯转发及当前生产Swift对同一Foundation API的直接调用；当前编译产物是否仍保留同一机器指令未验证。",
+      "scope": "仅原SDK转发的源码级复用，不升级相关原VM、持久化或整条调用链。"
+    },
+    {
+      "function_id": "Paste:0x100bf4050",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-1166.c",
+        "line": 1087,
+        "sha256": "101fe7f664d79f555153b84bf715ada260314235ca7f74db3a13cd867675379f",
+        "stub": "0x100bf4050"
+      },
+      "original_symbol": "_$s10Foundation11JSONEncoderC16outputFormattingAC06OutputD0VvsTj",
+      "original_dylib": "/System/Library/Frameworks/Foundation.framework/Versions/C/Foundation",
+      "source_reference": {
+        "path": "replica/Sources/PastoCore/ClipboardStore.swift",
+        "line": 330,
+        "text": "encoder.outputFormatting = [.sortedKeys]",
+        "sha256": "630b6ccf5038fad731c8623853a0d8a7d2c881f3a63c3d544401a9ebc6449ec5"
+      },
+      "criterion": "Foundation.JSONEncoder.outputFormatting.setter: 真实归档encoder设置属性。 已核历史原版SDK纯转发及当前生产Swift对同一Foundation API的直接调用；当前编译产物是否仍保留同一机器指令未验证。",
+      "scope": "仅原SDK转发的源码级复用，不升级相关原VM、持久化或整条调用链。"
+    },
+    {
+      "function_id": "Paste:0x100bf4074",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-1167.c",
+        "line": 40,
+        "sha256": "33de656a41635008bda7e88a7407efb93f3065b38039e5a42597da4aa3750fb4",
+        "stub": "0x100bf4074"
+      },
+      "original_symbol": "_$s10Foundation11JSONEncoderC6encodeyAA4DataVxKSERzlFTj",
+      "original_dylib": "/System/Library/Frameworks/Foundation.framework/Versions/C/Foundation",
+      "source_reference": {
+        "path": "replica/Sources/PastoCore/OriginalImagePreviewMetadataCodec.swift",
+        "line": 99,
+        "text": "JSONEncoder().encode(stored)",
+        "sha256": "1620a024a011c19294f16680ae2a8d6e92afac426d4ebbe1dd4e1fac1e364ca0"
+      },
+      "criterion": "Foundation.JSONEncoder.encode: 实际对Stored值调用并保throw边界。 已核历史原版SDK纯转发及当前生产Swift对同一Foundation API的直接调用；当前编译产物是否仍保留同一机器指令未验证。",
+      "scope": "仅原SDK转发的源码级复用，不升级相关原VM、持久化或整条调用链。"
+    },
+    {
+      "function_id": "Paste:0x100bf4080",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-1167.c",
+        "line": 56,
+        "sha256": "f4adedcd8600a13cab6431d1afaf93f92f231a6202f660722f6cb73eb1462d4a",
+        "stub": "0x100bf4080"
+      },
+      "original_symbol": "_$s10Foundation11JSONEncoderCACycfc",
+      "original_dylib": "/System/Library/Frameworks/Foundation.framework/Versions/C/Foundation",
+      "source_reference": {
+        "path": "replica/Sources/PastoCore/OriginalImagePreviewMetadataCodec.swift",
+        "line": 99,
+        "text": "JSONEncoder().encode(stored)",
+        "sha256": "1620a024a011c19294f16680ae2a8d6e92afac426d4ebbe1dd4e1fac1e364ca0"
+      },
+      "criterion": "Foundation.JSONEncoder.init: 实际构造编码器供metadata写入。 已核历史原版SDK纯转发及当前生产Swift对同一Foundation API的直接调用；当前编译产物是否仍保留同一机器指令未验证。",
+      "scope": "仅原SDK转发的源码级复用，不升级相关原VM、持久化或整条调用链。"
+    }
+  ]
+}

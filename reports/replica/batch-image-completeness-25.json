@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "scope": "前轮未覆盖的两个已存在原生预览按钮属性写入Swift工作体；成功原C、必要原ARM及实际生产调用核对，不改台账或新增包装。",
+  "counts": { "total": 2, "complete": 2, "gap": 0, "uncertain": 0 },
+  "records": [
+    {
+      "function_id": "Paste:0x10023cbf4",
+      "status": "complete",
+      "original": { "path": "decompiled/Paste/part-0195.c", "start_line": 1181, "address_range": "0x10023cbf4..<0x10023cc80" },
+      "supporting_original": { "path": "decompiled/Paste/part-0083.c", "start_line": 1397, "address_range": "0x1000f65ec..<0x1000f6618" },
+      "current_implementations": [ { "path": "replica/Sources/PastoCore/OriginalToolbarButton.swift", "start_line": 100, "end_line": 106, "symbol": "public override var contentTintColor: NSColor?" } ],
+      "criterion": "原先向super.setContentTintColor写输入optional，再取得同lazy icon，重新从super.contentTintColor读取实际值，交f0f65ec写到该icon；不把原输入直接复用、不更新label/arrow颜色、不额外f23d784。当前同super写入→lazy icon→super getter→icon tint顺序，nil正常写到两者，没有nil默认颜色回填。ARM23cc2c先super setter，23cc30取icon并保存x22，23cc48 super getter，23cc54将icon恢复x20，23cc58调f0f65ec，证明C中丢失的icon接收者和返回颜色顺序。该Swift工作体无executor诊断。",
+      "actual_consumer": "OriginalReplicaPreviewAdapter.swift第433行真实pinButton持久分组色更新写contentTintColor，第526行辅助预览按钮设置实际前景色；按钮symbol与layer显示使用同cached icon，不是未用属性。",
+      "limitations": "只确认Swift属性写入副作用；相邻ObjC setter f23cab4的actor桥不升级。当前Swift属性setter是Void，不声明原C错误推断return0或生成ABI相同。"
+    },
+    {
+      "function_id": "Paste:0x10023dd84",
+      "status": "complete",
+      "original": { "path": "decompiled/Paste/part-0196.c", "start_line": 122, "address_range": "0x10023dd84..<0x10023ddcc" },
+      "current_implementations": [ { "path": "replica/Sources/PastoCore/OriginalToolbarButton.swift", "start_line": 113, "end_line": 116, "symbol": "public override var isEnabled: Bool" } ],
+      "criterion": "原对合法Bool先super.setEnabled，再无条件调用f23d784；没有与旧值比较，不因禁用而跳样式，不自行调用buttonAction。当前相同super存值后刷新，同值赋值仍刷新。typed Bool只含原有效0/1，原param&1不是允许任意整数输入的独立业务功能。原Swift工作体无actor诊断，相邻ObjC入口检查不混算。",
+      "actual_consumer": "Adapter.swift第548行真实Save按钮初始禁用，第568行setCanCommit随编辑内容更新启用状态；第410行真实share按钮随当前canonical内容可分享性更新。三路径均进入此override并立即重算disabled样式。",
+      "limitations": "只确认普通setter，不升级_modify协程unwind、ObjC setter f23dc84、或下游完整style算法。没有执行按钮状态赋值或功能测试。"
+    }
+  ],
+  "arm_evidence": { "binary": ".local/paste-arm64-static.bin", "range": "0x10023cbf4..<0x10023cc80", "method": "只读llvm-objdump指定成功函数，未执行原二进制" },
+  "excluded_failed_addresses": [ "0x100ac35f8", "0x100ac746c" ],
+  "verification_scope": "仅新增本报告；没有产品源码、台账或旧报告修改，没有编译、parse、运行应用、测试、MCP或发布，未读取指定失败函数。complete限有限方法源码合同，不构成迁移计数授权、当前产物证明或一比一验收。"
+}

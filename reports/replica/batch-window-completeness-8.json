@@ -1,0 +1,227 @@
+{
+  "kind": "batch-window-completeness-8",
+  "scope": "只读检查9个搜索输入/clear/约束/文本值/focus ring方法，不为凑数量扩查。",
+  "summary": {
+    "reviewed": 9,
+    "complete": 5,
+    "gap": 0,
+    "uncertain": 4,
+    "new_to_round7": 9
+  },
+  "prior_inventory": "reports/replica/batch-completeness-round7.json",
+  "definite_product_differences": [],
+  "limitations": [
+    "complete限成功原C和当前真实消费的有限静态业务合同；不是当前编译或运行验收。",
+    "待证单列静态常量未解、缺显式consumer、Actor诊断、原返回值/桥ABI；均不直接视为确定产品缺陷。",
+    "原始伪代码保留误推寄存器可能；未以函数名或既有migrated状态直接判通过。",
+    "未改变台账及迁移总计，未修改产品源码。"
+  ],
+  "activities": {
+    "product_source_edited": false,
+    "ledger_edited": false,
+    "compiled": false,
+    "product_run": false,
+    "tests_run": false,
+    "wrapper_added": false
+  },
+  "skipped_failed_addresses": [
+    "Paste:0x100ac35f8",
+    "Paste:0x100ac746c"
+  ],
+  "functions": [
+    {
+      "function_id": "Paste:0x10004212c",
+      "status": "uncertain",
+      "mapping_state_at_review": "migrated",
+      "included_in_round7": false,
+      "original": {
+        "path": "decompiled/Paste/part-0024.c",
+        "line": 1162
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchInputView.swift",
+          "symbol": "f_10004212c"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/SearchEditor.swift",
+          "symbol": "ReplicaSearchEditor"
+        }
+      ],
+      "evidence": "原先探测符号、成功再次加载，失败用固定后备图，两次最终nil均终止；再设image/action、weakLoad target、refusesFirstResponder=true、bordered=false。当前结构与实际getter owner吻合；本批未独立解f20db28所读静态字符串槽，不能仅以既有contract宣称xmark.circle.fill常量已重新证明。",
+      "actual_consumer": "f042090创建NSButton后实际调用f04212c；clear action进入f042a68，非未接入包装。"
+    },
+    {
+      "function_id": "Paste:0x1000424e8",
+      "status": "complete",
+      "mapping_state_at_review": "migrated",
+      "included_in_round7": false,
+      "original": {
+        "path": "decompiled/Paste/part-0024.c",
+        "line": 1316
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchInputView.swift",
+          "symbol": "f_1000424e8"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/SearchEditor.swift",
+          "symbol": "ReplicaSearchEditor"
+        }
+      ],
+      "evidence": "原先构造scroller top/leading/bottom贴父，clear16x16成一组、centerY、leading=scroll.trailing+4、trailing贴父；返回七组。当前数组分组、常量、锚点方向均一致，调用方flatMap激活，不在本项增加其它布局条件。",
+      "actual_consumer": "OriginalSearchInputView.init(frame:)添加scroller/clear后调用NSLayoutConstraint.activate(f0424e8().flatMap)。"
+    },
+    {
+      "function_id": "Paste:0x1000429d0",
+      "status": "complete",
+      "mapping_state_at_review": "migrated",
+      "included_in_round7": false,
+      "original": {
+        "path": "decompiled/Paste/part-0024.c",
+        "line": 1464
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchInputView.swift",
+          "symbol": "f_1000429d0"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/SearchEditor.swift",
+          "symbol": "ReplicaSearchEditor"
+        }
+      ],
+      "evidence": "有window先取同一惰性TextView并makeFirstResponder，其后才读取可选onClear；无window仍执行存在回调；回调nil无动作。本项业务不直接改文字，当前顺序/分支一致；原C残留closure指针不作为Swift Void业务返回值。",
+      "actual_consumer": "clear→f042a68→同步MainActor helper→f0429d0；onClear由OriginalSearchField.f045c2c弱转发至f045e54。"
+    },
+    {
+      "function_id": "Paste:0x100042b50",
+      "status": "complete",
+      "mapping_state_at_review": "migrated",
+      "included_in_round7": false,
+      "original": {
+        "path": "decompiled/Paste/part-0024.c",
+        "line": 1550
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchInputView.swift",
+          "symbol": "f_100042b50"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/SearchEditor.swift",
+          "symbol": "ReplicaSearchEditor"
+        }
+      ],
+      "evidence": "由TextView.string是否非空计算visible；与存储相同不动。改变先存visible再enabled；显示先hidden=false再0.12秒easeOut alpha1；隐藏alpha0后weak完成仅仍不可见才hidden。当前f042d64/f042db0/f042dfc实际相连；不把所调通用动画父的诊断/逃逸错误ABI并入本方法。",
+      "actual_consumer": "f0449e8及InputView.init实际刷新；textStorage delegate同步进入f042a78→f0449e8。"
+    },
+    {
+      "function_id": "Paste:0x1000449e8",
+      "status": "complete",
+      "mapping_state_at_review": "migrated",
+      "included_in_round7": false,
+      "original": {
+        "path": "decompiled/Paste/part-0025.c",
+        "line": 1296
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchInputView.swift",
+          "symbol": "f_1000449e8"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/SearchEditor.swift",
+          "symbol": "ReplicaSearchEditor"
+        }
+      ],
+      "evidence": "先f042b50，再用同一TextView的string空状态设置placeholder.hidden；随后textStorage nil或containsAttachments=false选inset(0,2)，true选(0,0)。当前空storage默认false、执行顺序和两尺寸完全一致。",
+      "actual_consumer": "InputView构造末尾以及NSTextStorage didProcessEditing→f042a78真实调用，不排队延迟。"
+    },
+    {
+      "function_id": "Paste:0x1000f7254",
+      "status": "complete",
+      "mapping_state_at_review": "migrated",
+      "included_in_round7": false,
+      "original": {
+        "path": "decompiled/Paste/part-0084.c",
+        "line": 181
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchTextValue.swift",
+          "symbol": "f_1000f7254"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/SearchEditor.swift",
+          "symbol": "editor.f_1000f7254()"
+        }
+      ],
+      "evidence": "原读取接收者NSTextView.string并桥接Swift String返回，无其它业务分支。当前扩展直接返回string，真实UI读文本而非只存在声明；不主张Swift私有String ABI不变。",
+      "actual_consumer": "SearchEditor Coordinator在编辑提案/内容投影中调用editor.f_1000f7254()，约283与387行。"
+    },
+    {
+      "function_id": "Paste:0x1000f733c",
+      "status": "uncertain",
+      "mapping_state_at_review": "migrated",
+      "included_in_round7": false,
+      "original": {
+        "path": "decompiled/Paste/part-0084.c",
+        "line": 228
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchTextValue.swift",
+          "symbol": "f_1000f733c"
+        }
+      ],
+      "evidence": "有限方法体一致：输入Swift String桥接NSString，setString到同一接收者，返回0。当前扩展string=value;return0保留；但本批全源码引用搜索仅发现声明，没有f0f733c生产调用，不能把其他直接string赋值自动算该已映射方法真实消费者。",
+      "actual_consumer": "当前未找到显式调用；对应功能原生string setter存在，但映射方法消费关系待证，不宣称确定产品行为缺失。"
+    },
+    {
+      "function_id": "Paste:0x100043344",
+      "status": "uncertain",
+      "mapping_state_at_review": "migrated",
+      "included_in_round7": false,
+      "original": {
+        "path": "decompiled/Paste/part-0025.c",
+        "line": 229
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchTextScroller.swift",
+          "symbol": "f_100043344"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/SearchEditor.swift",
+          "symbol": "OriginalSearch"
+        }
+      ],
+      "evidence": "原返回存储focusRingBounds矩形、不重新由frame推导，当前getter一致且override实际消费。原完整ObjC入口还显式检查MainActor executor并固定文件/行unexpectedExecutor；当前未构建源码无法独立证明该诊断，不能只凭@MainActor判整个入口完整。",
+      "actual_consumer": "NSScrollView.focusRingMaskBounds override调用f043344；SearchField布局更新focusRingBounds供系统focus ring读取。"
+    },
+    {
+      "function_id": "Paste:0x100043418",
+      "status": "uncertain",
+      "mapping_state_at_review": "migrated",
+      "included_in_round7": false,
+      "original": {
+        "path": "decompiled/Paste/part-0025.c",
+        "line": 263
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchTextScroller.swift",
+          "symbol": "f_100043418"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/SearchEditor.swift",
+          "symbol": "OriginalSearch"
+        }
+      ],
+      "evidence": "原用存储focusRingBounds建圆角path：OS26半height、旧6；black.set→fill。当前图形业务一致。成功C末尾显式return0，当前f043418是Void且经同步闭包helper调用；本批未补原ARM返回寄存器及该调用桥是否只丢弃结果，保留完整输入输出/ABI待证，不将其推定为可见绘制bug。",
+      "actual_consumer": "系统drawFocusRingMask→f0434f8→OriginalSearchTextView.f043508同步闭包→f043418真实绘制。"
+    }
+  ]
+}

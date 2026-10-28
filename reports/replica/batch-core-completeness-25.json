@@ -1,0 +1,28 @@
+{
+  "review_kind": "read_only_entity_representation_routing",
+  "counts": { "reviewed": 1, "complete": 0, "gap": 0, "uncertain": 1, "new_migrations_claimed": 0 },
+  "functions": [
+    {
+      "function_id": "Paste:0x100383d90",
+      "status": "uncertain",
+      "original_path": "decompiled/Paste/part-0283.c",
+      "original_line": 2906,
+      "current_paths": [
+        "replica/Sources/PastoCore/Pasteboard.swift",
+        "replica/Sources/PastoCore/OriginalPasteboardImageRestore.swift"
+      ],
+      "current_symbol": "dragPasteboardGroups及writeToPasteboard中的kind/image准备分支",
+      "matching_route": "原读取实体rawType并经f323594转换，只有image(1)走f383df4图片临时文件准备，其余从entity.data调用f31b218取表示。当前普通恢复/drag先按item.kind投影原kind并解码表示；只有非plain且image才调用imageRestore.prepare，其余保持普通表示。plain与非plain的决定属于已读原上层f38222c：plain会改走f31bcdc，不应误称本方法自身带plain开关。",
+      "matching_actual_inputs": "两处真实Store调用都取显式sourceApplication(for:item)的name而非legacy sourceName，并传history时createdAt、非history时nil；prepare在nil timestamp才取now。原下游f383df4也读取显式sourceApplication.name及可选timestamp，nil使用默认名称/now。Pasto替代原默认Paste是已授权品牌适配，不在此计新迁移或擅自判缺陷。",
+      "unresolved": "原完整方法的rawType读取/转换及entity.data→f31b218的读取/异常域仍未与当前已投影ClipboardItem/Swift字典输入闭合；图片分支还依赖原f383df4的实体取数/临时目录/日志/时间错误链，当前prepare多了一层项目隔离临时根创建适配。正常分支路由匹配不能证明这个原实体方法全部副作用和失败域完整，故保持uncertain，不因仅没有同名wrapper判不完整。",
+      "consumer": "restore selected.map与native drag selected.map均实际调用上述分支，图片准备后的表示交真实f38222c processor；不存在仅定义未消费的新入口。没有为drag调用全局pasteboard writer或引入restore recency/Undo/通知副作用。",
+      "boundary": "本轮只完整阅读原短路由体，并对照当前两处生产路由及下游来源/日期参数；不是对大型f383df4全体重新验收。已完整的小值/清理方法保原结论，原实体取数父待证不反向否定它们。"
+    }
+  ],
+  "limits": [
+    "只阅读成功原C和当前源码，新增本独立报告；未修改产品源码、台账或用户数据。",
+    "未编译、parse、运行应用、功能/MCP测试、验证脚本或发布；未绑定当前编译产物。",
+    "本批0/1完整不是项目总体迁移率；总分母及跨批去重由主智能体汇总，新增迁移0。",
+    "指定失败地址0x100ac35f8、0x100ac746c跳过，未读取。"
+  ]
+}

@@ -1,0 +1,123 @@
+{
+  "kind": "batch-window-completeness-39",
+  "scope": "3项既有快捷键DI声明站点转发与validator getter，核完整原C、现有共享cache及真实model消费者。",
+  "summary": {
+    "reviewed": 3,
+    "complete": 3,
+    "gap": 0,
+    "uncertain": 0
+  },
+  "activities": {
+    "product_source_edited": false,
+    "ledger_edited": false,
+    "compiled": false,
+    "product_run": false,
+    "tests_run": false,
+    "wrapper_added": false
+  },
+  "skipped_failed_addresses": [
+    "Paste:0x100ac35f8",
+    "Paste:0x100ac746c"
+  ],
+  "limitations": [
+    "完整限于这些声明站点转发/具体getter的typed业务合同，不借此提升通用DI、任意metadata accessor机器ABI或model初始化父函数。",
+    "当前共享cache与生产keypath真实读取已检查，不单凭同名或SHA判通过；历史build不作为本轮编译。",
+    "没有增改台账完成数，3/3仅局部复核分类，不是项目迁移率。"
+  ],
+  "functions": [
+    {
+      "function_id": "Paste:0x1001e7580",
+      "status": "complete",
+      "evidence": "完整原C解析Value类型元数据后，将原factory、固定StaticString声明文件PasteShortcut/DI+PasteShortcut.swift、输入line、column=0x13及Value传给f0d80e0，原样返回Value。当前泛型f1e7580<Value>(line:factory:)向同一已实现通用共享service解析器传相同文件/column19、输入line及factory，不引入本地cache、不主动执行factory。Swift泛型保存typed返回与工厂值域；不冒原metadata accessor/间接返回机器ABI相同。",
+      "actual_consumer": "OriginalDependencyValues.f1e7514给global shortcut monitor的line6工厂调用；f1f1e64给validator的line12工厂调用。二者共用OriginalDependencies.f0d80e0的声明站点key与当前task-local或global共享cache。",
+      "original": {
+        "path": "decompiled/Paste/part-0156.c",
+        "line": 774
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutDependencies.swift",
+          "symbol": "static func f_1001e7580<Value>"
+        }
+      ],
+      "historical_evidence": {
+        "path": "reports/function-migration/Paste-0x1001e7580.json",
+        "sha256": "3e426388a155d9eb5146060bbcade307c804a6789df3e28af8bc6a8161deaba4",
+        "contract": "按类型Value将factory、固定声明源文件PasteShortcut/DI+PasteShortcut.swift与列19、调用方行号传给共享service cache，返回相同Value；不引入第二份私有缓存。",
+        "historical_build_snapshot": "reports/replica/dev52-static-build78.json",
+        "current_build_claim": false
+      },
+      "source_binding": {
+        "replica/Sources/PastoCore/OriginalShortcutDependencies.swift": {
+          "sha256": "73908ddfedcd38cb4f1f64a7a21d1499879bed195dfb13d70f1ebbbeb6ce5b51",
+          "historical_sha256": "73908ddfedcd38cb4f1f64a7a21d1499879bed195dfb13d70f1ebbbeb6ce5b51",
+          "unchanged": true
+        }
+      }
+    },
+    {
+      "function_id": "Paste:0x1001e7568",
+      "status": "complete",
+      "evidence": "完整原C无输入或额外分支，仅将具体validator元数据f1ec904、line12和factory f1e75e4交f1e7580。当前shortcutValidator getter转f1f1e64，再调Self.f1e7580(line:12)并传OriginalShortcutValidatorService.f1e75e4；没有私有单例或每读一次必创建对象，返回同类型service。复用现有同合同getter而非新增wrapper。",
+      "actual_consumer": "OriginalShortcutRecorder持有OriginalDependency(\\OriginalDependencyValues.shortcutValidator)，首次实际validate之前由f0da768→f0da760读取该property，再按共享cache取得服务。",
+      "original": {
+        "path": "decompiled/Paste/part-0156.c",
+        "line": 763
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutDependencies.swift",
+          "symbol": "func f_1001f1e64()"
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutDependencies.swift",
+          "symbol": "Self.f_1001e7580(line: 12)"
+        }
+      ],
+      "historical_evidence": {
+        "path": "reports/function-migration/Paste-0x1001e7568.json",
+        "sha256": "cb4aab9173baac96846122fe32c77baafaf1b80a4ed52540e268ed41aca9e5b7",
+        "contract": "无参validator服务直接getter，按固定文件PasteShortcut/DI+PasteShortcut.swift、line12、column19和f1e75e4具体服务factory解析共享cache，返回服务实例。",
+        "historical_build_snapshot": "reports/replica/dev52-static-build78.json",
+        "current_build_claim": false
+      },
+      "source_binding": {
+        "replica/Sources/PastoCore/OriginalShortcutDependencies.swift": {
+          "sha256": "73908ddfedcd38cb4f1f64a7a21d1499879bed195dfb13d70f1ebbbeb6ce5b51",
+          "historical_sha256": "73908ddfedcd38cb4f1f64a7a21d1499879bed195dfb13d70f1ebbbeb6ce5b51",
+          "unchanged": true
+        }
+      }
+    },
+    {
+      "function_id": "Paste:0x1001f1e64",
+      "status": "complete",
+      "evidence": "完整原C使用具体validator元数据，固定文件PasteShortcut/DI+PasteShortcut.swift、line12、column19及f1e75e4 factory直接调共享f0d80e0。当前f1f1e64通过窄泛型转发f1e7580传入完全相同的声明键和factory；该转发没有其他行为。已读现有f0d80e0与cache：相同当前scope键命中返回原存储Value，未命中调用factory并存一次；getter没有复制/替换服务。原通用cache本身独立合同不在本条扩大判满。",
+      "actual_consumer": "shortcutValidator property调用该方法，Recorder实际非空键校验会两次resolve同一OriginalDependency，之后validate使用本getter所得service；factory独立创建新引用，真正共享来自声明站点cache。",
+      "original": {
+        "path": "decompiled/Paste/part-0160.c",
+        "line": 1061
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutDependencies.swift",
+          "symbol": "func f_1001f1e64()"
+        }
+      ],
+      "historical_evidence": {
+        "path": "reports/function-migration/Paste-0x1001f1e64.json",
+        "sha256": "dbde160c517b269d2e647315df44ca38fb0ddb12f187fdb6c833633fd1e774a4",
+        "contract": "以PasteShortcut/DI+PasteShortcut.swift:12:19声明位置为键，经通用共享service cache解析具体validator；miss调用f1e75e4 factory，hit复用同引用。",
+        "historical_build_snapshot": "reports/replica/dev52-static-build78.json",
+        "current_build_claim": false
+      },
+      "source_binding": {
+        "replica/Sources/PastoCore/OriginalShortcutDependencies.swift": {
+          "sha256": "73908ddfedcd38cb4f1f64a7a21d1499879bed195dfb13d70f1ebbbeb6ce5b51",
+          "historical_sha256": "73908ddfedcd38cb4f1f64a7a21d1499879bed195dfb13d70f1ebbbeb6ce5b51",
+          "unchanged": true
+        }
+      }
+    }
+  ]
+}

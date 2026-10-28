@@ -1,0 +1,111 @@
+{
+  "kind": "static_sdk_source_level_reuse",
+  "generated_at": "2026-10-27T12:04:10.164636+00:00",
+  "historical_evidence": "reports/replica/batch-pasto-sdk-completeness-15.json",
+  "build_executed": false,
+  "tests_executed": false,
+  "product_executed": false,
+  "limitations": "确认生产源码直接使用同一Foundation API；未重新编译验证链接或运行时行为，不覆盖SDK内部实现。",
+  "records": [
+    {
+      "function_id": "Paste:0x100bf45c0",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-1168.c",
+        "line": 815,
+        "sha256": "aa79785fb434983437bd97243e20475c0a101ad0562a9fee1a18a27b3aa04ce8",
+        "stub": "0x100bf45c0"
+      },
+      "original_symbol": "_$s10Foundation19PropertyListDecoderC6decode_4fromxxm_AA4DataVtKSeRzlFTj",
+      "original_dylib": "/System/Library/Frameworks/Foundation.framework/Versions/C/Foundation",
+      "source_reference": {
+        "path": "replica/Sources/PastoCore/OriginalImagePreviewMetadataCodec.swift",
+        "line": 42,
+        "text": "PropertyListDecoder().decode(Stored.self, from: rawPreview)",
+        "sha256": "1620a024a011c19294f16680ae2a8d6e92afac426d4ebbe1dd4e1fac1e364ca0"
+      },
+      "criterion": "PropertyListDecoder.decode 对Stored和Data直接调用。 已核历史原版SDK转发及当前生产Swift对同一Foundation API的直接调用；当前机器链接未重新验证。",
+      "scope": "仅SDK转发的源码级复用，不升级metadata配置读取、实体及原父函数。"
+    },
+    {
+      "function_id": "Paste:0x100bf45cc",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-1168.c",
+        "line": 831,
+        "sha256": "10dfb67b24be055377d606af851005fe6da9e482a60541949d907ce5f79887a9",
+        "stub": "0x100bf45cc"
+      },
+      "original_symbol": "_$s10Foundation19PropertyListDecoderCACycfc",
+      "original_dylib": "/System/Library/Frameworks/Foundation.framework/Versions/C/Foundation",
+      "source_reference": {
+        "path": "replica/Sources/PastoCore/OriginalImagePreviewMetadataCodec.swift",
+        "line": 42,
+        "text": "PropertyListDecoder().decode(Stored.self, from: rawPreview)",
+        "sha256": "1620a024a011c19294f16680ae2a8d6e92afac426d4ebbe1dd4e1fac1e364ca0"
+      },
+      "criterion": "PropertyListDecoder.init供metadata读取。 已核历史原版SDK转发及当前生产Swift对同一Foundation API的直接调用；当前机器链接未重新验证。",
+      "scope": "仅SDK转发的源码级复用，不升级metadata配置读取、实体及原父函数。"
+    },
+    {
+      "function_id": "Paste:0x100bf45e4",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-1168.c",
+        "line": 865,
+        "sha256": "1daedeb2543247e041e1f12be10e6ec95d72b7e4d6502b5a338c6e2fa858826b",
+        "stub": "0x100bf45e4"
+      },
+      "original_symbol": "_$s10Foundation19PropertyListEncoderC12outputFormatSo010NSPropertycF0VvsTj",
+      "original_dylib": "/System/Library/Frameworks/Foundation.framework/Versions/C/Foundation",
+      "source_reference": {
+        "path": "replica/Sources/PastoCore/OriginalImagePreviewMetadataCodec.swift",
+        "line": 96,
+        "text": "encoder.outputFormat = .binary",
+        "sha256": "1620a024a011c19294f16680ae2a8d6e92afac426d4ebbe1dd4e1fac1e364ca0"
+      },
+      "criterion": "PropertyListEncoder.outputFormat.setter设置binary。 已核历史原版SDK转发及当前生产Swift对同一Foundation API的直接调用；当前机器链接未重新验证。",
+      "scope": "仅SDK转发的源码级复用，不升级metadata配置读取、实体及原父函数。"
+    },
+    {
+      "function_id": "Paste:0x100bf45f0",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-1168.c",
+        "line": 883,
+        "sha256": "d5cce1fcd22a43d131586b0c135513b78f1423d62990ea24a02bda297575fc32",
+        "stub": "0x100bf45f0"
+      },
+      "original_symbol": "_$s10Foundation19PropertyListEncoderC6encodeyAA4DataVxKSERzlFTj",
+      "original_dylib": "/System/Library/Frameworks/Foundation.framework/Versions/C/Foundation",
+      "source_reference": {
+        "path": "replica/Sources/PastoCore/OriginalImagePreviewMetadataCodec.swift",
+        "line": 97,
+        "text": "return try? encoder.encode(stored)",
+        "sha256": "1620a024a011c19294f16680ae2a8d6e92afac426d4ebbe1dd4e1fac1e364ca0"
+      },
+      "criterion": "PropertyListEncoder.encode直接编码Stored。 已核历史原版SDK转发及当前生产Swift对同一Foundation API的直接调用；当前机器链接未重新验证。",
+      "scope": "仅SDK转发的源码级复用，不升级metadata配置读取、实体及原父函数。"
+    },
+    {
+      "function_id": "Paste:0x100bf45fc",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-1168.c",
+        "line": 899,
+        "sha256": "53213de4e99ee02721eb848a156615dda2ed0c90c635c2e33881da6c8857973e",
+        "stub": "0x100bf45fc"
+      },
+      "original_symbol": "_$s10Foundation19PropertyListEncoderCACycfc",
+      "original_dylib": "/System/Library/Frameworks/Foundation.framework/Versions/C/Foundation",
+      "source_reference": {
+        "path": "replica/Sources/PastoCore/OriginalImagePreviewMetadataCodec.swift",
+        "line": 95,
+        "text": "let encoder = PropertyListEncoder()",
+        "sha256": "1620a024a011c19294f16680ae2a8d6e92afac426d4ebbe1dd4e1fac1e364ca0"
+      },
+      "criterion": "PropertyListEncoder.init供metadata写入。 已核历史原版SDK转发及当前生产Swift对同一Foundation API的直接调用；当前机器链接未重新验证。",
+      "scope": "仅SDK转发的源码级复用，不升级metadata配置读取、实体及原父函数。"
+    }
+  ]
+}

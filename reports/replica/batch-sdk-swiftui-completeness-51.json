@@ -1,0 +1,107 @@
+{
+  "kind": "static_sdk_source_reuse",
+  "records": [
+    {
+      "function_id": "Paste:0x100bf6204",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-1178.c",
+        "line": 244,
+        "sha256": "6384ab6fc452834966fc8fd52a16773f4fe799b67cc242b5d0a8b3875f85207e",
+        "stub": "0x100bf6204"
+      },
+      "sdk_symbol": "_$s7SwiftUI19NSHostingControllerC8rootViewACyxGx_tcfc",
+      "sdk_dylib": "/System/Library/Frameworks/SwiftUI.framework/Versions/A/SwiftUI",
+      "historical_replica_stub": "0x1001d3788",
+      "current_source": {
+        "path": "replica/Sources/Pasto/UI/FilterBrowser.swift",
+        "line": 294,
+        "sha256": "4149942f755922b56f1a43b90be826b87ed7063776dfc3b2026eb8bf91510c22"
+      },
+      "criterion": "显式NSHostingController(rootView: content)。 原stub与历史Pasto二进制绑定同一SwiftUI符号；当前源码显式调用对应公开API。",
+      "limitations": "仅源码级SDK API复用；当前二进制链接、运行和外层界面行为未验证。"
+    },
+    {
+      "function_id": "Paste:0x100bf66e4",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-1179.c",
+        "line": 853,
+        "sha256": "a9b2256c91bd7c9bd7fbe1d38063cc1eed46d41d2223f48c213ca8dfdfddc9fd",
+        "stub": "0x100bf66e4"
+      },
+      "sdk_symbol": "_$s7SwiftUI4TextVyACxcSyRzlufC",
+      "sdk_dylib": "/System/Library/Frameworks/SwiftUI.framework/Versions/A/SwiftUI",
+      "historical_replica_stub": "0x1001d3b18",
+      "current_source": {
+        "path": "replica/Sources/Pasto/UI/FilterBrowser.swift",
+        "line": 109,
+        "sha256": "4149942f755922b56f1a43b90be826b87ed7063776dfc3b2026eb8bf91510c22"
+      },
+      "criterion": "Text(group.section.title) 使用运行时字符串构造Text。 原stub与历史Pasto二进制绑定同一SwiftUI符号；当前源码显式调用对应公开API。",
+      "limitations": "仅源码级SDK API复用；当前二进制链接、运行和外层界面行为未验证。"
+    },
+    {
+      "function_id": "Paste:0x100bf6630",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-1179.c",
+        "line": 620,
+        "sha256": "94ea0a7bc82b25fba3167f8fe3e9d62e5e3ba5a0455db7bb310ab37ef487c0c8",
+        "stub": "0x100bf6630"
+      },
+      "sdk_symbol": "_$s7SwiftUI4MenuV7content5labelACyxq_Gq_yXE_xyXEtcfC",
+      "sdk_dylib": "/System/Library/Frameworks/SwiftUI.framework/Versions/A/SwiftUI",
+      "historical_replica_stub": "0x1001d3aac",
+      "current_source": {
+        "path": "replica/Sources/Pasto/UI/PanelViews.swift",
+        "line": 197,
+        "sha256": "8d21f76aef6761a3e07666782d4941efdda201c6ac087127875731e8742f0118"
+      },
+      "criterion": "Menu trailingControls显式提供内容和标签闭包。 原stub与历史Pasto二进制绑定同一SwiftUI符号；当前源码显式调用对应公开API。",
+      "limitations": "仅源码级SDK API复用；当前二进制链接、运行和外层界面行为未验证。"
+    },
+    {
+      "function_id": "Paste:0x100bf6ac8",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-1181.c",
+        "line": 150,
+        "sha256": "21dec29d01d6bec6bc216d3e757d26777664f59d8738a7d45d0c633d6e8bfaa6",
+        "stub": "0x100bf6ac8"
+      },
+      "sdk_symbol": "_$s7SwiftUI5ImageV13renderingModeyA2C017TemplateRenderingE0OSgF",
+      "sdk_dylib": "/System/Library/Frameworks/SwiftUI.framework/Versions/A/SwiftUI",
+      "historical_replica_stub": "0x1001d3da0",
+      "current_source": {
+        "path": "replica/Sources/Pasto/UI/ReplicaCopiedOSD.swift",
+        "line": 91,
+        "sha256": "d1b58b05ef6c37302cf6d6c1e0056ee0af55035422071d4c53ebe1583c84883d"
+      },
+      "criterion": "Image(systemName:)上调用renderingMode(.template)。 原stub与历史Pasto二进制绑定同一SwiftUI符号；当前源码显式调用对应公开API。",
+      "limitations": "仅源码级SDK API复用；当前二进制链接、运行和外层界面行为未验证。"
+    },
+    {
+      "function_id": "Paste:0x100bf6de0",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-1182.c",
+        "line": 177,
+        "sha256": "061b327620a01e184856db8be798fbb7cb149099bad314c58232042b74723230",
+        "stub": "0x100bf6de0"
+      },
+      "sdk_symbol": "_$s7SwiftUI9LazyVGridV7columns9alignment7spacing11pinnedViews7contentACyxGSayAA8GridItemVG_AA19HorizontalAlignmentV12CoreGraphics7CGFloatVSgAA016PinnedScrollableI0VxyXEtcfC",
+      "sdk_dylib": "/System/Library/Frameworks/SwiftUI.framework/Versions/A/SwiftUI",
+      "historical_replica_stub": "0x1001d3fc8",
+      "current_source": {
+        "path": "replica/Sources/Pasto/UI/FilterBrowser.swift",
+        "line": 111,
+        "sha256": "4149942f755922b56f1a43b90be826b87ed7063776dfc3b2026eb8bf91510c22"
+      },
+      "criterion": "显式提供columns、alignment、spacing与内容闭包构造LazyVGrid。 原stub与历史Pasto二进制绑定同一SwiftUI符号；当前源码显式调用对应公开API。",
+      "limitations": "仅源码级SDK API复用；当前二进制链接、运行和外层界面行为未验证。"
+    }
+  ],
+  "build_executed": false,
+  "tests_executed": false
+}

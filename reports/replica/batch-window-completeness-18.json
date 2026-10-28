@@ -1,0 +1,37 @@
+{
+  "kind": "batch-window-completeness-18",
+  "scope": "3个筛选图标映射/系统图像创建/动态色回调方法；只读成功C及必要ARM。",
+  "summary": {"reviewed": 3, "complete": 2, "gap": 0, "uncertain": 1},
+  "prior_inventory": "reports/replica/batch-completeness-round17.json",
+  "definite_product_differences": [],
+  "activities": {"product_source_edited": false, "ledger_edited": false, "compiled": false, "product_run": false, "tests_run": false, "wrapper_added": false},
+  "skipped_failed_addresses": ["Paste:0x100ac35f8", "Paste:0x100ac746c"],
+  "limitations": [
+    "complete限列明有限静态合同；不代表当前编译、SF图像实际可用性或产品视觉运行验收。",
+    "不按原类名/当前函数名直接判通过，不将未重解的11个原字符串槽常量冒称本批已证明。",
+    "没有更改台账状态或迁移计数。"
+  ],
+  "functions": [
+    {
+      "function_id": "Paste:0x1000f653c", "status": "complete",
+      "original": {"path": "decompiled/Paste/part-0083.c", "line": 1341},
+      "source_references": [{"path": "replica/Sources/PastoCore/OriginalSearchFilterSymbols.swift", "symbol": "f_1000f653c"}],
+      "evidence": "原由传入NSImage元类型取得ObjC class，Swift String桥NSString后调用imageWithSystemSymbolName:accessibilityDescription:nil，返回可空图像，不加后备。当前imageType.init(systemSymbolName:name,accessibilityDescription:nil)是同一导入类工厂，保传入元类型和nil失败，不固定只能NSImage、不强解包也不擅添questionmark后备。当前MainActor限制UI调用域，不把原未见Actor错误检查虚构为原分支。",
+      "actual_consumer": "FilterBrowser.Selection.chip在无已有image时将f054b2c可选symbol.flatMap给本方法，失败保持image nil。"
+    },
+    {
+      "function_id": "Paste:0x100054b2c", "status": "uncertain",
+      "original": {"path": "decompiled/Paste/part-0030.c", "line": 44},
+      "source_references": [{"path": "replica/Sources/PastoCore/OriginalSearchFilterSymbols.swift", "symbol": "f_100054b2c"}],
+      "evidence": "完整分支已核：原UInt8 tag0→f20c714，tag2 nil；tag1只lowercased后按link/image/color/text/file/unknown精确比较，分别f20d3b0/20d6a4/20d4f4/20d9c8/20cdd0/20d798，未知20cf40；tag3→20c934、tag4→20d434、其余20cc48；随后读取槽的String值返回。当前同一tag/精确值/分支顺序和nil语义。完整输出还依赖11个槽真实字符串，本批未逐槽重解原存储字节及初始化链，因此返回值全域保待证，不仅因当前helper同地址命名就判全体完整。",
+      "actual_consumer": "FilterBrowser.chip在来源图标/其他已有图像缺失时调用，返回symbol再经真实NSImage工厂消费；没有把显示Image误用作原raw筛选值。"
+    },
+    {
+      "function_id": "Paste:0x100206e94", "status": "complete",
+      "original": {"path": "decompiled/Paste/part-0170.c", "line": 3395},
+      "source_references": [{"path": "replica/Sources/PastoCore/OriginalSearchAppearance.swift", "symbol": "f_1001ff49c"}],
+      "evidence": "原回调appearance作为第1参数，context+0x10/+0x18两颜色为第2/第3参数转f206f30并返回同一对象。原C误标void，ARM 0x100206e9c ldp x1,x2,[x20,#0x10]、ea0调用206f30、eac尾跳ObjC返回值所有权桥，证明结果未丢弃。当前NSColor provider closure保appearance和dark/light两强捕获值，经f1ff49c→f206e50→f206f30原样返回；未交换两色、未复制/固定选色。额外纯转交层不引业务副作用，不主张原closure上下文私有布局/ARC指令相同。",
+      "actual_consumer": "OriginalSearchAppearance.f1feab8实际构造NSColor(name:nil)动态provider，其closure调用f1ff49c；该色由真实SearchTextView preferredTypingAttributes读取。"
+    }
+  ]
+}

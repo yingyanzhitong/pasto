@@ -1,0 +1,116 @@
+{
+  "review_kind": "read_only_unchanged_core_monitor_and_undo_batch",
+  "candidate_input": "reports/replica/batch-unchanged-method-candidates.json",
+  "selection": "从 identical_method_candidate 中选择此前 Core 四批未审的十项监控/计数/Undo 方法；方法文本相同仅用于筛选，不作为完成判据。",
+  "counts": { "reviewed": 10, "complete": 7, "gap": 0, "uncertain": 3, "new_migrations_claimed": 0 },
+  "inputs": {
+    "ledger": "replica/function-map.json",
+    "original_success_index": "reports/Paste/function-index.json",
+    "original_arm_image": ".local/targets/Paste.arm64",
+    "current_sources": [
+      "replica/Sources/PastoCore/Pasteboard.swift",
+      "replica/Sources/PastoCore/OriginalPasteboardCaptureState.swift",
+      "replica/Sources/PastoCore/OriginalDependencies.swift",
+      "replica/Sources/PastoCore/OriginalSharedDependencyCache.swift"
+    ]
+  },
+  "limits": [
+    "只读成功原 C、现有源码和有界原 ARM/字符串；未改产品源码、台账或用户数据，仅新增本报告。",
+    "未编译、parse、运行应用、功能或 MCP 测试，也未运行验证脚本。",
+    "不复用历史构建作为当前源码二进制证明；本批没有当前编译产物绑定。",
+    "complete 仅指本地址有限源码合同，不递归声明全部被调用方法、DI运行库或监控父对象完成。",
+    "uncertain 表示指定生命周期/延迟创建边界尚未闭合，不凭原类型名不同判缺口，也不声称普通生产路径已发现故障。",
+    "本批7/10不是项目总体迁移率，十项均为已有 migrated 记录，本批新增迁移计数0。",
+    "用户指定的0x100ac35f8与0x100ac746c未分析。"
+  ],
+  "bounded_original_evidence": [
+    { "start": "0x100378ac0", "end_exclusive": "0x100378bc8", "finding": "378b70 mov x2,x19，原NSTimer target为Pasteboard接收者；378b6c interval0.25，378b74 userInfo0，378b78 repeats1，378bb0设置tolerance0.025。" },
+    { "start": "0x10037aaf4", "end_exclusive": "0x10037ab4c", "finding": "读取self+0x90注入defaults；37ab04..18构造length19 large String，实际100da3a10字符串pasteboardSyncCount；37ab2c integerForKey，原值直接返回。" },
+    { "start": "0x10037ad4c", "end_exclusive": "0x10037ade4", "finding": "37ad64调用lazy getter f37aa3c，结果置x20后37ad6c调用action；37ad74释放取得对象；之后post，37adb0 x3为原HistoryManager self。动作后通知顺序明确，lazy获取本身不是空操作。" }
+  ],
+  "functions": [
+    {
+      "function_id": "Paste:0x100378ac0", "status": "uncertain",
+      "original_path": "decompiled/Paste/part-0281.c", "original_line": 266,
+      "current_path": "replica/Sources/PastoCore/Pasteboard.swift",
+      "current_symbol": "ClipboardMonitor.f_100378ac0()",
+      "criterion": "原每次先Start日志，已有timer不创建；无timer先读当前changeCount为基线，再默认runloop scheduledTimer，0.25秒、repeat=true、nil userInfo、tolerance0.025。当前这些顺序和参数对应。",
+      "unresolved": "原ARM target为Pasteboard接收者self；当前target为独立TimerTarget，其monitor为weak。回调转发会poll，但timer.target身份、retention及monitor释放后行为不同；未证明完整生命周期等价，不能仅参数和方法文本未变判complete。未运行回调或生命周期测试，不称普通路径有故障。",
+      "consumer": "ClipboardMonitor.start→f37ad40→f37ad4c(action:f378ac0)，由AppMain监控配置实际调用。"
+    },
+    {
+      "function_id": "Paste:0x100378bc8", "status": "complete",
+      "original_path": "decompiled/Paste/part-0281.c", "original_line": 303,
+      "current_path": "replica/Sources/PastoCore/Pasteboard.swift",
+      "current_symbol": "ClipboardMonitor.f_100378bc8()",
+      "criterion": "原无条件先Stop日志；pollTimer非nil则invalidate，随后其槽nil；再对syncTimer同样invalidate并nil。当前顺序逐项对应，重复停止也记录日志，不重置token或生成数据。这里只核停止已有timer槽，不把timer构造的target身份差异当此独立销毁方法已证故障。",
+      "consumer": "stop→f37ad14→状态包装器；deinit亦调用f37ad14清理，实际不只是孤立定义。"
+    },
+    {
+      "function_id": "Paste:0x10037a028", "status": "uncertain",
+      "original_path": "decompiled/Paste/part-0281.c", "original_line": 1144,
+      "current_path": "replica/Sources/PastoCore/Pasteboard.swift",
+      "current_symbol": "ClipboardMonitor.f_10037a028()",
+      "criterion": "changeCount与基线相等时无日志/无timer副作用；不等则记录原文日志，再读取changeCount更新基线、invalidate旧syncTimer、创建0.3秒/一次性/nil userInfo默认runloop timer。当前保留两次changeCount读取和先失效旧timer顺序。",
+      "unresolved": "当前syncTimer同样改用弱monitor的TimerTarget而不是原Pasteboard接收者；有限时间与正常回调目标逻辑相符，原目标持有及对象销毁边界尚未闭合。不能将同方法文本候选自动视作完整原目标生命周期。",
+      "consumer": "原poll转发现为TimerTarget.handlePollTimer→ClipboardMonitor.handlePollTimer→poll→本方法，sync callback实际转向synchronizePasteboard。"
+    },
+    {
+      "function_id": "Paste:0x10037aaf4", "status": "complete",
+      "original_path": "decompiled/Paste/part-0281.c", "original_line": 1736,
+      "current_path": "replica/Sources/PastoCore/Pasteboard.swift",
+      "current_symbol": "ClipboardMonitor.f_10037aaf4()",
+      "criterion": "原读取注入UserDefaults的pasteboardSyncCount integerForKey并直接返回Int，无写入/截断/非负限制。当前defaults.integer(forKey:)同键直返。原C省略字符串实参已用有界ARM和large literal字节补齐，不凭字段名猜。",
+      "consumer": "f37b428真实读取后addingReportingOverflow(1)并更新同步计数；读取方法不自行加一。"
+    },
+    {
+      "function_id": "Paste:0x10037ad14", "status": "complete",
+      "original_path": "decompiled/Paste/part-0281.c", "original_line": 1830,
+      "current_path": "replica/Sources/PastoCore/Pasteboard.swift",
+      "current_symbol": "ClipboardMonitor.f_10037ad14()",
+      "criterion": "原完整体只把stop动作f378bc8交给f37ad4c并返回；当前同一有限转发，不直接先post、不增加guard。该条只签转发方法，不把被调用状态包装器未闭合的lazy行为一并计完整。",
+      "consumer": "公开stop及deinit实际调用；状态包装器中的停止动作仍为本批已核的f378bc8。"
+    },
+    {
+      "function_id": "Paste:0x10037ad40", "status": "complete",
+      "original_path": "decompiled/Paste/part-0281.c", "original_line": 1853,
+      "current_path": "replica/Sources/PastoCore/Pasteboard.swift",
+      "current_symbol": "ClipboardMonitor.f_10037ad40()",
+      "criterion": "原完整体只把start动作f378ac0交给f37ad4c并返回；当前同一转发，无额外guard或通知。完整结论仅限转发选择，不递归声称start timer或状态包装器已完整。",
+      "consumer": "ClipboardMonitor.start真实调用，AppMain的配置/暂停恢复链可达。"
+    },
+    {
+      "function_id": "Paste:0x10037ad4c", "status": "uncertain",
+      "original_path": "decompiled/Paste/part-0281.c", "original_line": 1864,
+      "current_path": "replica/Sources/PastoCore/Pasteboard.swift",
+      "current_symbol": "ClipboardMonitor.f_10037ad4c(_:)",
+      "criterion": "原在持有Pasteboard对象期间调用动作，释放该临时持有，再post pasteboardHistoryManagerDidChangeStatus，object为HistoryManager。当前withExtendedLifetime(captureState,action)后post，同步动作先于通知，object为monitor对应管理对象。",
+      "unresolved": "原方法自身调用f37aa3c懒取Pasteboard；其nil分支会从defaults取token、构造并保存对象。当前captureState在ClipboardMonitor.init已创建，本方法仅延长已存在对象生命周期，未恢复此方法首次调用的lazy创建副作用/时点。这个缺口不是仅类名或ABI不同，不能凭withExtendedLifetime语法判所有原分支完整；是否影响用户可见时序未运行验证。",
+      "consumer": "f37ad40/f37ad14真实传入开始/停止动作；UI状态通知订阅实际存在。"
+    },
+    {
+      "function_id": "Paste:0x10037c4a4", "status": "complete",
+      "original_path": "decompiled/Paste/part-0282.c", "original_line": 127,
+      "current_path": "replica/Sources/PastoCore/Pasteboard.swift",
+      "current_symbol": "OriginalDependencyValues.f_10037c4a4()",
+      "criterion": "原成功完整体仅转发f2fad30；当前原样返回该共享provider，未创建独立UndoManager或额外缓存。这里只核provider转发，不把DI运行库父函数全部升级。",
+      "consumer": "pasteboardUndoManager计算属性→restoreUndoManager与ClipboardMonitor.undoManagerDependency两个真实OriginalDependency缓存使用。"
+    },
+    {
+      "function_id": "Paste:0x1002fad30", "status": "complete",
+      "original_path": "decompiled/Paste/part-0246.c", "original_line": 1027,
+      "current_path": "replica/Sources/PastoCore/Pasteboard.swift",
+      "current_symbol": "OriginalDependencyValues.f_1002fad30()",
+      "criterion": "原类型为NSUndoManager，按PasteCore/DI+PasteCore.swift位置0x36/0x13即54:19将f2fd5e4工厂交共享依赖provider。当前文件、line、column、类型和工厂参数一致；OriginalSharedDependencyCache按该声明位置共享并在当前task override上下文隔离，没有每次新建独立服务。该条有限provider调用合同不替代通用DI/cache本体审阅。",
+      "consumer": "两个实际restore/capture UndoManager依赖最终调用此provider，成功写入后removeAllActions使用同一声明服务；没有改为编辑器Undo。"
+    },
+    {
+      "function_id": "Paste:0x1002fd5e4", "status": "complete",
+      "original_path": "decompiled/Paste/part-0248.c", "original_line": 1064,
+      "current_path": "replica/Sources/PastoCore/Pasteboard.swift",
+      "current_symbol": "OriginalDependencyValues.f_1002fd5e4()",
+      "criterion": "原完整体分配原生NSUndoManager、init、返回新对象；当前Foundation UndoManager()同平台类构造，没有自定义默认行为或单例。共享性由调用provider决定，工厂本身不缓存。",
+      "consumer": "f2fad30实际把本工厂传给声明位置共享cache，首次需要真实UndoManager时创建。"
+    }
+  ]
+}

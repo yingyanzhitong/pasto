@@ -39,7 +39,7 @@ public final class OriginalPasteboardImageRestore: @unchecked Sendable {
         guard let directory = f_100384824() else { return items }
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd HH.mm.ss"
-        let name = (sourceName ?? "Paste") + " " + formatter.string(from: timestamp ?? Date.now)
+        let name = (sourceName ?? "Pasto") + " " + formatter.string(from: timestamp ?? Date.now)
         // Original uses one shared base name: equal-format items can target the same file.
         for item in items {
             for type in [UTType.png, .jpeg, .heic, .tiff] {

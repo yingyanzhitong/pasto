@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "kind": "independent_historical_static_evidence_reuse_review",
+  "input": "reports/replica/batch-unchanged-static-evidence.json",
+  "scope": "选择原清单中三个未被图像round28覆盖的窗口预览历史记录；重新读完整引用源码、历史合同、成功原C及生产消费者，未改旧报告。",
+  "counts": { "total": 3, "complete": 1, "gap": 0, "uncertain": 2, "historical_contract_reusable_as_complete": 1, "source_binding_unchanged": 3 },
+  "source_binding": {
+    "path": "replica/Sources/PastoCore/OriginalPreviewWindows.swift",
+    "historical_sha256": "4cc1f30d0de962162c6231a6207cc7623fc82e20f126f3ebc3edb326d5592c2d",
+    "current_read_sha256": "4cc1f30d0de962162c6231a6207cc7623fc82e20f126f3ebc3edb326d5592c2d",
+    "whole_file_unchanged": true,
+    "method": "只读整个生产文件并计算SHA256；不是只比较名称或局部声明。"
+  },
+  "records": [
+    {
+      "function_id": "Paste:0x1000af8a0",
+      "status": "complete",
+      "historical_contract_reusable": true,
+      "historical_evidence": "reports/function-migration/Paste-0x1000af8a0.json",
+      "original": { "path": "decompiled/Paste/part-0058.c", "start_line": 198, "address_range": "0x1000af8a0..<0x1000afa10" },
+      "current_reference": { "path": "replica/Sources/PastoCore/OriginalPreviewWindows.swift", "symbol": "public init(recovered: Void = ())" },
+      "criterion": "完整构造器和历史合同仍适用：super NSPanel指定init使用零rect/style0x801b/buffered2/defer1；依次animation.none raw2、两次独立调用兄弟visualEffect getter可选设置blend.behindWindow raw0及material.popover raw6；隐藏miniaturize/close/zoom，透明标题栏、背景拖动、失焦不隐藏、level3。没有新增isReleasedWhenClosed或全窗口透明度设置。当前完整源码与历史SHA一致且重读分支对应，原本体无inline executor诊断，故可复用有限构造业务合同。被调视觉getter的actor分支另列待证，不升级其子入口。",
+      "actual_consumer": "ReplicaUIController.swift第890行实际独立预览构造，OriginalPreviewPopover.swift第112行detach构造同窗口；均继续安装真实preview内容。",
+      "limitations": "不升级原ObjC init桥f0afa10、系统视觉层内部布局或实际平台外观；未执行窗口构造，未继承历史build_succeeded作为本轮构建。"
+    },
+    {
+      "function_id": "Paste:0x10021d7a4",
+      "status": "uncertain",
+      "historical_contract_reusable": false,
+      "reusable_subset": "正常树查询及first结果值合同、完整源码绑定可复用，整原入口仍待证。",
+      "historical_evidence": "reports/function-migration/Paste-0x10021d7a4.json",
+      "original": { "path": "decompiled/Paste/part-0185.c", "start_line": 81, "address_range": "0x10021d7a4..<0x10021da68" },
+      "current_reference": { "path": "replica/Sources/PastoCore/OriginalPreviewWindows.swift", "symbol": "public static func f_10021d7a4(window:)" },
+      "criterion": "历史正常查询合同和现源码一致：contentView或superview缺失nil，只扫描父直接subviews、收集NSVisualEffectView后返回首个，不递归或提前返回任意NSView。原完整C同时在每个候选dynamicCast之前获取MainActor executor并于失败reportUnexpectedExecutor(PasteUI/NSWindow+VisualEffects.swift,line42)。历史报告只概括树查询，源码只有@MainActor和compactMap，没有当前生成入口同诊断证据，因此即使全文件SHA未变仍不能复用为整方法complete。",
+      "actual_consumer": "OriginalPreviewWindow.init第21/22行真实两次调用，分别改变取到的视觉view blend和material；UIController/Popover实际窗口构造可达。",
+      "limitations": "没有发现正常树查询行为差异，列待证而非gap；不伪称历史编译或不可见actor分支已经验证。"
+    },
+    {
+      "function_id": "Paste:0x1000afaa8",
+      "status": "uncertain",
+      "historical_contract_reusable": false,
+      "reusable_subset": "先activateIgnoringOtherApps(true)后super.becomeKey的正常顺序和NSApp nil失败语义可复用，整入口诊断待证。",
+      "historical_evidence": "reports/function-migration/Paste-0x1000afaa8.json",
+      "original": { "path": "decompiled/Paste/part-0058.c", "start_line": 276, "address_range": "0x1000afaa8..<0x1000afb8c" },
+      "current_reference": { "path": "replica/Sources/PastoCore/OriginalPreviewWindows.swift", "symbol": "public override func becomeKey()" },
+      "criterion": "正常业务当前和历史一致：NSApp存在时忽略其他app激活，之后才super.becomeKey；原NSApp nil失败，当前IUO接收者也不以nil静默继续。原完整本体额外先做MainActor executor检查并在失败reportUnexpectedExecutor(Paste/ItemPreviewWindow.swift,line30)，源码仅class @MainActor不足以证明当前native ObjC桥诊断一致。全文件未变不消除此项，所以整历史MainActor合同不能只凭摘要自动复用为complete。",
+      "actual_consumer": "UIController与Popover建立的真实OriginalPreviewWindow在原生makeKey等窗口焦点流程进入该override；未另造未消费wrapper。",
+      "limitations": "不运行激活或焦点操作，不推测会抢焦点或失败；不升级窗口manager、系统注册或当前构建。"
+    }
+  ],
+  "excluded_failed_addresses": [ "0x100ac35f8", "0x100ac746c" ],
+  "verification_scope": "只读静态历史复用审阅并新增本报告；未修改产品源码、台账、输入清单或历史报告，未编译、parse、运行产品、测试、MCP或发布，未读取指定失败函数。历史报告的编译成功及二进制摘要保留为历史，不声称本轮重新构建或一比一功能验收。"
+}

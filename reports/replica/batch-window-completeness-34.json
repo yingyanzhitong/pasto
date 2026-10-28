@@ -1,0 +1,200 @@
+{
+  "kind": "batch-window-completeness-34",
+  "scope": "4项字面ANSI键码与菜单等效字符方法，完整成功C、当前实现和真实消费者静态对照。",
+  "summary": {
+    "reviewed": 4,
+    "complete": 3,
+    "gap": 1,
+    "uncertain": 0
+  },
+  "activities": {
+    "product_source_edited": false,
+    "ledger_edited": false,
+    "compiled": false,
+    "product_run": false,
+    "tests_run": false,
+    "wrapper_added": false
+  },
+  "skipped_failed_addresses": [
+    "Paste:0x100ac35f8",
+    "Paste:0x100ac746c"
+  ],
+  "limitations": [
+    "complete为有限值合同和真实消费链的静态结论，不是键盘布局、冲突提示或应用运行验收。",
+    "构造器以当前static let真实一次初始化消费核对，未声称原私有once body与新公开返回字典API具有相同机器ABI。",
+    "未改变台账计数，3/4仅是本批分类，不能解释为整体迁移率；历史编译声明不作为本轮构建。"
+  ],
+  "functions": [
+    {
+      "function_id": "Paste:0x1001e8a98",
+      "status": "complete",
+      "evidence": "已读完整C内20项构造：19个F键码122/120/99/118/96/97/98/100/101/109/103/111/105/107/113/106/64/79/80依次对应U+F704至F716，49对应空格U+0020，表无F20。当前19项functionKeyCodes枚举生成对应UnicodeScalar，加49空格，条目完整且未扩展。原重复键和计数溢出trap对该唯一固定表不可达；当前固定表同域。",
+      "actual_consumer": "OriginalShortcutFunctions.menuLabels为static let调用本方法一次保存字典；f1e8098的多Character标签分支按实际keyCode查询，用于OriginalShortcutValidation.f1ec200真实菜单冲突检查。",
+      "original": {
+        "path": "decompiled/Paste/part-0156.c",
+        "line": 1966
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutFunctions.swift",
+          "symbol": "f_1001e8a98"
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutValidation.swift",
+          "symbol": "f_1001ec200"
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutRecorder.swift",
+          "symbol": "f_1001f132c"
+        }
+      ],
+      "historical_evidence": {
+        "path": "reports/function-migration/Paste-0x1001e8a98.json",
+        "sha256": "f1955f5d3032fd95c677ce03e96afad80df9de7e68e2e06c1169bec46d0de106",
+        "contract": "构造 20 项菜单等效字符字典：F1…F19 对应 U+F704…U+F716，空格键对应 U+0020。",
+        "historical_build_snapshot": "reports/replica/dev52-static-build78.json",
+        "current_build_claim": false
+      },
+      "source_binding": {
+        "replica/Sources/PastoCore/OriginalShortcutFunctions.swift": {
+          "sha256": "82c57689dfb20e2c4c02cd3c4ca72cf40ee7a3fd650b5fa832d79589761a9058",
+          "historical_sha256": "82c57689dfb20e2c4c02cd3c4ca72cf40ee7a3fd650b5fa832d79589761a9058",
+          "unchanged": true
+        },
+        "replica/Sources/PastoCore/OriginalShortcutValidation.swift": {
+          "sha256": "094cb536243bcfa19d37564a409c032728c4c5756e98b21b375858394ad2d5cc",
+          "historical_sha256": "094cb536243bcfa19d37564a409c032728c4c5756e98b21b375858394ad2d5cc",
+          "unchanged": true
+        },
+        "replica/Sources/PastoCore/OriginalShortcutRecorder.swift": {
+          "sha256": "ba907c942f91fe336506e9a47576051f285bfce47ccd43315cb111aedbd237f2",
+          "historical_sha256": "ba907c942f91fe336506e9a47576051f285bfce47ccd43315cb111aedbd237f2",
+          "unchanged": true
+        }
+      }
+    },
+    {
+      "function_id": "Paste:0x1001e9654",
+      "status": "complete",
+      "evidence": "完整C从固定46条String/键码数组构造字典并发布DAT_100fb5080；已只读原thin MachO 0x100fb50b0起46个24字节tuple，解smallString逐项核a-z、0-9及10个标点，与当前字典全部一致，特别保留双引号到39、反斜线到42，没有改为单引号。原固定表无重复或计数溢出。当前keyCodes static let真实一次保存返回值，对应原once发布的业务合同，不假称dict内部桶布局一致。",
+      "original_static_data": {
+        "path": ".local/paste-arm64-static.bin",
+        "address": "0x100fb50b0",
+        "file_offset": "0xfb50b0",
+        "count": 46,
+        "tuple_bytes": 24
+      },
+      "actual_consumer": "OriginalShortcutFunctions.keyCodes实际调用本方法初始化；f1e94d4按lowercased字面值查询，录制Cmd-W/Q和Collection copy/quick数字动作都使用这份表。",
+      "original": {
+        "path": "decompiled/Paste/part-0157.c",
+        "line": 372
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutFunctions.swift",
+          "symbol": "f_1001e9654"
+        }
+      ],
+      "historical_evidence": {
+        "path": "reports/function-migration/Paste-0x1001e9654.json",
+        "sha256": "a3eab3f14395bd47cc3b3a3572515fdb381154b172bdf91d2e7062f8a585af53",
+        "contract": "懒初始化46项固定 ANSI字面键码字典；含字母、数字、标点，其中原版双引号键原样保留。",
+        "historical_build_snapshot": "reports/replica/dev52-static-build78.json",
+        "current_build_claim": false
+      },
+      "source_binding": {
+        "replica/Sources/PastoCore/OriginalShortcutFunctions.swift": {
+          "sha256": "82c57689dfb20e2c4c02cd3c4ca72cf40ee7a3fd650b5fa832d79589761a9058",
+          "historical_sha256": "82c57689dfb20e2c4c02cd3c4ca72cf40ee7a3fd650b5fa832d79589761a9058",
+          "unchanged": true
+        }
+      }
+    },
+    {
+      "function_id": "Paste:0x1001e8098",
+      "status": "complete",
+      "evidence": "完整C先调用f1e7e50取得标签；若等于U+21A9回车符号即返回单字节CR；否则String.count小于2时lowercased返回（包括空串），较长时懒读特殊菜单表按原keyCode查找，未命中返回空串。当前同顺序、Character计数、精确符号判断及回退，负Int键码不会新增trap而是按显示helper既有域处理。本结论复用被调用键名helper的值合同，不提升其输入源或系统翻译父状态。",
+      "actual_consumer": "OriginalShortcutValidation.f1ec200在每项submenu递归之后读取该候选，与item.keyEquivalent.lowercased比较并校验修饰位；不是仅展示未使用的字符串。",
+      "original": {
+        "path": "decompiled/Paste/part-0156.c",
+        "line": 1524
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutFunctions.swift",
+          "symbol": "f_1001e8098"
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutValidation.swift",
+          "symbol": "f_1001ec200"
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutRecorder.swift",
+          "symbol": "f_1001f132c"
+        }
+      ],
+      "historical_evidence": {
+        "path": "reports/function-migration/Paste-0x1001e8098.json",
+        "sha256": "71f09cc0fbe615d246fbef15f7c775d91653a9e6ebdcdbaa677d5bca40c4fbd1",
+        "contract": "获取键位显示标签，若是 Return 符号 U+21A9 返回回车字符；标签 Character 数少于 2 返回 lowercase；多字符标签在特殊菜单字符字典查询，未命中返回空串。",
+        "historical_build_snapshot": "reports/replica/dev52-static-build78.json",
+        "current_build_claim": false
+      },
+      "source_binding": {
+        "replica/Sources/PastoCore/OriginalShortcutFunctions.swift": {
+          "sha256": "82c57689dfb20e2c4c02cd3c4ca72cf40ee7a3fd650b5fa832d79589761a9058",
+          "historical_sha256": "82c57689dfb20e2c4c02cd3c4ca72cf40ee7a3fd650b5fa832d79589761a9058",
+          "unchanged": true
+        },
+        "replica/Sources/PastoCore/OriginalShortcutValidation.swift": {
+          "sha256": "094cb536243bcfa19d37564a409c032728c4c5756e98b21b375858394ad2d5cc",
+          "historical_sha256": "094cb536243bcfa19d37564a409c032728c4c5756e98b21b375858394ad2d5cc",
+          "unchanged": true
+        },
+        "replica/Sources/PastoCore/OriginalShortcutRecorder.swift": {
+          "sha256": "ba907c942f91fe336506e9a47576051f285bfce47ccd43315cb111aedbd237f2",
+          "historical_sha256": "ba907c942f91fe336506e9a47576051f285bfce47ccd43315cb111aedbd237f2",
+          "unchanged": true
+        }
+      }
+    },
+    {
+      "function_id": "Paste:0x1001e94d4",
+      "status": "gap",
+      "evidence": "正常分支完整一致：once得到固定表、输入lowercased、成功返回对应键码；不存在时原调用_assertionFailure并trap，当前preconditionFailure亦终止。但是完整失败诊断不相同：原thin字节0x100d9dc30是固定Unknown shortcut key，原文件标识0x100d9dc00为PasteShortcut/Shortcut.Key.swift；当前文字为Unsupported shortcut key:加原输入，且由当前源码位置产生诊断。不能把两者均trap当作完整错误输出一致。",
+      "missing": "未知字面输入的固定诊断消息及源码位置合同未保留。未证明真实生产中的固定w/q/c/1...9会触发该分支；本轮仅报告，不修改产品。",
+      "original_static_strings": {
+        "path": ".local/paste-arm64-static.bin",
+        "message_address": "0x100d9dc30",
+        "message": "Unknown shortcut key",
+        "file_address": "0x100d9dc00",
+        "file": "PasteShortcut/Shortcut.Key.swift"
+      },
+      "actual_consumer": "Recorder.f1f132c调用w/q固定字面值，OriginalCollectionShortcutActions.copyOptions调用c，quickPasteAction按1至9逐项调用；正常消费者真实接通且这些固定输入均在表内。",
+      "original": {
+        "path": "decompiled/Paste/part-0157.c",
+        "line": 227
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutFunctions.swift",
+          "symbol": "f_1001e94d4"
+        }
+      ],
+      "historical_evidence": {
+        "path": "reports/function-migration/Paste-0x1001e94d4.json",
+        "sha256": "fe5aa5601c659509c07a2cc9decc18fb87303998c2e916afb0857f6ab8ec64c3",
+        "contract": "将字面按键转 lowercase 后查询固定 ANSI 键码表；未知字符串触发前置条件失败。",
+        "historical_build_snapshot": "reports/replica/dev52-static-build78.json",
+        "current_build_claim": false
+      },
+      "source_binding": {
+        "replica/Sources/PastoCore/OriginalShortcutFunctions.swift": {
+          "sha256": "82c57689dfb20e2c4c02cd3c4ca72cf40ee7a3fd650b5fa832d79589761a9058",
+          "historical_sha256": "82c57689dfb20e2c4c02cd3c4ca72cf40ee7a3fd650b5fa832d79589761a9058",
+          "unchanged": true
+        }
+      }
+    }
+  ]
+}

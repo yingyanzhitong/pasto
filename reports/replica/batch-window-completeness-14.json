@@ -1,0 +1,176 @@
+{
+  "kind": "batch-window-completeness-14",
+  "scope": "9个搜索筛选胶囊及文本附件提供器方法，均不在round13已有集合；只读原C和必要ARM。",
+  "summary": {
+    "reviewed": 9,
+    "complete": 5,
+    "gap": 0,
+    "uncertain": 4,
+    "new_to_round13": 9
+  },
+  "prior_inventory": "reports/replica/batch-completeness-round13.json",
+  "definite_product_differences": [],
+  "activities": {
+    "product_source_edited": false,
+    "ledger_edited": false,
+    "compiled": false,
+    "product_run": false,
+    "tests_run": false,
+    "wrapper_added": false
+  },
+  "skipped_failed_addresses": [
+    "Paste:0x100ac35f8",
+    "Paste:0x100ac746c"
+  ],
+  "limitations": [
+    "complete为有限静态业务合同，不是当前编译或文本布局/点击运行验收，不改变台账计数。",
+    "不将真实附件提供器接入等同输入法、所有附件类型或原DI模型全部恢复。",
+    "原工厂可空返回的合法输入域未闭合处保待证；不把单纯机器码空值检查直接认定产品缺陷。"
+  ],
+  "functions": [
+    {
+      "function_id": "Paste:0x1000450a8",
+      "status": "uncertain",
+      "original": {
+        "path": "decompiled/Paste/part-0025.c",
+        "line": 1572
+      },
+      "evidence": "原两组结果：stack边距2/6/2/6组、icon12x12组，当前相同组形状和正负方向。原执行前还有Actor检查及SearchField.FilterView.swift行0x21报告，通用锚点witness精确身份本批亦未重解；完整函数保待证。",
+      "actual_consumer": "OriginalSearchFilterView专用构造添加stack后activate本方法flatMap结果；其对象由真实filter附件工厂创建。",
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchFilterView.swift",
+          "symbol": "f_1000450a8"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x100045338",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-0025.c",
+        "line": 1675
+      },
+      "evidence": "先super.layout，用bounds.height/2设置continuous圆角，再读layer，非nil才读原共享动态背景色取CGColor并写背景。当前同序复用原layer helper/原色槽，不改为固定颜色。ARM 0x100045364..388证实半height和continuous，0x10004539c跳过nil layer，0x1000453a4调用f1ff0d0后解引用槽；原C末尾return0实际ARM尾无显式置零，当前供调用方丢弃的Int0不解释为原机器返回ABI证明。",
+      "actual_consumer": "AppKit.layout→f0453e8→本方法；实际附件中的胶囊视图正常走布局。",
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchFilterView.swift",
+          "symbol": "f_100045338"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1000453e8",
+      "status": "uncertain",
+      "original": {
+        "path": "decompiled/Paste/part-0025.c",
+        "line": 1710
+      },
+      "evidence": "正常同步转交f045338与当前相同；原Actor检查及固定文件行0x2c错误报告未由当前源码独立证明，不能只按薄转交判全体完整。",
+      "actual_consumer": "OriginalSearchFilterView.layout override直接调用该方法。",
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchFilterView.swift",
+          "symbol": "f_1000453e8"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x100045484",
+      "status": "uncertain",
+      "original": {
+        "path": "decompiled/Paste/part-0025.c",
+        "line": 1742
+      },
+      "evidence": "原onClick存在原样传入NSEvent，不存在无动作，各路径不转super；当前同样。原Actor检查及文件行0x34报告未闭，不因正常点击回调一致提升整个ObjC入口。",
+      "actual_consumer": "mouseDown override→本方法→f046914安装的weak field闭包→f046acc，真实附件点击链存在。",
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchFilterView.swift",
+          "symbol": "f_100045484"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1002f5a50",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-0244.c",
+        "line": 1531
+      },
+      "evidence": "原为当前self附件创建专用provider，parentView/location原样传，textContainer可空时读取可空textLayoutManager；返回创建对象，无原Actor诊断或额外分支。当前同一对象、参数、可空layout manager和专用构造一致。",
+      "actual_consumer": "SearchEditor.attributedString创建OriginalFilterTextAttachment放入真实富文本；TextKit通过viewProvider override调用本方法。",
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchFilterView.swift",
+          "symbol": "f_1002f5a50"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1002f5bc8",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-0244.c",
+        "line": 1611
+      },
+      "evidence": "原将全部attachment/parentView/layoutManager/location原样传super指定初始化器，随后tracksTextAttachmentViewBounds=true，返回self；当前同序，无额外替换参数或隐式布局。",
+      "actual_consumer": "f2f5a50创建真实OriginalFilterTextAttachmentViewProvider调用该构造。",
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchFilterView.swift",
+          "symbol": "override init(textAttachment:"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1002f5c94",
+      "status": "uncertain",
+      "original": {
+        "path": "decompiled/Paste/part-0244.c",
+        "line": 1641
+      },
+      "evidence": "原textAttachment nil或非本类无动作；本类调用存储工厂并赋view，再读取view非nil才关闭translates，各路径返回0。当前条件cast/赋view/optional设置/return0一致。但当前makeView静态类型为()->NSView，原工厂返回可空的合法类型域尚未由本批证明；原setter后空值检查不能单独证明原工厂可空或非空，完整域保待证。真实UI的weak field缺失会回退NSView，该回退不能擅称原完整工厂相同。",
+      "actual_consumer": "TextKit loadView→f2f5d4c→本方法；SearchEditor创建的附件工厂返回f046914 stack，失效field用NSView适配。",
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchFilterView.swift",
+          "symbol": "f_1002f5c94"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1002f5d4c",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-0244.c",
+        "line": 1674
+      },
+      "evidence": "原完整入口只同步调用f2f5c94，不调用super、不额外构造或改变返回；当前loadView override通过本方法同样调用。callee自身工厂域待证不把纯转交入口扩成callee全体已证明。",
+      "actual_consumer": "真实NSTextAttachmentViewProvider.loadView override调用；由view getter惰性加载消费。",
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchFilterView.swift",
+          "symbol": "f_1002f5d4c"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1002f5d74",
+      "status": "complete",
+      "original": {
+        "path": "decompiled/Paste/part-0244.c",
+        "line": 1690
+      },
+      "evidence": "先读取provider.view触发系统惰性加载，nil返回zero，有值读取fittingSize；忽略其余布局参数，返回x0/y=-height*.25/width/height。原C CGRect拼装失真，ARM 0x1002f5da4/da8保存width/height，5dbc将height置d3，5dc4计算d1，5de0置d0零，5de4给d2 width；nil路径d1/d8/d3清零。当前四分量和操作顺序一致。",
+      "actual_consumer": "attachmentBounds override原样调用本方法，TextKit真实附件布局使用；没有用固定caret尺寸或proposedLineFragment近似。",
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchFilterView.swift",
+          "symbol": "f_1002f5d74"
+        }
+      ]
+    }
+  ]
+}

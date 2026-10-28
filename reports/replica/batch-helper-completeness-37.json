@@ -1,0 +1,43 @@
+{
+  "kind": "static_reuse_review",
+  "records": [
+    {
+      "function_id": "Paste-Helper:0x100001488",
+      "status": "complete",
+      "original_path": "decompiled/Paste-Helper/part-0000.c",
+      "original_line": 36,
+      "current_path": "replica/Sources/PastoHelper/HelperMain.swift",
+      "current_symbol": "startMonitoring",
+      "criterion": "启动后先记录Helper自身bundleURL；依次求取主app路径、共享defaults的pasteIsRunning布尔值（nil suite为false）、主app进程是否存在，再按原词记录这三项并启动runningApplications观察。",
+      "consumer": "HelperMain.main → HelperDelegate.applicationDidFinishLaunching → startMonitoring / observeRunningApplications；launchAfterDelay → completeLaunchAttempt。",
+      "source_sha256": "60d98b18e87390fcc6c8de6a43b75d9505bfd74b822eb9e0fc6dc58bbfd47e12",
+      "limitations": "限源码级函数合同，不推断系统进程状态、异步执行时间或编译产物。"
+    },
+    {
+      "function_id": "Paste-Helper:0x100001db0",
+      "status": "uncertain",
+      "original_path": "decompiled/Paste-Helper/part-0000.c",
+      "original_line": 327,
+      "current_path": "replica/Sources/PastoHelper/HelperMain.swift",
+      "current_symbol": "observeRunningApplications",
+      "criterion": "订阅 NSWorkspace.runningApplications 的 KVO publisher，包含初始发布；每次发布弱捕获 Delegate 并排入 MainActor Task，AnyCancellable 存入集合。",
+      "consumer": "HelperMain.main → HelperDelegate.applicationDidFinishLaunching → startMonitoring / observeRunningApplications；launchAfterDelay → completeLaunchAttempt。",
+      "source_sha256": "60d98b18e87390fcc6c8de6a43b75d9505bfd74b822eb9e0fc6dc58bbfd47e12",
+      "limitations": "正常订阅与弱捕获路径对应；MainActor.assumeIsolated 与原异步回调执行器诊断边界仍待证。"
+    },
+    {
+      "function_id": "Paste-Helper:0x100003514",
+      "status": "complete",
+      "original_path": "decompiled/Paste-Helper/part-0000.c",
+      "original_line": 1374,
+      "current_path": "replica/Sources/PastoHelper/HelperMain.swift",
+      "current_symbol": "completeLaunchAttempt",
+      "criterion": "处理异步启动结果：成功将 Delegate.retryCount 清零；失败先加一，计算 retryCount * 10 秒并调度弱捕获重试；两者最后清除 isLaunching。计数或乘法溢出遵循 Swift trap。",
+      "consumer": "HelperMain.main → HelperDelegate.applicationDidFinishLaunching → startMonitoring / observeRunningApplications；launchAfterDelay → completeLaunchAttempt。",
+      "source_sha256": "60d98b18e87390fcc6c8de6a43b75d9505bfd74b822eb9e0fc6dc58bbfd47e12",
+      "limitations": "限源码级函数合同，不推断系统进程状态、异步执行时间或编译产物。"
+    }
+  ],
+  "build_executed": false,
+  "tests_executed": false
+}

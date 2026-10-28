@@ -1,0 +1,79 @@
+{
+  "kind": "static_reuse_review",
+  "records": [
+    {
+      "function_id": "Paste:0x1000d4624",
+      "status": "complete",
+      "original_path": "decompiled/Paste/part-0069.c",
+      "original_line": 1435,
+      "current_path": "replica/Sources/PastoCore/OriginalLocalDiagnostics.swift",
+      "current_symbol": "f_1000d4624",
+      "criterion": "新建单 unfair 锁，保存名称，独立 optional logger 缓存为 nil，不解析全局 factory。",
+      "consumer": "Pasteboard.swift 的 ClipboardMonitor/historyDiagnostics 等生产路径，BackgroundService.swift 与 OriginalPasteboardImageRestore.swift 也使用对应 sink；诊断消息转发只判该函数自身合同。",
+      "source_sha256": "95baca2d0ee25cb9ca5a7bcbc111a820bbe70d29feecf46e5d8cd0c1f6d5c911",
+      "limitations": "源码级合同；不推断当前构建链接、运行结果或上游所有日志调用顺序。"
+    },
+    {
+      "function_id": "Paste:0x1000d468c",
+      "status": "complete",
+      "original_path": "decompiled/Paste/part-0069.c",
+      "original_line": 1460,
+      "current_path": "replica/Sources/PastoCore/OriginalLocalDiagnostics.swift",
+      "current_symbol": "f_1000d468c",
+      "criterion": "实例 unfair 锁内检查缓存；miss 时取得全局单次缓存 factory，factory(name)构造 logger 并缓存；hit 直接返回。",
+      "consumer": "Pasteboard.swift 的 ClipboardMonitor/historyDiagnostics 等生产路径，BackgroundService.swift 与 OriginalPasteboardImageRestore.swift 也使用对应 sink；诊断消息转发只判该函数自身合同。",
+      "source_sha256": "95baca2d0ee25cb9ca5a7bcbc111a820bbe70d29feecf46e5d8cd0c1f6d5c911",
+      "limitations": "源码级合同；不推断当前构建链接、运行结果或上游所有日志调用顺序。"
+    },
+    {
+      "function_id": "Paste:0x1000d4db8",
+      "status": "complete",
+      "original_path": "decompiled/Paste/part-0070.c",
+      "original_line": 77,
+      "current_path": "replica/Sources/PastoCore/OriginalLocalDiagnostics.swift",
+      "current_symbol": "f_1000d4db8",
+      "criterion": "诊断debug包装：将消息原样以level=0转发给传入sink.emit，不过滤或追加消息。",
+      "consumer": "Pasteboard.swift 的 ClipboardMonitor/historyDiagnostics 等生产路径，BackgroundService.swift 与 OriginalPasteboardImageRestore.swift 也使用对应 sink；诊断消息转发只判该函数自身合同。",
+      "source_sha256": "95baca2d0ee25cb9ca5a7bcbc111a820bbe70d29feecf46e5d8cd0c1f6d5c911",
+      "limitations": "源码级合同；不推断当前构建链接、运行结果或上游所有日志调用顺序。"
+    },
+    {
+      "function_id": "Paste:0x1000d4dd4",
+      "status": "complete",
+      "original_path": "decompiled/Paste/part-0070.c",
+      "original_line": 90,
+      "current_path": "replica/Sources/PastoCore/OriginalLocalDiagnostics.swift",
+      "current_symbol": "f_1000d4dd4",
+      "criterion": "诊断info包装：将消息原样以level=1转发给传入sink.emit。",
+      "consumer": "Pasteboard.swift 的 ClipboardMonitor/historyDiagnostics 等生产路径，BackgroundService.swift 与 OriginalPasteboardImageRestore.swift 也使用对应 sink；诊断消息转发只判该函数自身合同。",
+      "source_sha256": "95baca2d0ee25cb9ca5a7bcbc111a820bbe70d29feecf46e5d8cd0c1f6d5c911",
+      "limitations": "源码级合同；不推断当前构建链接、运行结果或上游所有日志调用顺序。"
+    },
+    {
+      "function_id": "Paste:0x1000d4df0",
+      "status": "complete",
+      "original_path": "decompiled/Paste/part-0070.c",
+      "original_line": 103,
+      "current_path": "replica/Sources/PastoCore/OriginalLocalDiagnostics.swift",
+      "current_symbol": "f_1000d4df0",
+      "criterion": "诊断warning包装：将消息原样以level=2转发给传入sink.emit。",
+      "consumer": "Pasteboard.swift 的 ClipboardMonitor/historyDiagnostics 等生产路径，BackgroundService.swift 与 OriginalPasteboardImageRestore.swift 也使用对应 sink；诊断消息转发只判该函数自身合同。",
+      "source_sha256": "95baca2d0ee25cb9ca5a7bcbc111a820bbe70d29feecf46e5d8cd0c1f6d5c911",
+      "limitations": "源码级合同；不推断当前构建链接、运行结果或上游所有日志调用顺序。"
+    },
+    {
+      "function_id": "Paste:0x1000d4e0c",
+      "status": "complete",
+      "original_path": "decompiled/Paste/part-0070.c",
+      "original_line": 116,
+      "current_path": "replica/Sources/PastoCore/OriginalLocalDiagnostics.swift",
+      "current_symbol": "f_1000d4e0c",
+      "criterion": "诊断error包装：将消息原样以level=3转发给传入sink.emit。",
+      "consumer": "Pasteboard.swift 的 ClipboardMonitor/historyDiagnostics 等生产路径，BackgroundService.swift 与 OriginalPasteboardImageRestore.swift 也使用对应 sink；诊断消息转发只判该函数自身合同。",
+      "source_sha256": "95baca2d0ee25cb9ca5a7bcbc111a820bbe70d29feecf46e5d8cd0c1f6d5c911",
+      "limitations": "源码级合同；不推断当前构建链接、运行结果或上游所有日志调用顺序。"
+    }
+  ],
+  "build_executed": false,
+  "tests_executed": false
+}

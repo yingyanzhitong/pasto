@@ -1,0 +1,65 @@
+{
+  "kind": "batch-window-completeness-9",
+  "scope": "只读核对7个搜索视图构造、惰性缓存、约束及弱点击回调。",
+  "summary": {"reviewed": 7, "complete": 3, "gap": 0, "uncertain": 4},
+  "prior_inventory": "reports/replica/batch-completeness-round8.json",
+  "definite_product_differences": [],
+  "activities": {"product_source_edited": false, "ledger_edited": false, "compiled": false, "product_run": false, "tests_run": false, "wrapper_added": false},
+  "skipped_failed_addresses": ["Paste:0x100ac35f8", "Paste:0x100ac746c"],
+  "limitations": [
+    "complete仅表示列明有限静态业务合同可复用，不是当前构建或运行验收，不改变台账计数。",
+    "静态符号槽绑定、约束witness轴身份、Actor诊断及错误报告保留待证，不据此认定可见产品缺陷。",
+    "拒绝初始化器只有原生入口，不虚构正常生产调用。"
+  ],
+  "functions": [
+    {
+      "function_id": "Paste:0x100042edc", "status": "complete",
+      "original": {"path": "decompiled/Paste/part-0025.c", "line": 91},
+      "source_references": [{"path": "replica/Sources/PastoCore/OriginalSearchTextScroller.swift", "symbol": "public init(textView:"}],
+      "evidence": "先清零focusRingBounds再super.init(frame:zero)，依序禁横竖滚动条和背景，focusRingType raw2=none、border raw0=noBorder；设置documentView后配置同一TextView，返回self。当前专用构造输入、顺序和状态一致，没有误走被拒绝的init(frame:)。",
+      "actual_consumer": "f04200c首次缓存时调用OriginalSearchTextScroller(textView:f041f9c())，真实InputView添加到视图树。"
+    },
+    {
+      "function_id": "Paste:0x100045c2c", "status": "complete",
+      "original": {"path": "decompiled/Paste/part-0025.c", "line": 2030},
+      "source_references": [{"path": "replica/Sources/PastoCore/OriginalSearchField.swift", "symbol": "f_100045c2c"}, {"path": "replica/Sources/Pasto/UI/SearchEditor.swift", "symbol": "attach"}],
+      "evidence": "缓存存在返回同一InputView；首次创建后设置其TextView委托及弱onClear转发，再存缓存。当前实际factory由SearchEditor覆盖，editingDelegate由field保存同寿命，onClear弱捕获field。有限业务一致，不声称原私有类布局同构。",
+      "actual_consumer": "SearchEditor.makeNSView/updateNSView及SearchField布局调用getter；Coordinator.attach读取同一editingDelegate接提案、选区、结束及Enter。"
+    },
+    {
+      "function_id": "Paste:0x100045d40", "status": "uncertain",
+      "original": {"path": "decompiled/Paste/part-0025.c", "line": 2078},
+      "source_references": [{"path": "replica/Sources/PastoCore/OriginalSearchField.swift", "symbol": "f_100045d40"}],
+      "evidence": "lazy缓存、OS26 body/旧title2、配置nil保原图一致；另读part-0178.c:626 f20dce0确认探测重载与后备强非nil。f20d45c返回descriptor100c35e80，邻接f20d468小串为magnifyingglass，但本批未独立证明descriptor槽与该字符串绑定，不仅凭邻近字面量判完整。",
+      "actual_consumer": "SearchField构造及f04639c取此NSImageView并添加至搜索视图。"
+    },
+    {
+      "function_id": "Paste:0x10004639c", "status": "uncertain",
+      "original": {"path": "decompiled/Paste/part-0025.c", "line": 2369},
+      "source_references": [{"path": "replica/Sources/PastoCore/OriginalSearchField.swift", "symbol": "f_10004639c"}],
+      "evidence": "八组顺序及显式常量已核：icon centerY/leading8，input centerY/height20/leading到icon.trailing+4，filters双边组、leading到input.trailing+4、trailing-8。双边组经f1f9cd8和100ec00e8 witness提供；part-0164.c:2154完整helper依次调用+8/+10构造正负constant约束，但本批未独立解witness两锚点身份，故完整八组保待证。",
+      "actual_consumer": "SearchField.init添加三个子视图后实际activate(f04639c().flatMap)。"
+    },
+    {
+      "function_id": "Paste:0x100046acc", "status": "complete",
+      "original": {"path": "decompiled/Paste/part-0026.c", "line": 58},
+      "source_references": [{"path": "replica/Sources/PastoCore/OriginalSearchField.swift", "symbol": "f_100046acc"}],
+      "evidence": "原weakLoad field，nil无动作，存活原样转发NSEvent到f046b10，各路径返回0。当前optional方法与真实f046914中的weak self闭包一并恢复弱读取，不只按强optional参数孤立判通过。",
+      "actual_consumer": "SearchEditor更新筛选附件调用f046914；其OriginalSearchFilterView点击闭包弱捕获field并调用f046acc。"
+    },
+    {
+      "function_id": "Paste:0x100043258", "status": "uncertain",
+      "original": {"path": "decompiled/Paste/part-0025.c", "line": 184},
+      "source_references": [{"path": "replica/Sources/PastoCore/OriginalSearchTextScroller.swift", "symbol": "public required init?(coder:"}],
+      "evidence": "原Actor检查和固定unexpectedExecutor后清零focusRingBounds，再assertionFailure终止。当前默认零和fatalError保拒绝解码业务，但原诊断、精确断言消息及位置未闭，不因都终止判完整错误合同。",
+      "actual_consumer": "NSCoding原生入口保留；正常生产只走init(textView:)，未找到正常coder调用。"
+    },
+    {
+      "function_id": "Paste:0x1000435d8", "status": "uncertain",
+      "original": {"path": "decompiled/Paste/part-0025.c", "line": 349},
+      "source_references": [{"path": "replica/Sources/PastoCore/OriginalSearchTextScroller.swift", "symbol": "public override init(frame frameRect:"}],
+      "evidence": "原Actor检查后reportUnimplementedInitializer(Paste.TextViewScroller,init(frame:))再brk。当前fatalError同样拒绝直接frame构造，专用构造直接super(frame:zero)不经过此入口；特定初始化器报告及Actor副作用未证明相同，保待证。",
+      "actual_consumer": "原生frame构造拒绝入口保留；正常缓存getter走专用textView构造，不伪造错误路径生产消费。"
+    }
+  ]
+}

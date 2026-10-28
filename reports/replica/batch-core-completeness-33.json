@@ -1,0 +1,35 @@
+{
+  "review_kind": "read_only_attributes_codingkey_string_projection",
+  "counts": { "reviewed": 1, "complete": 1, "gap": 0, "uncertain": 0, "new_migrations_claimed": 0 },
+  "functions": [
+    {
+      "function_id": "Paste:0x1003244dc",
+      "status": "complete",
+      "original_path": "decompiled/Paste/part-0258.c",
+      "original_line": 2284,
+      "current_path": "replica/Sources/PastoCore/OriginalPinboardAttributes.swift",
+      "current_symbol": "OriginalPinboardAttributes.Attributes.CodingKeys.stringValue（Codable派生）",
+      "criterion": "原三个合法CodingKey语义case固定输出type、capacity、colorCode，无格式器、locale、大小写替换或动态配置；当前Attributes以同三个属性名声明Codable，未提供自定义CodingKeys、keyEncodingStrategy或自定义encode/decode，派生CodingKey的stringValue正是相同属性键。合法key各分支完整复用，而非凭函数名判定。",
+      "original_literal_evidence": "原C直接以small String字组成键：0x65707974/tagE4→type；0x7974696361706163/tagE8→capacity；0x646f43726f6c6f63与尾字节0x65/tagE9→colorCode。bytecase0/1/2对应三个属性，编码体f324388用相同case0/1/2分别encodeIfPresent String、Int、UInt64，独立证实键与字段的关联。",
+      "consumer": "Store创建及调色调用encoded(colorCode:)→JSONEncoder.encode(Attributes(...))，实际由派生键stringValue写type/colorCode；colorCode(from:)→JSONDecoder.decode(Attributes.self)也消费同键。Panel Header、preview Header及AppIntent tint实际读取解码结果。capacity虽在新board编码时为nil，原全部字段声明仍保留，并在已有JSON解码读取capacity使用相同键。",
+      "error_boundary": "该方法只返回已知key字符串，编码值是否nil/抛错由外层编码器负责；不把nil值变成null或强行写默认值。Foundation键策略未额外配置，因此不会出现蛇形键或自定义映射。",
+      "boundary": "只签合法CodingKey值→字符串方法，不假设合成enum/VWT机器布局等于原byte布局，也不签description/debugDescription的Self名称。此前未知f324534协议slot身份不由本条自动解决；没有为计数新增同名wrapper。"
+    }
+  ],
+  "not_counted": [
+    {
+      "function_id": "Paste:0x10032469c",
+      "reason": "原String→可选key解析体亦已读；当前可依派生CodingKey提供同键解析，但本轮没有闭合该特定parser在生产Foundation解码中的实际调用（未见allKeys消费者），不因存在Codable就额外计为完整。此处不是新的gap或台账变更。"
+    }
+  ],
+  "reused_evidence": [
+    ".local/pasteboard-next-pinboard-header-writer-review.json",
+    "reports/replica/batch-core-completeness-32.json"
+  ],
+  "limits": [
+    "只阅读成功C和现有源码/调用者并新增本独立报告；未修改产品源码、台账或用户数据。",
+    "未编译、parse、运行产品、功能/MCP测试、验证脚本或发布；未核当前编译产物。",
+    "本批1/1完整不是项目总体迁移率；主智能体汇总分母与跨批去重，新增迁移0。",
+    "指定失败地址0x100ac35f8、0x100ac746c跳过，未读取。"
+  ]
+}

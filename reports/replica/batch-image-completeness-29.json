@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "scope": "两个前轮未覆盖的已有预览/卡片标题选择方法，核成功原C、当前canonical输入及两个真实显示消费者；不扩标题编辑生命周期。",
+  "counts": { "total": 2, "complete": 2, "gap": 0, "uncertain": 0 },
+  "records": [
+    {
+      "function_id": "Paste:0x100308f88",
+      "status": "complete",
+      "original": { "path": "decompiled/Paste/part-0251.c", "start_line": 772, "address_range": "0x100308f88..<0x100309008" },
+      "current_implementations": [ { "path": "replica/Sources/PastoCore/OriginalPreviewTitles.swift", "start_line": 17, "end_line": 20, "symbol": "public static func f_100308f88(_:defaultTitle:)" } ],
+      "criterion": "原读取optional title，存在且长度非0时原样返回，nil或空串才调用默认标题生成；不trim、大小写转换或把纯空白当无标题。当前if let且!isEmpty与惰性autoclosure保同分支，默认值仅在需要时求值，保任意Unicode非空字符串。原方法本体没有actor检查、可选回调或持久化副作用。",
+      "actual_consumer": "PanelViews.cardTitle把item.originalTitle传入并惰性嵌入f309008；Adapter第409行把current.originalTitle传入真实TitleLabel写入。Models.originalTitle保hasExplicitTitle的nil/empty区别，未错误使用legacy title非可选值顶替。Adapter还独立计算defaultTitle以更新默认占位字段，该上层用途不改变本方法的惰性合同。",
+      "limitations": "有限标题取值方法完整，不升级原实体title读取、rename事务或TitleLabel编辑控制；旧hasExplicitTitle缺键兼容仍为模型独立适配。"
+    },
+    {
+      "function_id": "Paste:0x100309008",
+      "status": "complete",
+      "original": { "path": "decompiled/Paste/part-0251.c", "start_line": 813, "address_range": "0x100309008..<0x1003091ec" },
+      "current_implementations": [ { "path": "replica/Sources/PastoCore/OriginalPreviewTitles.swift", "start_line": 4, "end_line": 15, "symbol": "public static func f_100309008(rawType:fileCount:)" } ],
+      "criterion": "原规范化内容type的1/2/4/5分别用image/color/link/text资源，其余unknown；files3读取canonical metadata，成功files投影使用paths.count，空数组保持0；缺metadata或非files退1。文件数量必须能作为非负Int32，原count>>31非0失败，当前来自paths.count并通过Int32转换保超界失败，nil退1，不将0改成1。每分支使用原对应LocalizedStringResource再String(localized:)；当前同资源与完整合法type分支，无按文件系统重新数、读取payload格式或网络请求。",
+      "actual_consumer": "PanelViews.cardTitle和Adapter第397..407行都显式把ClipboardKind映射到raw0..5（text/richText→5），files才传decodedFilePreviewMetadata?.paths.count。Models该getter只decode raw，strict files类型失败即nil，因此原缺/坏/非files→1路径真正可达，多个文件与空数组不丢失。",
+      "limitations": "只确认合法内容枚举及canonical paths.count的值合同；参数Int接口不宣称任意非法整数等于原rawType规范化ABI。原CoreData实体/metadata生成父不升级，不依赖当前磁盘真实文件或运行本地化测试。"
+    }
+  ],
+  "excluded_failed_addresses": [ "0x100ac35f8", "0x100ac746c" ],
+  "verification_scope": "只新增本独立报告，无产品源码、台账和旧报告修改，无编译、parse、运行产品、测试、MCP或发布，未读取两指定失败函数。complete限有限源码方法，不是一比一功能验收或当前二进制证明。"
+}

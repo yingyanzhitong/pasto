@@ -2,15 +2,15 @@
   "schema_version": 1,
   "kind": "static_code_migration",
   "function_id": "Paste:0x10021d024",
-  "reviewed_at": "2026-10-27T03:59:45.653489+00:00",
+  "reviewed_at": "2026-10-27T04:43:43.647224+00:00",
   "original_binary_sha256": "871f00354fbb1c165d858a98e6d19d6f43cb9d3f9f958b3e07c7f07eb5c19afb",
   "source_sha256": {
     "replica/Sources/PastoCore/OriginalLayerBackedView.swift": "87acffa7790cb38e5715cf6ce3d4474fffb3633d3deb15635743526f6342303c",
-    "replica/Sources/Pasto/UI/SearchEditor.swift": "f1cd5ab79ccf03c3c95aaf8e2c0d49690438607afa3367cc72455398628c8b76"
+    "replica/Sources/Pasto/UI/SearchEditor.swift": "1a25fc52eca054aea234d9a06396a22d8e08dfa68541b59fa4b2e4a4b25d6970"
   },
   "build_succeeded": true,
   "build_command": "bash replica/scripts/build-app.sh",
-  "compiled_app_binary_sha256": "c6ebd121b3cb9b31f2d4d3f11e543fe92d6557791b1117d311549d61c3a17562",
+  "compiled_app_binary_sha256": "9e011396bc6d57e32f9ea095bc335a3a42ee1153c90b42a421d93acb51fa7b69",
   "compiled_product": "Pasto",
   "functional_regression_executed": false,
   "equivalence_verified": false,
@@ -18,7 +18,7 @@
   "implementation_origin": "newly_migrated",
   "source_review": "192文件精确可逆改名证明及原证据不变守卫通过；菜单/产品/资源路径/错误域和临时前缀例外已逐文件审阅。保持本地址已有有限契约，新模块build76编译及当前源码摘要绑定；详见reports/replica/pasto-brand-build76.json。不将本轮静态检查称为差分运行或完整父功能等价。",
   "rename_audit": "reports/replica/pasto-brand-build76.json",
-  "build_snapshot": "reports/replica/dev52-static-build78.json",
+  "build_snapshot": "reports/replica/dev53-window-retention-build83.json",
   "original_pseudocode": {
     "path": "decompiled/Paste/part-0184.c",
     "line": 2312
@@ -30,9 +30,9 @@
     "sha256": "7135127224c2e8050db3d648f2270176d783409304008e034c65fb2b436736f8"
   },
   "compiled_provenance_refresh": {
-    "review": "已核对完整实现引用源码摘要未变化、符号及原地址绑定；仅刷新本次静态编译来源。",
-    "source_unchanged": true,
-    "previous_compiled_app_binary_sha256": "0357ba6a42a608c8746c59654ece36c4847a2566601f5bd187f83f4e7e4da6e5",
+    "review": "逐地址重核原伪码、主方法体与实际消费者；见静态证据。",
+    "source_unchanged": false,
+    "previous_compiled_app_binary_sha256": "c6ebd121b3cb9b31f2d4d3f11e543fe92d6557791b1117d311549d61c3a17562",
     "current_compiled_boundary_verified": false,
     "functional_tests_executed": false
   }

@@ -1,0 +1,38 @@
+{
+  "review_kind": "read_only_source_application_override_table_initializer",
+  "counts": { "reviewed": 1, "complete": 1, "gap": 0, "uncertain": 0, "new_migrations_claimed": 0 },
+  "functions": [
+    {
+      "function_id": "Paste:0x100311d2c",
+      "status": "complete",
+      "original_path": "decompiled/Paste/part-0254.c",
+      "original_line": 274,
+      "current_path": "replica/Sources/PastoCore/OriginalSourceApplicationColors.swift",
+      "current_symbol": "OriginalSourceApplicationColors.overrides的lazy static字典初始化",
+      "criterion": "原once构造函数无运行时参数：从固定47项bundleIdentifier/UInt64对建唯一键字典，写入全局槽；后续getter只经once消费该共享字典。当前private static let overrides用相同47项字面量构造唯一共享字典，首次getter访问时初始化一次，后续复用。非只凭名称：全部47对已在第10批对照原表，当前本轮又完整读字面表及原构造体，表值/大小写/数量未变化。",
+      "full_original_branches": "原字典插入每个键前检查重复、命中则trap；47个常量键已由既有原表证据证明唯一，合法固定输入域不会到该分支。循环47次、计数overflow trap是常量表容器实现；不把任意外部输入字典混入此无参数initializer。原最终销毁临时键值数组并发布已构造字典，当前literal的临时输入/字典由Swift持有管理，不保留第二份可变业务表或公开初始化入口。",
+      "existing_static_evidence": {
+        "proof": ".local/pasteboard-next-source-color-overrides-review.json",
+        "body_start": "0x100311d2c",
+        "body_end_exclusive": "0x100311e3c",
+        "body_size": 272,
+        "existing_sha256": "dcc2155ba864d387825c4c8866327b2ab784625724092669c5dab0d207841a63",
+        "table": "100fbefb8，24字节步长，47项；39个large字符串均有链式fixup/rebase证明，8个inline小串。原0311d5c/d60设47，d84按0x18前进，e04/e08/e0c销毁该47项临时数组。"
+      },
+      "consumer": "f311f7c真实访问此static字典做精确bundle lookup；rawColor先查该getter、未命中才从图像取色，SourceApplication.snapshot调用rawColor持久化。Header SourceAppColor也经实际rawColor记录读取颜色；不是仅落盘未消费的漂亮表。",
+      "boundary": "只签固定数据表的一次构造/共享消费源码合同。没有把39条chain验证脚本重新运行，也不把它们计39个函数；不声称原静态地址、字典hash种子、VWT/临时ARC指令与当前编译一致。第10批已完整的lookup方法不重复计本批。"
+    }
+  ],
+  "reused_prior_address_evidence": [
+    "reports/replica/batch-core-completeness-10.json",
+    ".local/root-source-app-color-overrides.json",
+    ".local/pasteboard-next-source-color-overrides-review.json"
+  ],
+  "limits": [
+    "只新增本独立报告，未修改产品源码、台账或用户数据。",
+    "本轮只读成功原C、当前源码和既存逐地址/常量证据；未编译、parse、运行产品、功能/MCP测试、验证脚本或发布。",
+    "原证据历史摘要仅作标识，不冒当前源/编译产物新hash绑定；本轮没有重跑fixup验证。",
+    "本批1/1完整不是项目总体迁移率；总分母及跨批去重由主智能体汇总，新增迁移0。",
+    "指定失败地址0x100ac35f8、0x100ac746c跳过，未读取。"
+  ]
+}

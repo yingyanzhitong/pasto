@@ -1,0 +1,52 @@
+{
+  "kind": "static_existing_stack_review",
+  "generated_at": "2026-10-27T11:22:39.923357+00:00",
+  "source_sha256": {
+    "replica/Sources/PastoCore/OriginalStackTableController.swift": "b1d4b71349ba609de5e7c16e33ae530e414228ad74cbe997d8f06413fdd1b2b3",
+    "replica/Sources/Pasto/UI/AuxiliaryViews.swift": "ae643de9f28fda9dc0fddc17fec2fdb69d6dabf9762e7399f97569a7a00a3412"
+  },
+  "build_executed": false,
+  "tests_executed": false,
+  "records": [
+    {
+      "function_id": "Paste:0x100082b90",
+      "status": "complete",
+      "criterion": "惰性返回同一高度约束，首建取enclosingScrollView.heightAnchor和tableView.rowHeight；scrollView缺失两者都失败。",
+      "original_path": "decompiled/Paste/part-0043.c",
+      "original_line": 637,
+      "source_path": "replica/Sources/PastoCore/OriginalStackTableController.swift",
+      "symbol": "f_100082b90",
+      "consumer": "AuxiliaryViews创建OriginalStackTableController，NSTableView dataSource/delegate或变更回调消费。"
+    },
+    {
+      "function_id": "Paste:0x100083a20",
+      "status": "complete",
+      "criterion": "取snippets.count截到1...10，animator设置rowHeight倍数并激活约束；由setSnippets和增删回调消费。",
+      "original_path": "decompiled/Paste/part-0043.c",
+      "original_line": 1267,
+      "source_path": "replica/Sources/PastoCore/OriginalStackTableController.swift",
+      "symbol": "f_100083a20",
+      "consumer": "AuxiliaryViews创建OriginalStackTableController，NSTableView dataSource/delegate或变更回调消费。"
+    },
+    {
+      "function_id": "Paste:0x100085230",
+      "status": "uncertain",
+      "criterion": "numberOfRows生产委托返回snippets.count；原含MainActor错误执行器报告，源码隔离可见但该诊断分支未确认。",
+      "original_path": "decompiled/Paste/part-0044.c",
+      "original_line": 169,
+      "source_path": "replica/Sources/PastoCore/OriginalStackTableController.swift",
+      "symbol": "f_100085230",
+      "consumer": "AuxiliaryViews创建OriginalStackTableController，NSTableView dataSource/delegate或变更回调消费。"
+    },
+    {
+      "function_id": "Paste:0x100085670",
+      "status": "uncertain",
+      "criterion": "shouldSelectRow对所有row返回false；原含MainActor错误执行器报告，诊断分支待证。",
+      "original_path": "decompiled/Paste/part-0044.c",
+      "original_line": 345,
+      "source_path": "replica/Sources/PastoCore/OriginalStackTableController.swift",
+      "symbol": "f_100085670",
+      "consumer": "AuxiliaryViews创建OriginalStackTableController，NSTableView dataSource/delegate或变更回调消费。"
+    }
+  ]
+}

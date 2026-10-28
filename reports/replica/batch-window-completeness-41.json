@@ -1,0 +1,116 @@
+{
+  "kind": "batch-window-completeness-41",
+  "scope": "2项已有快捷键特殊显示表和诊断全局配置初始化方法，核完整原C、生产消费者及历史未变证据。",
+  "summary": {
+    "reviewed": 2,
+    "complete": 1,
+    "gap": 0,
+    "uncertain": 1
+  },
+  "activities": {
+    "product_source_edited": false,
+    "ledger_edited": false,
+    "compiled": false,
+    "product_run": false,
+    "tests_run": false,
+    "wrapper_added": false
+  },
+  "skipped_failed_addresses": [
+    "Paste:0x100ac35f8",
+    "Paste:0x100ac746c"
+  ],
+  "limitations": [
+    "完整只覆盖配置容器构造/发布的有限合同，不表示Telemetry网络或Sentry sinks已迁移，也不提升诊断父生命周期。",
+    "待证不等于特殊键表所有正常标签错误；静态已明确区分固定条目和本地化资源解析域。",
+    "不更改台账总数，1/2仅本批局部分类，历史build不作为当前编译或运行证明。"
+  ],
+  "functions": [
+    {
+      "function_id": "Paste:0x10019b60c",
+      "status": "complete",
+      "evidence": "完整原C为具体InitializedValue配置容器分配对象、调用f0db2a8初始化Optional.none、将唯一引用发布至全局DAT_101057388。续读f0db2a8确认是对泛型Value?存储写nil判别，f19b654的once路径保证生产访问只构造一次。当前OriginalShortcutTelemetry.configuration为static let OriginalInitializedValue<命名tuple>()，该容器init唯一写value=nil，真实Swift static let提供一次构造与进程共享强引用，不额外填充默认配置或发送事件。原容器分配body与原getter地址分别区分，不把后续fallback赋值归入本构造方法。",
+      "extra_original_evidence": [
+        {
+          "path": "decompiled/Paste/part-0072.c",
+          "line": 1038,
+          "symbol": "FUN_1000db2a8"
+        },
+        {
+          "path": "decompiled/Paste/part-0134.c",
+          "line": 2546,
+          "symbol": "FUN_10019b654"
+        }
+      ],
+      "actual_consumer": "OriginalShortcutDependencies.shortcutDiagnostic实际调用OriginalShortcutTelemetry.f19b694解析服务；其factory f19b6f0读取同一configuration容器，未设时独立设置默认tuple并逐keypath投影，最终localDiagnostic进入现有本地日志adapter。",
+      "original": {
+        "path": "decompiled/Paste/part-0134.c",
+        "line": 2529
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutTelemetry.swift",
+          "symbol": "public static let configuration"
+        }
+      ],
+      "historical_evidence": {
+        "path": "reports/function-migration/Paste-0x10019b60c.json",
+        "sha256": "3d6309544d64306081bb9301226e968f2df0b84921909956aaba488c8027da33",
+        "contract": "首次访问Telemetry全局配置时分配持有带命名tuple的OriginalInitializedValue，初始存储为none；进程共用同一容器。",
+        "historical_build_snapshot": "reports/replica/dev52-static-build78.json",
+        "current_build_claim": false
+      },
+      "source_binding": {
+        "replica/Sources/PastoCore/OriginalShortcutTelemetry.swift": {
+          "sha256": "8873cf835f1611b85b91736a796b4335d3364b9bc9278ace5bc89b2bd43ef14c",
+          "historical_sha256": "8873cf835f1611b85b91736a796b4335d3364b9bc9278ace5bc89b2bd43ef14c",
+          "unchanged": true
+        }
+      }
+    },
+    {
+      "function_id": "Paste:0x1001e822c",
+      "status": "uncertain",
+      "evidence": "已读完整原C的52个条目及构造循环；19个F键标签F1...F19（无F20）、Escape/双向删除/四方向/帮助/翻页/Tab/Return、数字小键盘字符和首尾箭头与当前固定表逐项相符，49为空格键的本地化标签。当前static displayLabels一次消费返回表，对应原once字典发布，不把Dictionary桶顺序当业务输出。仍待证的是空格标签：原调用f1e4b54经LocalizedStringResource/String(localized:)从原bundle/table与Locale.current解析；当前spaceLabel按Locale.preferredLanguages匹配硬编码17语言并英语回退。已有译文匹配不足以证明所有locale/资源缺失/覆盖输入域一致，因此整个构造函数保待证。",
+      "extra_original_evidence": {
+        "path": "decompiled/Paste/part-0154.c",
+        "line": 2214,
+        "symbol": "FUN_1001e4b54",
+        "purpose": "原Space标签资源构造边界；不将原资源解析器自动等同字典fallback"
+      },
+      "actual_consumer": "OriginalShortcutFunctions.displayLabels static let调用本方法；f1e7e50优先查此表并用于Recorder候选显示/是否空键判定、OriginalShortcutValue.displayName与菜单等效字符路径。",
+      "original": {
+        "path": "decompiled/Paste/part-0156.c",
+        "line": 1606
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutFunctions.swift",
+          "symbol": "f_1001e822c"
+        },
+        {
+          "path": "replica/Sources/PastoCore/KeyboardShortcut.swift",
+          "symbol": "displayName"
+        }
+      ],
+      "historical_evidence": {
+        "path": "reports/function-migration/Paste-0x1001e822c.json",
+        "sha256": "099431faff05590967721a2322db4fd6a68c16ebbb34f7f521aa3cd64790839f",
+        "contract": "构造 52 项特殊键显示字典：F1…F19、空格、Escape、删除、方向/翻页/首尾、Tab/Return 及数字小键盘；空格标签按原版 17 个本地化区域选择。",
+        "historical_build_snapshot": "reports/replica/dev52-static-build78.json",
+        "current_build_claim": false
+      },
+      "source_binding": {
+        "replica/Sources/PastoCore/OriginalShortcutFunctions.swift": {
+          "sha256": "82c57689dfb20e2c4c02cd3c4ca72cf40ee7a3fd650b5fa832d79589761a9058",
+          "historical_sha256": "82c57689dfb20e2c4c02cd3c4ca72cf40ee7a3fd650b5fa832d79589761a9058",
+          "unchanged": true
+        },
+        "replica/Sources/PastoCore/KeyboardShortcut.swift": {
+          "sha256": "eba51741928fc95619585980567b617d39f3c749564cddb5dff4bbd04bf189d6",
+          "historical_sha256": "eba51741928fc95619585980567b617d39f3c749564cddb5dff4bbd04bf189d6",
+          "unchanged": true
+        }
+      }
+    }
+  ]
+}

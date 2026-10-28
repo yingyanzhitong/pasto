@@ -14,8 +14,8 @@ public enum OriginalPreviewTitles {
         return String(localized: resource)
     }
 
-    public static func f_100308f88(_ title: String?, defaultTitle: String) -> String {
+    public static func f_100308f88(_ title: String?, defaultTitle: @autoclosure () -> String) -> String {
         if let title, !title.isEmpty { return title }
-        return defaultTitle
+        return defaultTitle()
     }
 }

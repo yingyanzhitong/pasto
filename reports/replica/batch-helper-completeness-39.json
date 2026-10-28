@@ -1,0 +1,19 @@
+{
+  "kind": "static_reuse_review",
+  "records": [
+    {
+      "function_id": "Paste-Helper:0x100002614",
+      "status": "uncertain",
+      "original_path": "decompiled/Paste-Helper/part-0000.c",
+      "original_line": 704,
+      "current_path": "replica/Sources/PastoHelper/HelperMain.swift",
+      "current_symbol": "checkRunning",
+      "criterion": "每次检查先记录检查日志；isLaunching为true则日志后return；共享defaults不存在或pasteIsRunning为false则日志后return；主app已运行则日志后return；否则记录3秒后启动日志、设置isLaunching=true并派发弱捕获self的MainActor Task，sleep成功或抛错均继续执行延后进程复查。",
+      "consumer": "HelperDelegate 的观察回调和重试任务调用 checkRunning。",
+      "source_sha256": "60d98b18e87390fcc6c8de6a43b75d9505bfd74b822eb9e0fc6dc58bbfd47e12",
+      "limitations": "guards、日志、延时和弱捕获路径对应；原C显示返回值而当前为Void，调用约定和原真实返回用途尚未闭合。"
+    }
+  ],
+  "build_executed": false,
+  "tests_executed": false
+}

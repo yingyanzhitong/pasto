@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "kind": "static_code_migration",
+  "functions": [
+    {
+      "function_id": "Paste:0x100206b5c",
+      "original": "decompiled/Paste/part-0170.c:3189",
+      "machine_review": ".local/image-next-color-card-hex-arm64.txt",
+      "source": "replica/Sources/Pasto/UI/OriginalPreviewColorFormatting.swift",
+      "consumer": "Color preview display/commit and canonical color card call formatter then uppercase result",
+      "branches": "deviceRGB failure black; alpha read but omitted; Int truncation and traps preserved; lowercase %02x per channel; no clamp"
+    },
+    {
+      "function_id": "Paste:0x1003c14d0",
+      "original": "decompiled/Paste/part-0297.c:1049",
+      "source": "replica/Sources/PastoCore/OriginalTextPreviewSubmission.swift",
+      "consumer": "ClipboardStore edit -> makeItem -> attribute enumeration -> RTF/plain choice",
+      "branches": "Emphasis font traits or underline/strike key presence sets both flags; unrelated or empty attributes leave prior flags unchanged"
+    },
+    {
+      "function_id": "Paste:0x100315a10",
+      "original": "decompiled/Paste/part-0255.c:924",
+      "source": "replica/Sources/PastoCore/OriginalImagePreviewMetadataCodec.swift",
+      "consumer": "decodeStored -> synthesized Stored.Decodable",
+      "branches": "Forward decoder and decoding error to complete 0x1003152d4"
+    },
+    {
+      "function_id": "Paste:0x100315a24",
+      "original": "decompiled/Paste/part-0255.c:935",
+      "source": "replica/Sources/PastoCore/OriginalImagePreviewMetadataCodec.swift",
+      "consumer": "encodeStored -> synthesized Stored.Encodable",
+      "branches": "Forward encoder and encoding error to complete 0x100314ea8"
+    },
+    {
+      "function_id": "Paste:0x1000778c0",
+      "original": "decompiled/Paste/part-0039.c:1020",
+      "source": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+      "consumer": "ReplicaPanel.makeFirstResponder and existing show/hide/search calls",
+      "branches": "Nonnil directly delegates to super; nil selects initialFirstResponder then contentView; return actual super Bool; no extra collection priority"
+    }
+  ],
+  "build_executed": false,
+  "tests_executed": false,
+  "equivalence_verified": false,
+  "limitations": "Source-level method contracts only. Original actor-check wrappers, compiler ABI, parent workflows and runtime equivalence are separate work. Earlier build evidence is historical, not rerun."
+}

@@ -1,0 +1,50 @@
+{
+  "review_kind": "read_only_capture_completion_counter_and_notifications",
+  "counts": { "reviewed": 2, "complete": 1, "gap": 0, "uncertain": 1, "new_migrations_claimed": 0 },
+  "functions": [
+    {
+      "function_id": "Paste:0x10037b428",
+      "status": "complete",
+      "original_path": "decompiled/Paste/part-0281.c",
+      "original_line": 2169,
+      "current_path": "replica/Sources/PastoCore/Pasteboard.swift",
+      "current_symbol": "ClipboardMonitor.f_10037b428(_:)",
+      "criterion": "原先将state token写入defaults，再读取同步次数并带signed overflow检查加1，保存次数，然后以manager自身为object发DidSync；之后才检查state.items，空则debug日志并return，非空调用f37ae9c。当前同键、同顺序、同Int溢出trap、同object和空/非空分支，不把创建失败当成同步次数不推进。",
+      "bounded_arm_evidence": [
+        "原完整范围10037b428..10037b620已静态读，包含主路径、once初始化分支、Cocoa数组count分支、空日志与所有返回。",
+        "37b454读取state+30；37b458..480构造key并写token；37b494..4b4读取计数；37b4c4 ADDS +1 / 4c8 B.VS→37b588 BRK；37b4cc..4ec写回次数。",
+        "37b524加载DidSync名槽，37b530 MOV x3,x20证明通知object是manager而非state；37b534 post后才37b540..568检查items并分支。",
+        "原字符串100da39f0='pasteboard-change-token'；100da3a10='pasteboardSyncCount'。37a8d8..37a90c构造DidSync名，literal+32指100da3bc0='pasteboardHistoryManagerDidSync'。空日志literal100da3b40='Empty pasteboard content'，与当前一致。"
+      ],
+      "consumer": "originalPasteboardDidRead真实委托本方法，synchronizePasteboard在快照赋值后调用delegate；DidSync总在后续创建/去重之前。方法内委托f37ae9c的具体创建事务仍单独待证，不升级该子方法。",
+      "boundary": "完整指此计数/通知/分支协调源码合同，不把NSDefaults磁盘可靠性、诊断dispatcher父或CoreData创建事务当成已全量验收。"
+    },
+    {
+      "function_id": "Paste:0x10037ae9c",
+      "status": "uncertain",
+      "original_path": "decompiled/Paste/part-0281.c",
+      "original_line": 1931,
+      "current_path": "replica/Sources/PastoCore/Pasteboard.swift",
+      "current_symbol": "ClipboardMonitor.f_10037ae9c(_:)",
+      "matching_contract": "原创建操作返回三态：失败raw2只error日志；成功false清共享Undo、只发DidCapture；成功true清Undo、先DidCreate再DidCapture。当前try f37b034、catch日志return，成功清Undo，再按created发DidCreate，最后DidCapture，同主要事件顺序。失败不清Undo、不发这两通知，未把duplicate当新建。",
+      "unresolved": "原由f2ff5d4执行f37c47c/f37b034事务并传三态，当前Swift throwing调用还将错误存入公开只读lastError；原整个catcher与创建repo witness链的所有失败/ObjC异常及其外向状态尚未闭合。创建Bool来自现JSON锁内isNew适配，原事务身份/缓存/共享数据域不可仅由Bool解释完整。保uncertain，不凭主要成功通知顺序一样签整个函数完整，也不据类名不同判gap。",
+      "consumer": "f37b428的非空分支真实调用；DidCapture由OriginalSoundEffects订阅作capture声音事件，DidCreate由ReplicaUIController闭窗history订阅消费。原失败日志literal100da3b60='Error creating item for pasteboard content'已静态读，与当前文本相符。",
+      "boundary": "本轮无运行错误注入/创建/重复采集，不声称当前已出现通知错误；只是完整失败域及原事务返回意义仍未证明。"
+    }
+  ],
+  "original_static_inputs": {
+    "image": ".local/targets/Paste.arm64",
+    "code_ranges": [
+      { "start": "0x10037b428", "end_exclusive": "0x10037b620" },
+      { "start": "0x10037a8d8", "end_exclusive": "0x10037a90c" }
+    ],
+    "literal_reads": ["0x100da39f0..0x100da3a28", "0x100da3b40..0x100da3be8"],
+    "note": "llvm-objdump仅有界静态读原镜像，xxd仅读上述常量；无新产品编译或执行。"
+  },
+  "limits": [
+    "只新增本独立报告，未修改产品源码、台账或用户数据。",
+    "未编译、parse、运行产品、功能/MCP测试、验证脚本或发布；未核当前编译二进制。",
+    "本批1/2完整不是项目总迁移率；总分母/跨批去重由主智能体汇总，新增迁移0。",
+    "指定失败地址0x100ac35f8、0x100ac746c跳过，未读取。"
+  ]
+}
