@@ -1,0 +1,110 @@
+{
+  "date": "2026-10-29T16:39:47.597090+08:00",
+  "scope": "Four requested panel interactions; not full original function equivalence",
+  "sdk": "26.5",
+  "minimum_runtime": "14.0",
+  "global_sdk_unchanged": "15.2",
+  "core_test_groups": 25,
+  "core_failed": 0,
+  "ui": {
+    "status": "passed",
+    "passed": true,
+    "checks": [
+      "panel select/copy/deselect and original multi-text RTF/plain aggregation",
+      "ordered multi-selection paste and custom quick/plain modifiers",
+      "board navigation and original prepend/reverse Stack consumption",
+      "pause/resume and native Stack rows",
+      "NSItemProvider binary/HTML/Unicode and file paths; internal OCR excluded",
+      "22 hosted tab hit points including icon/gaps/edges; release outside cancels; label-only double-click editing",
+      "hover bitmap changes/restores; inline create/select-all/rename; native retention anchors and intermediate day/week/month mapping",
+      "offscreen ordered panel visible before Escape; first Escape hides including search",
+      "local outside-window click closes panel",
+      "old closing completion cannot close a reopened panel"
+    ],
+    "scope": "Isolated app ID/store/private pasteboard. Native offscreen windows and synthetic local events; no system keyboard posting, real cross-app paste or physical external-app click claim."
+  },
+  "scroll": {
+    "before_ms": 117.98637523315847,
+    "after_ms": 52.57197888568044,
+    "reduction_percent": 55.44233070827843,
+    "iterations": 600,
+    "samples_after_warmup": 2,
+    "fixtures_have_image_preview_metadata": true,
+    "physical_trackpad_or_original_fps_benchmark": false
+  },
+  "copy": {
+    "fixtures": [
+      {
+        "archive_bytes": 1273,
+        "cloud_journal_enabled": false,
+        "samples": [
+          {
+            "copy_return_ms": 1.829707995057106,
+            "history_notification_ms": 1.711708027869463,
+            "panel_closed_ms": 8.591999765485525
+          },
+          {
+            "copy_return_ms": 2.8038746677339077,
+            "history_notification_ms": 2.2154166363179684,
+            "panel_closed_ms": 224.61029142141342
+          },
+          {
+            "copy_return_ms": 1.49441696703434,
+            "history_notification_ms": 1.2829583138227463,
+            "panel_closed_ms": 218.59479183331132
+          }
+        ]
+      },
+      {
+        "archive_bytes": 75517875,
+        "cloud_journal_enabled": false,
+        "samples": [
+          {
+            "copy_return_ms": 2.038708422333002,
+            "history_notification_ms": 1.9255420193076134,
+            "panel_closed_ms": 52.606208715587854
+          },
+          {
+            "copy_return_ms": 2.293708734214306,
+            "history_notification_ms": 1.9851252436637878,
+            "panel_closed_ms": 227.27350005879998
+          },
+          {
+            "copy_return_ms": 2.295833081007004,
+            "history_notification_ms": 1.9420417957007885,
+            "panel_closed_ms": 212.0602917857468
+          }
+        ]
+      },
+      {
+        "archive_bytes": 75517875,
+        "cloud_journal_enabled": true,
+        "samples": [
+          {
+            "copy_return_ms": 6.016791332513094,
+            "history_notification_ms": 5.882999859750271,
+            "panel_closed_ms": 45.64362484961748
+          },
+          {
+            "copy_return_ms": 6.010125391185284,
+            "history_notification_ms": 5.65408356487751,
+            "panel_closed_ms": 225.02629179507494
+          },
+          {
+            "copy_return_ms": 11.883916798979044,
+            "history_notification_ms": 11.062083300203085,
+            "panel_closed_ms": 228.39929163455963
+          }
+        ]
+      }
+    ],
+    "passed": true,
+    "scope": "Release build; synthetic temporary data, private pasteboards and offscreen windows. No original runtime benchmark or network sync."
+  },
+  "installed": true,
+  "native_retention_days_preserved": 7,
+  "user_sync_remains_disabled": true,
+  "new_original_complete_function_count": 0,
+  "historical_migration_percent": 2.0315,
+  "historical_ledger_currently_reaudited": false
+}

@@ -16,7 +16,7 @@ compile_native_test_harness() {
   cat > "$app/Contents/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0"><dict><key>CFBundleIdentifier</key><string>local.pasto.regression.$name.$(uuidgen)</string><key>CFBundleExecutable</key><string>harness</string><key>CFBundleName</key><string>$name</string><key>CFBundlePackageType</key><string>APPL</string><key>LSUIElement</key><true/></dict></plist>
+<plist version="1.0"><dict><key>CFBundleIdentifier</key><string>local.pasto.regression.$name.$(uuidgen)</string><key>CFBundleExecutable</key><string>harness</string><key>CFBundleName</key><string>$name</string><key>CFBundlePackageType</key><string>APPL</string><key>LSUIElement</key><true/><key>UIDesignRequiresCompatibility</key><false/></dict></plist>
 PLIST
   cp -R "$binary_root/Pasto_PastoCore.bundle" "$app/Contents/Resources/"
   local optimization=-Onone

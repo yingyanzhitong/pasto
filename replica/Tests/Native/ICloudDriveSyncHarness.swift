@@ -145,6 +145,23 @@ struct ICloudDriveSyncHarness {
             withDestinationURL: folder.appendingPathComponent("PastoSync-v1"))
         do { try await transport.write(reset, to: linked); throw Failure(message: "Accepted a linked data directory") }
         catch is ICloudDriveSyncError { checks += 1 }
+        let cachedStore = try ClipboardStore(directoryURL: root.appendingPathComponent("digest-cache"))
+        let cachedID = try cachedStore.add(ClipboardItem(plainText: "cache", payloads: ["local.binary": bytes]))
+        let originalDigest = try cachedStore.prepareICloudSync()
+        try check(try cachedStore.prepareICloudSync() == originalDigest, "Warm digest cache changed the snapshot")
+        cachedStore.items[cachedStore.items.firstIndex { $0.id == cachedID }!].payloads["local.binary"] = Data([9, 8, 7])
+        try cachedStore.save()
+        let changedDigest = try cachedStore.prepareICloudSync()
+        try check(changedDigest != originalDigest, "Payload change did not invalidate digest cache")
+        let uncached = try ClipboardStore(directoryURL: cachedStore.directoryURL)
+        try check(try uncached.prepareICloudSync() == changedDigest, "Cached digest differs from cold encoding after reopen")
+        let cancelFolder = root.appendingPathComponent("cancelled-transport")
+        try FileManager.default.createDirectory(at: cancelFolder, withIntermediateDirectories: true)
+        let cancelled = Task { try await transport.write(changedDigest, to: cancelFolder) }
+        cancelled.cancel()
+        do { try await cancelled.value; throw Failure(message: "Cancelled write continued") }
+        catch is CancellationError { checks += 1 }
+        try check(!FileManager.default.fileExists(atPath: cancelFolder.appendingPathComponent("PastoSync-v1").path), "Cancelled write created a data directory")
         print("{\"passed\":true,\"checks\":\(checks),\"isolated_devices\":2,\"real_icloud_accessed\":false,\"general_pasteboard_accessed\":false}")
     }
 }

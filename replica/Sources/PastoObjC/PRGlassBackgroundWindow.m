@@ -13,17 +13,16 @@
                          styleMask:(NSWindowStyleMask)style
                            backing:(NSBackingStoreType)backingStoreType
                              defer:(BOOL)flag {
+    // Paste 0x10021dc14 creates the glass BEFORE NSWindow initialization:
+    // NSWindow can already dispatch our contentView accessors during super init.
+    Class glassClass = NSClassFromString(@"NSGlassEffectView");
+    if ([glassClass isSubclassOfClass:NSView.class]) {
+        _glassView = [[glassClass alloc] init];
+    }
     self = [super initWithContentRect:contentRect styleMask:style backing:backingStoreType defer:flag];
-    if (self) {
-        // Resolve the public Tahoe class at runtime to support older build SDKs.
-        Class glassClass = NSClassFromString(@"NSGlassEffectView");
-        if ([glassClass isSubclassOfClass:NSView.class]) {
-            NSView *content = [super contentView];
-            _glassView = [[glassClass alloc] initWithFrame:contentRect];
-            _glassView.cornerRadius = 26;
-            [super setContentView:_glassView];
-            _glassView.contentView = content;
-        }
+    if (self && _glassView) {
+        _glassView.cornerRadius = 26;
+        [super setContentView:_glassView];
     }
     return self;
 }

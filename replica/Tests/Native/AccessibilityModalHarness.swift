@@ -127,7 +127,33 @@ struct AccessibilityModalHarness {
                 ["x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility"]
             try require(actions == expected, "Permission button must open Accessibility settings for status \(status)")
         }
+        // A fitting-size preview does not exercise the modal display cycle which
+        // runs when double-clicking without Accessibility permission.
+        var modalReturns: [UInt8] = []
+        for expected: UInt8 in [0, 1, 2] {
+            let modal = AccessibilityModalSession(initialResult: 2,
+                styleMask: [.titled, .fullSizeContentView], animation: 5, material: 6)
+            modal.window.backgroundColor = .clear
+            modal.setContent(PasteToOtherAppsContent(appName: "Regression fixture") { modal.complete($0) },
+                             alertContainer: true)
+            let watchdog = DispatchWorkItem {
+                fputs("Modal display cycle timed out\n", stderr)
+                exit(1)
+            }
+            DispatchQueue.global().asyncAfter(deadline: .now() + 5, execute: watchdog)
+            let timer = Timer(timeInterval: 0.2, repeats: false) { _ in
+                MainActor.assumeIsolated { modal.complete(expected) }
+            }
+            RunLoop.main.add(timer, forMode: .modalPanel)
+            let result = modal.run()
+            watchdog.cancel()
+            timer.invalidate()
+            try require(result == expected && !modal.window.isVisible,
+                        "Modal loop did not close with result \(expected)")
+            modalReturns.append(result)
+        }
         let report: [String: Any] = ["passed": true, "native_glass": nativeGlass,
+            "real_modal_returns": modalReturns.map(Int.init),
             "content_size": [host.bounds.width, host.bounds.height], "window_is_opaque": session.window.isOpaque,
             "action_results": results.map(Int.init), "return_key_verified": returnVerified,
             "escape_key_verified": escapeVerified,
@@ -136,7 +162,7 @@ struct AccessibilityModalHarness {
             "checked_copy_result_1_status": "not verified; requires visible preview checkbox/action",
             "checks": ["native glass content replacement retains surface", "original toolbar and radius 26",
                        "hero resource and natural content size", "all permission states navigate to Accessibility settings"],
-            "limits": ["Real offscreen window and local key-equivalent attempts only; no runModal, permission request, system settings or cross-process AX action",
+            "limits": ["Real modal loops and local key equivalents; no permission request, system settings or cross-process AX action",
                        "No screenshot or backdrop transparency acceptance in the default run"]]
         print(String(data: try JSONSerialization.data(withJSONObject: report, options: [.sortedKeys]), encoding: .utf8)!)
         fflush(stdout)

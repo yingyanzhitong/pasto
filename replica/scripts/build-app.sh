@@ -3,6 +3,10 @@ set -euo pipefail
 replica_root="$(cd "$(dirname "$0")/.." && pwd)"
 configuration="${1:-release}"
 architecture="${2:-native}"
+build_sdk_version="$(xcrun --sdk macosx --show-sdk-version)"
+if (( ${build_sdk_version%%.*} < 26 )); then
+  printf '%s\n' "当前 macOS SDK 为 $build_sdk_version；要匹配 macOS 26 的原生控件外观，请使用 Xcode 26 或更新版本构建。" >&2
+fi
 case "$configuration" in release|debug) ;; *) printf '%s\n' '配置必须为 release 或 debug。' >&2; exit 1 ;; esac
 case "$architecture" in native|arm64|x86_64|universal) ;; *) printf '%s\n' '架构必须为 native、arm64、x86_64 或 universal。' >&2; exit 1 ;; esac
 version="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["version"])' "$replica_root/../package.json")"
@@ -92,6 +96,7 @@ cat > "$bundle/Contents/Info.plist" <<PLIST
 <key>LSUIElement</key><true/>
 <key>NSHighResolutionCapable</key><true/>
 <key>NSPrincipalClass</key><string>NSApplication</string>
+<key>UIDesignRequiresCompatibility</key><false/>
 </dict></plist>
 PLIST
 plutil -lint "$bundle/Contents/Info.plist"

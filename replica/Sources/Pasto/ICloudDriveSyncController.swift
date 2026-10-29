@@ -1,4 +1,3 @@
-import AppKit
 import Combine
 import CryptoKit
 import Foundation
@@ -16,6 +15,7 @@ final class ICloudDriveSyncController: ObservableObject {
     private let transport = ICloudDriveSyncTransport()
     private let defaults: UserDefaults
     private let prefix: String
+    private let cloudRoot: URL
     private var timer: Timer?
     private var syncTask: Task<Void, Never>?
     private var generation = UUID()
@@ -25,11 +25,13 @@ final class ICloudDriveSyncController: ObservableObject {
             .appendingPathComponent("Library/Mobile Documents/com~apple~CloudDocs", isDirectory: true)
     }
 
-    init(store: ClipboardStore, defaults: UserDefaults = .standard) {
+    init(store: ClipboardStore, defaults: UserDefaults = .standard,
+         supportedDataDirectory: URL? = nil, cloudRoot: URL? = nil) {
         self.store = store
         self.defaults = defaults
+        self.cloudRoot = cloudRoot ?? Self.iCloudDriveURL
         canSync = store.directoryURL.standardizedFileURL.resolvingSymlinksInPath()
-            == ClipboardStore.defaultDirectoryURL.standardizedFileURL.resolvingSymlinksInPath()
+            == (supportedDataDirectory ?? ClipboardStore.defaultDirectoryURL).standardizedFileURL.resolvingSymlinksInPath()
         let digest = SHA256.hash(data: Data(store.directoryURL.standardizedFileURL.path.utf8))
             .map { String(format: "%02x", $0) }.joined()
         prefix = "pasto.icloud-drive.\(digest)."
@@ -44,44 +46,31 @@ final class ICloudDriveSyncController: ObservableObject {
     }
 
     private func isICloudFolder(_ url: URL) -> Bool {
-        let root = Self.iCloudDriveURL.resolvingSymlinksInPath().standardizedFileURL.pathComponents
+        let root = cloudRoot.resolvingSymlinksInPath().standardizedFileURL.pathComponents
         let candidate = url.resolvingSymlinksInPath().standardizedFileURL.pathComponents
         return candidate.count >= root.count && Array(candidate.prefix(root.count)) == root
     }
 
-    func chooseFolder() {
-        guard canSync else { return }
-        guard FileManager.default.fileExists(atPath: Self.iCloudDriveURL.path) else {
-            statusText = "请先在系统设置中登录 Apple ID 并开启 iCloud Drive。"
-            return
+    private func prepareFolder() throws -> URL {
+        let files = FileManager.default
+        guard (try? cloudRoot.resourceValues(forKeys: [.isDirectoryKey]))?.isDirectory == true else {
+            throw ICloudDriveSyncError.folderUnavailable
         }
-        let panel = NSOpenPanel()
-        panel.title = "选择 iCloud Drive 同步文件夹"
-        panel.message = "请在 iCloud Drive 中新建或选择一个 Pasto 文件夹；其他 Mac 选择相同文件夹。"
-        panel.prompt = "选择同步文件夹"
-        panel.canChooseDirectories = true; panel.canChooseFiles = false
-        panel.canCreateDirectories = true; panel.allowsMultipleSelection = false
-        panel.directoryURL = folderURL ?? Self.iCloudDriveURL
-        guard panel.runModal() == .OK, let selected = panel.url else { return }
-        guard isICloudFolder(selected) else {
-            statusText = "请选择 iCloud Drive 中的文件夹，普通本地文件夹无法跨设备同步。"
-            return
+        // Keep an existing explicit location so upgrading never abandons its documents.
+        let selected = folderURL ?? cloudRoot.appendingPathComponent("Pasto", isDirectory: true)
+        guard isICloudFolder(selected) else { throw ICloudDriveSyncError.folderUnavailable }
+        if folderURL == nil && !files.fileExists(atPath: selected.path) {
+            try files.createDirectory(at: selected, withIntermediateDirectories: false,
+                                      attributes: [.posixPermissions: 0o700])
         }
-        let alert = NSAlert()
-        alert.messageText = "开启 iCloud 同步？"
-        alert.informativeText = "将本机剪贴板历史、图片和收藏分组写入选中的 iCloud Drive 文件夹，并与其他 Mac 合并。删除也会同步。\n\n仅限使用同一文件夹的 Pasto；不会连接原版 Paste 的云数据。"
-        alert.addButton(withTitle: "开启并同步"); alert.addButton(withTitle: "取消")
-        guard alert.runModal() == .alertFirstButtonReturn else { return }
-        do {
-            stop()
-            defaults.set(false, forKey: prefix + "enabled")
-            if folderURL?.standardizedFileURL != selected.standardizedFileURL {
-                try store.resetICloudSyncIdentity()
-            }
-            folderURL = selected
-            defaults.set(selected.path, forKey: prefix + "folder")
-            setEnabled(true)
-        } catch { statusText = error.localizedDescription }
+        guard (try selected.resourceValues(forKeys: [.isDirectoryKey])).isDirectory == true else {
+            throw ICloudDriveSyncError.folderUnavailable
+        }
+        if folderURL == nil {
+            try store.resetICloudSyncIdentity()
+            lastSyncDate = nil
+        }
+        return selected
     }
 
     func setEnabled(_ enabled: Bool) {
@@ -91,13 +80,16 @@ final class ICloudDriveSyncController: ObservableObject {
             statusText = "同步已关闭，本地和 iCloud Drive 中的内容均保留。"
             return
         }
-        guard canSync else { return }
-        guard let folderURL else { chooseFolder(); return }
-        guard isICloudFolder(folderURL), FileManager.default.fileExists(atPath: folderURL.path) else {
-            statusText = "同步文件夹不可用，请重新选择 iCloud Drive 文件夹。"
+        guard canSync, !isEnabled else { return }
+        do {
+            let selected = try prepareFolder()
+            folderURL = selected
+            defaults.set(selected.path, forKey: prefix + "folder")
+        } catch {
+            defaults.set(false, forKey: prefix + "enabled")
+            statusText = "无法开启：请确认系统已开启 iCloud Drive，且 Pasto 同步文件夹可访问。"
             return
         }
-        stop()
         isEnabled = true
         defaults.set(true, forKey: prefix + "enabled")
         timer = Timer.scheduledTimer(withTimeInterval: 30, repeats: true) { [weak self] _ in
@@ -125,6 +117,8 @@ final class ICloudDriveSyncController: ObservableObject {
                 if generation == currentGeneration { isBusy = false; syncTask = nil }
             }
             do {
+                try Task.checkCancellation()
+                guard generation == currentGeneration, isEnabled else { return }
                 let local = try store.prepareICloudSync()
                 let incoming = try await transport.read(from: folderURL, excluding: local.deviceID)
                 try Task.checkCancellation()

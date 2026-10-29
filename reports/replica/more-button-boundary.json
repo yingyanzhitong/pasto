@@ -1,0 +1,58 @@
+{
+  "date": "2026-10-29",
+  "source_evidence": [
+    "0x10000d050",
+    "0x10000d884",
+    "0x10023e080",
+    "0x10023fc94"
+  ],
+  "size_points": [
+    44,
+    44
+  ],
+  "size_origin": "Existing user-requested 44-point adaptation; original generic large button is 32 points",
+  "changes": [
+    "remove 2-point vertical offset to restore toolbar centerY alignment",
+    "prioritize full visible native button bounds over hosting padding and resize strip",
+    "weakly cache button lookup"
+  ],
+  "native_regression": {
+    "passed": true,
+    "circle_perimeter_points": 64,
+    "rectangular_points": 9,
+    "toolbar_vertical_alignment": true,
+    "resize_strip_outside_control": true,
+    "search_layout_matrix_cases": 9
+  },
+  "installed_click_tests": {
+    "method": "CUA screenshot-coordinate clicks",
+    "left": [
+      2886,
+      60
+    ],
+    "right": [
+      2970,
+      60
+    ],
+    "top": [
+      2928,
+      18
+    ],
+    "bottom": [
+      2928,
+      102
+    ],
+    "each_opened_menu": true
+  },
+  "installation": {
+    "status": "installed-and-running",
+    "installed_path": "/Applications/Pasto.app",
+    "sdk": "26.5",
+    "new_binary_sha256": "7c858a3199fd29e3bf06bdf40cb5a461b01d03440d8e90b06f9e89a4a3360a73",
+    "signature_verified": true,
+    "data_preserved": true,
+    "preferences_unchanged": true,
+    "previous_apps_removed_after_backup": true
+  },
+  "new_complete_original_functions": 0
+}

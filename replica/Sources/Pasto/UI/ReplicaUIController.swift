@@ -20,6 +20,9 @@ final class ReplicaUIState: ObservableObject {
         if !isApplyingSearchInput { searchInputProjection = nil; refreshSearch() }
     } }
     @Published var pinboardID: UUID?
+    @Published var pendingPinboardDeletionID: UUID?
+    @Published var pinboardDeletionError: String?
+    @Published var tabRenameRequest: (key: String, token: UUID)?
     @Published var showDeleted = false
     @Published var isMigratingPasteGroups = false
     @Published var selection: Set<UUID> = [] {
@@ -150,6 +153,10 @@ final class ReplicaUIState: ObservableObject {
     }
 
     func normalizeSelection() {
+        if let id = pendingPinboardDeletionID, !store.pinboards.contains(where: { $0.id == id }) {
+            pendingPinboardDeletionID = nil
+            pinboardDeletionError = nil
+        }
         let items = visibleItems
         let visible = Set(items.map(\.id))
         var ids = orderedSelectionIDs.filter { selection.contains($0) && visible.contains($0) }
@@ -223,6 +230,7 @@ final class ReplicaUIState: ObservableObject {
     }
 
     func chooseBoard(_ id: UUID?) {
+        controller?.cancelPinboardRemoval()
         allowsEmptySelection = false
         pinboardID = id
         showDeleted = false
@@ -410,6 +418,8 @@ final class ReplicaUIController {
     var pasteHandler: ((UUID, Bool) -> Bool)?
     var pasteItemsHandler: (([UUID], Bool) -> Bool)?
     var copiedItemsHandler: (() -> Void)?
+    var panelWillShow: (() -> Void)?
+    var panelWillClose: ((_ restorePreviousApplication: Bool) -> Void)?
     var pasteboard: NSPasteboard = .general
     var hotKeyConfigurationChanged: (() -> Void)?
     var hotKeyRecordingChanged: ((Bool) -> Void)?
@@ -492,7 +502,10 @@ final class ReplicaUIController {
         panel.didResignKey = { [weak self] in self?.panelDidResignKey() }
         panel.didChangeScreen = { [weak self] in self?.panelDidChangeScreen() }
         panel.closeRequested = { [weak self] in self?.hidePanel() }
-        panel.copyRequested = { [weak self] in self?.copySelection(plainTextOnly: false) }
+        panel.copyRequested = { [weak self] in
+            guard let self, self.state.pendingPinboardDeletionID == nil else { return }
+            self.copySelection(plainTextOnly: false)
+        }
         restorePanelFrame()
         panel.layoutIfNeeded()
         installPanelResizeHandle()
@@ -517,6 +530,7 @@ final class ReplicaUIController {
             return
         }
         guard let screen = NSScreen.main, let content = panel.contentView else { return }
+        panelWillShow?()
         panelTransitionGeneration += 1
         let generation = panelTransitionGeneration
         isPanelClosing = false
@@ -658,6 +672,7 @@ final class ReplicaUIController {
     func hidePanel() {
         guard panel.isVisible, let content = panel.contentView else { return }
         guard !isPanelClosing else { return }
+        cancelPinboardRemoval()
         removePanelDismissMonitors()
         panelTransitionGeneration += 1
         let generation = panelTransitionGeneration
@@ -666,6 +681,9 @@ final class ReplicaUIController {
         beginClosedState()
         isPanelClosing = true
         NotificationCenter.default.post(name: OriginalPreviewPopover.mainWindowWillCloseNotification, object: nil)
+        // 0x100019a84 → onWillClose → 0x1000b11ac: return activation
+        // before the close animation, unless detached previews still own it.
+        panelWillClose?(previewRegistry.windows.isEmpty)
         content.superview?.clipsToBounds = false
         NSAnimationContext.runAnimationGroup { context in
             context.duration = 0.2
@@ -985,12 +1003,16 @@ final class ReplicaUIController {
     }
 
     func createPinboard(assignSelection: Bool = false) {
-        guard let name = prompt(title: OriginalSearchLocalization.text("pasto.action.create-group"), message: "为这个分组输入名称。", initial: "") else { return }
+        let name = String(localized: OriginalPreviewLocalization.f_1001c6aa4())
         let ids = state.visibleItems.filter { state.selection.contains($0.id) }.map(\.id)
         state.perform {
             let board = try store.createPinboard(name: name)
             if assignSelection { try store.assign(orderedIDs: ids, to: board.id) }
-            state.chooseBoard(board.id)
+            // 0x100039618 → 0x10003b4c0: create first, then request inline editing.
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) { [weak self] in
+                guard let self, self.store.pinboards.contains(where: { $0.id == board.id }) else { return }
+                self.state.tabRenameRequest = (board.id.uuidString, UUID())
+            }
         }
     }
 
@@ -1000,14 +1022,37 @@ final class ReplicaUIController {
     }
 
     func removePinboard(_ board: Pinboard) {
-        let alert = NSAlert()
-        alert.messageText = "删除“\(board.name)”？"
-        alert.informativeText = "分组中的项目仍保留在剪贴板历史中。"
-        alert.addButton(withTitle: "删除分组")
-        alert.addButton(withTitle: "取消")
-        if alert.runModal() == .alertFirstButtonReturn {
-            state.perform { try store.removePinboard(id: board.id) }
-            if state.pinboardID == board.id { state.chooseBoard(nil) }
+        guard store.pinboards.contains(where: { $0.id == board.id }) else { return }
+        state.pinboardDeletionError = nil
+        state.pendingPinboardDeletionID = board.id
+        // 0x1003c4f00: an empty local group is deleted without confirmation.
+        // Nonempty confirmation stays inside the panel by user request, instead
+        // of the original 0x100022ad0 → 0x1003b6cfc NSAlert.runModal presenter.
+        if !store.items.contains(where: { $0.pinboardIDs.contains(board.id) }) {
+            confirmPinboardRemoval()
+        } else {
+            panel.makeFirstResponder(nil)
+        }
+    }
+
+    func cancelPinboardRemoval() {
+        state.pendingPinboardDeletionID = nil
+        state.pinboardDeletionError = nil
+    }
+
+    func confirmPinboardRemoval() {
+        guard let id = state.pendingPinboardDeletionID else { return }
+        guard store.pinboards.contains(where: { $0.id == id }) else {
+            cancelPinboardRemoval()
+            return
+        }
+        do {
+            try store.removePinboard(id: id)
+            cancelPinboardRemoval()
+            if state.pinboardID == id { state.chooseBoard(nil) }
+        } catch {
+            // Keep failures in the same confirmation rather than opening an alert.
+            state.pinboardDeletionError = error.localizedDescription
         }
     }
 
@@ -1227,6 +1272,19 @@ final class ReplicaUIController {
     }
 
     private func handleKey(_ event: NSEvent) -> Bool {
+        if state.pendingPinboardDeletionID != nil {
+            if event.keyCode == 53 { cancelPinboardRemoval(); return true }
+            let modifiers = event.modifierFlags.intersection([.command, .control, .option, .shift])
+            if (event.keyCode == 36 || event.keyCode == 76), modifiers.isEmpty {
+                confirmPinboardRemoval()
+                return true
+            }
+            // Allow button focus navigation and normal app commands, but do not
+            // pass copy/delete/navigation through to the covered card collection.
+            if event.keyCode == 48 { return false }
+            if event.keyCode == 49, panel.firstResponder !== (panel as? ReplicaPanel)?.collectionFocusTarget { return false }
+            return !(modifiers == .command && event.charactersIgnoringModifiers == "q")
+        }
         if event.keyCode == 53 {
             guard canDismissPanelForInteraction else { return false }
             cancelSearchOrPanel()
@@ -1310,6 +1368,7 @@ final class ReplicaUIController {
     }
 
     func cancelSearchOrPanel() {
+        if state.pendingPinboardDeletionID != nil { cancelPinboardRemoval(); return }
         guard canDismissPanelForInteraction else { return }
         if filterBrowserPopover?.isShown == true { filterBrowserPopover?.close() }
         if previewPopover?.isShown == true { previewPopover?.close() }

@@ -6,7 +6,26 @@ import AppKit
 final class ReplicaPanelContentView: NSView {
     var canInterpretSearchInput: (() -> Bool)?
     var onSearchText: ((String) -> Void)?
+    private weak var cachedMoreButton: NSButton?
     override var isFlipped: Bool { false }
+
+    override func hitTest(_ point: NSPoint) -> NSView? {
+        let hit = super.hitTest(point)
+        func moreButton(in view: NSView) -> NSButton? {
+            if let button = view as? NSButton, button.accessibilityIdentifier() == "panel-more-actions" {
+                return button
+            }
+            return view.subviews.lazy.compactMap { moreButton(in: $0) }.first
+        }
+        if cachedMoreButton?.isDescendant(of: self) != true {
+            cachedMoreButton = moreButton(in: self)
+        }
+        // Resolve the entire control before transparent hosting padding or the
+        // top resize strip can take the event. Forward directly to NSButton.
+        guard let button = cachedMoreButton, !button.isHiddenOrHasHiddenAncestor,
+              button.visibleRect.contains(button.convert(point, from: superview)) else { return hit }
+        return button
+    }
 
     private var collectionFocusTarget: NSView? {
         guard let panel = window as? ReplicaPanel, let collection = panel.collectionFocusTarget,

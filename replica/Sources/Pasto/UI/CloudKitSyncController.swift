@@ -108,31 +108,34 @@ final class CloudKitSyncController: ObservableObject {
 }
 
 @MainActor
-struct CloudKitSyncSettingsView: View {
+struct ICloudSyncGeneralRow: View {
     @ObservedObject var sync: CloudKitSyncController
     @ObservedObject var drive: ICloudDriveSyncController
+
+    private var enabled: Bool { drive.isEnabled || sync.isEnabled }
+    private var summary: String {
+        if drive.isBusy || sync.isBusy { return "正在同步…" }
+        guard enabled else { return drive.statusText.hasPrefix("无法开启") ? "无法开启" : "未开启" }
+        if let date = drive.isEnabled ? drive.lastSyncDate : sync.lastSyncDate {
+            return (drive.isEnabled ? "本地合并 " : "最近更新 ") + date.formatted(date: .omitted, time: .shortened)
+        }
+        return "等待同步"
+    }
+
     var body: some View {
-        Form {
-            Section("iCloud · CloudKit") {
-                Toggle("同步历史与收藏分组", isOn: Binding(get: { sync.isEnabled }, set: sync.setEnabled))
-                    .disabled(!sync.canSync)
-                Text("采用原版的 CloudKit 记录、附件和增量同步方式；使用 Pasto 自有容器。默认关闭。")
-                    .font(.caption).foregroundStyle(.secondary)
-                if let container = sync.containerIdentifier { Text(container).font(.caption).textSelection(.enabled) }
-                HStack {
-                    if sync.isBusy { ProgressView().controlSize(.small) }
-                    Text(sync.statusText).font(.caption).textSelection(.enabled)
+        HStack {
+            Text("iCloud 同步")
+            Spacer()
+            Text(summary).font(.caption).foregroundStyle(.secondary)
+            Toggle("iCloud 同步", isOn: Binding(get: { enabled }, set: { value in
+                if value { drive.setEnabled(true) }
+                else {
+                    if drive.isEnabled { drive.setEnabled(false) }
+                    if sync.isEnabled { sync.setEnabled(false) }
                 }
-                if let date = sync.lastSyncDate { LabeledContent("最近更新", value: date.formatted()).font(.caption) }
-                Button("立即同步") { sync.syncNow() }.disabled(!sync.isEnabled || sync.isBusy)
-            }
-            Section("另一种同步方式") {
-                DisclosureGroup("独立 iCloud Drive 文件同步") {
-                    Text("这是独立实现的文件同步，不是原版 CloudKit；两者不能同时开启。")
-                        .font(.caption).foregroundStyle(.secondary)
-                    ICloudSyncSettingsView(sync: drive).frame(minHeight: 680).disabled(sync.isEnabled)
-                }
-            }
-        }.formStyle(.grouped)
+            })).labelsHidden().toggleStyle(.switch)
+                .disabled(!drive.canSync && !sync.canSync)
+        }
+        .help(drive.isEnabled || !sync.isEnabled ? drive.statusText : sync.statusText)
     }
 }

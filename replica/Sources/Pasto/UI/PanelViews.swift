@@ -7,7 +7,6 @@ import PastoCore
 struct ReplicaPanelView: View {
     @ObservedObject var state: ReplicaUIState
     @State private var searchFocused = false
-    @State private var tabRenameRequest: (key: String, token: UUID)?
 
     var body: some View {
         GeometryReader { geometry in
@@ -30,6 +29,13 @@ struct ReplicaPanelView: View {
                         .frame(maxWidth: .infinity, minHeight: collectionHeight, maxHeight: collectionHeight)
                         .accessibilityLabel(state.searchFailed ? "本地搜索暂不可用" : "无结果")
                     }
+                    if let board = state.store.pinboards.first(where: { $0.id == state.pendingPinboardDeletionID }) {
+                        Color.black.opacity(0.08)
+                            .contentShape(Rectangle())
+                            .onTapGesture { state.controller?.cancelPinboardRemoval() }
+                        pinboardDeletionConfirmation(board)
+                            .frame(width: min(360, max(0, geometry.size.width - 32)))
+                    }
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -51,6 +57,34 @@ struct ReplicaPanelView: View {
         return 0
     }
 
+    private func pinboardDeletionConfirmation(_ board: Pinboard) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("删除“\(board.name)”？")
+                .font(.system(size: 16, weight: .semibold))
+                .lineLimit(2)
+            Text(state.pinboardDeletionError ?? "保留历史和其他分组中的内容，仅属于此分组的内容将被删除。")
+                .font(.system(size: 13))
+                .foregroundStyle(state.pinboardDeletionError == nil ? Color.secondary : Color.red)
+                .fixedSize(horizontal: false, vertical: true)
+            HStack {
+                Spacer()
+                Button("取消") { state.controller?.cancelPinboardRemoval() }
+                    .buttonStyle(.bordered)
+                    .accessibilityIdentifier("cancel-group-deletion")
+                Button("删除分组", role: .destructive) { state.controller?.confirmPinboardRemoval() }
+                    .buttonStyle(.borderedProminent)
+                    .tint(.red)
+                    .accessibilityIdentifier("confirm-group-deletion")
+            }
+        }
+        .padding(16)
+        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
+        .overlay(RoundedRectangle(cornerRadius: 16).strokeBorder(.primary.opacity(0.1)))
+        .shadow(color: .black.opacity(0.12), radius: 12, y: 4)
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("group-deletion-confirmation")
+    }
+
     private var backgroundRadius: CGFloat {
         if #available(macOS 26, *) { return 26 }
         return 0
@@ -59,20 +93,34 @@ struct ReplicaPanelView: View {
     private var searching: Bool { searchFocused || state.searchVisible || !state.isSearchQueryEmpty }
 
     private var header: some View {
-        ZStack {
-            HStack { Spacer(); trailingControls }
-            if searching {
-                searchField
-                historyControls.offset(x: 246)
-            } else {
-                HStack(spacing: 20) {
-                    Button { state.searchVisible = true; searchFocused = true } label: {
-                        Image(systemName: "magnifyingglass").font(.system(size: 19))
-                    }.buttonStyle(.plain).accessibilityLabel("搜索剪贴板")
-                    boardTabs
-                }.fixedSize(horizontal: true, vertical: false)
+        GeometryReader { geometry in
+            // 0x10000e4c8 / 0x10000d884: centered search, width >= 400 and
+            // >= 1/4 toolbar; collapsed tabs begin 8 points after its edge.
+            let searchWidth = max(400, geometry.size.width * 0.25)
+            let tabsWidth = max(0, (geometry.size.width - searchWidth) / 2 - 80)
+            ZStack {
+                HStack { Spacer(); trailingControls }
+                if searching {
+                    searchField.frame(width: searchWidth)
+                        .overlay(alignment: .trailing) {
+                            ScrollView(.horizontal) { historyControls }
+                                .scrollIndicators(.hidden)
+                                .frame(width: tabsWidth, height: 32)
+                                .clipped()
+                                .alignmentGuide(.trailing) { $0[.leading] - 8 }
+                        }
+                } else {
+                    HStack(spacing: 20) {
+                        OriginalPanelToolbarButton(symbol: "magnifyingglass", label: "搜索剪贴板") {
+                            state.searchVisible = true; searchFocused = true
+                        }
+                        boardTabs
+                    }.fixedSize(horizontal: true, vertical: false)
+                }
             }
-        }.padding(.horizontal, 24)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .padding(.horizontal, 24)
+        }
     }
 
     private var searchField: some View {
@@ -88,7 +136,7 @@ struct ReplicaPanelView: View {
                     state.searchVisible = false
                 }
             })
-            .frame(width: 400, height: 32)
+            .frame(height: 32)
     }
 
     private var searchFilterChips: [ReplicaSearchFilterChip] {
@@ -108,17 +156,24 @@ struct ReplicaPanelView: View {
                         Button("重命名") { requestTabRename(board.id) }
                         Menu("颜色") {
                             ForEach(OriginalPinboardColor.allCases, id: \.rawValue) { color in
-                                Button(colorName(color)) {
+                                Button {
                                     state.perform {
                                         try state.store.updatePinboard(id: board.id,
                                             colorHex: String(format: "%06llX", color.canonicalColorCode))
+                                    }
+                                } label: {
+                                    Label {
+                                        Text(colorName(color))
+                                    } icon: {
+                                        Image(nsImage: colorMenuImage(color)).renderingMode(.original)
                                     }
                                 }
                             }
                         }
                         Button("向左移动") { state.movePinboard(board, by: -1) }
                         Button("向右移动") { state.movePinboard(board, by: 1) }
-                        Button("删除…", role: .destructive) { state.controller?.removePinboard(board) }
+                        Button(state.store.items.contains(where: { $0.pinboardIDs.contains(board.id) }) ? "删除…" : "删除",
+                               role: .destructive) { state.controller?.removePinboard(board) }
                     }
                     .onDrag { NSItemProvider(object: ("paste-pinboard:" + board.id.uuidString) as NSString) }
                     .onDrop(of: [UTType.text], isTargeted: nil) { providers in
@@ -130,10 +185,22 @@ struct ReplicaPanelView: View {
                         return true
                     }
             }
-            Button { state.controller?.createPinboard() } label: { Image(systemName: "plus").font(.system(size: 21)).frame(width: 30, height: 28) }
-                .buttonStyle(.plain).accessibilityLabel(OriginalSearchLocalization.text("pasto.action.create-group"))
-                .help(OriginalSearchLocalization.text("pasto.action.create-group") + " (⇧⌘N)")
+            OriginalPanelToolbarButton(symbol: "plus", label: OriginalSearchLocalization.text("pasto.action.create-group"),
+                help: OriginalSearchLocalization.text("pasto.action.create-group") + " (⇧⌘N)") {
+                state.controller?.createPinboard()
+            }
         }.fixedSize()
+    }
+
+    private func colorMenuImage(_ color: OriginalPinboardColor) -> NSImage {
+        let fill = color.color()
+        let image = NSImage(size: NSSize(width: 12, height: 12), flipped: false) { bounds in
+            fill.setFill()
+            NSBezierPath(ovalIn: bounds).fill()
+            return true
+        }
+        image.isTemplate = false
+        return image
     }
 
     private func colorName(_ color: OriginalPinboardColor) -> String {
@@ -157,15 +224,16 @@ struct ReplicaPanelView: View {
     }
 
     private func requestTabRename(_ id: UUID?) {
-        tabRenameRequest = (key: id?.uuidString ?? "history", token: UUID())
+        state.tabRenameRequest = (key: id?.uuidString ?? "history", token: UUID())
     }
 
     private func boardButton(_ name: String, board: Pinboard?) -> some View {
         let key = board?.id.uuidString ?? "history"
         return OriginalPinboardTab(title: name, iconColor: board.map { NSColor(boardColor($0)) },
-                beginRequest: tabRenameRequest?.key == key ? tabRenameRequest?.token : nil,
+                isSelected: state.pinboardID == board?.id && !state.showDeleted,
+                beginRequest: state.tabRenameRequest?.key == key ? state.tabRenameRequest?.token : nil,
                 onSelect: { state.chooseBoard(board?.id) },
-                onEnd: { if tabRenameRequest?.key == key { tabRenameRequest = nil } },
+                onEnd: { if state.tabRenameRequest?.key == key { state.tabRenameRequest = nil } },
                 onCommit: { value in
                     if let board {
                         state.perform { try state.store.renamePinboardFromTab(id: board.id, rawName: value) }
@@ -176,7 +244,7 @@ struct ReplicaPanelView: View {
                         return state.store.preferences.historyTitle
                     }
                 })
-        .background(state.pinboardID == board?.id && !state.showDeleted ? Color.primary.opacity(0.10) : .clear, in: Capsule())
+        .background(Color.clear, in: Capsule())
         .accessibilityElement(children: .combine)
         .accessibilityLabel(name)
         .accessibilityAddTraits(state.pinboardID == board?.id ? .isSelected : [])
@@ -184,63 +252,23 @@ struct ReplicaPanelView: View {
     }
 
     private var trailingControls: some View {
-        HStack(spacing: 14) {
-            Menu {
-                Button {
-                    NSApp.sendAction(NSSelectorFromString("about:"), to: NSApp.delegate, from: nil)
-                } label: { Label("关于 Pasto", systemImage: "info.circle") }
-                Divider()
-                Button { state.controller?.newTextItem() } label: {
-                    Label("新文本项", systemImage: "square.and.pencil")
-                }
-                .keyboardShortcut("n", modifiers: .command)
-                Button { state.controller?.showSettings() } label: {
-                    Label("设置…", systemImage: "gear")
-                }
-                .keyboardShortcut(",", modifiers: .command)
-                Divider()
-                Button { state.controller?.migratePasteGroups() } label: {
-                    Label("从 Paste 迁移分组…", systemImage: "square.and.arrow.down")
-                }
-                .disabled(state.isMigratingPasteGroups)
-                Divider()
-                Menu {
-                    if state.store.preferences.isMonitoringPaused {
-                        Button("继续 Pasto", action: state.resumeMonitoring)
-                    } else {
-                        Button("暂停") { state.pauseMonitoring() }
-                        ForEach([15, 30, 60, 180, 480], id: \.self) { minutes in
-                            Button(minutes < 60 ? "暂停 \(minutes)分钟" : "暂停 \(minutes / 60)小时") {
-                                state.pauseMonitoring(minutes: minutes)
-                            }
-                        }
-                    }
-                } label: { Label("暂停 Pasto", systemImage: "pause.circle") }
-                Button { NSApp.terminate(nil) } label: {
-                    Label("退出 Pasto", systemImage: "xmark.square")
-                }
-                .keyboardShortcut("q", modifiers: .command)
-            } label: { Image(systemName: "ellipsis").frame(width: 16) }
-            .menuStyle(.borderlessButton).menuIndicator(.hidden).fixedSize()
-            .accessibilityLabel("更多操作")
-        }
-        .buttonStyle(.plain)
-        .font(.system(size: 18, weight: .semibold))
-        .foregroundStyle(.secondary)
-        .fixedSize()
+        OriginalPanelMoreMenu(state: state)
+            .frame(width: 44, height: 44)
+            .padding(.trailing, -6)
     }
 
     private var historyControls: some View {
-        HStack(spacing: 22) {
-            Button {
+        HStack(spacing: 8) {
+            OriginalPanelToolbarButton(symbol: "clock.arrow.circlepath", label: "返回剪贴板历史",
+                isSelected: state.pinboardID == nil && !state.showDeleted) {
                 state.query = ""; state.chooseBoard(nil); state.searchVisible = false; searchFocused = false
                 state.controller?.panel.makeFirstResponder(nil)
-            } label: { Image(systemName: "clock.arrow.circlepath").font(.system(size: 17)).frame(width: 18, height: 32) }
-            .buttonStyle(.plain).accessibilityLabel("返回剪贴板历史")
-            ForEach(state.store.pinboards) { board in
-                Button { state.chooseBoard(board.id) } label: {
-                    Circle().fill(boardColor(board)).frame(width: 12, height: 12).frame(height: 32)
-                }.buttonStyle(.plain).accessibilityLabel(board.name)
+            }
+            ForEach(state.store.pinboards.sorted { $0.sortOrder < $1.sortOrder }) { board in
+                OriginalPanelToolbarButton(symbol: "circle.fill", label: board.name, iconColor: NSColor(boardColor(board)),
+                    isSelected: state.pinboardID == board.id && !state.showDeleted) {
+                    state.chooseBoard(board.id)
+                }
             }
         }.foregroundStyle(Color(nsColor: .labelColor)).fixedSize()
     }
@@ -881,5 +909,116 @@ private final class ReplicaCardDatePresentation: ObservableObject {
     func stop() {
         timer?.invalidate()
         timer = nil
+    }
+}
+
+@MainActor
+private struct OriginalPanelToolbarButton: NSViewRepresentable {
+    let symbol: String
+    let label: String
+    var help: String? = nil
+    var iconColor: NSColor? = nil
+    var isSelected = false
+    let action: () -> Void
+    func makeNSView(context: Context) -> OriginalToolbarButton {
+        OriginalToolbarButton(symbol: symbol, size: .large, action: { _ in action() })
+    }
+    func updateNSView(_ view: OriginalToolbarButton, context: Context) {
+        view.buttonAction = { _ in action() }
+        view.toolTip = help ?? label
+        view.setAccessibilityLabel(label)
+        view.isSelected = isSelected
+        if let iconColor {
+            view.contentTintColor = iconColor
+            view.f_10023cc80().image = NSImage(systemSymbolName: symbol, accessibilityDescription: nil)?
+                .withSymbolConfiguration(.init(pointSize: 12, weight: .regular))
+        }
+    }
+    func sizeThatFits(_ proposal: ProposedViewSize, nsView: OriginalToolbarButton, context: Context) -> CGSize? {
+        CGSize(width: 32, height: 32)
+    }
+}
+
+@MainActor
+private struct OriginalPanelMoreMenu: NSViewRepresentable {
+    @ObservedObject var state: ReplicaUIState
+
+    func makeCoordinator() -> Coordinator { Coordinator() }
+
+    func makeNSView(context: Context) -> OriginalToolbarButton {
+        let button = OriginalToolbarButton(symbol: "ellipsis", size: .large, action: { _ in })
+        // Keep the recovered native hover/press behavior; only enlarge this control.
+        for constraint in button.constraints where constraint.firstItem === button
+            && (constraint.firstAttribute == .width || constraint.firstAttribute == .height)
+            && constraint.secondItem == nil && constraint.constant == 32 {
+            constraint.constant = 44
+        }
+        button.setAccessibilityIdentifier("panel-more-actions")
+        button.setAccessibilityLabel("更多操作")
+        button.toolTip = "更多操作"
+        return button
+    }
+
+    func updateNSView(_ button: OriginalToolbarButton, context: Context) {
+        button.buttonAction = { [state, coordinator = context.coordinator] button in
+            let menu = coordinator.makeMenu(state: state)
+            menu.popUp(positioning: nil, at: .init(x: button.bounds.maxX - menu.size.width, y: 0), in: button)
+        }
+    }
+
+    func sizeThatFits(_ proposal: ProposedViewSize, nsView: OriginalToolbarButton, context: Context) -> CGSize? {
+        CGSize(width: 44, height: 44)
+    }
+
+    @MainActor final class Coordinator: NSObject {
+        private var actions: [() -> Void] = []
+
+        @discardableResult private func add(_ title: String, symbol: String? = nil, key: String = "",
+                         to menu: NSMenu, action: @escaping () -> Void) -> NSMenuItem {
+            let item = NSMenuItem(title: title, action: #selector(invoke(_:)), keyEquivalent: key)
+            item.target = self
+            item.tag = actions.count
+            actions.append(action)
+            if let symbol { item.image = NSImage(systemSymbolName: symbol, accessibilityDescription: nil) }
+            menu.addItem(item)
+            return item
+        }
+
+        @objc private func invoke(_ item: NSMenuItem) { actions[item.tag]() }
+
+        func makeMenu(state: ReplicaUIState) -> NSMenu {
+            actions.removeAll()
+            let menu = NSMenu()
+            menu.autoenablesItems = false
+            add("关于 Pasto", symbol: "info.circle", to: menu) {
+                NSApp.sendAction(NSSelectorFromString("about:"), to: NSApp.delegate, from: nil)
+            }
+            menu.addItem(.separator())
+            add("新文本项", symbol: "square.and.pencil", key: "n", to: menu) { state.controller?.newTextItem() }
+            add("设置…", symbol: "gear", key: ",", to: menu) { state.controller?.showSettings() }
+            menu.addItem(.separator())
+            add("从 Paste 迁移分组…", symbol: "square.and.arrow.down", to: menu) {
+                state.controller?.migratePasteGroups()
+            }.isEnabled = !state.isMigratingPasteGroups
+            menu.addItem(.separator())
+            let pause = NSMenuItem(title: "暂停 Pasto", action: nil, keyEquivalent: "")
+            pause.image = NSImage(systemSymbolName: "pause.circle", accessibilityDescription: nil)
+            let submenu = NSMenu()
+            submenu.autoenablesItems = false
+            if state.store.preferences.isMonitoringPaused {
+                add("继续 Pasto", to: submenu) { state.resumeMonitoring() }
+            } else {
+                add("暂停", to: submenu) { state.pauseMonitoring() }
+                for minutes in [15, 30, 60, 180, 480] {
+                    add(minutes < 60 ? "暂停 \(minutes)分钟" : "暂停 \(minutes / 60)小时", to: submenu) {
+                        state.pauseMonitoring(minutes: minutes)
+                    }
+                }
+            }
+            pause.submenu = submenu
+            menu.addItem(pause)
+            add("退出 Pasto", symbol: "xmark.square", key: "q", to: menu) { NSApp.terminate(nil) }
+            return menu
+        }
     }
 }

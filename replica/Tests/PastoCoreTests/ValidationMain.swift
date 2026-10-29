@@ -91,6 +91,7 @@ struct ValidationMain {
             ("two-independent-process-writers", suite.testTwoRealProcessesDoNotLoseConcurrentWrites)
             ,("multiple-selection-raw-and-text-order", suite.testMultiSelectionOrderRawRepresentationsAndAtomicFailure)
             ,("copy-sync-save-before-notification", suite.testCopyCommitsHistoryBeforeNotificationAndReturn)
+            ,("pinboard-auto-unused-colors", suite.testPinboardAutomaticColors)
             ,("pinboard-reorder-duplicate-removal", suite.testPinboardReorderingDuplicationAndDeletingPinOnlyContent)
             ,("local-vision-ocr-real-pixels", suite.testLocalVisionOCRSearchPersistenceAndOriginalPayloadIsolation)
             ,("transient-opt-out-loop-guard", suite.testTransientOptOutStillRejectsReplicaWriteBack)

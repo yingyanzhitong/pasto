@@ -285,7 +285,6 @@ struct ReplicaSettingsView: View {
                 sidebarButton(String(localized: OriginalSettingsLocalization.f_1001dbfd4()), icon: "gearshape", index: 0)
                 sidebarButton(String(localized: OriginalSettingsLocalization.f_1001e16d4()), icon: "hand.raised", index: 1)
                 sidebarButton(OriginalSettingsLocalization.text("settings.shortcuts.title"), icon: "keyboard", index: 4)
-                sidebarButton("iCloud 同步", icon: "icloud", index: 6)
                 sidebarButton("MCP 与 AI 工具", icon: "point.3.connected.trianglepath.dotted", index: 5)
                 Spacer()
             }
@@ -298,7 +297,6 @@ struct ReplicaSettingsView: View {
                 case 1: privacy
                 case 4: shortcuts
                 case 5: mcp
-                case 6: CloudKitSyncSettingsView(sync: state.originalCloudSync, drive: state.cloudSync)
                 default: general
                 }
             }.frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -327,6 +325,7 @@ struct ReplicaSettingsView: View {
                     BackgroundService.setEnabled(value)
                 }))
                 .onReceive(BackgroundService.enabledChanges) { backgroundEnabled = $0 }
+                ICloudSyncGeneralRow(sync: state.originalCloudSync, drive: state.cloudSync)
                 Toggle(String(localized: OriginalSettingsLocalization.f_1001e28d4()), isOn: preference(\.playSounds))
             }
             Section(OriginalSettingsLocalization.text("settings.paste-items.title")) {
@@ -339,20 +338,22 @@ struct ReplicaSettingsView: View {
                 Toggle(OriginalSettingsLocalization.text("settings.paste-items.plain-text.title"), isOn: preference(\.alwaysPastePlainText))
             }
             Section(OriginalSettingsLocalization.text("settings.history.title")) {
-                Slider(value: Binding(get: {
-                    Double([1, 7, 30, 365, 0].firstIndex(of: state.store.preferences.historyRetentionDays) ?? 4)
-                }, set: { value in
-                    let index = max(0, min(4, Int(value.rounded())))
-                    state.store.preferences.historyRetentionDays = [1, 7, 30, 365, 0][index]
-                    state.perform { try state.store.save() }
-                }), in: 0...4, step: 1)
-                .accessibilityLabel(OriginalSettingsLocalization.text("settings.history.title"))
-                HStack {
-                    ForEach(["天", "周", "个月", "年", OriginalSettingsLocalization.text("settings.history.forever")], id: \.self) { title in
-                        Text(title).frame(maxWidth: .infinity)
+                VStack(spacing: 12) {
+                    OriginalHistoryCapacitySlider(days: Binding(get: {
+                        state.store.preferences.historyRetentionDays
+                    }, set: { days in
+                        state.store.preferences.historyRetentionDays = days
+                        state.perform { try state.store.save() }
+                    }))
+                    Divider()
+                    HStack {
+                        Spacer()
+                        Button(OriginalSettingsLocalization.text("general.action.erase-history") + "…") {
+                            state.controller?.clearHistory()
+                        }
                     }
-                }.font(.caption).foregroundStyle(.secondary)
-                Button(OriginalSettingsLocalization.text("general.action.erase-history")) { state.controller?.clearHistory() }
+                }.padding(.vertical, 4)
+
             }
         }
         .formStyle(.grouped)

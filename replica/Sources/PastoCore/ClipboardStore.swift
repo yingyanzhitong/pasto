@@ -53,6 +53,7 @@ public final class ClipboardStore: ObservableObject {
     private var baseline = StoreState()
     private var diskRevision: UUID?
     private let persistence: ClipboardPersistence
+    private var iCloudDigestCache: [String: (entity: ICloudSyncEntity, digest: String)] = [:]
 
     public static var defaultDirectoryURL: URL {
         FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
@@ -428,11 +429,22 @@ public final class ClipboardStore: ObservableObject {
         return ICloudSyncSnapshot(deviceID: metadata.deviceID, records: records)
     }
 
+    private func reconcileICloud(_ metadata: inout ICloudSyncMetadata, state: StoreState, now: Date) throws {
+        let entities = Self.cloudEntities(state)
+        iCloudDigestCache = iCloudDigestCache.filter { entities[$0.key] != nil }
+        try metadata.reconcile(entities, now: now) { key, entity in
+            if let cached = iCloudDigestCache[key], cached.entity == entity { return cached.digest }
+            let digest = try entity.digest()
+            iCloudDigestCache[key] = (entity, digest)
+            return digest
+        }
+    }
+
     /// Capture edits and explicit deletions under the same lock as normal application/MCP writes.
     public func prepareICloudSync(now: Date = Date()) throws -> ICloudSyncSnapshot {
         try mutate { state in
             var metadata = state.cloudSyncMetadata ?? ICloudSyncMetadata()
-            try metadata.reconcile(Self.cloudEntities(state), now: now)
+            try reconcileICloud(&metadata, state: state, now: now)
             state.cloudSyncMetadata = metadata
             return Self.cloudSnapshot(state, metadata: metadata)
         }
@@ -447,7 +459,7 @@ public final class ClipboardStore: ObservableObject {
         for snapshot in snapshots { try snapshot.validate() }
         return try mutate { state in
             var metadata = state.cloudSyncMetadata ?? ICloudSyncMetadata()
-            try metadata.reconcile(Self.cloudEntities(state), now: now)
+            try reconcileICloud(&metadata, state: state, now: now)
             var entities = Self.cloudEntities(state)
             for snapshot in snapshots {
                 for record in snapshot.records {
@@ -462,7 +474,7 @@ public final class ClipboardStore: ObservableObject {
             state.sourceApplications = entities.values.compactMap(\.application)
             // A group removal on another Mac must not leave dangling ownership here.
             normalize(&state)
-            try metadata.reconcile(Self.cloudEntities(state), now: now)
+            try reconcileICloud(&metadata, state: state, now: now)
             state.cloudSyncMetadata = metadata
             return Self.cloudSnapshot(state, metadata: metadata)
         }
@@ -936,7 +948,16 @@ public final class ClipboardStore: ObservableObject {
                 value = colorHex
                 code = OriginalPinboardAttributes.parsedColorCode(colorHex)
             } else {
-                let color = OriginalPinboardColor.allCases[Int.random(in: 0..<OriginalPinboardColor.allCases.count)]
+                // Keep the original eight-color palette (0x100324a80), but prefer
+                // unused colors as requested; the original creation path is random.
+                let used = Set(state.pinboards.compactMap { board -> OriginalPinboardColor? in
+                    guard let code = OriginalPinboardAttributes.colorCode(from: board.rawAttributes)
+                        ?? OriginalPinboardAttributes.parsedColorCode(board.colorHex) else { return nil }
+                    return OriginalPinboardColor(canonicalColorCode: code)
+                })
+                let unused = OriginalPinboardColor.allCases.filter { !used.contains($0) }
+                let palette = unused.isEmpty ? OriginalPinboardColor.allCases : unused
+                let color = palette[Int.random(in: 0..<palette.count)]
                 code = color.canonicalColorCode
                 value = String(format: "#%06llX", color.canonicalColorCode)
             }

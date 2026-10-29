@@ -1,0 +1,42 @@
+{
+  "date": "2026-10-29",
+  "source_evidence": [
+    "0x1000b07f0",
+    "0x1000b098c",
+    "0x1000b11ac",
+    "0x1000a56f4",
+    "0x1000a9968",
+    "0x1000a82fc",
+    "0x100019a84",
+    "0x1000a8700"
+  ],
+  "original_behavior": "snapshot previous application; onWillClose activates it with options 2 if no detached previews; clear previous application",
+  "native_ui_regression_passed": true,
+  "focus_callback_checks": [
+    "remember on opening",
+    "restore before close animation completes",
+    "duplicate hides restore once",
+    "detached previews suppress restore"
+  ],
+  "real_document_checks": {
+    "method": "CUA native application keyboard actions; no mouse reclick between close and continuation typing",
+    "end_cycles": 3,
+    "end_result": "Pasto cursor baselinexyz",
+    "middle_result": "Pasto cursor baselinemxyz"
+  },
+  "installation": {
+    "status": "installed-and-running",
+    "installed_path": "/Applications/Pasto.app",
+    "sdk": "26.5",
+    "new_binary_sha256": "153c14554107c93b01c1e4892b86daeb31a8359149cd50c5e0fc7d498552607f",
+    "signature_verified": true,
+    "data_preserved": true,
+    "preferences_unchanged": true,
+    "previous_app_removed_after_backup": true
+  },
+  "limits": [
+    "Single local TextEdit fixture; no all-app or IME acceptance",
+    "Independent Pasto callback adaptation; no claim of full original handoff implementation equivalence"
+  ],
+  "new_complete_original_functions": 0
+}

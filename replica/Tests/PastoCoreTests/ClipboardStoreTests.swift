@@ -576,8 +576,10 @@ final class ClipboardStoreTests {
         defer { try? FileManager.default.removeItem(at: directory) }
         try await MainActor.run {
             let defaults = try JSONDecoder().decode(AppPreferences.self, from: Data("{}".utf8))
-            expectEqual(defaults.historyRetentionDays, 30)
+            expectEqual(AppPreferences().historyRetentionDays, 7)
+            expectEqual(defaults.historyRetentionDays, 7)
             expectEqual(try JSONDecoder().decode(AppPreferences.self, from: Data("{\"historyRetentionDays\":0}".utf8)).historyRetentionDays, 0)
+            expectEqual(try JSONDecoder().decode(AppPreferences.self, from: Data("{\"historyRetentionDays\":30}".utf8)).historyRetentionDays, 30)
             expectTrue(defaults.pasteToActiveApp)
             expectFalse(defaults.alwaysPastePlainText)
             let store = try ClipboardStore(directoryURL: directory)
@@ -588,7 +590,7 @@ final class ClipboardStoreTests {
             let pinned = try store.add(ClipboardItem(createdAt: old, plainText: "old pinned", pinboardIDs: [board.id]))
             let fresh = try store.add(ClipboardItem(createdAt: now.addingTimeInterval(-86_400 + 60), plainText: "inside one-day boundary"))
             let future = try store.add(ClipboardItem(createdAt: now.addingTimeInterval(60), plainText: "future clock skew"))
-            expectEqual(store.search(query: "").count, 4, "All fixtures are within the original 30-day default")
+            expectEqual(store.search(query: "").count, 4, "All fixtures are within the one-week default")
             store.preferences.historyRetentionDays = 1
             try store.save()
             expectFalse(store.items.contains { $0.id == expired })
@@ -598,6 +600,14 @@ final class ClipboardStoreTests {
             store.preferences.historyRetentionDays = 0
             _ = try store.add(ClipboardItem(createdAt: old, plainText: "old after setting permanent"))
             expectTrue(store.items.contains { $0.plainText == "old after setting permanent" })
+            expectEqual(try ClipboardStore(directoryURL: directory).preferences.historyRetentionDays, 0,
+                        "A saved permanent setting must not be overwritten by a new default")
+            let weekly = try ClipboardStore(directoryURL: directory.appendingPathComponent("weekly"))
+            expectEqual(weekly.preferences.historyRetentionDays, 7)
+            let outside = try weekly.add(ClipboardItem(createdAt: now.addingTimeInterval(-8 * 86_400), plainText: "outside week"))
+            let inside = try weekly.add(ClipboardItem(createdAt: now.addingTimeInterval(-6 * 86_400), plainText: "inside week"))
+            expectFalse(weekly.items.contains { $0.id == outside })
+            expectTrue(weekly.items.contains { $0.id == inside })
         }
     }
 
@@ -693,6 +703,36 @@ final class ClipboardStoreTests {
             expectFalse(notified)
             expectEqual(board.changeCount, count)
             subscription.cancel()
+        }
+    }
+
+    func testPinboardAutomaticColors() async throws {
+        let directory = try temporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        try await MainActor.run {
+            let store = try ClipboardStore(directoryURL: directory)
+            let red = try store.createPinboard(name: "explicit red", colorHex: "#FFF0554D")
+            var used: Set<OriginalPinboardColor> = [.red]
+            for index in 1..<OriginalPinboardColor.allCases.count {
+                let board = try store.createPinboard(name: "auto \(index)")
+                let code = try requireValue(OriginalPinboardAttributes.colorCode(from: board.rawAttributes))
+                let color = OriginalPinboardColor(canonicalColorCode: code)
+                expectFalse(used.contains(color), "Automatic groups must use an unused displayed color")
+                used.insert(color)
+            }
+            expectEqual(used.count, 8)
+            let reopened = try ClipboardStore(directoryURL: directory)
+            let overflow = try reopened.createPinboardFromIntent(name: "all colors used")
+            let overflowCode = try requireValue(OriginalPinboardAttributes.colorCode(from: overflow.rawAttributes))
+            expectTrue(used.contains(OriginalPinboardColor(canonicalColorCode: overflowCode)))
+            try reopened.removePinboard(id: red.id)
+            if OriginalPinboardColor(canonicalColorCode: overflowCode) == .red {
+                try reopened.removePinboard(id: overflow.id)
+            }
+            let freed = try reopened.createPinboard(name: "reuse freed red")
+            expectEqual(OriginalPinboardAttributes.colorCode(from: freed.rawAttributes), OriginalPinboardColor.red.canonicalColorCode)
+            let explicit = try reopened.createPinboard(name: "explicit duplicate", colorHex: "#F0554D")
+            expectEqual(explicit.colorHex, "#F0554D", "An explicit color must remain unchanged")
         }
     }
 

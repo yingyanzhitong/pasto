@@ -1,0 +1,52 @@
+{
+  "date": "2026-10-29",
+  "source_evidence": [
+    "0x10000d884",
+    "0x10000e4c8",
+    "0x10003e9bc",
+    "0x10004639c"
+  ],
+  "native_ui_regression_passed": true,
+  "layout_matrix": {
+    "panel_widths": [
+      1024,
+      1512,
+      2560
+    ],
+    "group_counts": [
+      1,
+      4,
+      13
+    ],
+    "cases": 9,
+    "assertions": [
+      "centered search field",
+      "width max(400,toolbarWidth/4)",
+      "8-point gap to history control",
+      "32-point history hit area",
+      "no filter/history overlap",
+      "all 9 more-button hit points remain available"
+    ]
+  },
+  "native_visual_and_functional_checks": [
+    "search input",
+    "no-result state",
+    "clear query",
+    "filter popover open and cancel",
+    "history control exits search"
+  ],
+  "installation": {
+    "status": "installed-and-running",
+    "installed_path": "/Applications/Pasto.app",
+    "sdk": "26.5",
+    "new_binary_sha256": "86635d0852028d7243a9b156c6b82ee06b4ab1efd8e833c81b8c535d55dc7808",
+    "signature_verified": true,
+    "data_preserved": true,
+    "preferences_unchanged": true,
+    "previous_app_removed_after_backup": true
+  },
+  "limits": [
+    "SwiftUI host and collapsed-tab strip adaptation; no full Toolbar class or transition animation equivalence claim"
+  ],
+  "new_complete_original_functions": 0
+}

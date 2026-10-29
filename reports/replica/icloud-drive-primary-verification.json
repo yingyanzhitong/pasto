@@ -1,0 +1,240 @@
+{
+  "verified_at": "2026-10-29T15:18:38.214461+08:00",
+  "passed": true,
+  "selected_transport": "User-selected iCloud Drive folder; not CloudKit",
+  "paid_developer_membership_required": false,
+  "default_enabled": false,
+  "user_history_uploaded_by_agent": false,
+  "source_sha256": {
+    "replica/Sources/Pasto/ICloudDriveSyncController.swift": "f28f24378e0789106c186bc52bcd4efb5086ebbfddd1b97cd77b0c448e2cfc2e",
+    "replica/Sources/Pasto/UI/CloudKitSyncController.swift": "4aa7016796d77261e72a0499e8d071bf56a05c8a830009b176ffe179ce9c0b79",
+    "replica/Sources/Pasto/UI/ICloudSyncSettingsView.swift": "f493bad689f75dd3e8c5d2fb34cd7faf55d6b00374356037e75ae5ce5a4a0e27",
+    "replica/Sources/PastoCore/ClipboardStore.swift": "25fbddcc399d09fc6dd4a788e9a98f2822ce5895703e3cc27ea16603d96632cf",
+    "replica/Sources/PastoCore/ICloudDriveSync.swift": "648ea44d43871a8fd81e375419b7012887975fc6a608329f356912cd60f9fbcc",
+    "replica/Tests/Native/ICloudDriveSyncHarness.swift": "ac23698315b8dbd7965abdecc332795368764c0052d9d88e371dc7e3e4e0ccb6",
+    "replica/Tests/Native/ICloudDriveControllerHarness.swift": "cc82a29b83099f31c11e52c82b38066a3ffe47b1a0fcc2491499024d58e61c6e",
+    "replica/scripts/test-icloud-drive-controller.sh": "ff7edaaf839870358502558ea0ba49fc9d270ff1dcf7bb4f36c19d1c96e66e6b"
+  },
+  "checks": {
+    "sync": {
+      "passed": true,
+      "checks": 38,
+      "isolated_devices": 2,
+      "real_icloud_accessed": false,
+      "general_pasteboard_accessed": false
+    },
+    "controller": {
+      "checks": 18,
+      "passed": true,
+      "real_icloud_accessed": false,
+      "scope": "Temporary stores, defaults and synthetic cloud root; production defaults still require the real data directory and explicit folder consent.",
+      "user_history_accessed": false
+    },
+    "core": {
+      "failure_count": 0,
+      "passed": true,
+      "scope": "Temporary isolated stores and private named pasteboards; two independent worker processes; original app and user clipboard untouched.",
+      "test_count": 25,
+      "tests": [
+        {
+          "duration_seconds": 0.8604780435562134,
+          "failures": [],
+          "name": "legacy-migration-coredata-incremental-copy",
+          "passed": true
+        },
+        {
+          "duration_seconds": 0.054657936096191406,
+          "failures": [],
+          "name": "coredata-save-failure-rollback-order",
+          "passed": true
+        },
+        {
+          "duration_seconds": 0.012585997581481934,
+          "failures": [],
+          "name": "unicode-search-deduplication",
+          "passed": true
+        },
+        {
+          "duration_seconds": 0.047183990478515625,
+          "failures": [],
+          "name": "pinboards-edit-trash-restore",
+          "passed": true
+        },
+        {
+          "duration_seconds": 0.010611891746520996,
+          "failures": [],
+          "name": "history-limit-preserves-pins",
+          "passed": true
+        },
+        {
+          "duration_seconds": 0.014667034149169922,
+          "failures": [],
+          "name": "stale-store-three-way-merge",
+          "passed": true
+        },
+        {
+          "duration_seconds": 0.022204995155334473,
+          "failures": [],
+          "name": "archive-corruption-safety",
+          "passed": true
+        },
+        {
+          "duration_seconds": 1.8582069873809814,
+          "failures": [],
+          "name": "rtf-html-plain-text-write-loop",
+          "passed": true
+        },
+        {
+          "duration_seconds": 0.029675006866455078,
+          "failures": [],
+          "name": "rich-text-edit-format-reopen",
+          "passed": true
+        },
+        {
+          "duration_seconds": 0.024073004722595215,
+          "failures": [],
+          "name": "rtf-only-text-extraction",
+          "passed": true
+        },
+        {
+          "duration_seconds": 0.02426302433013916,
+          "failures": [],
+          "name": "multiple-file-urls",
+          "passed": true
+        },
+        {
+          "duration_seconds": 1.0449960231781006,
+          "failures": [],
+          "name": "real-large-png-binary-roundtrip",
+          "passed": true
+        },
+        {
+          "duration_seconds": 0.02024400234222412,
+          "failures": [],
+          "name": "privacy-pause-exclusion",
+          "passed": true
+        },
+        {
+          "duration_seconds": 0.0186079740524292,
+          "failures": [],
+          "name": "history-retention-age-boundaries",
+          "passed": true
+        },
+        {
+          "duration_seconds": 0.044531941413879395,
+          "failures": [],
+          "name": "refresh-pending-edits-no-op-io",
+          "passed": true
+        },
+        {
+          "duration_seconds": 0.2846720218658447,
+          "failures": [],
+          "name": "two-independent-process-writers",
+          "passed": true
+        },
+        {
+          "duration_seconds": 0.36782705783843994,
+          "failures": [],
+          "name": "multiple-selection-raw-and-text-order",
+          "passed": true
+        },
+        {
+          "duration_seconds": 0.07880699634552002,
+          "failures": [],
+          "name": "copy-sync-save-before-notification",
+          "passed": true
+        },
+        {
+          "duration_seconds": 0.05635201930999756,
+          "failures": [],
+          "name": "pinboard-reorder-duplicate-removal",
+          "passed": true
+        },
+        {
+          "duration_seconds": 0.8248159885406494,
+          "failures": [],
+          "name": "local-vision-ocr-real-pixels",
+          "passed": true
+        },
+        {
+          "duration_seconds": 0.027768969535827637,
+          "failures": [],
+          "name": "transient-opt-out-loop-guard",
+          "passed": true
+        },
+        {
+          "duration_seconds": 0.04029703140258789,
+          "failures": [],
+          "name": "history-erasure-queue-persistence-merge",
+          "passed": true
+        },
+        {
+          "duration_seconds": 0.041536927223205566,
+          "failures": [],
+          "name": "address-stack-array-window-contracts",
+          "passed": true
+        },
+        {
+          "duration_seconds": 0.11239099502563477,
+          "failures": [],
+          "name": "address-stack-table-contracts",
+          "passed": true
+        },
+        {
+          "duration_seconds": 0.1438959836959839,
+          "failures": [],
+          "name": "address-ocr-preparation-word-geometry",
+          "passed": true
+        }
+      ]
+    },
+    "ui": {
+      "status": "passed",
+      "passed": true,
+      "checks": [
+        "panel select/copy/deselect and original multi-text RTF/plain aggregation",
+        "ordered multi-selection paste and custom quick/plain modifiers",
+        "board navigation and original prepend/reverse Stack consumption",
+        "pause/resume and native Stack rows",
+        "NSItemProvider binary/HTML/Unicode and file paths; internal OCR excluded",
+        "22 hosted tab hit points including icon/gaps/edges; release outside cancels; label-only double-click editing",
+        "offscreen ordered panel visible before Escape; first Escape hides including search",
+        "local outside-window click closes panel",
+        "old closing completion cannot close a reopened panel"
+      ],
+      "scope": "Isolated app ID/store/private pasteboard. Native offscreen windows and synthetic local events; no system keyboard posting, real cross-app paste or physical external-app click claim."
+    },
+    "live_synthetic": {
+      "cloud_upload_confirmed": true,
+      "coordinated_readback_matches": true,
+      "fileprovider_reports_uploaded": true,
+      "iCloud_document_recognized": true,
+      "passed": true,
+      "second_physical_mac_tested": false,
+      "synthetic_cloud_folder_cleanup_scheduled": true,
+      "system_reports_uploaded": false,
+      "upload_status_error": "NSCocoaErrorDomain 4355: Couldn’t access your iCloud account. The iCloud servers might be unreachable or your settings might be incorrect.",
+      "user_history_accessed": false
+    }
+  },
+  "app_build": {
+    "configuration": "release",
+    "architecture": "arm64",
+    "passed": true
+  },
+  "installed": {
+    "verified": true,
+    "binary_sha256": "de0811f555e9e3881d38291151f89024c3bef139e9003f076fc0678afeece275",
+    "initial_sync_switch": "off",
+    "initial_folder": "not selected",
+    "signature_verified": true,
+    "data_preserved": true
+  },
+  "live_upload_confirmed": true,
+  "second_physical_mac_verified": false,
+  "new_complete_original_functions": 0,
+  "global_migration_ledger_reaudited": false,
+  "committed": false,
+  "published": false,
+  "previous_submitted_commit": "5ac3695c2e19102b7f3914815e548c2e56e2f3fa"
+}

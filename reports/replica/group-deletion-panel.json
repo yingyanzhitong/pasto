@@ -1,0 +1,43 @@
+{
+  "date": "2026-10-29",
+  "status": "passed",
+  "original_addresses": [
+    "0x100021f00",
+    "0x100325130",
+    "0x1003c4f00",
+    "0x100022ad0",
+    "0x1003b6cfc",
+    "0x100368818",
+    "0x100363004"
+  ],
+  "original_presenter": "NSAlert.runModal; inline presentation is the user-requested adaptation",
+  "isolated_ui_checks": [
+    "empty group deletes directly and leaves panel visible",
+    "nonempty group waits for inline confirmation without new window/sheet/modal",
+    "cancel and Escape retain group/items/panel",
+    "copy/delete keys do not operate covered cards",
+    "changing selected group cancels pending confirmation",
+    "failed Core Data save rolls back and displays inline error without changing selected group",
+    "successful deletion preserves history and other-group memberships; deletes only-group content",
+    "deleting active group returns to history; deleting another group preserves current selection",
+    "reopen persists deletion; closing/reopening clears pending confirmation"
+  ],
+  "expected_save_failure_injection": true,
+  "native_ui_harness_passed": true,
+  "sdk": "26.5",
+  "latest_local_app_updated": true,
+  "actual_cancel_keeps_panel": true,
+  "actual_escape_cancels_only_confirmation": true,
+  "user_data_preserved": true,
+  "preferences_preserved": true,
+  "real_group_deletion_performed": false,
+  "committed": false,
+  "published": false,
+  "new_fully_migrated_function_count": 0,
+  "historical_function_coverage": {
+    "percent": 2.0315,
+    "numerator": 1648,
+    "denominator": 81123,
+    "evidence": "historical; partially stale; not re-audited in this fix"
+  }
+}

@@ -8,7 +8,7 @@
 
 **A free, local clipboard manager for macOS.** Save what you copy, browse it as cards, and search and organize content you use often.
 
-Pasto supports **macOS 14+, Intel (x86_64), and Apple silicon (arm64)**. It is built with Swift, AppKit, and SwiftUI and needs no account from the original vendor. The released 1.0.0 runs locally only. The current source includes a [CloudKit migration](docs/CLOUDKIT_MIGRATION.md) and a separate [iCloud Drive sync implementation](docs/ICLOUD_SYNC.md); neither is included in the published installer. Both linked guides are in Chinese.
+Pasto supports **macOS 14+, Intel (x86_64), and Apple silicon (arm64)**. It is built with Swift, AppKit, and SwiftUI and needs no account from the original vendor. Version 1.0.0 runs locally only. The current source offers optional [iCloud Drive file sync](docs/ICLOUD_SYNC.md) and retains [CloudKit migration code](docs/CLOUDKIT_MIGRATION.md) requiring signing configuration. Check each installer's release notes for its features. Both linked guides are in Chinese.
 
 [![Build and release](https://github.com/yingyanzhitong/pasto/actions/workflows/release.yml/badge.svg)](https://github.com/yingyanzhitong/pasto/actions/workflows/release.yml)
 
@@ -60,11 +60,13 @@ Settings:
 
 Pasto also supports [importing local collections from Paste](replica/README.md#从-paste-迁移分组). ✅ means implemented; full interactions and cross-app paste still need comprehensive verification. See the [feature and testing scope](replica/TESTING.md) (Chinese). This comparison covers Paste 6.6.6 and Pasto 1.0.0. For Paste's sync and collaboration features, see the [Paste website](https://pasteapp.io/).
 
-## iCloud sync (unreleased source)
+## iCloud sync (current source)
 
-The **iCloud sync** settings include code migrated from the original CloudKit flow, using Pasto's own container and disabled by default. Valid Apple signing credentials and container configuration are currently missing, and live cloud testing is incomplete. It must not be advertised as a working feature yet. It does not connect to the original vendor's cloud data or provide mobile apps or shared collaboration.
+The primary option is **iCloud Drive file sync**, which does not require a paid developer membership. Turn on **iCloud sync** in **Settings → General**. Pasto automatically uses `iCloud Drive/Pasto`, with no folder picker or setup dialog. Use the same Apple ID and enable the switch on another Mac. It merges clipboard history, original content, and collections, including additions, edits, and deletions. It is off by default. See the [usage and verification guide](docs/ICLOUD_SYNC.md) (Chinese).
 
-The earlier iCloud Drive file sync implementation remains a separate option. It is not equivalent to CloudKit, and its upload results do not verify CloudKit behavior. See the [CloudKit notes](docs/CLOUDKIT_MIGRATION.md) (Chinese) for migration evidence, isolated tests, and outstanding work. The current 1.0.0 installer and the table above describe the released version.
+Properly signed builds can also show an advanced option migrated from the original CloudKit flow, using Pasto's own container and disabled by default. Valid Apple signing credentials and container configuration are currently missing, and live CloudKit testing is incomplete. It does not connect to the original vendor's cloud data or provide mobile apps or shared collaboration.
+
+CloudKit remains an advanced option for properly signed builds and cannot run alongside file sync. File upload results do not verify CloudKit behavior. See the [CloudKit notes](docs/CLOUDKIT_MIGRATION.md) (Chinese) for migration evidence, isolated tests, and outstanding work. The 1.0.0 installer and the table above still describe that published version.
 
 ## Download and use
 
@@ -84,7 +86,7 @@ Pasto stores clipboard content locally. Screenshots, logs, and archives may cont
 
 ## Build from source
 
-You need macOS 14+, an Intel or Apple silicon Mac, Xcode Command Line Tools (the Swift toolchain), and Python 3. The build uses system frameworks and **does not download third-party Swift packages**.
+You need macOS 14+, an Intel or Apple silicon Mac, Xcode Command Line Tools (the Swift toolchain), and Python 3. Build with Xcode 26 or newer Command Line Tools for the native macOS 26 control design; the minimum runtime remains macOS 14. The build uses system frameworks and **does not download third-party Swift packages**.
 
 ```sh
 git clone https://github.com/yingyanzhitong/pasto.git

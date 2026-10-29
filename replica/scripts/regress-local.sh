@@ -66,6 +66,7 @@ if run('build', ['bash', str(replica / 'scripts/build-app.sh')], timeout=300) ==
             ('accessibility-modal', ['bash', str(replica / 'scripts/test-accessibility-modal.sh')]),
             ('paste-group-migration', ['bash', str(replica / 'scripts/test-paste-group-migration.sh')]),
             ('icloud-sync', ['bash', str(replica / 'scripts/test-icloud-sync.sh')]),
+            ('icloud-drive-controller', ['bash', str(replica / 'scripts/test-icloud-drive-controller.sh')]),
             ('cloudkit-contract', ['bash', str(replica / 'scripts/test-cloudkit-sync.sh')]),
             ('monitor', ['python3', str(replica / 'scripts/test-app-monitor.py'),
                          '--app', str(app), '--report', str(reports / 'monitor.json')]),

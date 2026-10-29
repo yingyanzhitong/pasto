@@ -79,6 +79,10 @@ final class AccessibilityModalSession: NSObject, NSWindowDelegate {
 
     func setContent<Content: View>(_ content: Content, alertContainer: Bool = false) {
         let host = NSHostingView(rootView: content)
+        // This full-content modal already supplies its own insets. Letting the
+        // toolbar's safe area resize its glass-hosted content feeds back into
+        // window sizing on the macOS 26 display cycle.
+        host.safeAreaRegions = []
         window.contentView = alertContainer ? OriginalAlertContentHostingView(host: host) : host
         window.setContentSize(host.fittingSize)
     }

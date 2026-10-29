@@ -136,10 +136,11 @@ struct ICloudSyncMetadata: Codable, Equatable {
         if clock == nil || clock! < revision { clock = revision }
     }
 
-    mutating func reconcile(_ entities: [String: ICloudSyncEntity], now: Date) throws {
+    mutating func reconcile(_ entities: [String: ICloudSyncEntity], now: Date,
+                           digest: (String, ICloudSyncEntity) throws -> String = { _, entity in try entity.digest() }) throws {
         let isInitialSnapshot = stamps.isEmpty && clock == nil
         for key in entities.keys.sorted() {
-            let digest = try entities[key]!.digest()
+            let digest = try digest(key, entities[key]!)
             if stamps[key]?.digest != digest {
                 if isInitialSnapshot {
                     // Enabling sync on an old archive is not a new edit. Do not let its
@@ -194,11 +195,13 @@ public actor ICloudDriveSyncTransport {
     }
 
     public func read(from folder: URL, excluding deviceID: UUID) throws -> [ICloudSyncSnapshot] {
+        try Task.checkCancellation()
         let directory = try dataDirectory(in: folder)
         let files = try FileManager.default.contentsOfDirectory(at: directory,
             includingPropertiesForKeys: [.isSymbolicLinkKey])
         var snapshots: [ICloudSyncSnapshot] = []
         for file in files.sorted(by: { $0.lastPathComponent < $1.lastPathComponent }) {
+            try Task.checkCancellation()
             // Finder can represent an evicted document as .<name>.icloud rather than <name>.
             // Request its download instead of silently ignoring all data on a new Mac.
             let name = file.lastPathComponent
@@ -234,6 +237,7 @@ public actor ICloudDriveSyncTransport {
     }
 
     public func write(_ snapshot: ICloudSyncSnapshot, to folder: URL) throws {
+        try Task.checkCancellation()
         try snapshot.validate()
         let directory = try dataDirectory(in: folder)
         let file = directory.appendingPathComponent(snapshot.deviceID.uuidString + ".json")
@@ -244,7 +248,9 @@ public actor ICloudDriveSyncTransport {
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.sortedKeys]
         let data = try encoder.encode(snapshot)
+        try Task.checkCancellation()
         try coordinate(at: file, writing: true) { destination in
+            try Task.checkCancellation()
             // No-op sync must not rewrite a document and retrigger iCloud uploads.
             if let existing = try? Data(contentsOf: destination),
                let previous = try? JSONDecoder().decode(ICloudSyncSnapshot.self, from: existing), previous == snapshot { return }

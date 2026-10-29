@@ -8,7 +8,7 @@
 
 ### 独立 iCloud Drive 方式
 
-此前的文件同步保留在 **设置 → iCloud 同步 → 另一种同步方式**，不等同于原版 CloudKit。两台 Mac 均需使用含此功能的构建、登录同一 Apple ID，并选择同一个 iCloud Drive 文件夹。开启时合并历史和分组，后续每 30 秒尝试同步，也可手动同步；关闭后保留本地与云目录内容。两种方式不能同时开启。
+当前首选文件同步，**设置 → 通用** 只提供 **iCloud 同步** 开关及简短状态，没有设置弹窗。两台 Mac 均需使用含此功能的构建、登录同一 Apple ID 并打开开关；自动使用 `iCloud Drive/Pasto`。已有自定义同步目录配置继续保留。开启时合并历史和分组，后续每 30 秒尝试同步；关闭后保留本地与云目录内容。这不等同于原版 CloudKit。
 
 同步包含已保存的项目内容、原始格式、图片、来源应用信息及分组名称、颜色、顺序和成员关系。快捷键、权限、来源排除、暂停、保留期限和 Stack 队列不在设备之间同步。文件路径会保留，但对应的原始文件不会被自动复制。不要把不同保留期限视为独立删除策略：某台设备实际清理的内容也会通过删除标记传播。
 
@@ -26,7 +26,7 @@
 
 ## 构建运行
 
-支持 macOS 14+ 的 Intel（x86_64）和 Apple 芯片（arm64）Mac。需要 Xcode Command Line Tools 和 Python 3，默认构建当前 Mac 的本机架构：
+支持 macOS 14+ 的 Intel（x86_64）和 Apple 芯片（arm64）Mac。需要 Xcode Command Line Tools 和 Python 3；为匹配原版在 macOS 26 下的原生控件外观，构建时使用 Xcode 26 或更新版本。默认构建当前 Mac 的本机架构：
 
 ```sh
 bash replica/scripts/build-app.sh

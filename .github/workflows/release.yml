@@ -31,6 +31,8 @@ jobs:
     needs: plan
     if: needs.plan.outputs.release == 'true'
     runs-on: macos-15-intel
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.3.app/Contents/Developer
     timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
@@ -59,6 +61,7 @@ jobs:
       group: pasto-release-${{ needs.plan.outputs.tag }}
       cancel-in-progress: false
     env:
+      DEVELOPER_DIR: /Applications/Xcode_26.3.app/Contents/Developer
       GH_TOKEN: ${{ github.token }}
       RELEASE_VERSION: ${{ needs.plan.outputs.version }}
       RELEASE_TAG: ${{ needs.plan.outputs.tag }}

@@ -42,6 +42,7 @@ final class ReplicaNativeCollectionHost: NSView, NSDraggingSource {
     private var items: [ClipboardItem] = []
     private var cardSide: CGFloat = 0
     private var cells: [Int: ReplicaNativeCardCell] = [:]
+    private var recycledCells: [ReplicaNativeCardCell] = []
     private var lastPrimaryID: UUID?
     private var needsPrimaryReveal = false
     private var boundsObserver: NSObjectProtocol?
@@ -241,21 +242,31 @@ final class ReplicaNativeCollectionHost: NSView, NSDraggingSource {
         guard let state else { return }
         let desired = visibleIndexes().map { Set($0) } ?? []
         for index in Array(cells.keys) where !desired.contains(index) {
-            cells.removeValue(forKey: index)?.removeFromSuperview()
+            if let cell = cells.removeValue(forKey: index) {
+                cell.removeFromSuperview()
+                recycledCells.append(cell)
+            }
         }
         for index in desired.sorted() {
             let item = items[index]
             let cell: ReplicaNativeCardCell
+            let needsInsertion: Bool
             if let existing = cells[index], existing.itemID == item.id {
                 cell = existing
+                needsInsertion = false
             } else {
-                cells.removeValue(forKey: index)?.removeFromSuperview()
-                cell = ReplicaNativeCardCell(owner: self, state: state, item: item, side: cardSide, index: index)
+                if let replaced = cells.removeValue(forKey: index) {
+                    replaced.removeFromSuperview()
+                    recycledCells.append(replaced)
+                }
+                cell = recycledCells.popLast()
+                    ?? ReplicaNativeCardCell(owner: self, state: state, item: item, side: cardSide, index: index)
                 cells[index] = cell
-                document.addSubview(cell)
+                needsInsertion = true
             }
             cell.frame = cardFrame(index)
             cell.update(state: state, item: item, side: cardSide, index: index)
+            if needsInsertion { document.addSubview(cell) }
         }
     }
 
@@ -499,6 +510,16 @@ private final class ReplicaNativeCardCell: NSView, ReplicaNativeDragPreviewCell 
     private let shortcutIndicator = OriginalCardShortcutIndicatorView(frame: .zero)
     private let hosting = NSHostingView<AnyView>(rootView: AnyView(EmptyView()))
     private var renderedSelection: Bool
+    private struct RenderingSignature: Equatable {
+        let item: ClipboardItem
+        let side: CGFloat
+        let index: Int
+        let selected: Bool
+        let dimmed: Bool
+        let scheme: ColorScheme?
+        let active: ControlActiveState
+    }
+    private var renderingSignature: RenderingSignature?
     var itemID: UUID { item.id }
     var snapshotView: NSView { self }
     var isSelected: Bool {
@@ -528,6 +549,7 @@ private final class ReplicaNativeCardCell: NSView, ReplicaNativeDragPreviewCell 
     required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
 
     func update(state: ReplicaUIState, item: ClipboardItem, side: CGFloat, index: Int) {
+        if self.state !== state { renderingSignature = nil }
         self.state = state
         self.item = item
         self.side = side
@@ -540,8 +562,13 @@ private final class ReplicaNativeCardCell: NSView, ReplicaNativeDragPreviewCell 
     private func updateRoot() {
         guard let state else { return }
         let active: ControlActiveState = !NSApp.isActive ? .inactive : (window?.isKeyWindow == true ? .key : .active)
+        let signature = RenderingSignature(item: item, side: side, index: absoluteIndex,
+            selected: renderedSelection, dimmed: owner?.isDimmed ?? true, scheme: state.preferredScheme, active: active)
+        guard renderingSignature != signature else { return }
+        renderingSignature = signature
         hosting.rootView = AnyView(ReplicaClipboardCard(state: state, item: item, sideLength: side,
             selectionOverride: renderedSelection, dimmingOverride: owner?.isDimmed ?? true, nativeInteractions: true)
+            .id(item.id)
             .preferredColorScheme(state.preferredScheme)
             .environment(\.controlActiveState, active))
         if item.kind == .color, let metadata = item.decodedColorPreviewMetadata {
@@ -570,7 +597,7 @@ private final class ReplicaNativeCardCell: NSView, ReplicaNativeDragPreviewCell 
 
     override func viewDidMoveToWindow() {
         super.viewDidMoveToWindow()
-        updateRoot()
+        if window != nil { updateRoot() }
     }
 
     func flushPreviewRendering() {

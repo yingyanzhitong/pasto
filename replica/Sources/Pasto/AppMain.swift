@@ -32,6 +32,7 @@ final class ReplicaAppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValid
     private var stackPasteRegistered = false
     private var statusItem: NSStatusItem!
     private var targetApplication: NSRunningApplication?
+    private var handoffPreviousApplication: NSRunningApplication?
     private let pasteLogger = Logger(subsystem: "com.yingyanzhitong.paste-replica", category: "direct-paste")
     private var activationObserver: NSObjectProtocol?
     private var refreshTimer: Timer?
@@ -104,6 +105,8 @@ final class ReplicaAppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValid
             ui.pasteboard = pasteboard
             ui.pasteHandler = { [weak self] id, plain in self?.paste(id: id, plain: plain) ?? false }
             ui.pasteItemsHandler = { [weak self] ids, plain in self?.paste(ids: ids, plain: plain) ?? false }
+            ui.panelWillShow = { [weak self] in self?.rememberPanelApplication() }
+            ui.panelWillClose = { [weak self] restore in self?.restorePanelApplication(restore: restore) }
             ui.copiedItemsHandler = {
                 ReplicaCopiedOSD.showCopied()
                 NSApp.deactivate()
@@ -351,6 +354,25 @@ final class ReplicaAppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValid
         rememberPasteTargetBeforeOpeningPanel()
         ui.togglePanel()
     }
+    private func rememberPanelApplication() {
+        // 0x1000b098c: snapshot the previous application before Pasto activates.
+        let app = NSWorkspace.shared.frontmostApplication
+        if app?.processIdentifier != ProcessInfo.processInfo.processIdentifier {
+            handoffPreviousApplication = app
+        } else if handoffPreviousApplication == nil {
+            // Menu-bar/reopen entry points may already have activated Pasto.
+            handoffPreviousApplication = targetApplication
+        }
+    }
+
+    private func restorePanelApplication(restore: Bool) {
+        // 0x1000b11ac: restore onWillClose, then clear the saved application.
+        defer { handoffPreviousApplication = nil }
+        guard restore, let previous = handoffPreviousApplication, !previous.isTerminated,
+              previous.processIdentifier != ProcessInfo.processInfo.processIdentifier else { return }
+        previous.activate(options: .activateIgnoringOtherApps)
+    }
+
     private func rememberPasteTargetBeforeOpeningPanel() {
         guard !ui.panel.isVisible else { return }
         pasteGeneration = UUID()
