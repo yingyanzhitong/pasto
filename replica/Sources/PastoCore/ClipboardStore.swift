@@ -3,23 +3,28 @@ import Combine
 import Darwin
 import Foundation
 
-private struct StoreState: Codable, Equatable {
+struct StoreState: Codable, Equatable {
     var schemaVersion = 1
     var items: [ClipboardItem] = []
     var pinboards: [Pinboard] = []
     var preferences = AppPreferences()
     var sourceApplications: [SourceApplicationRecord] = []
+    var cloudSyncMetadata: ICloudSyncMetadata?
+    var cloudKitJournal: OriginalCloudKitJournal?
 
     init(items: [ClipboardItem] = [], pinboards: [Pinboard] = [], preferences: AppPreferences = AppPreferences(),
-         sourceApplications: [SourceApplicationRecord] = []) {
+         sourceApplications: [SourceApplicationRecord] = [], cloudSyncMetadata: ICloudSyncMetadata? = nil,
+         cloudKitJournal: OriginalCloudKitJournal? = nil) {
         self.items = items
         self.pinboards = pinboards
         self.preferences = preferences
         self.sourceApplications = sourceApplications
+        self.cloudSyncMetadata = cloudSyncMetadata
+        self.cloudKitJournal = cloudKitJournal
     }
 
     private enum CodingKeys: String, CodingKey {
-        case schemaVersion, items, pinboards, preferences, sourceApplications
+        case schemaVersion, items, pinboards, preferences, sourceApplications, cloudSyncMetadata, cloudKitJournal
     }
 
     init(from decoder: Decoder) throws {
@@ -29,13 +34,9 @@ private struct StoreState: Codable, Equatable {
         pinboards = try values.decode([Pinboard].self, forKey: .pinboards)
         preferences = try values.decode(AppPreferences.self, forKey: .preferences)
         sourceApplications = try values.decodeIfPresent([SourceApplicationRecord].self, forKey: .sourceApplications) ?? []
+        cloudSyncMetadata = try values.decodeIfPresent(ICloudSyncMetadata.self, forKey: .cloudSyncMetadata)
+        cloudKitJournal = try values.decodeIfPresent(OriginalCloudKitJournal.self, forKey: .cloudKitJournal)
     }
-}
-
-private struct DiskRevision: Equatable {
-    var inode: UInt64
-    var size: UInt64
-    var modified: Date
 }
 
 @MainActor
@@ -50,7 +51,8 @@ public final class ClipboardStore: ObservableObject {
     }
     public let directoryURL: URL
     private var baseline = StoreState()
-    private var diskRevision: DiskRevision?
+    private var diskRevision: UUID?
+    private let persistence: ClipboardPersistence
 
     public static var defaultDirectoryURL: URL {
         FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
@@ -62,12 +64,21 @@ public final class ClipboardStore: ObservableObject {
         try FileManager.default.createDirectory(at: directoryURL, withIntermediateDirectories: true,
                                                 attributes: [.posixPermissions: 0o700])
         try FileManager.default.setAttributes([.posixPermissions: 0o700], ofItemAtPath: directoryURL.path)
+        persistence = try Self.withLock(directoryURL: directoryURL) { try ClipboardPersistence(directoryURL: directoryURL) }
+        try withLock {
+            if try persistence.revision() == nil {
+                // First successful Core Data save is the migration marker. Keep the JSON intact as a backup.
+                let state = try readLegacyState()
+                try persistence.commit(state, previous: nil)
+            }
+        }
         try reload()
     }
 
     private var stateURL: URL { directoryURL.appendingPathComponent("clipboard.json") }
     private var current: StoreState {
-        StoreState(items: items, pinboards: pinboards, preferences: preferences, sourceApplications: sourceApplications)
+        StoreState(items: items, pinboards: pinboards, preferences: preferences, sourceApplications: sourceApplications,
+                   cloudSyncMetadata: baseline.cloudSyncMetadata, cloudKitJournal: baseline.cloudKitJournal)
     }
 
     private func publish(_ state: StoreState, persisted: StoreState? = nil) {
@@ -79,6 +90,10 @@ public final class ClipboardStore: ObservableObject {
     }
 
     private func withLock<T>(_ operation: () throws -> T) throws -> T {
+        try Self.withLock(directoryURL: directoryURL, operation)
+    }
+
+    private static func withLock<T>(directoryURL: URL, _ operation: () throws -> T) throws -> T {
         let path = directoryURL.appendingPathComponent(".lock").path
         let descriptor = Darwin.open(path, O_CREAT | O_RDWR, 0o600)
         guard descriptor >= 0 else { throw POSIXError(POSIXErrorCode(rawValue: errno) ?? .EIO) }
@@ -107,24 +122,20 @@ public final class ClipboardStore: ObservableObject {
         }
     }
 
-    private func readState() throws -> StoreState {
+    private func readLegacyState() throws -> StoreState {
         guard FileManager.default.fileExists(atPath: stateURL.path) else { return StoreState() }
         let state = try JSONDecoder().decode(StoreState.self, from: Data(contentsOf: stateURL))
         try validate(state)
         return state
     }
 
-    private func revision() throws -> DiskRevision? {
-        guard FileManager.default.fileExists(atPath: stateURL.path) else { return nil }
-        let attributes = try FileManager.default.attributesOfItem(atPath: stateURL.path)
-        return DiskRevision(inode: (attributes[.systemFileNumber] as? NSNumber)?.uint64Value ?? 0,
-                            size: (attributes[.size] as? NSNumber)?.uint64Value ?? 0,
-                            modified: attributes[.modificationDate] as? Date ?? .distantPast)
-    }
+    private func revision() throws -> UUID? { try persistence.revision() }
 
     private func latestState() throws -> StoreState {
         if try revision() == diskRevision { return baseline }
-        return try readState()
+        let state = try persistence.read()
+        try validate(state)
+        return state
     }
 
     private func writeAtomically(_ data: Data, to url: URL) throws {
@@ -325,11 +336,8 @@ public final class ClipboardStore: ObservableObject {
             if historyAction || state.preferences.historyRetentionDays != remote.preferences.historyRetentionDays {
                 expireHistory(&state)
             }
-            if state != remote || !FileManager.default.fileExists(atPath: stateURL.path) {
-                let encoder = JSONEncoder()
-                encoder.outputFormatting = [.sortedKeys]
-                try writeAtomically(encoder.encode(state), to: stateURL)
-            }
+            if state.cloudKitJournal != nil { try Self.captureCloudKit(&state, previous: remote) }
+            try persistence.commit(state, previous: remote)
             diskRevision = try revision()
             publish(state)
             return result
@@ -337,7 +345,7 @@ public final class ClipboardStore: ObservableObject {
     }
 
     /// Restore promotes the selected content in reverse order, as the original history repository does.
-    func recordRestoredItems(ids: [UUID]) throws {
+    func recordRestoredItems(_ ids: [UUID]) throws {
         try mutate(historyAction: true) { state in
             for id in ids.reversed() {
                 guard let index = state.items.firstIndex(where: { $0.id == id && !$0.isDeleted }) else {
@@ -352,6 +360,114 @@ public final class ClipboardStore: ObservableObject {
     }
 
     public func save() throws { try mutate { _ in } }
+
+    private static func cloudKitGraph(_ state: StoreState, journal: OriginalCloudKitJournal,
+                                     previousItems: [ClipboardItem] = []) throws -> [OriginalCloudDocument] {
+        try OriginalCloudKitGraph.capture(items: state.items, pinboards: state.pinboards,
+            applications: state.sourceApplications, capacity: state.preferences.historyRetentionDays,
+            journal: journal, now: Date(), previousItems: previousItems)
+    }
+
+    private static func captureCloudKit(_ state: inout StoreState, previous: StoreState? = nil) throws {
+        var journal = state.cloudKitJournal ?? OriginalCloudKitJournal()
+        try journal.capture(cloudKitGraph(state, journal: journal, previousItems: previous?.items ?? []))
+        state.cloudKitJournal = journal
+    }
+
+    /// Called only after an explicit CloudKit opt-in. Existing archives decode without a journal.
+    public func prepareCloudKit(zoneName: String? = nil) throws -> OriginalCloudKitJournal {
+        try mutate { state in
+            if let zoneName {
+                guard !zoneName.isEmpty else { throw PastoCloudKitError.invalidRecord }
+                if let journal = state.cloudKitJournal {
+                    guard journal.zoneName == zoneName else { throw PastoCloudKitError.invalidRecord }
+                } else {
+                    var journal = OriginalCloudKitJournal(); journal.zoneName = zoneName; state.cloudKitJournal = journal
+                }
+            }
+            try Self.captureCloudKit(&state)
+            return state.cloudKitJournal!
+        }
+    }
+
+    /// Content, pending mappings, server metadata and engine checkpoints share one disk commit.
+    /// On failure no advanced token is published; the delegate stops rather than losing changes.
+    public func cloudKitTransaction(project: Bool = false,
+        _ operation: (inout OriginalCloudKitJournal) throws -> Void) throws -> OriginalCloudKitJournal {
+        try mutate { state in
+            try Self.captureCloudKit(&state)
+            var journal = state.cloudKitJournal!
+            try operation(&journal)
+            if project {
+                let value = try OriginalCloudKitGraph.project(journal, preserving: state.items,
+                    pinboards: state.pinboards, applications: state.sourceApplications)
+                state.items = value.items; state.pinboards = value.pinboards; state.sourceApplications = value.applications
+                if let capacity = value.capacity { state.preferences.historyRetentionDays = capacity }
+                normalize(&state)
+                let graph = try Self.cloudKitGraph(state, journal: journal)
+                journal.localBaseline = Dictionary(uniqueKeysWithValues: graph.map { (OriginalCloudKitJournal.key($0.id, scope: $0.scope), $0) })
+            }
+            state.cloudKitJournal = journal
+            return journal
+        }
+    }
+
+    private static func cloudEntities(_ state: StoreState) -> [String: ICloudSyncEntity] {
+        let values = state.items.map(ICloudSyncEntity.init(item:))
+            + state.pinboards.map(ICloudSyncEntity.init(pinboard:))
+            + state.sourceApplications.map(ICloudSyncEntity.init(application:))
+        return Dictionary(uniqueKeysWithValues: values.map { ($0.key, $0) })
+    }
+
+    private static func cloudSnapshot(_ state: StoreState, metadata: ICloudSyncMetadata) -> ICloudSyncSnapshot {
+        let entities = cloudEntities(state)
+        let records = metadata.stamps.keys.sorted().compactMap { key -> ICloudSyncRecord? in
+            guard let stamp = metadata.stamps[key], stamp.revision.deviceID == metadata.deviceID else { return nil }
+            return ICloudSyncRecord(key: key, revision: stamp.revision, entity: stamp.digest == nil ? nil : entities[key])
+        }
+        return ICloudSyncSnapshot(deviceID: metadata.deviceID, records: records)
+    }
+
+    /// Capture edits and explicit deletions under the same lock as normal application/MCP writes.
+    public func prepareICloudSync(now: Date = Date()) throws -> ICloudSyncSnapshot {
+        try mutate { state in
+            var metadata = state.cloudSyncMetadata ?? ICloudSyncMetadata()
+            try metadata.reconcile(Self.cloudEntities(state), now: now)
+            state.cloudSyncMetadata = metadata
+            return Self.cloudSnapshot(state, metadata: metadata)
+        }
+    }
+
+    public func resetICloudSyncIdentity() throws {
+        try mutate { state in state.cloudSyncMetadata = nil }
+    }
+
+    /// Validate all incoming data before committing. Local preferences never leave this Mac.
+    public func applyICloudSync(_ snapshots: [ICloudSyncSnapshot], now: Date = Date()) throws -> ICloudSyncSnapshot {
+        for snapshot in snapshots { try snapshot.validate() }
+        return try mutate { state in
+            var metadata = state.cloudSyncMetadata ?? ICloudSyncMetadata()
+            try metadata.reconcile(Self.cloudEntities(state), now: now)
+            var entities = Self.cloudEntities(state)
+            for snapshot in snapshots {
+                for record in snapshot.records {
+                    metadata.observe(record.revision)
+                    if let stamp = metadata.stamps[record.key], !(stamp.revision < record.revision) { continue }
+                    entities[record.key] = record.entity
+                    metadata.stamps[record.key] = try ICloudSyncStamp(revision: record.revision, digest: record.entity?.digest())
+                }
+            }
+            state.items = entities.values.compactMap(\.item)
+            state.pinboards = entities.values.compactMap(\.pinboard)
+            state.sourceApplications = entities.values.compactMap(\.application)
+            // A group removal on another Mac must not leave dangling ownership here.
+            normalize(&state)
+            try metadata.reconcile(Self.cloudEntities(state), now: now)
+            state.cloudSyncMetadata = metadata
+            return Self.cloudSnapshot(state, metadata: metadata)
+        }
+    }
+
     public func reload() throws {
         let local = current
         try validate(local)
@@ -966,7 +1082,10 @@ public final class ClipboardStore: ObservableObject {
             try save()
             let encoder = JSONEncoder()
             encoder.outputFormatting = [.sortedKeys]
-            try writeAtomically(encoder.encode(current), to: url)
+            var archive = current
+            archive.cloudSyncMetadata = nil
+            archive.cloudKitJournal = nil
+            try writeAtomically(encoder.encode(archive), to: url)
         }
     }
 

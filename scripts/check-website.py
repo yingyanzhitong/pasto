@@ -4,6 +4,7 @@ from html.parser import HTMLParser
 from pathlib import Path
 from urllib.parse import unquote, urlsplit
 import json
+import re
 
 ROOT = Path(__file__).resolve().parents[1]
 SITE = ROOT / "website"
@@ -15,9 +16,12 @@ class SiteParser(HTMLParser):
         self.ids = set()
         self.targets = []
         self.downloads = set()
+        self.release_version = None
 
     def handle_starttag(self, tag, attrs):
         attrs = dict(attrs)
+        if tag == "html":
+            self.release_version = attrs.get("data-release-version")
         if "id" in attrs:
             assert attrs["id"] not in self.ids, f"Duplicate id: {attrs['id']}"
             self.ids.add(attrs["id"])
@@ -44,7 +48,9 @@ def main():
             assert path.is_file(), f"Missing resource: {target}"
         elif url.fragment:
             assert unquote(url.fragment) in parser.ids, f"Missing anchor: {target}"
-    version = json.loads((ROOT / "package.json").read_text())["version"]
+    # Public download links may lag a package version while its release is still building.
+    version = parser.release_version or json.loads((ROOT / "package.json").read_text())["version"]
+    assert re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+(?:-dev\.[0-9]+)?", version), "Invalid public release version"
     expected = f"https://github.com/yingyanzhitong/pasto/releases/download/v{version}/Pasto-{version}-macos-universal.dmg"
     assert parser.downloads == {expected}, "Download does not match current universal release"
     allowed = {".html", ".css", ".js", ".png"}

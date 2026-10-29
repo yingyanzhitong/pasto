@@ -1,3 +1,5 @@
+<p align="center"><strong>简体中文</strong> · <a href="README.en.md">English</a></p>
+
 <p align="center">
   <img src="replica/Assets/PastoIcon.png" width="112" alt="Pasto 图标">
 </p>
@@ -6,11 +8,13 @@
 
 **免费的本地 macOS 剪贴板工具。** 保存拷贝记录，用卡片浏览、搜索和整理常用内容。
 
-Pasto 面向 **macOS 14+，支持 Intel（x86_64）和 Apple 芯片（arm64）**，使用 Swift、AppKit 和 SwiftUI。无需原厂账号，不实现 iCloud 或远程账号同步。
+Pasto 面向 **macOS 14+，支持 Intel（x86_64）和 Apple 芯片（arm64）**，使用 Swift、AppKit 和 SwiftUI。无需原厂账号。已发布的 1.0.0 仅在本地运行；当前源码包含 [CloudKit 同步迁移](docs/CLOUDKIT_MIGRATION.md)及独立的 [iCloud Drive 同步](docs/ICLOUD_SYNC.md)，尚未发布到安装包。
 
 [![构建与发布](https://github.com/yingyanzhitong/pasto/actions/workflows/release.yml/badge.svg)](https://github.com/yingyanzhitong/pasto/actions/workflows/release.yml)
 
 [官网](https://yingyanzhitong.github.io/pasto/) · [下载 1.0.0](https://github.com/yingyanzhitong/pasto/releases/tag/v1.0.0) · [功能对比](#paste-与-pasto-功能对比) · [源码构建](#源码构建) · [参与贡献](CONTRIBUTING.md) · [许可范围](NOTICE.md)
+
+1.0.1 已提交构建：[查看 GitHub Actions](https://github.com/yingyanzhitong/pasto/actions/workflows/release.yml)。成功发布后可在 [Releases](https://github.com/yingyanzhitong/pasto/releases) 下载；以上官网链接保留已发布版本。
 
 ## 界面
 
@@ -55,6 +59,12 @@ Pasto 面向 **macOS 14+，支持 Intel（x86_64）和 Apple 芯片（arm64）**
 | 联网链接预览 | ✅ | ❌ |
 
 Pasto 另支持[从 Paste 迁移本地分组](replica/README.md#从-paste-迁移分组)。✅ 表示已有实现，完整交互及跨应用粘贴仍待全面验证，详见[功能与验证范围](replica/TESTING.md)。对照基于 Paste 6.6.6 及 Pasto 1.0.0；同步与协作介绍见 [Paste 官网](https://pasteapp.io/)。
+
+## iCloud 同步（当前源码，尚未发布）
+
+设置中的 **iCloud 同步** 已接入按原版 CloudKit 路径迁移的代码，使用 Pasto 自有容器，默认关闭。目前缺少有效 Apple 签名与容器配置，真实云端测试尚未完成，不能按已可用功能宣传。它不连接 Paste 原厂云数据，也不提供手机端或共享协作。
+
+此前独立的 iCloud Drive 文件同步保留为另一种方式，与 CloudKit 不等价；其上传记录不计作 CloudKit 验收。当前迁移证据、隔离测试与未完成项见 [CloudKit 说明](docs/CLOUDKIT_MIGRATION.md)。当前 1.0.0 安装包及上表仍按已发布版本描述。
 
 ## 下载与使用
 

@@ -73,6 +73,8 @@ struct ValidationMain {
             return
         }
         let tests: [(String, () async throws -> Void)] = [
+            ("legacy-migration-coredata-incremental-copy", suite.testLegacyMigrationAndIncrementalCoreDataRestore),
+            ("coredata-save-failure-rollback-order", suite.testCoreDataSaveFailureRollsBackBeforeRestoreNotification),
             ("unicode-search-deduplication", suite.testUnicodeSearchDeduplicationAndIndependentRepresentations),
             ("pinboards-edit-trash-restore", suite.testPinboardsEditingTrashRestoreAndPermanentDeletion),
             ("history-limit-preserves-pins", suite.testHistoryLimitPreservesPinnedContentOutsideHistory),
@@ -88,6 +90,7 @@ struct ValidationMain {
             ("refresh-pending-edits-no-op-io", suite.testRefreshPreservesPendingEditsWithoutNoOpWrites),
             ("two-independent-process-writers", suite.testTwoRealProcessesDoNotLoseConcurrentWrites)
             ,("multiple-selection-raw-and-text-order", suite.testMultiSelectionOrderRawRepresentationsAndAtomicFailure)
+            ,("copy-sync-save-before-notification", suite.testCopyCommitsHistoryBeforeNotificationAndReturn)
             ,("pinboard-reorder-duplicate-removal", suite.testPinboardReorderingDuplicationAndDeletingPinOnlyContent)
             ,("local-vision-ocr-real-pixels", suite.testLocalVisionOCRSearchPersistenceAndOriginalPayloadIsolation)
             ,("transient-opt-out-loop-guard", suite.testTransientOptOutStillRejectsReplicaWriteBack)

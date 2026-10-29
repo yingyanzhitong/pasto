@@ -1,24 +1,25 @@
 <!doctype html>
-<html lang="zh-CN">
+<html lang="zh-CN" data-release-version="1.0.0">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#087f80">
-  <meta name="description" content="Pasto，免费开源的 Mac 剪贴板工具。保存复制记录，用搜索、收藏分组与 Stack 找回和整理常用内容。支持 Intel 与 Apple 芯片。">
+  <meta name="theme-color" content="#fafafa">
+  <meta name="description" content="Pasto，免费开源的 Mac 剪贴板工具。保存复制记录，用搜索、收藏分组与 Stack 找回和整理常用内容。支持 Intel 与 Apple 芯片。" data-i18n-content="meta.description">
   <meta property="og:type" content="website">
   <meta property="og:locale" content="zh_CN">
-  <meta property="og:title" content="Pasto — 复制过的，都值得留住。">
-  <meta property="og:description" content="免费的 Mac 剪贴板工具。历史、搜索、分组与 OCR，都留在自己的 Mac。">
+  <meta property="og:title" content="Pasto — 复制过的，都值得留住。" data-i18n-content="meta.title">
+  <meta property="og:description" content="免费的 Mac 剪贴板工具。历史、搜索、分组与 OCR，都留在自己的 Mac。" data-i18n-content="meta.socialDescription">
   <meta property="og:url" content="https://yingyanzhitong.github.io/pasto/">
   <meta property="og:image" content="https://yingyanzhitong.github.io/pasto/assets/pasto-icon.png">
   <link rel="canonical" href="https://yingyanzhitong.github.io/pasto/">
   <link rel="icon" type="image/png" href="./assets/pasto-icon.png">
-  <link rel="stylesheet" href="./styles.css">
-  <script src="./site.js" defer></script>
-  <title>Pasto — 复制过的，都值得留住。</title>
+  <link rel="stylesheet" href="./styles.css?v=20261029-color-accents">
+  <script src="./i18n.js?v=20261029-language-menu" defer></script>
+  <script src="./site.js?v=20261029-language-menu" defer></script>
+  <title data-i18n="meta.title">Pasto — 复制过的，都值得留住。</title>
 </head>
 <body>
-  <a class="skip-link" href="#main">跳到正文</a>
+  <a class="skip-link" href="#main" data-i18n="a11y.skip">跳到正文</a>
   <svg class="icon-library" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
     <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6"/></symbol>
     <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3v12m-4-4 4 4 4-4M4 16v4h16v-4"/></symbol>
@@ -33,90 +34,105 @@
   </svg>
 
   <header class="site-header">
-    <nav class="nav-wrap" aria-label="主导航">
-      <a class="brand" href="#" aria-label="Pasto 首页"><img src="./assets/pasto-icon.png" width="42" height="42" alt=""><span>Pasto</span></a>
-      <div class="nav-links"><a href="#features">功能</a><a href="#compare">与 Paste 对比</a><a href="#faq">常见问题</a><a href="https://github.com/yingyanzhitong/pasto">GitHub <span aria-hidden="true">↗</span></a></div>
-      <a class="button button-small" href="#download">免费下载 <svg class="icon" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+    <nav class="nav-wrap" aria-label="主导航" data-i18n-aria-label="a11y.navigation">
+      <a class="brand" href="#" aria-label="Pasto 首页" data-i18n-aria-label="a11y.home"><img src="./assets/pasto-icon.png" width="42" height="42" alt=""><span>Pasto</span></a>
+      <div class="nav-links"><a href="#features" data-i18n="nav.features">功能</a><a href="#compare" data-i18n="nav.compare">与 Paste 对比</a><a href="#faq" data-i18n="nav.faq">常见问题</a><a href="https://github.com/yingyanzhitong/pasto">GitHub <span aria-hidden="true">↗</span></a></div>
+      <div class="nav-actions">
+        <a class="button button-small" href="#download"><span data-i18n="nav.download">免费下载</span> <svg class="icon" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+        <details class="language-switch">
+          <summary class="language-trigger" id="language-trigger" aria-label="切换语言：简体中文" title="切换语言：简体中文" aria-controls="language-options">
+            <svg class="language-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5h12M9 3v2m4 0c-1 6-4 9-9 12m1-9c2 4 4 6 7 8m1 4 4-10 4 10m-6.8-3h5.6"/></svg>
+            <span class="language-chevron" aria-hidden="true"></span>
+          </summary>
+          <div class="language-menu" id="language-options" role="group" aria-label="显示语言" data-i18n-aria-label="language.label">
+            <p class="language-menu-title" data-i18n="language.label">显示语言</p>
+            <button type="button" data-language="zh-CN" aria-pressed="false" lang="zh-CN"><span>简体中文</span><span class="language-check" aria-hidden="true">✓</span></button>
+            <button type="button" data-language="en" aria-pressed="false" lang="en"><span>English</span><span class="language-check" aria-hidden="true">✓</span></button>
+            <div class="language-menu-divider"></div>
+            <button type="button" data-language="system" aria-pressed="true"><span data-i18n="language.system">跟随系统</span><span class="language-check" aria-hidden="true">✓</span></button>
+          </div>
+        </details>
+      </div>
     </nav>
   </header>
 
   <main id="main">
     <section class="hero section-wrap" aria-labelledby="hero-title">
-      <a class="release-pill" href="https://github.com/yingyanzhitong/pasto/releases/tag/v1.0.0"><span class="live-dot"></span>Pasto 1.0.0 现已发布 <span aria-hidden="true">↗</span></a>
-      <h1 id="hero-title">复制过的，<br>都值得<span class="title-mark">留住。</span></h1>
-      <p class="hero-description">一句灵感、一张图片、一段常用文字。<br>让复制记录留在手边，下一次需要，轻松找回。</p>
-      <div class="hero-actions"><a class="button" href="https://github.com/yingyanzhitong/pasto/releases/download/v1.0.0/Pasto-1.0.0-macos-universal.dmg"><svg class="icon" aria-hidden="true"><use href="#i-download"/></svg>免费下载 Mac 版</a><a class="button button-outline" href="#experience">看看怎么用 <svg class="icon" aria-hidden="true"><use href="#i-arrow"/></svg></a></div>
-      <p class="system-note">macOS 14+<span>·</span>Intel 与 Apple 芯片<span>·</span>免费开源</p>
+      <a class="release-pill" href="https://github.com/yingyanzhitong/pasto/releases/tag/v1.0.0"><span class="live-dot"></span><span data-i18n="hero.release">Pasto 1.0.0 现已发布</span> <span aria-hidden="true">↗</span></a>
+      <h1 id="hero-title"><span data-i18n="hero.title.one">复制过的，</span><br><span data-i18n="hero.title.two">都值得</span><span class="title-mark" data-i18n="hero.title.mark">留住。</span></h1>
+      <p class="hero-description"><span data-i18n="hero.description.one">一句灵感、一张图片、一段常用文字。</span><br><span data-i18n="hero.description.two">让复制记录留在手边，下一次需要，轻松找回。</span></p>
+      <div class="hero-actions"><a class="button" href="https://github.com/yingyanzhitong/pasto/releases/download/v1.0.0/Pasto-1.0.0-macos-universal.dmg"><svg class="icon" aria-hidden="true"><use href="#i-download"/></svg><span data-i18n="download.mac">免费下载 Mac 版</span></a><a class="button button-outline" href="#experience"><span data-i18n="hero.try">看看怎么用</span> <svg class="icon" aria-hidden="true"><use href="#i-arrow"/></svg></a></div>
+      <p class="system-note">macOS 14+<span>·</span><span data-i18n="compat.chips">Intel 与 Apple 芯片</span><span>·</span><span data-i18n="common.openSource">免费开源</span></p>
 
-      <div class="product-stage" aria-label="Pasto 在 Mac 上的界面示意">
-        <div class="floating-note note-left"><span class="tiny-dot coral"></span>刚才的灵感，还在。</div>
+      <div class="product-stage" aria-label="Pasto 在 Mac 上的界面示意" data-i18n-aria-label="a11y.stage">
+        <div class="floating-note note-left"><span class="tiny-dot coral"></span><span data-i18n="stage.idea">刚才的灵感，还在。</span></div>
         <div class="laptop">
           <div class="laptop-screen">
-            <div class="desktop-menu"><span class="menu-apple" aria-hidden="true">●</span><strong>Pasto</strong><span>文件</span><span>编辑</span><span class="desktop-date">周四 10:28</span></div>
+            <div class="desktop-menu"><span class="menu-apple" aria-hidden="true">●</span><strong>Pasto</strong><span><span data-i18n="stage.file">文件</span></span><span><span data-i18n="stage.edit">编辑</span></span><span class="desktop-date"><span data-i18n="stage.date">周四 10:28</span></span></div>
             <div class="desktop-wallpaper"><div class="wallpaper-ring"></div></div>
-            <div class="desktop-note"><div class="window-dots"><i></i><i></i><i></i></div><span class="note-eyebrow">给下一个灵感</span><h2>少一次寻找，<br>多一点心流。</h2><p>常用的文字、收藏的链接、<br>还没来得及整理的好想法。</p><div class="note-line"></div><div class="note-line short"></div></div>
-            <div class="desktop-shortcut"><svg class="icon" aria-hidden="true"><use href="#i-history"/></svg><span>复制记录，随叫随到。</span><kbd>⇧</kbd><kbd>⌘</kbd><kbd>V</kbd></div>
-            <img class="actual-panel" src="./assets/pasto-panel.png" width="2048" height="450" alt="Pasto 实际剪贴板面板：横向浏览文本、图片和收藏分组，内容为演示数据" fetchpriority="high">
+            <div class="desktop-note"><div class="window-dots"><i></i><i></i><i></i></div><span class="note-eyebrow"><span data-i18n="stage.eyebrow">给下一个灵感</span></span><h2><span data-i18n="demo.sample.one">少一次寻找，</span><br><span data-i18n="demo.sample.two">多一点心流。</span></h2><p><span data-i18n="stage.description.one">常用的文字、收藏的链接、</span><br><span data-i18n="stage.description.two">还没来得及整理的好想法。</span></p><div class="note-line"></div><div class="note-line short"></div></div>
+            <div class="desktop-shortcut"><svg class="icon" aria-hidden="true"><use href="#i-history"/></svg><span><span data-i18n="stage.shortcut">复制记录，随叫随到。</span></span><kbd>⇧</kbd><kbd>⌘</kbd><kbd>V</kbd></div>
+            <img class="actual-panel" src="./assets/pasto-panel.png?v=20261029-source-colors" width="2048" height="450" alt="Pasto 实际剪贴板面板：横向浏览文本、图片和收藏分组，内容为演示数据" data-i18n-alt="image.panel" fetchpriority="high">
           </div>
           <div class="laptop-base"><div></div></div>
         </div>
-        <div class="floating-note note-right"><span class="tiny-dot teal"></span>只在你的 Mac 上。</div>
+        <div class="floating-note note-right"><span class="tiny-dot teal"></span><span data-i18n="stage.local">只在你的 Mac 上。</span></div>
       </div>
-      <div class="hero-values"><span><svg class="icon" aria-hidden="true"><use href="#i-lock"/></svg>内容保存在本地</span><span><svg class="icon" aria-hidden="true"><use href="#i-github"/></svg>源码公开</span><span>没有订阅，也无需账号</span></div>
+      <div class="hero-values"><span><svg class="icon" aria-hidden="true"><use href="#i-lock"/></svg><span data-i18n="hero.local">内容保存在本地</span></span><span><svg class="icon" aria-hidden="true"><use href="#i-github"/></svg><span data-i18n="hero.source">源码公开</span></span><span data-i18n="hero.account">没有订阅，也无需账号</span></div>
     </section>
 
     <section id="features" class="features section-wrap" aria-labelledby="features-title">
-      <div class="section-heading"><span class="eyebrow">从复制，到再次使用</span><h2 id="features-title">你的剪贴板，<br>可以多做一点。</h2><p>把每天重复的小动作，变得更顺手。</p></div>
+      <div class="section-heading"><span class="eyebrow" data-i18n="features.eyebrow">从复制，到再次使用</span><h2 id="features-title"><span data-i18n="features.title.one">你的剪贴板，</span><br><span data-i18n="features.title.two">可以多做一点。</span></h2><p data-i18n="features.description">把每天重复的小动作，变得更顺手。</p></div>
       <div class="feature-grid">
-        <article class="feature-card"><div class="feature-icon mint"><svg class="icon" aria-hidden="true"><use href="#i-history"/></svg></div><h3>复制记录，不用再找一遍</h3><p>文字、图片、文件和链接，自动收进历史。需要时打开面板，再次使用。</p><div class="format-tags"><span>文字</span><span>图片</span><span>文件</span><span>链接</span></div></article>
-        <article class="feature-card"><div class="feature-icon peach"><svg class="icon" aria-hidden="true"><use href="#i-stack"/></svg></div><h3>常用内容，放在一起</h3><p>用分组收藏常用片段，用 Stack 整理待粘贴的顺序。让重复工作少一点。</p><div class="group-tags"><span><i class="tiny-dot coral"></i>工作常用</span><span><i class="tiny-dot teal"></i>灵感收藏</span></div></article>
-        <article class="feature-card"><div class="feature-icon blue"><svg class="icon" aria-hidden="true"><use href="#i-image"/></svg></div><h3>图片里的字，也能复制</h3><p>本地识别图片文字，搜索已有识别结果。把截图里的内容，变成可用的文字。</p><div class="ocr-sample"><span>好想法，值得留下。</span><span class="ocr-corner tl"></span><span class="ocr-corner tr"></span><span class="ocr-corner bl"></span><span class="ocr-corner br"></span></div></article>
+        <article class="feature-card"><div class="feature-icon mint"><svg class="icon" aria-hidden="true"><use href="#i-history"/></svg></div><h3 data-i18n="history.title">复制记录，不用再找一遍</h3><p data-i18n="history.description">文字、图片、文件和链接，自动收进历史。需要时打开面板，再次使用。</p><div class="format-tags"><span data-i18n="type.text">文字</span><span data-i18n="type.image">图片</span><span data-i18n="type.file">文件</span><span data-i18n="type.link">链接</span></div></article>
+        <article class="feature-card"><div class="feature-icon peach"><svg class="icon" aria-hidden="true"><use href="#i-stack"/></svg></div><h3 data-i18n="collections.title">常用内容，放在一起</h3><p data-i18n="collections.description">用分组收藏常用片段，用 Stack 整理待粘贴的顺序。让重复工作少一点。</p><div class="group-tags"><span><i class="tiny-dot coral"></i><span data-i18n="collections.work">工作常用</span></span><span><i class="tiny-dot teal"></i><span data-i18n="collections.ideas">灵感收藏</span></span></div></article>
+        <article class="feature-card"><div class="feature-icon blue"><svg class="icon" aria-hidden="true"><use href="#i-image"/></svg></div><h3 data-i18n="ocr.title">图片里的字，也能复制</h3><p data-i18n="ocr.description">本地识别图片文字，搜索已有识别结果。把截图里的内容，变成可用的文字。</p><div class="ocr-sample"><span data-i18n="ocr.sample">好想法，值得留下。</span><span class="ocr-corner tl"></span><span class="ocr-corner tr"></span><span class="ocr-corner bl"></span><span class="ocr-corner br"></span></div></article>
       </div>
     </section>
 
     <section id="experience" class="experience section-wrap" aria-labelledby="experience-title">
-      <div class="experience-copy"><span class="eyebrow">找回，只需要一个关键词</span><h2 id="experience-title">刚刚复制的，<br>和上次收藏的。</h2><p>记不清放在哪里，记得一点内容就好。<br>搜索、切换类型，让需要的片段浮到眼前。</p><a class="text-link" href="https://github.com/yingyanzhitong/pasto#paste-与-pasto-功能对比">了解全部功能 <svg class="icon" aria-hidden="true"><use href="#i-arrow"/></svg></a></div>
+      <div class="experience-copy"><span class="eyebrow" data-i18n="search.eyebrow">找回，只需要一个关键词</span><h2 id="experience-title"><span data-i18n="search.title.one">刚刚复制的，</span><br><span data-i18n="search.title.two">和上次收藏的。</span></h2><p><span data-i18n="search.description.one">记不清放在哪里，记得一点内容就好。</span><br><span data-i18n="search.description.two">搜索、切换类型，让需要的片段浮到眼前。</span></p><a class="text-link" href="https://github.com/yingyanzhitong/pasto#paste-与-pasto-功能对比"><span data-i18n="search.more">了解全部功能</span> <svg class="icon" aria-hidden="true"><use href="#i-arrow"/></svg></a></div>
       <div class="interactive-demo">
-        <div class="demo-label"><span>试着找一条内容</span><span>网页交互示意 · 演示数据</span></div>
-        <div class="demo-toolbar"><label class="demo-search"><svg class="icon" aria-hidden="true"><use href="#i-search"/></svg><input id="demo-search" type="search" placeholder="搜索复制记录…" aria-label="搜索演示记录" autocomplete="off"></label><button class="demo-reset" type="button" aria-label="清空搜索和筛选">重置</button></div>
-        <div class="demo-filters" role="group" aria-label="演示内容类型"><button type="button" data-filter="all" aria-pressed="true">全部</button><button type="button" data-filter="text" aria-pressed="false">文字</button><button type="button" data-filter="link" aria-pressed="false">链接</button><button type="button" data-filter="image" aria-pressed="false">图片</button></div>
+        <div class="demo-label"><span data-i18n="demo.heading">试着找一条内容</span><span data-i18n="demo.disclaimer">网页交互示意 · 演示数据</span></div>
+        <div class="demo-toolbar"><label class="demo-search"><svg class="icon" aria-hidden="true"><use href="#i-search"/></svg><input id="demo-search" type="search" placeholder="搜索复制记录…" aria-label="搜索演示记录" autocomplete="off" data-i18n-aria-label="a11y.search" data-i18n-placeholder="demo.placeholder"></label><button class="demo-reset" type="button" aria-label="清空搜索和筛选" data-i18n-aria-label="a11y.reset"><span data-i18n="demo.reset">重置</span></button></div>
+        <div class="demo-filters" role="group" aria-label="演示内容类型" data-i18n-aria-label="a11y.filters"><button type="button" data-filter="all" aria-pressed="true"><span data-i18n="demo.all">全部</span></button><button type="button" data-filter="text" aria-pressed="false"><span data-i18n="type.text">文字</span></button><button type="button" data-filter="link" aria-pressed="false"><span data-i18n="type.link">链接</span></button><button type="button" data-filter="image" aria-pressed="false"><span data-i18n="type.image">图片</span></button></div>
         <div class="demo-items">
-          <article class="demo-card" data-type="text" data-search="文字 灵感 少一次寻找 多一点心流"><div class="demo-card-header mint-header"><svg class="icon" aria-hidden="true"><use href="#i-text"/></svg><span>灵感备忘<small>刚刚</small></span></div><p>少一次寻找，<br>多一点心流。</p><span class="demo-card-footer">文字</span></article>
-          <article class="demo-card" data-type="link" data-search="链接 github pasto 开源 软件"><div class="demo-card-header blue-header"><svg class="icon" aria-hidden="true"><use href="#i-link"/></svg><span>实用链接<small>2 分钟前</small></span></div><div class="link-preview"><svg class="icon" aria-hidden="true"><use href="#i-github"/></svg><strong>Pasto</strong><small>github.com</small></div><span class="demo-card-footer">链接</span></article>
-          <article class="demo-card" data-type="image" data-search="图片 pasto 图标 设计"><div class="demo-card-header peach-header"><svg class="icon" aria-hidden="true"><use href="#i-image"/></svg><span>设计收藏<small>5 分钟前</small></span></div><img src="./assets/pasto-icon.png" alt="演示记录中的 Pasto 图标" width="120" height="120" loading="lazy"><span class="demo-card-footer">图片</span></article>
+          <article class="demo-card" data-type="text" data-search="文字 灵感 少一次寻找 多一点心流" data-i18n-search="demo.keywords.text"><div class="demo-card-header mint"><svg class="icon" aria-hidden="true"><use href="#i-text"/></svg><span><span data-i18n="demo.note">灵感备忘</span><small data-i18n="demo.now">刚刚</small></span></div><p><span data-i18n="demo.sample.one">少一次寻找，</span><br><span data-i18n="demo.sample.two">多一点心流。</span></p><span class="demo-card-footer" data-i18n="type.text">文字</span></article>
+          <article class="demo-card" data-type="link" data-search="链接 github pasto 开源 软件" data-i18n-search="demo.keywords.link"><div class="demo-card-header blue"><svg class="icon" aria-hidden="true"><use href="#i-link"/></svg><span><span data-i18n="demo.links">实用链接</span><small data-i18n="demo.twoMinutes">2 分钟前</small></span></div><div class="link-preview"><svg class="icon" aria-hidden="true"><use href="#i-github"/></svg><strong>Pasto</strong><small>github.com</small></div><span class="demo-card-footer" data-i18n="type.link">链接</span></article>
+          <article class="demo-card" data-type="image" data-search="图片 pasto 图标 设计" data-i18n-search="demo.keywords.image"><div class="demo-card-header peach"><svg class="icon" aria-hidden="true"><use href="#i-image"/></svg><span><span data-i18n="demo.design">设计收藏</span><small data-i18n="demo.fiveMinutes">5 分钟前</small></span></div><img src="./assets/pasto-icon.png" alt="演示记录中的 Pasto 图标" width="120" height="120" loading="lazy" data-i18n-alt="image.demoIcon"><span class="demo-card-footer" data-i18n="type.image">图片</span></article>
         </div>
-        <p class="demo-empty" hidden>没有找到这条记录，换个关键词试试。</p>
-        <p class="demo-result" aria-live="polite" aria-atomic="true">3 条演示记录</p>
-        <noscript><p class="demo-noscript">启用 JavaScript 后可试用搜索与筛选；上方是演示记录。</p></noscript>
+        <p class="demo-empty" hidden data-i18n="demo.empty">没有找到这条记录，换个关键词试试。</p>
+        <p class="demo-result" aria-live="polite" aria-atomic="true" data-i18n="demo.initial">3 条演示记录</p>
+        <noscript><p class="demo-noscript" data-i18n="demo.noScript">启用 JavaScript 后可试用搜索与筛选；上方是演示记录。</p></noscript>
       </div>
     </section>
 
-    <section class="local-section" aria-labelledby="local-title"><div class="section-wrap local-inner"><div class="privacy-visual" aria-hidden="true"><div class="orbit orbit-one"></div><div class="orbit orbit-two"></div><div class="privacy-core"><svg class="icon"><use href="#i-lock"/></svg></div><span class="privacy-chip chip-text">文字</span><span class="privacy-chip chip-image">图片</span><span class="privacy-chip chip-link">链接</span><span class="privacy-caption">保存在你的 Mac</span></div><div class="local-copy"><span class="eyebrow">本地优先，简单就好</span><h2 id="local-title">你的内容，<br>留在自己手里。</h2><p>Pasto 不需要账号，不提供云同步。<br>剪贴板内容保存在自己的 Mac 上，<br>也可以暂停记录，或排除指定应用。</p><p class="privacy-note">本地数据为明文存储，请妥善保管电脑及导出归档。</p><a class="text-link" href="https://github.com/yingyanzhitong/pasto">查看开源代码 <svg class="icon" aria-hidden="true"><use href="#i-arrow"/></svg></a></div></div></section>
+    <section class="local-section" aria-labelledby="local-title"><div class="section-wrap local-inner"><div class="privacy-visual" aria-hidden="true"><div class="orbit orbit-one"></div><div class="orbit orbit-two"></div><div class="privacy-core"><svg class="icon"><use href="#i-lock"/></svg></div><span class="privacy-chip chip-text"><span data-i18n="type.text">文字</span></span><span class="privacy-chip chip-image"><span data-i18n="type.image">图片</span></span><span class="privacy-chip chip-link"><span data-i18n="type.link">链接</span></span><span class="privacy-caption"><span data-i18n="privacy.caption">保存在你的 Mac</span></span></div><div class="local-copy"><span class="eyebrow" data-i18n="privacy.eyebrow">本地优先，简单就好</span><h2 id="local-title"><span data-i18n="privacy.title.one">你的内容，</span><br><span data-i18n="privacy.title.two">留在自己手里。</span></h2><p><span data-i18n="privacy.description.one">Pasto 不需要账号，不提供云同步。</span><br><span data-i18n="privacy.description.two">剪贴板内容保存在自己的 Mac 上，</span><br><span data-i18n="privacy.description.three">也可以暂停记录，或排除指定应用。</span></p><p class="privacy-note" data-i18n="privacy.note">本地数据为明文存储，请妥善保管电脑及导出归档。</p><a class="text-link" href="https://github.com/yingyanzhitong/pasto"><span data-i18n="privacy.source">查看开源代码</span> <svg class="icon" aria-hidden="true"><use href="#i-arrow"/></svg></a></div></div></section>
 
-    <section id="compare" class="comparison section-wrap" aria-labelledby="compare-title"><div class="section-heading"><span class="eyebrow">熟悉的用法，更轻的选择</span><h2 id="compare-title">专注你在 Mac 上<br>常用的那部分。</h2><p>参考 Paste 的本地使用体验，Pasto 免费开源。</p></div><div class="comparison-table"><table><caption class="sr-only">Paste 与 Pasto 核心功能对比</caption><thead><tr><th scope="col">核心功能</th><th scope="col">Paste</th><th scope="col"><img src="./assets/pasto-icon.png" alt="" width="26" height="26">Pasto</th></tr></thead><tbody>
-      <tr><th scope="row">剪贴板历史与搜索</th><td><span aria-label="支持">✅</span></td><td><span aria-label="已有实现">✅</span></td></tr>
-      <tr><th scope="row">收藏分组与 Stack</th><td><span aria-label="支持">✅</span></td><td><span aria-label="已有实现">✅</span></td></tr>
-      <tr><th scope="row">复制粘贴与自定义快捷键</th><td><span aria-label="支持">✅</span></td><td><span aria-label="已有实现">✅</span></td></tr>
-      <tr><th scope="row">图片文字识别（OCR）</th><td><span aria-label="支持">✅</span></td><td><span aria-label="已有实现">✅</span></td></tr>
-      <tr><th scope="row">AI 工具接入（MCP）</th><td><span aria-label="支持">✅</span></td><td><span aria-label="已有实现">✅</span></td></tr>
-      <tr><th scope="row">系统“快捷指令”</th><td><span aria-label="支持">✅</span></td><td><span aria-label="不支持">❌</span></td></tr>
-      <tr><th scope="row">云同步、手机端与共享协作</th><td><span aria-label="支持">✅</span></td><td><span aria-label="不支持">❌</span></td></tr>
-      <tr><th scope="row">联网链接预览</th><td><span aria-label="支持">✅</span></td><td><span aria-label="不支持">❌</span></td></tr>
-    </tbody></table></div><p class="comparison-note">✅ 表示已有实现，不代表全部场景已验证。跨应用直接粘贴及完整交互仍待全面回归。<br>对照参考 Paste 6.6.6；Pasto 是独立项目，与 Paste 原厂无关联。</p></section>
+    <section id="compare" class="comparison section-wrap" aria-labelledby="compare-title"><div class="section-heading"><span class="eyebrow" data-i18n="compare.eyebrow">熟悉的用法，更轻的选择</span><h2 id="compare-title"><span data-i18n="compare.title.one">专注你在 Mac 上</span><br><span data-i18n="compare.title.two">常用的那部分。</span></h2><p data-i18n="compare.description">参考 Paste 的本地使用体验，Pasto 免费开源。</p></div><div class="comparison-table"><table><caption class="sr-only" data-i18n="a11y.comparison">Paste 与 Pasto 核心功能对比</caption><thead><tr><th scope="col" data-i18n="compare.column">核心功能</th><th scope="col">Paste</th><th scope="col"><img src="./assets/pasto-icon.png" alt="" width="26" height="26">Pasto</th></tr></thead><tbody>
+      <tr><th scope="row" data-i18n="compare.history">剪贴板历史与搜索</th><td><span aria-label="支持" data-i18n-aria-label="common.supported">✅</span></td><td><span aria-label="已有实现" data-i18n-aria-label="common.implemented">✅</span></td></tr>
+      <tr><th scope="row" data-i18n="compare.collections">收藏分组与 Stack</th><td><span aria-label="支持" data-i18n-aria-label="common.supported">✅</span></td><td><span aria-label="已有实现" data-i18n-aria-label="common.implemented">✅</span></td></tr>
+      <tr><th scope="row" data-i18n="compare.paste">复制粘贴与自定义快捷键</th><td><span aria-label="支持" data-i18n-aria-label="common.supported">✅</span></td><td><span aria-label="已有实现" data-i18n-aria-label="common.implemented">✅</span></td></tr>
+      <tr><th scope="row" data-i18n="compare.ocr">图片文字识别（OCR）</th><td><span aria-label="支持" data-i18n-aria-label="common.supported">✅</span></td><td><span aria-label="已有实现" data-i18n-aria-label="common.implemented">✅</span></td></tr>
+      <tr><th scope="row" data-i18n="compare.mcp">AI 工具接入（MCP）</th><td><span aria-label="支持" data-i18n-aria-label="common.supported">✅</span></td><td><span aria-label="已有实现" data-i18n-aria-label="common.implemented">✅</span></td></tr>
+      <tr><th scope="row" data-i18n="compare.shortcuts">系统“快捷指令”</th><td><span aria-label="支持" data-i18n-aria-label="common.supported">✅</span></td><td><span aria-label="不支持" data-i18n-aria-label="common.unsupported">❌</span></td></tr>
+      <tr><th scope="row" data-i18n="compare.cloud">云同步、手机端与共享协作</th><td><span aria-label="支持" data-i18n-aria-label="common.supported">✅</span></td><td><span aria-label="不支持" data-i18n-aria-label="common.unsupported">❌</span></td></tr>
+      <tr><th scope="row" data-i18n="compare.preview">联网链接预览</th><td><span aria-label="支持" data-i18n-aria-label="common.supported">✅</span></td><td><span aria-label="不支持" data-i18n-aria-label="common.unsupported">❌</span></td></tr>
+    </tbody></table></div><p class="comparison-note"><span data-i18n="compare.note.one">✅ 表示已有实现，不代表全部场景已验证。跨应用直接粘贴及完整交互仍待全面回归。</span><br><span data-i18n="compare.note.two">对照参考 Paste 6.6.6；Pasto 是独立项目，与 Paste 原厂无关联。</span></p></section>
 
-    <section class="migration section-wrap" aria-labelledby="migration-title"><div class="migration-symbol" aria-hidden="true"><svg class="icon"><use href="#i-stack"/></svg><svg class="icon"><use href="#i-arrow"/></svg><img src="./assets/pasto-icon.png" width="76" height="76" alt=""></div><div><span class="eyebrow">已经在用 Paste？</span><h2 id="migration-title">收藏的分组，一起带过来。</h2><p>保留分组名称、颜色、排列顺序与组内内容。<br>只读导入，重复迁移不会覆盖你在 Pasto 中的编辑。</p></div><a class="button button-outline" href="https://github.com/yingyanzhitong/pasto/tree/main/replica#从-paste-迁移分组">查看迁移说明 <svg class="icon" aria-hidden="true"><use href="#i-arrow"/></svg></a></section>
+    <section class="migration section-wrap" aria-labelledby="migration-title"><div class="migration-symbol" aria-hidden="true"><svg class="icon"><use href="#i-stack"/></svg><svg class="icon"><use href="#i-arrow"/></svg><img src="./assets/pasto-icon.png" width="76" height="76" alt=""></div><div><span class="eyebrow" data-i18n="migration.eyebrow">已经在用 Paste？</span><h2 id="migration-title" data-i18n="migration.title">收藏的分组，一起带过来。</h2><p><span data-i18n="migration.description.one">保留分组名称、颜色、排列顺序与组内内容。</span><br><span data-i18n="migration.description.two">只读导入，重复迁移不会覆盖你在 Pasto 中的编辑。</span></p></div><a class="button button-outline" href="https://github.com/yingyanzhitong/pasto/tree/main/replica#从-paste-迁移分组"><span data-i18n="migration.more">查看迁移说明</span> <svg class="icon" aria-hidden="true"><use href="#i-arrow"/></svg></a></section>
 
-    <section id="faq" class="faq section-wrap" aria-labelledby="faq-title"><div class="section-heading"><span class="eyebrow">开始之前</span><h2 id="faq-title">你可能想知道。</h2></div><div class="faq-list">
-      <details><summary>Pasto 是免费的吗？</summary><p>是。Pasto 的独立实现按 MIT 许可开源，无需订阅或原厂账号。原版研究材料的权利范围单独说明，详见仓库中的 NOTICE。</p></details>
-      <details><summary>我的 Mac 可以使用吗？</summary><p>支持 macOS 14 及以上。一个 Universal DMG 同时包含 Intel 与 Apple 芯片架构，无需区分下载。构建通过不代表两个架构的所有功能均已完成回归。</p></details>
-      <details><summary>怎么安装？为什么需要辅助功能权限？</summary><p>下载并打开 DMG，将 Pasto.app 拖入 Applications，从应用程序目录启动，再推出安装镜像。直接粘贴到其他应用需要 macOS 辅助功能权限；仅保存和复制内容无需通过此权限发送按键。当前安装包采用临时签名，尚未经过 Apple 公证，请先阅读 Release 中的安装说明。</p></details>
-      <details><summary>会把我的剪贴板上传到云端吗？</summary><p>Pasto 不实现云同步，剪贴板数据保存在本地。MCP 是可选的本地工具接口；若你自行连接第三方 AI 客户端，该客户端如何使用所读取的内容取决于它自己的设置。分享归档或日志前，也请检查是否包含隐私。</p></details>
-      <details><summary>和 Paste 完全一样吗？</summary><p>尚未完全一致。Pasto 依据 Paste 6.6.6 的 REA / Ghidra 逆向证据独立实现本地功能，未完成全部原函数迁移或一比一验收。云同步、远程共享、联网预览不在实现范围内；系统“快捷指令”尚未完成接入。直接粘贴等交互的完整兼容性仍在完善。</p></details>
+    <section id="faq" class="faq section-wrap" aria-labelledby="faq-title"><div class="section-heading"><span class="eyebrow" data-i18n="faq.eyebrow">开始之前</span><h2 id="faq-title" data-i18n="faq.title">你可能想知道。</h2></div><div class="faq-list">
+      <details><summary data-i18n="faq.free.question">Pasto 是免费的吗？</summary><p data-i18n="faq.free.answer">是。Pasto 的独立实现按 MIT 许可开源，无需订阅或原厂账号。原版研究材料的权利范围单独说明，详见仓库中的 NOTICE。</p></details>
+      <details><summary data-i18n="faq.mac.question">我的 Mac 可以使用吗？</summary><p data-i18n="faq.mac.answer">支持 macOS 14 及以上。一个 Universal DMG 同时包含 Intel 与 Apple 芯片架构，无需区分下载。构建通过不代表两个架构的所有功能均已完成回归。</p></details>
+      <details><summary data-i18n="faq.install.question">怎么安装？为什么需要辅助功能权限？</summary><p data-i18n="faq.install.answer">下载并打开 DMG，将 Pasto.app 拖入 Applications，从应用程序目录启动，再推出安装镜像。直接粘贴到其他应用需要 macOS 辅助功能权限；仅保存和复制内容无需通过此权限发送按键。当前安装包采用临时签名，尚未经过 Apple 公证，请先阅读 Release 中的安装说明。</p></details>
+      <details><summary data-i18n="faq.cloud.question">会把我的剪贴板上传到云端吗？</summary><p data-i18n="faq.cloud.answer">Pasto 不实现云同步，剪贴板数据保存在本地。MCP 是可选的本地工具接口；若你自行连接第三方 AI 客户端，该客户端如何使用所读取的内容取决于它自己的设置。分享归档或日志前，也请检查是否包含隐私。</p></details>
+      <details><summary data-i18n="faq.parity.question">和 Paste 完全一样吗？</summary><p data-i18n="faq.parity.answer">尚未完全一致。Pasto 依据 Paste 6.6.6 的 REA / Ghidra 逆向证据独立实现本地功能，未完成全部原函数迁移或一比一验收。云同步、远程共享、联网预览不在实现范围内；系统“快捷指令”尚未完成接入。直接粘贴等交互的完整兼容性仍在完善。</p></details>
     </div></section>
 
-    <section id="download" class="download section-wrap" aria-labelledby="download-title"><img class="download-icon" src="./assets/pasto-icon.png" alt="Pasto 图标" width="100" height="100" loading="lazy"><h2 id="download-title">给复制，<br>多一点记忆。</h2><p>从下一次 <kbd>⌘</kbd> <kbd>C</kbd> 开始。</p><a class="button" href="https://github.com/yingyanzhitong/pasto/releases/download/v1.0.0/Pasto-1.0.0-macos-universal.dmg"><svg class="icon" aria-hidden="true"><use href="#i-download"/></svg>免费下载 Mac 版</a><span class="download-meta">v1.0.0 · macOS 14+ · Intel / Apple 芯片</span><a class="release-link" href="https://github.com/yingyanzhitong/pasto/releases">更新日志与所有版本 <span aria-hidden="true">↗</span></a></section>
+    <section id="download" class="download section-wrap" aria-labelledby="download-title"><img class="download-icon" src="./assets/pasto-icon.png" alt="Pasto 图标" width="100" height="100" loading="lazy" data-i18n-alt="image.appIcon"><h2 id="download-title"><span data-i18n="download.title.one">给复制，</span><br><span data-i18n="download.title.two">多一点记忆。</span></h2><p><span data-i18n="download.start">从下一次</span> <kbd>⌘</kbd> <kbd>C</kbd><span data-i18n="download.end">开始。</span></p><a class="button" href="https://github.com/yingyanzhitong/pasto/releases/download/v1.0.0/Pasto-1.0.0-macos-universal.dmg"><svg class="icon" aria-hidden="true"><use href="#i-download"/></svg><span data-i18n="download.mac">免费下载 Mac 版</span></a><span class="download-meta" data-i18n="download.meta">v1.0.0 · macOS 14+ · Intel / Apple 芯片</span><a class="release-link" href="https://github.com/yingyanzhitong/pasto/releases"><span data-i18n="download.releases">更新日志与所有版本</span> <span aria-hidden="true">↗</span></a></section>
   </main>
 
-  <footer class="site-footer section-wrap"><a class="brand" href="#"><img src="./assets/pasto-icon.png" width="34" height="34" alt=""><span>Pasto</span></a><span>免费的本地 Mac 剪贴板工具。</span><div><a href="https://github.com/yingyanzhitong/pasto">GitHub</a><a href="https://github.com/yingyanzhitong/pasto/issues">反馈问题</a><a href="https://github.com/yingyanzhitong/pasto/blob/main/NOTICE.md">许可说明</a></div><p>© 2026 Pasto · 独立开源项目，与 Paste 原厂无关联。</p></footer>
+  <footer class="site-footer section-wrap"><a class="brand" href="#"><img src="./assets/pasto-icon.png" width="34" height="34" alt=""><span>Pasto</span></a><span data-i18n="footer.tagline">免费的本地 Mac 剪贴板工具。</span><div><a href="https://github.com/yingyanzhitong/pasto">GitHub</a><a href="https://github.com/yingyanzhitong/pasto/issues" data-i18n="footer.feedback">反馈问题</a><a href="https://github.com/yingyanzhitong/pasto/blob/main/NOTICE.md" data-i18n="footer.license">许可说明</a></div><p data-i18n="footer.legal">© 2026 Pasto · 独立开源项目，与 Paste 原厂无关联。</p></footer>
 </body>
 </html>

@@ -6,11 +6,12 @@ const empty = document.querySelector('.demo-empty');
 let selectedType = 'all';
 
 function updateDemo() {
-  const query = search.value.trim().toLocaleLowerCase();
+  const language = window.PastoI18n.language;
+  const query = search.value.trim().toLocaleLowerCase(language);
   let count = 0;
   for (const card of cards) {
     const matchesType = selectedType === 'all' || card.dataset.type === selectedType;
-    const matchesQuery = card.dataset.search.toLocaleLowerCase().includes(query);
+    const matchesQuery = card.dataset.search.toLocaleLowerCase(language).includes(query);
     card.hidden = !(matchesType && matchesQuery);
     if (!card.hidden) count += 1;
   }
@@ -18,7 +19,9 @@ function updateDemo() {
     filter.setAttribute('aria-pressed', String(filter.dataset.filter === selectedType));
   }
   empty.hidden = count !== 0;
-  result.textContent = `${count} 条演示记录`;
+  result.textContent = window.PastoI18n.t(count === 1 ? 'demo.result.one' : 'demo.result.other', {
+    count: new Intl.NumberFormat(language).format(count)
+  });
 }
 
 search.addEventListener('input', updateDemo);
@@ -34,3 +37,5 @@ document.querySelector('.demo-reset').addEventListener('click', () => {
   updateDemo();
   search.focus();
 });
+document.addEventListener('pasto:languagechange', updateDemo);
+updateDemo();

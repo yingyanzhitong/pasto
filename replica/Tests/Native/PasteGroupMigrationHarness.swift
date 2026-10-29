@@ -162,7 +162,7 @@ struct PasteGroupMigrationHarness {
         let repeated = try store.importPasteGroups(snapshot)
         try check(repeated.addedGroups == 0 && repeated.addedItems == 0 && repeated.existingGroups == 2 && repeated.existingItems == 2, "Repeated migration duplicated data")
         try check(store.pinboards.contains { $0.name == "本地改名" } && store.items.contains { $0.plainText == "保留我的改动" }, "Repeated migration overwrote edits")
-        let stateURL = destination.appendingPathComponent("clipboard.json")
+        let stateURL = destination.appendingPathComponent("clipboard.sqlite-wal")
         let stateBefore = try Data(contentsOf: stateURL)
         var corrupt = snapshot
         corrupt.items.append(snapshot.items[0])

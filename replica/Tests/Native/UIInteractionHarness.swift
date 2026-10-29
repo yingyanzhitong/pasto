@@ -30,6 +30,22 @@ struct UIInteractionHarness {
         let ui = ReplicaUIController(store: store)
         ui.pasteboard = board
         let state = ui.state
+        try require(!state.cloudSync.canSync && !state.cloudSync.isEnabled)
+        state.cloudSync.start()
+        state.cloudSync.setEnabled(true)
+        try require(!state.cloudSync.isEnabled && !state.cloudSync.isBusy)
+        let cloudSettings = NSHostingView(rootView: ICloudSyncSettingsView(sync: state.cloudSync))
+        cloudSettings.frame = NSRect(x: 0, y: 0, width: 430, height: 560)
+        cloudSettings.layoutSubtreeIfNeeded()
+        try require(cloudSettings.fittingSize.width > 0)
+        try require(!state.originalCloudSync.canSync && !state.originalCloudSync.isEnabled)
+        state.originalCloudSync.start()
+        state.originalCloudSync.setEnabled(true)
+        try require(!state.originalCloudSync.isEnabled && !state.originalCloudSync.isBusy)
+        let originalCloudSettings = NSHostingView(rootView: CloudKitSyncSettingsView(sync: state.originalCloudSync, drive: state.cloudSync))
+        originalCloudSettings.frame = NSRect(x: 0, y: 0, width: 430, height: 560)
+        originalCloudSettings.layoutSubtreeIfNeeded()
+        try require(originalCloudSettings.fittingSize.width > 0)
         var delivered: [([UUID], Bool)] = []
         ui.pasteItemsHandler = { delivered.append(($0, $1)); return true }
         func key(_ code: UInt16, _ chars: String, _ modifiers: NSEvent.ModifierFlags) {
@@ -218,6 +234,29 @@ struct UIInteractionHarness {
         editableTab.titleView.cancelOperation(nil)
         try require(!editableTab.titleView.isEditing && tabPanel.tabTitleEditingOwner == nil)
         try require(tabHitChecks == 22)
+        state.chooseBoard(nil)
+        state.select(store.items.first { $0.id == first }!)
+        let priorCopyDate = store.items.first { $0.id == first }!.updatedAt
+        var copyFeedbackCount = 0
+        var restoreNotifiedBeforeFeedback = false
+        var savedBeforeFeedback = false
+        let restoreSubscription = store.didRestoreItem.sink { restoreNotifiedBeforeFeedback = true }
+        ui.copiedItemsHandler = {
+            copyFeedbackCount += 1
+            let reopened = try? ClipboardStore(directoryURL: directory)
+            savedBeforeFeedback = restoreNotifiedBeforeFeedback
+                && reopened?.items.first { $0.id == first }?.updatedAt == store.items.first { $0.id == first }?.updatedAt
+        }
+        key(8, "c", .command)
+        try require(board.string(forType: .string) == "FIRST fixture")
+        try require(ui.panel.isVisible && copyFeedbackCount == 1)
+        try require(savedBeforeFeedback)
+        try require(store.items.first { $0.id == first }!.updatedAt > priorCopyDate)
+        try await waitForVisibility(false)
+        restoreSubscription.cancel()
+        let afterCopy = try ClipboardStore(directoryURL: directory)
+        try require(afterCopy.items.first { $0.id == first }!.updatedAt > priorCopyDate)
+        try await presentOffscreen()
         key(53, "", [])
         try await waitForVisibility(false)
         state.searchVisible = true
@@ -238,8 +277,15 @@ struct UIInteractionHarness {
         NSApp.sendEvent(click)
         try await waitForVisibility(false)
         try await presentOffscreen()
-        ui.hidePanel()
+        state.chooseBoard(nil)
+        state.select(store.items.first { $0.id == first }!)
+        let beforeInterruptedCopy = store.items.first { $0.id == first }!.updatedAt
+        key(8, "c", .command)
+        ui.copySelection(plainTextOnly: true)
+        try require(copyFeedbackCount == 3)
+        try require(store.items.first { $0.id == first }!.updatedAt > beforeInterruptedCopy)
         ui.showPanel()
+        try require(store.items.first { $0.id == first }!.updatedAt > beforeInterruptedCopy)
         ui.panel.setFrameOrigin(.init(x: screen.frame.maxX + 200, y: screen.frame.maxY + 200))
         try await Task.sleep(nanoseconds: 350_000_000)
         try require(ui.panel.isVisible)

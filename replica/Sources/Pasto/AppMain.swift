@@ -97,6 +97,10 @@ final class ReplicaAppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValid
             try store.save()
             if arguments.contains("--fixture"), store.items.isEmpty { try seedFixture() }
             ui = ReplicaUIController(store: store)
+            if argument("--data-dir") == nil, !arguments.contains("--fixture") {
+                ui.state.cloudSync.start()
+                ui.state.originalCloudSync.start()
+            }
             ui.pasteboard = pasteboard
             ui.pasteHandler = { [weak self] id, plain in self?.paste(id: id, plain: plain) ?? false }
             ui.pasteItemsHandler = { [weak self] ids, plain in self?.paste(ids: ids, plain: plain) ?? false }

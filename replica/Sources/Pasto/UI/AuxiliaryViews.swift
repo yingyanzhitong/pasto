@@ -285,6 +285,7 @@ struct ReplicaSettingsView: View {
                 sidebarButton(String(localized: OriginalSettingsLocalization.f_1001dbfd4()), icon: "gearshape", index: 0)
                 sidebarButton(String(localized: OriginalSettingsLocalization.f_1001e16d4()), icon: "hand.raised", index: 1)
                 sidebarButton(OriginalSettingsLocalization.text("settings.shortcuts.title"), icon: "keyboard", index: 4)
+                sidebarButton("iCloud 同步", icon: "icloud", index: 6)
                 sidebarButton("MCP 与 AI 工具", icon: "point.3.connected.trianglepath.dotted", index: 5)
                 Spacer()
             }
@@ -297,6 +298,7 @@ struct ReplicaSettingsView: View {
                 case 1: privacy
                 case 4: shortcuts
                 case 5: mcp
+                case 6: CloudKitSyncSettingsView(sync: state.originalCloudSync, drive: state.cloudSync)
                 default: general
                 }
             }.frame(maxWidth: .infinity, maxHeight: .infinity)

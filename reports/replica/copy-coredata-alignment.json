@@ -1,0 +1,389 @@
+{
+  "checked_at": "2026-10-29T12:55:30.993659+08:00",
+  "passed": true,
+  "scope": "Audited local copy storage and transaction order; isolated synthetic fixtures only",
+  "source_sha256": {
+    "replica/Sources/PastoCore/ClipboardPersistence.swift": "31978e6879ac1a0a645cfc0c89ab59d31dc0bccd9ddbe19a080d93273eebecb9",
+    "replica/Sources/PastoCore/ClipboardStore.swift": "144551b6eda29834fded4aa3d24f01f043fb36dc9e439841e7c1a244c88f2935",
+    "replica/Sources/PastoCore/Pasteboard.swift": "94774459e9255149bc0e0443f7f45ced17c723d62f7ae7d91b975f52fa4b54a2",
+    "replica/Sources/PastoCore/OriginalCloudKitGraph.swift": "79324b3c6c164d2713c629342de98d15ee691d4fa3a9fa9b26effeddbd6c0d43",
+    "replica/Sources/Pasto/UI/ReplicaUIController.swift": "73bc155bd74f68c3684dedfaaaaf48f106e1129d5168180248aab1240b533825",
+    "replica/Sources/Pasto/AppMain.swift": "6657dd41732537ee47fc3f35150bed772ec673d229b17c20e788b053001261af",
+    "replica/Tests/PastoCoreTests/ClipboardStoreTests.swift": "616c25663a922750e090993376e12a06cded5b5ea853e90ff144bd7901db5221",
+    "replica/Tests/PastoCoreTests/ValidationMain.swift": "8df8c85be845b47b5703041884e0c6eb6f43a37fb59ad14ca2671d2a555c8b79",
+    "replica/Tests/Native/UIInteractionHarness.swift": "fa9e77812627b1b80be600ee24e5d6a8ddff5723a7636a948bea370577bbf877",
+    "replica/Tests/Native/CopyRestoreHarness.swift": "faf702253226e22f673088fd4327de9602ac3f476ebeb55e8ca1da3350e1cfb8",
+    "replica/Tests/Native/OriginalCloudKitSyncHarness.swift": "d0032855e506ddc731041091daad25180c6aeb1ef6f6dfea7c9bba453df9bfa5",
+    "replica/scripts/test-copy-restore.sh": "275fcaa8f7974fc5f7499d8b23fd11e9c3226215cb4e4a713d31254760527111",
+    "replica/Tests/Native/StoreReadHarness.swift": "cd4d4a1ca890077fbf6fe92feeb89810b341d591f52e180b61784cf3b25d74b4",
+    "replica/Tests/Native/PasteGroupMigrationHarness.swift": "2b479abc3cfce7365d56ed00c015655196db6fbb15d6c85fad1281f77c0d376d",
+    "replica/Tests/Native/build-support.sh": "259e5073c34573f3135cb486a412e7c84a6c6c8075db7076129c4a37aeadfbc7",
+    "replica/scripts/build-store-reader.sh": "4f0bbacdfd35e5760e73917aa3a5abdc9bbd88804bee76b7689e18a3841c44dc",
+    "replica/scripts/test-app-monitor.py": "cdbfa8eb0923055f72f3bf3d93eb19822ab8870141c04eefe277bd5d82d27f45",
+    "replica/scripts/regress-local.sh": "7e1ad89d552fe40ca3a1f6626119425a197cb409e748e86857134af03aeac988"
+  },
+  "verification_inputs_unchanged": true,
+  "original_evidence_references_verified": 18,
+  "original_arm64_sha256": "871f00354fbb1c165d858a98e6d19d6f43cb9d3f9f958b3e07c7f07eb5c19afb",
+  "persistence_and_restore_order_matches_audited_path": true,
+  "vendor_store_schema_reused": false,
+  "full_function_equivalence_verified": false,
+  "new_complete_functions": 0,
+  "global_ledger": {
+    "completed": 1648,
+    "denominator": 81123,
+    "percent": 2.0315,
+    "stale": true,
+    "reverified_this_turn": false
+  },
+  "static_copy_order_checks": [
+    "try reload()",
+    "writer.f_10037875c(objects)",
+    "state.persistChangeCount?",
+    "try recordRestoredItems(ids)",
+    "removeAllActions()",
+    "didRestoreItem.send()"
+  ],
+  "suites": [
+    {
+      "name": "core",
+      "passed": true,
+      "exit_code": 0,
+      "seconds": 9.921
+    },
+    {
+      "name": "app-build",
+      "passed": true,
+      "exit_code": 0,
+      "seconds": 15.459
+    },
+    {
+      "name": "ui",
+      "passed": true,
+      "exit_code": 0,
+      "seconds": 24.518
+    },
+    {
+      "name": "group-migration",
+      "passed": true,
+      "exit_code": 0,
+      "seconds": 2.342
+    },
+    {
+      "name": "icloud",
+      "passed": true,
+      "exit_code": 0,
+      "seconds": 2.43
+    },
+    {
+      "name": "cloudkit",
+      "passed": true,
+      "exit_code": 0,
+      "seconds": 3.139
+    },
+    {
+      "name": "performance",
+      "passed": true,
+      "exit_code": 0,
+      "seconds": 55.859
+    },
+    {
+      "name": "app-monitor",
+      "passed": true,
+      "scope": "Fresh temporary AppKit bundle from current Release executable; private synthetic state and pasteboard"
+    }
+  ],
+  "core": {
+    "failure_count": 0,
+    "passed": true,
+    "scope": "Temporary isolated stores and private named pasteboards; two independent worker processes; original app and user clipboard untouched.",
+    "test_count": 25,
+    "tests": [
+      {
+        "duration_seconds": 0.7865819931030273,
+        "failures": [],
+        "name": "legacy-migration-coredata-incremental-copy",
+        "passed": true
+      },
+      {
+        "duration_seconds": 0.028934955596923828,
+        "failures": [],
+        "name": "coredata-save-failure-rollback-order",
+        "passed": true
+      },
+      {
+        "duration_seconds": 0.024288058280944824,
+        "failures": [],
+        "name": "unicode-search-deduplication",
+        "passed": true
+      },
+      {
+        "duration_seconds": 0.047950029373168945,
+        "failures": [],
+        "name": "pinboards-edit-trash-restore",
+        "passed": true
+      },
+      {
+        "duration_seconds": 0.010731935501098633,
+        "failures": [],
+        "name": "history-limit-preserves-pins",
+        "passed": true
+      },
+      {
+        "duration_seconds": 0.015531063079833984,
+        "failures": [],
+        "name": "stale-store-three-way-merge",
+        "passed": true
+      },
+      {
+        "duration_seconds": 0.025797009468078613,
+        "failures": [],
+        "name": "archive-corruption-safety",
+        "passed": true
+      },
+      {
+        "duration_seconds": 1.8556079864501953,
+        "failures": [],
+        "name": "rtf-html-plain-text-write-loop",
+        "passed": true
+      },
+      {
+        "duration_seconds": 0.016868948936462402,
+        "failures": [],
+        "name": "rich-text-edit-format-reopen",
+        "passed": true
+      },
+      {
+        "duration_seconds": 0.008556008338928223,
+        "failures": [],
+        "name": "rtf-only-text-extraction",
+        "passed": true
+      },
+      {
+        "duration_seconds": 0.02282106876373291,
+        "failures": [],
+        "name": "multiple-file-urls",
+        "passed": true
+      },
+      {
+        "duration_seconds": 0.6133350133895874,
+        "failures": [],
+        "name": "real-large-png-binary-roundtrip",
+        "passed": true
+      },
+      {
+        "duration_seconds": 0.011344075202941895,
+        "failures": [],
+        "name": "privacy-pause-exclusion",
+        "passed": true
+      },
+      {
+        "duration_seconds": 0.011066913604736328,
+        "failures": [],
+        "name": "history-retention-age-boundaries",
+        "passed": true
+      },
+      {
+        "duration_seconds": 0.02311396598815918,
+        "failures": [],
+        "name": "refresh-pending-edits-no-op-io",
+        "passed": true
+      },
+      {
+        "duration_seconds": 0.11789202690124512,
+        "failures": [],
+        "name": "two-independent-process-writers",
+        "passed": true
+      },
+      {
+        "duration_seconds": 0.2408759593963623,
+        "failures": [],
+        "name": "multiple-selection-raw-and-text-order",
+        "passed": true
+      },
+      {
+        "duration_seconds": 0.03259098529815674,
+        "failures": [],
+        "name": "copy-sync-save-before-notification",
+        "passed": true
+      },
+      {
+        "duration_seconds": 0.02283799648284912,
+        "failures": [],
+        "name": "pinboard-reorder-duplicate-removal",
+        "passed": true
+      },
+      {
+        "duration_seconds": 0.45152997970581055,
+        "failures": [],
+        "name": "local-vision-ocr-real-pixels",
+        "passed": true
+      },
+      {
+        "duration_seconds": 0.009998083114624023,
+        "failures": [],
+        "name": "transient-opt-out-loop-guard",
+        "passed": true
+      },
+      {
+        "duration_seconds": 0.016994953155517578,
+        "failures": [],
+        "name": "history-erasure-queue-persistence-merge",
+        "passed": true
+      },
+      {
+        "duration_seconds": 0.020630955696105957,
+        "failures": [],
+        "name": "address-stack-array-window-contracts",
+        "passed": true
+      },
+      {
+        "duration_seconds": 0.11380600929260254,
+        "failures": [],
+        "name": "address-stack-table-contracts",
+        "passed": true
+      },
+      {
+        "duration_seconds": 0.11933505535125732,
+        "failures": [],
+        "name": "address-ocr-preparation-word-geometry",
+        "passed": true
+      }
+    ]
+  },
+  "ui": {
+    "status": "passed",
+    "passed": true,
+    "checks": [
+      "panel select/copy/deselect and original multi-text RTF/plain aggregation",
+      "ordered multi-selection paste and custom quick/plain modifiers",
+      "board navigation and original prepend/reverse Stack consumption",
+      "pause/resume and native Stack rows",
+      "NSItemProvider binary/HTML/Unicode and file paths; internal OCR excluded",
+      "22 hosted tab hit points including icon/gaps/edges; release outside cancels; label-only double-click editing",
+      "offscreen ordered panel visible before Escape; first Escape hides including search",
+      "local outside-window click closes panel",
+      "old closing completion cannot close a reopened panel"
+    ],
+    "scope": "Isolated app ID/store/private pasteboard. Native offscreen windows and synthetic local events; no system keyboard posting, real cross-app paste or physical external-app click claim."
+  },
+  "performance": {
+    "fixtures": [
+      {
+        "archive_bytes": 1273,
+        "cloud_journal_enabled": false,
+        "samples": [
+          {
+            "copy_return_ms": 2.0544580183923244,
+            "history_notification_ms": 1.762458123266697,
+            "panel_closed_ms": 11.098999995738268
+          },
+          {
+            "copy_return_ms": 1.6137082129716873,
+            "history_notification_ms": 1.296458300203085,
+            "panel_closed_ms": 218.19091681391
+          },
+          {
+            "copy_return_ms": 7.967750076204538,
+            "history_notification_ms": 7.537167053669691,
+            "panel_closed_ms": 216.64837514981627
+          }
+        ]
+      },
+      {
+        "archive_bytes": 75517877,
+        "cloud_journal_enabled": false,
+        "samples": [
+          {
+            "copy_return_ms": 5.11537492275238,
+            "history_notification_ms": 4.825999960303307,
+            "panel_closed_ms": 71.94333337247372
+          },
+          {
+            "copy_return_ms": 3.5388749092817307,
+            "history_notification_ms": 3.135333303362131,
+            "panel_closed_ms": 218.75137463212013
+          },
+          {
+            "copy_return_ms": 6.760583259165287,
+            "history_notification_ms": 5.7708751410245895,
+            "panel_closed_ms": 229.8559583723545
+          }
+        ]
+      },
+      {
+        "archive_bytes": 75517875,
+        "cloud_journal_enabled": true,
+        "samples": [
+          {
+            "copy_return_ms": 15.353916678577662,
+            "history_notification_ms": 15.119083225727081,
+            "panel_closed_ms": 73.98958317935467
+          },
+          {
+            "copy_return_ms": 8.413374889642,
+            "history_notification_ms": 8.072166703641415,
+            "panel_closed_ms": 231.52650007978082
+          },
+          {
+            "copy_return_ms": 16.242958139628172,
+            "history_notification_ms": 15.175249893218279,
+            "panel_closed_ms": 235.2292500436306
+          }
+        ]
+      }
+    ],
+    "passed": true,
+    "scope": "Release build; synthetic temporary data, private pasteboards and offscreen windows. No original runtime benchmark or network sync."
+  },
+  "performance_warm_medians": [
+    {
+      "archive_bytes": 1273,
+      "cloud_journal_enabled": false,
+      "warm_median_ms": {
+        "copy_return_ms": 4.790729144588113,
+        "history_notification_ms": 4.416812676936388,
+        "panel_closed_ms": 217.41964598186314
+      }
+    },
+    {
+      "archive_bytes": 75517877,
+      "cloud_journal_enabled": false,
+      "warm_median_ms": {
+        "copy_return_ms": 5.149729084223509,
+        "history_notification_ms": 4.45310422219336,
+        "panel_closed_ms": 224.30366650223732
+      }
+    },
+    {
+      "archive_bytes": 75517875,
+      "cloud_journal_enabled": true,
+      "warm_median_ms": {
+        "copy_return_ms": 12.328166514635086,
+        "history_notification_ms": 11.623708298429847,
+        "panel_closed_ms": 233.3778750617057
+      }
+    }
+  ],
+  "installed": false,
+  "committed": false,
+  "published": false,
+  "real_cloud_tested": false,
+  "original_runtime_benchmarked": false,
+  "monitor": {
+    "passed": true,
+    "checks": [
+      "real AppKit bundle launched without a window",
+      "250ms poll plus 300ms sync debounce captured private pasteboard Unicode",
+      "running monitor ignored AutoGenerated representation"
+    ],
+    "system_clipboard_used": false,
+    "original_app_data_used": false,
+    "isolated_bundle_id": "com.pastereplica.timer-test.48fbc43b22e54369a09678197e9f4f02",
+    "private_pasteboard": "com.pastereplica.timer-test.84bcc74e-12bc-4308-8610-9b839eeb86a7",
+    "capture_seconds": 1.9704732910000011,
+    "warmup_writes": 1,
+    "poll_interval_seconds": 0.25,
+    "sync_delay_seconds": 0.3
+  }
+}

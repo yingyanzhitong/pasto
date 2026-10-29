@@ -9,6 +9,8 @@ import PastoCore
 @MainActor
 final class ReplicaUIState: ObservableObject {
     let store: ClipboardStore
+    let cloudSync: ICloudDriveSyncController
+    let originalCloudSync: CloudKitSyncController
     weak var controller: ReplicaUIController?
     var monitoringPauseChanged: (() -> Void)?
     @Published var query = "" { didSet {
@@ -47,6 +49,8 @@ final class ReplicaUIState: ObservableObject {
 
     init(store: ClipboardStore) {
         self.store = store
+        cloudSync = ICloudDriveSyncController(store: store)
+        originalCloudSync = CloudKitSyncController(store: store, drive: cloudSync)
         searchIndex = ReplicaSearchIndex(directoryURL: store.directoryURL, store: store)
         stackIDs = store.preferences.stackItemIDs
         searchIndex.onUpdate = { [weak self] in
@@ -652,7 +656,8 @@ final class ReplicaUIController {
     }
 
     func hidePanel() {
-        guard panel.isVisible, !isPanelClosing, let content = panel.contentView else { return }
+        guard panel.isVisible, let content = panel.contentView else { return }
+        guard !isPanelClosing else { return }
         removePanelDismissMonitors()
         panelTransitionGeneration += 1
         let generation = panelTransitionGeneration
@@ -832,7 +837,6 @@ final class ReplicaUIController {
         state.perform {
             try write()
             copiedItemsHandler?()
-            // Deactivation may not emit a new notification for a nonactivating panel.
             hidePanel()
         }
     }

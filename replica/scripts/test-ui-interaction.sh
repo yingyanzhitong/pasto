@@ -7,6 +7,7 @@ source "$replica_root/Tests/Native/build-support.sh"
 prepare_native_test_core
 compile_native_test_harness ui-interaction \
   "$replica_root/Sources/Pasto/UI/"*.swift \
+  "$replica_root/Sources/Pasto/ICloudDriveSyncController.swift" \
   "$replica_root/Sources/Pasto/SourceAppColor.swift" \
   "$replica_root/Sources/Pasto/WindowSharingPolicy.swift" \
   "$replica_root/Sources/Pasto/BackgroundService.swift" \

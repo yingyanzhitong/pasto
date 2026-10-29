@@ -95,7 +95,17 @@ cat > "$bundle/Contents/Info.plist" <<PLIST
 </dict></plist>
 PLIST
 plutil -lint "$bundle/Contents/Info.plist"
-codesign --force --sign - "$bundle"
+if [[ -n "${PASTO_CLOUDKIT_PROFILE:-}${PASTO_CLOUDKIT_CONTAINER:-}${PASTO_SIGNING_IDENTITY:-}" ]]; then
+  : "${PASTO_CLOUDKIT_PROFILE:?需要自有描述文件路径}"
+  : "${PASTO_CLOUDKIT_CONTAINER:?需要自有 CloudKit 容器标识}"
+  : "${PASTO_SIGNING_IDENTITY:?需要本机有效 Apple 签名身份}"
+  python3 "$replica_root/scripts/configure-cloudkit-signing.py" \
+    --profile "$PASTO_CLOUDKIT_PROFILE" --bundle "$bundle" --container "$PASTO_CLOUDKIT_CONTAINER" \
+    --environment "${PASTO_CLOUDKIT_ENVIRONMENT:-Development}" --output "$staging/cloudkit-entitlements.plist"
+  codesign --force --sign "$PASTO_SIGNING_IDENTITY" --entitlements "$staging/cloudkit-entitlements.plist" "$bundle"
+else
+  codesign --force --sign - "$bundle"
+fi
 codesign --verify --deep --strict "$bundle"
 if [[ -e "$replica_root/dist/Pasto.app" ]]; then
   backup="$replica_root/../.local/app-bundle-backups/$(date +%Y%m%d-%H%M%S)"

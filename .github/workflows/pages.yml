@@ -6,6 +6,7 @@ on:
     paths:
       - 'website/**'
       - 'scripts/check-website.py'
+      - 'scripts/test-website-i18n.cjs'
       - '.github/workflows/pages.yml'
   workflow_dispatch:
 
@@ -32,7 +33,11 @@ jobs:
       - name: Check website assets and links
         run: python3 scripts/check-website.py
       - name: Check browser script syntax
-        run: node --check website/site.js
+        run: |
+          node --check website/i18n.js
+          node --check website/site.js
+      - name: Check language selection and translations
+        run: node scripts/test-website-i18n.cjs
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v4
         with:

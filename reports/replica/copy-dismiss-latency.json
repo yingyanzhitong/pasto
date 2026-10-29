@@ -1,0 +1,168 @@
+{
+  "checked_at": "2026-10-29T12:07:39.925298+08:00",
+  "passed": true,
+  "source_sha256": {
+    "replica/Sources/PastoCore/Pasteboard.swift": "50e38375f5f888bd82878b60e29bfc962f04f58aacd9f00a168f5a7a7a60bda2",
+    "replica/Sources/PastoCore/ClipboardStore.swift": "4dc6f1ffeec99966596ef27a5d227ad744d80949d8b9e5f354c45ee5976e8f1d",
+    "replica/Sources/Pasto/UI/ReplicaUIController.swift": "8ec8a5234435f53e0da0e4090b21420d67988e2bbdc681291ed963b15fa69d8d",
+    "replica/Sources/Pasto/AppMain.swift": "2c316119ca40f233e86e40fa24b045f0077f8bdb10ab6ae733a395d0084d46fe",
+    "replica/Tests/PastoCoreTests/ClipboardStoreTests.swift": "2f81a86d81a0d99689e7e76143b34381015d4cb2d80c1ff55e42102e7dd401e2",
+    "replica/Tests/PastoCoreTests/ValidationMain.swift": "162aa8f554a0984928455c2a239f025d78e741b9d5da7f2691550f4651e44497",
+    "replica/Tests/Native/UIInteractionHarness.swift": "33f1bdc66e13d372fa58efe03342ee791c676323feff41fdd1810ca7ba91e714"
+  },
+  "scope": "Isolated synthetic history, named pasteboard, optimized arm64 build, offscreen AppKit panels; no access to real clipboard content or installation change.",
+  "original_close_evidence": {
+    "path": "decompiled/Paste/part-0010.c",
+    "function": "0x100019a84",
+    "duration_seconds": 0.2
+  },
+  "sampling": {
+    "trials_per_fixture": 3,
+    "warmup_trials_excluded_per_fixture": 1,
+    "warm_samples_per_fixture": 2,
+    "close_measurement": "NSWindow.willCloseNotification, not later completion of metadata persistence",
+    "fixture_bytes_before": 75517883,
+    "fixture_bytes_after": 75517885
+  },
+  "before": {
+    "fixtures": [
+      {
+        "archive_bytes": 1273,
+        "samples": [
+          {
+            "copy_return_ms": 4.692458547651768,
+            "history_completed_ms": 17.83516677096486,
+            "panel_closed_ms": 15.734374988824129
+          },
+          {
+            "copy_return_ms": 3.7711667828261852,
+            "history_completed_ms": 235.7532917521894,
+            "panel_closed_ms": 226.19741689413786
+          },
+          {
+            "copy_return_ms": 8.378874976187944,
+            "history_completed_ms": 231.9020414724946,
+            "panel_closed_ms": 221.31604189053178
+          }
+        ]
+      },
+      {
+        "archive_bytes": 75517883,
+        "samples": [
+          {
+            "copy_return_ms": 141.3996247574687,
+            "history_completed_ms": 227.41999989375472,
+            "panel_closed_ms": 225.65729171037674
+          },
+          {
+            "copy_return_ms": 145.66566701978445,
+            "history_completed_ms": 360.8615002594888,
+            "panel_closed_ms": 355.3121667355299
+          },
+          {
+            "copy_return_ms": 286.4739168435335,
+            "history_completed_ms": 500.9615416638553,
+            "panel_closed_ms": 496.16091698408127
+          }
+        ]
+      }
+    ],
+    "passed": true
+  },
+  "after": {
+    "fixtures": [
+      {
+        "archive_bytes": 1273,
+        "samples": [
+          {
+            "copy_return_ms": 2.3077079094946384,
+            "history_completed_ms": 24.038583040237427,
+            "panel_closed_ms": 6.8648746237158775
+          },
+          {
+            "copy_return_ms": 5.5236248299479485,
+            "history_completed_ms": 219.1864582709968,
+            "panel_closed_ms": 211.04337507858872
+          },
+          {
+            "copy_return_ms": 1.1981669813394547,
+            "history_completed_ms": 226.95895843207836,
+            "panel_closed_ms": 218.98129163309932
+          }
+        ]
+      },
+      {
+        "archive_bytes": 75517885,
+        "samples": [
+          {
+            "copy_return_ms": 1.7652497626841068,
+            "history_completed_ms": 359.17679127305746,
+            "panel_closed_ms": 14.624583069235086
+          },
+          {
+            "copy_return_ms": 1.646791584789753,
+            "history_completed_ms": 449.2444582283497,
+            "panel_closed_ms": 203.04166665300727
+          },
+          {
+            "copy_return_ms": 1.5212916769087315,
+            "history_completed_ms": 678.2060419209301,
+            "panel_closed_ms": 203.72612541541457
+          }
+        ]
+      }
+    ],
+    "passed": true
+  },
+  "large_fixture_warm_median_ms": {
+    "before": {
+      "copy_return_ms": 216.06979193165898,
+      "history_completed_ms": 430.91152096167207,
+      "panel_closed_ms": 425.7365418598056
+    },
+    "after": {
+      "copy_return_ms": 1.5840416308492422,
+      "history_completed_ms": 563.7252500746399,
+      "panel_closed_ms": 203.38389603421092
+    }
+  },
+  "panel_close_reduction_percent": 52.227756831551254,
+  "core_tests": {
+    "passed": true,
+    "groups": 23,
+    "failures": 0
+  },
+  "ui_tests": {
+    "status": "passed",
+    "passed": true,
+    "checks": [
+      "panel select/copy/deselect and original multi-text RTF/plain aggregation",
+      "ordered multi-selection paste and custom quick/plain modifiers",
+      "board navigation and original prepend/reverse Stack consumption",
+      "pause/resume and native Stack rows",
+      "NSItemProvider binary/HTML/Unicode and file paths; internal OCR excluded",
+      "22 hosted tab hit points including icon/gaps/edges; release outside cancels; label-only double-click editing",
+      "offscreen ordered panel visible before Escape; first Escape hides including search",
+      "local outside-window click closes panel",
+      "old closing completion cannot close a reopened panel"
+    ],
+    "scope": "Isolated app ID/store/private pasteboard. Native offscreen windows and synthetic local events; no system keyboard posting, real cross-app paste or physical external-app click claim."
+  },
+  "app_target_release_build": true,
+  "installed": false,
+  "committed": false,
+  "published": false,
+  "limitations": [
+    "No measured original Paste runtime comparison.",
+    "Only two warm samples per fixture; these are diagnostic timings, not a statistical benchmark.",
+    "Full JSON persistence still runs on the main actor after the panel closes; total bookkeeping duration is not reduced.",
+    "Normal quit calls the same flush helper verified by the reopen regression; no operation on the installed application was performed."
+  ],
+  "original_implementation_comparison": {
+    "report": "reports/replica/copy-original-flow-audit.json",
+    "matches_original_order": false,
+    "classification": "Independent JSON-adapter performance mitigation; original uses Core Data transaction/save before DidRestore and deactivation."
+  },
+  "superseded_by": "copy-coredata-alignment.json",
+  "snapshot": "Before Core Data alignment; historical measurements/evidence retained"
+}

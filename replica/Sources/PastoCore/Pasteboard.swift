@@ -303,7 +303,8 @@ extension ClipboardStore {
     }
 
     public func writeToPasteboard(ids: [UUID], pasteboard: NSPasteboard, plainTextOnly: Bool = false) throws {
-        try writeToPasteboard(ids: ids, pasteboard: pasteboard, options: plainTextOnly ? .plainText : [])
+        try writeToPasteboard(ids: ids, pasteboard: pasteboard, options: plainTextOnly ? .plainText : [],
+                             recognizedImageData: nil)
     }
 
     public func writeToPasteboard(ids: [UUID], pasteboard: NSPasteboard,
@@ -341,7 +342,8 @@ extension ClipboardStore {
     private func writeToPasteboard(ids: [UUID], pasteboard: NSPasteboard,
                                    options: OriginalPasteboardRestore.Options, recognizedImageData: Data?) throws {
         guard !ids.isEmpty else { return }
-        try save()
+        // Refresh selection inputs without an extra pre-writer save; the restore transaction saves once below.
+        try reload()
         let selected = try ids.map { id -> ClipboardItem in
             guard let item = items.first(where: { $0.id == id && !$0.isDeleted }) else { throw ClipboardStoreError.itemNotFound }
             return item
@@ -384,7 +386,8 @@ extension ClipboardStore {
         if let state = OriginalPasteboardCaptureState.current(for: pasteboard) {
             state.persistChangeCount?(state.lastChangeCount)
         }
-        try recordRestoredItems(ids: ids)
+        // 0x10037a144: performAndWait + save, then undo cleanup and DidRestore, before deactivation.
+        try recordRestoredItems(ids)
         Self.restoreUndoManager.f_1000da768().removeAllActions()
         didRestoreItem.send()
     }

@@ -5,6 +5,124 @@ import ImageIO
 import PastoCore
 
 final class ClipboardStoreTests {
+    private func sqlite(_ directory: URL, _ sql: String) throws -> String {
+        let process = Process(), output = Pipe()
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/sqlite3")
+        process.arguments = [directory.appendingPathComponent("clipboard.sqlite").path, sql]
+        process.standardOutput = output; process.standardError = output
+        try process.run()
+        let data = output.fileHandleForReading.readDataToEndOfFile()
+        process.waitUntilExit()
+        guard process.terminationStatus == 0 else {
+            throw ValidationFailure(message: String(decoding: data, as: UTF8.self))
+        }
+        return String(decoding: data, as: UTF8.self)
+    }
+
+    func testLegacyMigrationAndIncrementalCoreDataRestore() async throws {
+        let directory = try temporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        try await MainActor.run {
+            let seed = try ClipboardStore(directoryURL: directory.appendingPathComponent("seed"))
+            seed.preferences.historyRetentionDays = 0
+            seed.preferences.stackReversed = true
+            let group = try seed.createPinboard(name: "迁移保留", colorHex: "#12ABCD")
+            let first = ClipboardItem(plainText: "copy fixture", payloads: ["public.utf8-plain-text": Data("copy fixture".utf8)])
+            let second = ClipboardItem(kind: .unknown, payloads: ["local.synthetic": Data(repeating: 91, count: 16_777_216)],
+                                       pinboardIDs: [group.id], pinboardOwnerID: group.id)
+            seed.items = [first, second]
+            try seed.save()
+            let migratedURL = directory.appendingPathComponent("migrated")
+            try FileManager.default.createDirectory(at: migratedURL, withIntermediateDirectories: true)
+            let legacy = migratedURL.appendingPathComponent("clipboard.json")
+            try seed.exportArchive(to: legacy)
+            let backup = try Data(contentsOf: legacy)
+            let store = try ClipboardStore(directoryURL: migratedURL)
+            expectEqual(store.items, seed.items)
+            expectEqual(store.pinboards, seed.pinboards)
+            expectEqual(store.preferences, seed.preferences)
+            let contentBefore = try sqlite(migratedURL, "SELECT ZKEY,hex(ZCONTENT) FROM ZITEM ORDER BY ZKEY;")
+            let untouchedBefore = try sqlite(migratedURL, "SELECT Z_OPT FROM ZITEM WHERE ZKEY='\(second.id.uuidString)';")
+            let revisionBefore = try sqlite(migratedURL, "SELECT hex(ZREVISION) FROM ZSTATE;")
+            let board = privatePasteboard()
+            defer { board.releaseGlobally() }
+            try store.writeToPasteboard(ids: [first.id], pasteboard: board)
+            expectEqual(try sqlite(migratedURL, "SELECT ZKEY,hex(ZCONTENT) FROM ZITEM ORDER BY ZKEY;"), contentBefore,
+                        "Copy updates managed timestamps without rewriting any encoded content")
+            expectEqual(try sqlite(migratedURL, "SELECT Z_OPT FROM ZITEM WHERE ZKEY='\(second.id.uuidString)';"), untouchedBefore,
+                        "Unselected binary entity is not updated")
+            expectFalse(try sqlite(migratedURL, "SELECT hex(ZREVISION) FROM ZSTATE;") == revisionBefore)
+            let revisionAfter = try sqlite(migratedURL, "SELECT hex(ZREVISION) FROM ZSTATE;")
+            try store.reload(); try store.save()
+            expectEqual(try sqlite(migratedURL, "SELECT hex(ZREVISION) FROM ZSTATE;"), revisionAfter,
+                        "No changes means no Core Data save")
+            let reopened = try ClipboardStore(directoryURL: migratedURL)
+            expectEqual(reopened.items, store.items)
+            expectEqual(reopened.items.first { $0.id == second.id }?.payloads, second.payloads)
+            expectEqual(try Data(contentsOf: legacy), backup, "Migration backup is immutable and never used as the live store")
+            let journal = try store.prepareCloudKit()
+            let assetKeys = journal.documents.filter { $0.value.type == "ItemDataEntity" }.keys
+                .map { "'" + $0.replacingOccurrences(of: "'", with: "''") + "'" }.joined(separator: ",")
+            let assetQuery = "SELECT ZKEY,hex(ZCONTENT) FROM ZCLOUDDOCUMENT WHERE ZKEY IN (\(assetKeys)) ORDER BY ZKEY;"
+            let assetsBefore = try sqlite(migratedURL, assetQuery)
+            expectFalse(assetsBefore.isEmpty)
+            try store.writeToPasteboard(ids: [first.id], pasteboard: board)
+            expectEqual(try sqlite(migratedURL, assetQuery), assetsBefore,
+                        "An enabled cloud journal must not rewrite unchanged payload documents on copy")
+            let withSync = try ClipboardStore(directoryURL: migratedURL)
+            expectEqual(try withSync.prepareCloudKit().deviceID, journal.deviceID)
+            expectEqual(withSync.items, store.items)
+            let now = Date()
+            @MainActor func graph(_ items: [ClipboardItem], previous: [ClipboardItem]) throws -> [OriginalCloudDocument] {
+                try OriginalCloudKitGraph.capture(items: items, pinboards: store.pinboards,
+                    applications: store.sourceApplications, capacity: store.preferences.historyRetentionDays,
+                    journal: journal, now: now, previousItems: previous)
+            }
+            expectEqual(try graph(store.items, previous: store.items), try graph(store.items, previous: []),
+                        "Unchanged-payload reuse must produce the same graph as a fresh encoding")
+            var changedItems = store.items
+            changedItems[0].payloads["local.new.representation"] = Data([1, 2, 3])
+            expectEqual(try graph(changedItems, previous: store.items), try graph(changedItems, previous: []),
+                        "Changed payloads must invalidate the reuse path")
+            try store.permanentlyDelete(ids: [second.id])
+            expectFalse(try ClipboardStore(directoryURL: migratedURL).items.contains { $0.id == second.id },
+                        "Reopen must not re-import the legacy backup or resurrect deleted records")
+        }
+    }
+
+    func testCoreDataSaveFailureRollsBackBeforeRestoreNotification() async throws {
+        let directory = try temporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        try await MainActor.run {
+            let store = try ClipboardStore(directoryURL: directory)
+            let id = try store.add(ClipboardItem(plainText: "rollback fixture"))
+            let before = store.items
+            let revision = try sqlite(directory, "SELECT hex(ZREVISION) FROM ZSTATE;")
+            let undo = OriginalDependencyValues().pasteboardUndoManager
+            undo.beginUndoGrouping()
+            undo.registerUndo(withTarget: store) { _ in }
+            undo.endUndoGrouping()
+            expectTrue(undo.canUndo)
+            _ = try sqlite(directory, "CREATE TRIGGER reject_restore BEFORE UPDATE ON ZITEM BEGIN SELECT RAISE(ABORT,'synthetic save failure'); END;")
+            let board = privatePasteboard()
+            defer { board.releaseGlobally() }
+            var notified = false
+            let subscription = store.didRestoreItem.sink { notified = true }
+            expectThrows(try store.writeToPasteboard(ids: [id], pasteboard: board))
+            expectFalse(notified, "Failed save must not emit DidRestore")
+            expectTrue(undo.canUndo, "Undo cleanup must not run before a successful save")
+            expectEqual(board.string(forType: .string), "rollback fixture", "Original writes the clipboard before the transaction")
+            expectEqual(store.items, before, "Failed transaction must not publish an uncommitted timestamp")
+            expectEqual(try ClipboardStore(directoryURL: directory).items, before)
+            expectEqual(try sqlite(directory, "SELECT hex(ZREVISION) FROM ZSTATE;"), revision)
+            _ = try sqlite(directory, "DROP TRIGGER reject_restore;")
+            try store.writeToPasteboard(ids: [id], pasteboard: board)
+            expectTrue(notified, "Rollback must leave the context reusable")
+            expectFalse(undo.canUndo)
+            subscription.cancel()
+        }
+    }
+
     private func temporaryDirectory() throws -> URL {
         let url = FileManager.default.temporaryDirectory.appendingPathComponent("PastoTests-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
@@ -61,7 +179,7 @@ final class ClipboardStoreTests {
             let reopened = try ClipboardStore(directoryURL: directory)
             expectEqual(Set(reopened.items.map(\.id)), Set(store.items.map(\.id)))
             expectEqual(reopened.items.first { $0.id == id }?.plainText, text)
-            let attributes = try FileManager.default.attributesOfItem(atPath: directory.appendingPathComponent("clipboard.json").path)
+            let attributes = try FileManager.default.attributesOfItem(atPath: directory.appendingPathComponent("clipboard.sqlite").path)
             expectEqual((attributes[.posixPermissions] as? NSNumber)?.intValue, 0o600)
         }
     }
@@ -224,12 +342,16 @@ final class ClipboardStoreTests {
             expectThrows(try destination.importArchive(from: broken))
             try destination.reload()
             expectEqual(destination.items.count, 2)
-            let stateURL = destination.directoryURL.appendingPathComponent("clipboard.json")
-            let original = try Data(contentsOf: stateURL)
-            try Data("{corrupt disk state".utf8).write(to: stateURL)
-            expectThrows(try ClipboardStore(directoryURL: destination.directoryURL))
-            expectEqual(try Data(contentsOf: stateURL), Data("{corrupt disk state".utf8))
-            try original.write(to: stateURL)
+            let corruptDirectory = directory.appendingPathComponent("corrupt-legacy")
+            try FileManager.default.createDirectory(at: corruptDirectory, withIntermediateDirectories: true)
+            let stateURL = corruptDirectory.appendingPathComponent("clipboard.json")
+            let corrupt = Data("{corrupt disk state".utf8)
+            try corrupt.write(to: stateURL)
+            expectThrows(try ClipboardStore(directoryURL: corruptDirectory))
+            expectEqual(try Data(contentsOf: stateURL), corrupt, "Failed migration preserves the legacy file")
+            try Data(contentsOf: archive).write(to: stateURL)
+            let recovered = try ClipboardStore(directoryURL: corruptDirectory)
+            expectEqual(recovered.items, source.items, "A failed migration must be retryable")
         }
     }
 
@@ -516,7 +638,7 @@ final class ClipboardStoreTests {
             expectEqual(pasteboard.pasteboardItems?.count, 1)
             expectNil(pasteboard.data(forType: .rtf))
             let previous = pasteboard.changeCount
-            let stateURL = directory.appendingPathComponent("clipboard.json")
+            let stateURL = directory.appendingPathComponent("clipboard.sqlite-wal")
             let beforeFailure = try Data(contentsOf: stateURL)
             expectThrows(try store.writeToPasteboard(ids: [text, UUID()], pasteboard: pasteboard, plainTextOnly: false))
             expectEqual(pasteboard.changeCount, previous, "Invalid selections cannot partially replace the clipboard")
@@ -527,11 +649,50 @@ final class ClipboardStoreTests {
             expectEqual(pasteboard.string(forType: .string), "alpha 中文", "A non-projectable image does not reject the other selected text")
             expectEqual(pasteboard.pasteboardItems?.count, 1)
             let clipboardBeforeDiskFailure = pasteboard.changeCount
-            let validState = try Data(contentsOf: stateURL)
-            try Data("{invalid state".utf8).write(to: stateURL)
-            defer { try? validState.write(to: stateURL) }
+            let validState = try sqlite(directory, "SELECT hex(ZPREFERENCES)||'|'||hex(ZREVISION) FROM ZSTATE;")
+                .trimmingCharacters(in: .whitespacesAndNewlines).components(separatedBy: "|")
+            _ = try sqlite(directory, "UPDATE ZSTATE SET ZPREFERENCES=X'7B', ZREVISION=randomblob(16);")
+            defer { _ = try? sqlite(directory, "UPDATE ZSTATE SET ZPREFERENCES=X'\(validState[0])', ZREVISION=X'\(validState[1])';") }
             expectThrows(try store.writeToPasteboard(ids: [text], pasteboard: pasteboard, plainTextOnly: false))
             expectEqual(pasteboard.changeCount, clipboardBeforeDiskFailure, "A store read failure must occur before clipboard replacement")
+        }
+    }
+
+    func testCopyCommitsHistoryBeforeNotificationAndReturn() async throws {
+        let directory = try temporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        try await MainActor.run {
+            let store = try ClipboardStore(directoryURL: directory)
+            let id = try store.add(ClipboardItem(plainText: "synchronous restore fixture"))
+            let before = try requireValue(store.items.first { $0.id == id })
+            let concurrent = try ClipboardStore(directoryURL: directory)
+            try concurrent.updateItem(id: id, title: "concurrent title", text: nil)
+            let board = privatePasteboard()
+            defer { board.releaseGlobally() }
+            var notified = false
+            var durableAtNotification = false
+            store.preferences.appearance = "dark"
+            expectThrows(try store.writeToPasteboard(ids: [UUID()], pasteboard: board))
+            expectEqual(try ClipboardStore(directoryURL: directory).preferences.appearance, "system",
+                        "Selection validation must not introduce a pre-writer save of pending edits")
+            let subscription = store.didRestoreItem.sink {
+                notified = true
+                let reopened = try? ClipboardStore(directoryURL: directory)
+                durableAtNotification = reopened?.items.first { $0.id == id }?.updatedAt == store.items.first { $0.id == id }?.updatedAt
+                    && reopened?.preferences.appearance == "dark"
+            }
+            try store.writeToPasteboard(ids: [id], pasteboard: board)
+            expectTrue(notified && durableAtNotification, "Save must precede DidRestore and the copy return")
+            expectEqual(board.string(forType: .string), before.plainText)
+            let restored = try requireValue(store.items.first { $0.id == id })
+            expectEqual(restored.title, "concurrent title")
+            expectTrue(restored.createdAt > before.createdAt && restored.updatedAt > before.updatedAt)
+            notified = false
+            let count = board.changeCount
+            expectThrows(try store.writeToPasteboard(ids: [UUID()], pasteboard: board))
+            expectFalse(notified)
+            expectEqual(board.changeCount, count)
+            subscription.cancel()
         }
     }
 
@@ -769,7 +930,7 @@ final class ClipboardStoreTests {
             let id = try a.add(ClipboardItem(title: "original", kind: .image,
                                              payloads: ["public.png": Data(repeating: 123, count: 1_048_576)]))
             let b = try ClipboardStore(directoryURL: directory)
-            let url = directory.appendingPathComponent("clipboard.json")
+            let url = directory.appendingPathComponent("clipboard.sqlite-wal")
             let before = try FileManager.default.attributesOfItem(atPath: url.path)
             var updates = 0
             let subscription = a.objectWillChange.sink { updates += 1 }
