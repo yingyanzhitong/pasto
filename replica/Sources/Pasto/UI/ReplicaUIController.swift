@@ -1286,8 +1286,18 @@ final class ReplicaUIController {
 
     func showSettings() {
         if settingsWindow == nil {
-            settingsWindow = makeWindow(title: "设置", size: .init(width: 640, height: 564),
+            settingsWindow = makeWindow(title: "设置", size: .init(width: 648, height: 600),
                                         view: ReplicaSettingsView(state: state))
+            settingsWindow?.styleMask.remove(.resizable)
+            settingsWindow?.styleMask.insert(.fullSizeContentView)
+            settingsWindow?.titleVisibility = .hidden
+            settingsWindow?.titlebarAppearsTransparent = true
+            settingsWindow?.toolbar = NSToolbar(identifier: "PastoSettings")
+            settingsWindow?.toolbar?.showsBaselineSeparator = false
+            settingsWindow?.toolbarStyle = .unified
+            if let settingsWindow {
+                settingsWindow.setFrame(NSRect(origin: settingsWindow.frame.origin, size: NSSize(width: 648, height: 600)), display: false)
+            }
         }
         show(settingsWindow!)
     }
@@ -1413,8 +1423,18 @@ final class ReplicaUIController {
         sharingPolicy.apply(to: alert.window)
         alert.messageText = "您确定要删除剪贴板历史记录吗？"
         alert.informativeText = "已固定的项目和 Pasto 不会被删除。此操作无法撤销。"
-        alert.addButton(withTitle: "删除历史"); alert.addButton(withTitle: "取消")
-        if alert.runModal() == .alertFirstButtonReturn { state.perform { try store.eraseHistory() } }
+        let deleteButton = alert.addButton(withTitle: "删除历史")
+        deleteButton.hasDestructiveAction = true
+        deleteButton.keyEquivalent = ""
+        let cancelButton = alert.addButton(withTitle: "取消")
+        cancelButton.keyEquivalent = "\r"
+        alert.window.defaultButtonCell = cancelButton.cell as? NSButtonCell
+        if let settingsWindow, settingsWindow.isVisible {
+            alert.beginSheetModal(for: settingsWindow) { [weak self] response in
+                guard let self, response == .alertFirstButtonReturn else { return }
+                self.state.perform { try self.store.eraseHistory() }
+            }
+        } else if alert.runModal() == .alertFirstButtonReturn { state.perform { try store.eraseHistory() } }
     }
 
     func copySelection(plainTextOnly: Bool) {

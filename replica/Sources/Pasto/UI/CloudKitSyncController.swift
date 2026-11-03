@@ -133,7 +133,7 @@ struct ICloudSyncGeneralRow: View {
                     if drive.isEnabled { drive.setEnabled(false) }
                     if sync.isEnabled { sync.setEnabled(false) }
                 }
-            })).labelsHidden().toggleStyle(.switch)
+            })).labelsHidden().toggleStyle(.switch).controlSize(.mini)
                 .disabled(!drive.canSync && !sync.canSync)
         }
         .help(drive.isEnabled || !sync.isEnabled ? drive.statusText : sync.statusText)

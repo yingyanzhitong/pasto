@@ -230,6 +230,8 @@ final class ReplicaAppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValid
         file.addItem(menuItem("导入…", #selector(importArchive(_:))))
         file.addItem(menuItem("从 Paste 迁移分组…", #selector(migratePasteGroups(_:))))
         file.addItem(menuItem("导出…", #selector(exportArchive(_:))))
+        file.addItem(.separator())
+        file.addItem(NSMenuItem(title: "关闭窗口", action: #selector(NSWindow.performClose(_:)), keyEquivalent: "w"))
         let fileItem = NSMenuItem(title: "文件", action: nil, keyEquivalent: ""); fileItem.submenu = file; main.addItem(fileItem)
         let edit = NSMenu(title: "编辑")
         for (title, selector, key) in [("撤销", "undo:", "z"), ("剪切", "cut:", "x"),
