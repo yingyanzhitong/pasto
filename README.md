@@ -73,9 +73,9 @@ CloudKit 作为已配置签名构建的高级选项，与文件同步不能同�
 从 [最新正式 Release](https://github.com/yingyanzhitong/pasto/releases/latest) 下载，并阅读该版本的限制说明。安装包采用临时签名，尚未经过 Apple 公证。
 
 <!-- pasto-download:start -->
-当前正式版 **1.0.2**，一个安装包兼容 Intel 与 Apple 芯片：
+当前正式版 **1.0.3**，一个安装包兼容 Intel 与 Apple 芯片：
 
-[下载 Pasto-1.0.2-macos-universal.dmg](https://github.com/yingyanzhitong/pasto/releases/download/v1.0.2/Pasto-1.0.2-macos-universal.dmg)
+[下载 Pasto-1.0.3-macos-universal.dmg](https://github.com/yingyanzhitong/pasto/releases/download/v1.0.3/Pasto-1.0.3-macos-universal.dmg)
 <!-- pasto-download:end -->
 
 主程序、Helper 和 MCP 均包含两种架构，无需选择芯片版本。历史版本的格式与架构范围以该版本的发布说明为准。
