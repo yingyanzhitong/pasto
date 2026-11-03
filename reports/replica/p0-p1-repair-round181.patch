@@ -1,0 +1,69 @@
+--- a/replica/Sources/Pasto/UI/SearchEditor.swift
++++ b/replica/Sources/Pasto/UI/SearchEditor.swift
+@@ -27,6 +27,7 @@
+     var onEditingEnded: (NSView) -> Void = { _ in }
+     var onApplySuggestion: ([OriginalSearchQueryNode]) -> Void = { _ in }
+     var onDismissSuggestions: () -> Void = {}
++    var onSuggestionAnchor: (NSRange) -> NSRect? = { _ in nil }
+ 
+     func makeField(coordinator: Coordinator) -> SearchField {
+         let field = SearchField(frame: .zero)
+@@ -192,7 +193,7 @@
+         }
+ 
+         func performSuggestionRequest(_ context: OriginalSearchInputContext.Context,
+-                                      field: SearchField, editor: SearchTextView) {
++                                      field: SearchField) {
+             let candidates = parent.onLoadSuggestions(context)
+             guard !Task.isCancelled, !candidates.isEmpty else {
+                 dismissSuggestionMenu()
+@@ -202,15 +203,13 @@
+                 guard case let .filter(tag, value) = node, let chip = self.chip(for: node) else { return nil }
+                 return (.filter(tag, value), chip)
+             }
+-            guard !entries.isEmpty, let manager = editor.textLayoutManager else {
++            guard !entries.isEmpty else {
+                 self.dismissSuggestionMenu()
+                 return
+             }
+-            manager.textViewportLayoutController.layoutViewport()
+-            let textRect = OriginalSearchSuggestionAnchor.f_100046e28(manager, range: context.anchorRange)
+-            let anchorRect = editor.convert(textRect, to: field)
+             let menu = self.suggestionMenu ?? ReplicaSearchSuggestionsMenu()
+             self.suggestionMenu = menu
++            guard let anchorRect = parent.onSuggestionAnchor(context.anchorRange) else { return }
+             let applySuggestion = self.parent.onApplySuggestion
+             let dismissSuggestions = self.parent.onDismissSuggestions
+             menu.show(rows: entries.map { .init(title: $0.1.title, image: $0.1.image, matchQuery: context.text) },
+--- a/replica/Sources/Pasto/UI/OriginalPanelToolbar.swift
++++ b/replica/Sources/Pasto/UI/OriginalPanelToolbar.swift
+@@ -223,6 +223,7 @@
+         var specification = specification
+         specification.onApplySuggestion = { [weak self] nodes in self?.applySearchQuery(nodes) }
+         specification.onDismissSuggestions = { [weak self] in self?.coordinator?.dismissSuggestions() }
++        specification.onSuggestionAnchor = { [weak self] range in self?.suggestionAnchor(for: range) }
+         self.button.rootView = button
+         if let field, let coordinator {
+             coordinator.suggestionOwner = self
+@@ -296,10 +297,19 @@
+         return coordinator.querySnapshot
+     }
+ 
++    // 0407f8: nil owner/manager is no anchor; a zero helper rectangle remains valid.
++    func suggestionAnchor(for range: NSRange) -> NSRect? {
++        let (field, _) = inputPair()
++        let editor = field.f_100045c2c().f_100041f9c() as! ReplicaSearchEditor.SearchTextView
++        guard let manager = editor.textLayoutManager else { return nil }
++        manager.textViewportLayoutController.layoutViewport()
++        let rect = OriginalSearchSuggestionAnchor.f_100046e28(manager, range: range)
++        return editor.convert(rect, to: field)
++    }
++
+     func performSuggestionRequest(_ context: OriginalSearchInputContext.Context) {
+         let (field, coordinator) = inputPair()
+-        let editor = field.f_100045c2c().f_100041f9c() as! ReplicaSearchEditor.SearchTextView
+-        coordinator.performSuggestionRequest(context, field: field, editor: editor)
++        coordinator.performSuggestionRequest(context, field: field)
+     }
+ 
+     func applySearchQuery(_ nodes: [OriginalSearchQueryNode]) {

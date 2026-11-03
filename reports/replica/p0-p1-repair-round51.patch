@@ -1,0 +1,727 @@
+--- phase-51-before/replica/Sources/Pasto/UI/ReplicaSearchIndex.swift
++++ replica/Sources/Pasto/UI/ReplicaSearchIndex.swift
+@@ -61,6 +61,7 @@
+     private var requested: Request?
+     private var pending: Request?
+     private var pendingMayInitializeIndex = false
++    private var pendingResetsIndex = false
+     private var indexed: [UUID: Entry] = [:]
+     private let stateStore = OriginalSearchIndexStateStore()
+     private var mayRestoreSavedState = true
+@@ -405,6 +406,83 @@
+         try stateStore.save(state)
+     }
+ 
++    private func clearIndex() async throws {
++        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
++            index.deleteAllSearchableItems { error in
++                if let error { continuation.resume(throwing: error) }
++                else { continuation.resume() }
++            }
++        }
++        indexed = [:]
++    }
++
++    // 0x1002f1ca0/2f201c: clear while inactive, then enter the normal initialization path.
++    private func resetIndex(_ request: Request) async throws {
++        if isRunning { stopIndexing() }
++        try stateStore.save(nil)
++        try await clearIndex()
++        needsReset = true
++        mayRestoreSavedState = false
++        try await initializeIndexIfNeeded(request)
++    }
++
++    private func initializeIndexIfNeeded(_ request: Request) async throws {
++        if let previous = lastSourceIdentifier, let current = request.sourceIdentifier, previous != current {
++            needsReset = true
++        }
++        if needsReset && isRunning { stopIndexing() }
++        guard !isRunning else { return }
++        isRunning = true
++        do {
++            // A new start reloads persisted progress; an explicit reset still disables reuse.
++            if !needsReset {
++                needsReset = true
++                mayRestoreSavedState = true
++            }
++            // 0x1002efccc: unavailable indexing must not start a snapshot/write/observer.
++            if needsReset && !CSSearchableIndex.isIndexingAvailable() { throw IndexingError.unavailable }
++            var restoredCompletedState = false
++            var resumeState: OriginalSearchIndexingState?
++            if needsReset && mayRestoreSavedState,
++               let saved = savedStateForRestore(sourceIdentifier: request.sourceIdentifier) {
++                if saved.indexedItems < saved.totalItems {
++                    // 0x1002f00dc: copy the old cursor and keep indexed/total counters.
++                    resumeState = saved
++                    needsReset = false
++                } else {
++                    let healthy = await restoreCompletedStateIfHealthy(saved)
++                    // A full delegate reset received during the probe must remain authoritative.
++                    restoredCompletedState = healthy && mayRestoreSavedState
++                    if restoredCompletedState { needsReset = false }
++                }
++            }
++            mayRestoreSavedState = false
++            if let current = request.sourceIdentifier {
++                lastSourceIdentifier = current
++                stateStore.indexedStoreID = current
++            }
++            let usesSnapshot = !restoredCompletedState
++            let currentEntries = request.entries
++            if needsReset {
++                try stateStore.save(nil)
++                needsReset = false
++                try await clearIndex()
++            }
++            let current = Dictionary(uniqueKeysWithValues: currentEntries.map { ($0.id, $0) })
++            let deleted = usesSnapshot && store == nil ? Set(indexed.keys).subtracting(current.keys) : Set<UUID>()
++            if !deleted.isEmpty {
++                try await deleteIdentifiers(deleted.compactMap { indexed[$0]?.searchIdentifier })
++            }
++            // 0x1002f00dc/2f14cc installs change observation before requesting snapshot IDs.
++            startHistoryObservation()
++            if usesSnapshot { try await indexInitialSnapshot(currentEntries, resuming: resumeState) }
++            if usesSnapshot && store == nil { indexed = current }
++        } catch {
++            isRunning = false
++            throw error
++        }
++    }
++
+     private func drain() async {
+         while pending != nil || !pendingHistory.isEmpty {
+             if !pendingHistory.isEmpty {
+@@ -417,73 +495,19 @@
+             pending = nil
+             let mayInitializeIndex = pendingMayInitializeIndex
+             pendingMayInitializeIndex = false
++            let resetsIndex = pendingResetsIndex
++            pendingResetsIndex = false
+             let forcedIdentifiers = reindexIdentifiers
+             reindexIdentifiers = []
+             var requestAcknowledgements = acknowledgements
+             acknowledgements = []
+-            var initializationInProgress = false
+             do {
+-                if mayInitializeIndex {
+-                    // 0x1002f00dc: nil is not an identity mismatch; retain the previous nonnil identity.
+-                    if let previous = lastSourceIdentifier, let current = request.sourceIdentifier, previous != current {
+-                        needsReset = true
++                if resetsIndex {
++                    try await retryTransientIndexErrors {
++                        try await resetIndex(request)
+                     }
+-                    if needsReset && isRunning { stopIndexing() }
+-                    if !isRunning {
+-                        initializationInProgress = true
+-                        isRunning = true
+-                        // A new start reloads persisted progress; an explicit reset still disables reuse.
+-                        if !needsReset {
+-                            needsReset = true
+-                            mayRestoreSavedState = true
+-                        }
+-                        // 0x1002efccc: unavailable indexing must not start a snapshot/write/observer.
+-                        if needsReset && !CSSearchableIndex.isIndexingAvailable() { throw IndexingError.unavailable }
+-                        var restoredCompletedState = false
+-                        var resumeState: OriginalSearchIndexingState?
+-                        if needsReset && mayRestoreSavedState,
+-                           let saved = savedStateForRestore(sourceIdentifier: request.sourceIdentifier) {
+-                            if saved.indexedItems < saved.totalItems {
+-                                // 0x1002f00dc: copy the old cursor and keep indexed/total counters.
+-                                resumeState = saved
+-                                needsReset = false
+-                            } else {
+-                                let healthy = await restoreCompletedStateIfHealthy(saved)
+-                                // A full delegate reset received during the probe must remain authoritative.
+-                                restoredCompletedState = healthy && mayRestoreSavedState
+-                                if restoredCompletedState { needsReset = false }
+-                            }
+-                        }
+-                        mayRestoreSavedState = false
+-                        if let current = request.sourceIdentifier {
+-                            lastSourceIdentifier = current
+-                            stateStore.indexedStoreID = current
+-                        }
+-                        let usesSnapshot = !restoredCompletedState
+-                        let currentEntries = request.entries
+-                        if needsReset {
+-                            try stateStore.save(nil)
+-                            needsReset = false
+-                            try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+-                                index.deleteAllSearchableItems { error in
+-                                    if let error { continuation.resume(throwing: error) }
+-                                    else { continuation.resume() }
+-                                }
+-                            }
+-                            indexed = [:]
+-                        }
+-                        let current = Dictionary(uniqueKeysWithValues: currentEntries.map { ($0.id, $0) })
+-                        let deleted = usesSnapshot && store == nil ? Set(indexed.keys).subtracting(current.keys) : Set<UUID>()
+-                        if !deleted.isEmpty {
+-                            try await deleteIdentifiers(deleted.compactMap { indexed[$0]?.searchIdentifier })
+-                        }
+-                        // 0x1002f00dc/2f14cc installs change observation before requesting snapshot IDs.
+-                        startHistoryObservation()
+-                        if usesSnapshot { try await indexInitialSnapshot(currentEntries, resuming: resumeState) }
+-                        if usesSnapshot && store == nil { indexed = current }
+-                        // A targeted write failure must not undo a successful initialization.
+-                        initializationInProgress = false
+-                    }
++                } else if mayInitializeIndex {
++                    try await initializeIndexIfNeeded(request)
+                 }
+                 if !forcedIdentifiers.isEmpty {
+                     try await retryTransientIndexErrors {
+@@ -495,7 +519,6 @@
+                 requestAcknowledgements = []
+                 completed.forEach { $0() }
+             } catch {
+-                if initializationInProgress { isRunning = false }
+                 logger.error("Search index operation failed: \(error.localizedDescription, privacy: .public)")
+                 // 0x1002f2468/2f2a30 logs and returns without requesting another full reset.
+             }
+@@ -531,8 +554,9 @@
+             } else {
+                 needsReset = true
+                 mayRestoreSavedState = false
+-                stopIndexing()
++                if isRunning { stopIndexing() }
+                 pendingMayInitializeIndex = true
++                pendingResetsIndex = true
+             }
+             pending = request
+             acknowledgements.append(acknowledge)
+--- phase-51-before/scripts/tests/test_index_rebuild_contracts.py
++++ scripts/tests/test_index_rebuild_contracts.py
+@@ -67,7 +67,8 @@
+     def test_success_acknowledges_index_operation_before_query_and_guard(self):
+         self.assertTrue(acknowledges_before_query(self.source))
+         drain = body(self.source, 'private func drain() async')
+-        self.assertLess(drain.index('indexed = current'), drain.index('completed.forEach'))
++        self.assertLess(drain.index('try await initializeIndexIfNeeded(request)'), drain.index('completed.forEach'))
++        self.assertIn('indexed = current', body(self.source, 'private func initializeIndexIfNeeded('))
+         self.assertLess(drain.index('try await reindexTargets(forcedIdentifiers)'), drain.index('completed.forEach'))
+         self.assertNotIn('CSSearchQuery(',drain)
+         self.assertNotIn('queryTask',drain)
+--- phase-51-before/scripts/tests/test_p1_repair_completed_index_state.py
++++ scripts/tests/test_p1_repair_completed_index_state.py
+@@ -26,7 +26,7 @@
+         cls.index = (ROOT / 'replica/Sources/Pasto/UI/ReplicaSearchIndex.swift').read_text()
+         cls.restore = body(cls.index, 'private func restoreCompletedStateIfHealthy(')
+         cls.initial = body(cls.index, 'private func indexInitialSnapshot(')
+-        cls.drain = body(cls.index, 'private func drain() async')
++        cls.initialization = body(cls.index, 'private func initializeIndexIfNeeded(')
+         cls.original = {r['address']: original_fragment((ROOT / r['path']).read_text(), r['address'][2:])
+                         for r in cls.proof['original_fragments']}
+ 
+@@ -100,25 +100,27 @@
+ 
+     def test_real_cold_start_restores_before_delete_and_skips_snapshot_writes_on_health(self):
+         self.assertIn('lastSourceIdentifier = stateStore.indexedStoreID', body(self.index, 'init(directoryURL:'))
+-        check = self.drain.index('await restoreCompletedStateIfHealthy(')
+-        self.assertLess(check, self.drain.index('index.deleteAllSearchableItems'))
+-        self.assertIn('if restoredCompletedState { needsReset = false }', self.drain)
+-        self.assertIn('let usesSnapshot = !restoredCompletedState', self.drain)
+-        self.assertIn('if usesSnapshot { try await indexInitialSnapshot(currentEntries, resuming: resumeState) }', self.drain)
+-        self.assertIn('startHistoryObservation()', self.drain)
++        check = self.initialization.index('await restoreCompletedStateIfHealthy(')
++        self.assertLess(check, self.initialization.index('try await clearIndex()'))
++        self.assertIn('if restoredCompletedState { needsReset = false }', self.initialization)
++        self.assertIn('let usesSnapshot = !restoredCompletedState', self.initialization)
++        self.assertIn('if usesSnapshot { try await indexInitialSnapshot(currentEntries, resuming: resumeState) }', self.initialization)
++        self.assertIn('startHistoryObservation()', self.initialization)
+ 
+     def test_explicit_reset_overrides_pending_health_probe_reuse(self):
+         rebuild = body(self.index, 'nonisolated private func rebuild(')
+         full = method_body(rebuild, '} else {')
+         self.assertIn('needsReset = true', full)
+         self.assertIn('mayRestoreSavedState = false', full)
+-        self.assertIn('restoredCompletedState = healthy && mayRestoreSavedState', self.drain)
+-        self.assertLess(self.drain.index('let healthy = await'), self.drain.index('restoredCompletedState = healthy'))
++        self.assertIn('restoredCompletedState = healthy && mayRestoreSavedState', self.initialization)
++        self.assertLess(self.initialization.index('let healthy = await'), self.initialization.index('restoredCompletedState = healthy'))
+ 
+     def test_reset_clears_persisted_optional_state_before_actual_sdk_clear(self):
+-        reset = method_body(self.drain, 'if needsReset {')
+-        self.assertLess(reset.index('try stateStore.save(nil)'), reset.index('index.deleteAllSearchableItems'))
+-        self.assertLess(reset.index('index.deleteAllSearchableItems'), reset.index('indexed = [:]'))
++        reset = method_body(self.initialization, 'if needsReset {')
++        self.assertLess(reset.index('try stateStore.save(nil)'), reset.index('try await clearIndex()'))
++        clear = body(self.index, 'private func clearIndex()')
++        self.assertLess(clear.index('index.deleteAllSearchableItems'), clear.index('indexed = [:]'))
++        self.assertIn('try await initializeIndexIfNeeded(request)', body(self.index, 'private func drain() async'))
+ 
+     def test_ids_query_is_dictionary_only_with_original_timestamp_order_and_strict_before(self):
+         request = body(self.persistence, 'func searchIndexIdentifiers(')
+--- phase-51-before/scripts/tests/test_p1_repair_delegate_no_snapshot.py
++++ scripts/tests/test_p1_repair_delegate_no_snapshot.py
+@@ -86,7 +86,8 @@
+         self.assertNotIn('requested', initial + live)
+         drain = body(self.source, 'private func drain() async')
+         self.assertIn('guard let request = pending else { break }', drain)
+-        self.assertIn('try await indexInitialSnapshot(currentEntries, resuming: resumeState)', drain)
++        self.assertIn('try await initializeIndexIfNeeded(request)', drain)
++        self.assertIn('try await indexInitialSnapshot(currentEntries, resuming: resumeState)', body(self.source, 'private func initializeIndexIfNeeded('))
+ 
+     def test_query_requests_and_retry_are_unchanged_and_delegate_does_not_publish(self):
+         for marker in ['func update(items:', 'func retry()', 'private func replaceQuery(',
+--- phase-51-before/scripts/tests/test_p1_repair_index_active_state.py
++++ scripts/tests/test_p1_repair_index_active_state.py
+@@ -22,7 +22,8 @@
+         cls.source = (ROOT / 'replica/Sources/Pasto/UI/ReplicaSearchIndex.swift').read_text()
+         cls.before = (cls.phase / 'before/replica/Sources/Pasto/UI/ReplicaSearchIndex.swift').read_text()
+         cls.drain = body(cls.source, 'private func drain() async')
+-        cls.initialization = body(cls.drain, 'if mayInitializeIndex')
++        cls.initialization = body(cls.source, 'private func initializeIndexIfNeeded(')
++        cls.initialization_gate = body(cls.drain, 'else if mayInitializeIndex')
+         cls.target = body(cls.source, 'private func reindexTargets(')
+         cls.snapshot = body(cls.source, 'private func indexInitialSnapshot(')
+         cls.rebuild = body(cls.source, 'nonisolated private func rebuild(')
+@@ -54,26 +55,25 @@
+         self.assertIn('*(undefined1 *)(*(long *)(unaff_x22 + 0x60) + 0xf0) = 0', self.original['0x1002f2214'])
+ 
+     def test_actual_start_only_sets_true_in_inactive_initialization_branch(self):
+-        start = method_body(self.initialization, 'if !isRunning {')
+-        self.assertIn('initializationInProgress = true', start)
+-        self.assertIn('isRunning = true', start)
++        start = self.initialization
++        guard = start.index('guard !isRunning else { return }')
++        self.assertLess(guard, start.index('isRunning = true'))
+         self.assertEqual(self.source.count('isRunning = true'), 1)
+         self.assertNotIn('worker == nil', start)
+         self.assertNotIn('historyTask == nil', start)
+         for token in ['stateStore.indexedStoreID = current', 'startHistoryObservation()', 'try await indexInitialSnapshot(']:
+-            self.assertIn(token, start)
+-            self.assertNotIn(token, self.initialization.replace(start, '', 1))
++            self.assertLess(guard, start.index(token))
+         self.assertIn('let usesSnapshot = !restoredCompletedState', start)
+ 
+     def test_initialization_success_is_marked_before_targeted_work_can_fail(self):
+-        order = ['initializationInProgress = true', 'try await indexInitialSnapshot(',
+-                 'initializationInProgress = false', 'try await reindexTargets(']
+-        start = self.drain.index(order[0])
+-        offsets = [self.drain.index(token, start) for token in order]
+-        self.assertEqual(offsets, sorted(offsets))
+-        failure = self.drain[self.drain.rindex('} catch {'):]
+-        self.assertIn('if initializationInProgress { isRunning = false }', failure)
++        failure = body(self.initialization, 'catch')
++        self.assertIn('isRunning = false', failure)
++        self.assertIn('throw error', failure)
+         self.assertNotIn('needsReset =', failure)
++        self.assertLess(self.drain.index('try await initializeIndexIfNeeded(request)'), self.drain.index('try await reindexTargets('))
++        drain_failure = self.drain[self.drain.rindex('} catch {'):]
++        self.assertNotIn('isRunning =', drain_failure)
++        self.assertNotIn('needsReset =', drain_failure)
+ 
+     def test_queue_drain_and_ack_do_not_turn_off_a_successful_service(self):
+         tail = self.drain[self.drain.index('worker = nil'):]
+@@ -132,18 +132,18 @@
+ 
+     def test_initialization_flag_is_captured_before_await_and_does_not_leak_to_next_target(self):
+         request = self.drain[self.drain.index('guard let request = pending'):]
+-        order = ['let mayInitializeIndex = pendingMayInitializeIndex', 'pendingMayInitializeIndex = false', 'if mayInitializeIndex', 'await ']
++        order = ['let mayInitializeIndex = pendingMayInitializeIndex', 'pendingMayInitializeIndex = false', 'if resetsIndex', 'await ']
+         offsets = [request.index(token) for token in order]
+         self.assertEqual(offsets, sorted(offsets))
+         self.assertNotIn('pendingMayInitializeIndex = true', self.drain)
+-        self.assertIn('try await reindexTargets(forcedIdentifiers)', request[request.index(self.initialization) + len(self.initialization):])
++        self.assertIn('try await reindexTargets(forcedIdentifiers)', request[request.index(self.initialization_gate) + len(self.initialization_gate):])
+ 
+     def test_target_only_request_has_no_path_into_state_reset_or_snapshot(self):
+-        after_initialization = self.drain[self.drain.index(self.initialization) + len(self.initialization):]
++        after_initialization = self.drain[self.drain.index(self.initialization_gate) + len(self.initialization_gate):]
+         self.assertIn('try await reindexTargets(forcedIdentifiers)', after_initialization)
+         for token in ['stateStore.save(', 'indexInitialSnapshot(', 'isRunning = true', 'startHistoryObservation()']:
+             self.assertNotIn(token, after_initialization)
+-        for token in ['savedStateForRestore(', 'index.deleteAllSearchableItems', 'startHistoryObservation()']:
++        for token in ['savedStateForRestore(', 'try await clearIndex()', 'startHistoryObservation()']:
+             self.assertIn(token, self.initialization)
+ 
+     def test_real_target_descriptor_and_callees_do_not_route_through_reset(self):
+@@ -177,7 +177,7 @@
+                       body(self.source, 'private func startHistoryObservation()'))
+ 
+     def test_genuine_restart_can_restore_saved_state_but_explicit_reset_keeps_precedence(self):
+-        inactive = method_body(self.initialization, 'if !isRunning {')
++        inactive = self.initialization
+         restart = method_body(inactive, 'if !needsReset {')
+         self.assertIn('needsReset = true', restart)
+         self.assertIn('mayRestoreSavedState = true', restart)
+--- phase-51-before/scripts/tests/test_p1_repair_index_cursor_resume.py
++++ scripts/tests/test_p1_repair_index_cursor_resume.py
+@@ -20,7 +20,7 @@
+         cls.phase = ROOT / '.local/p0-repair/phase-46'
+         cls.proof = json.loads((cls.phase / 'cursor-resume-contract.json').read_text())
+         cls.source = (ROOT / 'replica/Sources/Pasto/UI/ReplicaSearchIndex.swift').read_text()
+-        cls.drain = body(cls.source, 'private func drain() async')
++        cls.initialization = body(cls.source, 'private func initializeIndexIfNeeded(')
+         cls.initial = body(cls.source, 'private func indexInitialSnapshot(')
+         cls.gate = body(cls.source, 'private func savedStateForRestore(')
+         cls.original = {r['address']: original_fragment((ROOT / r['path']).read_text(), r['address'][2:])
+@@ -57,20 +57,20 @@
+         self.assertIn('state.schemaVersion == OriginalSearchIndexingState.currentSchemaVersion else { return nil }', self.gate)
+         self.assertIn('if let previous = stateStore.indexedStoreID, let current = sourceIdentifier, previous != current { return nil }', self.gate)
+         self.assertIn('return state', self.gate)
+-        self.assertEqual(self.drain.count('savedStateForRestore('), 1)
+-        self.assertNotIn('stateStore.savedState', self.drain)
++        self.assertEqual(self.initialization.count('savedStateForRestore('), 1)
++        self.assertNotIn('stateStore.savedState', self.initialization)
+ 
+     def test_actual_partial_branch_keeps_index_without_health_probe(self):
+-        partial = method_body(self.drain, 'if saved.indexedItems < saved.totalItems {')
++        partial = method_body(self.initialization, 'if saved.indexedItems < saved.totalItems {')
+         self.assertIn('resumeState = saved', partial)
+         self.assertIn('needsReset = false', partial)
+         for forbidden in ['await', 'save(', 'deleteAll', 'restoreCompletedStateIfHealthy']:
+             self.assertNotIn(forbidden, partial)
+-        self.assertLess(self.drain.index('resumeState = saved'), self.drain.index('let usesSnapshot = !restoredCompletedState'))
+-        self.assertLess(self.drain.index('let usesSnapshot = !restoredCompletedState'), self.drain.index('if needsReset {'))
++        self.assertLess(self.initialization.index('resumeState = saved'), self.initialization.index('let usesSnapshot = !restoredCompletedState'))
++        self.assertLess(self.initialization.index('let usesSnapshot = !restoredCompletedState'), self.initialization.index('if needsReset {'))
+ 
+     def test_completed_branch_keeps_previous_health_and_explicit_reset_protection(self):
+-        completed = self.drain[self.drain.index('let healthy = await'):self.drain.index('mayRestoreSavedState = false')]
++        completed = self.initialization[self.initialization.index('let healthy = await'):self.initialization.index('mayRestoreSavedState = false')]
+         self.assertIn('restoreCompletedStateIfHealthy(saved)', completed)
+         self.assertIn('restoredCompletedState = healthy && mayRestoreSavedState', completed)
+         restore = body(self.source, 'private func restoreCompletedStateIfHealthy(')
+@@ -83,8 +83,8 @@
+         self.assertIn('mayRestoreSavedState = false', full)
+ 
+     def test_resume_is_passed_to_real_snapshot_call_and_not_just_saved_in_a_model(self):
+-        self.assertIn('let usesSnapshot = !restoredCompletedState', self.drain)
+-        self.assertIn('if usesSnapshot { try await indexInitialSnapshot(currentEntries, resuming: resumeState) }', self.drain)
++        self.assertIn('let usesSnapshot = !restoredCompletedState', self.initialization)
++        self.assertIn('if usesSnapshot { try await indexInitialSnapshot(currentEntries, resuming: resumeState) }', self.initialization)
+         self.assertIn('let before = saved?.oldestTimestamp', self.initial)
+         self.assertIn('try store?.searchIndexIdentifiers(before: before)', self.initial)
+         self.assertNotIn('searchIndexIdentifiers(before: nil)', self.initial)
+@@ -184,7 +184,7 @@
+                 (True, (5, 0, 0), 'A', 'A', 'error', 'clear')]
+         for *inputs, expected in rows:
+             self.assertEqual(decision(*inputs), expected)
+-        self.assertIn('if needsReset && mayRestoreSavedState,', self.drain)
++        self.assertIn('if needsReset && mayRestoreSavedState,', self.initialization)
+ 
+     def test_only_two_shared_finite_recovery_records_close_and_lifecycle_stays_open(self):
+         self.assertEqual([r['function_id'] for r in self.proof['contracts']],
+--- phase-51-before/scripts/tests/test_p1_repair_index_error_observer.py
++++ scripts/tests/test_p1_repair_index_error_observer.py
+@@ -22,6 +22,7 @@
+         cls.source = (ROOT / 'replica/Sources/Pasto/UI/ReplicaSearchIndex.swift').read_text()
+         cls.before = (cls.phase / 'before/replica/Sources/Pasto/UI/ReplicaSearchIndex.swift').read_text()
+         cls.drain = body(cls.source, 'private func drain() async')
++        cls.initialization = body(cls.source, 'private func initializeIndexIfNeeded(')
+         cls.target = body(cls.source, 'private func reindexTargets(')
+         cls.failure = cls.drain[cls.drain.rindex('} catch {'):cls.drain.index('// The original delegate also acknowledges')]
+         cls.original = {r['address']: original_fragment((ROOT / r['path']).read_text(), r['address'][2:])
+@@ -91,18 +92,18 @@
+         full = method_body(rebuild, '} else {')
+         self.assertIn('needsReset = true', full)
+         self.assertIn('mayRestoreSavedState = false', full)
+-        source_gate = method_body(self.drain, 'if let previous = lastSourceIdentifier, let current = request.sourceIdentifier, previous != current {')
++        source_gate = method_body(self.initialization, 'if let previous = lastSourceIdentifier, let current = request.sourceIdentifier, previous != current {')
+         self.assertIn('needsReset = true', source_gate)
+-        reset = method_body(self.drain, 'if needsReset {')
+-        self.assertLess(reset.index('try stateStore.save(nil)'), reset.index('index.deleteAllSearchableItems'))
++        reset = method_body(self.initialization, 'if needsReset {')
++        self.assertLess(reset.index('try stateStore.save(nil)'), reset.index('try await clearIndex()'))
+ 
+     def test_observer_is_installed_before_real_snapshot_work_but_after_reset_succeeds(self):
+         order = ['CSSearchableIndex.isIndexingAvailable()', 'let usesSnapshot =',
+-                 'index.deleteAllSearchableItems', 'startHistoryObservation()',
+-                 'try await indexInitialSnapshot(', 'try await reindexTargets(', 'completed.forEach']
+-        offsets = [self.drain.index(token) for token in order]
++                 'try await clearIndex()', 'startHistoryObservation()', 'try await indexInitialSnapshot(']
++        offsets = [self.initialization.index(token) for token in order]
+         self.assertEqual(offsets, sorted(offsets))
+-        self.assertEqual(self.drain.count('startHistoryObservation()'), 1)
++        self.assertEqual(self.initialization.count('startHistoryObservation()'), 1)
++        self.assertLess(self.drain.index('try await initializeIndexIfNeeded(request)'), self.drain.index('try await reindexTargets('))
+         observer = body(self.source, 'private func startHistoryObservation()')
+         self.assertIn('guard isRunning, historyTask == nil, let store else { return }', observer)
+ 
+@@ -115,13 +116,12 @@
+             self.assertIn('+ 0x120) =', original[install:fetch])
+ 
+     def test_target_error_after_completed_initialization_does_not_force_reset_on_next_request(self):
+-        self.assertIn('let usesSnapshot = !restoredCompletedState', self.drain)
+-        # An active ordinary request does not enter the initialization block at all.
+-        initialization = body(self.drain, 'if mayInitializeIndex')
+-        inactive = method_body(initialization, 'if !isRunning {')
+-        self.assertIn('try await indexInitialSnapshot(', inactive)
+-        self.assertNotIn('try await indexInitialSnapshot(', initialization.replace(inactive, '', 1))
++        self.assertIn('let usesSnapshot = !restoredCompletedState', self.initialization)
++        guard = self.initialization.index('guard !isRunning else { return }')
++        self.assertLess(guard, self.initialization.index('try await indexInitialSnapshot('))
++        self.assertIn('try await initializeIndexIfNeeded(request)', self.drain)
+         self.assertNotIn('needsReset', self.failure)
++        self.assertNotIn('isRunning =', self.failure)
+ 
+     def test_target_ids_are_nonempty_filtered_before_batching_without_dedup_or_UUID_gate(self):
+         self.assertIn('let input = identifiers.filter { !$0.isEmpty }', self.target)
+--- phase-51-before/scripts/tests/test_p1_repair_index_recovery_prerequisites.py
++++ scripts/tests/test_p1_repair_index_recovery_prerequisites.py
+@@ -87,15 +87,17 @@
+             self.assertIn(token, raw)
+ 
+     def test_reset_waits_for_delete_completion_before_clearing_memory_and_reindexing(self):
+-        drain = body(self.index, 'private func drain() async')
+-        reset = method_body(drain, 'if needsReset {')
+-        order = ['needsReset = false', 'try await withCheckedThrowingContinuation',
+-                 'index.deleteAllSearchableItems', 'continuation.resume(throwing: error)', 'indexed = [:]']
+-        offsets = [reset.index(t) for t in order]
++        initialization = body(self.index, 'private func initializeIndexIfNeeded(')
++        reset = method_body(initialization, 'if needsReset {')
++        self.assertLess(reset.index('needsReset = false'), reset.index('try await clearIndex()'))
++        clear = body(self.index, 'private func clearIndex()')
++        order = ['try await withCheckedThrowingContinuation', 'index.deleteAllSearchableItems',
++                 'continuation.resume(throwing: error)', 'indexed = [:]']
++        offsets = [clear.index(t) for t in order]
+         self.assertEqual(offsets, sorted(offsets))
+-        self.assertIn('else { continuation.resume() }', reset)
+-        self.assertNotIn('withDomainIdentifiers:', reset)
+-        self.assertNotIn('matchingIdentifiers(', reset)
++        self.assertIn('else { continuation.resume() }', clear)
++        self.assertNotIn('withDomainIdentifiers:', clear)
++        self.assertNotIn('matchingIdentifiers(', clear)
+ 
+     def test_original_id_fetch_error_sets_empty_array_then_resets_context(self):
+         source = self.fragments['0x10036dc00']
+@@ -128,11 +130,11 @@
+         self.assertNotIn('context.save()', make)
+ 
+     def test_availability_check_blocks_data_sdk_and_observer_but_is_not_claimed_full_worker_fix(self):
+-        drain = body(self.index, 'private func drain() async')
++        drain = body(self.index, 'private func initializeIndexIfNeeded(')
+         guard = 'if needsReset && !CSSearchableIndex.isIndexingAvailable() { throw IndexingError.unavailable }'
+         check = drain.index(guard)
+         for token in ['lastSourceIdentifier = current', 'try await indexInitialSnapshot(',
+-                      'index.deleteAllSearchableItems', 'startHistoryObservation()']:
++                      'try await clearIndex()', 'startHistoryObservation()']:
+             self.assertLess(check, drain.index(token))
+         self.assertIn('index.indexSearchableItems(', body(self.index, 'private func indexInitialSnapshot('))
+         self.assertIn('worker = Task { [weak self]', body(self.index, 'private func startWorker()'))
+--- phase-51-before/scripts/tests/test_p1_repair_index_transient_retry.py
++++ scripts/tests/test_p1_repair_index_transient_retry.py
+@@ -122,12 +122,13 @@
+ 
+     def test_production_target_retry_wraps_whole_pass_not_individual_SDK_batches(self):
+         drain = body(self.source, 'private func drain() async')
+-        wrapper = body(drain, 'try await retryTransientIndexErrors')
++        target = body(drain, 'if !forcedIdentifiers.isEmpty')
++        wrapper = body(target, 'try await retryTransientIndexErrors')
+         self.assertIn('try await reindexTargets(forcedIdentifiers)', wrapper)
+         self.assertNotIn('indexSearchableItems', wrapper)
+         for marker in ['private func reindexTargets(', 'private func indexInitialSnapshot(', 'private func applyHistoryChanges(']:
+             self.assertNotIn('retryTransientIndexErrors', body(self.source, marker))
+-        self.assertEqual(self.source.count('try await retryTransientIndexErrors'), 1)
++        self.assertEqual(self.source.count('try await retryTransientIndexErrors'), 2)
+         self.assertIn('FUN_1002e7914(', self.original['0x1002f26a8'])
+         self.assertNotIn('FUN_1002e7914(', self.original['0x1002f2ca8'])
+ 
+@@ -141,7 +142,11 @@
+     def test_queries_and_target_only_initialization_gates_are_not_changed_by_retry(self):
+         for marker in ['private func replaceQuery(', 'nonisolated private static func matchingIdentifiers(',
+                        'nonisolated private func rebuild(', 'func retry()']:
+-            self.assertEqual(body(self.source, marker), body(self.before, marker))
++            current = body(self.source, marker)
++            if marker == 'nonisolated private func rebuild(':
++                current = current.replace('                pendingResetsIndex = true\n', '', 1)
++                current = current.replace('if isRunning { stopIndexing() }', 'stopIndexing()', 1)
++            self.assertEqual(current, body(self.before, marker))
+         drain = body(self.source, 'private func drain() async')
+         initialization = body(drain, 'if mayInitializeIndex')
+         self.assertNotIn('retryTransientIndexErrors', initialization)
+--- /dev/null
++++ scripts/tests/test_p1_repair_full_index_reset.py
+@@ -0,0 +1,188 @@
++"""Real descriptor/source flow checks; no Swift, SDK, sleeps or Core Data execution."""
++import hashlib
++import json
++import struct
++import sys
++import unittest
++from pathlib import Path
++
++ROOT = Path(__file__).resolve().parents[2]
++sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'scripts/tests')]
++from function_ledger import source_fragments
++from test_offline_p0_contracts import body
++from test_p0_repair_identity import method_body
++from test_p0_repair_checksum_routing import original_fragment
++
++
++class FullIndexResetContracts(unittest.TestCase):
++    @classmethod
++    def setUpClass(cls):
++        cls.phase = ROOT / '.local/p0-repair/phase-51'
++        cls.proof = json.loads((cls.phase / 'full-reset-contract.json').read_text())
++        cls.source = (ROOT / 'replica/Sources/Pasto/UI/ReplicaSearchIndex.swift').read_text()
++        cls.before = (cls.phase / 'before/replica/Sources/Pasto/UI/ReplicaSearchIndex.swift').read_text()
++        cls.reset = body(cls.source, 'private func resetIndex(')
++        cls.initialize = body(cls.source, 'private func initializeIndexIfNeeded(')
++        cls.clear = body(cls.source, 'private func clearIndex()')
++        cls.drain = body(cls.source, 'private func drain() async')
++        cls.rebuild = body(cls.source, 'nonisolated private func rebuild(')
++        cls.original = {r['address']: original_fragment((ROOT / r['path']).read_text(), r['address'][2:])
++                        for r in cls.proof['original_fragments']}
++
++    def test_original_fragments_and_prior_retry_contract_are_hash_bound(self):
++        self.assertEqual(len(self.proof['original_fragments']), 26)
++        for row in self.proof['original_fragments']:
++            self.assertEqual(source_fragments(ROOT / row['path'])[row['address']]['sha256'], row['sha256'])
++        prior = self.proof['prior_retry_contract']
++        self.assertEqual(hashlib.sha256((ROOT / prior['path']).read_bytes()).hexdigest(), prior['sha256'])
++
++    def test_full_operation_descriptor_is_not_the_prestart_clear_descriptor(self):
++        descriptors = {row['address']: row for row in self.proof['async_descriptors']}
++        expected = {'0x100c3ec18': '0x1002f3cdc', '0x100c3ec20': '0x1002eb754',
++                    '0x100c3ec28': '0x1002f3a60', '0x100c3eb50': '0x1002f3a60'}
++        for address, target in expected.items():
++            delta, frame = struct.unpack('<iI', bytes.fromhex(descriptors[address]['bytes']))
++            self.assertEqual(hex(int(address, 16) + delta), target)
++            self.assertEqual(frame, 32)
++        self.assertNotEqual(expected['0x100c3ec18'], expected['0x100c3ec28'])
++
++    def test_original_retry_wrapper_dispatches_the_nested_full_operation(self):
++        full = self.original['0x1002f2280']
++        self.assertIn('*(undefined **)(unaff_x22 + 0x20) = &DAT_100c3ec18', full)
++        self.assertIn('&DAT_100c3ec20', full)
++        self.assertIn('FUN_1002e7914(', full)
++        self.assertIn('FUN_1002e7838(', self.original['0x1002eb754'])
++        dispatch = self.original['0x1002e7838']
++        self.assertIn('iVar1 = *param_4', dispatch)
++        self.assertIn('(*(code *)((long)iVar1 + (long)param_4))()', dispatch)
++        self.assertIn('FUN_1002f2648()', self.original['0x1002f3cdc'])
++        self.assertIn('FUN_1002f1c30()', self.original['0x1002f2648'])
++
++    def test_original_reset_preclear_success_then_start_and_nil_state_clear_are_distinct(self):
++        reset = self.original['0x1002f1ca0']
++        self.assertIn('FUN_1002cb5a0(', reset)
++        self.assertIn('&DAT_100c3ec28', reset)
++        self.assertIn('FUN_1002e267c(', self.original['0x1002f3a60'])
++        self.assertIn('_swift_task_switch(FUN_1002f20a0', self.original['0x1002f201c'])
++        self.assertIn('FUN_1002efba0()', self.original['0x1002f20a0'])
++        self.assertIn('&DAT_100c3eb50', self.original['0x1002f00dc'])
++
++    def test_actual_reset_clears_before_activating_normal_initialization(self):
++        order = ['if isRunning { stopIndexing() }', 'try stateStore.save(nil)',
++                 'try await clearIndex()', 'needsReset = true', 'mayRestoreSavedState = false',
++                 'try await initializeIndexIfNeeded(request)']
++        offsets = [self.reset.index(token) for token in order]
++        self.assertEqual(offsets, sorted(offsets))
++        self.assertNotIn('isRunning = true', self.reset)
++        self.assertNotIn('catch', self.reset)
++        self.assertNotIn('Task {', self.reset)
++
++    def test_actual_clear_waits_for_completion_and_updates_cache_only_after_success(self):
++        order = ['try await withCheckedThrowingContinuation', 'index.deleteAllSearchableItems',
++                 'continuation.resume(throwing: error)', 'indexed = [:]']
++        offsets = [self.clear.index(token) for token in order]
++        self.assertEqual(offsets, sorted(offsets))
++        self.assertIn('else { continuation.resume() }', self.clear)
++        for token in ['isRunning = true', 'stateStore.save', 'catch', 'withDomainIdentifiers:']:
++            self.assertNotIn(token, self.clear)
++
++    def test_clear_failure_prevents_start_in_original_and_current_paths(self):
++        native = self.original['0x1002f201c']
++        failure = method_body(native, 'if (unaff_x20 != 0) {')
++        self.assertIn('return;', failure)
++        self.assertNotIn('FUN_1002f20a0', failure)
++        self.assertLess(self.reset.index('try await clearIndex()'), self.reset.index('try await initializeIndexIfNeeded('))
++        self.assertNotIn('try?', self.reset)
++        drain_failure = self.drain[self.drain.rindex('} catch {'):]
++        self.assertIn('logger.error(', drain_failure)
++        self.assertNotIn('needsReset =', drain_failure)
++        self.assertNotIn('pending =', drain_failure)
++
++    def test_full_retry_repeats_entire_reset_including_preclear_and_initialization(self):
++        full = body(self.drain, 'if resetsIndex')
++        wrapper = body(full, 'try await retryTransientIndexErrors')
++        self.assertIn('try await resetIndex(request)', wrapper)
++        self.assertNotIn('index.deleteAllSearchableItems', wrapper)
++        self.assertIn('try await initializeIndexIfNeeded(request)', self.reset)
++        self.assertEqual(self.drain.count('try await retryTransientIndexErrors'), 2)
++
++    def test_ordinary_initialization_has_no_new_outer_retry(self):
++        ordinary = body(self.drain, 'else if mayInitializeIndex')
++        self.assertIn('try await initializeIndexIfNeeded(request)', ordinary)
++        self.assertNotIn('retryTransientIndexErrors', ordinary)
++        self.assertNotIn('resetIndex(', ordinary)
++        self.assertLess(self.drain.index('if resetsIndex'), self.drain.index('else if mayInitializeIndex'))
++
++    def test_reset_request_flag_is_captured_before_await_and_coalesced_full_request_is_preserved(self):
++        self.assertIn('private var pendingResetsIndex = false', self.source)
++        full = method_body(self.rebuild, '} else {')
++        self.assertIn('pendingResetsIndex = true', full)
++        target = body(self.rebuild, 'if let identifiers')
++        self.assertNotIn('pendingResetsIndex', target)
++        request = self.drain[self.drain.index('guard let request = pending'):]
++        order = ['let resetsIndex = pendingResetsIndex', 'pendingResetsIndex = false', 'if resetsIndex', 'await ']
++        offsets = [request.index(token) for token in order]
++        self.assertEqual(offsets, sorted(offsets))
++        self.assertNotIn('pendingResetsIndex = true', body(self.source, 'func update(items:'))
++
++    def test_extracted_initializer_keeps_active_gate_success_and_failed_state(self):
++        guard = self.initialize.index('guard !isRunning else { return }')
++        self.assertLess(guard, self.initialize.index('isRunning = true'))
++        self.assertLess(self.initialize.index('isRunning = true'), self.initialize.index('CSSearchableIndex.isIndexingAvailable()'))
++        failure = body(self.initialize, 'catch')
++        self.assertIn('isRunning = false', failure)
++        self.assertIn('throw error', failure)
++        self.assertNotIn('needsReset =', failure)
++        self.assertNotIn('isRunning = false', body(self.initialize, 'do '))
++
++    def test_nil_state_initialization_preserves_independent_second_clear(self):
++        reset = method_body(self.initialize, 'if needsReset {')
++        self.assertLess(reset.index('try stateStore.save(nil)'), reset.index('try await clearIndex()'))
++        self.assertLess(self.initialize.index('try await clearIndex()'), self.initialize.index('startHistoryObservation()'))
++        self.assertLess(self.initialize.index('startHistoryObservation()'), self.initialize.index('try await indexInitialSnapshot('))
++        self.assertIn('restoredCompletedState = healthy && mayRestoreSavedState', self.initialize)
++
++    def test_target_wrapper_and_ack_remain_after_successful_full_or_normal_initialization(self):
++        target = body(self.drain, 'if !forcedIdentifiers.isEmpty')
++        self.assertIn('try await reindexTargets(forcedIdentifiers)', body(target, 'try await retryTransientIndexErrors'))
++        order = ['try await resetIndex(request)', 'try await initializeIndexIfNeeded(request)',
++                 'try await reindexTargets(forcedIdentifiers)', 'completed.forEach']
++        offsets = [self.drain.index(token) for token in order]
++        self.assertEqual(offsets, sorted(offsets))
++        self.assertEqual(self.drain.count('requestAcknowledgements.forEach { $0() }'), 1)
++
++    def test_existing_retry_classifier_batch_content_and_query_methods_are_unchanged(self):
++        for marker in ['private func retryTransientIndexErrors(', 'private static func isTransientIndexError(',
++                       'private func reindexTargets(', 'private func indexInitialSnapshot(',
++                       'private func searchableItem(', 'private func replaceQuery(',
++                       'nonisolated private static func matchingIdentifiers(']:
++            self.assertEqual(body(self.source, marker), body(self.before, marker))
++
++    def test_fault_trace_fixture_requires_repeating_the_preclear_and_does_not_start_after_failed_clear(self):
++        # Original-bound trace fixture only, not SDK/Swift execution.
++        def attempt(preclear_ok, initialize_ok):
++            trace = ['inactive', 'state-nil', 'preclear']
++            if not preclear_ok:
++                return trace, 'error'
++            trace += ['start', 'nil-state-clear', 'snapshot']
++            return trace, 'success' if initialize_ok else 'error'
++        self.assertEqual(attempt(False, True), (['inactive', 'state-nil', 'preclear'], 'error'))
++        first, status = attempt(True, False)
++        second, outcome = attempt(True, True)
++        self.assertEqual((status, outcome), ('error', 'success'))
++        self.assertEqual((first + second).count('preclear'), 2)
++        self.assertEqual((first + second).count('nil-state-clear'), 2)
++
++    def test_only_finite_deletion_error_record_closes_while_OCR_stop_parent_remains_open(self):
++        self.assertEqual([r['function_id'] for r in self.proof['contracts']], ['Paste:0x1002f201c'])
++        self.assertTrue(all(not r['full_function_migration_verified'] for r in self.proof['contracts']))
++        self.assertFalse(self.proof['full_function_migration_verified'])
++        self.assertEqual(self.proof['function_map_markers_upgraded'], 0)
++        partial = ' '.join(self.proof['retained_partial_contracts'])
++        self.assertIn('OCR task cancellation/await', partial)
++        self.assertIn('A child interpretation conflating these was rejected', partial)
++        self.assertEqual(len(self.proof['partial_unscored_repairs']), 2)
++
++
++if __name__ == '__main__':
++    unittest.main()

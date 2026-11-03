@@ -1,6 +1,6 @@
 import AppKit
 
-/// The recovered PasteUI.Editable requirements used by ItemPreviewView.
+/// The recovered PasteCoreUI.ItemContent.Editable requirements used by ItemPreviewView.
 /// Names of cancel/commit are established by the original EditorHeader callbacks.
 @MainActor
 public protocol OriginalPreviewEditableContent: AnyObject {
@@ -9,6 +9,12 @@ public protocol OriginalPreviewEditableContent: AnyObject {
     func beginPreviewEditing()
     func cancelPreviewEditing()
     func commitPreviewEditing()
+    func focusPreviewEditing()
+}
+
+public extension OriginalPreviewEditableContent {
+    /// Paste 0x100004520: the color, image and link witnesses do no additional work.
+    func focusPreviewEditing() {}
 }
 
 /// Recovered preview mode transitions. Concrete headers and item renderers are adapters.

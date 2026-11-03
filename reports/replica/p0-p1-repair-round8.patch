@@ -1,0 +1,59 @@
+--- phase-8-before/replica/Sources/Pasto/UI/ReplicaUIController.swift
++++ replica/Sources/Pasto/UI/ReplicaUIController.swift
+@@ -1083,7 +1083,7 @@
+     }
+ 
+     func copySelection(plainTextOnly: Bool) {
+-        let items = state.selectedItems
++        let items = appliedSelectionItems()
+         guard !items.isEmpty else { NSSound.beep(); return }
+         copy(ids: items.map(\.id), plainTextOnly: plainTextOnly)
+     }
+@@ -1552,6 +1552,35 @@
+         return collection.appliedItems(for: state)
+     }
+ 
++    private func appliedSelectionItems() -> [ClipboardItem] {
++        let byID = Dictionary(uniqueKeysWithValues: (appliedCollectionItems() ?? []).map { ($0.id, $0) })
++        return state.collectionSelectionSnapshot().orderedIDs.compactMap { byID[$0] }
++    }
++
++    // 0x100064da0: filter first, deactivate once, then decode each accepted preview again.
++    private func openAppliedSelection() {
++        let selected = appliedSelectionItems()
++        let accepted = selected.filter { item in
++            if item.kind == .link { return true }
++            guard let path = item.decodedFilePreviewMetadata?.paths.first else { return false }
++            let url = URL(fileURLWithPath: path)
++            let accessed = url.startAccessingSecurityScopedResource()
++            url.stopAccessingSecurityScopedResource()
++            let exists = FileManager.default.fileExists(atPath: path)
++            return accessed && exists
++        }
++        guard !accepted.isEmpty else { NSSound.beep(); return }
++        NSApp.deactivate()
++        for item in accepted {
++            if let link = item.decodedLinkPreviewMetadata {
++                NSWorkspace.shared.open(link.url)
++            } else if let files = item.decodedFilePreviewMetadata {
++                guard let path = files.paths.first else { return }
++                NSWorkspace.shared.open(URL(fileURLWithPath: path))
++            }
++        }
++    }
++
+     private func handleKey(_ event: NSEvent) -> Bool {
+         if state.hasPendingDeletion {
+             if event.keyCode == 53 { cancelPendingDeletion(); return true }
+@@ -1636,6 +1665,11 @@
+                         userInfo: [NSLocalizedDescriptionKey: "粘贴服务尚未就绪，请使用“拷贝”后粘贴。 "]))
+                 }
+             }
++            return true
++        }
++        if !isEditing, signature.keyCode == OriginalShortcutFunctions.f_1001e94d4("o"),
++           signature.modifierRawValue == NSEvent.ModifierFlags.command.rawValue {
++            openAppliedSelection()
+             return true
+         }
+         if !isEditing, signature.keyCode == OriginalShortcutFunctions.f_1001e94d4("g"),

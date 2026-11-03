@@ -18,6 +18,9 @@ public enum ClipboardKind: String, Codable, CaseIterable, Sendable {
 
 public struct ClipboardItem: Identifiable, Codable, Equatable, Sendable {
     public var id: UUID
+    public var nativeIdentifier: String?
+    public var nativeChecksum: String?
+    public var sourceIdentifier: String?
     public var createdAt: Date
     public var updatedAt: Date
     public var title: String
@@ -33,6 +36,18 @@ public struct ClipboardItem: Identifiable, Codable, Equatable, Sendable {
     public var payloads: [String: Data]
     public var imagePreviewMetadata: OriginalImagePreviewMetadata?
     public var rawPreview: Data?
+
+    // This is a read-time projection of the native relation, never archived as item content.
+    public var sourceApplicationSnapshot: SourceApplicationRecord? = nil
+    public var hasSourceApplicationSnapshot = false
+
+    private enum CodingKeys: String, CodingKey {
+        case id, nativeIdentifier, nativeChecksum, sourceIdentifier, createdAt
+        case updatedAt, title, hasExplicitTitle, kind, plainText
+        case sourceName, sourceBundleID, sourceApplicationBundleID, sourceApplicationRelationIsKnown, sourceDevice
+        case isInHistory, payloads, imagePreviewMetadata, rawPreview, pinboardIDs
+        case pinboardOwnerID, pinboardOrder, isDeleted
+    }
 
     public var originalTitle: String? {
         if hasExplicitTitle == false || (hasExplicitTitle == nil && title.isEmpty) { return nil }
@@ -60,7 +75,9 @@ public struct ClipboardItem: Identifiable, Codable, Equatable, Sendable {
     public var pinboardOrder: Int64?
     public var isDeleted: Bool
 
-    public init(id: UUID = UUID(), createdAt: Date = Date(), updatedAt: Date? = nil,
+    public init(id: UUID = UUID(), nativeIdentifier: String? = nil, nativeChecksum: String? = nil,
+                sourceIdentifier: String? = nil,
+                createdAt: Date = Date(), updatedAt: Date? = nil,
                 title: String = "", kind: ClipboardKind = .text, plainText: String? = nil,
                 sourceName: String = "Pasto", sourceBundleID: String? = nil,
                 payloads: [String: Data] = [:], pinboardIDs: Set<UUID> = [], isDeleted: Bool = false,
@@ -70,6 +87,9 @@ public struct ClipboardItem: Identifiable, Codable, Equatable, Sendable {
                 sourceApplicationBundleID: String? = nil, pinboardOwnerID: UUID? = nil,
                 sourceApplicationRelationIsKnown: Bool? = true) {
         self.id = id
+        self.nativeIdentifier = nativeIdentifier
+        self.nativeChecksum = nativeChecksum
+        self.sourceIdentifier = sourceIdentifier
         self.createdAt = createdAt
         self.updatedAt = updatedAt ?? createdAt
         self.title = title

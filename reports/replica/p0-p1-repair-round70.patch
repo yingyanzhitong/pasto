@@ -1,0 +1,1200 @@
+--- phase-70-before/replica/Sources/Pasto/UI/ReplicaUIController.swift
++++ replica/Sources/Pasto/UI/ReplicaUIController.swift
+@@ -93,6 +93,8 @@
+     private var collectionQueryObservation: AnyCancellable?
+     private var collectionItemObservation: AnyCancellable?
+     private var collectionSourceObservation: AnyCancellable?
++    private var listCollection: ClipboardSearchCollection?
++    private var listCollectionObservation: AnyCancellable?
+     private var pendingCollectionChangedIDs: Set<UUID> = []
+     private var indexedSearchQueryNodes: [OriginalSearchQueryNode] = []
+     private var collectionSearchQueryNodes: [OriginalSearchQueryNode] = []
+@@ -132,8 +134,8 @@
+         observation = store.objectWillChange.sink { [weak self] _ in
+             self?.objectWillChange.send()
+         }
+-        // Until the managed collection source is migrated, only data/registry changes
+-        // use this snapshot adapter. List colors/capacity have their own synchronous stream.
++        // Legacy value/registry adapters still refresh payload snapshots and selection.
++        // Managed list membership/order now arrives through its retained FRC source.
+         collectionSourceObservation = store.$items
+             .combineLatest(store.$sourceApplications, store.$pinboards.map { Set($0.map(\.id)) })
+             .removeDuplicates { lhs, rhs in lhs.0 == rhs.0 && lhs.1 == rhs.1 && lhs.2 == rhs.2 }
+@@ -235,11 +237,25 @@
+                 self.controller?.cancelPendingDeletion()
+                 self.objectWillChange.send()
+                 self.collectionSearchQueryNodes = nodes
++                self.installListCollectionSource()
+                 self.normalizeSelection()
+                 self.collectionOwner?.replaceCollectionModel(state: self)
+             }
+     }
+ 
++    private func installListCollectionSource() {
++        listCollectionObservation = nil
++        listCollection = nil
++        guard isCollectionSearchQueryEmpty else { return }
++        let source = store.makeListCollection(pinboardID: pinboardID)
++        listCollection = source
++        listCollectionObservation = source?.publisher.dropFirst().sink { [weak self] snapshot in
++            guard let self, self.isCollectionSearchQueryEmpty, !self.showDeleted else { return }
++            self.pendingCollectionChangedIDs.formUnion(snapshot.updatedIdentifiers)
++            self.objectWillChange.send()
++        }
++    }
++
+     private func refreshSearch() {
+         searchIndex.update(items: store.items, nodes: indexedSearchQueryNodes)
+     }
+@@ -253,9 +269,21 @@
+ 
+     var visibleItems: [ClipboardItem] {
+         if isCollectionSearchQueryEmpty {
+-            if let pinboardID, !showDeleted { return store.items(in: pinboardID) }
+-            return store.search(query: "", pinboardID: pinboardID, includeDeleted: showDeleted)
+-                .filter { !showDeleted || $0.isDeleted }
++            if showDeleted {
++                return store.search(query: "", pinboardID: pinboardID, includeDeleted: true).filter(\.isDeleted)
++            }
++            let items = Dictionary(uniqueKeysWithValues: store.items.map { ($0.id, $0) })
++            let identifiers = listCollection?.value.identifiers ?? []
++            let native = identifiers.compactMap { items[$0] }.filter { !$0.isDeleted }
++            if let pinboardID {
++                // Older local archives can retain secondary memberships beyond the native single owner.
++                let legacy = store.items(in: pinboardID).filter { $0.pinboardOwnerID != pinboardID }
++                if !legacy.isEmpty {
++                    let retained = Set(identifiers).union(legacy.map(\.id))
++                    return store.items(in: pinboardID).filter { retained.contains($0.id) }
++                }
++            }
++            return native
+         }
+         let items = Dictionary(uniqueKeysWithValues: store.items.map { ($0.id, $0) })
+         return searchIndex.orderedIdentifiers.compactMap { identifier in
+@@ -486,6 +514,7 @@
+         showDeleted = false
+         selection = []
+         primaryID = nil
++        installListCollectionSource()
+         normalizeProjectedSelection()
+         collectionOwner?.replaceCollectionModel(state: self)
+     }
+--- phase-70-before/replica/Sources/PastoCore/ClipboardListPersistence.swift
++++ replica/Sources/PastoCore/ClipboardListPersistence.swift
+@@ -93,6 +93,21 @@
+         try firstList(predicate: NSPredicate(format: "identifier == %@", identifier))
+     }
+ 
++    // 329088: history uses its timestamp; pinboard uses the Item's order, not the List's index.
++    func itemRequest(for list: NSManagedObject) -> NSFetchRequest<PastoItemEntity> {
++        let request = PastoItemEntity.defaultFetchRequest()
++        switch (list.value(forKey: "rawType") as? NSNumber)?.int64Value ?? 0 {
++        case 1:
++            request.sortDescriptors = [NSSortDescriptor(key: "timestamp", ascending: false)]
++            request.predicate = NSPredicate(format: "timestamp != nil")
++        case 2:
++            request.sortDescriptors = [NSSortDescriptor(key: "displayOrderInPinboard", ascending: true)]
++            request.predicate = NSPredicate(format: "list == %@", list)
++        default: break
++        }
++        return request
++    }
++
+     // 0x100325130/329088: count managed history/group members; count errors mean empty.
+     func menuState(identifier: String) -> (rawType: Int64?, isEmpty: Bool) {
+         guard let list = try? list(identifier: identifier) else { return (nil, true) }
+--- phase-70-before/replica/Sources/PastoCore/ClipboardPersistence.swift
++++ replica/Sources/PastoCore/ClipboardPersistence.swift
+@@ -88,7 +88,8 @@
+                                   includeOptionalTimestamp: Bool = true,
+                                   includeNativeItemData: Bool = true,
+                                   includeNativeSources: Bool = true,
+-                                  includeTypedItem: Bool = true) -> NSManagedObjectModel {
++                                  includeTypedItem: Bool = true,
++                                  includeItemOrder: Bool = true) -> NSManagedObjectModel {
+         let model = NSManagedObjectModel()
+         func attribute(_ name: String, _ type: NSAttributeType, optional: Bool = false) -> NSAttributeDescription {
+             let value = NSAttributeDescription()
+@@ -137,6 +138,7 @@
+         if includeTypedItem {
+             model.entitiesByName["Item"]!.managedObjectClassName = NSStringFromClass(PastoItemEntity.self)
+         }
++        if includeItemOrder { ClipboardItemOrderPersistence.addField(to: model) }
+         if includeLists { ClipboardListPersistence.addEntities(to: model, item: model.entitiesByName["Item"]!) }
+         if includeNativeItemData { ClipboardItemDataPersistence.addEntity(to: model, item: model.entitiesByName["Item"]!) }
+         if includeNativeSources { ClipboardSourcePersistence.addEntities(to: model, item: model.entitiesByName["Item"]!) }
+@@ -151,13 +153,14 @@
+         guard !destinationModel.isConfiguration(nil, compatibleWithStoreMetadata: metadata) else { return }
+ 
+         let legacyCandidates = [
+-            makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeTypedItem: false),
+-            makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeNativeSources: false, includeTypedItem: false),
+-            makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeNativeItemData: false, includeNativeSources: false, includeTypedItem: false),
+-            makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeLists: true, includeOptionalTimestamp: false, includeNativeItemData: false, includeNativeSources: false, includeTypedItem: false),
+-            makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeLists: false, includeOptionalTimestamp: false, includeNativeItemData: false, includeNativeSources: false, includeTypedItem: false),
+-            makeModel(includeNativeIdentity: false, preserveItemKeyInHistory: true, includeLists: false, includeOptionalTimestamp: false, includeNativeItemData: false, includeNativeSources: false, includeTypedItem: false),
+-            makeModel(includeNativeIdentity: false, preserveItemKeyInHistory: false, includeLists: false, includeOptionalTimestamp: false, includeNativeItemData: false, includeNativeSources: false, includeTypedItem: false)
++            makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeItemOrder: false),
++            makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeTypedItem: false, includeItemOrder: false),
++            makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeNativeSources: false, includeTypedItem: false, includeItemOrder: false),
++            makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeNativeItemData: false, includeNativeSources: false, includeTypedItem: false, includeItemOrder: false),
++            makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeLists: true, includeOptionalTimestamp: false, includeNativeItemData: false, includeNativeSources: false, includeTypedItem: false, includeItemOrder: false),
++            makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeLists: false, includeOptionalTimestamp: false, includeNativeItemData: false, includeNativeSources: false, includeTypedItem: false, includeItemOrder: false),
++            makeModel(includeNativeIdentity: false, preserveItemKeyInHistory: true, includeLists: false, includeOptionalTimestamp: false, includeNativeItemData: false, includeNativeSources: false, includeTypedItem: false, includeItemOrder: false),
++            makeModel(includeNativeIdentity: false, preserveItemKeyInHistory: false, includeLists: false, includeOptionalTimestamp: false, includeNativeItemData: false, includeNativeSources: false, includeTypedItem: false, includeItemOrder: false)
+         ]
+         // The older history-retention variants can share a version hash.
+         let sourceModel = legacyCandidates.first {
+@@ -220,6 +223,7 @@
+             item.pinboardOwnerID = owner
+             item.pinboardIDs.insert(owner)
+         } else { item.pinboardOwnerID = nil }
++        try ClipboardItemOrderPersistence.project(&item, from: object)
+         return item
+     }
+ 
+@@ -246,6 +250,13 @@
+ 
+     func searchItems(identifiers: [String]?) throws -> [ClipboardItem] {
+         try snapshotReader.searchItems(identifiers: identifiers)
++    }
++
++    func makeListCollection(identifier: String) -> ClipboardSearchCollection? {
++        context.performAndWait {
++            guard let list = try? lists.list(identifier: identifier) else { return nil }
++            return ClipboardSearchCollection(context: context, request: lists.itemRequest(for: list))
++        }
+     }
+ 
+     func makeSearchCollection(identifiers: [String]) -> ClipboardSearchCollection? {
+@@ -324,6 +335,7 @@
+             }
+             try bootstrapHistoryTimestamps()
+             try bootstrapSourcesIfNeeded(root)
++            try ClipboardItemOrderPersistence.bootstrap(in: context, root: root)
+             if context.hasChanges {
+                 root.setValue(UUID(), forKey: "revision")
+                 try context.save()
+@@ -406,6 +418,7 @@
+         var value = item
+         value.createdAt = Date(timeIntervalSinceReferenceDate: 0)
+         value.updatedAt = value.createdAt; value.isInHistory = false
++        value.pinboardOrder = nil
+         return value
+     }
+ 
+@@ -605,6 +618,7 @@
+                             object.setValue(owner, forKey: "list")
+                         } else { object.setValue(nil, forKey: "list") }
+                     }
++                    ClipboardItemOrderPersistence.update(item, on: object)
+                 }
+                 try transaction.repository.update(state.pinboards, previous: previous?.pinboards ?? [], entity: "Pinboard", key: { $0.id.uuidString }) { value, _, object in
+                     object.setValue(try encode(value), forKey: "content")
+@@ -626,6 +640,7 @@
+                 if root.isInserted {
+                     root.setValue("local", forKey: "key")
+                     root.setValue(1, forKey: "version")
++                    root.setValue(Int64(1), forKey: ClipboardItemOrderPersistence.versionKey)
+                 }
+                 if (root.value(forKey: ClipboardSourcePersistence.versionKey) as? NSNumber)?.intValue != 1 {
+                     root.setValue(1, forKey: ClipboardSourcePersistence.versionKey)
+--- phase-70-before/replica/Sources/PastoCore/ClipboardSearchCollection.swift
++++ replica/Sources/PastoCore/ClipboardSearchCollection.swift
+@@ -3,7 +3,7 @@
+ import Foundation
+ import os
+ 
+-/// The search result owns a live FRC on the stable view context. IDs are adapted to Pasto's local keys.
++/// Each search or ordinary list owns a live FRC on the stable view context. IDs are adapted to Pasto's local keys.
+ @MainActor
+ public final class ClipboardSearchCollection {
+     public struct Snapshot: Equatable {
+@@ -20,12 +20,19 @@
+     private var pending: (ids: [NSManagedObjectID], updated: Set<NSManagedObjectID>)?
+     private let logger = Logger(subsystem: "com.yingyanzhitong.paste-replica", category: "search-collection")
+ 
+-    init(context: NSManagedObjectContext, identifiers: [String]) {
+-        self.context = context
++    convenience init(context: NSManagedObjectContext, identifiers: [String]) {
+         let request = PastoItemEntity.defaultFetchRequest()
+         // The second clause preserves existing local records without a native identifier.
+         request.predicate = NSPredicate(
+             format: "nativeIdentifier IN %@ OR (nativeIdentifier == nil AND key IN %@)", identifiers, identifiers)
++        self.init(context: context, request: request)
++        if objectIDs.count != identifiers.count {
++            logger.error("Search found \(identifiers.count) identifiers but fetched \(objectIDs.count) objects")
++        }
++    }
++
++    init(context: NSManagedObjectContext, request: NSFetchRequest<PastoItemEntity>) {
++        self.context = context
+         controller = NSFetchedResultsController(fetchRequest: request, managedObjectContext: context,
+                                                 sectionNameKeyPath: nil, cacheName: nil)
+         // 365e18: initial fetch failure is fatal; index-record fetch36dc00 has a different error contract.
+@@ -45,9 +52,6 @@
+             .sink { [weak self] notification in
+                 MainActor.assumeIsolated { self?.objectsDidChange(notification) }
+             }
+-        if initial.count != identifiers.count {
+-            logger.error("Search found \(identifiers.count) identifiers but fetched \(initial.count) objects")
+-        }
+     }
+ 
+     public var value: Snapshot { subject.value }
+--- phase-70-before/replica/Sources/PastoCore/ClipboardStore.swift
++++ replica/Sources/PastoCore/ClipboardStore.swift
+@@ -86,6 +86,9 @@
+ 
+     public func searchItems(identifiers: [String]?) throws -> [ClipboardItem] {
+         try persistence.searchItems(identifiers: identifiers)
++    }
++    public func makeListCollection(pinboardID: UUID?) -> ClipboardSearchCollection? {
++        persistence.makeListCollection(identifier: pinboardID?.uuidString ?? Self.historyListIdentifier)
+     }
+     public func makeSearchCollection(identifiers: [String]) -> ClipboardSearchCollection? {
+         persistence.makeSearchCollection(identifiers: identifiers)
+--- /dev/null
++++ replica/Sources/PastoCore/ClipboardItemOrderPersistence.swift
+@@ -0,0 +1,42 @@
++import CoreData
++import Foundation
++
++/// Queue-confined adapter for ItemEntity.displayOrderInPinboard, distinct from ListMetadataEntity.index.
++final class ClipboardItemOrderPersistence {
++    static let versionKey = "nativeItemOrderVersion"
++
++    static func addField(to model: NSManagedObjectModel) {
++        let order = NSAttributeDescription()
++        order.name = "displayOrderInPinboard"; order.attributeType = .integer64AttributeType
++        order.isOptional = false; order.defaultValue = 0
++        model.entitiesByName["Item"]!.properties.append(order)
++        let version = NSAttributeDescription()
++        version.name = versionKey; version.attributeType = .integer64AttributeType; version.isOptional = true
++        model.entitiesByName["State"]!.properties.append(version)
++    }
++
++    // Only the old local blob is a migration input. Normal readers use the managed column.
++    static func bootstrap(in context: NSManagedObjectContext, root: NSManagedObject) throws {
++        guard (root.value(forKey: versionKey) as? NSNumber)?.int64Value != 1 else { return }
++        for object in try context.fetch(PastoItemEntity.defaultFetchRequest()) {
++            let item = try ClipboardPersistence.decode(ClipboardItem.self, object)
++            object.setValue(item.pinboardOrder ?? 0, forKey: "displayOrderInPinboard")
++        }
++        root.setValue(Int64(1), forKey: versionKey)
++    }
++
++    static func project(_ item: inout ClipboardItem, from object: NSManagedObject) throws {
++        guard !item.pinboardIDs.isEmpty else { item.pinboardOrder = nil; return }
++        guard let order = (object.value(forKey: "displayOrderInPinboard") as? NSNumber)?.int64Value else {
++            throw CocoaError(.fileReadCorruptFile)
++        }
++        item.pinboardOrder = order
++    }
++
++    static func update(_ item: ClipboardItem, on object: NSManagedObject) {
++        let order = item.pinboardOrder ?? 0
++        if (object.value(forKey: "displayOrderInPinboard") as? NSNumber)?.int64Value != order {
++            object.setValue(order, forKey: "displayOrderInPinboard")
++        }
++    }
++}
+--- phase-70-before/scripts/tests/frc_result_scope_contract.py
++++ scripts/tests/frc_result_scope_contract.py
+@@ -28,6 +28,8 @@
+ 
+ 
+ def assert_factory_addition_only(test, current, previous, public=False):
++    from item_order_scope_contract import without_list_factory, without_order_persistence
++    current = without_list_factory(current, public=True) if public else without_order_persistence(current)
+     marker = ('public ' if public else '') + 'func makeSearchCollection('
+     declaration = '    ' + marker
+     start = current.index(declaration); block = body(current, marker)
+@@ -55,10 +57,15 @@
+ 
+ 
+ def assert_visible_order_only(test, current, previous):
++    from item_order_scope_contract import assert_history_list_projection_only
+     marker = '        let items = Dictionary(uniqueKeysWithValues: store.items.map { ($0.id, $0) })'
+-    head, sep, tail = current.partition(marker);test.assertTrue(sep)
++    head, sep, tail = current.rpartition(marker);test.assertTrue(sep)
+     old_head, sep, old_tail = previous.partition('        return store.items.filter { item in')
+-    test.assertTrue(sep);test.assertEqual(head, old_head)
++    test.assertTrue(sep)
++    if 'listCollection?.value.identifiers' in head:
++        assert_history_list_projection_only(test, head, old_head)
++    else:
++        test.assertEqual(head, old_head)
+     test.assertEqual(tail, '''
+         return searchIndex.orderedIdentifiers.compactMap { identifier in
+             guard let item = items[identifier], showDeleted ? item.isDeleted : !item.isDeleted else { return nil }
+@@ -70,6 +77,8 @@
+ 
+ 
+ def assert_ui_frc_only(test, current, previous):
++    from item_order_scope_contract import without_list_UI_insertions
++    current = without_list_UI_insertions(current); previous = without_list_UI_insertions(previous)
+     left = ui_init_segments(current); right = ui_init_segments(previous)
+     test.assertEqual(left[0], right[0])
+     a, b = left[1], right[1]
+--- phase-70-before/scripts/tests/snapshot_read_scope_contract.py
++++ scripts/tests/snapshot_read_scope_contract.py
+@@ -1,3 +1,4 @@
++from item_order_scope_contract import without_order_projection, without_order_commit
+ """Locate real queue-confined producers through verified forwarding wrappers.
+ No synthesized Swift or replacement implementation is used by source assertions.
+ """
+@@ -28,8 +29,8 @@
+     return result
+ 
+ def projection_spelling(source):
+-    """Only phase67 explicit projection qualifiers and trailing DTO reset differ."""
+-    return source.replace('ClipboardPersistence.decode(', 'decode(').replace('Self.decode(', 'decode(').replace('.map(ClipboardPersistence.item)', '.map(item)').replace('            defer { context.reset() }\n', '')
++    """Explicit read-move qualifiers/reset and the separately checked phase70 order metadata differ."""
++    return without_order_projection(source).replace('ClipboardPersistence.decode(', 'decode(').replace('Self.decode(', 'decode(').replace('.map(ClipboardPersistence.item)', '.map(item)').replace('            defer { context.reset() }\n', '')
+ 
+ def commit_business_body(source):
+     result = source_body(source, 'func commit<T>(')
+@@ -37,7 +38,7 @@
+                     viewHistoryToken = context.persistentStoreCoordinator?.currentPersistentHistoryToken(fromStores: nil)
+                     viewRevision = root.value(forKey: "revision") as? UUID
+ '''
+-    return result.replace(added, '', 1)
++    return without_order_commit(result.replace(added, '', 1))
+ 
+ 
+ def assert_history_queue_only(test, current, previous, check_observe=True):
+--- phase-70-before/scripts/tests/test_p0_repair_history_timestamp.py
++++ scripts/tests/test_p0_repair_history_timestamp.py
+@@ -1,3 +1,4 @@
++from item_order_scope_contract import without_order_model
+ """Source/data checks only: no Swift or Core Data execution."""
+ import hashlib
+ import json
+@@ -59,14 +60,14 @@
+         # Historical model shape is the real includeTypedItem=false branch.
+         old_shape = old_shape.replace('if includeTypedItem ' + typed, '')
+         compact = lambda s: re.sub(r'\s+', ' ', s).strip()
+-        self.assertEqual(compact(old_shape), compact(before))
++        self.assertEqual(compact(without_order_model(old_shape)), compact(before))
+ 
+     def test_all_four_legacy_schema_candidates_are_nonoptional(self):
+         migration = body(self.persistence, 'private static func migrateLegacyStoreIfNeeded(at storeURL: URL,')
+         for native, preserve, lists in [('true', 'true', 'true'), ('true', 'true', 'false'),
+                                        ('false', 'true', 'false'), ('false', 'false', 'false')]:
+             self.assertIn(f'makeModel(includeNativeIdentity: {native}, preserveItemKeyInHistory: {preserve}, '
+-                          f'includeLists: {lists}, includeOptionalTimestamp: false, includeNativeItemData: false, includeNativeSources: false, includeTypedItem: false)', migration)
++                          f'includeLists: {lists}, includeOptionalTimestamp: false, includeNativeItemData: false, includeNativeSources: false, includeTypedItem: false, includeItemOrder: false)', migration)
+         self.assertEqual(migration.count('includeOptionalTimestamp: false'), 4)
+         self.assertLess(migration.index('try manager.migrateStore'), migration.index('try coordinator.replacePersistentStore'))
+         self.assertNotIn('destroyPersistentStore', migration)
+--- phase-70-before/scripts/tests/test_p0_repair_identity.py
++++ scripts/tests/test_p0_repair_identity.py
+@@ -142,7 +142,7 @@
+         migration = method_body(self.persistence, "private static func migrateLegacyStoreIfNeeded(at storeURL: URL,")
+         self.assertIn("metadataForPersistentStore", migration)
+         self.assertIn("destinationModel.isConfiguration(nil, compatibleWithStoreMetadata: metadata)", migration)
+-        self.assertIn("makeModel(includeNativeIdentity: false, preserveItemKeyInHistory: true, includeLists: false, includeOptionalTimestamp: false, includeNativeItemData: false, includeNativeSources: false, includeTypedItem: false)", migration)
++        self.assertIn("makeModel(includeNativeIdentity: false, preserveItemKeyInHistory: true, includeLists: false, includeOptionalTimestamp: false, includeNativeItemData: false, includeNativeSources: false, includeTypedItem: false, includeItemOrder: false)", migration)
+         self.assertIn("$0.isConfiguration(nil, compatibleWithStoreMetadata: metadata)", migration)
+         self.assertIn("inferredMappingModel", migration)
+         self.assertIn("defer { try? FileManager.default.removeItem(at: temporaryDirectory) }", migration)
+@@ -160,10 +160,10 @@
+         self.assertIn("preserveItemKeyInHistory: Bool", self.persistence)
+         self.assertIn("if name == \"Item\", preserveItemKeyInHistory", factory)
+         migration = method_body(self.persistence, "private static func migrateLegacyStoreIfNeeded(at storeURL: URL,")
+-        self.assertIn("makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeLists: true, includeOptionalTimestamp: false, includeNativeItemData: false, includeNativeSources: false, includeTypedItem: false)", migration)
+-        self.assertIn("makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeLists: false, includeOptionalTimestamp: false, includeNativeItemData: false, includeNativeSources: false, includeTypedItem: false)", migration)
+-        self.assertIn("makeModel(includeNativeIdentity: false, preserveItemKeyInHistory: true, includeLists: false, includeOptionalTimestamp: false, includeNativeItemData: false, includeNativeSources: false, includeTypedItem: false)", migration)
+-        self.assertIn("makeModel(includeNativeIdentity: false, preserveItemKeyInHistory: false, includeLists: false, includeOptionalTimestamp: false, includeNativeItemData: false, includeNativeSources: false, includeTypedItem: false)", migration)
++        self.assertIn("makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeLists: true, includeOptionalTimestamp: false, includeNativeItemData: false, includeNativeSources: false, includeTypedItem: false, includeItemOrder: false)", migration)
++        self.assertIn("makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeLists: false, includeOptionalTimestamp: false, includeNativeItemData: false, includeNativeSources: false, includeTypedItem: false, includeItemOrder: false)", migration)
++        self.assertIn("makeModel(includeNativeIdentity: false, preserveItemKeyInHistory: true, includeLists: false, includeOptionalTimestamp: false, includeNativeItemData: false, includeNativeSources: false, includeTypedItem: false, includeItemOrder: false)", migration)
++        self.assertIn("makeModel(includeNativeIdentity: false, preserveItemKeyInHistory: false, includeLists: false, includeOptionalTimestamp: false, includeNativeItemData: false, includeNativeSources: false, includeTypedItem: false, includeItemOrder: false)", migration)
+         self.assertIn("let sourceModel = legacyCandidates.first", migration)
+         self.assertIn("guard let sourceModel else", migration)
+         self.assertNotIn("compatibleSourceModels.count == 1", migration)
+--- phase-70-before/scripts/tests/test_p0_repair_incremental_selection_delivery.py
++++ scripts/tests/test_p0_repair_incremental_selection_delivery.py
+@@ -1,3 +1,4 @@
++from item_order_scope_contract import without_list_route
+ """C/ARM and source-contract checks; no Swift/AppKit execution."""
+ import hashlib
+ import itertools
+@@ -111,7 +112,7 @@
+         expected = expected.replace('        normalizeProjectedSelection()\n',
+                                     '        normalizeProjectedSelection()\n'
+                                     '        collectionOwner?.replaceCollectionModel(state: self)\n')
+-        self.assertEqual(expected, board)
++        self.assertEqual(expected, without_list_route(board))
+ 
+     def test_unique_id_no_move_domain_matches_original_delete_insert_index_arithmetic(self):
+         # A pure Python model of 1b2a90 -> 1b2cc0, with no moves/reloads and
+--- phase-70-before/scripts/tests/test_p0_repair_item_data_graph.py
++++ scripts/tests/test_p0_repair_item_data_graph.py
+@@ -1,3 +1,4 @@
++from item_order_scope_contract import without_order_model
+ # coding: utf-8
+ """Native data graph/migration/source contracts only; no Core Data execution."""
+ import hashlib,json,sys,unittest
+@@ -136,19 +137,19 @@
+     def test_prior_models_are_preserved_with_new_graph_disabled(self):
+         migration=body(self.persistence,'private static func migrateLegacyStoreIfNeeded(')
+         candidates=migration.split('let legacyCandidates = [',1)[1].split('\n        ]',1)[0]
+-        self.assertEqual(candidates.count('makeModel('),7)
++        self.assertEqual(candidates.count('makeModel('),8)
+         self.assertEqual(candidates.count('includeTypedItem: false'),7)
+         self.assertEqual(candidates.count('includeNativeItemData: false'),5)
+         self.assertEqual(candidates.count('includeOptionalTimestamp: false'),4)
+         self.assertEqual(candidates.count('includeNativeSources: false'),6)
+-        self.assertIn('makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeNativeItemData: false, includeNativeSources: false, includeTypedItem: false)',candidates)
++        self.assertIn('makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeNativeItemData: false, includeNativeSources: false, includeTypedItem: false, includeItemOrder: false)',candidates)
+         before=(self.phase/'before/replica/Sources/PastoCore/ClipboardPersistence.swift').read_text()
+         old=body(before,'private static func makeModel(');current=body(self.persistence,'private static func makeModel(')
+         addition='        if includeNativeItemData { ClipboardItemDataPersistence.addEntity(to: model, item: model.entitiesByName["Item"]!) }\n'
+         sources='        if includeNativeSources { ClipboardSourcePersistence.addEntities(to: model, item: model.entitiesByName["Item"]!) }\n'
+         typed = body(current, 'if includeTypedItem')
+         legacy = current.replace('        if includeTypedItem ' + typed + '\n', '', 1)
+-        self.assertEqual(legacy.replace(addition,'',1).replace(sources,'',1),old)
++        self.assertEqual(without_order_model(legacy).replace(addition,'',1).replace(sources,'',1),old)
+ 
+     def test_policy_fills_required_relation_before_migration_validates_and_replaces_source(self):
+         migration=body(self.persistence,'private static func migrateLegacyStoreIfNeeded(')
+--- phase-70-before/scripts/tests/test_p0_repair_list_graph.py
++++ scripts/tests/test_p0_repair_list_graph.py
+@@ -100,8 +100,8 @@
+     def test_legacy_model_migration_recognizes_native_identity_and_both_earlier_variants(self):
+         migration = body(self.persistence, 'private static func migrateLegacyStoreIfNeeded(at storeURL: URL,')
+         for native, preserve in [('true', 'true'), ('false', 'true'), ('false', 'false')]:
+-            self.assertIn(f'makeModel(includeNativeIdentity: {native}, preserveItemKeyInHistory: {preserve}, includeLists: false, includeOptionalTimestamp: false, includeNativeItemData: false, includeNativeSources: false, includeTypedItem: false)', migration)
+-        self.assertIn('makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeLists: true, includeOptionalTimestamp: false, includeNativeItemData: false, includeNativeSources: false, includeTypedItem: false)', migration)
++            self.assertIn(f'makeModel(includeNativeIdentity: {native}, preserveItemKeyInHistory: {preserve}, includeLists: false, includeOptionalTimestamp: false, includeNativeItemData: false, includeNativeSources: false, includeTypedItem: false, includeItemOrder: false)', migration)
++        self.assertIn('makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeLists: true, includeOptionalTimestamp: false, includeNativeItemData: false, includeNativeSources: false, includeTypedItem: false, includeItemOrder: false)', migration)
+         self.assertIn('includeLists: Bool = true', self.persistence)
+         self.assertLess(migration.index('try manager.migrateStore'), migration.index('try coordinator.replacePersistentStore'))
+         self.assertNotIn('destroyPersistentStore', migration)
+--- phase-70-before/scripts/tests/test_p1_repair_FRC_result_source.py
++++ scripts/tests/test_p1_repair_FRC_result_source.py
+@@ -1,3 +1,4 @@
++from item_order_scope_contract import assert_common_FRC_ctor_only, without_order_persistence, without_list_factory, without_list_UI_insertions
+ """Real FRC source/consumer contracts and source-bound semantic fixtures; no native execution."""
+ import hashlib
+ import itertools
+@@ -41,7 +42,23 @@
+             frozen = (self.phase / 'after' / path).read_bytes()
+             self.assertEqual(hashlib.sha256(frozen).hexdigest(), digest)
+             if path == self.paths['ui']:
+-                assert_list_context_only(self, (ROOT / path).read_text(), frozen.decode())
++                # phase69 type routing plus phase70 ordinary-source additions are explicitly delimited.
++                current = without_list_UI_insertions((ROOT / path).read_text()); old = without_list_UI_insertions(frozen.decode())
++                from item_order_scope_contract import assert_history_list_projection_only
++                cv = body(current, 'var visibleItems:'); ov = body(old, 'var visibleItems:')
++                assert_history_list_projection_only(self, cv, ov)
++                for a, b in zip(current.split(cv), old.split(ov)):
++                    if 'private func installListSelectionDelivery()' in a: assert_list_context_only(self, a, b)
++                    else: self.assertEqual(a, b)
++            elif path == self.paths['view']:
++                self.assertEqual(without_order_persistence((ROOT / path).read_text()), frozen.decode())
++            elif path == self.paths['store']:
++                self.assertEqual(without_list_factory((ROOT / path).read_text(), public=True), frozen.decode())
++            elif path == self.paths['source']:
++                current = (ROOT / path).read_text()
++                assert_common_FRC_ctor_only(self, current, frozen.decode())
++                for marker in ['private func receive(', 'private func flushPending()', 'private func objectsDidChange(', 'nonisolated func controller(']:
++                    self.assertEqual(body(current, marker), body(frozen.decode(), marker))
+             else:
+                 self.assertEqual((ROOT / path).read_bytes(), frozen)
+ 
+@@ -89,8 +106,8 @@
+         self.assertLess(native.index('FUN_100366344();'), native.index('objc_stub::setDelegate_'))
+ 
+     def test_real_initializer_fetch_delegate_initial_publish_then_context_observer(self):
+-        init = body(self.source, 'init(context:')
+-        order = ['PastoItemEntity.defaultFetchRequest()', 'request.predicate =', 'NSFetchedResultsController(fetchRequest:',
++        init = body(self.source, 'init(context: NSManagedObjectContext, request:')
++        order = ['NSFetchedResultsController(fetchRequest:',
+                  'sectionNameKeyPath: nil, cacheName: nil)', 'try controller.performFetch()',
+                  'catch { fatalError(', 'let initial = (controller.fetchedObjects ?? []).map(\\.objectID)',
+                  'ClipboardSearchDifferenceDelegate(ids: initial)', 'differenceDelegate = delegate', 'controller.delegate = delegate',
+@@ -105,7 +122,7 @@
+         factory = body(self.sources['view'], 'func makeSearchCollection(')
+         self.assertLess(factory.index('guard !identifiers.isEmpty else { return nil }'), factory.index('ClipboardSearchCollection(context: context, identifiers: identifiers)'))
+         self.assertIn('nativeIdentifier IN %@ OR (nativeIdentifier == nil AND key IN %@)', self.source)
+-        init = body(self.source, 'init(context:')
++        init = body(self.source, 'convenience init(context:')
+         for token in ['Set(identifiers)', 'UUID(uuidString:', 'identifiers.filter', 'identifiers.compactMap', 'fetchLimit', 'request.sortDescriptors =']:
+             self.assertNotIn(token, init)
+         self.assertIn('request.fetchBatchSize = 20', (ROOT / 'replica/Sources/PastoCore/OriginalManagedItem.swift').read_text())
+@@ -132,7 +149,7 @@
+             self.assertIn(token, observer)
+         for token in ['NSInsertedObjectsKey', 'NSDeletedObjectsKey', 'NSInvalidatedObjectsKey', 'save()', 'reset()']:
+             self.assertNotIn(token, observer)
+-        self.assertIn('object: context', body(self.source, 'init(context:'))
++        self.assertIn('object: context', body(self.source, 'init(context: NSManagedObjectContext, request:'))
+ 
+     def test_pending_accumulates_before_single_scheduled_weak_delivery_and_clears_before_send(self):
+         receive = body(self.source, 'private func receive(')
+--- phase-70-before/scripts/tests/test_p1_repair_context_ownership.py
++++ scripts/tests/test_p1_repair_context_ownership.py
+@@ -1,3 +1,4 @@
++from item_order_scope_contract import without_list_request
+ from frc_result_scope_contract import assert_factory_addition_only
+ """Source/static contracts only; no Swift/CoreData/framework/database/app execution."""
+ import hashlib
+@@ -36,6 +37,8 @@
+             self.assertEqual(hashlib.sha256(frozen).hexdigest(), digest)
+             if path == self.paths['ClipboardPersistence']:
+                 assert_factory_addition_only(self, (ROOT / path).read_text(), frozen.decode())
++            elif path == self.paths['ClipboardListPersistence']:
++                self.assertEqual(without_list_request((ROOT / path).read_text()), frozen.decode())
+             else:
+                 self.assertEqual((ROOT / path).read_bytes(), frozen)
+ 
+@@ -120,7 +123,7 @@
+     def test_list_helper_changes_only_class_actor_marker_and_queue_contract_comment(self):
+         previous = self.old['ClipboardListPersistence']
+         expected = previous.replace('@MainActor\n', '', 1).replace('/// Local managed list relationships.', '/// Access on the supplied context queue.', 1)
+-        self.assertEqual(self.current['ClipboardListPersistence'], expected)
++        self.assertEqual(without_list_request(self.current['ClipboardListPersistence']), expected)
+ 
+     def test_view_revision_merges_before_cache_and_cursor_advances_only_after_all_merges(self):
+         revision = body(self.view, 'func revision()')
+--- phase-70-before/scripts/tests/test_p1_repair_lazy_search_records.py
++++ scripts/tests/test_p1_repair_lazy_search_records.py
+@@ -1,3 +1,4 @@
++from item_order_scope_contract import without_order_model
+ """Original-bound source contracts only; no Swift, Core Data, OCR or Spotlight execution."""
+ import hashlib
+ import json
+@@ -247,7 +248,7 @@
+         old_model = body(previous, 'private static func makeModel(')
+         typed = body(model, 'if includeTypedItem')
+         self.assertIn('NSStringFromClass(PastoItemEntity.self)', typed)
+-        self.assertEqual(model.replace('        if includeTypedItem ' + typed + '\n', '', 1), old_model)
++        self.assertEqual(without_order_model(model).replace('        if includeTypedItem ' + typed + '\n', '', 1), old_model)
+         migration = body(self.persistence, 'private static func migrateLegacyStoreIfNeeded(')
+         old_migration = body(previous, 'private static func migrateLegacyStoreIfNeeded(')
+         tail = '        // The older history-retention variants'
+--- phase-70-before/scripts/tests/test_p1_repair_list_attributes_observation.py
++++ scripts/tests/test_p1_repair_list_attributes_observation.py
+@@ -1,3 +1,4 @@
++from item_order_scope_contract import without_list_route
+ from frc_result_scope_contract import assert_visible_order_only, assert_ui_frc_only, assert_list_context_only
+ """Original-bound list observation contracts; Python/source/Mach-O checks, no native execution."""
+ import hashlib
+@@ -226,7 +227,7 @@
+             self.assertEqual((current[:start], current[end:]), (previous[:start], previous[start:]))
+         for marker in ['private func installSearchQueryDelivery()', 'private func applySelectedList(',
+                        'private func installListSelectionDelivery()', 'func normalizeSelection(', 'var visibleItems:']:
+-            (assert_visible_order_only if marker == 'var visibleItems:' else assert_list_context_only if marker == 'private func installListSelectionDelivery()' else lambda t, a, b: t.assertEqual(a, b))(self, body(self.state, marker), body(body(self.before('state'), 'final class ReplicaUIState:'), marker))
++            (assert_visible_order_only if marker == 'var visibleItems:' else assert_list_context_only if marker == 'private func installListSelectionDelivery()' else lambda t, a, b: t.assertEqual(without_list_route(a), b))(self, body(self.state, marker), body(body(self.before('state'), 'final class ReplicaUIState:'), marker))
+ 
+     def test_only_six_existing_sources_and_one_real_observer_added_no_FRC_claim(self):
+         base = json.loads((self.phase / 'baseline.json').read_text())
+--- phase-70-before/scripts/tests/test_p1_repair_list_context_fallback.py
++++ scripts/tests/test_p1_repair_list_context_fallback.py
+@@ -1,3 +1,4 @@
++from item_order_scope_contract import without_list_request, without_list_factory, without_list_UI_insertions
+ """Original-bound list type/fallback and unknown ABI guards; no AppKit/Swift execution."""
+ import hashlib
+ import json
+@@ -34,8 +35,21 @@
+         for row in [self.proof['binary']] + self.proof['arm_disassemblies']:
+             self.assertEqual(hashlib.sha256((ROOT / row['path']).read_bytes()).hexdigest(), row['sha256'])
+         for path, digest in self.proof['current_sources'].items():
+-            self.assertEqual(hashlib.sha256((ROOT / path).read_bytes()).hexdigest(), digest)
+-            self.assertEqual((ROOT / path).read_bytes(), (self.phase / 'after' / path).read_bytes())
++            frozen = (self.phase / 'after' / path).read_bytes()
++            self.assertEqual(hashlib.sha256(frozen).hexdigest(), digest)
++            current = (ROOT / path).read_text()
++            if path == self.paths['ui']:
++                from item_order_scope_contract import assert_history_list_projection_only
++                a = without_list_UI_insertions(current); b = without_list_UI_insertions(frozen.decode())
++                av = body(a, 'var visibleItems:'); bv = body(b, 'var visibleItems:')
++                assert_history_list_projection_only(self, av, bv)
++                self.assertEqual(a.split(av), b.split(bv))
++            elif path == self.paths['lists']:
++                self.assertEqual(without_list_request(current), frozen.decode())
++            elif path == self.paths['store']:
++                self.assertEqual(without_list_factory(current, public=True), frozen.decode())
++            else:
++                self.assertEqual((ROOT / path).read_bytes(), frozen)
+ 
+     def test_real_rawType_selector_and_64_bit_comparisons_select_same_identity_tags(self):
+         raw, setter = self.proof['selector_bindings']
+@@ -126,13 +140,14 @@
+ 
+     def test_only_one_UI_branch_and_one_new_core_file_change(self):
+         baseline = json.loads((self.phase / 'baseline.json').read_text())
+-        changed = {p for p, h in baseline['production'].items() if hashlib.sha256((ROOT / p).read_bytes()).hexdigest() != h}
+-        actual = {str(p.relative_to(ROOT)) for p in (ROOT / 'replica/Sources').rglob('*') if p.is_file()}
++        frozen_root = ROOT / '.local/p0-repair/phase-70/before'
++        changed = {p for p, h in baseline['production'].items() if hashlib.sha256((frozen_root / p).read_bytes()).hexdigest() != h}
++        actual = {str(p.relative_to(frozen_root)) for p in (frozen_root / 'replica/Sources').rglob('*') if p.is_file()}
+         self.assertEqual(changed, {self.paths['ui']})
+         self.assertEqual(actual - set(baseline['production']), {self.paths['context']})
+-        assert_list_context_only(self, self.source['ui'], (self.phase / 'before' / self.paths['ui']).read_text())
++        assert_list_context_only(self, (frozen_root / self.paths['ui']).read_text(), (self.phase / 'before' / self.paths['ui']).read_text())
+         for marker in ['private func applySelectedList(', 'private func selectListIdentifier(', 'var visibleItems:', 'private func installSearchQueryDelivery()']:
+-            self.assertEqual(body(self.source['ui'], marker), body((self.phase / 'before' / self.paths['ui']).read_text(), marker))
++            self.assertEqual(body((frozen_root / self.paths['ui']).read_text(), marker), body((self.phase / 'before' / self.paths['ui']).read_text(), marker))
+ 
+     def test_versioned_backlog_keeps_old159_and_admits_only_new_unsupported_branch(self):
+         old_path = 'reports/replica/p0-p1-difference-backlog-v12.json'
+--- phase-70-before/scripts/tests/test_p1_repair_list_selection.py
++++ scripts/tests/test_p1_repair_list_selection.py
+@@ -1,3 +1,5 @@
++from item_order_scope_contract import without_list_route
++from item_order_scope_contract import without_list_route
+ from frc_result_scope_contract import assert_visible_order_only, assert_list_context_only
+ """Optional-list force-selection source/ARM checks; does not execute Combine or Swift."""
+ import hashlib
+@@ -43,7 +45,7 @@
+                        'private func installListSelectionDelivery()', 'private func applySelectedList('],
+                        self.store_path: ['public func localListMenuState(']}[path]
+             for marker in markers:
+-                (assert_list_context_only if marker == 'private func installListSelectionDelivery()' else lambda t, a, b: t.assertEqual(a, b))(self, body((ROOT / path).read_text(), marker), body(frozen, marker))
++                (assert_list_context_only if marker == 'private func installListSelectionDelivery()' else lambda t, a, b: t.assertEqual(without_list_route(a), b))(self, body((ROOT / path).read_text(), marker), body(frozen, marker))
+ 
+     def test_native_conditional_nil_then_unconditional_target_setters_are_distinct(self):
+         words = {r['address']: int.from_bytes(bytes.fromhex(r['bytes']), 'little') for r in self.proof['ARM_words']}
+@@ -109,7 +111,7 @@
+ 
+     def test_successful_selection_tail_is_reused_exactly_not_run_on_nil(self):
+         previous = (self.phase / 'before' / self.ui_path).read_text()
+-        self.assertEqual(self.consumer, body(previous, 'func chooseBoard('))
++        self.assertEqual(without_list_route(self.consumer), body(previous, 'func chooseBoard('))
+         for token in ['cancelItemDeletion()', 'pinboardID = id', 'selection = []',
+                       'normalizeProjectedSelection()', 'collectionOwner?.replaceCollectionModel(state: self)']:
+             self.assertIn(token, self.consumer)
+@@ -134,7 +136,7 @@
+         for marker in ['private func installSearchQueryDelivery()', 'var visibleItems:',
+                        'func consumePendingListFocus(', 'func applyFullCollectionReload(',
+                        'func applyIncrementalCollectionSnapshot(', 'func selectedItemTargetLists()']:
+-            (assert_visible_order_only if marker == 'var visibleItems:' else lambda t, a, b: t.assertEqual(a, b))(self, body(self.ui, marker), body(previous, marker))
++            (assert_visible_order_only if marker == 'var visibleItems:' else lambda t, a, b: t.assertEqual(without_list_route(a), b))(self, body(self.ui, marker), body(previous, marker))
+         self.assertEqual(pre_attributes_host(self, (ROOT / 'replica/Sources/Pasto/UI/ReplicaNativeCardCollection.swift').read_text()).encode(),
+                          (self.phase / 'before/replica/Sources/Pasto/UI/ReplicaNativeCardCollection.swift').read_bytes())
+         for text in [self.choose, self.select, self.delivery, self.consumer]:
+--- phase-70-before/scripts/tests/test_p1_repair_local_list_menu.py
++++ scripts/tests/test_p1_repair_local_list_menu.py
+@@ -1,3 +1,4 @@
++from item_order_scope_contract import without_list_route
+ """Native private-list menu/count contracts; source checks only, no CoreData execution."""
+ import hashlib
+ import json
+@@ -171,7 +172,7 @@
+             for marker in markers:
+                 self.assertEqual(body(current, marker), body(before, marker))
+         before_ui = (self.phase / 'before/replica/Sources/Pasto/UI/ReplicaUIController.swift').read_text()
+-        self.assertEqual(body(self.ui, 'private func applySelectedList('), body(before_ui, 'func chooseBoard('))
++        self.assertEqual(without_list_route(body(self.ui, 'private func applySelectedList(')), body(before_ui, 'func chooseBoard('))
+         self.assertFalse(self.proof['partial_unscored_repairs'][1]['implemented'])
+         self.assertFalse(self.proof['full_function_migration_verified'])
+         self.assertEqual([r['function_id'] for r in self.proof['contracts']], ['Paste:0x100021f00'])
+--- phase-70-before/scripts/tests/test_p1_repair_native_sources.py
++++ scripts/tests/test_p1_repair_native_sources.py
+@@ -1,3 +1,4 @@
++from item_order_scope_contract import without_order_model, without_order_projection
+ """Source/MOM/Mach-O contracts only; never opens Core Data or user history."""
+ import hashlib
+ import json
+@@ -75,18 +76,18 @@
+         addition = '        if includeNativeSources { ClipboardSourcePersistence.addEntities(to: model, item: model.entitiesByName["Item"]!) }\n'
+         typed = body(current, 'if includeTypedItem')
+         legacy = current.replace('        if includeTypedItem ' + typed + '\n', '', 1)
+-        self.assertEqual(legacy.replace(addition, '', 1), before)
++        self.assertEqual(without_order_model(legacy).replace(addition, '', 1), before)
+         self.assertIn('entity("Application", [attribute("content", .binaryDataAttributeType)])', current)
+         self.assertIn('sourceGraphVersion', self.source)
+ 
+     def test_six_legacy_model_variants_are_explicitly_preserved(self):
+         migration = body(self.persistence, 'private static func migrateLegacyStoreIfNeeded(')
+         candidates = migration.split('let legacyCandidates = [', 1)[1].split('\n        ]', 1)[0]
+-        self.assertEqual(candidates.count('makeModel('), 7)
++        self.assertEqual(candidates.count('makeModel('), 8)
+         self.assertEqual(candidates.count('includeTypedItem: false'), 7)
+         self.assertEqual(candidates.count('includeNativeSources: false'), 6)
+         self.assertEqual(candidates.count('includeNativeItemData: false'), 5)
+-        self.assertIn('makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeNativeSources: false, includeTypedItem: false)', candidates)
++        self.assertIn('makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeNativeSources: false, includeTypedItem: false, includeItemOrder: false)', candidates)
+         order = ['NSMappingModel.inferredMappingModel(', 'manager.migrateStore(', 'coordinator.replacePersistentStore(']
+         self.assertEqual([migration.index(t) for t in order], sorted(migration.index(t) for t in order))
+         self.assertIn('NSStringFromClass(PastoItemDataMigrationPolicy.self)', migration)
+@@ -226,7 +227,7 @@
+             self.assertEqual(body(self.store, signature), body(previous, signature))
+         previous = self.before('replica/Sources/PastoCore/ClipboardPersistence.swift')
+         for signature in ['func restoreHistoryItems(', 'func prepareHistoryItems(', 'private func content(']:
+-            self.assertEqual(body(self.persistence, signature), body(previous, signature))
++            self.assertEqual(without_order_projection(body(self.persistence, signature)), body(previous, signature))
+ 
+     def test_original_binary_selector_mom_and_patch_snapshots_remain_bound(self):
+         for row in self.proof['original_fragments']:
+--- phase-70-before/scripts/tests/test_p1_repair_suggestion_source_service.py
++++ scripts/tests/test_p1_repair_suggestion_source_service.py
+@@ -1,3 +1,4 @@
++from item_order_scope_contract import without_list_route
+ """Real optional provider registration and consumers, native error/date branches; source only."""
+ import hashlib
+ import json
+@@ -44,7 +45,7 @@
+                 frozen_ui = (ROOT / '.local/p0-repair/phase-65/before' / path).read_text()
+                 assert_ui_service_composition_only(self, frozen_ui, frozen)
+                 for marker in ['private func installSearchQueryDelivery()', 'func availableSearchFilters()']:
+-                    self.assertEqual(body((ROOT / path).read_text(), marker), body(frozen_ui, marker))
++                    self.assertEqual(without_list_route(body((ROOT / path).read_text(), marker)), body(frozen_ui, marker))
+             elif path.endswith('ClipboardStore.swift'):
+                 for marker in ['public func makeSearchSuggestionProvider()', 'public func searchPinboardNames(', 'public func searchApplicationNames(', 'public func searchDeviceNames(']:
+                     self.assertEqual(body((ROOT / path).read_text(), marker), body(frozen, marker))
+--- phase-70-before/scripts/tests/test_p1_repair_typed_item_factory.py
++++ scripts/tests/test_p1_repair_typed_item_factory.py
+@@ -1,3 +1,4 @@
++from item_order_scope_contract import without_order_model, assert_order_migration_only
+ """Typed managed Item/fetch defaults and legacy source models; no CoreData/Swift runtime."""
+ import hashlib
+ import json
+@@ -40,11 +41,15 @@
+             self.assertEqual(hashlib.sha256((self.phase / 'after' / path).read_bytes()).hexdigest(), digest)
+             if path.endswith('ClipboardPersistence.swift'):
+                 for marker in ['private static func makeModel(', 'private static func migrateLegacyStoreIfNeeded(', 'func searchIndexRecords(', 'func searchItems(', 'func searchNativeItems(', 'private func fetch(']:
+-                    self.assertEqual(projection_spelling(body((ROOT / path).read_text(), marker)), projection_spelling(body(frozen, marker)))
++                    if marker == 'private static func migrateLegacyStoreIfNeeded(':
++                        assert_order_migration_only(self, body((ROOT / path).read_text(), marker), body(frozen, marker))
++                    else:
++                        self.assertEqual(without_order_model(projection_spelling(body((ROOT / path).read_text(), marker))), projection_spelling(body(frozen, marker)))
+             else:
+                 current = (ROOT / path).read_text()
+                 if path == self.list_path:
+-                    self.assertEqual(current, frozen.replace('@MainActor\n', '', 1).replace('/// Local managed list relationships.', '/// Access on the supplied context queue.'))
++                    from item_order_scope_contract import without_list_request
++                    self.assertEqual(without_list_request(current), frozen.replace('@MainActor\n', '', 1).replace('/// Local managed list relationships.', '/// Access on the supplied context queue.'))
+                 else:
+                     self.assertEqual(current, frozen)
+             self.assertEqual(hashlib.sha256((self.phase / 'after' / path).read_bytes()).hexdigest(), digest)
+@@ -147,7 +152,7 @@
+         typed = body(model, 'if includeTypedItem')
+         self.assertEqual(typed.strip(), '{\n            model.entitiesByName["Item"]!.managedObjectClassName = NSStringFromClass(PastoItemEntity.self)\n        }')
+         before = body(self.before, 'private static func makeModel(')
+-        self.assertEqual(model.replace('        if includeTypedItem ' + typed + '\n', '', 1), before)
++        self.assertEqual(without_order_model(model).replace('        if includeTypedItem ' + typed + '\n', '', 1), before)
+         self.assertIn('override class var entityName: String { "Item" }', self.item)
+         self.assertIn('@objc(PastoItemEntity)', self.item)
+         self.assertIn('class PastoItemEntity: PastoManagedObject', self.item)
+@@ -158,12 +163,12 @@
+         before = body(self.before, 'private static func migrateLegacyStoreIfNeeded(')
+         def candidates(s): return s.split('let legacyCandidates = [', 1)[1].split('\n        ]', 1)[0]
+         actual = candidates(migration); old = candidates(before)
+-        self.assertEqual(actual.count('makeModel('), 7)
++        self.assertEqual(actual.count('makeModel('), 8)
+         self.assertEqual(actual.count('includeTypedItem: false'), 7)
+         for line in old.splitlines():
+             if 'makeModel(' in line:
+-                self.assertIn(line.rstrip(',').replace(')', ', includeTypedItem: false)'), actual)
+-        self.assertIn('makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeTypedItem: false)', actual)
++                self.assertIn(line.rstrip(',').replace(')', ', includeTypedItem: false, includeItemOrder: false)'), actual)
++        self.assertIn('makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeTypedItem: false, includeItemOrder: false)', actual)
+         tail = '        // The older history-retention variants'
+         self.assertEqual(migration[migration.index(tail):], before[before.index(tail):])
+         self.assertNotIn('destroyPersistentStore', migration)
+--- /dev/null
++++ scripts/tests/test_p1_repair_native_list_order.py
+@@ -0,0 +1,289 @@
++"""Actual managed ordering/list-source wiring; source/static fixtures only, no CoreData runtime."""
++import hashlib
++import json
++import plistlib
++import struct
++import sys
++import unittest
++from pathlib import Path
++ROOT = Path(__file__).resolve().parents[2]
++sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'scripts/tests')]
++from function_ledger import source_fragments
++from test_offline_p0_contracts import body
++from test_p0_repair_checksum_routing import original_fragment
++from item_order_scope_contract import (without_order_persistence, without_list_factory, without_list_request,
++    without_list_UI_insertions, assert_history_list_projection_only, assert_common_FRC_ctor_only, assert_order_migration_only)
++
++
++class NativeListOrderContracts(unittest.TestCase):
++    @classmethod
++    def setUpClass(cls):
++        cls.phase = ROOT / '.local/p0-repair/phase-70'
++        cls.proof = json.loads((cls.phase / 'native-list-order-contract.json').read_text())
++        cls.base = json.loads((cls.phase / 'baseline.json').read_text())
++        cls.paths = dict(order='replica/Sources/PastoCore/ClipboardItemOrderPersistence.swift',
++            persistence='replica/Sources/PastoCore/ClipboardPersistence.swift',
++            lists='replica/Sources/PastoCore/ClipboardListPersistence.swift',
++            store='replica/Sources/PastoCore/ClipboardStore.swift',
++            frc='replica/Sources/PastoCore/ClipboardSearchCollection.swift',
++            ui='replica/Sources/Pasto/UI/ReplicaUIController.swift')
++        cls.source = {k: (ROOT / p).read_text() for k, p in cls.paths.items()}
++        cls.original = {r['address']: original_fragment((ROOT / r['path']).read_text(), r['address'][2:]) for r in cls.proof['original_fragments']}
++
++    def before(self, key): return (self.phase / 'before' / self.paths[key]).read_text()
++
++    def test_original_fragments_static_ARM_and_actual_source_bytes_are_bound(self):
++        self.assertEqual(len(self.proof['original_fragments']), 11)
++        for row in self.proof['original_fragments']:
++            self.assertEqual(source_fragments(ROOT / row['path'])[row['address']]['sha256'], row['sha256'])
++        for row in [self.proof['binary'], self.proof['model']] + self.proof['arm_disassemblies']:
++            self.assertEqual(hashlib.sha256((ROOT / row['path']).read_bytes()).hexdigest(), row['sha256'])
++        for path, digest in self.proof['current_sources'].items():
++            self.assertEqual(hashlib.sha256((ROOT / path).read_bytes()).hexdigest(), digest)
++            self.assertEqual((ROOT / path).read_bytes(), (self.phase / 'after' / path).read_bytes())
++
++    def test_original_MOM_has_Item_order_and_List_metadata_but_no_invented_ItemMetadata(self):
++        model = self.proof['model']
++        archive = plistlib.loads((ROOT / model['path']).read_bytes());objects = archive['$objects']
++        deref = lambda v: objects[v.data] if isinstance(v, plistlib.UID) else v
++        entities = {deref(e['NSEntityName']): e for e in objects if isinstance(e, dict) and 'NSEntityName' in e}
++        self.assertEqual(len(entities), 9);self.assertNotIn('ItemMetadataEntity', entities)
++        def properties(entity):
++            p = deref(entity['NSProperties']);return {deref(k): deref(v) for k, v in zip(p['NS.keys'], p['NS.objects'])}
++        order = properties(entities['ItemEntity'])['displayOrderInPinboard']
++        self.assertEqual(order['NSAttributeType'], 300)
++        self.assertEqual(deref(order['NSDefaultValue']), 0)
++        self.assertNotIn('index', properties(entities['ItemEntity']))
++        self.assertIn('index', properties(entities['ListMetadataEntity']))
++        self.assertEqual(hashlib.sha256((ROOT / model['decoded_path']).read_bytes()).hexdigest(), model['decoded_sha256'])
++        self.assertIn('ObjectMetadata', entities)
++
++    def test_real_sort_getter_setter_selectors_and_ascending_flags_match_original(self):
++        self.assertEqual([r['selector'] for r in self.proof['selector_bindings']], [
++            'initWithKey:ascending:', 'setSortDescriptors:', 'setPredicate:',
++            'displayOrderInPinboard', 'setDisplayOrderInPinboard:'])
++        for row in self.proof['selector_bindings']:
++            self.assertTrue(row['chain']['declared_chain_reachable'])
++            self.assertEqual(bytes.fromhex(row['selector_bytes']['bytes']), row['selector'].encode() + b'\0')
++        words = {int(r['address'], 16): struct.unpack('<I', bytes.fromhex(r['bytes']))[0] for r in self.proof['ARM_words']}
++        self.assertEqual(words[0x100329140], 0x52800003)
++        self.assertEqual(words[0x100329290], 0x52800023)
++        self.assertEqual(bytes.fromhex(self.proof['order_key']['bytes']), b'displayOrderInPinboard\0')
++        self.assertIn('setDisplayOrderInPinboard_', self.original['0x100362584'])
++
++    def test_actual_request_builder_distinguishes_history_group_and_default(self):
++        request = body(self.source['lists'], 'func itemRequest(for list:')
++        self.assertIn('let request = PastoItemEntity.defaultFetchRequest()', request)
++        self.assertIn('?.int64Value ?? 0', request)
++        history = request.split('case 1:', 1)[1].split('case 2:', 1)[0]
++        group = request.split('case 2:', 1)[1].split('default:', 1)[0]
++        self.assertIn('NSSortDescriptor(key: "timestamp", ascending: false)', history)
++        self.assertIn('NSPredicate(format: "timestamp != nil")', history)
++        self.assertIn('NSSortDescriptor(key: "displayOrderInPinboard", ascending: true)', group)
++        self.assertIn('NSPredicate(format: "list == %@", list)', group)
++        self.assertIn('default: break', request)
++        self.assertNotIn('metadata.index', request)
++        self.assertNotIn('fetchLimit', request)
++        self.assertNotIn('catch', request)
++        self.assertIn('FUN_1003298a0(0,FUN_1003214a8)', self.original['0x100329088'])
++
++    def test_current_model_adds_required_default_zero_order_and_optional_marker_only(self):
++        add = body(self.source['order'], 'static func addField(')
++        for token in ['order.name = "displayOrderInPinboard"; order.attributeType = .integer64AttributeType',
++                      'order.isOptional = false; order.defaultValue = 0',
++                      'model.entitiesByName["Item"]!.properties.append(order)',
++                      'version.attributeType = .integer64AttributeType; version.isOptional = true',
++                      'model.entitiesByName["State"]!.properties.append(version)']:
++            self.assertIn(token, add)
++        for token in ['model.entities.append', 'ItemMetadata', '.relationship', 'renamingIdentifier', 'removeAll']:
++            self.assertNotIn(token, add)
++        model = body(self.source['persistence'], 'private static func makeModel(')
++        self.assertIn('if includeItemOrder { ClipboardItemOrderPersistence.addField(to: model) }', model)
++        self.assertIn('includeItemOrder: Bool = true', self.source['persistence'])
++        self.assertLess(model.index('model.entities ='), model.index('ClipboardItemOrderPersistence.addField'))
++
++    def test_eight_old_candidates_preserve_typed_model_and_all_seven_earlier_descriptions(self):
++        current = body(self.source['persistence'], 'private static func migrateLegacyStoreIfNeeded(')
++        previous = body(self.before('persistence'), 'private static func migrateLegacyStoreIfNeeded(')
++        assert_order_migration_only(self, current, previous)
++        rows = current.split('let legacyCandidates = [', 1)[1].split('\n        ]', 1)[0]
++        self.assertEqual(rows.count('makeModel('), 8)
++        self.assertEqual(rows.count('includeItemOrder: false'), 8)
++        self.assertEqual(rows.count('includeTypedItem: false'), 7)
++        self.assertIn('makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeItemOrder: false)', rows)
++        self.assertNotIn('destroyPersistentStore', current)
++        self.assertLess(current.index('manager.migrateStore('), current.index('coordinator.replacePersistentStore('))
++        self.assertEqual(without_order_persistence(self.source['persistence']), self.before('persistence'))
++
++    def test_backfill_guard_is_before_blob_decode_marker_after_all_rows_same_save_transaction(self):
++        bootstrap = body(self.source['order'], 'static func bootstrap(')
++        order = ['guard (root.value(forKey: versionKey) as? NSNumber)?.int64Value != 1',
++                 'context.fetch(PastoItemEntity.defaultFetchRequest())', 'ClipboardPersistence.decode(ClipboardItem.self, object)',
++                 'object.setValue(item.pinboardOrder ?? 0, forKey: "displayOrderInPinboard")',
++                 'root.setValue(Int64(1), forKey: versionKey)']
++        self.assertEqual([bootstrap.index(t) for t in order], sorted(bootstrap.index(t) for t in order))
++        for token in ['catch', 'try?', 'context.save()']:
++            self.assertNotIn(token, bootstrap)
++        actual = body(self.source['persistence'], 'private func bootstrapListsIfNeeded()')
++        order = ['try perform', 'try bootstrapHistoryTimestamps()', 'try bootstrapSourcesIfNeeded(root)',
++                 'try ClipboardItemOrderPersistence.bootstrap(in: context, root: root)', 'if context.hasChanges', 'try context.save()']
++        self.assertEqual([actual.index(t) for t in order], sorted(actual.index(t) for t in order))
++
++    def test_new_root_is_marked_before_save_to_prevent_restart_overwriting_native_order(self):
++        commit = body(self.source['persistence'], 'func commit<T>(')
++        inserted = body(commit, 'if root.isInserted')
++        self.assertIn('root.setValue(Int64(1), forKey: ClipboardItemOrderPersistence.versionKey)', inserted)
++        self.assertLess(commit.index('ClipboardItemOrderPersistence.versionKey'), commit.index('try context.save()'))
++        bootstrap = body(self.source['order'], 'static func bootstrap(')
++        self.assertNotIn('content', bootstrap.split('!= 1 else { return }', 1)[0])
++        # Source-bound restart fixture. No NSManagedObject/database is created.
++        for existing_marker, blob_order, initial_column in [(None, 7, 0), (1, None, 4)]:
++            marker, column = existing_marker, initial_column
++            if marker != 1: column = blob_order if blob_order is not None else 0;marker = 1
++            column = 3  # ordinary reorder; new content deliberately strips order
++            if marker != 1: column = blob_order if blob_order is not None else 0
++            self.assertEqual(column, 3)
++
++    def test_reads_project_actual_column_after_owner_and_never_rederive_order_from_blob(self):
++        project = body(self.source['order'], 'static func project(')
++        self.assertIn('guard !item.pinboardIDs.isEmpty else { item.pinboardOrder = nil; return }', project)
++        self.assertIn('object.value(forKey: "displayOrderInPinboard") as? NSNumber', project)
++        self.assertIn('item.pinboardOrder = order', project)
++        self.assertNotIn('decode', project)
++        item = body(self.source['persistence'], 'nonisolated static func item(')
++        self.assertLess(item.index('item.pinboardOwnerID = owner'), item.index('try ClipboardItemOrderPersistence.project(&item, from: object)'))
++        self.assertLess(item.index('try ClipboardItemOrderPersistence.project'), item.index('return item'))
++        reader = (ROOT / 'replica/Sources/PastoCore/ClipboardSnapshotReader.swift').read_text()
++        self.assertIn('.map(ClipboardPersistence.item)', body(reader, 'func read()'))
++
++    def test_commit_order_update_is_outside_blob_replacement_after_owner_before_save(self):
++        commit = body(self.source['persistence'], 'func commit<T>(')
++        update = 'ClipboardItemOrderPersistence.update(item, on: object)'
++        encoded = body(commit, 'if old.map(content) != content(item)')
++        self.assertNotIn(update, encoded)
++        self.assertLess(commit.index('object.setValue(owner, forKey: "list")'), commit.index(update))
++        self.assertLess(commit.index(update), commit.index('try context.save()'))
++        setter = body(self.source['order'], 'static func update(')
++        self.assertIn('let order = item.pinboardOrder ?? 0', setter)
++        self.assertIn('?.int64Value != order', setter)
++        self.assertIn('object.setValue(order, forKey: "displayOrderInPinboard")', setter)
++        self.assertNotIn('encode', setter)
++
++    def test_order_only_reorder_does_not_reencode_unchanged_payload_blob(self):
++        content = body(self.source['persistence'], 'private func content(')
++        self.assertIn('value.pinboardOrder = nil', content)
++        self.assertIn('if old.map(content) != content(item)', body(self.source['persistence'], 'func commit<T>('))
++        # Scalar signatures model the real content comparison; they are not a Swift serializer test.
++        payload = ('image', 'unchanged-large-bytes', 'title')
++        old = (payload, 3);new = (payload, 9)
++        self.assertNotEqual(old, new)
++        self.assertEqual((old[0], None), (new[0], None))
++        changed_payload = (('image', 'changed-bytes', 'title'), 9)
++        self.assertNotEqual((old[0], None), (changed_payload[0], None))
++
++    def test_actual_store_and_persistence_factories_use_same_stable_context_and_real_request(self):
++        facade = body(self.source['store'], 'public func makeListCollection(')
++        self.assertIn('persistence.makeListCollection(identifier: pinboardID?.uuidString ?? Self.historyListIdentifier)', facade)
++        factory = body(self.source['persistence'], 'func makeListCollection(')
++        for token in ['context.performAndWait', 'guard let list = try? lists.list(identifier: identifier) else { return nil }',
++                      'ClipboardSearchCollection(context: context, request: lists.itemRequest(for: list))']:
++            self.assertIn(token, factory)
++        self.assertNotIn('context.reset()', factory)
++        self.assertNotIn('items.filter', factory)
++
++    def test_shared_FRC_common_initializer_keeps_original_error_delegate_and_observer_order(self):
++        assert_common_FRC_ctor_only(self, self.source['frc'], self.before('frc'))
++        common = body(self.source['frc'], 'init(context: NSManagedObjectContext, request:')
++        order = ['controller = NSFetchedResultsController(', 'sectionNameKeyPath: nil, cacheName: nil)',
++                 'try controller.performFetch()', 'catch { fatalError(', 'controller.delegate = delegate',
++                 'flushPending()', 'objectsObservation = NotificationCenter.default']
++        self.assertEqual([common.index(t) for t in order], sorted(common.index(t) for t in order))
++        search = body(self.source['frc'], 'convenience init(context:')
++        self.assertIn('self.init(context: context, request: request)', search)
++        self.assertIn('if objectIDs.count != identifiers.count', search)
++        self.assertNotIn('identifiers.count', common)
++        for marker in ['private func receive(', 'private func flushPending()', 'private func objectsDidChange(', 'nonisolated func controller(']:
++            self.assertEqual(body(self.source['frc'], marker), body(self.before('frc'), marker))
++
++    def test_retained_ordinary_source_cancels_previous_subscription_and_suppresses_hidden_updates(self):
++        ui = self.source['ui']; install = body(ui, 'private func installListCollectionSource()')
++        order = ['listCollectionObservation = nil', 'listCollection = nil', 'guard isCollectionSearchQueryEmpty else { return }',
++                 'store.makeListCollection(pinboardID: pinboardID)', 'listCollection = source',
++                 'source?.publisher.dropFirst().sink { [weak self] snapshot',
++                 'self.isCollectionSearchQueryEmpty, !self.showDeleted', 'pendingCollectionChangedIDs.formUnion(snapshot.updatedIdentifiers)',
++                 'self.objectWillChange.send()']
++        self.assertEqual([install.index(t) for t in order], sorted(install.index(t) for t in order))
++        for token in ['normalizeSelection', 'applyOrderedSelection', 'replaceCollectionModel', 'context.save()']:
++            self.assertNotIn(token, install)
++        self.assertIn('private var listCollection: ClipboardSearchCollection?', ui)
++        self.assertIn('private var listCollectionObservation: AnyCancellable?', ui)
++
++    def test_query_and_list_switch_install_actual_source_before_normalizing_or_replacing_applier(self):
++        ui = self.source['ui']
++        query = body(ui, 'private func installSearchQueryDelivery()')
++        order = ['self.collectionSearchQueryNodes = nodes', 'self.installListCollectionSource()', 'self.normalizeSelection()', 'self.collectionOwner?.replaceCollectionModel(state: self)']
++        self.assertEqual([query.index(t) for t in order], sorted(query.index(t) for t in order))
++        chosen = body(ui, 'private func applySelectedList(')
++        self.assertLess(chosen.index('pinboardID = id'), chosen.index('installListCollectionSource()'))
++        self.assertLess(chosen.index('installListCollectionSource()'), chosen.index('normalizeProjectedSelection()'))
++
++    def test_primary_history_and_group_visible_items_follow_FRC_order_and_keep_explicit_adapters(self):
++        visible = body(self.source['ui'], 'var visibleItems:')
++        history = body(visible, 'if isCollectionSearchQueryEmpty')
++        for token in ['if showDeleted', 'includeDeleted: true).filter(\\.isDeleted)',
++                      'let identifiers = listCollection?.value.identifiers ?? []',
++                      'let native = identifiers.compactMap { items[$0] }.filter { !$0.isDeleted }', 'return native']:
++            self.assertIn(token, history)
++        legacy = body(history, 'if let pinboardID')
++        self.assertIn('filter { $0.pinboardOwnerID != pinboardID }', legacy)
++        self.assertIn('if !legacy.isEmpty', legacy)
++        self.assertIn('Set(identifiers).union(legacy.map(\\.id))', legacy)
++        # Pure scalar normal-domain fixtures: own membership and database order, no UUID tie sorting.
++        snapshots = {'A': False, 'B': False, 'C': True}
++        self.assertEqual([i for i in ['B', 'C', 'A'] if i in snapshots and not snapshots[i]], ['B', 'A'])
++        self.assertNotIn('.sorted', history)
++
++    def test_legacy_secondary_membership_does_not_silently_disappear_from_the_UI(self):
++        identifiers = ['B', 'A'];legacy = ['secondary']
++        retained = set(identifiers) | set(legacy)
++        # This branch deliberately keeps old local ordering, not claimed native equality.
++        old_store_order = ['A', 'secondary', 'B', 'unrelated']
++        self.assertEqual([i for i in old_store_order if i in retained], ['A', 'secondary', 'B'])
++        self.assertIn('existing Store ordering', ' '.join(self.proof['retained_partial_contracts']))
++        self.assertIn('mixed legacy domain', ' '.join(self.proof['retained_partial_contracts']))
++
++    def test_only_five_existing_files_and_one_new_order_adapter_change(self):
++        actual = {str(p.relative_to(ROOT)) for p in (ROOT / 'replica/Sources').rglob('*') if p.is_file()}
++        changed = {p for p, digest in self.base['production'].items() if hashlib.sha256((ROOT / p).read_bytes()).hexdigest() != digest}
++        self.assertEqual(changed, set(self.paths.values()) - {self.paths['order']})
++        self.assertEqual(actual - set(self.base['production']), {self.paths['order']})
++        self.assertEqual(without_order_persistence(self.source['persistence']), self.before('persistence'))
++        self.assertEqual(without_list_factory(self.source['store'], public=True), self.before('store'))
++        self.assertEqual(without_list_request(self.source['lists']), self.before('lists'))
++        a = without_list_UI_insertions(self.source['ui']);b = without_list_UI_insertions(self.before('ui'))
++        av = body(a, 'var visibleItems:');bv = body(b, 'var visibleItems:')
++        assert_history_list_projection_only(self, av, bv)
++        self.assertEqual(a.split(av), b.split(bv))
++
++    def test_v14_preserves_old160_records_and_adds_only_actual_list_request_gap(self):
++        old = json.loads((ROOT / 'reports/replica/p0-p1-difference-backlog-v13.json').read_text())
++        new = json.loads((ROOT / 'reports/replica/p0-p1-difference-backlog-v14.json').read_text())
++        self.assertEqual(new['groups'][:-1], old['groups'])
++        rows = [r for g in new['groups'] for r in g['records']]
++        self.assertEqual(len(rows), 161);self.assertEqual(len({r['function_id'] for r in rows}), 161)
++        self.assertEqual(new['added_function_ids'], ['Paste:0x100329088'])
++        self.assertEqual(new['counts']['p0_records'], 69)
++        self.assertEqual(new['counts']['p1_additional_records'], 92)
++
++    def test_full_original_schema_provider_witness_runtime_migration_and_goal_stay_unclosed(self):
++        row, = self.proof['contracts']
++        self.assertEqual(row['function_id'], 'Paste:0x100329088')
++        self.assertFalse(row['full_function_migration_verified'])
++        self.assertFalse(self.proof['full_function_migration_verified'])
++        self.assertEqual(self.proof['function_map_markers_upgraded'], 0)
++        limits = ' '.join(self.proof['retained_partial_contracts'])
++        for token in ['eight old candidates', 'not executed', 'unique365cd8', 'Unknown04430c/0f733c', 'model hash']:
++            self.assertIn(token, limits)
++
++
++if __name__ == '__main__': unittest.main()
+--- /dev/null
++++ scripts/tests/item_order_scope_contract.py
+@@ -0,0 +1,107 @@
++"""Explicit phase70 deltas for historical source contracts; actual new paths have separate tests."""
++from test_offline_p0_contracts import body
++
++ORDER_MODEL = '        if includeItemOrder { ClipboardItemOrderPersistence.addField(to: model) }\n'
++ORDER_PROJECT = '        try ClipboardItemOrderPersistence.project(&item, from: object)\n'
++ORDER_BOOTSTRAP = '            try ClipboardItemOrderPersistence.bootstrap(in: context, root: root)\n'
++ORDER_UPDATE = '                    ClipboardItemOrderPersistence.update(item, on: object)\n'
++ORDER_ROOT = '                    root.setValue(Int64(1), forKey: ClipboardItemOrderPersistence.versionKey)\n'
++ORDER_CONTENT = '        value.pinboardOrder = nil\n'
++
++
++def without_order_model(source):
++    return source.replace(ORDER_MODEL, '', 1)
++
++
++def without_order_projection(source):
++    return source.replace(ORDER_PROJECT, '', 1).replace(ORDER_BOOTSTRAP, '', 1).replace(ORDER_CONTENT, '', 1)
++
++
++def without_order_commit(source):
++    return source.replace(ORDER_UPDATE, '', 1).replace(ORDER_ROOT, '', 1)
++
++
++def assert_order_migration_only(test, current, previous):
++    marker = '        let legacyCandidates = ['
++    a, candidates = current.split(marker, 1); b, old_candidates = previous.split(marker, 1)
++    current_rows, tail = candidates.split('\n        ]', 1); old_rows, old_tail = old_candidates.split('\n        ]', 1)
++    test.assertEqual((a, tail), (b, old_tail))
++    new_row = '\n            makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeItemOrder: false),'
++    test.assertTrue(current_rows.startswith(new_row))
++    test.assertEqual(current_rows.count('includeItemOrder: false'), 8)
++    test.assertEqual(current_rows[len(new_row):].replace(', includeItemOrder: false', ''), old_rows)
++
++
++def without_list_route(source):
++    return source.replace('        installListCollectionSource()\n', '', 1).replace('                self.installListCollectionSource()\n', '', 1)
++
++
++def without_list_factory(source, public=False):
++    marker = ('public ' if public else '') + 'func makeListCollection('
++    declaration = '    ' + marker
++    if declaration not in source: return source
++    start = source.index(declaration); block = body(source, marker)
++    end = source.index(block, start) + len(block) + (1 if public else 2)
++    return source[:start] + source[end:]
++
++
++def without_list_request(source):
++    marker = '    // 329088: history uses its timestamp; pinboard uses the Item\'s order, not the List\'s index.\n'
++    if marker not in source: return source
++    start = source.index(marker); actual = body(source, 'func itemRequest(for list:')
++    end = source.index(actual, start) + len(actual) + 2
++    return source[:start] + source[end:]
++
++
++def without_list_UI_insertions(source):
++    source = source.replace('    private var listCollection: ClipboardSearchCollection?\n    private var listCollectionObservation: AnyCancellable?\n', '', 1)
++    declaration = '    private func installListCollectionSource()'
++    if declaration in source:
++        start = source.index(declaration); actual = body(source, 'private func installListCollectionSource()')
++        end = source.index(actual, start) + len(actual) + 2
++        source = source[:start] + source[end:]
++    source = without_list_route(source)
++    for comment in [
++        '        // Until the managed collection source is migrated, only data/registry changes\n        // use this snapshot adapter. List colors/capacity have their own synchronous stream.\n',
++        '        // Legacy value/registry adapters still refresh payload snapshots and selection.\n        // Managed list membership/order now arrives through its retained FRC source.\n']:
++        source = source.replace(comment, '', 1)
++    return source
++
++
++def assert_history_list_projection_only(test, current, previous):
++    signature = 'if isCollectionSearchQueryEmpty'
++    current_history = body(current, signature); previous_history = body(previous, signature)
++    test.assertEqual(current.split(current_history), previous.split(previous_history))
++    if 'listCollection?.value.identifiers' not in previous_history:
++        test.assertIn('store.items(in: pinboardID)', previous_history)
++        for token in ['if showDeleted', 'listCollection?.value.identifiers ?? []', 'let native = identifiers.compactMap',
++                      'let legacy = store.items(in: pinboardID).filter { $0.pinboardOwnerID != pinboardID }',
++                      'Set(identifiers).union(legacy.map(\\.id))', 'return native']:
++            test.assertIn(token, current_history)
++    else:
++        test.assertEqual(current_history, previous_history)
++
++
++def without_order_persistence(source):
++    source = without_list_factory(source)
++    source = without_order_model(without_order_projection(without_order_commit(source)))
++    source = source.replace('includeTypedItem: Bool = true,\n                                  includeItemOrder: Bool = true)', 'includeTypedItem: Bool = true)', 1)
++    source = source.replace('            makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeItemOrder: false),\n', '', 1)
++    source = source.replace(', includeItemOrder: false', '')
++    return source
++
++
++def assert_common_FRC_ctor_only(test, current_source, previous_source):
++    old = body(previous_source, 'init(context: NSManagedObjectContext, identifiers:')
++    current = body(current_source, 'init(context: NSManagedObjectContext, request:')
++    start = '        controller = NSFetchedResultsController('
++    old_common = old[old.index(start):]
++    diagnostic = '''        if initial.count != identifiers.count {
++            logger.error("Search found \\(identifiers.count) identifiers but fetched \\(initial.count) objects")
++        }
++'''
++    test.assertEqual(current[current.index(start):], old_common.replace(diagnostic, '', 1))
++    convenience = body(current_source, 'convenience init(context:')
++    test.assertIn('PastoItemEntity.defaultFetchRequest()', convenience)
++    test.assertIn('self.init(context: context, request: request)', convenience)
++    test.assertIn('if objectIDs.count != identifiers.count', convenience)

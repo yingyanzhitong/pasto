@@ -16,6 +16,7 @@ final class ReplicaLinkPreviewContent: NSView, OriginalPreviewEditableContent, N
 
     private weak var state: ReplicaUIState?
     private let itemID: UUID
+    private var editInput: ClipboardRestoreItem?
     private let readOnlyContent: NSView
     private let textView = NSTextView()
     private let metadata = NSStackView()
@@ -23,10 +24,12 @@ final class ReplicaLinkPreviewContent: NSView, OriginalPreviewEditableContent, N
     private var openButton: OriginalToolbarButton?
     private var itemObservation: AnyCancellable?
 
-    init(state: ReplicaUIState, item: ClipboardItem) {
+    init(state: ReplicaUIState, item: ClipboardItem?, input: ClipboardRestoreItem? = nil) {
         self.state = state
-        itemID = item.id
-        readOnlyContent = makeReplicaReadOnlyPreviewContent(store: state.store, item: item)
+        guard let itemID = input?.id ?? item?.id else { preconditionFailure("Link preview requires an item") }
+        self.itemID = itemID
+        editInput = input
+        readOnlyContent = makeReplicaReadOnlyPreviewContent(store: state.store, itemID: itemID)
         super.init(frame: .zero)
         textView.isSelectable = true
         textView.isEditable = true
@@ -55,10 +58,17 @@ final class ReplicaLinkPreviewContent: NSView, OriginalPreviewEditableContent, N
         metadata.spacing = 8
         for view in [urlLabel, spacer, open] { metadata.addArrangedSubview(view) }
         showContent(readOnlyContent)
-        itemObservation = state.store.$items.sink { [weak self] items in
-            MainActor.assumeIsolated {
-                guard let self, let current = items.first(where: { $0.id == self.itemID }) else { return }
-                self.updateMetadata(Self.itemURL(current))
+        itemObservation = input?.observeChanges { [weak self] current in
+            self?.receiveNativeModel(current)
+        }
+        if itemObservation != nil, let input {
+            receiveNativeModel(input)
+        } else {
+            itemObservation = state.store.$items.sink { [weak self] items in
+                MainActor.assumeIsolated {
+                    guard let self, let current = items.first(where: { $0.id == self.itemID }) else { return }
+                    self.updateMetadata(Self.itemURL(current))
+                }
             }
         }
     }
@@ -66,7 +76,7 @@ final class ReplicaLinkPreviewContent: NSView, OriginalPreviewEditableContent, N
     required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
 
     func beginPreviewEditing() {
-        textView.string = currentURL()?.absoluteString ?? ""
+        textView.f_1000f733c(currentURL()?.absoluteString ?? "")
         showContent(textView)
         updateCanCommit()
         window?.makeFirstResponder(textView)
@@ -80,9 +90,12 @@ final class ReplicaLinkPreviewContent: NSView, OriginalPreviewEditableContent, N
     func commitPreviewEditing() {
         guard let state, let url = Self.normalizedURL(textView.string) else { return }
         do {
-            try state.store.updateLinkItem(id: itemID, url: url)
+            if let editInput { try state.store.updateLinkItem(editInput, url: url) }
+            else { try state.store.updateLinkItem(id: itemID, url: url) }
             state.normalizeSelection()
-        } catch { state.controller?.presentError(error) }
+        } catch {
+            // 3bf900: consume the transaction error and continue the editing cleanup.
+        }
         showContent(readOnlyContent)
         updateMetadata(currentURL())
     }
@@ -99,8 +112,14 @@ final class ReplicaLinkPreviewContent: NSView, OriginalPreviewEditableContent, N
 
     private func updateCanCommit() { onCanCommitEditing?(Self.normalizedURL(textView.string) != nil) }
 
+    private func receiveNativeModel(_ input: ClipboardRestoreItem) {
+        editInput = input
+        updateMetadata(currentURL())
+    }
+
     private func currentURL() -> URL? {
-        state?.store.items.first(where: { $0.id == itemID }).map(Self.itemURL)
+        if let url = editInput?.previewLinkURL() { return url }
+        return state?.store.items.first(where: { $0.id == itemID }).map(Self.itemURL)
     }
 
     private static func itemURL(_ item: ClipboardItem) -> URL {

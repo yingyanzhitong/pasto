@@ -19,7 +19,7 @@ public enum OriginalPreviewAttributedText {
         let descriptor = font.fontDescriptor
         let cleared = descriptorWithTraits(descriptor, traits: [])
         let requested = cleared.flatMap { descriptorWithTraits($0, traits: traits) }
-        return NSFont(descriptor: requested ?? descriptor, size: font.pointSize) ?? font
+        return NSFont(descriptor: requested ?? font.fontDescriptor, size: font.pointSize) ?? font
     }
 
     // The older build SDK imports this selector as nonnull. The recovered binary
@@ -100,10 +100,13 @@ public enum OriginalPreviewAttributedText {
     }
 
     /// Paste 0x1003c0be0: nonempty changed text, with the original plain/rich baseline choice.
-    public static func f_1003c0be0(candidate: NSAttributedString, original: NSAttributedString,
-                                  editing: NSAttributedString) -> Bool {
+    public static func f_1003c0be0(candidate: NSAttributedString,
+                                  original: @autoclosure () -> NSAttributedString,
+                                  editing: @autoclosure () -> NSAttributedString) -> Bool {
         guard !candidate.string.isEmpty else { return false }
-        return (f_1003095bc(original) ? editing : original) != candidate
+        let isPlain = f_1003095bc(original())
+        // The model's selected slot is read after attribute enumeration, not before it.
+        return (isPlain ? editing() : original()) != candidate
     }
 
     /// PastePlatform's NSTextView.attributedText Objective-C getter, 0x1000f6ef8.
@@ -150,10 +153,11 @@ public enum OriginalPreviewAttributedText {
 
     /// Paste 0x1003eb330: the two actual isEditable reads select content and plain styling.
     @discardableResult
-    public static func f_1003eb330(original: NSAttributedString, editing: NSAttributedString,
+    public static func f_1003eb330(original: @autoclosure () -> NSAttributedString,
+                                  editing: @autoclosure () -> NSAttributedString,
                                   editor: NSTextView) -> Int {
-        var displayed = editor.isEditable ? editing : original
-        if !editor.isEditable, f_1003095bc(original) {
+        var displayed = editor.isEditable ? editing() : original()
+        if !editor.isEditable, f_1003095bc(original()) {
             let plain = NSMutableAttributedString(attributedString: displayed)
             let range = f_100309700(plain)
             plain.removeAttribute(.foregroundColor, range: range)

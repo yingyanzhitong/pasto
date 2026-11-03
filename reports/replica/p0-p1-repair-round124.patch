@@ -1,0 +1,85 @@
+--- a/replica/Sources/PastoCore/ClipboardPersistence.swift
++++ b/replica/Sources/PastoCore/ClipboardPersistence.swift
+@@ -244,14 +244,29 @@
+     // Capture replaces content, preview, source application and history time; only retain metadata.
+     nonisolated static func capturedItemValue(_ object: NSManagedObject, id: UUID,
+                                              replacingContentWith replacement: ClipboardItem) throws -> ClipboardItem {
+-        let metadata = try Self.decode(CapturedItemCompatibilityMetadata.self, object)
++        let metadata: CapturedItemCompatibilityMetadata?
++        if object.isInserted, object.value(forKey: "content") == nil {
++            // A failed new capture may have native content before its compatibility value is saved.
++            metadata = nil
++        } else {
++            metadata = try Self.decode(CapturedItemCompatibilityMetadata.self, object)
++        }
+         var item = replacement
+         item.id = id
+-        item.title = metadata.title
+-        item.hasExplicitTitle = metadata.hasExplicitTitle
+-        item.sourceIdentifier = metadata.sourceIdentifier
+-        item.sourceDevice = metadata.sourceDevice
+-        item.pinboardIDs = metadata.pinboardIDs
++        if let metadata {
++            item.title = metadata.title
++            item.hasExplicitTitle = metadata.hasExplicitTitle
++            item.sourceIdentifier = metadata.sourceIdentifier
++            item.sourceDevice = metadata.sourceDevice
++            item.pinboardIDs = metadata.pinboardIDs
++        } else {
++            item.title = ""
++            item.hasExplicitTitle = false
++            item.sourceIdentifier = nil
++            item.sourceDevice = (object.value(forKey: "device") as? NSManagedObject)?.value(forKey: "name") as? String
++                ?? replacement.sourceDevice
++            item.pinboardIDs = []
++        }
+         item.pinboardOwnerID = nil
+         item.nativeIdentifier = object.value(forKey: "nativeIdentifier") as? String
+         ClipboardItemTitlePersistence.project(&item, from: object)
+@@ -601,6 +616,10 @@
+             itemData.replace(on: target.object, items: items, kind: kind, checksum: checksum,
+                              useBinaryPlist: useBinaryPlist, preview: preview)
+             replacedItemDataIDs.insert(target.id)
++        }
++
++        func initializeCapturedDevice(_ target: (id: UUID, object: NSManagedObject), name: String) throws {
++            try sources.applyDevice(named: name, to: target.object)
+         }
+ 
+         func applyCapturedSources(_ target: (id: UUID, object: NSManagedObject), item: ClipboardItem,
+--- a/replica/Sources/PastoCore/ClipboardSourcePersistence.swift
++++ b/replica/Sources/PastoCore/ClipboardSourcePersistence.swift
+@@ -104,7 +104,11 @@
+             object.setValue(source, forKey: "sourceApplication")
+         }
+         guard !preserveDevice else { return }
+-        let device = try device(named: item.sourceDevice)
++        try applyDevice(named: item.sourceDevice, to: object)
++    }
++
++    func applyDevice(named name: String, to object: NSManagedObject) throws {
++        let device = try device(named: name)
+         if (object.value(forKey: "device") as? NSManagedObject) !== device {
+             object.setValue(device, forKey: "device")
+         }
+--- a/replica/Sources/PastoCore/ClipboardStore.swift
++++ b/replica/Sources/PastoCore/ClipboardStore.swift
+@@ -805,6 +805,9 @@
+                 if target!.object.value(forKey: "nativeIdentifier") == nil {
+                     target!.object.setValue(state.items[result.index].nativeIdentifier, forKey: "nativeIdentifier")
+                 }
++                if capturedTarget == nil {
++                    try transaction.repository.initializeCapturedDevice(target!, name: state.items[result.index].sourceDevice)
++                }
+                 let items = try Self.originalPasteboardItems(from: state.items[result.index].payloads)
+                 let kind = OriginalPasteboardClassification.f_10032362c(items)
+                 if let checksum = OriginalPasteboardChecksums.f_1003216bc(items, kind: kind) {
+@@ -834,7 +837,7 @@
+                 // 0x10037b034 → 0x100361ec0: stamp history after content/source
+                 // updates, not before preview generation or checksum lookup.
+                 try transaction.repository.applyCapturedSources(target!, item: state.items[result.index],
+-                    applications: state.sourceApplications, preserveDevice: capturedTarget != nil)
++                    applications: state.sourceApplications, preserveDevice: true)
+                 let timestamp = transaction.repository.restoreHistoryItems([target!])[0].timestamp
+                 state.items[result.index].createdAt = timestamp
+                 state.items[result.index].updatedAt = timestamp

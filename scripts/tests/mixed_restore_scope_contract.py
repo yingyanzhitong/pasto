@@ -1,0 +1,176 @@
+"""Reverse only reviewed125 mixed restore deltas for historical source checks."""
+from local_device_scope_contract import pre_local_device
+CHANGES = [['replica/Sources/PastoCore/Pasteboard.swift',
+  '        guard selected.allSatisfy({ $0.nativeObject != nil }) else {\n'
+  '            return try dragPasteboardGroups(for: selected.map { $0.resolvedItem() }, options: '
+  'options)\n'
+  '        }\n'
+  '        return nativeRestoreGroups(selected, options: options)\n',
+  '        guard selected.contains(where: { $0.nativeObject != nil }) else {\n'
+  '            return try dragPasteboardGroups(for: selected.map { $0.resolvedItem() }, options: '
+  'options)\n'
+  '        }\n'
+  '        return try nativeRestoreGroups(selected, options: options)\n'],
+ ['replica/Sources/PastoCore/Pasteboard.swift',
+  '        guard restoreItems.allSatisfy({ $0.nativeObject != nil }) else {',
+  '        guard restoreItems.contains(where: { $0.nativeObject != nil }) else {'],
+ ['replica/Sources/PastoCore/Pasteboard.swift',
+  '        let objects = nativeRestoreObjects(restoreItems, options: options)\n',
+  '        let objects = try nativeRestoreObjects(restoreItems, options: options)\n'],
+ ['replica/Sources/PastoCore/Pasteboard.swift',
+  '    private func nativeRestoreObjects(_ inputs: [ClipboardRestoreItem],\n'
+  '                                      options: OriginalPasteboardRestore.Options) -> '
+  '[OriginalPasteboardItem] {\n'
+  '        nativeRestoreGroups(inputs, options: options).flatMap { $0 }\n'
+  '    }\n',
+  '    private func nativeRestoreObjects(_ inputs: [ClipboardRestoreItem],\n'
+  '                                      options: OriginalPasteboardRestore.Options) throws -> '
+  '[OriginalPasteboardItem] {\n'
+  '        try nativeRestoreGroups(inputs, options: options, legacyCopy: true).flatMap { $0 }\n'
+  '    }\n'],
+ ['replica/Sources/PastoCore/Pasteboard.swift',
+  '    private func nativeRestoreGroups(_ inputs: [ClipboardRestoreItem],\n'
+  '                                     options: OriginalPasteboardRestore.Options) -> '
+  '[[OriginalPasteboardItem]] {\n'
+  '        let multiple = inputs.count > 1\n'
+  '        let aggregatesText = inputs.contains { $0.previewRawType() == 5 || $0.previewRawType() '
+  '== 4 }\n',
+  '    private func nativeRestoreGroups(_ inputs: [ClipboardRestoreItem],\n'
+  '                                     options: OriginalPasteboardRestore.Options,\n'
+  '                                     legacyCopy: Bool = false) throws -> '
+  '[[OriginalPasteboardItem]] {\n'
+  '        let multiple = inputs.count > 1\n'
+  '        let aggregatesText = inputs.contains { input in\n'
+  '            if let rawType = input.previewRawType() { return rawType == 5 || rawType == 4 }\n'
+  '            let item = input.resolvedItem()\n'
+  '            return item.kind == .text || item.kind == .richText || item.kind == .link\n'
+  '        }\n'],
+ ['replica/Sources/PastoCore/Pasteboard.swift',
+  '        for input in inputs {\n'
+  '            let object = input.nativeObject!\n'
+  '            let kind = OriginalPasteboardContentKind(rawValue: '
+  'UInt8(input.previewRawType()!))!\n'
+  '            let plain = OriginalPasteboardRestore.usesPlainProjection(kind: kind, options: '
+  'options)\n'
+  '            let representations: [OriginalPasteboardItem]\n'
+  '            if !plain, kind == .image {\n'
+  '                representations = Self.imageRestore.prepareNative(\n'
+  '                    sourceName: (object.value(forKey: "sourceApplication") as? '
+  'NSManagedObject)?.value(forKey: "name") as? String,\n'
+  '                    timestamp: object.value(forKey: "timestamp") as? Date) {\n'
+  '                        Self.nativeRestoreRepresentations(for: object)\n'
+  '                    }\n'
+  '            } else {\n'
+  '                representations = Self.nativeRestoreRepresentations(for: object)\n'
+  '            }\n'
+  '            let items = plain ? OriginalPasteboardRestore.f_10031bcdc(representations) : '
+  'representations\n'
+  '            let application = object.value(forKey: "sourceApplication") as? NSManagedObject\n'
+  '            let sourceBundleID = application?.value(forKey: "bundleIdentifier") as? String\n',
+  '        for input in inputs {\n'
+  '            let kind: OriginalPasteboardContentKind\n'
+  '            let plain: Bool\n'
+  '            let representations: [OriginalPasteboardItem]\n'
+  '            let items: [OriginalPasteboardItem]\n'
+  '            let sourceBundleID: String?\n'
+  '            if let object = input.nativeObject {\n'
+  '                kind = OriginalPasteboardContentKind(rawValue: '
+  'UInt8(input.previewRawType()!))!\n'
+  '                plain = OriginalPasteboardRestore.usesPlainProjection(kind: kind, options: '
+  'options)\n'
+  '                if !plain, kind == .image {\n'
+  '                    representations = Self.imageRestore.prepareNative(\n'
+  '                        sourceName: (object.value(forKey: "sourceApplication") as? '
+  'NSManagedObject)?.value(forKey: "name") as? String,\n'
+  '                        timestamp: object.value(forKey: "timestamp") as? Date) {\n'
+  '                            Self.nativeRestoreRepresentations(for: object)\n'
+  '                        }\n'
+  '                } else {\n'
+  '                    representations = Self.nativeRestoreRepresentations(for: object)\n'
+  '                }\n'
+  '                items = plain ? OriginalPasteboardRestore.f_10031bcdc(representations) : '
+  'representations\n'
+  '                let application = object.value(forKey: "sourceApplication") as? '
+  'NSManagedObject\n'
+  '                sourceBundleID = application?.value(forKey: "bundleIdentifier") as? String\n'
+  '            } else {\n'
+  '                let item = input.resolvedItem()\n'
+  '                let application = sourceApplication(for: item)\n'
+  '                switch item.kind {\n'
+  '                case .text, .richText: kind = .text\n'
+  '                case .link: kind = .link\n'
+  '                case .image: kind = .image\n'
+  '                case .files: kind = .files\n'
+  '                case .color: kind = .color\n'
+  '                case .unknown: kind = .unknown\n'
+  '                }\n'
+  '                plain = OriginalPasteboardRestore.usesPlainProjection(kind: kind, options: '
+  'options)\n'
+  '                let read: () throws -> [OriginalPasteboardItem] = {\n'
+  '                    if legacyCopy { return try Self.ordinaryRestoreRepresentations(for: item, '
+  'plainTextProjection: plain) }\n'
+  '                    return try Self.originalPasteboardItems(from: item.payloads)\n'
+  '                }\n'
+  '                if !plain, kind == .image {\n'
+  '                    representations = try Self.imageRestore.prepare(sourceName: '
+  'application?.name,\n'
+  '                        timestamp: item.isInHistory ? item.createdAt : nil, loadItems: read)\n'
+  '                } else { representations = try read() }\n'
+  '                items = plain ? OriginalPasteboardRestore.f_10031bcdc(representations) : '
+  'representations\n'
+  '                sourceBundleID = application?.bundleIdentifier\n'
+  '            }\n'],
+ ['replica/Sources/PastoCore/ClipboardStore.swift',
+  '            return HistoryRestoreOperation(local: state, previous: previous,\n'
+  '                native: try persistence.prepareHistoryRestore(targets: selected.map { (id: '
+  '$0.id, object: $0.nativeObject!) }))\n',
+  '            let legacy = selected.filter { $0.nativeObject == nil }\n'
+  '            if !legacy.isEmpty {\n'
+  '                let available = Set(state.items.filter { !$0.isDeleted }.map(\\.id))\n'
+  '                guard legacy.allSatisfy({ available.contains($0.id) }) else { throw '
+  'ClipboardStoreError.itemNotFound }\n'
+  '            }\n'
+  '            return HistoryRestoreOperation(local: state, previous: previous,\n'
+  '                native: try persistence.prepareHistoryRestore(inputs: selected))\n'],
+ ['replica/Sources/PastoCore/ClipboardPersistence.swift',
+  '    func prepareHistoryRestore(ids: [UUID]) throws -> HistoryRestoreSelection {',
+  '    func prepareHistoryRestore(inputs: [ClipboardRestoreItem]) throws -> '
+  'HistoryRestoreSelection {\n'
+  '        let nativeTargets: [(id: UUID, object: NSManagedObject)] = inputs.compactMap { input '
+  'in\n'
+  '            guard let object = input.nativeObject else { return nil }\n'
+  '            return (id: input.id, object: object)\n'
+  '        }\n'
+  '        if nativeTargets.count == inputs.count {\n'
+  '            return try prepareHistoryRestore(targets: nativeTargets)\n'
+  '        }\n'
+  '        let transaction = Transaction(context: context, nativeHistoryRestoreTargets: '
+  'nativeTargets)\n'
+  '        return try context.performAndWait {\n'
+  '            try OriginalObjCExceptionBridge.withResult {\n'
+  '                let legacyIDs = inputs.filter { $0.nativeObject == nil }.map(\\.id)\n'
+  '                let legacyTargets: [(id: UUID, object: NSManagedObject)]\n'
+  '                if legacyIDs.isEmpty { legacyTargets = [] }\n'
+  '                else { legacyTargets = try '
+  'transaction.repository.prepareHistoryItems(legacyIDs) }\n'
+  '                var legacyIndex = 0\n'
+  '                let targets: [(id: UUID, object: NSManagedObject)] = inputs.map { input in\n'
+  '                    if let object = input.nativeObject { return (id: input.id, object: object) '
+  '}\n'
+  '                    defer { legacyIndex += 1 }\n'
+  '                    return legacyTargets[legacyIndex]\n'
+  '                }\n'
+  '                return HistoryRestoreSelection(transaction: transaction, targets: targets)\n'
+  '            }\n'
+  '        }\n'
+  '    }\n'
+  '\n'
+  '    func prepareHistoryRestore(ids: [UUID]) throws -> HistoryRestoreSelection {']]
+
+def pre_mixed_restore(source):
+    source=pre_local_device(source)
+    for _,old,new in reversed(CHANGES):
+        if new in source:
+            assert source.count(new)==1
+            source=source.replace(new,old,1)
+    return source

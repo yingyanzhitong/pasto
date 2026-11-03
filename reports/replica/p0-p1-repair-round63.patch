@@ -1,0 +1,517 @@
+--- phase-63-before/replica/Sources/PastoCore/ClipboardListPersistence.swift
++++ replica/Sources/PastoCore/ClipboardListPersistence.swift
+@@ -99,7 +99,7 @@
+         guard let list = try? list(identifier: identifier) else { return (nil, true) }
+         let rawType = (list.value(forKey: "rawType") as? NSNumber)?.int64Value ?? 0
+         guard let context = list.managedObjectContext else { return (rawType, true) }
+-        let request = NSFetchRequest<NSFetchRequestResult>(entityName: "Item")
++        let request = PastoItemEntity.defaultFetchRequest()
+         switch rawType {
+         case 1: request.predicate = NSPredicate(format: "timestamp != nil")
+         case 2: request.predicate = NSPredicate(format: "list == %@", list)
+--- phase-63-before/replica/Sources/PastoCore/ClipboardPersistence.swift
++++ replica/Sources/PastoCore/ClipboardPersistence.swift
+@@ -80,7 +80,8 @@
+                                   includeLists: Bool = true,
+                                   includeOptionalTimestamp: Bool = true,
+                                   includeNativeItemData: Bool = true,
+-                                  includeNativeSources: Bool = true) -> NSManagedObjectModel {
++                                  includeNativeSources: Bool = true,
++                                  includeTypedItem: Bool = true) -> NSManagedObjectModel {
+         let model = NSManagedObjectModel()
+         func attribute(_ name: String, _ type: NSAttributeType, optional: Bool = false) -> NSAttributeDescription {
+             let value = NSAttributeDescription()
+@@ -126,6 +127,9 @@
+                 attribute("cloudMetadata", .binaryDataAttributeType, optional: true),
+                 attribute("cloudJournal", .binaryDataAttributeType, optional: true)])
+         ]
++        if includeTypedItem {
++            model.entitiesByName["Item"]!.managedObjectClassName = NSStringFromClass(PastoItemEntity.self)
++        }
+         if includeLists { ClipboardListPersistence.addEntities(to: model, item: model.entitiesByName["Item"]!) }
+         if includeNativeItemData { ClipboardItemDataPersistence.addEntity(to: model, item: model.entitiesByName["Item"]!) }
+         if includeNativeSources { ClipboardSourcePersistence.addEntities(to: model, item: model.entitiesByName["Item"]!) }
+@@ -140,12 +144,13 @@
+         guard !destinationModel.isConfiguration(nil, compatibleWithStoreMetadata: metadata) else { return }
+ 
+         let legacyCandidates = [
+-            makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeNativeSources: false),
+-            makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeNativeItemData: false, includeNativeSources: false),
+-            makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeLists: true, includeOptionalTimestamp: false, includeNativeItemData: false, includeNativeSources: false),
+-            makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeLists: false, includeOptionalTimestamp: false, includeNativeItemData: false, includeNativeSources: false),
+-            makeModel(includeNativeIdentity: false, preserveItemKeyInHistory: true, includeLists: false, includeOptionalTimestamp: false, includeNativeItemData: false, includeNativeSources: false),
+-            makeModel(includeNativeIdentity: false, preserveItemKeyInHistory: false, includeLists: false, includeOptionalTimestamp: false, includeNativeItemData: false, includeNativeSources: false)
++            makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeTypedItem: false),
++            makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeNativeSources: false, includeTypedItem: false),
++            makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeNativeItemData: false, includeNativeSources: false, includeTypedItem: false),
++            makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeLists: true, includeOptionalTimestamp: false, includeNativeItemData: false, includeNativeSources: false, includeTypedItem: false),
++            makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeLists: false, includeOptionalTimestamp: false, includeNativeItemData: false, includeNativeSources: false, includeTypedItem: false),
++            makeModel(includeNativeIdentity: false, preserveItemKeyInHistory: true, includeLists: false, includeOptionalTimestamp: false, includeNativeItemData: false, includeNativeSources: false, includeTypedItem: false),
++            makeModel(includeNativeIdentity: false, preserveItemKeyInHistory: false, includeLists: false, includeOptionalTimestamp: false, includeNativeItemData: false, includeNativeSources: false, includeTypedItem: false)
+         ]
+         // The older history-retention variants can share a version hash.
+         let sourceModel = legacyCandidates.first {
+@@ -244,7 +249,7 @@
+             // 0x10036dc00 resets after projecting records, including the empty/error result.
+             defer { context.reset() }
+             if let identifiers, identifiers.isEmpty { return [] }
+-            let request = NSFetchRequest<NSManagedObject>(entityName: "Item")
++            let request = PastoItemEntity.defaultFetchRequest()
+             if let identifiers {
+                 request.predicate = NSPredicate(
+                     format: "nativeIdentifier IN %@ OR (nativeIdentifier == nil AND key IN %@)", identifiers, identifiers)
+@@ -282,7 +287,7 @@
+             context.reset()
+             guard let identifiers else { return try fetch("Item").map(item) }
+             guard !identifiers.isEmpty else { return [] }
+-            let request = NSFetchRequest<NSManagedObject>(entityName: "Item")
++            let request = PastoItemEntity.defaultFetchRequest()
+             request.predicate = NSPredicate(format: "key IN %@", identifiers)
+             return try context.fetch(request).map(item)
+         }
+@@ -293,7 +298,7 @@
+             context.reset()
+             guard let identifiers else { return try fetch("Item").map(item) }
+             guard !identifiers.isEmpty else { return [] }
+-            let request = NSFetchRequest<NSManagedObject>(entityName: "Item")
++            let request = PastoItemEntity.defaultFetchRequest()
+             request.predicate = NSPredicate(
+                 format: "nativeIdentifier IN %@ OR (nativeIdentifier == nil AND key IN %@)", identifiers, identifiers)
+             return try context.fetch(request).map(item)
+@@ -305,6 +310,11 @@
+     }
+ 
+     private func fetch(_ entity: String, keys: [String]? = nil) throws -> [NSManagedObject] {
++        if entity == PastoItemEntity.entityName {
++            let request = PastoItemEntity.defaultFetchRequest()
++            if let keys { request.predicate = NSPredicate(format: "key IN %@", keys) }
++            return try context.fetch(request)
++        }
+         let request = NSFetchRequest<NSManagedObject>(entityName: entity)
+         if let keys { request.predicate = NSPredicate(format: "key IN %@", keys) }
+         return try context.fetch(request)
+--- /dev/null
++++ replica/Sources/PastoCore/OriginalManagedItem.swift
+@@ -0,0 +1,36 @@
++import CoreData
++import Foundation
++
++// The original NSManagedObject category supplies nil defaults; concrete entities override them.
++@objc(PastoManagedObject)
++class PastoManagedObject: NSManagedObject {
++    class var entityName: String { String(describing: self) }
++    @objc class var defaultSortDescriptors: [NSSortDescriptor]? { nil }
++    @objc class var defaultPredicate: NSPredicate? { nil }
++}
++
++// 0x1003214a8/31f2a4: a dedicated managed Item type with the original class defaults.
++@objc(PastoItemEntity)
++class PastoItemEntity: PastoManagedObject {
++    // Keep the existing local store's physical entity name for persisted IDs and relationships.
++    override class var entityName: String { "Item" }
++    override class var defaultSortDescriptors: [NSSortDescriptor]? {
++        [NSSortDescriptor(key: "timestamp", ascending: false)]
++    }
++
++    // 0x100329754: Item-specific wrapper around the same generic request factory.
++    static func defaultFetchRequest() -> NSFetchRequest<PastoItemEntity> {
++        OriginalManagedFetchRequest.make(for: PastoItemEntity.self)
++    }
++}
++
++enum OriginalManagedFetchRequest {
++    // 0x1003298a0: entity name, class sort/predicate defaults, then batch size.
++    static func make<Entity: PastoManagedObject>(for entity: Entity.Type) -> NSFetchRequest<Entity> {
++        let request = NSFetchRequest<Entity>(entityName: entity.entityName)
++        request.sortDescriptors = entity.defaultSortDescriptors
++        request.predicate = entity.defaultPredicate
++        request.fetchBatchSize = 20
++        return request
++    }
++}
+--- phase-63-before/scripts/tests/test_p0_repair_history_timestamp.py
++++ scripts/tests/test_p0_repair_history_timestamp.py
+@@ -55,6 +55,9 @@
+         old_shape = old_shape.replace('if includeNativeItemData ' + native, '')
+         sources = body(old_shape, 'if includeNativeSources')
+         old_shape = old_shape.replace('if includeNativeSources ' + sources, '')
++        typed = body(old_shape, 'if includeTypedItem')
++        # Historical model shape is the real includeTypedItem=false branch.
++        old_shape = old_shape.replace('if includeTypedItem ' + typed, '')
+         compact = lambda s: re.sub(r'\s+', ' ', s).strip()
+         self.assertEqual(compact(old_shape), compact(before))
+ 
+@@ -63,7 +66,7 @@
+         for native, preserve, lists in [('true', 'true', 'true'), ('true', 'true', 'false'),
+                                        ('false', 'true', 'false'), ('false', 'false', 'false')]:
+             self.assertIn(f'makeModel(includeNativeIdentity: {native}, preserveItemKeyInHistory: {preserve}, '
+-                          f'includeLists: {lists}, includeOptionalTimestamp: false, includeNativeItemData: false, includeNativeSources: false)', migration)
++                          f'includeLists: {lists}, includeOptionalTimestamp: false, includeNativeItemData: false, includeNativeSources: false, includeTypedItem: false)', migration)
+         self.assertEqual(migration.count('includeOptionalTimestamp: false'), 4)
+         self.assertLess(migration.index('try manager.migrateStore'), migration.index('try coordinator.replacePersistentStore'))
+         self.assertNotIn('destroyPersistentStore', migration)
+--- phase-63-before/scripts/tests/test_p0_repair_identity.py
++++ scripts/tests/test_p0_repair_identity.py
+@@ -139,7 +139,7 @@
+         migration = method_body(self.persistence, "private static func migrateLegacyStoreIfNeeded(at storeURL: URL,")
+         self.assertIn("metadataForPersistentStore", migration)
+         self.assertIn("destinationModel.isConfiguration(nil, compatibleWithStoreMetadata: metadata)", migration)
+-        self.assertIn("makeModel(includeNativeIdentity: false, preserveItemKeyInHistory: true, includeLists: false, includeOptionalTimestamp: false, includeNativeItemData: false, includeNativeSources: false)", migration)
++        self.assertIn("makeModel(includeNativeIdentity: false, preserveItemKeyInHistory: true, includeLists: false, includeOptionalTimestamp: false, includeNativeItemData: false, includeNativeSources: false, includeTypedItem: false)", migration)
+         self.assertIn("$0.isConfiguration(nil, compatibleWithStoreMetadata: metadata)", migration)
+         self.assertIn("inferredMappingModel", migration)
+         self.assertIn("defer { try? FileManager.default.removeItem(at: temporaryDirectory) }", migration)
+@@ -157,10 +157,10 @@
+         self.assertIn("preserveItemKeyInHistory: Bool", self.persistence)
+         self.assertIn("if name == \"Item\", preserveItemKeyInHistory", factory)
+         migration = method_body(self.persistence, "private static func migrateLegacyStoreIfNeeded(at storeURL: URL,")
+-        self.assertIn("makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeLists: true, includeOptionalTimestamp: false, includeNativeItemData: false, includeNativeSources: false)", migration)
+-        self.assertIn("makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeLists: false, includeOptionalTimestamp: false, includeNativeItemData: false, includeNativeSources: false)", migration)
+-        self.assertIn("makeModel(includeNativeIdentity: false, preserveItemKeyInHistory: true, includeLists: false, includeOptionalTimestamp: false, includeNativeItemData: false, includeNativeSources: false)", migration)
+-        self.assertIn("makeModel(includeNativeIdentity: false, preserveItemKeyInHistory: false, includeLists: false, includeOptionalTimestamp: false, includeNativeItemData: false, includeNativeSources: false)", migration)
++        self.assertIn("makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeLists: true, includeOptionalTimestamp: false, includeNativeItemData: false, includeNativeSources: false, includeTypedItem: false)", migration)
++        self.assertIn("makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeLists: false, includeOptionalTimestamp: false, includeNativeItemData: false, includeNativeSources: false, includeTypedItem: false)", migration)
++        self.assertIn("makeModel(includeNativeIdentity: false, preserveItemKeyInHistory: true, includeLists: false, includeOptionalTimestamp: false, includeNativeItemData: false, includeNativeSources: false, includeTypedItem: false)", migration)
++        self.assertIn("makeModel(includeNativeIdentity: false, preserveItemKeyInHistory: false, includeLists: false, includeOptionalTimestamp: false, includeNativeItemData: false, includeNativeSources: false, includeTypedItem: false)", migration)
+         self.assertIn("let sourceModel = legacyCandidates.first", migration)
+         self.assertIn("guard let sourceModel else", migration)
+         self.assertNotIn("compatibleSourceModels.count == 1", migration)
+--- phase-63-before/scripts/tests/test_p0_repair_item_data_graph.py
++++ scripts/tests/test_p0_repair_item_data_graph.py
+@@ -136,16 +136,19 @@
+     def test_prior_models_are_preserved_with_new_graph_disabled(self):
+         migration=body(self.persistence,'private static func migrateLegacyStoreIfNeeded(')
+         candidates=migration.split('let legacyCandidates = [',1)[1].split('\n        ]',1)[0]
+-        self.assertEqual(candidates.count('makeModel('),6)
++        self.assertEqual(candidates.count('makeModel('),7)
++        self.assertEqual(candidates.count('includeTypedItem: false'),7)
+         self.assertEqual(candidates.count('includeNativeItemData: false'),5)
+         self.assertEqual(candidates.count('includeOptionalTimestamp: false'),4)
+         self.assertEqual(candidates.count('includeNativeSources: false'),6)
+-        self.assertIn('makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeNativeItemData: false, includeNativeSources: false)',candidates)
++        self.assertIn('makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeNativeItemData: false, includeNativeSources: false, includeTypedItem: false)',candidates)
+         before=(self.phase/'before/replica/Sources/PastoCore/ClipboardPersistence.swift').read_text()
+         old=body(before,'private static func makeModel(');current=body(self.persistence,'private static func makeModel(')
+         addition='        if includeNativeItemData { ClipboardItemDataPersistence.addEntity(to: model, item: model.entitiesByName["Item"]!) }\n'
+         sources='        if includeNativeSources { ClipboardSourcePersistence.addEntities(to: model, item: model.entitiesByName["Item"]!) }\n'
+-        self.assertEqual(current.replace(addition,'',1).replace(sources,'',1),old)
++        typed = body(current, 'if includeTypedItem')
++        legacy = current.replace('        if includeTypedItem ' + typed + '\n', '', 1)
++        self.assertEqual(legacy.replace(addition,'',1).replace(sources,'',1),old)
+ 
+     def test_policy_fills_required_relation_before_migration_validates_and_replaces_source(self):
+         migration=body(self.persistence,'private static func migrateLegacyStoreIfNeeded(')
+--- phase-63-before/scripts/tests/test_p0_repair_list_graph.py
++++ scripts/tests/test_p0_repair_list_graph.py
+@@ -100,8 +100,8 @@
+     def test_legacy_model_migration_recognizes_native_identity_and_both_earlier_variants(self):
+         migration = body(self.persistence, 'private static func migrateLegacyStoreIfNeeded(at storeURL: URL,')
+         for native, preserve in [('true', 'true'), ('false', 'true'), ('false', 'false')]:
+-            self.assertIn(f'makeModel(includeNativeIdentity: {native}, preserveItemKeyInHistory: {preserve}, includeLists: false, includeOptionalTimestamp: false, includeNativeItemData: false, includeNativeSources: false)', migration)
+-        self.assertIn('makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeLists: true, includeOptionalTimestamp: false, includeNativeItemData: false, includeNativeSources: false)', migration)
++            self.assertIn(f'makeModel(includeNativeIdentity: {native}, preserveItemKeyInHistory: {preserve}, includeLists: false, includeOptionalTimestamp: false, includeNativeItemData: false, includeNativeSources: false, includeTypedItem: false)', migration)
++        self.assertIn('makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeLists: true, includeOptionalTimestamp: false, includeNativeItemData: false, includeNativeSources: false, includeTypedItem: false)', migration)
+         self.assertIn('includeLists: Bool = true', self.persistence)
+         self.assertLess(migration.index('try manager.migrateStore'), migration.index('try coordinator.replacePersistentStore'))
+         self.assertNotIn('destroyPersistentStore', migration)
+--- phase-63-before/scripts/tests/test_p0_repair_transaction_errors.py
++++ scripts/tests/test_p0_repair_transaction_errors.py
+@@ -95,7 +95,16 @@
+             current = body(self.persistence, signature)
+             if signature == 'private func bootstrapListsIfNeeded()':
+                 current = current.replace('            try bootstrapSourcesIfNeeded(root)\n', '', 1)
+-            self.assertEqual(body(before, signature), current)
++            previous = body(before, signature)
++            if signature in ['func searchItems(identifiers:', 'func searchNativeItems(identifiers:']:
++                old_request = 'let request = NSFetchRequest<NSManagedObject>(entityName: "Item")'
++                new_request = 'let request = PastoItemEntity.defaultFetchRequest()'
++                old_head, _, old_tail = previous.partition(old_request)
++                new_head, _, new_tail = current.partition(new_request)
++                self.assertIn(new_request, current)
++                self.assertEqual((new_head, new_tail), (old_head, old_tail))
++            else:
++                self.assertEqual(previous, current)
+         self.assertIn('catch { context.rollback(); throw error }', body(self.persistence, 'private func perform<T>(_ operation:'))
+ 
+ 
+--- phase-63-before/scripts/tests/test_p1_repair_lazy_search_records.py
++++ scripts/tests/test_p1_repair_lazy_search_records.py
+@@ -241,9 +241,23 @@
+     def test_new_record_reads_do_not_alter_old_schemas_transactions_or_capture(self):
+         path = 'replica/Sources/PastoCore/ClipboardPersistence.swift'
+         previous = self.before(path)
+-        for marker in ['private static func makeModel(', 'private static func migrateLegacyStoreIfNeeded(',
+-                       'func searchNativeItems(', 'func commit<T>(']:
+-            self.assertEqual(body(self.persistence, marker), body(previous, marker))
++        self.assertEqual(body(self.persistence, 'func commit<T>('), body(previous, 'func commit<T>('))
++        # New typed Item class is selected only for the destination/current model.
++        model = body(self.persistence, 'private static func makeModel(')
++        old_model = body(previous, 'private static func makeModel(')
++        typed = body(model, 'if includeTypedItem')
++        self.assertIn('NSStringFromClass(PastoItemEntity.self)', typed)
++        self.assertEqual(model.replace('        if includeTypedItem ' + typed + '\n', '', 1), old_model)
++        migration = body(self.persistence, 'private static func migrateLegacyStoreIfNeeded(')
++        old_migration = body(previous, 'private static func migrateLegacyStoreIfNeeded(')
++        tail = '        // The older history-retention variants'
++        self.assertEqual(migration[migration.index(tail):], old_migration[old_migration.index(tail):])
++        current_read = body(self.persistence, 'func searchNativeItems(')
++        old_read = body(previous, 'func searchNativeItems(')
++        old_head, _, old_tail = old_read.partition('let request = NSFetchRequest<NSManagedObject>(entityName: "Item")')
++        new_head, _, new_tail = current_read.partition('let request = PastoItemEntity.defaultFetchRequest()')
++        self.assertIn('PastoItemEntity.defaultFetchRequest()', current_read)
++        self.assertEqual((new_head, new_tail), (old_head, old_tail))
+         self.assertNotIn('context.save()', self.make)
+         self.assertNotIn('context.setValue', self.make)
+         self.assertNotIn('insertNewObject', self.make)
+--- phase-63-before/scripts/tests/test_p1_repair_local_list_menu.py
++++ scripts/tests/test_p1_repair_local_list_menu.py
+@@ -49,7 +49,15 @@
+                 'replica/Sources/Pasto/UI/ReplicaUIController.swift': ['func clearHistory()', 'func removePinboard('],
+             }[path]
+             for marker in markers:
+-                self.assertEqual(body((ROOT / path).read_text(), marker), body(frozen, marker))
++                current = body((ROOT / path).read_text(), marker)
++                previous = body(frozen, marker)
++                if marker == 'func menuState(':
++                    old_head, _, old_tail = previous.partition('let request = NSFetchRequest<NSFetchRequestResult>(entityName: "Item")')
++                    new_head, _, new_tail = current.partition('let request = PastoItemEntity.defaultFetchRequest()')
++                    self.assertIn('PastoItemEntity.defaultFetchRequest()', current)
++                    self.assertEqual((new_head, new_tail), (old_head, old_tail))
++                else:
++                    self.assertEqual(current, previous)
+ 
+     def test_native_predicate_constants_decode_to_history_and_owner_not_cached_flags(self):
+         for row in self.proof['predicate_constants']:
+@@ -77,7 +85,7 @@
+         self.assertEqual(words['0x1003251bc'], 0x1a9f17e0)  # cset w0,eq
+ 
+     def test_count_uses_native_history_timestamp_and_owner_relationship(self):
+-        self.assertIn('NSFetchRequest<NSFetchRequestResult>(entityName: "Item")', self.count)
++        self.assertIn('PastoItemEntity.defaultFetchRequest()', self.count)
+         self.assertIn('case 1: request.predicate = NSPredicate(format: "timestamp != nil")', self.count)
+         self.assertIn('case 2: request.predicate = NSPredicate(format: "list == %@", list)', self.count)
+         self.assertIn('default: return (rawType, true)', self.count)
+--- phase-63-before/scripts/tests/test_p1_repair_native_search_identifiers.py
++++ scripts/tests/test_p1_repair_native_search_identifiers.py
+@@ -74,7 +74,15 @@
+             elif path == 'replica/Sources/PastoCore/ClipboardPersistence.swift':
+                 frozen = (self.phase / 'after' / path).read_text()
+                 for marker in ['func searchIndexRecords(', 'func searchNativeItems(', 'func searchIndexIdentifiers(']:
+-                    self.assertEqual(body((ROOT / path).read_text(), marker), body(frozen, marker))
++                    current = body((ROOT / path).read_text(), marker)
++                    previous = body(frozen, marker)
++                    if marker in ['func searchIndexRecords(', 'func searchNativeItems(']:
++                        old_head, _, old_tail = previous.partition('let request = NSFetchRequest<NSManagedObject>(entityName: "Item")')
++                        new_head, _, new_tail = current.partition('let request = PastoItemEntity.defaultFetchRequest()')
++                        self.assertIn('PastoItemEntity.defaultFetchRequest()', current)
++                        self.assertEqual((new_head, new_tail), (old_head, old_tail))
++                    else:
++                        self.assertEqual(current, previous)
+             else:
+                 self.assertEqual(hashlib.sha256((ROOT / path).read_bytes()).hexdigest(), digest)
+ 
+--- phase-63-before/scripts/tests/test_p1_repair_native_sources.py
++++ scripts/tests/test_p1_repair_native_sources.py
+@@ -73,17 +73,20 @@
+         before = body(self.before('replica/Sources/PastoCore/ClipboardPersistence.swift'), signature)
+         current = body(self.persistence, signature)
+         addition = '        if includeNativeSources { ClipboardSourcePersistence.addEntities(to: model, item: model.entitiesByName["Item"]!) }\n'
+-        self.assertEqual(current.replace(addition, '', 1), before)
++        typed = body(current, 'if includeTypedItem')
++        legacy = current.replace('        if includeTypedItem ' + typed + '\n', '', 1)
++        self.assertEqual(legacy.replace(addition, '', 1), before)
+         self.assertIn('entity("Application", [attribute("content", .binaryDataAttributeType)])', current)
+         self.assertIn('sourceGraphVersion', self.source)
+ 
+     def test_six_legacy_model_variants_are_explicitly_preserved(self):
+         migration = body(self.persistence, 'private static func migrateLegacyStoreIfNeeded(')
+         candidates = migration.split('let legacyCandidates = [', 1)[1].split('\n        ]', 1)[0]
+-        self.assertEqual(candidates.count('makeModel('), 6)
++        self.assertEqual(candidates.count('makeModel('), 7)
++        self.assertEqual(candidates.count('includeTypedItem: false'), 7)
+         self.assertEqual(candidates.count('includeNativeSources: false'), 6)
+         self.assertEqual(candidates.count('includeNativeItemData: false'), 5)
+-        self.assertIn('makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeNativeSources: false)', candidates)
++        self.assertIn('makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeNativeSources: false, includeTypedItem: false)', candidates)
+         order = ['NSMappingModel.inferredMappingModel(', 'manager.migrateStore(', 'coordinator.replacePersistentStore(']
+         self.assertEqual([migration.index(t) for t in order], sorted(migration.index(t) for t in order))
+         self.assertIn('NSStringFromClass(PastoItemDataMigrationPolicy.self)', migration)
+--- /dev/null
++++ scripts/tests/test_p1_repair_typed_item_factory.py
+@@ -0,0 +1,176 @@
++"""Typed managed Item/fetch defaults and legacy source models; no CoreData/Swift runtime."""
++import hashlib
++import json
++import re
++import struct
++import sys
++import unittest
++from pathlib import Path
++
++ROOT = Path(__file__).resolve().parents[2]
++sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'scripts/tests')]
++from function_ledger import source_fragments
++from test_offline_p0_contracts import body
++from test_p0_repair_checksum_routing import original_fragment
++
++
++class TypedItemFactoryContracts(unittest.TestCase):
++    @classmethod
++    def setUpClass(cls):
++        cls.phase = ROOT / '.local/p0-repair/phase-63'
++        cls.proof = json.loads((cls.phase / 'typed-item-factory-contract.json').read_text())
++        cls.item_path = 'replica/Sources/PastoCore/OriginalManagedItem.swift'
++        cls.persistence_path = 'replica/Sources/PastoCore/ClipboardPersistence.swift'
++        cls.list_path = 'replica/Sources/PastoCore/ClipboardListPersistence.swift'
++        cls.item = (ROOT / cls.item_path).read_text()
++        cls.persistence = (ROOT / cls.persistence_path).read_text()
++        cls.lists = (ROOT / cls.list_path).read_text()
++        cls.before = (cls.phase / 'before' / cls.persistence_path).read_text()
++        cls.original = {r['address']: original_fragment((ROOT / r['path']).read_text(), r['address'][2:])
++                        for r in cls.proof['original_fragments']}
++
++    def test_original_inputs_metadata_and_actual_source_are_bound(self):
++        self.assertEqual(len(self.proof['original_fragments']), 9)
++        for row in self.proof['original_fragments']:
++            self.assertEqual(source_fragments(ROOT / row['path'])[row['address']]['sha256'], row['sha256'])
++        for row in [self.proof['binary'], self.proof['sdk_typed_fetch_count']] + self.proof['prior_contracts'] + self.proof['arm_disassemblies']:
++            self.assertEqual(hashlib.sha256((ROOT / row['path'] if not Path(row['path']).is_absolute() else Path(row['path'])).read_bytes()).hexdigest(), row['sha256'])
++        for path, digest in self.proof['current_sources'].items():
++            self.assertEqual(hashlib.sha256((ROOT / path).read_bytes()).hexdigest(), digest)
++            self.assertEqual((ROOT / path).read_bytes(), (self.phase / 'after' / path).read_bytes())
++
++    def test_original_metatype_accessor_resolves_actual_Item_class_not_a_guessed_name(self):
++        words = {r['address']: int.from_bytes(bytes.fromhex(r['bytes']), 'little') for r in self.proof['ARM_words']}
++        adrp = words['0x1003214b0']; add = words['0x1003214b4']
++        imm = ((adrp >> 5) & 0x7ffff) * 4 + ((adrp >> 29) & 3)
++        if imm & (1 << 20): imm -= 1 << 21
++        address = (0x1003214b0 & ~4095) + (imm << 12) + ((add >> 10) & 4095)
++        self.assertEqual(address, 0x100f97da8)
++        item = self.proof['item_hierarchy'][0]
++        self.assertEqual(int(item['class_pointer'], 16), address)
++        self.assertEqual(bytes.fromhex(item['name']['bytes']).rstrip(b'\0'), b'_TtC9PasteCore10ItemEntity')
++        parent = self.proof['item_hierarchy'][1]
++        self.assertEqual(parent['decoded_name'], '_TtC9PasteCore21SyncableManagedObject')
++        self.assertEqual(int.from_bytes(bytes.fromhex(item['class_data']['bytes'])[8:16], 'little') & ((1 << 36) - 1),
++                         int(parent['class_pointer'], 16) - 0x100000000)
++
++    def test_native_class_overrides_sort_and_inherits_nil_predicate_category(self):
++        item, parent = self.proof['item_hierarchy']
++        overrides = {m['selector']: m for m in item['methods']}
++        self.assertEqual(set(overrides), {'defaultSortDescriptors'})
++        self.assertEqual(overrides['defaultSortDescriptors']['imp'], '0x10031f2a4')
++        entry = overrides['defaultSortDescriptors']['entry']
++        imp = int(entry['address'], 16) + 8 + struct.unpack_from('<i', bytes.fromhex(entry['bytes']), 8)[0]
++        self.assertEqual(imp, 0x10031f2a4)
++        self.assertEqual(parent['methods'], [])
++        defaults = {m['selector']: m['imp'] for m in self.proof['base_category']['methods']}
++        self.assertEqual(defaults['defaultPredicate'], '0x10032c5c8')
++        self.assertEqual(defaults['defaultSortDescriptors'], '0x10032c5c4')
++        for a in ['0x10032c5c4', '0x10032c5c8', '0x10032b760']:
++            self.assertIn('return 0;', self.original[a])
++
++    def test_timestamp_descending_and_base_nil_defaults_match_original_bytes(self):
++        words = struct.unpack('<6I', bytes.fromhex(self.proof['sort_key']['bytes']))
++        first = sum(((word >> 5) & 65535) << (16 * i) for i, word in enumerate(words[:4]))
++        second = ((words[4] >> 5) & 65535) | (((words[5] >> 5) & 65535) << 48)
++        self.assertEqual((first.to_bytes(8, 'little') + second.to_bytes(8, 'little'))[:9], b'timestamp')
++        self.assertEqual(bytes.fromhex(self.proof['sort_descending']['bytes']), struct.pack('<I', 0x52800003))
++        self.assertIn('[NSSortDescriptor(key: "timestamp", ascending: false)]', self.item)
++        self.assertIn('@objc class var defaultSortDescriptors: [NSSortDescriptor]? { nil }', self.item)
++        self.assertIn('@objc class var defaultPredicate: NSPredicate? { nil }', self.item)
++
++    def test_six_native_factory_selectors_and_batch_twenty_are_bound(self):
++        names = [r['selector'] for r in self.proof['selector_bindings']]
++        self.assertEqual(names, ['initWithEntityName:', 'defaultSortDescriptors', 'setSortDescriptors:',
++                                 'defaultPredicate', 'setPredicate:', 'setFetchBatchSize:'])
++        for row in self.proof['selector_bindings']:
++            self.assertTrue(row['chain']['declared_chain_reachable'])
++            self.assertEqual(bytes.fromhex(row['selector_bytes']['bytes']).rstrip(b'\0').decode(), row['selector'])
++        batch = next(r for r in self.proof['ARM_words'] if r['address'] == '0x100329964')
++        word = int.from_bytes(bytes.fromhex(batch['bytes']), 'little')
++        self.assertEqual((word >> 5) & 65535, 20)
++        self.assertEqual(word & 31, 2)
++
++    def test_generic_factory_reads_metatype_defaults_before_returning_typed_request(self):
++        factory = body(self.item, 'static func make<Entity: PastoManagedObject>(')
++        steps = ['NSFetchRequest<Entity>(entityName: entity.entityName)',
++                 'request.sortDescriptors = entity.defaultSortDescriptors',
++                 'request.predicate = entity.defaultPredicate', 'request.fetchBatchSize = 20', 'return request']
++        self.assertEqual([factory.index(t) for t in steps], sorted(factory.index(t) for t in steps))
++        for token in ['context.', 'save(', 'fetch(', 'catch', 'try?', 'timestamp', '"Item"', 'fetchLimit', 'reset(']:
++            self.assertNotIn(token, factory)
++        native = self.original['0x1003298a0']
++        expected = ['(*param_2)()', 'Swift::__typeName', 'initWithEntityName_', 'FUN_100c00de0(',
++                    'FUN_100c0dbc0(', 'FUN_100c00d80(', 'setPredicate_', 'FUN_100c0bb60(self_00,0x14)', 'return self_00']
++        self.assertEqual([native.index(t) for t in expected], sorted(native.index(t) for t in expected))
++
++    def test_Item_wrapper_and_actual_readers_use_real_typed_factory(self):
++        wrapper = body(self.item, 'static func defaultFetchRequest()')
++        self.assertIn('OriginalManagedFetchRequest.make(for: PastoItemEntity.self)', wrapper)
++        self.assertIn('FUN_1003298a0(0,FUN_1003214a8)', self.original['0x100329754'])
++        for marker in ['func searchIndexRecords(', 'func searchItems(', 'func searchNativeItems(']:
++            self.assertIn('let request = PastoItemEntity.defaultFetchRequest()', body(self.persistence, marker))
++        generic = body(self.persistence, 'private func fetch(')
++        self.assertIn('if entity == PastoItemEntity.entityName', generic)
++        self.assertIn('let request = PastoItemEntity.defaultFetchRequest()', generic)
++        self.assertIn('PastoItemEntity.defaultFetchRequest()', body(self.lists, 'func menuState('))
++
++    def test_read_predicates_empty_inputs_error_and_projection_tails_are_unchanged(self):
++        old_request = 'let request = NSFetchRequest<NSManagedObject>(entityName: "Item")'
++        new_request = 'let request = PastoItemEntity.defaultFetchRequest()'
++        for marker in ['func searchIndexRecords(', 'func searchItems(', 'func searchNativeItems(']:
++            previous = body(self.before, marker); current = body(self.persistence, marker)
++            old_head, _, old_tail = previous.partition(old_request)
++            new_head, _, new_tail = current.partition(new_request)
++            self.assertEqual((old_head, old_tail), (new_head, new_tail))
++            self.assertIn('request.predicate =', current)
++            self.assertIn('context.fetch(request)', current)
++        old_lists = (self.phase / 'before' / self.list_path).read_text()
++        previous = body(old_lists, 'func menuState('); current = body(self.lists, 'func menuState(')
++        old_head, _, old_tail = previous.partition('let request = NSFetchRequest<NSFetchRequestResult>(entityName: "Item")')
++        new_head, _, new_tail = current.partition(new_request)
++        self.assertEqual((old_head, old_tail), (new_head, new_tail))
++
++    def test_current_model_binds_class_only_under_explicit_flag_and_keeps_physical_schema(self):
++        self.assertIn('includeTypedItem: Bool = true', self.persistence)
++        model = body(self.persistence, 'private static func makeModel(')
++        typed = body(model, 'if includeTypedItem')
++        self.assertEqual(typed.strip(), '{\n            model.entitiesByName["Item"]!.managedObjectClassName = NSStringFromClass(PastoItemEntity.self)\n        }')
++        before = body(self.before, 'private static func makeModel(')
++        self.assertEqual(model.replace('        if includeTypedItem ' + typed + '\n', '', 1), before)
++        self.assertIn('override class var entityName: String { "Item" }', self.item)
++        self.assertIn('@objc(PastoItemEntity)', self.item)
++        self.assertIn('class PastoItemEntity: PastoManagedObject', self.item)
++        self.assertIn('class PastoManagedObject: NSManagedObject', self.item)
++
++    def test_every_prior_model_description_stays_in_legacy_candidates_with_typed_flag_false(self):
++        migration = body(self.persistence, 'private static func migrateLegacyStoreIfNeeded(')
++        before = body(self.before, 'private static func migrateLegacyStoreIfNeeded(')
++        def candidates(s): return s.split('let legacyCandidates = [', 1)[1].split('\n        ]', 1)[0]
++        actual = candidates(migration); old = candidates(before)
++        self.assertEqual(actual.count('makeModel('), 7)
++        self.assertEqual(actual.count('includeTypedItem: false'), 7)
++        for line in old.splitlines():
++            if 'makeModel(' in line:
++                self.assertIn(line.rstrip(',').replace(')', ', includeTypedItem: false)'), actual)
++        self.assertIn('makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeTypedItem: false)', actual)
++        tail = '        // The older history-retention variants'
++        self.assertEqual(migration[migration.index(tail):], before[before.index(tail):])
++        self.assertNotIn('destroyPersistentStore', migration)
++
++    def test_sdk_overlay_supports_typed_fetch_and_count_without_erased_request_cast(self):
++        sdk = Path(self.proof['sdk_typed_fetch_count']['path']).read_text()
++        self.assertIn('public func fetch<T>(_ request: CoreData.NSFetchRequest<T>) throws -> [T]', sdk)
++        self.assertIn('public func count<T>(for request: CoreData.NSFetchRequest<T>) throws -> Swift.Int', sdk)
++        self.assertNotIn('as! NSFetchRequest', self.persistence + self.lists + self.item)
++        self.assertIn('return try context.fetch(request)', body(self.persistence, 'private func fetch('))
++
++    def test_only_finite_type_factory_records_close_and_FRC_model_lifecycle_stays_open(self):
++        self.assertEqual([r['function_id'] for r in self.proof['contracts']],
++                         ['Paste:0x1003214a8', 'Paste:0x100329754', 'Paste:0x1003298a0'])
++        self.assertFalse(self.proof['full_function_migration_verified'])
++        self.assertEqual(self.proof['function_map_markers_upgraded'], 0)
++        limitations = '\n'.join(self.proof['retained_partial_contracts'])
++        for text in ['FRC', 'ItemMetadata', 'ABI', 'physical entity name Item', 'No model hash']:
++            self.assertIn(text, limitations)
++        self.assertNotIn('NSFetchedResultsController', self.item)

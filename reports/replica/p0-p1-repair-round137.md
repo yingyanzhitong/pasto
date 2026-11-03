@@ -1,0 +1,15 @@
+# 第一百三十七轮：预览事件使用当前原生标识
+
+上一轮URI查重键迁移是实质进展。本轮继续分开的itemIdentifier字符串，以及脱离窗口/开始编辑时URI读取时点，不重写Registry算法或P2布局。
+
+确认原00458c捕获同一item，经004478在编辑状态事件发生时读identifier，再交8727c；不是捕获旧UUID/String。029e6c在isDisplayed/sharing更新后读取当前stored item的identifier，仅变化才发布popoverItemIdentifier。086c10登记条目时也读当前原生identifier。Pasto此前全部使用UUID，或在show/register时缓存一个字符串供后续编辑事件使用，因此原生标识有不同大小写/格式、或之后改变时，字段和值时点均不一致。
+
+现ClipboardRestoreItem.previewIdentifier按需读取当前nativeIdentifier，原样保留String，不解析UUID、不改大小写、不trim、空String也保留；旧值或旧本地字段缺失才回退id.uuidString。UI各登记/发布入口和编辑回调统一使用该投影。Popup willShow从当前item取值并保持已变化才发布；detach回调从所持item现取identifier，先beginEditing再以当前identifier登记。已保留的public scalar字段仅为本地适配缓存，关键事件不再以这些缓存为输入。
+
+又确认原0298b0把捕获的item传8747c，由其在事件时读取objectID URI；029a80向866c10传item，登记时也读当前URI。现onBeginEditing与detach registration使用input/item.previewIdentity现场求值，避免136仅在show时复制URI而漏掉后续事件时点。URI相等键与原生identifier字符串保持独立，不拿其中一个代另一个。
+
+3生产文件13精确增量，其余244源文件不变。11原反编译片段、16 ARM字、真实identifier selector及136 URI证据绑定，6旧方法与6共享源保持。2146项源码/Python/Mach-O静态检查通过，新增16项；2历史测试工具8处精确逆隔离，无本轮检查失败，无编译或框架执行。
+
+v48保旧204记录182组，新增004478/029e6c/029a80/0298b0四条有限事件合同并修，既有086c10补注册原生字符串合同而不再计函数。它们共用一个live projections数据流修复，不表示四个独立bug。P0 77/77、P1 131/131、总208/208（100%）仅已确认有限差异清单。原模型/DI/工厂与完整生命周期、两个未知04430c/0f733c仍未证明，整体迁移完成率未知，目标保持进行中。
+
+仅本地修改。版本1.0.2、HEAD、function-map及官网/README下载9份既有改动保持。未编译、构建、安装、运行应用/系统框架、联网、提交、推送、打标签、发布或部署。

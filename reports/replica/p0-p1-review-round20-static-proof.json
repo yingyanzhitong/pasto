@@ -1,0 +1,351 @@
+{
+  "kind": "p0_p1_round20_boundary_static_proof",
+  "binary_path": ".local/paste-arm64-static.bin",
+  "binary_sha256": "871f00354fbb1c165d858a98e6d19d6f43cb9d3f9f958b3e07c7f07eb5c19afb",
+  "file_backed_segments": [
+    {
+      "name": "__PAGEZERO",
+      "vmaddr": 0,
+      "vmsize": 4294967296,
+      "fileoff": 0,
+      "filesize": 0
+    },
+    {
+      "name": "__TEXT",
+      "vmaddr": 4294967296,
+      "vmsize": 15351808,
+      "fileoff": 0,
+      "filesize": 15351808
+    },
+    {
+      "name": "__DATA_CONST",
+      "vmaddr": 4310319104,
+      "vmsize": 671744,
+      "fileoff": 15351808,
+      "filesize": 671744
+    },
+    {
+      "name": "__DATA",
+      "vmaddr": 4310990848,
+      "vmsize": 1736704,
+      "fileoff": 16023552,
+      "filesize": 1064960
+    },
+    {
+      "name": "__LINKEDIT",
+      "vmaddr": 4312727552,
+      "vmsize": 1966080,
+      "fileoff": 17088512,
+      "filesize": 1956752
+    }
+  ],
+  "blocks": [
+    {
+      "address": "0x10004299c",
+      "file_offset": 272796,
+      "length": 12,
+      "bytes": "f40315aae7070094f40300aa",
+      "sha256": "3e919ded9a5001d7ffca6a520572579a164dfbf9c8d362c7ffa607319169323f",
+      "role": "InputView coder thunk passes self then BL to unavailable initializer 04493c"
+    },
+    {
+      "address": "0x1001ee744",
+      "file_offset": 2025284,
+      "length": 4,
+      "bytes": "b0ffff17",
+      "sha256": "128cab9e3bff33360b7f6dd86f745e9bd3147ec74b22928d9538707eb13664ec",
+      "role": "remove style forwarding thunk"
+    },
+    {
+      "address": "0x1001f0674",
+      "file_offset": 2033268,
+      "length": 4,
+      "bytes": "b9ffff17",
+      "sha256": "f2d09cb7dbde0294aeaf345c82b214b68ef8e6264bbb88e446f1cb691e74e15f",
+      "role": "state hash forwarding thunk"
+    },
+    {
+      "address": "0x100fb3e98",
+      "file_offset": 16465560,
+      "length": 8,
+      "bytes": "e868ca0000005000",
+      "sha256": "c6c36f55e5d4edf234536e1bfb715a7003eaef562540b056256f3731aa983a99",
+      "role": "TelemetryImpl metadata nominal descriptor"
+    },
+    {
+      "address": "0x100ca68e8",
+      "file_offset": 13265128,
+      "length": 20,
+      "bytes": "5000008060ffffffd8b5f8ff94664fff0cd60900",
+      "sha256": "373af9adbf6ade6a329ed659b4a4aae93e8e7cf9a91baded210e2aa9796189e7",
+      "role": "TelemetryImpl nominal descriptor"
+    },
+    {
+      "address": "0x100c31ec8",
+      "file_offset": 12787400,
+      "length": 14,
+      "bytes": "54656c656d65747279496d706c00",
+      "sha256": "b0ab689663680adfeac3cf56a4a90f9664a6884b37dd6c273b8f32b2b70a98bd",
+      "role": "concrete type name"
+    },
+    {
+      "address": "0x100ca684c",
+      "file_offset": 13264972,
+      "length": 12,
+      "bytes": "000000000000000070b5f8ff",
+      "sha256": "2fd4d8635fbb5643013ca8e2eff49642bca2f49d7eff3e725b515fe65cf3327f",
+      "role": "module descriptor"
+    },
+    {
+      "address": "0x100c31dc4",
+      "file_offset": 12787140,
+      "length": 15,
+      "bytes": "506173746554656c656d6574727900",
+      "sha256": "4c2efb9f44e4e91f94271fd68db639e387f1a030027662f7f8894e5ac8fc08db",
+      "role": "module name"
+    },
+    {
+      "address": "0x100ca7104",
+      "file_offset": 13267204,
+      "length": 84,
+      "bytes": "4300010064feffffc4bdf8ff0100000006000000cdbdf8ff80000000a8fc030075772100080000000000000007000000000000001300000000000000110000000000000011000000000000001300000000000000",
+      "sha256": "3d1cde34fba96371ce1c1e56d748367d8dfdcb2f6b92b33237ad963dfdc3b67a",
+      "role": "ObservableCollection descriptor, signature requirement, six witness requirements"
+    },
+    {
+      "address": "0x100c32ed0",
+      "file_offset": 12791504,
+      "length": 21,
+      "bytes": "4f627365727661626c65436f6c6c656374696f6e00",
+      "sha256": "be61f7bdca2a202f425fda63724bd216ada9b290b993ffd1e0e1a0c1f0cf1824",
+      "role": "protocol name"
+    },
+    {
+      "address": "0x100c32ee5",
+      "file_offset": 12791525,
+      "length": 8,
+      "bytes": "456c656d656e7400",
+      "sha256": "518e9a20d008d7269cd5101b0657b639300bd97bbebf1f0942156a3045f8ee09",
+      "role": "associated type name"
+    },
+    {
+      "address": "0x100c425d0",
+      "file_offset": 12854736,
+      "length": 16,
+      "bytes": "999b280014a20600b8e1370000000200",
+      "sha256": "53cd83a93b4e826e708076b7b4f9337f406bad5b9cdb5341997e3081573c62fe",
+      "role": "SearchResultsCollection conformance with indirect protocol reference"
+    },
+    {
+      "address": "0x100ecc168",
+      "file_offset": 15516008,
+      "length": 8,
+      "bytes": "0471ca0000002000",
+      "sha256": "82593595cd2a737c6474689fe30d6182bf00a7b4db9d3809d5f91fcc92cf6721",
+      "role": "indirect protocol reference"
+    },
+    {
+      "address": "0x100cac7e8",
+      "file_offset": 13289448,
+      "length": 20,
+      "bytes": "d0000080bcf2ffff705df9ffb88e6affb0bb0900",
+      "sha256": "b829bd7ab21e305b8c90fac769e5c1acfd24a81008ba9c549f95d4be688b67f1",
+      "role": "conforming nominal type descriptor"
+    },
+    {
+      "address": "0x100c42560",
+      "file_offset": 12854624,
+      "length": 24,
+      "bytes": "536561726368526573756c7473436f6c6c656374696f6e00",
+      "sha256": "6abae65ceb84b7311efb9c773c2782099e753b0c487ac7f8e72110ddeb9eb543",
+      "role": "SearchResultsCollection nominal type name"
+    },
+    {
+      "address": "0x100fc0790",
+      "file_offset": 16517008,
+      "length": 56,
+      "bytes": "d025c40000001000817ccf0000001000ff6ecf0000001000c8563500000010005457350000001000d0573500000010005458350000008000",
+      "sha256": "15993372c77fc25a64f21d61299730fdbb1c269fb2053841b572baf66227bed8",
+      "role": "witness pattern through publisher getter"
+    },
+    {
+      "address": "0x100355854",
+      "file_offset": 3496020,
+      "length": 32,
+      "bytes": "f44fbea9fd7b01a9fd430091940240f904000094fd7b41a9f44fc2a8c0035fd6",
+      "sha256": "62a6a958d26beb965b8a175602bfee3780692a28b02e54a575c1381ae3bfd3d4",
+      "role": "publisher getter forwarding body"
+    },
+    {
+      "address": "0x100067ef0",
+      "file_offset": 425712,
+      "length": 44,
+      "bytes": "0b1b0594f40300aae00317aab1522e94e00313aa1b502e94f70300aae10314aaf4031aaa1eed0694f40300aa",
+      "sha256": "646367a32582e4d69ec368f950af4efaaf3a4ff70015636d952286c0c0285d7b",
+      "role": "publisher getter result forwarded into applier constructor"
+    },
+    {
+      "address": "0x10022338c",
+      "file_offset": 2241420,
+      "length": 128,
+      "bytes": "f657bda9f44f01a9fd7b02a9fd830091f30301aaf50300aae06400f00080209101038052e200805257642794f60300aa00400091e10315aafa652794e00316aa836527940100009021601391e00313aae20316aa6a56fe97f30300aae00316aa75652794e00315aadc622794e00313aafd7b42a9f44f41a9f657c3a8c0035fd6",
+      "sha256": "3e1e556cdc9026deb2170b89dd13b2dcc3db57f7a94e3541d597fc6d56effea7",
+      "role": "applier callback registration and weak CollectionView context"
+    },
+    {
+      "address": "0x1001b8ddc",
+      "file_offset": 1805788,
+      "length": 348,
+      "bytes": "ff8301d1fa6701a9f85f02a9f65703a9f44f04a9fd7b05a9fd430191f30314aaf50302aaf70301aaf60300aa990240f9342b40f9000080d2e10314aaeafc28947ffe01a9600a00f92800805268a20039882580527f3200f97ffe04a97f5a00b9685e03a9752200f9f60700f9206800d000c0229101038052e2008052ae0d2994f70300aa00400091e10313aa6f0f2994206800d00060239101058052e2008052a50d2994f80300aa140800f9222f40f902dc01a9e01f8052e10314aaa9f6ff97e10300aaa26700b0421c46f9a36700b0632046f9000080d268f12894f70300aae00315aac60e2994806700b000ac43f9e10317aa7d0e2994e30300aa000000b000503991f4230091e10318aae20317aadbf12894f40300aae00316aab20e2994e00318aab00e2994e00315aaae0e2994603240f9743200f9ab0e2994e00313aafd7b45a9f44f44a9f65743a9f85f42a9fa6741a9ff830191c0035fd6",
+      "sha256": "8b52eaa7be6e72583a73d62be60cada33d191be5b2118eb6f57c9ff7f79e1803",
+      "role": "applier constructor: callback, threshold, flags and actual sink closure"
+    },
+    {
+      "address": "0x1001b9e54",
+      "file_offset": 1810004,
+      "length": 12,
+      "bytes": "820e41a9811240f937fcff17",
+      "sha256": "c91be5ff737cb9833c8c65a09eab5d873514d4600554bb875ebb941355e9312f",
+      "role": "actual publisher sink closure"
+    },
+    {
+      "address": "0x1001b8f38",
+      "file_offset": 1806136,
+      "length": 264,
+      "bytes": "ffc302d1fa6706a9f85f07a9f65708a9f44f09a9fd7b0aa9fd830291f50303aaf80302aaf70301aa0000c03de003803d000080d20dfd2894f30300aab96700d0390b46f9f40300aa05fd2894f60300aae06f009000003791a26700d0420c46f9e10319aa992af997e10300aaf40316aae00313aac1fc2894f40300aaf90301aac70e299420010037005f009000000f91c104805222008052a3068052e40314aae50319aaca0e2994f85703a9f72300f9e003c03de083843c000000d000900291025f009042000f91e1830091c304805244008052e5068052f40313aa150080d29ffeff97e00316aa680e2994fd7b4aa9f44f49a9f65748a9f85f47a9fa6746a9ffc30291c0035fd6",
+      "sha256": "2e4924c3851d50a22bc1dfc253f546ea0500e8bb724f08d6db96c4bb6ebbddd4",
+      "role": "snapshot pair and synchronous MainActor-isolation assertion wrapper"
+    },
+    {
+      "address": "0x1001b8a94",
+      "file_offset": 1804948,
+      "length": 392,
+      "bytes": "ff0302d1fc1300f9fb6b03a9f96304a9f75b05a9f44f06a9fd7b07a9fdc30191fa0315aaf90314aaf80305aae42f00b9f60303aaf70302aafc0301aafb0300aaf30308aa2ffe2894b90f2994f70f2994fc0f2994c0040036206800d000c0289101048052e2008052850e2994f60300aa1b7001a9e80313aaf4031caaf5031aaa60033fd6f40315aaa15e00d021802e91e00316aa020080520300805204008052050080527e0f2994f30300aae00316aa9f0f2994740000b473000036200020d453010037f50314aafd7b47a9f44f46a9f75b45a9f96344a9fb6b43a9fc1340f9ff030291c0035fd6200020d40800fcd2ff2301a9f443009140088052fc022994e82741a9e82701a9a85e00d008812d91088100d1010141b2f4430091e00780d20000faf289fc2894e00319aa01008052ea072994f30301aaf443009183fc2894e00313aa6f0e2994f4430091c00580520120fcd27dfc2894e31341a9ff0b00b9f80300f9a05e00b000c03a916101805242008052e50317aae60316aae72f40b92b042994200020d4",
+      "sha256": "ba2d8b9fe6eb07965fbd63d3fffebe0bb5a8c46d76789633743fd53f115a109c",
+      "role": "executor assertion and immediate closure call, not async handoff"
+    },
+    {
+      "address": "0x1001b912c",
+      "file_offset": 1806636,
+      "length": 184,
+      "bytes": "fa67bba9f85f01a9f65702a9f44f03a9fd7b04a9fd030191f30301aaf50300aa962640f9f60200b4972a40f9880240f9186545a9e00316aa120d2994e00317aa100d2994e00315aae10313aae20316aae30317aae40318aae50319aa17f2ff97f50300aaf30301aae00317aaff0c2994e00316aafd0c2994802640f906000014e00315aaff0c2994e00313aafd0c2994000080d2812a40f995ce04a926030094fd7b44a9f44f43a9f65742a9f85f41a9fa67c5a80d000014",
+      "sha256": "187195a444d4de896880eca344e103927eb3498177e437c273c7f03a0914b348",
+      "role": "latest snapshot pair storage and dispatch request"
+    },
+    {
+      "address": "0x1001b9214",
+      "file_offset": 1806868,
+      "length": 588,
+      "bytes": "fc6fbaa9fa6701a9f85f02a9f65703a9f44f04a9fd7b05a9fd430191ff0301d19b0240f9000080d2d0f72894f30300aa1c805ff8882340f9e90308aa706700f0106241f900023fd6e9030091083d009108ed7c92350108cbbf020091000080d2d4f7289417805ff8e82240f9e90308aa706700f0106241f900023fd6e9030091083d009108ed7c92360108cbdf02009188664139c80c003788624139880c0037886e4139480c00372800805288620139a00317f8000080d247030094fa0314aaf40300aa87fe2894f90300aa206800b000c0229101038052e2008052880c2994f80300aa00400091e1031aaa490e2994206800b00080279101058052e20080527f0c2994682b40f9080800f9682f40f908e001a9080000b008b10091a8033aa9686700f0085141f9a80318f8485300d0006941fda08318fca8f3fff008411091296800b029e12791a82739a9a00302d1af072994fa0300aae00318aa9a0d2994e80316aa8af72894a86700b0086d40f9a88317f8c06f00f000603991a16700b0213843f9a26700b0424043f99829f997fb0300aac06f00f000803991c15300b021c03e910e29f997f40300aa25030094e20300aaa02302d1e80315aae10314aaf40313aae30313aae4031baa76002994000080d2e10316aae20315aae3031aaaf40319aa45fe2894e0031aaa91072994e00319aad70a2994880740f9e00315aae10313aa00013fd6e80640f9e00316aaa10357f800013fd6b3835af8e00318aa630d2994e00313aa610d2994bf4301d1fd7b45a9f44f44a9f65743a9f85f42a9fa6741a9fc6fc6a8c0035fd6",
+      "sha256": "f4cd8cb824b08125ff437553ffea78927a3243797f72fdb8da1cb9f04d13c01f",
+      "role": "actual DispatchQueue.main.async scheduling"
+    },
+    {
+      "address": "0x1001b95bc",
+      "file_offset": 1807804,
+      "length": 128,
+      "bytes": "f657bda9f44f01a9fd7b02a9fd8300919f620139886e4139c80200378866413988020037f60314aad38e44f828008052c8460039d30100b4886e413988010037952a40f9df7e00a9e00313aae10315aa5b010094e00315aae00b2994e00313aade0b2994932640f993feffb59f660139fd7b42a9f44f41a9f657c3a8c0035fd6",
+      "sha256": "375a3598b976abf21170fb5f17ca2c3cce856eba7b6497974a28c128095b18ca",
+      "role": "pending pair drain into snapshot application"
+    },
+    {
+      "address": "0x1001b9b78",
+      "file_offset": 1809272,
+      "length": 568,
+      "bytes": "ff4303d1fc6f07a9fa6708a9f85f09a9f6570aa9f44f0ba9fd7b0ca9fd030391f30314aafa0301aaf50300aa886a41391f05007181040054770240f960420091e1630191020080d2030080d2710a2994740a40f9f65e45a9e00314aa760a2994e00315aa740a2994e0031aaa720a2994e00314aae10315aae2031aaae30316aae40317aaa4efff97f60300aaf70301aaf80302aaf90303aaead4ff97c0030036e00319aa5e0a2994e00318aa5c0a2994e00317aa5a0a2994e00316aa580a29945400001428008052686a013976d243a960a20091e1630191020080d2030080d24c0a299464a24039f35704a9fa2b00f9050000b0a5600391e6c30091000080d2010080d2020080d2030080d2c0023fd632000014c80a40f9e90a40f9080109ab86080054090b40f91c0109ab4608005460c20091e1630091020080d2030080d2340a2994686e43a9742240f91f011cebaa010054e00319aa310a2994e00318aa2f0a2994e00317aa2d0a2994e00316aa2b0a2994160080d2170080d2180080d2190080d260a20091e1030091020080d2030080d21f0a299464a24039f35704a9fa2b00f905000090a5003e91e6c30091e00316aae10317aae20318aae30319aa60033fd6e00316aae10317aae20318aae30319aa9400009460620091e1c30091020080d2030080d20a0a2994750e40f9150100b4741240f9e00314aa190b2994a0023fd6e00315aae10314aaf329f997fd7b4ca9f44f4ba9f6574aa9f85f49a9fa6748a9fc6f47a9ff430391c0035fd6200020d4200020d4",
+      "sha256": "22f7b56b1bb4039db28ea898d3d8e0c532202864d59d43d8c5ebf4ef106574da",
+      "role": "first application and threshold nil-payload producers"
+    },
+    {
+      "address": "0x1001ba0d8",
+      "file_offset": 1810648,
+      "length": 4,
+      "bytes": "aaffff17",
+      "sha256": "02aaa88cd02be52c116d78de7f926a79725b2f3c642d6a67514cc32d8cda7911",
+      "role": "initial mutation closure forwarder"
+    },
+    {
+      "address": "0x1001b9f80",
+      "file_offset": 1810304,
+      "length": 28,
+      "bytes": "fd7bbfa9fd030091800641a9821240f988ffff97fd7bc1a8c0035fd6",
+      "sha256": "37e4259b016a57960ebe6f7ef75491efb49c7bb1b51faf41d857d50d52185238",
+      "role": "mutation capture forwarding"
+    },
+    {
+      "address": "0x1001b9db0",
+      "file_offset": 1809840,
+      "length": 92,
+      "bytes": "ff4301d1f65702a9f44f03a9fd7b04a9fd030191f30301aaf40300aa00400091e123009122008052030080d2eb092994950a40f9930a00f9e00313aaf0092994e00315aae8092994fd7b44a9f44f43a9f65742a9ff430191c0035fd6",
+      "sha256": "4ce399adcda804d2936ca2b41d43de314a8492f0db534ea20d57759138b14044",
+      "role": "new applier items stored before collection refresh"
+    },
+    {
+      "address": "0x100223430",
+      "file_offset": 2241584,
+      "length": 168,
+      "bytes": "fa67bba9f85f01a9f65702a9f44f03a9fd7b04a9fd030191f40306aafa0305aaf70304aaf50303aaf60302aaf80301aaf90300aae0400091d4652794800100b4f30300aa40033fd6f90100b4e4020012e00319aae10318aae20316aae30315aaf40313aa1300009409000014fd7b44a9f44f43a9f65742a9f85f41a9fa67c5a8c0035fd6f40313aa78220094e00313aafd7b44a9f44f43a9f65742a9f85f41a9fa67c5a8a4622714",
+      "sha256": "433927a94fc10181ff55737aad4e47bd11de8f5ffb14871eaba4dc1809b9f06b",
+      "role": "mutation callback occurs before nil/non-nil dispatch"
+    },
+    {
+      "address": "0x1002234d8",
+      "file_offset": 2241752,
+      "length": 8,
+      "bytes": "e70314aad5ffff17",
+      "sha256": "ed5581692dbadecfea04031a1b7652f55822c2a1778ae4f8845306527d274b13",
+      "role": "callback weak-context bridge"
+    },
+    {
+      "address": "0x10022c0e0",
+      "file_offset": 2277600,
+      "length": 128,
+      "bytes": "f50100b4406c00d000201291415000b021401691bf5df797416c00f021401c9103422794080840f9280100b409008052080c088b0a0d40f907000014006400d0006c40f9080840f928ffffb50a0080d229008052486c00f0086943f92b03088b680140f9605500a96a0900f969610039e00308aa10412794f40319aa84f3ff97",
+      "sha256": "7a6cbb7ef9e1109c9fa38cc2697c024aced837e055fe50d8199808c830485a0e",
+      "role": "nonempty reload selection uses static first-index array"
+    },
+    {
+      "address": "0x100fb7710",
+      "file_offset": 16480016,
+      "length": 40,
+      "bytes": "00000000000000000000000000000000010000000000000002000000000000000000000000000000",
+      "sha256": "116c14c30253bc09c7affb22befc525a904d7a802b1d27bda22905719b36cecf",
+      "role": "nonempty reload static array payload: count 1, capacity 2, element 0"
+    }
+  ],
+  "telemetry": {
+    "metadata": "0x100fb3e58",
+    "descriptor": "0x100ca68e8",
+    "name": "TelemetryImpl",
+    "module": "PasteTelemetry"
+  },
+  "limitations": [
+    "Classification of the existing 239-candidate boundary only, not a full-original priority inventory.",
+    "No new comparison units or migration completion claims.",
+    "No application/framework execution or compilation."
+  ],
+  "observable_collection": {
+    "protocol": "0x100ca7104",
+    "associated_type_names": [
+      "Element"
+    ],
+    "signature_requirement_count": 1,
+    "requirement_count": 6,
+    "conformance": "0x100c425d0",
+    "type_descriptor": "0x100cac7e8",
+    "witness_pattern": "0x100fc0790",
+    "publisher_getter": "0x100355854",
+    "limitation": "No associated type named Output is declared; the publisher generic Output and the subsequent SnapshotApplier callback ABI are separate questions."
+  },
+  "snapshot_applier": {
+    "actual_sink": "0x1001b9e54",
+    "collection_callback": "0x1002234d8",
+    "initial_state_byte_offset": "0x5a",
+    "threshold": 300,
+    "callback_slot": "0x38",
+    "mutation_before_reload": true,
+    "first_mutation_thunk": "0x1001ba0d8",
+    "subsequent_mutation_thunk": "0x1001b9f80",
+    "limitation": "Precise producer chain established; does not yet establish all four difference payload nominal types or equivalent current event effects."
+  }
+}

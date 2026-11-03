@@ -1,0 +1,123 @@
+--- replica/Sources/PastoCore/ClipboardPersistence.swift
++++ replica/Sources/PastoCore/ClipboardPersistence.swift
+@@ -86,7 +86,9 @@
+             .sink { [weak self] _ in
+                 MainActor.assumeIsolated {
+                     guard let context = Self.undoContext(from: { self }) else { return }
+-                    OriginalContextUndo.f_10035ca9c(context)
++                    OriginalContextUndo.f_10035ca9c(context) {
++                        try Self.updateRevisionAfterUndo(in: context)
++                    }
+                 }
+             }
+     }
+@@ -95,6 +97,29 @@
+     @inline(never)
+     private static func undoContext(from loadOwner: () -> ClipboardPersistence?) -> NSManagedObjectContext? {
+         loadOwner()?.context
++    }
++
++    // State is Pasto's compatibility metadata, not an original undoable model entity.
++    // Flush native edits while registration is enabled, then flush metadata while disabled.
++    private static func withoutMetadataUndo(in context: NSManagedObjectContext,
++                                             _ operation: () throws -> Void) rethrows {
++        context.processPendingChanges()
++        let manager = context.undoManager
++        manager?.disableUndoRegistration()
++        defer {
++            context.processPendingChanges()
++            manager?.enableUndoRegistration()
++        }
++        try operation()
++    }
++
++    private static func updateRevisionAfterUndo(in context: NSManagedObjectContext) throws {
++        let request = NSFetchRequest<NSManagedObject>(entityName: "State")
++        request.predicate = NSPredicate(format: "key == %@", "local")
++        request.fetchLimit = 2
++        let roots = try context.fetch(request)
++        guard roots.count == 1 else { throw CocoaError(.fileReadCorruptFile) }
++        withoutMetadataUndo(in: context) { roots[0].setValue(UUID(), forKey: "revision") }
+     }
+ 
+     private func publishChangedItemIDs(from notification: Notification) {
+@@ -1001,28 +1026,30 @@
+                         object.setValue(try encode(value.value), forKey: "content")
+                     }
+                 }
++                try transaction.repository.lists.refreshHistoryIfNeeded()
+                 let root = try root() ?? NSEntityDescription.insertNewObject(forEntityName: "State", into: context)
+-                if root.isInserted {
+-                    root.setValue("local", forKey: "key")
+-                    root.setValue(1, forKey: "version")
+-                    root.setValue(Int64(1), forKey: ClipboardItemOrderPersistence.versionKey)
+-                    root.setValue(Int64(1), forKey: ClipboardItemTitlePersistence.versionKey)
+-                }
+-                if (root.value(forKey: ClipboardSourcePersistence.versionKey) as? NSNumber)?.intValue != 1 {
+-                    root.setValue(1, forKey: ClipboardSourcePersistence.versionKey)
+-                }
+-                if previous?.preferences != state.preferences {
+-                    root.setValue(try encode(state.preferences), forKey: "preferences")
+-                }
+-                if previous?.cloudSyncMetadata != state.cloudSyncMetadata {
+-                    root.setValue(try state.cloudSyncMetadata.map(encode), forKey: "cloudMetadata")
+-                }
+-                if journalHeader(previous?.cloudKitJournal) != journalHeader(state.cloudKitJournal) {
+-                    root.setValue(try journalHeader(state.cloudKitJournal).map(encode), forKey: "cloudJournal")
+-                }
+-                try transaction.repository.lists.refreshHistoryIfNeeded()
++                try Self.withoutMetadataUndo(in: context) {
++                    if root.isInserted {
++                        root.setValue("local", forKey: "key")
++                        root.setValue(1, forKey: "version")
++                        root.setValue(Int64(1), forKey: ClipboardItemOrderPersistence.versionKey)
++                        root.setValue(Int64(1), forKey: ClipboardItemTitlePersistence.versionKey)
++                    }
++                    if (root.value(forKey: ClipboardSourcePersistence.versionKey) as? NSNumber)?.intValue != 1 {
++                        root.setValue(1, forKey: ClipboardSourcePersistence.versionKey)
++                    }
++                    if previous?.preferences != state.preferences {
++                        root.setValue(try encode(state.preferences), forKey: "preferences")
++                    }
++                    if previous?.cloudSyncMetadata != state.cloudSyncMetadata {
++                        root.setValue(try state.cloudSyncMetadata.map(encode), forKey: "cloudMetadata")
++                    }
++                    if journalHeader(previous?.cloudKitJournal) != journalHeader(state.cloudKitJournal) {
++                        root.setValue(try journalHeader(state.cloudKitJournal).map(encode), forKey: "cloudJournal")
++                    }
++                }
+                 if context.hasChanges {
+-                    root.setValue(UUID(), forKey: "revision")
++                    Self.withoutMetadataUndo(in: context) { root.setValue(UUID(), forKey: "revision") }
+                     do {
+                         try OriginalObjCExceptionBridge.f_1002ff9c8 { try context.save() }
+                     } catch {
+--- replica/Sources/PastoCore/OriginalContextUndo.swift
++++ replica/Sources/PastoCore/OriginalContextUndo.swift
+@@ -8,17 +8,22 @@
+ 
+     // 0x10035ca9c -> 0x10035f228: keep a successful result when there are no changes.
+     @discardableResult
+-    static func f_10035ca9c(_ context: NSManagedObjectContext) -> Bool {
++    static func f_10035ca9c(_ context: NSManagedObjectContext,
++                           prepareForSave: (() throws -> Void)? = nil) -> Bool {
+         var succeeded = true
+-        context.performAndWait { f_10035e4d8(context, succeeded: &succeeded) }
++        context.performAndWait { f_10035e4d8(context, succeeded: &succeeded, prepareForSave: prepareForSave) }
+         return succeeded
+     }
+ 
+     // 0x10035e4d8: Ghidra drops this failure branch; ARM restores rollback/false/log.
+-    static func f_10035e4d8(_ context: NSManagedObjectContext, succeeded: inout Bool) {
++    static func f_10035e4d8(_ context: NSManagedObjectContext, succeeded: inout Bool,
++                           prepareForSave: (() throws -> Void)? = nil) {
+         guard context.hasChanges else { return }
+         do {
+-            try OriginalObjCExceptionBridge.f_1002ff9c8 { try context.save() }
++            try OriginalObjCExceptionBridge.f_1002ff9c8 {
++                try prepareForSave?()
++                try context.save()
++            }
+         } catch {
+             context.rollback()
+             succeeded = false

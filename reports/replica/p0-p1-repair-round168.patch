@@ -1,0 +1,190 @@
+--- a/replica/Sources/PastoCore/ClipboardListPersistence.swift
++++ b/replica/Sources/PastoCore/ClipboardListPersistence.swift
+@@ -6,6 +6,7 @@
+ @MainActor
+ public struct ClipboardPinboardTarget {
+     public let id: UUID
++    public var listTarget: ClipboardListTarget { ClipboardListTarget(object: nativeObject) }
+     public var name: String { nativeObject.value(forKey: "name") as? String ?? "" }
+     public var colorCode: UInt64? {
+         OriginalPinboardAttributes.colorCode(from: nativeObject.value(forKey: "rawAttributes") as? Data)
+@@ -23,6 +24,9 @@
+ public struct ClipboardListTarget {
+     let nativeObject: NSManagedObject
+     public var isDeleted: Bool { nativeObject.isDeleted }
++    public func hasSameObjectID(as other: ClipboardListTarget) -> Bool {
++        nativeObject.objectID.isEqual(other.nativeObject.objectID)
++    }
+     public var identifier: String {
+         String._unconditionallyBridgeFromObjectiveC(nativeObject.value(forKey: "identifier") as? NSString)
+     }
+--- a/replica/Sources/Pasto/UI/ReplicaUIController.swift
++++ b/replica/Sources/Pasto/UI/ReplicaUIController.swift
+@@ -62,7 +62,7 @@
+     @Published var pendingItemDeletion: ItemDeletionRequest?
+     @Published var pendingNeighborSelection: PendingNeighborSelection?
+     @Published var itemDeletionError: String?
+-    @Published var tabRenameRequest: (key: String, token: UUID)?
++    let beginEditingListSubject = PassthroughSubject<ClipboardListTarget, Never>()
+     @Published var showDeleted = false { didSet {
+         if oldValue != showDeleted { cancelItemDeletion() }
+     } }
+@@ -1764,10 +1764,10 @@
+                     try store.assign(orderedIDs: ids, to: board.id)
+                 }
+             }
+-            // 0x100039618 → 0x10003b4c0: create first, then request inline editing.
+-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) { [weak self] in
+-                guard let self, self.store.pinboards.contains(where: { $0.id == board.id }) else { return }
+-                self.state.tabRenameRequest = (board.id.uuidString, UUID())
++            // 039618/03b4c0: retain the created List across the delay; only the owner is weak.
++            let target = board.listTarget
++            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) { [weak self, target] in
++                self?.state.beginEditingListSubject.send(target)
+             }
+         }
+     }
+--- a/replica/Sources/Pasto/UI/OriginalPanelTabBar.swift
++++ b/replica/Sources/Pasto/UI/OriginalPanelTabBar.swift
+@@ -59,6 +59,19 @@
+         needsLayout = true
+     }
+ 
++    // 099838: locate the same native object, scroll its cell, then start editing after the animation.
++    func beginEditingList(_ target: ClipboardListTarget) {
++        guard let cell = keys.compactMap({ cells[$0] }).first(where: {
++            $0.listTarget?.hasSameObjectID(as: target) == true
++        }) else { return }
++        window?.makeFirstResponder(nil)
++        let rect = cell.frame.insetBy(dx: -17, dy: 0)
++        OriginalViewAnimation.f_10021cadc(duration: 0.15,
++            timingFunction: OriginalViewAnimation.f_10021ccd4(), animated: true,
++            animations: { self.f_10009ac24(rect) },
++            completion: { cell.titleView.beginEditingFromListRequest() })
++    }
++
+     func setCollapsed(_ collapsed: Bool) {
+         isCollapsed = collapsed
+         f_100095228()
+--- a/replica/Sources/Pasto/UI/PanelViews.swift
++++ b/replica/Sources/Pasto/UI/PanelViews.swift
+@@ -149,6 +149,7 @@
+         state.tabListTargets.map { target in
+             let board = target.pinboardValue
+             var tab = boardButton(target.name, board: board, target: target)
++            tab.target = target
+             tab.menuProvider = { localListMenu(for: target) }
+             tab.dragString = "paste-pinboard:" + target.identifier
+             tab.onDropString = { value in
+@@ -163,7 +164,7 @@
+     private func localListMenu(for target: ClipboardListTarget) -> NSMenu {
+         let menu = NSMenu()
+         menu.autoenablesItems = false
+-        menu.addItem(OriginalPanelTabMenuItem(title: "重命名") { requestTabRename(target.identifier) })
++        menu.addItem(OriginalPanelTabMenuItem(title: "重命名") { requestTabRename(target) })
+         // Resolve and count only when the native context menu is requested.
+         let list = state.store.localListMenuState(target)
+         if list.rawType == 1 {
+@@ -233,22 +234,22 @@
+         return parseColor(board.colorHex) ?? .red
+     }
+ 
+-    private func requestTabRename(_ identifier: String) {
+-        state.tabRenameRequest = (key: identifier, token: UUID())
++    private func requestTabRename(_ target: ClipboardListTarget) {
++        state.beginEditingListSubject.send(target)
+     }
+ 
+     private func boardButton(_ name: String, board: Pinboard?, target: ClipboardListTarget) -> OriginalPinboardTab {
+         let key = target.identifier
+         return OriginalPinboardTab(key: key, title: name, iconColor: board.map { NSColor(boardColor($0)) },
+                 isSelected: state.selectedListIdentifier == target.identifier && !state.showDeleted,
+-                beginRequest: state.tabRenameRequest?.key == key ? state.tabRenameRequest?.token : nil,
++                beginRequest: nil,
+                 onSelect: {
+                     if target.rawType != 2, searching {
+                         state.query = ""; state.chooseList(identifier: target.identifier); state.searchVisible = false
+                         state.controller?.panel.makeFirstResponder(nil)
+                     } else { state.chooseList(identifier: target.identifier) }
+                 },
+-                onEnd: { if state.tabRenameRequest?.key == key { state.tabRenameRequest = nil } },
++                onEnd: {},
+                 onCommit: { value in
+                     try? state.store.renameList(target, rawName: value)
+                     return target.name
+--- a/replica/Sources/Pasto/UI/OriginalPanelToolbar.swift
++++ b/replica/Sources/Pasto/UI/OriginalPanelToolbar.swift
+@@ -29,6 +29,7 @@
+         state.toolbarOwner = view
+         updateNSView(view, context: context)
+         view.searchBar.observeQuery(state.searchInputPublisher, initial: state.searchQueryNodes)
++        view.observeListEditing(state.beginEditingListSubject.eraseToAnyPublisher())
+         return view
+     }
+ 
+@@ -45,6 +46,7 @@
+ 
+     static func dismantleNSView(_ view: OriginalPanelToolbarView, coordinator: Coordinator) {
+         if coordinator.state?.toolbarOwner === view { coordinator.state?.toolbarOwner = nil }
++        view.stopObservingListEditing()
+         view.searchBar.dismantleEditor()
+         view.onDismiss = nil
+     }
+@@ -54,6 +56,7 @@
+ final class OriginalPanelToolbarView: NSView {
+     let searchBar = OriginalPanelSearchBar()
+     private let tabBar = OriginalPanelTabBar()
++    private var listEditingObservation: AnyCancellable?
+     private let createButton = NSHostingView(rootView: AnyView(EmptyView()))
+     private let menuButton = NSHostingView(rootView: AnyView(EmptyView()))
+     private var activeSearchConstraints: [NSLayoutConstraint] = []
+@@ -116,6 +119,17 @@
+         }
+     }
+ 
++    func observeListEditing(_ publisher: AnyPublisher<ClipboardListTarget, Never>) {
++        listEditingObservation = publisher.sink { [weak self] target in
++            MainActor.assumeIsolated { self?.tabBar.beginEditingList(target) }
++        }
++    }
++
++    func stopObservingListEditing() {
++        listEditingObservation?.cancel()
++        listEditingObservation = nil
++    }
++
+     func applySearchQuery(_ nodes: [OriginalSearchQueryNode]) { searchBar.applySearchQuery(nodes) }
+ 
+     private func f_10000e4c8() -> [NSLayoutConstraint] {
+--- a/replica/Sources/Pasto/UI/OriginalPinboardTabTitle.swift
++++ b/replica/Sources/Pasto/UI/OriginalPinboardTabTitle.swift
+@@ -16,10 +16,12 @@
+     var menuProvider: (() -> NSMenu)?
+     var dragString: String?
+     var onDropString: ((String) -> Bool)?
++    var target: ClipboardListTarget? = nil
+ 
+     func configure(_ view: OriginalPinboardTabView) {
+         view.configure(title: title, iconColor: iconColor, isSelected: isSelected, beginRequest: beginRequest,
+                        onSelect: onSelect, onEnd: onEnd, onCommit: onCommit)
++        view.listTarget = target
+         view.menuProvider = menuProvider
+         view.dragString = dragString
+         view.onDropString = onDropString
+@@ -44,6 +46,7 @@
+     var menuProvider: (() -> NSMenu)?
+     var dragString: String?
+     var onDropString: ((String) -> Bool)?
++    var listTarget: ClipboardListTarget?
+     private var isDragging = false
+     private var isDragDestination = false
+     private lazy var labelTrailingConstraint = titleView.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -8)
+@@ -319,6 +322,8 @@
+         editingPanel = nil
+     }
+ 
++    func beginEditingFromListRequest() { beginEditing() }
++
+     private func beginEditing() {
+         guard !field.isEditable else { return }
+         originalString = field.stringValue

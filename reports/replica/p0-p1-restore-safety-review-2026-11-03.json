@@ -1,0 +1,141 @@
+{
+  "kind": "fixed_p0_native_restore_safety_batch_reuse",
+  "date": "2026-11-03",
+  "previous_report": "reports/replica/p0-p1-search-ocr-review-2026-11-03.json",
+  "scope": {
+    "path": "reports/replica/p0-p1-review-scope-v6.json",
+    "denominator": 959,
+    "P0": 353,
+    "P1": 606,
+    "expanded": false
+  },
+  "reviewed_existing_function_ids": [
+    "Paste:0x10038222c",
+    "Paste:0x10031bcdc",
+    "Paste:0x100383a0c",
+    "Paste:0x100381fdc",
+    "Paste:0x100383574",
+    "Paste:0x1003838bc",
+    "Paste:0x10037875c",
+    "Paste:0x10037a144",
+    "Paste:0x10037ade4",
+    "Paste:0x10037b620",
+    "Paste:0x1002ff310",
+    "Paste:0x100302b78",
+    "Paste:0x10031aeec",
+    "Paste:0x100321f48",
+    "Paste:0x10032362c",
+    "Paste:0x100383df4",
+    "Paste:0x100384824",
+    "Paste:0x100384aac",
+    "Paste:0x100384e6c",
+    "Paste:0x10037e5e0",
+    "Paste:0x100360ff8",
+    "Paste:0x100378664",
+    "Paste:0x100361ec0",
+    "Paste:0x100364108",
+    "Paste:0x1003614c0",
+    "Paste:0x100363810",
+    "Paste:0x1003646ec"
+  ],
+  "support_not_added_to_denominator": [
+    "Paste:0x10037aa3c",
+    "Paste:0x10031b218",
+    "Paste:0x100323594"
+  ],
+  "evidence_summary": {
+    "native_functions": 30,
+    "complete_machine_ranges": 30,
+    "direct_branches": 1257,
+    "selectors": 81,
+    "import_calls": 745
+  },
+  "current_round_repaired_function_ids": [],
+  "current_round_repaired_count": 0,
+  "new_confirmed_differences": [],
+  "reused_contracts": [
+    "Native previewRawType validates full-width0...5 before UI/restore UInt8 conversion; device conversion has0..<3 precondition and other kind lookup uses UInt8(exactly:).",
+    "Captured native input supplies its own raw data, type and application; no re-resolve by UUID or whole-value archive for native copy.",
+    "Per-input image/data preparation precedes source attribution, OLE filtering and flags; text aggregation preserves input order and separate option bits.",
+    "Writer materializes ordered NSPasteboardItems/data before clearContents, then writeObjects, then changeCount even on empty/false write result.",
+    "Actual pasteboard write and change-count update precede history preparation/save. Preparation and save errors converge before Undo clear and process notification.",
+    "Native restoration writes timestamps in reverse input order, preserves entity payload/owner and avoids replaying stale value content.",
+    "UI copy success callback/hidePanel runs only after synchronous writer returns, without a timer or Task delay."
+  ],
+  "counts": {
+    "finite_contract_consistent": 691,
+    "source_repaired": 258,
+    "user_adaptation": 9,
+    "evidence_insufficient": 1
+  },
+  "by_priority": {
+    "P0": {
+      "finite_contract_consistent": 267,
+      "source_repaired": 82,
+      "user_adaptation": 4
+    },
+    "P1": {
+      "finite_contract_consistent": 424,
+      "source_repaired": 176,
+      "user_adaptation": 5,
+      "evidence_insufficient": 1
+    }
+  },
+  "finite_comparison_progress": {
+    "numerator": 958,
+    "denominator": 959,
+    "percent": 99.9
+  },
+  "confirmed_unfixed_finite_differences": 0,
+  "evidence_insufficient_count": 1,
+  "unknown_function_ids": [
+    "Paste:0x1000f733c"
+  ],
+  "exact_total_outstanding": null,
+  "full_function_migration_verified": false,
+  "migration_completion_percent": null,
+  "tests": {
+    "current_source_checks": 21,
+    "new_checks": 21,
+    "failures": 0,
+    "errors": 0,
+    "source_substitution": false,
+    "trace_models": "Four Python witnesses cover prepare/save errors converging before Undo/notify, empty/false pasteboard write result, reverse recency timestamps and pre-narrowing type bounds. Not framework execution.",
+    "first_failure": "One new source spelling assertion expected raw rather than the actual rawType local name. Corrected test only; first log retained."
+  },
+  "remaining_boundaries": [
+    "Finite native-copy/error contract only; no NSPasteboard/CoreData/FileManager or application runtime executed.",
+    "All private ABI, optimized ARC, invalid managed graphs, per-format archive faults and every reentry input remain unverified.",
+    "Legacy UUID/value projections, additional generated markers and old notification subject remain existing explicit adapters.",
+    "Original0f733c remains unresolved; no claim that this copy-chain audit resolves its declaration or consumers.",
+    "This finite copy-chain result does not establish all P0/P1 original functions or product acceptance."
+  ],
+  "production_modified": false,
+  "existing_production_unchanged": 248,
+  "production_added": 0,
+  "old_test_files_modified": 0,
+  "source_inputs": {
+    "reports/replica/p0-p1-search-ocr-review-2026-11-03.json": "8c614fc66040ebca87c33f3f3ec5a444694bdf67784c4eab9aadcc9477b5bd49",
+    ".local/p0-p1-parent-review/2026-11-03-restore-safety/baseline.json": "0bfba2c6008fe9d053f02bc387e75d208b555afb9f9b91a4d6e5e7b756f9ffb9",
+    ".local/p0-p1-parent-review/2026-11-03-restore-safety/contract.json": "e55bd6d6ac9666e747447021ba55a00e0762c6c74dc3120ca2d04e562ca7dc08",
+    ".local/p0-p1-parent-review/2026-11-03-restore-safety/test-summary.json": "ab375bb0ddf92dd66cab21354b00363397dcd53dc12c0f2038eba1ef9cefe209",
+    ".local/p0-p1-parent-review/2026-11-03-restore-safety/first-test-summary.json": "5dbf11d9583140b351e9a8c37741d0207754f81c8349282bee03b8a8341f44c6",
+    ".local/p0-p1-parent-review/2026-11-03-restore-safety/proof.py": "978377bacf70833ba9b1010c46002aff7a478da41b4d01b92a3f5ff46882a185",
+    "scripts/tests/test_p0_restore_safety_batch.py": "32b4d921d01ca6ca7c062f87264cf8696486987d0620ebd293ddb3523b4b8ae6"
+  },
+  "head_unchanged": "050e6878a5a52f96fe33aa40f48bb8a056cd0f05",
+  "version_unchanged": "1.0.2",
+  "function_map_unchanged": "ea781c82f93e580a940f0804fa120e01e9030357d10aee157fe4a135143b8985",
+  "compiled": false,
+  "built": false,
+  "installed": false,
+  "application_executed": false,
+  "framework_executed": false,
+  "network_used": false,
+  "committed": false,
+  "pushed": false,
+  "published": false,
+  "user_data_modified": false,
+  "goal_should_remain_active": true,
+  "next_action": "Audit actual remaining P0/P1 completion requirements and source-evidence gaps, distinguishing the unresolved0f733c contract from generic runtime/ABI caveats and stale historical snapshots."
+}

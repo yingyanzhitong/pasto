@@ -1,0 +1,78 @@
+{
+  "kind": "bounded_static_entry_evidence",
+  "round": 23,
+  "source_inputs": {
+    ".local/targets/Paste.arm64": "871f00354fbb1c165d858a98e6d19d6f43cb9d3f9f958b3e07c7f07eb5c19afb",
+    ".local/p0-review/build-p0-p1-round23-proof.py": "9f51421ed82fe8e56660be584284b0222049950a7268f7bef612a20b2d3689fb",
+    ".local/p0-review/p0-p1-round23-setter-review.json": "edb4eeba522aacdd0c85732f54f3cb88166fadb655e39707e86068634269ea69",
+    ".local/p0-review/p0-p1-round23-coder-review.json": "ecf8aa31e7bc43c86c39a1223c9bd368ddb4254766913c88c3875479e272da60",
+    "/Applications/Paste.app/Contents/Resources/PasteStack.storyboardc/7aE-aT-8LC-view-NAZ-eB-2HW.nib": "c505fa5e5761a884a5478cbfc17f531095e2206a181a6f3cac0e479ab90d5310",
+    "/Applications/Paste.app/Contents/Resources/PasteStack.storyboardc/NSWindowController-HiK-vN-N5b.nib": "e31cad1f6e9c6a311337f3d1f50c50ac1f196949064a7cd7d7aea69042dde325",
+    "reports/symbols/Paste.txt": "a109a2afc103a9c1f1540ce6ca303bda5ded003c2b4a4378601aa6d02c6eb15f",
+    "reports/exported-symbols.txt": "acd050ec3d0e9a4624d47d6587c4605f082857f5f41fff20938e08ce78a3bd1a",
+    "reports/Paste/function-index.json": "c44bd5174bf16b3e333279e32f48bcf25ec73085b3bd14ad94fedc5f934d78b6",
+    "reports/Paste/procedures.json": "31fbc196e64de6f329f6007afa2926cb83b3addade47d63f7e7164254c9c7122"
+  },
+  "binary_segments": [
+    {
+      "name": "__TEXT",
+      "vm": 4294967296,
+      "file_offset": 0,
+      "file_size": 15351808
+    },
+    {
+      "name": "__DATA_CONST",
+      "vm": 4310319104,
+      "file_offset": 15351808,
+      "file_size": 671744
+    },
+    {
+      "name": "__DATA",
+      "vm": 4310990848,
+      "file_offset": 16023552,
+      "file_size": 1064960
+    },
+    {
+      "name": "__LINKEDIT",
+      "vm": 4312727552,
+      "file_offset": 17088512,
+      "file_size": 1956752
+    }
+  ],
+  "target": "0x1000f733c",
+  "raw_target_bytes": {
+    "vm_address": "0x1000f733c",
+    "file_offset": "0xf733c",
+    "bytes_before_16": "f44f42a9f65741a9f85fc4a8a2152c14",
+    "bytes_at_80": "f657bda9f44f01a9fd7b02a9fd830091f30301aa1c022c94f50300aae00313aa8e142c94e00314aae20315aabe5a2c94e00315aafd7b42a9f44f41a9f657c3a8fa122c14e00314aa2200805256562c14"
+  },
+  "absolute64_hits": [],
+  "low36_payload_hits": [],
+  "tagged_rel32_hits": [],
+  "scan_definition": "File-backed LC_SEGMENT_64 ranges, every byte offset. Exact target|0..3 QWORD; image-relative low36 payload with low2 ignored; signed rel32 low2 ignored from field and field+4. No one-level indirect or general fixup decoder claim.",
+  "resources": [
+    {
+      "path": "/Applications/Paste.app/Contents/Resources/PasteStack.storyboardc/7aE-aT-8LC-view-NAZ-eB-2HW.nib",
+      "sha256": "c505fa5e5761a884a5478cbfc17f531095e2206a181a6f3cac0e479ab90d5310",
+      "ascii_terms_found": []
+    },
+    {
+      "path": "/Applications/Paste.app/Contents/Resources/PasteStack.storyboardc/NSWindowController-HiK-vN-N5b.nib",
+      "sha256": "e31cad1f6e9c6a311337f3d1f50c50ac1f196949064a7cd7d7aea69042dde325",
+      "ascii_terms_found": []
+    }
+  ],
+  "limitations": [
+    "Zero references do not prove dead/unreachable code.",
+    "No instruction or runtime reachability inference.",
+    "Low36 payload search is not full chained-fixup decoding.",
+    "Only the two recorded nib resources are covered; external archives remain unknown.",
+    "Child one-level-indirection claim is not adopted by the root proof."
+  ],
+  "resolved_entries_added": 0,
+  "comparison_only": true,
+  "full_function_migration_verified": false,
+  "compiled": false,
+  "application_executed": false,
+  "network_used": false
+}

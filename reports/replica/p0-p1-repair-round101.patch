@@ -1,0 +1,540 @@
+--- phase-101-before/replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift
++++ replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift
+@@ -22,17 +22,17 @@
+     let screenSize = NSScreen.main?.frame.size ?? .zero
+     switch item.kind {
+     case .image:
+-        let image = ReplicaImagePreviewContent(state: state, item: item)
++        let image = ReplicaImagePreviewContent(state: state, item: item, input: input)
+         content = image
+         contentSize = image.preferredPreviewSize
+         metadata = image.previewMetadataView
+     case .color:
+-        let color = ReplicaColorPreviewContent(state: state, item: item)
++        let color = ReplicaColorPreviewContent(state: state, item: item, input: input)
+         content = color
+         contentSize = color.preferredPreviewSize
+         metadata = color.previewMetadataView
+     case .link:
+-        let link = ReplicaLinkPreviewContent(state: state, item: item)
++        let link = ReplicaLinkPreviewContent(state: state, item: item, input: input)
+         content = link
+         contentSize = link.preferredPreviewSize
+         metadata = link.previewMetadataView
+--- phase-101-before/replica/Sources/Pasto/UI/ReplicaColorPreviewContent.swift
++++ replica/Sources/Pasto/UI/ReplicaColorPreviewContent.swift
+@@ -16,6 +16,7 @@
+ 
+     private weak var state: ReplicaUIState?
+     private let itemID: UUID
++    private let editInput: ClipboardRestoreItem?
+     private let codeLabel = NSTextField(labelWithString: "")
+     private let metadataHost = NSView()
+     private let metadata = NSStackView()
+@@ -28,9 +29,10 @@
+             dark: NSColor.white.withAlphaComponent(0.26), light: NSColor.black.withAlphaComponent(0.26))
+     }
+ 
+-    init(state: ReplicaUIState, item: ClipboardItem) {
++    init(state: ReplicaUIState, item: ClipboardItem, input: ClipboardRestoreItem? = nil) {
+         self.state = state
+         itemID = item.id
++        editInput = input
+         super.init(frame: .zero)
+         codeLabel.font = NSFont.userFixedPitchFont(ofSize: 22)
+         codeLabel.alignment = .center
+@@ -109,8 +111,9 @@
+         colorPanel.orderOut(nil)
+         guard let state else { return }
+         do {
+-            try state.store.updateColorItem(id: itemID,
+-                text: OriginalPreviewColorFormatting.f_100206b5c(displayedColor).uppercased())
++            let text = OriginalPreviewColorFormatting.f_100206b5c(displayedColor).uppercased()
++            if let editInput { try state.store.updateColorItem(editInput, text: text) }
++            else { try state.store.updateColorItem(id: itemID, text: text) }
+             state.normalizeSelection()
+         } catch { state.controller?.presentError(error) }
+     }
+--- phase-101-before/replica/Sources/Pasto/UI/ReplicaImagePreviewContent.swift
++++ replica/Sources/Pasto/UI/ReplicaImagePreviewContent.swift
+@@ -7,6 +7,7 @@
+ final class ReplicaImagePreviewContent: NSView, OriginalPreviewEditableContent, NSUserInterfaceValidations {
+     private weak var state: ReplicaUIState?
+     private let itemID: UUID
++    private let editInput: ClipboardRestoreItem?
+     private let checkerboardView = OriginalImageCheckerboardView(frame: .zero)
+     private let zoomView = OriginalZoomableImageView()
+     private let metadataHost = NSView()
+@@ -38,9 +39,10 @@
+ 
+     var previewEditingToolbar: NSView? { toolbar }
+ 
+-    init(state: ReplicaUIState, item: ClipboardItem) {
++    init(state: ReplicaUIState, item: ClipboardItem, input: ClipboardRestoreItem? = nil) {
+         self.state = state
+         itemID = item.id
++        editInput = input
+         super.init(frame: .zero)
+         addSubview(checkerboardView)
+         checkerboardView.translatesAutoresizingMaskIntoConstraints = false
+@@ -106,7 +108,11 @@
+     func commitPreviewEditing() {
+         if let image = zoomView.f_100240a18(), let state {
+             do {
+-                try state.store.updateImagePreviewItem(id: itemID, payloads: Self.encodedPayloads(image))
++                if let editInput {
++                    try state.store.updateImagePreviewItem(editInput, payloads: Self.encodedPayloads(image))
++                } else {
++                    try state.store.updateImagePreviewItem(id: itemID, payloads: Self.encodedPayloads(image))
++                }
+                 state.normalizeSelection()
+             } catch { state.controller?.presentError(error) }
+         }
+--- phase-101-before/replica/Sources/Pasto/UI/ReplicaLinkPreviewContent.swift
++++ replica/Sources/Pasto/UI/ReplicaLinkPreviewContent.swift
+@@ -16,6 +16,7 @@
+ 
+     private weak var state: ReplicaUIState?
+     private let itemID: UUID
++    private let editInput: ClipboardRestoreItem?
+     private let readOnlyContent: NSView
+     private let textView = NSTextView()
+     private let metadata = NSStackView()
+@@ -23,9 +24,10 @@
+     private var openButton: OriginalToolbarButton?
+     private var itemObservation: AnyCancellable?
+ 
+-    init(state: ReplicaUIState, item: ClipboardItem) {
++    init(state: ReplicaUIState, item: ClipboardItem, input: ClipboardRestoreItem? = nil) {
+         self.state = state
+         itemID = item.id
++        editInput = input
+         readOnlyContent = makeReplicaReadOnlyPreviewContent(store: state.store, item: item)
+         super.init(frame: .zero)
+         textView.isSelectable = true
+@@ -80,7 +82,8 @@
+     func commitPreviewEditing() {
+         guard let state, let url = Self.normalizedURL(textView.string) else { return }
+         do {
+-            try state.store.updateLinkItem(id: itemID, url: url)
++            if let editInput { try state.store.updateLinkItem(editInput, url: url) }
++            else { try state.store.updateLinkItem(id: itemID, url: url) }
+             state.normalizeSelection()
+         } catch { state.controller?.presentError(error) }
+         showContent(readOnlyContent)
+--- phase-101-before/replica/Sources/PastoCore/ClipboardStore.swift
++++ replica/Sources/PastoCore/ClipboardStore.swift
+@@ -1026,11 +1026,19 @@
+     }
+ 
+     private func updateTextPreviewItem(id: UUID, input: ClipboardRestoreItem?, attributedString: NSAttributedString) throws {
++        try replacePreviewContent(id: id, input: input, plainText: attributedString.string) {
++            OriginalTextPreviewSubmission.makeItem(attributedString)
++        }
++    }
++
++    // All local content writers submit the captured entity through Writing +0x18 / 360ff8.
++    private func replacePreviewContent(id: UUID, input: ClipboardRestoreItem?, plainText: @autoclosure () -> String?,
++                                       makeRepresentation: () -> OriginalPasteboardItem) throws {
+         try mutateInTransaction { state, transaction in
+             let nativeObject = input?.nativeObject
+             var index = state.items.firstIndex(where: { $0.id == id })
+             guard nativeObject != nil || index != nil else { throw ClipboardStoreError.itemNotFound }
+-            let representation = OriginalTextPreviewSubmission.makeItem(attributedString)
++            let representation = makeRepresentation()
+             let items = [representation]
+             let nativeKind = OriginalPasteboardClassification.f_10032362c(items)
+             guard let checksum = OriginalPasteboardChecksums.f_1003216bc(items, kind: nativeKind) else { return }
+@@ -1064,7 +1072,7 @@
+             }
+             let i = index!
+             item.payloads = payloads
+-            item.plainText = attributedString.string
++            item.plainText = plainText()
+             item.kind = kind
+             item.imagePreviewMetadata = nil
+             item.rawPreview = nil
+@@ -1108,6 +1116,22 @@
+         try updateImageItem(id: id, payloads: payloads, allowingEmptyRepresentation: false)
+     }
+ 
++    public func updateImagePreviewItem(_ input: ClipboardRestoreItem, payloads: [String: Data]) throws {
++        guard input.nativeObject != nil else {
++            try updateImagePreviewItem(id: input.id, payloads: payloads)
++            return
++        }
++        let imageTypes = ["public.png", "public.jpeg", "public.heic", "public.tiff", "com.apple.icns", "com.compuserve.gif"]
++        let types = imageTypes.filter { payloads[$0] != nil }
++        guard !types.isEmpty || payloads.isEmpty else {
++            throw OriginalPasteboardItemCreationError.unsupportedContent
++        }
++        try replacePreviewContent(id: input.id, input: input, plainText: nil) {
++            OriginalPasteboardItem(types: types, dataByType: payloads)
++        }
++        startBackgroundTextRecognition(id: input.id)
++    }
++
+     public func updateImagePreviewItem(id: UUID, payloads: [String: Data]) throws {
+         try updateImageItem(id: id, payloads: payloads, allowingEmptyRepresentation: true)
+     }
+@@ -1138,6 +1162,20 @@
+             Self.refreshNativeChecksum(&state.items[i])
+         }
+         startBackgroundTextRecognition(id: id)
++    }
++
++    public func updateLinkItem(_ input: ClipboardRestoreItem, url: URL) throws {
++        guard let object = input.nativeObject else {
++            try updateLinkItem(id: input.id, url: url)
++            return
++        }
++        let name: String?
++        if let previous = OriginalImagePreviewMetadataCodec.decodeLink(object.value(forKey: "rawPreview") as? Data) {
++            name = previous.name
++        } else { name = "" }
++        try replacePreviewContent(id: input.id, input: input, plainText: url.absoluteString) {
++            OriginalPasteboardItem.f_10037c7bc(url, title: name)
++        }
+     }
+ 
+     public func updateLinkItem(id: UUID, url: URL) throws {
+@@ -1164,6 +1202,16 @@
+                 binaryPropertyList: state.preferences.useBinaryPlist)
+             state.items[i].updatedAt = Date()
+             Self.refreshNativeChecksum(&state.items[i])
++        }
++    }
++
++    public func updateColorItem(_ input: ClipboardRestoreItem, text: String) throws {
++        guard input.nativeObject != nil else {
++            try updateColorItem(id: input.id, text: text)
++            return
++        }
++        try replacePreviewContent(id: input.id, input: input, plainText: text) {
++            OriginalPasteboardItem.f_10037c6d4(text)
+         }
+     }
+ 
+--- phase-101-before/scripts/tests/test_p1_repair_native_title_write.py
++++ scripts/tests/test_p1_repair_native_title_write.py
+@@ -2,6 +2,7 @@
+ from pathlib import Path
+ import hashlib,json,sys,unittest
+ ROOT=Path(__file__).resolve().parents[2]
++from nontext_edit_write_scope_contract import pre_nontext_edit_write
+ sys.path[:0]=[str(ROOT/'scripts'),str(ROOT/'scripts/tests')]
+ from function_ledger import source_fragments
+ from test_offline_p0_contracts import body
+@@ -95,7 +96,7 @@
+         setter=(ROOT/'replica/Sources/PastoCore/ClipboardItemTitlePersistence.swift').read_text();self.assertIn('if (object.value(forKey: "title") as? String) != title',setter);self.assertIn('object.setValue(title, forKey: "title")',setter);self.assertNotIn('Date()',setter)
+         persistence=(ROOT/'replica/Sources/PastoCore/ClipboardPersistence.swift').read_text();self.assertIn('if old.map(contentForComparison) != contentForComparison(item)',persistence);self.assertIn('value.title = ""',body(persistence,'private func contentForComparison('))
+         for r in self.proof['unchanged_methods']:
+-            s=body((ROOT/r['path']).read_text(),r['symbol']);self.assertEqual(hashlib.sha256(s.encode()).hexdigest(),r['sha256']);self.assertEqual(s,body((self.phase/'before'/r['path']).read_text(),r['symbol']))
++            s=body(pre_nontext_edit_write((ROOT/r['path']).read_text()),r['symbol']);self.assertEqual(hashlib.sha256(s.encode()).hexdigest(),r['sha256']);self.assertEqual(s,body((self.phase/'before'/r['path']).read_text(),r['symbol']))
+ 
+     def test_seven_exact_deltas_only_three_files_and_244_others_unchanged(self):
+         self.assertEqual(len(CHANGES),7);sha=lambda p:hashlib.sha256(pre_card_title_input_bytes(ROOT/p)).hexdigest()
+--- phase-101-before/scripts/tests/test_p1_repair_text_preview_creation.py
++++ scripts/tests/test_p1_repair_text_preview_creation.py
+@@ -7,13 +7,14 @@
+ from test_offline_p0_contracts import body
+ from test_p0_repair_checksum_routing import original_fragment
+ from text_preview_creation_scope_contract import CHANGES,pre_text_preview_creation
++from nontext_edit_write_scope_contract import pre_nontext_edit_write,pre_nontext_edit_write_bytes
+ 
+ class TextPreviewCreationContracts(unittest.TestCase):
+     @classmethod
+     def setUpClass(cls):
+         cls.phase=ROOT/'.local/p0-repair/phase-100';cls.proof=json.loads((cls.phase/'text-preview-creation-contract.json').read_text());cls.base=json.loads((cls.phase/'baseline.json').read_text())
+         cls.paths=dict(handle='replica/Sources/PastoCore/ClipboardRestoreItem.swift',adapter='replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift',controller='replica/Sources/Pasto/UI/ReplicaUIController.swift')
+-        cls.src={k:(ROOT/p).read_text()for k,p in cls.paths.items()};cls.before={k:(cls.phase/'before'/p).read_text()for k,p in cls.paths.items()}
++        cls.src={k:pre_nontext_edit_write((ROOT/p).read_text())for k,p in cls.paths.items()};cls.before={k:(cls.phase/'before'/p).read_text()for k,p in cls.paths.items()}
+         ns={};exec((ROOT/cls.proof['decoder']['path']).read_text().split("idx={r['address']",1)[0],ns);cls.ns=ns
+         s=cls.src['adapter'];cls.text=s[s.index('private final class ReplicaInlineTextPreviewContent:'):s.index('private final class ReplicaPreviewActionMenuItem:')];cls.header=s[s.index('private final class ReplicaInlinePreviewHeader:'):]
+     def original(self,a):
+@@ -81,9 +82,9 @@
+     def test_fifteen_existing_commit_observation_and_lifecycle_methods_remain_unchanged(self):
+         self.assertEqual(len(self.proof['unchanged_methods']),15)
+         for r in self.proof['unchanged_methods']:
+-            s=body((ROOT/r['path']).read_text(),r['symbol']);self.assertEqual(hashlib.sha256(s.encode()).hexdigest(),r['sha256']);self.assertEqual(s,body((self.phase/'before'/r['path']).read_text(),r['symbol']))
++            s=body(pre_nontext_edit_write((ROOT/r['path']).read_text()),r['symbol']);self.assertEqual(hashlib.sha256(s.encode()).hexdigest(),r['sha256']);self.assertEqual(s,body((self.phase/'before'/r['path']).read_text(),r['symbol']))
+     def test_exact_delta_scope_and_historical_reversal_are_idempotent(self):
+-        self.assertEqual(len(CHANGES),18);sha=lambda p:hashlib.sha256((ROOT/p).read_bytes()).hexdigest();current={str(p.relative_to(ROOT))for p in(ROOT/'replica/Sources').rglob('*')if p.is_file()};self.assertEqual(current,set(self.base['production']))
++        self.assertEqual(len(CHANGES),18);sha=lambda p:hashlib.sha256(pre_nontext_edit_write_bytes(ROOT/p)).hexdigest();current={str(p.relative_to(ROOT))for p in(ROOT/'replica/Sources').rglob('*')if p.is_file()};self.assertEqual(current,set(self.base['production']))
+         self.assertEqual({p for p,h in self.base['production'].items()if sha(p)!=h},set(self.paths.values()))
+         for k,p in self.paths.items():self.assertEqual(pre_text_preview_creation(self.src[k]),self.before[k]);self.assertEqual(pre_text_preview_creation(self.before[k]),self.before[k]);self.assertEqual(sha(p),self.proof['current_sources'][p])
+         for p,h in self.proof['shared_sources'].items():self.assertEqual(sha(p),h);self.assertEqual(h,self.base['production'][p])
+--- phase-101-before/scripts/tests/text_preview_creation_scope_contract.py
++++ scripts/tests/text_preview_creation_scope_contract.py
+@@ -1,5 +1,6 @@
+ """Exact phase100 native text creation deltas for historical contracts only."""
+ from pathlib import Path
++from nontext_edit_write_scope_contract import pre_nontext_edit_write
+ CHANGES = [['replica/Sources/PastoCore/ClipboardRestoreItem.swift',
+   '    // 309008/308f88 read title/type/preview, independently of archived value content.\n',
+   '    // 31eba8/31c2ec inspect native type before content creation or editing eligibility.\n'
+@@ -121,6 +122,7 @@
+   '            return makeOriginalReplicaNativePreview(state: self.state, input: input)\n']]
+ 
+ def pre_text_preview_creation(source):
++    source=pre_nontext_edit_write(source)
+     for _,old,new in reversed(CHANGES):
+         if old.startswith(new) and old in source: continue
+         if new in source:
+--- /dev/null
++++ scripts/tests/test_p1_repair_nontext_edit_write.py
+@@ -0,0 +1,98 @@
++"""Nontext captured-entity writes: source/Mach-O checks, never framework execution."""
++from pathlib import Path
++import hashlib,json,sys,unittest
++ROOT=Path(__file__).resolve().parents[2]
++sys.path[:0]=[str(ROOT/'scripts'),str(ROOT/'scripts/tests')]
++from function_ledger import source_fragments
++from test_offline_p0_contracts import body
++from test_p0_repair_checksum_routing import original_fragment
++from nontext_edit_write_scope_contract import CHANGES,pre_nontext_edit_write
++
++class NontextEditWriteContracts(unittest.TestCase):
++    @classmethod
++    def setUpClass(cls):
++        cls.phase=ROOT/'.local/p0-repair/phase-101';cls.proof=json.loads((cls.phase/'nontext-edit-write-contract.json').read_text());cls.base=json.loads((cls.phase/'baseline.json').read_text());cls.src={p:(ROOT/p).read_text()for p in cls.proof['current_sources']}
++        cls.store=cls.src['replica/Sources/PastoCore/ClipboardStore.swift'];cls.transaction=body(cls.store,'private func replacePreviewContent(')
++        ns={};exec((ROOT/cls.proof['decoder']['path']).read_text().split("idx={r['address']",1)[0],ns);cls.ns=ns
++    def original(self,a):
++        r=next(r for r in self.proof['original_fragments']if r['address']==a);return original_fragment((ROOT/r['path']).read_text(),a[2:])
++    def order(self,s,tokens):
++        pos=[s.index(t)for t in tokens];self.assertEqual(pos,sorted(pos))
++    def test_twenty_five_original_fragments_and_reused_contracts_are_bound(self):
++        self.assertEqual(len(self.proof['original_fragments']),25)
++        for r in self.proof['original_fragments']:self.assertEqual(source_fragments(ROOT/r['path'])[r['address']]['sha256'],r['sha256'])
++        for r in [self.proof['binary'],self.proof['decoder']]+self.proof['reused_evidence']:self.assertEqual(hashlib.sha256((ROOT/r['path']).read_bytes()).hexdigest(),r['sha256'])
++    def test_actual_ARM_calls_bind_three_representation_writers_and_shared_backend(self):
++        self.assertEqual(len(self.proof['ARM_calls']),20)
++        for r in self.proof['ARM_calls']:
++            pc=int(r['address'],16);b=self.ns['read'](pc,4);self.assertEqual(b.hex(),r['bytes']);w=int.from_bytes(b,'little');self.assertEqual(w&0x7c000000,0x14000000);d=w&0x3ffffff
++            if d&0x2000000:d-=0x4000000
++            self.assertEqual(pc+4*d,int(r['target'],16))
++    def test_default_repository_and_writing_content_slots_have_actual_chain_targets(self):
++        self.assertIn('&PTR_PTR_100eccad0',self.original('0x100357cf0'))
++        rows=self.proof['repository_writing_pointers'];self.assertEqual(len(rows),2);self.assertEqual([(r['address'],r['target'])for r in rows],[('0x100eccae0','0x100ecca50'),('0x100ecca68','0x100363ff0')])
++        for r in rows:
++            a=int(r['address'],16);v,ch=self.ns['reachable_pointer'](a);self.assertEqual(ch,r['chain']);self.assertEqual(self.ns['read'](a,8).hex(),r['bytes']);self.assertEqual(self.ns['base']+(v&((1<<36)-1)),int(r['target'],16))
++        self.assertIn('FUN_100360ff8()',self.original('0x100363ff0'))
++    def test_VM_constructors_and_ARM_handoffs_keep_captured_entities(self):
++        for a in ['0x1003bc2e8','0x1003bffac']:self.assertIn('*(undefined8 *)(param_3 + 0x50) = param_1',self.original(a))
++        words={r['address']:r['bytes']for r in self.proof['ARM_words']};self.assertEqual(len(words),16)
++        for a,b in words.items():self.assertEqual(self.ns['read'](int(a,16),4).hex(),b)
++        for a,b in {'0x1003bdf20':'180b40f9','0x1003bdff8':'e00318aa','0x1003be008':'00013fd6','0x1003bc0e4':'342b40f9','0x1003bc22c':'e0031baa','0x1003bc238':'00013fd6','0x1003bfc18':'732a40f9','0x1003bfca0':'e00313aa','0x1003bfcb0':'00013fd6'}.items():self.assertEqual(words[a],b)
++    def test_actual_factory_passes_input_to_all_three_UI_classes(self):
++        s=self.src['replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift'];factory=body(s,'func makeOriginalReplicaPreview(')
++        for kind in ['Image','Color','Link']:self.assertIn('Replica'+kind+'PreviewContent(state: state, item: item, input: input)',factory)
++        for kind in ['Image','Color','Link']:
++            s=self.src['replica/Sources/Pasto/UI/Replica'+kind+'PreviewContent.swift'];self.assertIn('private let editInput: ClipboardRestoreItem?',s);init=body(s,'init(state: ReplicaUIState, item: ClipboardItem, input: ClipboardRestoreItem? = nil)');self.order(init,['itemID = item.id','editInput = input'])
++    def test_shared_transaction_is_exact_previous_text_body_with_deferred_reads(self):
++        old=body((self.phase/'before/replica/Sources/PastoCore/ClipboardStore.swift').read_text(),'private func updateTextPreviewItem(');expected=old.replace('OriginalTextPreviewSubmission.makeItem(attributedString)','makeRepresentation()').replace('item.plainText = attributedString.string','item.plainText = plainText()');self.assertEqual(self.transaction,expected)
++        self.assertIn('plainText: @autoclosure () -> String?',self.store)
++        wrapper=body(self.store,'private func updateTextPreviewItem(');self.assertIn('plainText: attributedString.string',wrapper);self.assertIn('OriginalTextPreviewSubmission.makeItem(attributedString)',wrapper)
++    def test_checksum_nil_gate_precedes_projection_and_all_native_mutations(self):
++        self.order(self.transaction,['try mutateInTransaction','let representation = makeRepresentation()','f_10032362c(items)','guard let checksum = OriginalPasteboardChecksums.f_1003216bc','else { return }','if let nativeObject, let input','item = input.resolvedItem()','item.payloads = payloads','replaceCapturedItemData'])
++        early=self.transaction[:self.transaction.index('guard let checksum')]
++        for token in ['state.items.append','item.payloads =','replaceCapturedItemData','setValue','Date()']:self.assertNotIn(token,early)
++    def test_native_target_uses_same_object_and_cache_miss_does_not_reject(self):
++        native=body(self.transaction,'if let nativeObject, let input');self.order(native,['target = (id: id, object: nativeObject)','item = input.resolvedItem()','if index == nil','state.items.append(item)'])
++        self.assertNotIn('prepareHistoryItems',native);self.assertNotIn('first(where:',native)
++        self.assertIn('target = try transaction.repository.prepareHistoryItems([id]).first!',self.transaction)
++    def test_native_recency_is_preserved_and_legacy_clock_is_explicit(self):
++        self.assertEqual(self.transaction.count('Date()'),1);self.assertIn('if nativeObject == nil { item.updatedAt = Date() }',self.transaction)
++        for name in ['updateImagePreviewItem','updateColorItem','updateLinkItem']:
++            s=body(self.store,'public func '+name+'(_ input:');self.assertNotIn('Date()',s)
++    def test_data_replacement_precedes_preview_generation_and_cached_assignment(self):
++        self.order(self.transaction,['item.rawPreview = nil','item.nativeChecksum = checksum','transaction.repository.replaceCapturedItemData(target, items: items','item = Self.withPreviewMetadata(item','return item.rawPreview','state.items[i] = item'])
++        self.assertEqual(self.transaction.count('Self.withPreviewMetadata'),1);self.assertNotIn('save(',self.transaction)
++        original=self.original('0x100360ff8');self.order(original,['FUN_1003216bc(','if (uVar5 != 0)','objc_stub::setRawType_','objc_stub::deleteObject_','objc_stub::setData_','FUN_100322504(','FUN_10031ed94('])
++    def test_native_image_uses_ordered_PNG_JPEG_or_empty_representation(self):
++        s=body(self.store,'public func updateImagePreviewItem(_ input:');self.order(s,['guard input.nativeObject != nil','updateImagePreviewItem(id: input.id','let imageTypes =','let types = imageTypes.filter','replacePreviewContent(id: input.id, input: input, plainText: nil)','OriginalPasteboardItem(types: types, dataByType: payloads)','startBackgroundTextRecognition(id: input.id)'])
++        image=self.src['replica/Sources/Pasto/UI/ReplicaImagePreviewContent.swift'];encode=body(image,'private static func encodedPayloads(');self.order(encode,['OriginalPasteboardImageEncoding.f_1003c89c8','PasteboardType.png','f_1003c8b58(image, compression: 0.5)','public.jpeg','return [:]'])
++        self.assertIn('guard !types.isEmpty || payloads.isEmpty else',s);self.assertIn('throw OriginalPasteboardItemCreationError.unsupportedContent',s)
++        self.assertIn('FUN_100381528',self.original('0x1003bded4'));self.assertIn('FUN_100381534',self.original('0x1003bded4'))
++    def test_native_link_name_comes_from_captured_metadata_and_preserves_nil(self):
++        s=body(self.store,'public func updateLinkItem(_ input:');self.order(s,['guard let object = input.nativeObject','updateLinkItem(id: input.id','decodeLink(object.value(forKey: "rawPreview")','name = previous.name','else { name = "" }','replacePreviewContent(id: input.id, input: input, plainText: url.absoluteString)','OriginalPasteboardItem.f_10037c7bc(url, title: name)'])
++        for token in ['state.items','first(where:','resolvedItem','previous.name ??']:self.assertNotIn(token,s)
++    def test_native_color_uses_same_HEX_plain_representation_without_UUID_selection(self):
++        s=body(self.store,'public func updateColorItem(_ input:');self.order(s,['guard input.nativeObject != nil','updateColorItem(id: input.id','replacePreviewContent(id: input.id, input: input, plainText: text)','OriginalPasteboardItem.f_10037c6d4(text)'])
++        ui=self.src['replica/Sources/Pasto/UI/ReplicaColorPreviewContent.swift'];commit=body(ui,'func commitPreviewEditing()');self.order(commit,['editing = false','colorPanel.orderOut(nil)','f_100206b5c(displayedColor).uppercased()','if let editInput','updateColorItem(editInput, text: text)','else { try state.store.updateColorItem(id: itemID, text: text)'])
++    def test_each_UI_commit_calls_handle_overload_and_retains_legacy_fallback(self):
++        for kind,name in [('Image','updateImagePreviewItem'),('Color','updateColorItem'),('Link','updateLinkItem')]:
++            s=self.src['replica/Sources/Pasto/UI/Replica'+kind+'PreviewContent.swift'];commit=body(s,'func commitPreviewEditing()');self.order(commit,['if let editInput','state.store.'+name+'(editInput','state.store.'+name+'(id: itemID','state.normalizeSelection()'])
++            self.assertNotIn('ClipboardRestoreItem(item:',s)
++    def test_legacy_APIs_and_eighteen_unrelated_methods_are_unchanged(self):
++        self.assertEqual(len(self.proof['unchanged_methods']),18)
++        for r in self.proof['unchanged_methods']:
++            s=body((ROOT/r['path']).read_text(),r['symbol']);self.assertEqual(hashlib.sha256(s.encode()).hexdigest(),r['sha256']);self.assertEqual(s,body((self.phase/'before'/r['path']).read_text(),r['symbol']))
++    def test_new_cross_file_API_and_representation_initializers_exist(self):
++        for name in ['updateImagePreviewItem','updateColorItem','updateLinkItem']:self.assertIn('public func '+name+'(_ input: ClipboardRestoreItem',self.store)
++        pasteboard=(ROOT/'replica/Sources/PastoCore/OriginalPasteboard.swift').read_text();self.assertIn('    init(types: [String], dataByType: [String: Data])',pasteboard);self.assertNotIn('private init(types:',pasteboard)
++        self.assertIn('public static func f_10037c6d4(',pasteboard);self.assertIn('public static func f_10037c7bc(',pasteboard)
++    def test_twenty_one_deltas_only_five_files_and_reversal_is_idempotent(self):
++        self.assertEqual(len(CHANGES),21);sha=lambda p:hashlib.sha256((ROOT/p).read_bytes()).hexdigest();files={str(p.relative_to(ROOT))for p in(ROOT/'replica/Sources').rglob('*')if p.is_file()};self.assertEqual(files,set(self.base['production']))
++        self.assertEqual({p for p,h in self.base['production'].items()if sha(p)!=h},set(self.src))
++        for p,s in self.src.items():
++            before=(self.phase/'before'/p).read_text();self.assertEqual(pre_nontext_edit_write(s),before);self.assertEqual(pre_nontext_edit_write(before),before);self.assertEqual(sha(p),self.proof['current_sources'][p])
++        for p,h in self.proof['shared_sources'].items():self.assertEqual(sha(p),h);self.assertEqual(h,self.base['production'][p])
++    def test_three_finite_writes_do_not_claim_full_async_reader_DI_or_runtime(self):
++        self.assertEqual(self.proof['new_difference_records'],3);self.assertEqual({r['function_id']for r in self.proof['contracts']},{'Paste:0x1003bded4','Paste:0x1003bc060','Paste:0x1003bfb8c'});self.assertTrue(self.proof['finite_contract_verified']);self.assertFalse(self.proof['full_function_migration_verified']);self.assertFalse(self.proof['runtime_executed'])
++        for token in ['Nontext','debounce','Missing fields','+58','04430c']:self.assertTrue(any(token in r for r in self.proof['remaining']),token)
+--- /dev/null
++++ scripts/tests/nontext_edit_write_scope_contract.py
+@@ -0,0 +1,153 @@
++"""Exact phase101 nontext native write deltas, historical contract isolation only."""
++from pathlib import Path
++CHANGES = [['replica/Sources/PastoCore/ClipboardStore.swift',
++  '    private func updateTextPreviewItem(id: UUID, input: ClipboardRestoreItem?, attributedString: '
++  'NSAttributedString) throws {\n'
++  '        try mutateInTransaction { state, transaction in\n',
++  '    private func updateTextPreviewItem(id: UUID, input: ClipboardRestoreItem?, attributedString: '
++  'NSAttributedString) throws {\n'
++  '        try replacePreviewContent(id: id, input: input, plainText: attributedString.string) {\n'
++  '            OriginalTextPreviewSubmission.makeItem(attributedString)\n'
++  '        }\n'
++  '    }\n'
++  '\n'
++  '    // All local content writers submit the captured entity through Writing +0x18 / 360ff8.\n'
++  '    private func replacePreviewContent(id: UUID, input: ClipboardRestoreItem?, plainText: @autoclosure () '
++  '-> String?,\n'
++  '                                       makeRepresentation: () -> OriginalPasteboardItem) throws {\n'
++  '        try mutateInTransaction { state, transaction in\n'],
++ ['replica/Sources/PastoCore/ClipboardStore.swift',
++  '            let representation = OriginalTextPreviewSubmission.makeItem(attributedString)\n',
++  '            let representation = makeRepresentation()\n'],
++ ['replica/Sources/PastoCore/ClipboardStore.swift',
++  '            item.plainText = attributedString.string\n',
++  '            item.plainText = plainText()\n'],
++ ['replica/Sources/PastoCore/ClipboardStore.swift',
++  '    public func updateImagePreviewItem(id: UUID, payloads: [String: Data]) throws {\n',
++  '    public func updateImagePreviewItem(_ input: ClipboardRestoreItem, payloads: [String: Data]) throws {\n'
++  '        guard input.nativeObject != nil else {\n'
++  '            try updateImagePreviewItem(id: input.id, payloads: payloads)\n'
++  '            return\n'
++  '        }\n'
++  '        let imageTypes = ["public.png", "public.jpeg", "public.heic", "public.tiff", "com.apple.icns", '
++  '"com.compuserve.gif"]\n'
++  '        let types = imageTypes.filter { payloads[$0] != nil }\n'
++  '        guard !types.isEmpty || payloads.isEmpty else {\n'
++  '            throw OriginalPasteboardItemCreationError.unsupportedContent\n'
++  '        }\n'
++  '        try replacePreviewContent(id: input.id, input: input, plainText: nil) {\n'
++  '            OriginalPasteboardItem(types: types, dataByType: payloads)\n'
++  '        }\n'
++  '        startBackgroundTextRecognition(id: input.id)\n'
++  '    }\n'
++  '\n'
++  '    public func updateImagePreviewItem(id: UUID, payloads: [String: Data]) throws {\n'],
++ ['replica/Sources/PastoCore/ClipboardStore.swift',
++  '    public func updateLinkItem(id: UUID, url: URL) throws {\n',
++  '    public func updateLinkItem(_ input: ClipboardRestoreItem, url: URL) throws {\n'
++  '        guard let object = input.nativeObject else {\n'
++  '            try updateLinkItem(id: input.id, url: url)\n'
++  '            return\n'
++  '        }\n'
++  '        let name: String?\n'
++  '        if let previous = OriginalImagePreviewMetadataCodec.decodeLink(object.value(forKey: "rawPreview") '
++  'as? Data) {\n'
++  '            name = previous.name\n'
++  '        } else { name = "" }\n'
++  '        try replacePreviewContent(id: input.id, input: input, plainText: url.absoluteString) {\n'
++  '            OriginalPasteboardItem.f_10037c7bc(url, title: name)\n'
++  '        }\n'
++  '    }\n'
++  '\n'
++  '    public func updateLinkItem(id: UUID, url: URL) throws {\n'],
++ ['replica/Sources/PastoCore/ClipboardStore.swift',
++  '    public func updateColorItem(id: UUID, text: String) throws {\n',
++  '    public func updateColorItem(_ input: ClipboardRestoreItem, text: String) throws {\n'
++  '        guard input.nativeObject != nil else {\n'
++  '            try updateColorItem(id: input.id, text: text)\n'
++  '            return\n'
++  '        }\n'
++  '        try replacePreviewContent(id: input.id, input: input, plainText: text) {\n'
++  '            OriginalPasteboardItem.f_10037c6d4(text)\n'
++  '        }\n'
++  '    }\n'
++  '\n'
++  '    public func updateColorItem(id: UUID, text: String) throws {\n'],
++ ['replica/Sources/Pasto/UI/ReplicaImagePreviewContent.swift',
++  '    private let itemID: UUID\n'
++  '    private let checkerboardView = OriginalImageCheckerboardView(frame: .zero)\n',
++  '    private let itemID: UUID\n'
++  '    private let editInput: ClipboardRestoreItem?\n'
++  '    private let checkerboardView = OriginalImageCheckerboardView(frame: .zero)\n'],
++ ['replica/Sources/Pasto/UI/ReplicaImagePreviewContent.swift',
++  '    init(state: ReplicaUIState, item: ClipboardItem) {\n',
++  '    init(state: ReplicaUIState, item: ClipboardItem, input: ClipboardRestoreItem? = nil) {\n'],
++ ['replica/Sources/Pasto/UI/ReplicaImagePreviewContent.swift',
++  '        itemID = item.id\n        super.init(frame: .zero)\n',
++  '        itemID = item.id\n        editInput = input\n        super.init(frame: .zero)\n'],
++ ['replica/Sources/Pasto/UI/ReplicaImagePreviewContent.swift',
++  '                try state.store.updateImagePreviewItem(id: itemID, payloads: '
++  'Self.encodedPayloads(image))\n',
++  '                if let editInput {\n'
++  '                    try state.store.updateImagePreviewItem(editInput, payloads: '
++  'Self.encodedPayloads(image))\n'
++  '                } else {\n'
++  '                    try state.store.updateImagePreviewItem(id: itemID, payloads: '
++  'Self.encodedPayloads(image))\n'
++  '                }\n'],
++ ['replica/Sources/Pasto/UI/ReplicaColorPreviewContent.swift',
++  '    private let itemID: UUID\n    private let codeLabel = NSTextField(labelWithString: "")\n',
++  '    private let itemID: UUID\n'
++  '    private let editInput: ClipboardRestoreItem?\n'
++  '    private let codeLabel = NSTextField(labelWithString: "")\n'],
++ ['replica/Sources/Pasto/UI/ReplicaColorPreviewContent.swift',
++  '    init(state: ReplicaUIState, item: ClipboardItem) {\n',
++  '    init(state: ReplicaUIState, item: ClipboardItem, input: ClipboardRestoreItem? = nil) {\n'],
++ ['replica/Sources/Pasto/UI/ReplicaColorPreviewContent.swift',
++  '        itemID = item.id\n        super.init(frame: .zero)\n',
++  '        itemID = item.id\n        editInput = input\n        super.init(frame: .zero)\n'],
++ ['replica/Sources/Pasto/UI/ReplicaColorPreviewContent.swift',
++  '            try state.store.updateColorItem(id: itemID,\n'
++  '                text: OriginalPreviewColorFormatting.f_100206b5c(displayedColor).uppercased())\n',
++  '            let text = OriginalPreviewColorFormatting.f_100206b5c(displayedColor).uppercased()\n'
++  '            if let editInput { try state.store.updateColorItem(editInput, text: text) }\n'
++  '            else { try state.store.updateColorItem(id: itemID, text: text) }\n'],
++ ['replica/Sources/Pasto/UI/ReplicaLinkPreviewContent.swift',
++  '    private let itemID: UUID\n    private let readOnlyContent: NSView\n',
++  '    private let itemID: UUID\n'
++  '    private let editInput: ClipboardRestoreItem?\n'
++  '    private let readOnlyContent: NSView\n'],
++ ['replica/Sources/Pasto/UI/ReplicaLinkPreviewContent.swift',
++  '    init(state: ReplicaUIState, item: ClipboardItem) {\n',
++  '    init(state: ReplicaUIState, item: ClipboardItem, input: ClipboardRestoreItem? = nil) {\n'],
++ ['replica/Sources/Pasto/UI/ReplicaLinkPreviewContent.swift',
++  '        itemID = item.id\n'
++  '        readOnlyContent = makeReplicaReadOnlyPreviewContent(store: state.store, item: item)\n',
++  '        itemID = item.id\n'
++  '        editInput = input\n'
++  '        readOnlyContent = makeReplicaReadOnlyPreviewContent(store: state.store, item: item)\n'],
++ ['replica/Sources/Pasto/UI/ReplicaLinkPreviewContent.swift',
++  '            try state.store.updateLinkItem(id: itemID, url: url)\n',
++  '            if let editInput { try state.store.updateLinkItem(editInput, url: url) }\n'
++  '            else { try state.store.updateLinkItem(id: itemID, url: url) }\n'],
++ ['replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift',
++  'ReplicaImagePreviewContent(state: state, item: item)',
++  'ReplicaImagePreviewContent(state: state, item: item, input: input)'],
++ ['replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift',
++  'ReplicaColorPreviewContent(state: state, item: item)',
++  'ReplicaColorPreviewContent(state: state, item: item, input: input)'],
++ ['replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift',
++  'ReplicaLinkPreviewContent(state: state, item: item)',
++  'ReplicaLinkPreviewContent(state: state, item: item, input: input)']]
++
++def pre_nontext_edit_write(source):
++    for _,old,new in reversed(CHANGES):
++        if old.startswith(new) and old in source: continue
++        if new in source:
++            assert source.count(new)==1
++            source=source.replace(new,old,1)
++    return source
++
++def pre_nontext_edit_write_bytes(path):
++    p=Path(path)
++    return pre_nontext_edit_write(p.read_text()).encode() if p.suffix=='.swift' else p.read_bytes()

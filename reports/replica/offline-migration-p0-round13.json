@@ -1,0 +1,261 @@
+{
+  "kind": "offline_source_contract_review",
+  "round": 13,
+  "status": "source-checks-passed-goal-active",
+  "generated_at": "2026-10-29T15:13:42.733022+00:00",
+  "previous_goal_turn": "progress",
+  "priority": "P1",
+  "module": "item_reveal_in_list_pending_focus",
+  "functions": [
+    {
+      "function_id": "Paste:0x100069fe0",
+      "status": "source_path_fixed_partial",
+      "contract": "键盘父：只核对精确Command+G分支；无候选返回false，成功调用定位。其余键盘分支仍partial。",
+      "original": {
+        "path": "decompiled/Paste/part-0035.c",
+        "sha256": "c7457bcee6863fb71878ee74a20394a338dc36bbf11e7cfdb281d46dc0f34832"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "private func handleKey(_ event:"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "return revealSelectedItemInList()"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1003b83c4",
+      "status": "source_path_fixed_partial",
+      "contract": "恰一条已解析选中项；先有历史时间的history，再rawType2所属组，排除当前列表，搜索无当前列表。当前兼容模型投影isInHistory/owner，不复制原实体与泛型ABI。",
+      "original": {
+        "path": "decompiled/Paste/part-0294.c",
+        "sha256": "084ecfcf2ee2b67c78e941e304cd10726d204ce45a87cdf7b63f7a3f8e65439a"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "func selectedItemTargetLists()"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1003250f0",
+      "status": "source_path_fixed_partial",
+      "contract": "原rawType==2，真实候选所属组使用同一条件；可选legacy rawType不伪造原实体。",
+      "original": {
+        "path": "decompiled/Paste/part-0259.c",
+        "sha256": "c6785cd5db36fe90afb7d8749249d02d62a63434de708b81aa1ec2a54e2ade13"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "store.pinboardOwner(for: item), owner.rawType == 2"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x10006c338",
+      "status": "source_path_fixed_partial",
+      "contract": "解析单项后捕获可见cell.minX-contentOffset.x，可见cell缺失保存nil；先写pending，再发onSelectList。当前直接UUID快照，原applier/actor诊断和弱回调边界保留。",
+      "original": {
+        "path": "decompiled/Paste/part-0035.c",
+        "sha256": "afbb80e3f805a3521d53509bbe270048f89d139be7370d319bc4d33dda8c3eae"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "private func revealSelectedItemInList()"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaNativeCardCollection.swift",
+          "symbol": "func horizontalOffsetForVisibleItem(_ itemID:"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x10022b598",
+      "status": "source_path_fixed_partial",
+      "contract": "原contentView.bounds getter用于取得x；当前从原生clip.bounds.minX读取，无额外布局推算。",
+      "original": {
+        "path": "decompiled/Paste/part-0189.c",
+        "sha256": "307353bf59f09e8e35b77ccd9951bb283d1931d0a65b0291d7f2f579d713ad73"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaNativeCardCollection.swift",
+          "symbol": "return cell.frame.minX - scrollView.contentView.bounds.minX"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x100037ec0",
+      "status": "source_path_fixed_partial",
+      "contract": "原闭包跳转036860再弱载入MainViewModel；当前弱controller生命周期适配，实际转chooseListForItemReveal。",
+      "original": {
+        "path": "decompiled/Paste/part-0021.c",
+        "sha256": "58e01aa9fd6915a081af7cc6fe5488c3cf17dec83fd3841e3c04b5698e004f16"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "state.chooseListForItemReveal(lists[0])"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x100036860",
+      "status": "source_path_fixed_partial",
+      "contract": "原弱MainViewModel仍存活才执行07d9c8；当前Controller拥有state，State对controller为weak，直接动作非原ABI。",
+      "original": {
+        "path": "decompiled/Paste/part-0020.c",
+        "sha256": "aec45dee40c3227485909875a0482d6695cabe0dc8b5d40a56c279af1d89990b"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "weak var controller: ReplicaUIController?"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "state.chooseListForItemReveal(lists[0])"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x10007d9c8",
+      "status": "source_path_fixed_partial",
+      "contract": "仅卡片定位回调先清原始query nodes再强制目标列表；当前清文本和filters的原子输入，然后chooseBoard。普通tab不混用此入口。",
+      "original": {
+        "path": "decompiled/Paste/part-0041.c",
+        "sha256": "dcaf32275fc5d0403dc6aef1169c722a2a691dd11ba32f40f43672d5d5bee73a"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "func chooseListForItemReveal(_ id:"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x100068b0c",
+      "status": "source_path_fixed_partial",
+      "contract": "搜索或非目标列表保留pending；目标匹配先清pending再按新provider找item，失效不选fallback；有效时singleton无delegate，再按可选offset分支恢复。当前同步可见项快照适配，原applier/FRC事务生命周期仍待核对。",
+      "original": {
+        "path": "decompiled/Paste/part-0035.c",
+        "sha256": "467bf8cf01eaff8a327f80bc4dd5bcfc546a08e5ac8558e8d5c1cf3a7e840c0e"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "func consumePendingListFocus(itemIDs:"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaNativeCardCollection.swift",
+          "symbol": "let pendingFocus = state.consumePendingListFocus(itemIDs: itemIDs)"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x10022cce0",
+      "status": "source_path_fixed_partial",
+      "contract": "原由新index布局minX减捕获offset，直接setBounds(x,0)，无clamp/动画；当前使用原生cardFrame与clip.bounds，原布局源仍适配。",
+      "original": {
+        "path": "decompiled/Paste/part-0190.c",
+        "sha256": "8a9f8cbc54d24d8226f6c280b94e1e178750178bb1bead6b7607333bf33be4c2"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaNativeCardCollection.swift",
+          "symbol": "x: cardFrame(pendingFocus.index).minX - offset, y: 0"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x100067c84",
+      "status": "source_path_fixed_partial",
+      "contract": "只核对上下文建立后的pendingFocus消费者；当前host.update在新visibleItems布局后经MainQueue异步交付，核对host/state快照一致才消费，避免SwiftUI更新中发布selection。原整段订阅/applier/FRC仍partial。",
+      "original": {
+        "path": "decompiled/Paste/part-0035.c",
+        "sha256": "27c0018b74d690544a2836d19228d8abc0122df4b1cb55b98c1d54953453e877"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaNativeCardCollection.swift",
+          "symbol": "func update(state: ReplicaUIState, cardSide: CGFloat)"
+        }
+      ]
+    }
+  ],
+  "reviewed_count": 11,
+  "current_review_unique_count": 361,
+  "current_review_inventory_percent": 0.445,
+  "source_sha256": {
+    "replica/Sources/Pasto/UI/ReplicaUIController.swift": "3b25280760d28af362b65e33be2d5f179aa0ba59f6ce33806a83761e8dea703d",
+    "replica/Sources/Pasto/UI/ReplicaNativeCardCollection.swift": "47363989466213a14b631c8f130ce25a313b88ebe059b0c6149ab5df9483ebfe",
+    "scripts/tests/test_item_list_focus_contracts.py": "48afa4f8223bc78923a976aa72e21da7967c3a632980035769f8767fd5e7a7ac"
+  },
+  "new_partial_bindings": [
+    "Paste:0x1003b83c4",
+    "Paste:0x1003250f0",
+    "Paste:0x10006c338",
+    "Paste:0x10022b598",
+    "Paste:0x100037ec0",
+    "Paste:0x100036860",
+    "Paste:0x10007d9c8",
+    "Paste:0x100068b0c",
+    "Paste:0x10022cce0",
+    "Paste:0x100067c84"
+  ],
+  "confirmed_differences_fixed": [
+    "新增精确Command+G定位单项，候选history优先再所属pinboard并排除当前列表",
+    "补卡片定位独有的清query→选组回调及pendingFocus；保留普通tab搜索",
+    "按新列表匹配并清pending后定位UUID，恢复singleton与原可选横向偏移；无cell则普通无动画reveal，不使用固定延时或clamp"
+  ],
+  "tests": {
+    "passed": true,
+    "total": 134,
+    "added_in_round": 7,
+    "scope": "Python source/ledger/original-fragment bindings only; no Swift/ObjC compile or app execution"
+  },
+  "new_fully_migrated_function_count": 0,
+  "historical_ledger": {
+    "numerator": 1648,
+    "denominator": 81123,
+    "percent": 2.0315,
+    "stale_evidence": true
+  },
+  "current_partial_count": 450,
+  "compiled": false,
+  "application_executed": false,
+  "original_binary_executed": false,
+  "user_data_modified": false,
+  "network_used": false,
+  "committed": false,
+  "pushed": false,
+  "module_complete": false,
+  "remaining_differences": [
+    "原Core Data实体/applier/FRC和自有多board/历史flag的模型适配保留，尚不能声称全父函数一比一完成",
+    "原索引全量重建、optional字段、内容和图片闭包、actor/DI/错误生命周期继续待核对",
+    "本轮不进行运行与视觉验收，源码检查不证明真实跨状态焦点/滚动已运行通过"
+  ],
+  "next_module": "P1 search_and_filter",
+  "next_work": [
+    "批量核对已有建议与FilterBrowser消费者、索引重建，完整已有合同直接复用",
+    "继续索引/列表真实事件生命周期，不用ABI库存扫描冒充产品完成"
+  ],
+  "inventory_checked": {
+    "mapped_reference_records_checked": 2107,
+    "mapping_states": {
+      "partial": 450,
+      "migrated": 1648,
+      "excluded_by_scope": 9
+    },
+    "reference_issue_counts": {
+      "missing_address_in_evidence": 12
+    },
+    "unchanged_source_review_count": 328
+  }
+}

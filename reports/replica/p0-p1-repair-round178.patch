@@ -1,0 +1,94 @@
+--- a/replica/Sources/Pasto/UI/SearchEditor.swift
++++ b/replica/Sources/Pasto/UI/SearchEditor.swift
+@@ -24,6 +24,8 @@
+     var onCancel: () -> Void
+     var onShowFilters: (NSButton) -> Void
+     var onEditingEnded: (NSView) -> Void = { _ in }
++    var onApplySuggestion: ([OriginalSearchQueryNode]) -> Void = { _ in }
++    var onDismissSuggestions: () -> Void = {}
+ 
+     func makeField(coordinator: Coordinator) -> SearchField {
+         let field = SearchField(frame: .zero)
+@@ -185,9 +187,9 @@
+                 let candidates = OriginalSearchSuggestions.f_1002df190(
+                     contextNode: context.nodes[context.nodeIndex], currentNodes: context.nodes, provider: provider)
+                 guard !Task.isCancelled else { return }
+-                let entries = candidates.compactMap { node -> (OriginalSearchQueryNode, ReplicaSearchFilterChip)? in
+-                    guard let chip = self.chip(for: node) else { return nil }
+-                    return (node, chip)
++                let entries = candidates.compactMap { node -> (OriginalSearchSuggestions.Suggestion, ReplicaSearchFilterChip)? in
++                    guard case let .filter(tag, value) = node, let chip = self.chip(for: node) else { return nil }
++                    return (.filter(tag, value), chip)
+                 }
+                 guard !entries.isEmpty, let manager = editor.textLayoutManager else {
+                     self.dismissSuggestions()
+@@ -198,31 +200,24 @@
+                 let anchorRect = editor.convert(textRect, to: field)
+                 let menu = self.suggestionMenu ?? ReplicaSearchSuggestionsMenu()
+                 self.suggestionMenu = menu
++                let applySuggestion = self.parent.onApplySuggestion
++                let dismissSuggestions = self.parent.onDismissSuggestions
+                 menu.show(rows: entries.map { .init(title: $0.1.title, image: $0.1.image, matchQuery: context.text) },
+                           anchorRect: anchorRect, in: field,
+-                          onAccept: { [weak self, weak field, weak editor] index in
+-                    guard let self, let field, let editor, entries.indices.contains(index) else { return }
+-                    self.accept(entries[index].0, context: context, field: field, editor: editor)
+-                }, onEscape: { [weak self] in self?.dismissSuggestions() })
+-            }
+-        }
+-
+-        private func accept(_ node: OriginalSearchQueryNode, context: OriginalSearchInputContext.Context,
+-                            field: SearchField, editor: SearchTextView) {
+-            guard case let .filter(tag, filterValue) = node else { return }
+-            var nodes = OriginalSearchSuggestions.f_1002dcca4(.filter(tag, filterValue),
++                          onAccept: { index in
++                    guard entries.indices.contains(index) else { return }
++                    Self.accept(entries[index].0, context: context, apply: applySuggestion)
++                }, onEscape: dismissSuggestions)
++            }
++        }
++
++        // 041de0 -> 04160c merges the captured context, then proposes to the weak SearchBar.
++        private static func accept(_ suggestion: OriginalSearchSuggestions.Suggestion,
++                                   context: OriginalSearchInputContext.Context,
++                                   apply: ([OriginalSearchQueryNode]) -> Void) {
++            let nodes = OriginalSearchSuggestions.f_1002dcca4(suggestion,
+                 index: context.nodeIndex, addMode: 0, nodes: context.nodes)
+-            nodes = OriginalSearchQueryNormalization.f_1002da16c(nodes, flag: 0)
+-            guard nodes != currentNodes else { return }
+-            let rendered = attributedString(nodes, field: field, editor: editor)
+-            let selection = NSRange(location: rendered.length, length: 0)
+-            history.f_1002f5e18(.init(nodes: nodes, selection: selection), immediate: true)
+-            display(rendered, selection: selection, field: field, editor: editor)
+-            let value = contents(rendered, text: rendered.string)
+-            currentNodes = nodes
+-            renderedFilters = value.filters
+-            parent.onInputChange(value.text, value.filters, nodes)
+-            dismissSuggestions()
++            apply(nodes)
+         }
+ 
+         private func attributedString(_ nodes: [OriginalSearchQueryNode], field: SearchField,
+@@ -360,7 +355,9 @@
+             currentNodes = normalized
+             let rendered = attributedString(normalized, field: field, editor: editor)
+             let selection = NSRange(location: rendered.length, length: 0)
+-            history.f_1002f5e18(.init(nodes: normalized, selection: selection), immediate: true)
++            if !restoringHistory {
++                history.f_1002f5e18(.init(nodes: normalized, selection: selection), immediate: true)
++            }
+             display(rendered, selection: selection, field: field, editor: editor)
+             renderedFilters = contents(rendered, text: rendered.string).filters
+             publishCurrentQuery()
+--- a/replica/Sources/Pasto/UI/OriginalPanelToolbar.swift
++++ b/replica/Sources/Pasto/UI/OriginalPanelToolbar.swift
+@@ -220,6 +220,9 @@
+     override var intrinsicContentSize: NSSize { button.fittingSize }
+ 
+     func configure(button: AnyView, field specification: ReplicaSearchEditor) {
++        var specification = specification
++        specification.onApplySuggestion = { [weak self] nodes in self?.applySearchQuery(nodes) }
++        specification.onDismissSuggestions = { [weak self] in self?.coordinator?.dismissSuggestions() }
+         self.button.rootView = button
+         if let field, let coordinator {
+             specification.updateField(field, coordinator: coordinator)

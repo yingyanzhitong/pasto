@@ -14,7 +14,7 @@ let package = Package(
     ],
     targets: [
         .target(name: "PastoObjC", publicHeadersPath: "include"),
-        .target(name: "PastoCore", dependencies: ["PastoObjC"], resources: [.process("Resources")]),
+        .target(name: "PastoCore", dependencies: ["PastoObjC"], resources: [.process("Resources"), .copy("OriginalStackIcons.bundle")]),
         .executableTarget(name: "Pasto", dependencies: ["PastoCore", "PastoObjC"]),
         .executableTarget(name: "PastoHelper"),
         .executableTarget(name: "PastoMCP", dependencies: ["PastoCore"]),

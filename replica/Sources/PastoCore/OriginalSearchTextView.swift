@@ -127,7 +127,7 @@ open class OriginalSearchTextView: NSTextView, NSMenuDelegate {
         textLayoutManager?.textContainer?.maximumNumberOfLines = 1
         textLayoutManager?.textContainer?.lineFragmentPadding = 0
         drawsBackground = false
-        focusRingType = .none
+        focusRingType = .exterior
         isAutomaticSpellingCorrectionEnabled = false
         isAutomaticQuoteSubstitutionEnabled = false
         isAutomaticDashSubstitutionEnabled = false

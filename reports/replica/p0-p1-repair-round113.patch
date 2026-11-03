@@ -1,0 +1,10 @@
+--- a/replica/Sources/PastoCore/ClipboardPersistence.swift
++++ b/replica/Sources/PastoCore/ClipboardPersistence.swift
+@@ -222,6 +222,7 @@
+         item.rawPreview = object.value(forKey: "rawPreview") as? Data
+         item.imagePreviewMetadata = OriginalImagePreviewMetadataCodec.decode(item.rawPreview)
+         if let list = object.value(forKey: "list") as? NSManagedObject,
++           (list.value(forKey: "rawType") as? NSNumber)?.int64Value == 2,
+            let identifier = list.value(forKey: "identifier") as? String,
+            let owner = UUID(uuidString: identifier) {
+             item.pinboardOwnerID = owner

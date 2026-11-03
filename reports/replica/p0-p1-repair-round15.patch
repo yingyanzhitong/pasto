@@ -1,0 +1,52 @@
+--- phase-15-before/replica/Sources/Pasto/UI/ReplicaUIController.swift
++++ replica/Sources/Pasto/UI/ReplicaUIController.swift
+@@ -364,7 +364,7 @@
+     }
+ 
+     func moveSelection(_ offset: Int, extending: Bool = false) {
+-        let items = visibleItems
++        guard let items = collectionOwner?.appliedItems(for: self) else { return }
+         guard !items.isEmpty else { return }
+         guard let endpoint = orderedSelectionIDs.last,
+               let current = items.firstIndex(where: { $0.id == endpoint }) else { return }
+@@ -373,7 +373,7 @@
+     }
+ 
+     func moveSelectionToBoundary(last: Bool, extending: Bool = false) {
+-        let items = visibleItems
++        guard let items = collectionOwner?.appliedItems(for: self) else { return }
+         guard !items.isEmpty else { return }
+         selectIndex(last ? items.count - 1 : 0, mode: extending ? 2 : 0, items: items, animated: false)
+     }
+@@ -551,10 +551,11 @@
+     }
+ 
+     func selectAll() {
++        guard let items = collectionOwner?.appliedItems(for: self) else { return }
+         cancelPendingNeighborSelection()
+         allowsEmptySelection = false
+-        let ids = visibleItems.map(\.id)
+-        applyOrderedSelection(ids, anchor: ids.last, primary: primaryID)
++        let ids = items.map(\.id)
++        applyOrderedSelection(ids, anchor: ids.last, primary: ids.last)
+     }
+     func deselectAll() {
+         cancelPendingNeighborSelection()
+@@ -1121,7 +1122,7 @@
+     }
+ 
+     func pasteSelection(plainTextOnly: Bool) {
+-        let items = state.selectedItems
++        let items = appliedSelectionItems()
+         guard !items.isEmpty else { return }
+         paste(ids: items.map(\.id), plainTextOnly: plainTextOnly)
+     }
+@@ -1783,7 +1784,7 @@
+             }
+         }
+         if event.keyCode == 49, !isEditing {
+-            if let item = state.selectedItems.last { showPreview(item: item) }
++            if let item = appliedSelectionItems().last { showPreview(item: item) }
+             return true
+         }
+         if !isEditing, let specialKey = event.specialKey {

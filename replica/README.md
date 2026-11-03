@@ -41,7 +41,7 @@ npm run build:dmg
 
 `npm run build:dmg` 调用 `release-ci.py package` 完成两个架构的构建、合并和通用镜像打包。只处理已有应用时，可运行 `bash replica/scripts/build-dmg.sh replica/dist/Pasto.app replica/dist/Pasto.dmg` 制作本机安装镜像。`npm run build:icon` 根据独立前景素材和标准画布重新生成应用图标。
 
-Releases 仅提供一个 `Pasto-<版本号>-macos-universal.dmg`。1.0.0 安装包为 `Pasto-1.0.0-macos-universal.dmg`；其中主程序、登录项辅助程序和 `pasto-mcp` 均包含 arm64 与 x86_64 两种架构，自动适配本机芯片。打开 DMG 后，将 `Pasto.app` 拖到 `Applications` 快捷入口，复制完成后从应用程序目录启动，并在 Finder 中推出磁盘映像。Release 另附 `SHA256SUMS.txt` 和 `release-manifest.json`。
+Releases 仅提供一个 `Pasto-<版本号>-macos-universal.dmg`。最新安装包见[最新正式 Release](https://github.com/yingyanzhitong/pasto/releases/latest)；其中主程序、登录项辅助程序和 `pasto-mcp` 均包含 arm64 与 x86_64 两种架构，自动适配本机芯片。打开 DMG 后，将 `Pasto.app` 拖到 `Applications` 快捷入口，复制完成后从应用程序目录启动，并在 Finder 中推出磁盘映像。Release 另附 `SHA256SUMS.txt` 和 `release-manifest.json`。
 
 页面上的 `Source code (zip)` / `Source code (tar.gz)` 是 GitHub 自动生成的标签源码链接，不是流程上传的安装附件。
 

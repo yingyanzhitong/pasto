@@ -1,0 +1,1444 @@
+{
+  "execution_order": [
+    "修复P0",
+    "检查P1",
+    "修复P1"
+  ],
+  "scope_provisional": true,
+  "unknown_function_ids": [
+    "Paste:0x1000f733c"
+  ],
+  "frozen_comparison": {
+    "closed": 654,
+    "denominator": 656,
+    "percent": 99.7,
+    "role": "旧比较结论覆盖比例，不表示迁移完成"
+  },
+  "parallelism": {
+    "main_agents": 1,
+    "subagents_spawned": 0,
+    "existing_subagents_used": false,
+    "production_writers": 1
+  },
+  "head_revision": "050e6878a5a52f96fe33aa40f48bb8a056cd0f05",
+  "function_map_sha256": "ea781c82f93e580a940f0804fa120e01e9030357d10aee157fe4a135143b8985",
+  "additional_repaired_contracts_total": 12,
+  "kind": "P1_group_filter_String_identity_native_caption_and_model_query_gap_round176",
+  "phase": 176,
+  "generated_at": "2026-10-31T16:12:32.463519+00:00",
+  "current_stage": "P1 group身份/名称已修；模型query及弱SearchBar回调待迁",
+  "progress": {
+    "total": {
+      "repaired": 229,
+      "denominator": 230,
+      "percent": 99.57
+    },
+    "P0": {
+      "repaired": 81,
+      "denominator": 81,
+      "percent": 100.0
+    },
+    "P1": {
+      "repaired": 148,
+      "denominator": 149,
+      "percent": 99.33
+    }
+  },
+  "metric_note": "230条已确认差异中229已修；006e80只迁身份子链，模型query/弱回调仍pending，不以局部代码计整函数完成。不是全量迁移完成率。",
+  "full_function_migration_verified": false,
+  "full_priority_completion_percent": null,
+  "prior_repair_report": "reports/replica/p0-p1-repair-round175.json",
+  "difference_backlog": "reports/replica/p0-p1-difference-backlog-v80.json",
+  "new_records": 2,
+  "records": [
+    {
+      "function_id": "Paste:0x100006e80",
+      "priority": "P1",
+      "priorities": [
+        "P1"
+      ],
+      "modules": [
+        "搜索与筛选"
+      ],
+      "status": "difference_confirmed",
+      "original": {
+        "path": "decompiled/Paste/part-0002.c",
+        "sha256": "22a8a95e99242d4f339bd743ce09ee735993690c2313bdf8debc66c23ff023d6"
+      },
+      "current_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/SearchEditor.swift",
+          "symbol": "private func chip(",
+          "present": true,
+          "sha256": "6a1ef8d5c40a9ba374248ce80aa47b642bc0893d450ea900b1ba9e1fc094163c",
+          "body_sha256": "bd3e857b41a357597dc55b04238f12240d27e8d2858a0a5b5c0b90d8256afad1"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/FilterBrowser.swift",
+          "symbol": "private final class ReplicaFilterBrowserModel:",
+          "present": true,
+          "sha256": "d5b72088943cef939844116f099f0b8f2bb8bd5a3a006d276dd3fd2ade671a8f",
+          "body_sha256": "640b3c79f6c991e520ae07f0eeebef615375bd6eca65a5277d434b5e2fd7b28d"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "func toggleSearchFilter(",
+          "present": true,
+          "sha256": "d78b35c18ba0a92fa3da33e4bc9e5a7197c6186cb3378c76f06b2b5fd966c1c7",
+          "body_sha256": "c01a684015f30f39516f8bf4eedf17a831e057e7bc66f1d48c4fdb85f7d4f2fa"
+        }
+      ],
+      "contract": "Retain group5 filter value as opaque String from available/suggested/restored node through selection/token/query toggle. No UUID parsing, uppercase/canonical UUID rewrite or native-only group rejection. Existing query toggle/normalization/history paths reused. Original constructor stores its own Published query snapshot;006e80 toggles that model query then calls onQueryChanged.03f044 supplies041e08→041860 capturing weak SearchBar; nil owner returns, otherwise requires coordinator and applies2f7744 mode0. Current model stores sections only; actual row reads/modifies global state, and nil toolbarOwner falls back to mutating global state. Local snapshot and actual weak SearchBar consumer boundaries remain absent.",
+      "evidence_note": "Native group filter values are String; prior UUID UI adapter rejected opaque identifiers/canonicalized case. Caption used stale DTO names/brand fallback instead of real default name resolver. Raw identity and caption now corrected;006e80 model-owned query and weak originating SearchBar callback are separately confirmed still absent, so this function is not credited repaired.",
+      "supporting_original_fragments": [
+        {
+          "address": "0x100005e1c",
+          "path": "decompiled/Paste/part-0002.c",
+          "sha256": "db74d084f36c83f9af5149f2c365630a88bbc93eaf9aeccd02da4c766c0914e6"
+        },
+        {
+          "address": "0x100006184",
+          "path": "decompiled/Paste/part-0002.c",
+          "sha256": "fdd6dcd60f38f5afe7346c31b110ac2f1669b765732308e2a7a02f9c516191c9"
+        },
+        {
+          "address": "0x100006260",
+          "path": "decompiled/Paste/part-0002.c",
+          "sha256": "68e4ee538eea6522904082f31982798eb2591a42348b1d6d057c3c0ff04e74ec"
+        },
+        {
+          "address": "0x1002e00a0",
+          "path": "decompiled/Paste/part-0238.c",
+          "sha256": "5bb23d1df615646e3abb95294771058de28127a4b11a7b2d58d2351b4bfa014d"
+        },
+        {
+          "address": "0x100006e80",
+          "path": "decompiled/Paste/part-0002.c",
+          "sha256": "22a8a95e99242d4f339bd743ce09ee735993690c2313bdf8debc66c23ff023d6"
+        },
+        {
+          "address": "0x100006db8",
+          "path": "decompiled/Paste/part-0002.c",
+          "sha256": "d65524597fa4a7090c0e7389491aff1dd8c81ad30dd2625598907bc87dd9b447"
+        },
+        {
+          "address": "0x1002ddc10",
+          "path": "decompiled/Paste/part-0237.c",
+          "sha256": "f304e70e5640b0ccf8d74cd91d345a342f29371c08496bdfc39fd49e6838541b"
+        },
+        {
+          "address": "0x10007d0e0",
+          "path": "decompiled/Paste/part-0041.c",
+          "sha256": "1c0de67a4d0c89c38be3601adfbbdc46efdd522f5043ce789789144793cc3030"
+        },
+        {
+          "address": "0x10007d740",
+          "path": "decompiled/Paste/part-0041.c",
+          "sha256": "12c16c4ac9a15e538412696f1341e4de259967517d125928efd6b068b6cc6ba2"
+        },
+        {
+          "address": "0x10007d950",
+          "path": "decompiled/Paste/part-0041.c",
+          "sha256": "47b7bfb8fd8930b50b01ac54108f38ac3dcebd10125ec5f55206b9d604eaf838"
+        },
+        {
+          "address": "0x10007d78c",
+          "path": "decompiled/Paste/part-0041.c",
+          "sha256": "07048de14c7c997faeb804293f4207a0319464361706c32867e7f7fc9bf2aa3e"
+        },
+        {
+          "address": "0x1003595f8",
+          "path": "decompiled/Paste/part-0272.c",
+          "sha256": "54149bcd8149db490b4b47c3cb0d139032fc31e26f8958dfc92f336ac542df80"
+        },
+        {
+          "address": "0x100368060",
+          "path": "decompiled/Paste/part-0276.c",
+          "sha256": "9c78219b4679ce8ad8c7b96a6af2285a6d02d128cf58392616ef36eac2bbd4c5"
+        },
+        {
+          "address": "0x100368080",
+          "path": "decompiled/Paste/part-0276.c",
+          "sha256": "f7065ed8144888a247d4447e8ba33dbeeb7f46eb273b6c9a7766144746fbdb61"
+        },
+        {
+          "address": "0x10032a5b0",
+          "path": "decompiled/Paste/part-0262.c",
+          "sha256": "24d9f100b75e30e9070f50ffd897ea09e4317dd98ecc4dac8a40d8f2ac823169"
+        },
+        {
+          "address": "0x10032aee0",
+          "path": "decompiled/Paste/part-0262.c",
+          "sha256": "9796a599053db25b1eac172ee5f701473d249b845611589d2be50203cd93c472"
+        },
+        {
+          "address": "0x10032b270",
+          "path": "decompiled/Paste/part-0262.c",
+          "sha256": "95de7087e53e2c7e0cbca82c9018e134be20a930f41e15833c4768ed07dd1c9c"
+        },
+        {
+          "address": "0x100329764",
+          "path": "decompiled/Paste/part-0261.c",
+          "sha256": "0b3578126a65092ee1363d6a3b4daebb8900d4434bb6842955cb8fd56d5e18b3"
+        },
+        {
+          "address": "0x100042908",
+          "path": "decompiled/Paste/part-0024.c",
+          "sha256": "0b718cac608a2d90817c5d8e8f22934bfe4c6cf6336d97660118c671151abd4d"
+        },
+        {
+          "address": "0x10004493c",
+          "path": "decompiled/Paste/part-0025.c",
+          "sha256": "29a861f11c90def6f4e5d5bbdf62b02140d51df3843508167968086b48e68b01"
+        },
+        {
+          "address": "0x100005e1c",
+          "path": "decompiled/Paste/part-0002.c",
+          "sha256": "db74d084f36c83f9af5149f2c365630a88bbc93eaf9aeccd02da4c766c0914e6"
+        },
+        {
+          "address": "0x100006e80",
+          "path": "decompiled/Paste/part-0002.c",
+          "sha256": "22a8a95e99242d4f339bd743ce09ee735993690c2313bdf8debc66c23ff023d6"
+        },
+        {
+          "address": "0x10003f044",
+          "path": "decompiled/Paste/part-0023.c",
+          "sha256": "e1f22388fc56bfeb039372db3e1f95cddbb759e6766fb91c8bae58743690bddb"
+        },
+        {
+          "address": "0x100041e08",
+          "path": "decompiled/Paste/part-0024.c",
+          "sha256": "c2fc1f1fec371194c2edbea4dfd4c28cbfcf57e2c9882515362fad04a71dfa72"
+        },
+        {
+          "address": "0x100041860",
+          "path": "decompiled/Paste/part-0024.c",
+          "sha256": "1dba3ad692ec678e051888ac31a1945e60f0aaae072be5e0d150592e5f6d5189"
+        }
+      ],
+      "repair": {
+        "kind": "partial_source_repair",
+        "completed": false,
+        "report": "reports/replica/p0-p1-repair-round176.json",
+        "evidence": ".local/p0-repair/phase-176/group-filter-identity-contract.json",
+        "completion_audit": ".local/p0-repair/phase-176/group-filter-completion-audit.json",
+        "current_sources": {
+          "replica/Sources/Pasto/UI/FilterBrowser.swift": "d5b72088943cef939844116f099f0b8f2bb8bd5a3a006d276dd3fd2ade671a8f",
+          "replica/Sources/Pasto/UI/SearchEditor.swift": "6a1ef8d5c40a9ba374248ce80aa47b642bc0893d450ea900b1ba9e1fc094163c"
+        },
+        "implemented_subcontracts": [
+          "Retain group5 filter value as opaque String from available/suggested/restored node through selection/token/query toggle. No UUID parsing, uppercase/canonical UUID rewrite or native-only group rejection. Existing query toggle/normalization/history paths reused."
+        ],
+        "remaining": [
+          "FilterBrowserModel must own initial query and use it for checked/hidden state and toggling, independent of later unrelated global query changes.",
+          "Actual filter UI proposal callback must weakly reference the originating SearchBar/coordinator; no fallback global query mutation when that owner is absent."
+        ],
+        "remaining_evidence": ".local/p0-repair/phase-176/filter-model-query-gap.json",
+        "full_function_migration_verified": false
+      },
+      "coverage_boundaries": [
+        "FilterBrowserModel must own initial query and use it for checked/hidden state and toggling, independent of later unrelated global query changes.",
+        "Actual filter UI proposal callback must weakly reference the originating SearchBar/coordinator; no fallback global query mutation when that owner is absent."
+      ],
+      "full_function_migration_verified": false
+    },
+    {
+      "function_id": "Paste:0x1002ddc10",
+      "priority": "P1",
+      "priorities": [
+        "P1"
+      ],
+      "modules": [
+        "搜索与筛选"
+      ],
+      "status": "difference_confirmed",
+      "original": {
+        "path": "decompiled/Paste/part-0237.c",
+        "sha256": "f304e70e5640b0ccf8d74cd91d345a342f29371c08496bdfc39fd49e6838541b"
+      },
+      "current_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/FilterBrowser.swift",
+          "symbol": "static func chip(",
+          "present": true,
+          "sha256": "d5b72088943cef939844116f099f0b8f2bb8bd5a3a006d276dd3fd2ade671a8f",
+          "body_sha256": "8302c9b825e398d95cea1b1484b054033374f4af0098de7005d32c8252456065"
+        }
+      ],
+      "contract": "For group5 with normal installed local resolver, resolve first native List by original String identifier, use bridged name when present (including empty), otherwise return original raw identifier. Fetch error is consumed into empty result in original32aee0, so missing/error yields raw fallback. No old Pinboard DTO gate or generic brand fallback.",
+      "evidence_note": "Native group filter values are String; prior UUID UI adapter rejected opaque identifiers/canonicalized case. Caption used stale DTO names/brand fallback instead of real default name resolver. Raw identity and caption now corrected;006e80 model-owned query and weak originating SearchBar callback are separately confirmed still absent, so this function is not credited repaired.",
+      "supporting_original_fragments": [
+        {
+          "address": "0x100005e1c",
+          "path": "decompiled/Paste/part-0002.c",
+          "sha256": "db74d084f36c83f9af5149f2c365630a88bbc93eaf9aeccd02da4c766c0914e6"
+        },
+        {
+          "address": "0x100006184",
+          "path": "decompiled/Paste/part-0002.c",
+          "sha256": "fdd6dcd60f38f5afe7346c31b110ac2f1669b765732308e2a7a02f9c516191c9"
+        },
+        {
+          "address": "0x100006260",
+          "path": "decompiled/Paste/part-0002.c",
+          "sha256": "68e4ee538eea6522904082f31982798eb2591a42348b1d6d057c3c0ff04e74ec"
+        },
+        {
+          "address": "0x1002e00a0",
+          "path": "decompiled/Paste/part-0238.c",
+          "sha256": "5bb23d1df615646e3abb95294771058de28127a4b11a7b2d58d2351b4bfa014d"
+        },
+        {
+          "address": "0x100006e80",
+          "path": "decompiled/Paste/part-0002.c",
+          "sha256": "22a8a95e99242d4f339bd743ce09ee735993690c2313bdf8debc66c23ff023d6"
+        },
+        {
+          "address": "0x100006db8",
+          "path": "decompiled/Paste/part-0002.c",
+          "sha256": "d65524597fa4a7090c0e7389491aff1dd8c81ad30dd2625598907bc87dd9b447"
+        },
+        {
+          "address": "0x1002ddc10",
+          "path": "decompiled/Paste/part-0237.c",
+          "sha256": "f304e70e5640b0ccf8d74cd91d345a342f29371c08496bdfc39fd49e6838541b"
+        },
+        {
+          "address": "0x10007d0e0",
+          "path": "decompiled/Paste/part-0041.c",
+          "sha256": "1c0de67a4d0c89c38be3601adfbbdc46efdd522f5043ce789789144793cc3030"
+        },
+        {
+          "address": "0x10007d740",
+          "path": "decompiled/Paste/part-0041.c",
+          "sha256": "12c16c4ac9a15e538412696f1341e4de259967517d125928efd6b068b6cc6ba2"
+        },
+        {
+          "address": "0x10007d950",
+          "path": "decompiled/Paste/part-0041.c",
+          "sha256": "47b7bfb8fd8930b50b01ac54108f38ac3dcebd10125ec5f55206b9d604eaf838"
+        },
+        {
+          "address": "0x10007d78c",
+          "path": "decompiled/Paste/part-0041.c",
+          "sha256": "07048de14c7c997faeb804293f4207a0319464361706c32867e7f7fc9bf2aa3e"
+        },
+        {
+          "address": "0x1003595f8",
+          "path": "decompiled/Paste/part-0272.c",
+          "sha256": "54149bcd8149db490b4b47c3cb0d139032fc31e26f8958dfc92f336ac542df80"
+        },
+        {
+          "address": "0x100368060",
+          "path": "decompiled/Paste/part-0276.c",
+          "sha256": "9c78219b4679ce8ad8c7b96a6af2285a6d02d128cf58392616ef36eac2bbd4c5"
+        },
+        {
+          "address": "0x100368080",
+          "path": "decompiled/Paste/part-0276.c",
+          "sha256": "f7065ed8144888a247d4447e8ba33dbeeb7f46eb273b6c9a7766144746fbdb61"
+        },
+        {
+          "address": "0x10032a5b0",
+          "path": "decompiled/Paste/part-0262.c",
+          "sha256": "24d9f100b75e30e9070f50ffd897ea09e4317dd98ecc4dac8a40d8f2ac823169"
+        },
+        {
+          "address": "0x10032aee0",
+          "path": "decompiled/Paste/part-0262.c",
+          "sha256": "9796a599053db25b1eac172ee5f701473d249b845611589d2be50203cd93c472"
+        },
+        {
+          "address": "0x10032b270",
+          "path": "decompiled/Paste/part-0262.c",
+          "sha256": "95de7087e53e2c7e0cbca82c9018e134be20a930f41e15833c4768ed07dd1c9c"
+        },
+        {
+          "address": "0x100329764",
+          "path": "decompiled/Paste/part-0261.c",
+          "sha256": "0b3578126a65092ee1363d6a3b4daebb8900d4434bb6842955cb8fd56d5e18b3"
+        },
+        {
+          "address": "0x100042908",
+          "path": "decompiled/Paste/part-0024.c",
+          "sha256": "0b718cac608a2d90817c5d8e8f22934bfe4c6cf6336d97660118c671151abd4d"
+        },
+        {
+          "address": "0x10004493c",
+          "path": "decompiled/Paste/part-0025.c",
+          "sha256": "29a861f11c90def6f4e5d5bbdf62b02140d51df3843508167968086b48e68b01"
+        }
+      ],
+      "repair": {
+        "kind": "finite_source_repair",
+        "completed": true,
+        "report": "reports/replica/p0-p1-repair-round176.json",
+        "evidence": ".local/p0-repair/phase-176/group-filter-identity-contract.json",
+        "completion_audit": ".local/p0-repair/phase-176/group-filter-completion-audit.json",
+        "current_sources": {
+          "replica/Sources/Pasto/UI/FilterBrowser.swift": "d5b72088943cef939844116f099f0b8f2bb8bd5a3a006d276dd3fd2ade671a8f",
+          "replica/Sources/Pasto/UI/SearchEditor.swift": "6a1ef8d5c40a9ba374248ce80aa47b642bc0893d450ea900b1ba9e1fc094163c"
+        },
+        "contract": "For group5 with normal installed local resolver, resolve first native List by original String identifier, use bridged name when present (including empty), otherwise return original raw identifier. Fetch error is consumed into empty result in original32aee0, so missing/error yields raw fallback. No old Pinboard DTO gate or generic brand fallback.",
+        "adaptations": [
+          "Retain current Selection enum and NSAttributedString token adapter; pinboard payload changes from UUID to String. Persisted original query nodes remain raw String, no archive schema or app version changes.",
+          "Use existing tabListTarget(identifier:) with same native first-match local read instead of recreating a mutable global resolver callback. Source data is current native List name; default-resolver branch is the comparison domain.",
+          "Group symbol/color rendering and all UI layout remain outside this identity/title repair; full constructor/DI/private ABI and arbitrary global resolver replacement are not claimed."
+        ],
+        "full_function_migration_verified": false
+      },
+      "coverage_boundaries": [
+        "group5 normal installed default local resolver only; other captions/icons/layout and arbitrary global resolver replacement outside this finite repair"
+      ],
+      "full_function_migration_verified": false
+    }
+  ],
+  "repaired_finite_contracts": [
+    {
+      "function_id": "Paste:0x1002ddc10",
+      "repair": {
+        "kind": "finite_source_repair",
+        "completed": true,
+        "report": "reports/replica/p0-p1-repair-round176.json",
+        "evidence": ".local/p0-repair/phase-176/group-filter-identity-contract.json",
+        "completion_audit": ".local/p0-repair/phase-176/group-filter-completion-audit.json",
+        "current_sources": {
+          "replica/Sources/Pasto/UI/FilterBrowser.swift": "d5b72088943cef939844116f099f0b8f2bb8bd5a3a006d276dd3fd2ade671a8f",
+          "replica/Sources/Pasto/UI/SearchEditor.swift": "6a1ef8d5c40a9ba374248ce80aa47b642bc0893d450ea900b1ba9e1fc094163c"
+        },
+        "contract": "For group5 with normal installed local resolver, resolve first native List by original String identifier, use bridged name when present (including empty), otherwise return original raw identifier. Fetch error is consumed into empty result in original32aee0, so missing/error yields raw fallback. No old Pinboard DTO gate or generic brand fallback.",
+        "adaptations": [
+          "Retain current Selection enum and NSAttributedString token adapter; pinboard payload changes from UUID to String. Persisted original query nodes remain raw String, no archive schema or app version changes.",
+          "Use existing tabListTarget(identifier:) with same native first-match local read instead of recreating a mutable global resolver callback. Source data is current native List name; default-resolver branch is the comparison domain.",
+          "Group symbol/color rendering and all UI layout remain outside this identity/title repair; full constructor/DI/private ABI and arbitrary global resolver replacement are not claimed."
+        ],
+        "full_function_migration_verified": false
+      }
+    }
+  ],
+  "partial_unscored_repairs": [
+    {
+      "function_id": "Paste:0x1000f733c",
+      "priority": "P1",
+      "kind": "remove_unsubstantiated_integer_result",
+      "status": "partial_source_adaptation",
+      "evidence": ".local/p0-repair/phase-161/setter-return-contract.json",
+      "contract": "Ghidra在objc_release injection后伪造return 0，真实函数桥接Swift String、release bridgeObject、对x20发setString:、以objc_release尾跳结束，无Integer zero返回指令。Pasto独立helper应移除凭伪代码添加的Int/0返回，仅执行同setter副作用。",
+      "current_sources": {
+        "replica/Sources/PastoCore/OriginalSearchTextValue.swift": "63b7925df9bdf3e0c7022d8fcd9117c333b28fe4d596e1284ab82fd23bc3ec2f"
+      },
+      "remaining": [
+        "未恢复原Swift声明元数据或确认实际调用者；当前void为无返回值适配，不以机器码中的未定义返回寄存器推断完整Swift ABI。",
+        "0f733c及04430c继续unknown，不计完整函数或清单完成增量。",
+        "原完整DI/ARC/context/fault仍父合同；不运行编译器或框架。"
+      ],
+      "counted_as_repaired_function": false,
+      "full_function_migration_verified": false
+    },
+    {
+      "function_id": "Paste:0x100367f78",
+      "priority": "P1",
+      "kind": "partial_native_group_read_bridge",
+      "status": "partial_source_repair",
+      "contract": "read project保已有值/原生覆盖，补缺兼容行的未删除type2 UUID本地List，取native名称/attributes/index，按已有值sortOrder/UUID tie排序；只读，不创建compat行，不改live UI/动作。",
+      "evidence": ".local/p0-repair/phase-163/native-tab-source-contract.json",
+      "current_sources": {
+        "replica/Sources/PastoCore/ClipboardListPersistence.swift": "236db55acb2f0224a4fe689d124b17f29a82d576c5a87138238705fd30703c3e"
+      },
+      "remaining": [
+        "live tab provider尚未接原生全List publisher，history顺序/名称及选择/菜单原生输入仍待迁，不能以read/reload补齐声称实时行为完成。",
+        "本地native组的重命名/颜色/删除/排序等动作持有对象路径、无兼容值行时的后续事务仍需核。",
+        "完整schema/DI/ARC及04430c/0f733c仍开放；不运行CoreData或UI。"
+      ],
+      "counted_as_repaired_function": false,
+      "full_function_migration_verified": false
+    },
+    {
+      "function_id": "Paste:0x100367f78",
+      "priority": "P1",
+      "kind": "native_live_tab_delivery_and_selection",
+      "completed": false,
+      "components_repaired": [
+        "same-context all-List native snapshot publisher",
+        "raw ObjectID count/index and nullable lookup holes",
+        "native identifier lookup and string content collection",
+        "tab native name/order/selection and raw-index neighbor reconciliation",
+        "remove manual post-delete history override"
+      ],
+      "contract": "tab采用无rawType2过滤的主context List默认FRC；snapshot保原ID数组和count，不压缩nil lookup，按objectID找selectedIndex；初始化/collection dropFirst事件选择默认history、保留现有对象或min(oldIndex,count-1)的可选target。identifier经原生query解析，不以Pinboard缓存存在为门，保同标识force nil→target交付；content按native string，tab标题/顺序/按键走同snapshot，删除成功不再强制history。",
+      "report": "reports/replica/p0-p1-repair-round164.json",
+      "evidence": ".local/p0-repair/phase-164/native-tab-delivery-contract.json",
+      "current_sources": {
+        "replica/Sources/PastoCore/ClipboardPersistence.swift": "230a9c8dc77e4427b8ec7e7078a53150670652af8c408b4e7148b5ef9a5306a7",
+        "replica/Sources/PastoCore/ClipboardStore.swift": "40940cdb1de464ba8e449a642157056491c40c16719e9d48d1ab2ab95488093d",
+        "replica/Sources/PastoCore/ClipboardListPersistence.swift": "b5de615c30e0be9a8ef2aaeb7f8baeff843158aa295f20e8f586260aef291951",
+        "replica/Sources/PastoCore/ClipboardSearchCollection.swift": "048491154252bc9fc68273a4f613b9a5dc6346c8dd2f92f4165dd43071dac88d",
+        "replica/Sources/Pasto/UI/ReplicaUIController.swift": "2817108ebf1e2a3f24ade2a6f3f6db442936ff7604b0454b3f7a8091eb24c0a7",
+        "replica/Sources/Pasto/UI/PanelViews.swift": "509e06f1bad503054c0f335bb9fb038d7576491ba6c9339058e5dcd4c5cb7727"
+      },
+      "adaptations": [
+        "原生String标识完整用于tab/read/选择，旧UUID pinboardID、Pinboard颜色默认和值API保兼容；菜单写动作尚未全换原生target，不能由该流修复推广所有标识/类型动作完整。",
+        "UI仅显示成功lookup的cells，但选择保持rawID count和空洞；nil cell的完整原布局未验收。",
+        "MainActor同步Combine map/同context lookup，未加Task/receive-on/计时器/手工ARC；未编译验证编译器隔离或真实框架时序。"
+      ],
+      "remaining": [
+        "native tab菜单重命名/颜色/删除/重排仍使用兼容Pinboard/UUID路径，缺缓存或未保存对象仍需实际native写输入迁移。",
+        "历史改名/多type上下文与搜索过滤消费者、旧创建及完整DI/ARC/nullable布局父合同继续复核。",
+        "04430c/0f733c两未知不关闭；无编译运行CoreData/UI。"
+      ],
+      "counted_as_repaired_function": false,
+      "new_function_count": 0,
+      "full_function_migration_verified": false
+    },
+    {
+      "function_id": "Paste:0x100367f78",
+      "priority": "P1",
+      "kind": "native_List_name_color_same_object_write",
+      "completed": false,
+      "components_repaired": [
+        "native tab name/color/count same-object inputs",
+        "name two reads and change-only setter",
+        "pinboard-only color decode/equality/encode-error nil setter",
+        "transaction error consumption and weak menu cancel",
+        "native object markers before compatibility field replay"
+      ],
+      "contract": "tab改名/颜色/计数持同一List；名称两次读取只写不同，原空字符串映射不trim；仅可解码pinboard颜色不同写入，编码失败仍写nil；消费两事务错误，颜色后弱menu cancelTracking；同对象标记阻止兼容旧值覆盖，保存后索引由同对象投影。",
+      "report": "reports/replica/p0-p1-repair-round165.json",
+      "evidence": ".local/p0-repair/phase-165/native-list-name-color-contract.json",
+      "current_sources": {
+        "replica/Sources/PastoCore/ClipboardPersistence.swift": "e5a071193b0478eeaabd75040d862ca5f34a5d0366e9129f2a4ac11933fd913c",
+        "replica/Sources/PastoCore/ClipboardStore.swift": "6b52d947afb18c16f00dc6373c870930fb5b4cb5c0609037a0d278e388317f3f",
+        "replica/Sources/PastoCore/ClipboardListPersistence.swift": "0c71f711c9fb3c69aa7468e40cd3b20c0aa38ca4df218e917aaba0be9663268c",
+        "replica/Sources/Pasto/UI/PanelViews.swift": "50747eef348a4fcbee0468cb555378ad3163765d5d303fcaac367f65d6055f2f"
+      },
+      "adaptations": [
+        "事务/兼容值投影仍为Pasto存储适配，原完整DI/ARC/编码器/重入时序未运行验证。",
+        "保留中文命名颜色行与圆点；原生任意String目标可变更，兼容Pinboard值仅UUID能投影。",
+        "删除与拖放排序仍旧UUID/cache路径，整体367f78不能关闭。"
+      ],
+      "remaining": [
+        "原生List删除/排序、privateContext保存与observer、缺缓存/未保存对象",
+        "创建后inline编辑/未用色的全List消费者",
+        "04430c/0f733c未知、完整schema/DI/ARC"
+      ],
+      "counted_as_repaired_function": false,
+      "new_function_count": 0,
+      "full_function_migration_verified": false
+    },
+    {
+      "function_id": "Paste:0x100367f78",
+      "priority": "P1",
+      "kind": "native_local_pinboard_delete_same_object",
+      "completed": false,
+      "components_repaired": [
+        "native target retained through menu/count/panel confirmation/transaction",
+        "fetch from supplied List own context, errors and nil context use empty sequence",
+        "owner isEqual target before clearing; timestamp and owner both nil before Item own-context delete",
+        "delete same List only after native sequence cleanup",
+        "compatibility identifiers/projection after native mutations and no confirmation cache gate"
+      ],
+      "contract": "rawType2本地tab删除保同原生List跨菜单/计数/面板确认/提交；从该List自身context按原itemRequest读取，nil或fetch错误取空，先仅解其本身owner，timestamp和owner皆nil才从Item自身context删除，最后删除同List。全部native变更后才读取兼容UUID/投影；空组立即执行，非空仍panel确认，原生snapshot选择邻项。",
+      "report": "reports/replica/p0-p1-repair-round166.json",
+      "evidence": ".local/p0-repair/phase-166/native-list-deletion-contract.json",
+      "current_sources": {
+        "replica/Sources/PastoCore/ClipboardPersistence.swift": "802e0409b5907cd0d69b60f40a13c357ed27f42c5c7b667635f3c3618ccc2652",
+        "replica/Sources/PastoCore/ClipboardStore.swift": "73ed7bcb8a1cd01cb6bd78e815635e2a363c019613fe63402615e9f8587ffd02",
+        "replica/Sources/PastoCore/ClipboardListPersistence.swift": "e7e7224d1b1395fdbaca2810a3609f0f3ba4eeed2bd9ad5a2709b59053159d9b",
+        "replica/Sources/Pasto/UI/ReplicaUIController.swift": "12e3a0c7a8004b0230b835054c90e943cb2666c258b15558d2ea64b030996c57",
+        "replica/Sources/Pasto/UI/PanelViews.swift": "10507d0cd63bcda55a04c9e891244d20882c6cf2c344d7d71594c9f39d53ba9d"
+      },
+      "adaptations": [
+        "本轮迁移368818/363004的local rawType2 pinboard分支；通用删除的rawType1清历史/refresh链由既有P0入口负责，本轮未推广该新API为全部List类型实现。",
+        "UI错误继续在panel内保留供取消/重试，沿用户既有确认适配；原3c5308消费事务错误，不把此展示差别冒原版完全一致。",
+        "兼容值投影/整个Store验证仍Pasto存储适配，原生-only坏内容的投影错误父合同未闭；不冒运行CoreData/ARC/故障时序。"
+      ],
+      "remaining": [
+        "368a30原生全List排序、私有context/保存observer",
+        "创建inline编辑与未用色原生List消费者",
+        "通用多类型List/完整schema/DI/ARC/值投影错误父合同",
+        "04430c/0f733c未知"
+      ],
+      "counted_as_repaired_function": false,
+      "new_function_count": 0,
+      "full_function_migration_verified": false
+    },
+    {
+      "function_id": "Paste:0x100367f78",
+      "priority": "P1",
+      "kind": "native_all_List_reorder_context_KVO_save",
+      "completed": false,
+      "components_repaired": [
+        "full native List order and NSObject equality input",
+        "SwiftUI move and original final-index to-offset conversion",
+        "current-context metadata.index changes before background metadata KVO",
+        "specific background DidSave observer and two weak-owner synchronous merge gates",
+        "background save failure rollback/log/consume before outer transaction index save",
+        "native String drag inputs and compatibility write suppression/projection"
+      ],
+      "contract": "当前事务context全List按metadata.index fetch，无type2/UUID过滤；isEqual找源，missing→return，SwiftUI move offset；只对不同index在当前context重读metadata setter，另background同PSC/storeTrump按objectID发metadata will/did KVO；变更后装特定background的DidSave/nil-queue observer，双weak owner经原context.performAndWait merge；background hasChanges才save，异常桥catch→rollback→命名level3日志并消费错误，再移observer。外层既有事务之后保存index；所有native对象标记阻止值index回放，状态只后投影。UI String拖放与097828下移destination+1转换已接。",
+      "report": "reports/replica/p0-p1-repair-round167.json",
+      "evidence": ".local/p0-repair/phase-167/native-list-reorder-contract.json",
+      "current_sources": {
+        "replica/Sources/PastoCore/ClipboardStore.swift": "470095bdf5af17e37b33c6b32379dbc1f12b4ac3b179ed0961afea83e93a8dc9",
+        "replica/Sources/PastoCore/ClipboardListPersistence.swift": "c0fe6ffbbb4cd62bf4b311492b9950ef4c253133dcb1cffa6f202b57bfde3adf",
+        "replica/Sources/Pasto/UI/ReplicaUIController.swift": "7f8445406b3bf07a4a82c35cdd8d7aa630a7d4f93ee77e326bbdbd3f9856ddf4",
+        "replica/Sources/Pasto/UI/PanelViews.swift": "41effd6f6a653a2f0803bbf0d802ceb6254762475324c2560072181a3eab9413",
+        "replica/Sources/Pasto/UI/OriginalPinboardTabTitle.swift": "31ab58219a1f14b741da1c76f58a1e7c815ede1cd82345b0400f7405d8bdd939"
+      },
+      "adaptations": [
+        "新background用NSManagedObjectContext(privateQueue)+当前persistentStoreCoordinator+storeTrump适配原NSPersistentContainer.newBackgroundContext；完整容器/DI默认值和真实框架队列/重入未运行验证。",
+        "保留既有paste-pinboard:本地拖放载荷前缀以兼容，标识改为原生String，无UUID门；当前UI静态target落点映射final index，原TabBar placeholder/几何/乐观applier移动另列未闭，不冒完整拖放视觉交互。",
+        "不把同一root的索引/保存修复加计完整函数；创建inline/未用色与两个unknown仍开。"
+      ],
+      "remaining": [
+        "097828尾1b9460乐观applier移动与TabBar拖放几何父合同",
+        "创建inline编辑与未用色的原生全List输入",
+        "完整容器/DI/ARC/schema/框架重入与通用多类型删除父合同",
+        "04430c/0f733c未知"
+      ],
+      "counted_as_repaired_function": false,
+      "new_function_count": 0,
+      "full_function_migration_verified": false
+    },
+    {
+      "function_id": "Paste:0x100367f78",
+      "priority": "P1",
+      "kind": "native_List_begin_editing_event",
+      "completed": false,
+      "components_repaired": [
+        "created List retained across .2s delay with weak owner, no compatibility existence gate",
+        "menu and creation share native PassthroughSubject event",
+        "weak MainActor subscription and explicit cancellation",
+        "native ObjectID cell lookup, missing target event dropped without replay",
+        "TabBar focus clearing, -17 inset/.15 scroll, strong cell completion uses existing label editor"
+      ],
+      "contract": "创建后强持同List .2秒、只weak owner，无compat存在/UUID/删除门，发送PassthroughSubject；右键同target事件复用。Toolbar持取消订阅，weak owner/MainActor同步交付；cells持same native target，按ObjectID找已有cell，缺项直接丢弃不重放，先清TabBar window responder，frame(-17,0)滚动.15秒后completion强持cell调用既有label编辑。移除字符串/UUID token Published待办，legacy title配置API保。",
+      "report": "reports/replica/p0-p1-repair-round168.json",
+      "evidence": ".local/p0-repair/phase-168/native-list-edit-event-contract.json",
+      "current_sources": {
+        "replica/Sources/PastoCore/ClipboardListPersistence.swift": "07314720342a929370fac839628d7b46abf9337cff2b5e7c7f7a80ec19d81baf",
+        "replica/Sources/Pasto/UI/ReplicaUIController.swift": "eb3a07f590bc300eb15ee4d17dcf28ff90fbfe79a14713bc09adb77536c93bd6",
+        "replica/Sources/Pasto/UI/OriginalPanelTabBar.swift": "35dbe941250f7416ce7907241922184cb9c216c27d9693c1d311650d3632cb74",
+        "replica/Sources/Pasto/UI/PanelViews.swift": "1b16d3e5bafbb918c144545103aa9dbbddecfb4a6b38eb4163387393c77ede17",
+        "replica/Sources/Pasto/UI/OriginalPanelToolbar.swift": "c9ea13dcd8e02dec12c3c9e75c8dc8f1d2102756c4f39e10ca0efa3a0c5ba4f5",
+        "replica/Sources/Pasto/UI/OriginalPinboardTabTitle.swift": "62d716490b9814df6f02c46f70563390e7f8b5dae1819747fb60f04671043ea9"
+      },
+      "adaptations": [
+        "兼容List目标包装仍Pasto自有类型；同objectID匹配/一次事件替代原泛型applier查找，完整UI applier/布局/ARC和框架动画重入仍父合同。",
+        "OriginalPinboardTab.target默认nil只为既有展示/测试配置兼容，真实boardTabs每项填原生target；不把nil当history。",
+        "现有label.beginEditing/focus/选全文等方法逐字复用，完整原label接口仍不冒一比一；仅复刻本次事件传递/实际consumer顺序。",
+        "未用颜色优先为用户指定适配而非原随机行为，现有palette/typed创建/原生读投影保持；不加完成函数计数。"
+      ],
+      "remaining": [
+        "097828尾1b9460乐观applier移动与真实TabBar拖放几何/源订阅父合同",
+        "完整通用多类型List/容器DI/ARC/schema/框架重入及坏投影合同",
+        "04430c/0f733c未知"
+      ],
+      "counted_as_repaired_function": false,
+      "new_function_count": 0,
+      "full_function_migration_verified": false
+    },
+    {
+      "function_id": "Paste:0x100367f78",
+      "priority": "P1",
+      "kind": "native_TabBar_snapshot_and_optimistic_move",
+      "completed": false,
+      "components_repaired": [
+        "latest full tab configurations coalesced with synchronous initial delivery",
+        "three-flag weak-owner main-queue drain with clear-before-render reentry loop",
+        "displayed native ObjectID indices drive destination offset",
+        "mutation lock spans persistence and optimistic remove/insert; latest snapshot follows unlock"
+      ],
+      "contract": "native TabBar latest full configuration snapshot coalescing; initial immediate delivery; three-flag main queue drain, pending cleared before renderer and reentry loop; displayed ObjectID positions; local mutation lock across persistence and optimistic remove/insert(min(destination,count)); schedule after unlock",
+      "report": "reports/replica/p0-p1-repair-round169.json",
+      "evidence": ".local/p0-repair/phase-169/native-tab-applier-contract.json",
+      "current_sources": {
+        "replica/Sources/Pasto/UI/ReplicaUIController.swift": "0905c3c0a5afec5c75a6d74b111abffe49ebc728353f72b057397d28d19caa86",
+        "replica/Sources/Pasto/UI/OriginalPanelTabBar.swift": "e615472764717b1db83ef919b1885ca53be14e5b6037b60ee9a0547cd996a2e5",
+        "replica/Sources/Pasto/UI/OriginalPanelToolbar.swift": "70a2598e5a0d7150f0d2a84aa9c5b746b89491c4340e7b7d41f1b5731fa5cfba"
+      },
+      "adaptations": [
+        "Existing full tab specifications replace the original generic ID/changed-set pair; refresh every retained cell, no independent changed-set cache.",
+        "Existing keyed NSStackView renderer retained; reorders views after optimistic keys mutation because current NSDraggingSession has no original custom placeholder reorder.",
+        "Original generic diff threshold300/renderer animation/drag placeholders, full ABI/lifecycle/schema and two unknown functions remain open."
+      ],
+      "remaining": [
+        "native generic diff/renderer delivery and original drag placeholder/selected-cell consumer chain require final comparison; no full group credit",
+        "two unknown contracts and complete framework lifecycle/ABI/schema remain open"
+      ],
+      "counted_as_repaired_function": false,
+      "full_function_migration_verified": false
+    },
+    {
+      "function_id": "Paste:0x100367f78",
+      "priority": "P1",
+      "kind": "native_TabBar_renderer_setter_and_drag_completion",
+      "completed": false,
+      "components_repaired": [
+        "publish incoming keys before native cell configuration; retain previous keys for view removals",
+        "unlock/schedule immediately after optimistic array move before renderer",
+        "layout before optional destination-cell lookup; selected destination scroll uses existing-17/.15 easeout helper"
+      ],
+      "contract": "097eb0 invokes applier setter before native cells are configured; 0973d8 returns from1b91e4 (unlock/schedule) before rebuilding/layout; destination index from inputx1 is preserved across rebuild, looked up via09727c, only selected cell scrolls frame(-17,0) over.15 easeout; reuse existing095ae8 helper",
+      "report": "reports/replica/p0-p1-repair-round170.json",
+      "evidence": ".local/p0-repair/phase-170/native-tab-renderer-delivery-contract.json",
+      "current_sources": {
+        "replica/Sources/Pasto/UI/OriginalPanelTabBar.swift": "e41f7a87aac91687719124e037dddb3636fd7b1005f64fa8cf5eea7b0f133976"
+      },
+      "adaptations": [
+        "Current keyed full-spec NSStackView renderer still retained, not the complete original generic diff/full reload algorithm.",
+        "Current cells are retained across drag; original0973d8 recreates/configures cells after custom placeholder drag. Selection flags originate existing configurations; full native selection/render reentry still pending.",
+        "P2 visual polish/drag image style is excluded; functional data/selection event order remains within P1."
+      ],
+      "remaining": [
+        "native generic diff/renderer and drag source/placeholder/selection consumers final contract",
+        "04430c/0f733c full original input/ABI/consumer unknowns",
+        "full model/DI/ARC/framework lifecycle"
+      ],
+      "counted_as_repaired_function": false,
+      "full_function_migration_verified": false
+    },
+    {
+      "function_id": "Paste:0x100006e80",
+      "priority": "P1",
+      "kind": "partial_raw_group_filter_identity",
+      "status": "partial_source_repair",
+      "contract": "Retain group5 filter value as opaque String from available/suggested/restored node through selection/token/query toggle. No UUID parsing, uppercase/canonical UUID rewrite or native-only group rejection. Existing query toggle/normalization/history paths reused.",
+      "evidence": ".local/p0-repair/phase-176/group-filter-identity-contract.json",
+      "current_sources": {
+        "replica/Sources/Pasto/UI/FilterBrowser.swift": "d5b72088943cef939844116f099f0b8f2bb8bd5a3a006d276dd3fd2ade671a8f",
+        "replica/Sources/Pasto/UI/SearchEditor.swift": "6a1ef8d5c40a9ba374248ce80aa47b642bc0893d450ea900b1ba9e1fc094163c"
+      },
+      "remaining": [
+        "FilterBrowserModel must own initial query and use it for checked/hidden state and toggling, independent of later unrelated global query changes.",
+        "Actual filter UI proposal callback must weakly reference the originating SearchBar/coordinator; no fallback global query mutation when that owner is absent."
+      ],
+      "remaining_evidence": ".local/p0-repair/phase-176/filter-model-query-gap.json",
+      "counted_as_repaired_function": false,
+      "full_function_migration_verified": false
+    }
+  ],
+  "cumulative_repaired_function_ids": [
+    "Paste:0x100004478",
+    "Paste:0x100005e1c",
+    "Paste:0x100006184",
+    "Paste:0x10000e0ec",
+    "Paste:0x10000e74c",
+    "Paste:0x100011e00",
+    "Paste:0x100018c84",
+    "Paste:0x1000192b0",
+    "Paste:0x100019790",
+    "Paste:0x100019a84",
+    "Paste:0x100021518",
+    "Paste:0x100021b04",
+    "Paste:0x100021f00",
+    "Paste:0x10002964c",
+    "Paste:0x1000298b0",
+    "Paste:0x100029a80",
+    "Paste:0x100029e6c",
+    "Paste:0x100031978",
+    "Paste:0x100039c50",
+    "Paste:0x100040054",
+    "Paste:0x100042edc",
+    "Paste:0x100042fc8",
+    "Paste:0x1000519f8",
+    "Paste:0x100051bd8",
+    "Paste:0x100051ec8",
+    "Paste:0x1000538b4",
+    "Paste:0x100065ed8",
+    "Paste:0x100067c84",
+    "Paste:0x1000684f8",
+    "Paste:0x100068db8",
+    "Paste:0x100069158",
+    "Paste:0x100069778",
+    "Paste:0x100069fe0",
+    "Paste:0x10006e0dc",
+    "Paste:0x10006e1f8",
+    "Paste:0x10006e95c",
+    "Paste:0x100075718",
+    "Paste:0x100075a6c",
+    "Paste:0x100075e3c",
+    "Paste:0x1000765a4",
+    "Paste:0x1000765b8",
+    "Paste:0x100079430",
+    "Paste:0x10007c378",
+    "Paste:0x10007d0e0",
+    "Paste:0x100082c68",
+    "Paste:0x10008339c",
+    "Paste:0x100086658",
+    "Paste:0x100086c10",
+    "Paste:0x10008747c",
+    "Paste:0x10009e510",
+    "Paste:0x10009e8a8",
+    "Paste:0x10009ee9c",
+    "Paste:0x10009ef40",
+    "Paste:0x10009f240",
+    "Paste:0x1000a0b2c",
+    "Paste:0x1000a56f4",
+    "Paste:0x1000a8378",
+    "Paste:0x1000a86c0",
+    "Paste:0x1000b07f0",
+    "Paste:0x1000b098c",
+    "Paste:0x1000b11ac",
+    "Paste:0x1000f35e0",
+    "Paste:0x1000f36ec",
+    "Paste:0x1000f4774",
+    "Paste:0x1001b9b78",
+    "Paste:0x1001eaa64",
+    "Paste:0x1001ebce4",
+    "Paste:0x1001ec200",
+    "Paste:0x100214704",
+    "Paste:0x100223430",
+    "Paste:0x1002234e0",
+    "Paste:0x100228c78",
+    "Paste:0x100228ee8",
+    "Paste:0x10022be98",
+    "Paste:0x1002ddc10",
+    "Paste:0x1002dfb18",
+    "Paste:0x1002dfd4c",
+    "Paste:0x1002dfe58",
+    "Paste:0x1002e00a0",
+    "Paste:0x1002e1bac",
+    "Paste:0x1002e20b8",
+    "Paste:0x1002e267c",
+    "Paste:0x1002e2930",
+    "Paste:0x1002e39b4",
+    "Paste:0x1002e3ce8",
+    "Paste:0x1002e467c",
+    "Paste:0x1002e46fc",
+    "Paste:0x1002e477c",
+    "Paste:0x1002e48a0",
+    "Paste:0x1002e4928",
+    "Paste:0x1002e7914",
+    "Paste:0x1002e8de0",
+    "Paste:0x1002e9d54",
+    "Paste:0x1002ea770",
+    "Paste:0x1002ea78c",
+    "Paste:0x1002eaa10",
+    "Paste:0x1002eaea4",
+    "Paste:0x1002ec26c",
+    "Paste:0x1002ec520",
+    "Paste:0x1002ec72c",
+    "Paste:0x1002ee16c",
+    "Paste:0x1002efba0",
+    "Paste:0x1002efccc",
+    "Paste:0x1002f00dc",
+    "Paste:0x1002f14cc",
+    "Paste:0x1002f1c30",
+    "Paste:0x1002f1ca0",
+    "Paste:0x1002f201c",
+    "Paste:0x1002f20a0",
+    "Paste:0x1002f2214",
+    "Paste:0x1002f2280",
+    "Paste:0x1002f2468",
+    "Paste:0x1002f2648",
+    "Paste:0x1002f26a8",
+    "Paste:0x1002f2a30",
+    "Paste:0x1002f2ca8",
+    "Paste:0x1002f3c8c",
+    "Paste:0x1002f3cdc",
+    "Paste:0x1002f60fc",
+    "Paste:0x1002f65e0",
+    "Paste:0x1002f6f0c",
+    "Paste:0x1002f7370",
+    "Paste:0x1002f7744",
+    "Paste:0x1002f7c14",
+    "Paste:0x1002f7d60",
+    "Paste:0x1002faafc",
+    "Paste:0x1002fc0ec",
+    "Paste:0x1002ff310",
+    "Paste:0x100302b78",
+    "Paste:0x1003088e0",
+    "Paste:0x10030e070",
+    "Paste:0x10030e6bc",
+    "Paste:0x10030ed6c",
+    "Paste:0x10030f380",
+    "Paste:0x10030f3a0",
+    "Paste:0x10030f3c0",
+    "Paste:0x100312150",
+    "Paste:0x10031b1bc",
+    "Paste:0x10031b494",
+    "Paste:0x10031bc94",
+    "Paste:0x10031c2ec",
+    "Paste:0x1003214a8",
+    "Paste:0x1003214c8",
+    "Paste:0x1003216bc",
+    "Paste:0x100322ae4",
+    "Paste:0x1003250f0",
+    "Paste:0x100328bb4",
+    "Paste:0x100328bc8",
+    "Paste:0x100329088",
+    "Paste:0x1003293c4",
+    "Paste:0x100329754",
+    "Paste:0x1003298a0",
+    "Paste:0x100329980",
+    "Paste:0x1003544dc",
+    "Paste:0x100357cf0",
+    "Paste:0x10035fbcc",
+    "Paste:0x100360d9c",
+    "Paste:0x100360ff8",
+    "Paste:0x1003611b0",
+    "Paste:0x1003614c0",
+    "Paste:0x100361ec0",
+    "Paste:0x1003620f8",
+    "Paste:0x10036299c",
+    "Paste:0x100363a3c",
+    "Paste:0x100364014",
+    "Paste:0x100364074",
+    "Paste:0x1003646ec",
+    "Paste:0x100364ab4",
+    "Paste:0x100365e18",
+    "Paste:0x100366344",
+    "Paste:0x1003669fc",
+    "Paste:0x100366b38",
+    "Paste:0x100367c5c",
+    "Paste:0x100367f78",
+    "Paste:0x100368560",
+    "Paste:0x10036dc00",
+    "Paste:0x10036e4f4",
+    "Paste:0x10036fa2c",
+    "Paste:0x10037063c",
+    "Paste:0x100371998",
+    "Paste:0x100371e9c",
+    "Paste:0x100371fd4",
+    "Paste:0x1003724f0",
+    "Paste:0x100375210",
+    "Paste:0x100375244",
+    "Paste:0x100375274",
+    "Paste:0x100378df4",
+    "Paste:0x10037a144",
+    "Paste:0x10037ade4",
+    "Paste:0x10037b034",
+    "Paste:0x10037b204",
+    "Paste:0x10037c47c",
+    "Paste:0x10037c494",
+    "Paste:0x10037f520",
+    "Paste:0x10038222c",
+    "Paste:0x100383d90",
+    "Paste:0x100383df4",
+    "Paste:0x100384824",
+    "Paste:0x100384e6c",
+    "Paste:0x1003b4888",
+    "Paste:0x1003b4984",
+    "Paste:0x1003b80f0",
+    "Paste:0x1003b83c4",
+    "Paste:0x1003b9264",
+    "Paste:0x1003ba2bc",
+    "Paste:0x1003baac8",
+    "Paste:0x1003bab24",
+    "Paste:0x1003bae08",
+    "Paste:0x1003bb7bc",
+    "Paste:0x1003bba9c",
+    "Paste:0x1003bbbb0",
+    "Paste:0x1003bbc20",
+    "Paste:0x1003bbf5c",
+    "Paste:0x1003bc01c",
+    "Paste:0x1003bc060",
+    "Paste:0x1003bd740",
+    "Paste:0x1003bd9cc",
+    "Paste:0x1003bde74",
+    "Paste:0x1003bded4",
+    "Paste:0x1003bf65c",
+    "Paste:0x1003bf900",
+    "Paste:0x1003bfb8c",
+    "Paste:0x1003c05d4",
+    "Paste:0x1003c0e08",
+    "Paste:0x1003c36f0",
+    "Paste:0x1003c3c90",
+    "Paste:0x1003ca374",
+    "Paste:0x1003e5dd4",
+    "Paste:0x100ae6678"
+  ],
+  "remaining_confirmed_differences": [
+    "Paste:0x100006e80"
+  ],
+  "tests": {
+    "count": 2590,
+    "passed": true,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "newly_added": 18,
+    "kind": "Python/source/Mach-O static checks and protocol models; no Swift compilation/framework execution",
+    "initial_run": {
+      "count": 2590,
+      "passed": false,
+      "failures": 3,
+      "errors": 0,
+      "skipped": 0
+    },
+    "post_audit_run": {
+      "count": 18,
+      "passed": true,
+      "failures": 0,
+      "errors": 0
+    },
+    "adjusted_prior_files": 4,
+    "adjustment_patterns": 10
+  },
+  "static_validation": {
+    "original_fragments": 20,
+    "indexed_machine_ranges": 7,
+    "default_name_resolver_slot": "0x101057920",
+    "real_ListReading_slot": "0x100eccd90",
+    "name_selector": {
+      "stub": "0x100c07060",
+      "pointer": "0x100f88820",
+      "chain": {
+        "segment_index": 3,
+        "page_index": 16,
+        "page_start": 0,
+        "pointer_format": 6,
+        "declared_chain_reachable": true
+      },
+      "target": "0x100df3140",
+      "name": "name"
+    },
+    "read_error_consumed": {
+      "call": "0x10032af24",
+      "stub": "0x100bfc708",
+      "pointer": "0x100eae218",
+      "chain": {
+        "segment_index": 2,
+        "page_index": 2,
+        "page_start": 0,
+        "pointer_format": 6,
+        "declared_chain_reachable": true
+      },
+      "symbol": "_swift_errorRelease"
+    },
+    "unchanged_methods": 7,
+    "shared_sources": 7,
+    "exact_hunks": 5,
+    "implemented_requirements": 6,
+    "confirmed_unmet_requirements": 2,
+    "model_query_gap_original_fragments": 5,
+    "full_P0_completion": false,
+    "full_P1_completion": false,
+    "runtime_verification": false
+  },
+  "baseline_production_files": 247,
+  "current_production_files": 247,
+  "current_production_hashes": {
+    "replica/Sources/PastoHelper/HelperMain.swift": "60d98b18e87390fcc6c8de6a43b75d9505bfd74b822eb9e0fc6dc58bbfd47e12",
+    "replica/Sources/PastoCore/OriginalDateDisplay.swift": "cd1ad2edda3b32d3e25f1750c7d790e3906869325480933e0d7d47c863500e5b",
+    "replica/Sources/PastoCore/OriginalOrderedSelection.swift": "b3631aed0222167f88c16329c76483f807d20af3baaf3a90ab4d214e8d9cb9f8",
+    "replica/Sources/PastoCore/OriginalSearchFieldAnimation.swift": "5c415996232f8f009d56ca0e07976ac31bb502f2295b7401cda2c62b4f51cc49",
+    "replica/Sources/PastoCore/OriginalSearchSuggestionAnchor.swift": "2af28e89780d0e373331ea15588909cea7d99e1008e396717bb57b10b21436a7",
+    "replica/Sources/PastoCore/ClipboardItemObservation.swift": "6cfe581eb828913eca4fbdce868350b50f5767cf5eb68cfe66d536bc671f376a",
+    "replica/Sources/PastoCore/OriginalSearchInputContext.swift": "073c80079e979d5cddc549c105aab901fdf8c9482d7b56cb535e098d9d942867",
+    "replica/Sources/PastoCore/ClipboardListAttributesObservation.swift": "e3697eaeef210ee29ce26369751b0706425aa4bb188f1ad2ca891f72752cc418",
+    "replica/Sources/PastoCore/ClipboardPersistence.swift": "c0b34bc4e4e6c51c95a1801796c567b8801f76c22d7fd3be15b86ea2ed28aa98",
+    "replica/Sources/PastoCore/OriginalCloudKitContracts.swift": "732a19c2d7ffc73bdeda09ebacf9c8e2adb9b698a916c8e0eaa59fb6a37e51f3",
+    "replica/Sources/PastoCore/OriginalSearchCommands.swift": "cf7409e5f4bf47f0e1052ac3ae42c5af43812c37407bfc77eca62ba864ca1bf8",
+    "replica/Sources/PastoCore/OriginalStackFunctions.swift": "e408e508e9bc0bf2b7477ab142e29e4b1c1087daa63cd402c312f145e6cf16a4",
+    "replica/Sources/PastoCore/OriginalShortcutValidation.swift": "fe66e83630d3e9e3031d00bc90bb869d75f5d7066a693843a53e11f9eb966c19",
+    "replica/Sources/PastoCore/OriginalViewAnimation.swift": "66c9ebb5f7187b0ad41aac5f1b61b2bce393ccdbac6a4111491cc15e7a50e56e",
+    "replica/Sources/PastoCore/OriginalLayerBackedView.swift": "87acffa7790cb38e5715cf6ce3d4474fffb3633d3deb15635743526f6342303c",
+    "replica/Sources/PastoCore/OriginalLinkDisplay.swift": "22ddf146e091d4b1f9fb0315e95a8bfb527542b1e1f945c9c80a776e47302b20",
+    "replica/Sources/PastoCore/OriginalSourceApplicationColors.swift": "c9842f94a46e841a187891f746cbbe7418fc7a595d46e4a738c59757c28dbcb3",
+    "replica/Sources/PastoCore/OriginalSettingsLocalization.swift": "62f7b6d5767ce50f52f1138d76ca6544a0294368cc2b9f9bc65dc7ff2fabf67a",
+    "replica/Sources/PastoCore/OriginalColorPreviewMetadata.swift": "b78c20f7a126322c3be604b7a26fc7d630384f31265969e4d17c5cf0887f60b2",
+    "replica/Sources/PastoCore/OriginalManagedItem.swift": "b5388f95ca3f7b58a366f7b9d3a77075294df773d999627249f2aa510906cdca",
+    "replica/Sources/PastoCore/OriginalShortcutTelemetry.swift": "8873cf835f1611b85b91736a796b4335d3364b9bc9278ace5bc89b2bd43ef14c",
+    "replica/Sources/PastoCore/OriginalSearchHistory.swift": "8fc078b55a5e21dd5b8e4297d4725d409e8f4a32c779aeff29f9cc16c4c89ab9",
+    "replica/Sources/PastoCore/OriginalStackCategoryIcons.swift": "cc3f5495111d50de1362e5dceb498e87095b8b628f86a8d221d5aa1083d02d7c",
+    "replica/Sources/PastoCore/OriginalPinboardColor.swift": "cfc44a744f2d3769d70582fea50da409435cfd9dcfa7f9ba104719093dcaef8e",
+    "replica/Sources/PastoCore/ClipboardStore.swift": "bf5c019889150ace6f90139f504effad24ec3a0ac95c9b6eb82cf304b0f7211b",
+    "replica/Sources/PastoCore/OriginalPasteboardCaptureState.swift": "37ffe8ec4714bca780d53654ed09cde4a89a1b6362ba3869e56882a30a06689c",
+    "replica/Sources/PastoCore/OriginalPasteboardClassification.swift": "120318efac6b9e47b12a415427c830d051338fcbe0257f6f6c6d5bbab6f30614",
+    "replica/Sources/PastoCore/OriginalSearchTextValue.swift": "63b7925df9bdf3e0c7022d8fcd9117c333b28fe4d596e1284ab82fd23bc3ec2f",
+    "replica/Sources/PastoCore/OriginalPasteboardPolicies.swift": "b85860e5fdc4be03afd7f4f69651f3ed1fc15c2c48d4a765fdcae5fdc8787dc7",
+    "replica/Sources/PastoCore/OriginalPasteboardRestore.swift": "bf309c94b15bb4db46acedc6ba535d1f060aa3a8d74257053a773cf7200dd2c6",
+    "replica/Sources/PastoCore/OriginalPasteboardArchive.swift": "f0775dbdefa9611c9972d4aa8daf3ea9c8742f1f85d446c71f01e0c820c759dd",
+    "replica/Sources/PastoCore/OriginalSearchDateEncoding.swift": "b46fe7fca447d1089bfc7c36676ecaf13a2d77c6d665eb5f42cb37ab5d00c5c6",
+    "replica/Sources/PastoCore/OriginalSoundEffects.swift": "a452159a1b014ef158f3267ac4cf31501876b24fc89e44f0400f27b64b8b169a",
+    "replica/Sources/PastoCore/OriginalPreviewSharing.swift": "64b2623f15994676d6798fbc4702a7046826279c56249ade36f9361eef46393c",
+    "replica/Sources/PastoCore/OriginalFilterBrowserPopover.swift": "f0476a5457e4326cfa241adc063afb2e0031627cb49fe8bdf226634f9731ae7f",
+    "replica/Sources/PastoCore/OriginalHistoryCapacity.swift": "b5fd642d85020bf621819b81c9bcda4cc33c4c602da19070eb67f6f7e825d3d3",
+    "replica/Sources/PastoCore/OriginalPreviewTitles.swift": "09c1378ba75a4d8d7c75a4cdc22eb8b5093987b824a75ff56bb771cfe28d1c41",
+    "replica/Sources/PastoCore/OriginalPasteboardChecksums.swift": "91b10577b3103f2b5e4ad0879dce27b6ed53648531a0265d93d7d9f636fc611f",
+    "replica/Sources/PastoCore/ClipboardListPersistence.swift": "5118f73387ac1aceb75e70327251ed0799924bf6071098cff8a6e2a2b6ffe1d3",
+    "replica/Sources/PastoCore/ClipboardRestoreItem.swift": "b896730653c49e72387fd53bc19e2aeea23e5cafabc94ce7fd8fe6b9cf1d7665",
+    "replica/Sources/PastoCore/OriginalSearchLocalization.swift": "3bc5e87065b5c45dc8e358424aac32873c00d142faab21a9a2fc949cefc44019",
+    "replica/Sources/PastoCore/OriginalSearchDateRanges.swift": "91f2f941e01c03dc575e29edb80144c4e268174528e551deb72642b4a7743451",
+    "replica/Sources/PastoCore/OriginalDiagnosticsHistory.swift": "a2c917352e8d3d194f3528b7023994fdb3e393e7f81007ac5be6c77928f30b62",
+    "replica/Sources/PastoCore/OriginalSearchIndexingState.swift": "3c790cd0e302b6a3020b88516500e1b4ab9b51462eebef220f17d2b9795264d9",
+    "replica/Sources/PastoCore/OriginalPasteboardDataCodec.swift": "3994f19683c261c6137c9a97f66f89d69b111e8731cc09acb42f6727980a786c",
+    "replica/Sources/PastoCore/OriginalSearchInputHistory.swift": "24cfdd95c3456f594ef02cf3d2d6b31d61600256266a129a686c2675876fce1a",
+    "replica/Sources/PastoCore/OriginalPreviewAttributedText.swift": "f670c5a9d4120859b7c75cb646ae574472ce51bdb320143fb929b48ac6e586ed",
+    "replica/Sources/PastoCore/OriginalSourceApplication.swift": "f062fd4c806d1c155e84c80e6ba962500c2f2f195a2fee3b50fe5d864f06478b",
+    "replica/Sources/PastoCore/OriginalDiagnosticDispatcher.swift": "7f7ca246acae9248a654db1af4973e8d48c272651a147fffc06cafaf2a103e9f",
+    "replica/Sources/PastoCore/OriginalSearchSuggestions.swift": "838d8b9233d01c709bdea98a1aad697f93bcebb4cd662cd5ab429260b7914402",
+    "replica/Sources/PastoCore/OriginalPinboardTitle.swift": "111682b2e750e5a237a34b7a39bc90107cffec52f74ffe0eefa95455b5ca0261",
+    "replica/Sources/PastoCore/OriginalCardPresentation.swift": "acb4df601c1f35cf1e8767bc8a66140c99ec082c8c82f79acd49fc316a5d09cf",
+    "replica/Sources/PastoCore/OriginalSearchFilterView.swift": "4628dc1edfd81fa48b4442c4b7f05ec5eea3a6f8598038d3a1f9f9480c62f6aa",
+    "replica/Sources/PastoCore/OriginalConfigurationFunctions.swift": "d777c6848066ec198ca41739d0a785ece4df2000977cda19b230e3d4530fcb54",
+    "replica/Sources/PastoCore/OriginalSearchTextTokens.swift": "ea0bef0b75186bf558f512cd15f5343e1251fb47a9e39791d320fd23248b143f",
+    "replica/Sources/PastoCore/KeyboardShortcut.swift": "eba51741928fc95619585980567b617d39f3c749564cddb5dff4bbd04bf189d6",
+    "replica/Sources/PastoCore/OriginalSelectionAppearance.swift": "5872178f7e902aa92c57626c3a2201be08ee9fcda85d1d7b1b90e11baff84588",
+    "replica/Sources/PastoCore/ClipboardSourcePersistence.swift": "2ad8c94d258472f64eb428e64e39fd73a53d7236a08883d274ccdbc2c14acc58",
+    "replica/Sources/PastoCore/OriginalObjCExceptionBridge.swift": "cf3e9e3b016001d7d982a673e00e365d8b638693effe3c9c49f8c77b93102bc2",
+    "replica/Sources/PastoCore/OriginalShortcutControls.swift": "55ecfa91d843f2305044a1558079a89d6da119edc25f5a3d1f4e5b4ffe4d82a8",
+    "replica/Sources/PastoCore/OriginalPasteboardImageEncoding.swift": "2e4430ee0d8c7d8f88561457d37e8d50c0c756d83471facda099b7518a6a2dfe",
+    "replica/Sources/PastoCore/OriginalPreviewTextTraits.swift": "32ee33412a545f9388d26965dbdaa210a18f2e648b8c62b1b4c7f6e56556cca5",
+    "replica/Sources/PastoCore/OriginalStackTableController.swift": "cf0da7926b589a254f17ecb40d513d25903aa3fe40aa64a112b03c04e33bd2f8",
+    "replica/Sources/PastoCore/OriginalTextPreviewMetadata.swift": "7c09e2e2297ef070a792bf8a50e51ab162146d27b516d7e92ac3bd53df36b676",
+    "replica/Sources/PastoCore/OriginalAccessibilityService.swift": "e015554a40a64837f284fb9a0dc08a2639e8606b4e34b5930234cf1751e40073",
+    "replica/Sources/PastoCore/ClipboardCollectionItemReference.swift": "0afcada788788dfd0295ab0c8b3fb0ea747045b74d64847745b7ae88157fee35",
+    "replica/Sources/PastoCore/OriginalShortcutCoding.swift": "9a0f5880a129959b4a906014bab6aeab7dfc0055e55e73655ecbe2d55090d2e5",
+    "replica/Sources/PastoCore/OriginalFilePreviewActions.swift": "71aed79904a062dba83864ccd4fa4a1958543abe7f216cea3395f24ccb5a6f8d",
+    "replica/Sources/PastoCore/OriginalPreviewPopover.swift": "8617fae44630789d2aff97e65f2aa2c67adc2551c54d6d21d6021ea1c121994e",
+    "replica/Sources/PastoCore/OriginalCloudKitJournal.swift": "f580f0d45cdb9237892f0cc5ee77faf676d0e93c026b63dd36514765811fc1f2",
+    "replica/Sources/PastoCore/ClipboardItemTitlePersistence.swift": "c85a59b46d6b6dda6134d7454368d64fc05b269fdd99fc5350e5b74502e3715b",
+    "replica/Sources/PastoCore/OriginalLinkPreviewMetadata.swift": "cf30ef0714e8f3bfa31c11765ce3a0493b3228013c3d4096cc5c32e851c2be00",
+    "replica/Sources/PastoCore/OCR.swift": "05735a83412519d0a8fb4b913b17f434a235b57ec7fda6cc0fa334248223ed93",
+    "replica/Sources/PastoCore/OriginalPasteKeyTranslation.swift": "cf36143569f8356a1fb84e8dd8729c5f9ca2f5fe5ab4db0eab54f7c0ffcb9ad3",
+    "replica/Sources/PastoCore/OriginalSharedDependencyCache.swift": "d83f199826f661090cdd74b9d05e185e295bf3570ba2f8e8dc868f9dac219cbf",
+    "replica/Sources/PastoCore/OriginalShortcutRecorder.swift": "38443490b32e595db1e3de5c73deef2076ecd862fcdf4e73b021d8addd910e29",
+    "replica/Sources/PastoCore/OriginalFilePreviewMetadata.swift": "39becad3e7a78d6d313569312faae9669d577803261813fee3ed8c14189044d0",
+    "replica/Sources/PastoCore/OriginalItemPreviewView.swift": "dc4ed2844af83a17c2c878828e13e29572941172b6a18e161081a47c734fd6c0",
+    "replica/Sources/PastoCore/OriginalShortcutDependencies.swift": "b61963d4976edbdce29db86588d7ed4725a2f27105e3eea814877663e7b1ce37",
+    "replica/Sources/PastoCore/OriginalGlobalShortcutMonitor.swift": "8793fd5fe1cf86710fe0453d585ede5299d2e97a8c7b1b2bdea780d60bfa8945",
+    "replica/Sources/PastoCore/OriginalCollectionShortcutActions.swift": "01be6b33a11e469bcbbe4afe6b12ff4f3ee7ef64e7f4a7cc64d8ff654379f9fb",
+    "replica/Sources/PastoCore/OriginalShortcutMessages.swift": "6c8f8f4e3c0b7224ccaad185e3e4fd4deba90bbf273d88836162deea032013c8",
+    "replica/Sources/PastoCore/OriginalCollectionSnapshot.swift": "84df7a39ccdad8d43fb43a1e8caaa2c0c14cbd4510f5c9d7165cc651678c17ac",
+    "replica/Sources/PastoCore/OriginalPreviewTextColors.swift": "06134570276933fc2be82f00033d2ba9c70aaf04d5e1e134e23fcfb830b3a881",
+    "replica/Sources/PastoCore/OriginalPreviewWindows.swift": "4cc1f30d0de962162c6231a6207cc7623fc82e20f126f3ebc3edb326d5592c2d",
+    "replica/Sources/PastoCore/OriginalPreviewLocalization.swift": "0163cc854b291a3341675ea525903141dc764dda4a2791b513f4a9c4515632f1",
+    "replica/Sources/PastoCore/OriginalSearchAppearance.swift": "0cfd7e194ce6f6b1f4118897810e35d0eafab317a68e6104e4bfbd11dbaeb5c4",
+    "replica/Sources/PastoCore/Models.swift": "c1dcab4c4b2125b99cf09d15ca4e073e3096241abcbc4fcf65052c1f4e9c1380",
+    "replica/Sources/PastoCore/OriginalSearchField.swift": "6a56456d5b45a28cacd291891380b97414e71c1eaf68bd1d9ee15c3ec1596600",
+    "replica/Sources/PastoCore/PastoCloudKitConfiguration.swift": "5c19e5388c3c730449e47dc7aef3c81d3d3d1992722c1bef2b4981d4b5495e9d",
+    "replica/Sources/PastoCore/OriginalSearchEditing.swift": "de4dbf21b72826fed9c0e9418c842eb8b0f1146a7d7aa9bfe22985af5d7ac73e",
+    "replica/Sources/PastoCore/OriginalPasteboard.swift": "139097cb610fc3a43f906414ef1b41d8634eb804f8911bc898bb987967a4208e",
+    "replica/Sources/PastoCore/ClipboardItemDataPersistence.swift": "3abbd2239d3f077bc7fe8a26fab62c8cb34db85895ef2445e213df7e7182d34c",
+    "replica/Sources/PastoCore/OriginalSearchMenu.swift": "af3962d55bbfae4c40a67d43872d7f30d8e0e9c34c049527f28f94cc5a62f5e9",
+    "replica/Sources/PastoCore/ICloudDriveSync.swift": "648ea44d43871a8fd81e375419b7012887975fc6a608329f356912cd60f9fbcc",
+    "replica/Sources/PastoCore/OriginalCloudKitSyncEngine.swift": "6cce5e14ca63852cecf00e378964216c8ff6d4e4bef31dfd89343f1e0f6825da",
+    "replica/Sources/PastoCore/ClipboardSnapshotReader.swift": "4e36a42f107bbeeab6ad2a2407a82185df00cf9f05bd8b0606f1c5c1e3417628",
+    "replica/Sources/PastoCore/ClipboardItemOrderPersistence.swift": "978e36634da0a087257f4df93030f5aa60620df1a7f568f080dc2dd7c3c0bc17",
+    "replica/Sources/PastoCore/OriginalPreviewTitleLabel.swift": "84e3a33dbd575ad595cded72928d3d9b917ec1ece7eb258ba42ef3cf457bb0e2",
+    "replica/Sources/PastoCore/ClipboardSearchRecord.swift": "f624524f6902d07084ccbee412c92ce933b3b5d7e397f024bd57ce1330cca459",
+    "replica/Sources/PastoCore/OriginalCloudKitGraph.swift": "79324b3c6c164d2713c629342de98d15ee691d4fa3a9fa9b26effeddbd6c0d43",
+    "replica/Sources/PastoCore/OriginalShortcutFunctions.swift": "c9f72e489f3345339beef2b79493c8c06bbae52251d9f29876bde3fd4c884174",
+    "replica/Sources/PastoCore/OriginalUnavailablePreviewLocalization.swift": "fe4dbd6517e0dd813bff1a508d009a4a2a00a55d644134ebc9477ecb21d608be",
+    "replica/Sources/PastoCore/OriginalNativeDragPasteboardWriter.swift": "db793abd1e9b2c3c6ddf5fbe94dcb55af21122e5c9751751d5032a5156a3c908",
+    "replica/Sources/PastoCore/OriginalPreviewFooter.swift": "97d14915cc4fa873a0d526a42f168ea5487864d0b8327e825bee18e28bd2e25c",
+    "replica/Sources/PastoCore/OriginalSearchFilterSymbols.swift": "73a9ca9cb90529d7c46665ac1af0241f0310505e56704d441df4e94c816698ef",
+    "replica/Sources/PastoCore/OriginalImagePreviewMetadataCodec.swift": "1620a024a011c19294f16680ae2a8d6e92afac426d4ebbe1dd4e1fac1e364ca0",
+    "replica/Sources/PastoCore/PasteGroupMigration.swift": "7c7eb2bc22d31de3a3c00ef3b3966b4f3f821fe195a4d5b471542952b0559cfe",
+    "replica/Sources/PastoCore/OriginalPasteboardImageRestore.swift": "03e7d3e0aeac82986226a674708f4817cbf5cf69c20e856738774bbd0f51635a",
+    "replica/Sources/PastoCore/OriginalSearchQueryNormalization.swift": "fc2414e1395bb916246c9ef38509730c394e3d0feebbf0ca6dc9438f86409eb9",
+    "replica/Sources/PastoCore/OriginalImagePreviewMetadata.swift": "90bfbfd6d413e25d446b47346935f15c53d80dc44028d6630d19331b06908ffa",
+    "replica/Sources/PastoCore/OriginalSearchInputView.swift": "bacd69180e56aaac3eebae4eca50daa594cd09a6a146da89654f37f04b860b28",
+    "replica/Sources/PastoCore/OriginalItemTitleLabel.swift": "ffc86d0ef58daeb84ed0ede3a777fbc7152ae3a1778d2fbae8470f205f6fee29",
+    "replica/Sources/PastoCore/OriginalSearchTextView.swift": "25de1edc0432fcfa2a18c8437d6ea6fd98727a7914e01560240380f6d74808b5",
+    "replica/Sources/PastoCore/ClipboardCollectionEntry.swift": "8f507c30666e267cb30f60e9bf86dae8af186305348156da1fef8a2a5b30a82f",
+    "replica/Sources/PastoCore/OriginalSearchTextScroller.swift": "0f0b42bf9b40a34105f00c5dddf2c644415329fbae2f7816de221c2c123ce870",
+    "replica/Sources/PastoCore/ClipboardSearchCollection.swift": "7b19e56ece8ad6f03971a5d8c09058994a65c64d9cbab06a6aca2574e7f9e65c",
+    "replica/Sources/PastoCore/OriginalLocalDiagnostics.swift": "95baca2d0ee25cb9ca5a7bcbc111a820bbe70d29feecf46e5d8cd0c1f6d5c911",
+    "replica/Sources/PastoCore/OriginalTextPreviewSubmission.swift": "d73f78493de8b58d15baf16daa91882034cc8f186768a7e6a927a398ddc8d91f",
+    "replica/Sources/PastoCore/OriginalSearchQuery.swift": "4c828b16c6342387d375e6b5a3f24d28b37bbffa1c377e4cdb064ad27b5d1b28",
+    "replica/Sources/PastoCore/OriginalWritingTools.swift": "4a21f642be03fe3c1c08638186a90b3320567eb2af90f181aea36469446637a3",
+    "replica/Sources/PastoCore/OriginalDependencies.swift": "6cccb9750822fd36e8e769bbaf820fc92232446bbde723089032b94a862619a8",
+    "replica/Sources/PastoCore/OriginalPreviewWindowTransition.swift": "35bf14270834582525088ebe43b6b50c11373c6c59106153711c3acf0e1aa34a",
+    "replica/Sources/PastoCore/OriginalToolbarButton.swift": "f4c3920e5f5cd9f515bbe0cce530f4f8f6335b14450f75e471f0272e19412165",
+    "replica/Sources/PastoCore/OriginalCollectionListContext.swift": "4511aae8e8d7897a27c173e97f7cd4a98b9a9c0aecf33080d25bf78dfdd5115e",
+    "replica/Sources/PastoCore/OriginalDiagnosticsAppActions.swift": "51b66a38645a00f634efdb623f74940f503c8c2c36862badc56b1267d2132cac",
+    "replica/Sources/PastoCore/OriginalPinboardAttributes.swift": "c5e2e57445672c441594085a57f57b2b79325e5d19db26141962018bf5eb26df",
+    "replica/Sources/PastoCore/OriginalInitializedValue.swift": "bde8f2a1c9e4b6c74e9bb332ebff29dcbd3569d2459783a451661ff106d0e1c4",
+    "replica/Sources/PastoCore/OriginalSourceApplicationImageColor.swift": "dd0923531076f26726f9aae58876b63a9f8056b009597e99a6612f28155f0c24",
+    "replica/Sources/PastoCore/OriginalDiagnosticsManager.swift": "afb071a98b036e3023f254c039ca1d85c4a975e79307aa3f3075b1caf21513ed",
+    "replica/Sources/PastoCore/OriginalShortcutRecorderView.swift": "881691562e6378fbadd64502b3ec893c821a1e0a463f8b0c6a5ddbdef7dd6330",
+    "replica/Sources/PastoCore/Pasteboard.swift": "8263f0e4b1f96a126031f44d3371b3fc7a05a123e3333196c6c6e593beeab15c",
+    "replica/Sources/PastoCore/OriginalStackIcons.bundle/Contents/Info.plist": "83d3bb20cda3c61373de928b60c991fbd8c8e53590c6a0eb80fcbb6e11d6645a",
+    "replica/Sources/PastoCore/OriginalStackIcons.bundle/Contents/Resources/Assets.car": "40461d0131c8408ce4118a1c8e52f2926a499d4c54f44d5ef8d658bdab139d13",
+    "replica/Sources/PastoCore/Resources/PastoOtherApps@2x.png": "9c5e5ee6b2af9a4fa6cb81982d5aaafe08635ed12ea93f12dd2d3c956c978483",
+    "replica/Sources/PastoCore/Resources/de.lproj/Localizable.strings": "24f605532174f9023727875f1a761d8e5a898f50535b4c8768134e4b0da7c29f",
+    "replica/Sources/PastoCore/Resources/de.lproj/Localizable.stringsdict": "c6fc20ab4a366deb148f095d770cf6f90c94eb246ac497812103b4f5e8aa6b34",
+    "replica/Sources/PastoCore/Resources/he.lproj/Localizable.strings": "5f6ad513c457efe3816e026752b13a813b4e7907d4e077e742a311e8df2794b1",
+    "replica/Sources/PastoCore/Resources/he.lproj/Localizable.stringsdict": "1c851445f2286d5959411ce7712152009f17a86f3121b597f8563f7a8955808e",
+    "replica/Sources/PastoCore/Resources/zh-Hans.lproj/Localizable.strings": "46bbc9f99ebc3f7ec774e85e63cff49ab737a8a4fd11ec4b0d7a4f62f0f3cd62",
+    "replica/Sources/PastoCore/Resources/zh-Hans.lproj/Localizable.stringsdict": "c1f7a75193a101959e60911f9014ab3ca0ef905a4e2105e9cba5133d1433e1ad",
+    "replica/Sources/PastoCore/Resources/ja.lproj/Localizable.strings": "f6c77338a2f532fd315c782b9477fa4c11dc740ba94babbe9fd647f87f3c3d7b",
+    "replica/Sources/PastoCore/Resources/ja.lproj/Localizable.stringsdict": "cbd651d369b6e4156ec091cc46b97a477273a7476f9082bb3f14b03d199e207d",
+    "replica/Sources/PastoCore/Resources/en.lproj/Localizable.strings": "6340aeb381929d8a714c01cbd0c67ab66b3bf4f958d2d76cc5bad40b379c0fe4",
+    "replica/Sources/PastoCore/Resources/en.lproj/Localizable.stringsdict": "dc7911c873e852bd01252c685a5e9fce24c07ca7f8954054ab6b2c4374d04679",
+    "replica/Sources/PastoCore/Resources/es.lproj/Localizable.strings": "9c3de71c37307c2cbba2ef904bd6f329885c2631f93d6dc1f95a1170d8a8dffa",
+    "replica/Sources/PastoCore/Resources/es.lproj/Localizable.stringsdict": "28a931243ce4f9259d411fbe579c3b8eb7c0a58711dabd344d31029ea1104c4f",
+    "replica/Sources/PastoCore/Resources/da.lproj/Localizable.strings": "b52c90715ec4f8ceda958d463d0ebf55609d908919206bec73363c5300e9c68b",
+    "replica/Sources/PastoCore/Resources/da.lproj/Localizable.stringsdict": "2fbe4e3d9ae3f2dadad058b3fe4375dd56a346ec26ec191e6f347b0333ea2b25",
+    "replica/Sources/PastoCore/Resources/it.lproj/Localizable.strings": "7e8b31b6a9e4ad619f585d4c59fc284a80a45471b54632e9f52a10c85ab85f0f",
+    "replica/Sources/PastoCore/Resources/it.lproj/Localizable.stringsdict": "5b89c5b4fa16e1354a92f46c8070f428dd468e3367a63776a0f7b059db17d492",
+    "replica/Sources/PastoCore/Resources/cs.lproj/Localizable.strings": "f2ae3069460455cb1108f7f33bb89f616afef938e142c2f570790f7b4f3ad23a",
+    "replica/Sources/PastoCore/Resources/cs.lproj/Localizable.stringsdict": "cad4a0663c716b0a571317b5d99b8855f3076469a39f1bfeb1ce05e4ae6f2a8a",
+    "replica/Sources/PastoCore/Resources/ko.lproj/Localizable.strings": "03c5948083de753dc38acab90ed3ce1fc90cd14ecd5a3e8abce305e7b5d2701e",
+    "replica/Sources/PastoCore/Resources/ko.lproj/Localizable.stringsdict": "9a0b1198ca2e28753b38e4d9aa70e5ce026ebfe62308cb36bc45928029b71981",
+    "replica/Sources/PastoCore/Resources/zh-Hant.lproj/Localizable.strings": "47124f4e8b2f9bd3874260a562efa070c0d7607d174939f90119367688ec77e7",
+    "replica/Sources/PastoCore/Resources/zh-Hant.lproj/Localizable.stringsdict": "8e8115b30d8b5f765fc5b94b485c028b6bf01510e888b2c568ad7978a48756d4",
+    "replica/Sources/PastoCore/Resources/pl.lproj/Localizable.strings": "860e084185ffc056f5794d8adc9e00e13ca570f66a7aede80d3e5d53c2ffd64f",
+    "replica/Sources/PastoCore/Resources/pl.lproj/Localizable.stringsdict": "1c257470d804b04c12cab3de12ca8747cc1857bcef963c44e732a5614f5b4232",
+    "replica/Sources/PastoCore/Resources/pt-BR.lproj/Localizable.strings": "54890e3c77ab3306092d8c953f8bd8eefe1d91649269fd3f6047f92e4e09233b",
+    "replica/Sources/PastoCore/Resources/pt-BR.lproj/Localizable.stringsdict": "793057162eaa4cf343f9b8b1cbe83ec3aa4641d0812055b6c7fbbbcb4fb648f1",
+    "replica/Sources/PastoCore/Resources/ru.lproj/Localizable.strings": "db49193a7de6be91beec70764e0c02e728720d3c29aa2daac207370377efe64a",
+    "replica/Sources/PastoCore/Resources/ru.lproj/Localizable.stringsdict": "4195d7291edb5f78b23c95e44e06e52ae313e0ae4421b9ce28010d5df97bb6f4",
+    "replica/Sources/PastoCore/Resources/fr.lproj/Localizable.strings": "24a84d7a0f2025b820135441c64da4a3001cb2b5dc4cb3b7a3bc4e40b24c3ba7",
+    "replica/Sources/PastoCore/Resources/fr.lproj/Localizable.stringsdict": "7e0acca552f31d51b5556ab38d664b14d359ec55c6c2f52ce54a3b1cfad3bb03",
+    "replica/Sources/PastoCore/Resources/nl.lproj/Localizable.strings": "ba23a130992e986a9c934a17dede000d30ed63254cbaacedab0a85c17e24e993",
+    "replica/Sources/PastoCore/Resources/nl.lproj/Localizable.stringsdict": "270356615bf42ba73be94323210365be1d6adfe845256517acd9b6cf343a7809",
+    "replica/Sources/PastoCore/Resources/pt-PT.lproj/Localizable.strings": "ecbf3caf257f1580b0d5ac99a07fd99c08ba8c4386232177870d2f7d387c0e42",
+    "replica/Sources/PastoCore/Resources/pt-PT.lproj/Localizable.stringsdict": "1b28f44dabcb27b6f00d3c8ac5c78b29c6b63510b1525d5cfb7d812cf3e1d399",
+    "replica/Sources/Pasto/GlobalHotKey.swift": "9c9281b031b7d5b81bf704c3f009f3dc2880cfafd819b9bfae59658cb0f28ae8",
+    "replica/Sources/Pasto/SourceAppColor.swift": "fc9c6a1b5dd5aec1998fa9a5b3149f7b8f7055b472473a80902bd9e546e89a74",
+    "replica/Sources/Pasto/BackgroundService.swift": "882176450c8acb852a8573f3ec3a953974ad3198df286ea4da8288835af7faa5",
+    "replica/Sources/Pasto/WindowSharingPolicy.swift": "d1d69c1996b68c50240bfc952ea9bb9fc8c2f88185e3706daf7ad120af2705fc",
+    "replica/Sources/Pasto/ICloudDriveSyncController.swift": "0504696025e87e2c5c7944d9c9df9aa9ca885c2b0b00d73e601cce5ca5b418ea",
+    "replica/Sources/Pasto/AppMain.swift": "8c7e98930275a77cf912b96ef6814caa263eca2913f38c53e702116dce6402f2",
+    "replica/Sources/Pasto/UI/AuxiliaryViews.swift": "21fe1d85ccb07e32821ce1ca2bb4bcfd3d2bafa72f661efbb8d4e7072720ec32",
+    "replica/Sources/Pasto/UI/ReplicaPanelContentView.swift": "4dc1bc8712542e9bf8d2ee386cca67584f19d698b1e789ba6974e4028a549b32",
+    "replica/Sources/Pasto/UI/OriginalLinkPreviewViewport.swift": "b4df9cc96a0a5fc4aa881bb3785b18df24c96b6cf989a60c7ac9223af72bf7bd",
+    "replica/Sources/Pasto/UI/ReplicaNativeDragPreview.swift": "0e5adbd506e11dee134c1e059adf4f3c7b27fd7e3cd7379be3c87bdc1fb391b7",
+    "replica/Sources/Pasto/UI/OriginalCollectionScrollAnimator.swift": "6a406ef43ba78b00f7acb7c184926c3d0341ef84a3e070e7eda6bc8166fa72b4",
+    "replica/Sources/Pasto/UI/OriginalCompactTextContent.swift": "3f0e9a48a84507ddadbcf2c4c3fee02e166c5aee98ca0b6763286d22dc96a1d6",
+    "replica/Sources/Pasto/UI/OriginalImageCheckerboardView.swift": "956e55f5c723f031c762c58571098682af9a07055a4ded76af2be684941dd68e",
+    "replica/Sources/Pasto/UI/ReplicaPanelResizeHandle.swift": "f0461fe70bbcb486c89ef24d7d2d119b051cd5bbfb34279df06f72636f6bcbbe",
+    "replica/Sources/Pasto/UI/OriginalUnavailablePreviewContent.swift": "2e1dd8473f7b0aa146ee780fb03defb4729a6a87677031da00e50b31bae08afb",
+    "replica/Sources/Pasto/UI/CloudKitSyncController.swift": "ede6e2fcab1fb44e76abd9c65f5d060349ab2ae4d535feb04849b2799c2e7e1a",
+    "replica/Sources/Pasto/UI/OriginalStackSnippetCell.swift": "334266eff46fbab12a7895734553252887a423dd691d7c564f025d4cfe380d18",
+    "replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift": "4120de8117fc0b1a609a1e92918f2103bb96a93e6530c2e56df1c9cfb295beeb",
+    "replica/Sources/Pasto/UI/ReplicaUIController.swift": "d78b35c18ba0a92fa3da33e4bc9e5a7197c6186cb3378c76f06b2b5fd966c1c7",
+    "replica/Sources/Pasto/UI/OriginalCollectionNavigation.swift": "2447946e59d94172c077b429a80868506ac65d2298a45c4365410376bcd980ba",
+    "replica/Sources/Pasto/UI/OriginalHeadTruncatedLabel.swift": "02882527d847263c3370a82d555436d149fd9f9971392ba033967d32cdc9ae6b",
+    "replica/Sources/Pasto/UI/ReplicaCardContextSelection.swift": "2a5b9aac7f579d6466a8f0c6feff24095609873c348ef99444f95f23aeb7615f",
+    "replica/Sources/Pasto/UI/ReplicaBrand.swift": "17757bf65cc45d46160089c7f4379471045ee0209c517a7337d3ef8fcf55de23",
+    "replica/Sources/Pasto/UI/OriginalAccessibilityRequestAction.swift": "4b0e371b854f3b96be9b9d7f763e574cb374141eeff9b526ce69c5aa35dd0957",
+    "replica/Sources/Pasto/UI/OriginalUnavailableCompactContent.swift": "aa3a350b3aa3559b9e78db3eb5547a90b4ab73a5abf92e8763ac7340f5706d50",
+    "replica/Sources/Pasto/UI/ReplicaSearchSuggestionSource.swift": "d3a861f8ca53ce22c57f54684d673ff2df6f646d965de8b5220ac75d6e56f24c",
+    "replica/Sources/Pasto/UI/ReplicaLinkPreviewContent.swift": "7d841ec2fa32511b264636842a221e814f3e974b3de0cb5587ae7c4e6ae34200",
+    "replica/Sources/Pasto/UI/OriginalAdaptiveScalingImageView.swift": "0002845178a53c2617885f40fcfad92f679c1123a095340aa1037450914730d6",
+    "replica/Sources/Pasto/UI/RichTextEditor.swift": "7c4a91fd3876d2bd35277b1a2e0ce6e1ac5e4f6af0e8de346ac7a1ced149794d",
+    "replica/Sources/Pasto/UI/ReplicaCardTitle.swift": "eb1dadb0a53e03e8ced8c70e35add3a4431aa4c77b668adaa3aa5098f3938ebf",
+    "replica/Sources/Pasto/UI/OriginalPinboardHeaderIcon.swift": "c5aad86b7285c39fd31757919e9cf8d3cc5a29fae201a150132735c193a0c2db",
+    "replica/Sources/Pasto/UI/OriginalImageSizeBadge.swift": "5579a312cf5cc74260e6a9403c1b704afdfe3c0c6a70aa101678264733911873",
+    "replica/Sources/Pasto/UI/ReplicaFileCardImage.swift": "92b5d106ab7f48bb8d9dddaa29fdc279ef09b4a02e34448879d34738f440bbd4",
+    "replica/Sources/Pasto/UI/ReplicaImagePreviewContent.swift": "f571de628dd9f10ae92e16c9a6f53ae386451f60f61c581958bf4d070f1dd027",
+    "replica/Sources/Pasto/UI/OriginalCompactTextFooter.swift": "cd31a6dd52715f0f376365665dabba599bd190358ba6b9d23d4f6d0b4c284d2b",
+    "replica/Sources/Pasto/UI/OriginalPanelTabBar.swift": "f5e6fe2b4cf7c26424a3c2958f2b68e0f64c260d905038a0bec3986be7824d3c",
+    "replica/Sources/Pasto/UI/OriginalCardShortcutIndicator.swift": "afb30541523231c5438a4a357d607d87aa67a0babd7ecd1fa839b204e08ff620",
+    "replica/Sources/Pasto/UI/PanelViews.swift": "1f61c5684dfd3fb9da52d062ea290acba417c01af4fea1e0039e5c273ddc608e",
+    "replica/Sources/Pasto/UI/OriginalNavigationKey.swift": "63c828be06065a20f1956fb2c4cb346e81990872ff089a13e5af2ecad2c61ded",
+    "replica/Sources/Pasto/UI/ReplicaLinkMetadataContent.swift": "0a47517556c1c338b3035815126f000cff8e49b32d3e42f3bd80221acb9af21c",
+    "replica/Sources/Pasto/UI/OriginalPreviewColorFormatting.swift": "38754162d394bae0d27932eb73389f8c5ac0f1de6c7be24fd7e16a8656774fa9",
+    "replica/Sources/Pasto/UI/ReplicaFilePreviewContent.swift": "df56f4edf10439457eb19ae21ca3225088e66e2b9ebeb6db461f024fa60c76ee",
+    "replica/Sources/Pasto/UI/ReplicaCanonicalCardContent.swift": "366ac2b62df5d28f46fc9264538503dcabf1159f06fefbcbea8b038bdc8cc928",
+    "replica/Sources/Pasto/UI/ReplicaNativeCardCollection.swift": "b121bf9ac66163acef09f5e33ee8b9c3eddd8c37ec1444668632594ea0ae524b",
+    "replica/Sources/Pasto/UI/ReplicaCopiedOSD.swift": "d1b58b05ef6c37302cf6d6c1e0056ee0af55035422071d4c53ebe1583c84883d",
+    "replica/Sources/Pasto/UI/FilterBrowser.swift": "d5b72088943cef939844116f099f0b8f2bb8bd5a3a006d276dd3fd2ade671a8f",
+    "replica/Sources/Pasto/UI/ReplicaReadOnlyPreviewContent.swift": "9aaf8080fba6501211d529b319d0e0b7ecab29e2874694369ba46eab37e7ea77",
+    "replica/Sources/Pasto/UI/SearchEditor.swift": "6a1ef8d5c40a9ba374248ce80aa47b642bc0893d450ea900b1ba9e1fc094163c",
+    "replica/Sources/Pasto/UI/OriginalHistoryCapacityControl.swift": "a9cedf5637008697440ce3f09ef8d06d213e0ff76ed3616b2cb98c11ef571c4e",
+    "replica/Sources/Pasto/UI/ReplicaPanelGlassBackground.swift": "95b52f8030c95838d208905d2737b6deea301a6103080143ccf017f5a2ef43d2",
+    "replica/Sources/Pasto/UI/OriginalSuggestionAttributedTitle.swift": "8abc994aae0de69cc925757b59a4976580f2a6f145af30f850c0b63f768d99f9",
+    "replica/Sources/Pasto/UI/OriginalImageTextSelection.swift": "930ceb4220aaba298f30eac0642bbcdebfab4d143390be8edd9d903515e1f21d",
+    "replica/Sources/Pasto/UI/PreviewAnchor.swift": "aa621221c95e877131ce3f53723be87730091482eeac479ec109daf66adaf923",
+    "replica/Sources/Pasto/UI/ReplicaSearchSuggestionsMenu.swift": "fe798a4855021674aef0c99a6c1287375ddcbc12a92f3d981cf085952e51090b",
+    "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift": "3cbac01e4f4f710898d9ad7e81fc64c71dc5c7ce5e1c83ab5c74424f11936bdd",
+    "replica/Sources/Pasto/UI/OriginalPanelToolbar.swift": "fbc51469cda4db80c494dcb3d3eea1a6673e772f0e37c56a1f118badf64d0a93",
+    "replica/Sources/Pasto/UI/ShortcutRecorder.swift": "2aa3eccd3955064dc00e2d252b282f268f4c01bee026d846bcdb70a8c463ad90",
+    "replica/Sources/Pasto/UI/ReplicaColorPreviewContent.swift": "950ae832377be7458c762c7b3c807231b6da404ac7940077c9ee4799a038233d",
+    "replica/Sources/Pasto/UI/OriginalPinboardTabTitle.swift": "cd277f28a03d3eaf825683f75ff8072f405b72cce89985b7308f15ad5d413683",
+    "replica/Sources/Pasto/UI/OriginalAccessibilityModals.swift": "b4894f98cbd41b6d036739c4828a88efa1d7dfb6ac672d784f80a5be2a02f627",
+    "replica/Sources/Pasto/UI/OriginalStackSnippetText.swift": "b0040d8583798179b84a4f88a2aac45652a48eeeae5746330a065073609ff428",
+    "replica/Sources/Pasto/AppIntents/PastoGetItemAtIndexIntent.swift": "6785d3f7ed2b28697b94bd244bb6daccd9cf81498d6c13f6d3b61b4d8924055b",
+    "replica/Sources/Pasto/AppIntents/PastoPinboardAppIntents.swift": "f862f309ce88392128b1ddfe021f9642d59bc045493381fb03de57c358404552",
+    "replica/Sources/Pasto/AppIntents/PastoShortcutsProvider.swift": "c99f374ac5d00a9096d85c6a475ab8cef24a17d60f29824065ee440bcc80024b",
+    "replica/Sources/Pasto/AppIntents/PastoGetLatestItemIntent.swift": "49d2d21aed2fd5f70c61b26cd3f2d3449d2cb41b7c0f27762314ba6f4de837f8",
+    "replica/Sources/Pasto/AppIntents/PastoCreateItemIntent.swift": "98fea411eb85f02b889bcf2208e1c43a80b5b7521d098c3ea92c26dc8b470e02",
+    "replica/Sources/PastoObjC/PRCloudKitEntitlements.m": "3a6df47c2b05120f90d26e93fe3cc1aa36ede17362734a77512f82c5aa73d872",
+    "replica/Sources/PastoObjC/PastoKeyTranslation.m": "a0f6ee08fa476bdd6f082442f012845a89138b3be852b5f07857d959be2d2ff6",
+    "replica/Sources/PastoObjC/PRGlassBackgroundWindow.m": "a59cd14d1e459d83a070fdb5ff909c90e7e3a9e86aca96a429cb1aeca578b4a1",
+    "replica/Sources/PastoObjC/PRPanelGlassBackground.m": "79491f7a55dfd2dcaeb9c03099bce75c386b58c2229bc8d855d2a5fd0e875a04",
+    "replica/Sources/PastoObjC/PRObjCExceptionCatcher.m": "99b8ce9f229954f427517a16c4a976b6b1ad776873c0eb5a6856b6a82943af6e",
+    "replica/Sources/PastoObjC/include/PRGlassBackgroundWindow.h": "935ea0c78f99a6e0e04aa264c72189ca85433f6bba33c62b2e8da1a18ef872d3",
+    "replica/Sources/PastoObjC/include/PRPanelGlassBackground.h": "1e4f72b473bdeb1b90f82daa3e72dd0c75de072e06b9a15a21df0cf8ac818091",
+    "replica/Sources/PastoObjC/include/PRObjCExceptionCatcher.h": "04b59d8c6afe6efa1496969e34c823ea16752e7c924d9f123a767acfe804a384",
+    "replica/Sources/PastoObjC/include/PRCloudKitEntitlements.h": "d6bdd810591057f1f8ce692a9d81f396bf9b49bc39ba9e1a933deb06b388bb9c",
+    "replica/Sources/PastoObjC/include/module.modulemap": "55cf21adda4b79a4330ec7d4de9b5fad073f13585024a4aac27fe4115af89b07",
+    "replica/Sources/PastoObjC/include/PastoKeyTranslation.h": "3b6b43e45da825496fe7787512b0103ab39ae7c6fb069000cde80b72c11ddeb6",
+    "replica/Sources/PastoMCP/PastoMCP.swift": "c97ffb4388a7d46fc6b4c4e16242feb341b3cc31a6f80a970a64d2e773ea589a"
+  },
+  "changed_production_files": {
+    "replica/Sources/Pasto/UI/FilterBrowser.swift": "d5b72088943cef939844116f099f0b8f2bb8bd5a3a006d276dd3fd2ade671a8f",
+    "replica/Sources/Pasto/UI/SearchEditor.swift": "6a1ef8d5c40a9ba374248ce80aa47b642bc0893d450ea900b1ba9e1fc094163c"
+  },
+  "added_production_files": [],
+  "unchanged_production_files": 245,
+  "adjusted_prior_tests": {
+    "scripts/tests/text_storage_owner_scope_contract.py": "a50b57af6458b639dafd6f45a9ef95494b2ecf193131c0dab4586cdbe0e832d1",
+    "scripts/tests/test_p1_repair_coder_source_resolution.py": "3d7ffe9fb6caba7c3192b2f4b09c56fa1a23630309d91bc0b62c94eec2a9a309",
+    "scripts/tests/test_p1_repair_text_storage_owner.py": "a0c8be44fd79dae5123e15ab3dc3a10cc52f723fba15f771cbccf836b1e7eb39",
+    "scripts/tests/test_p1_repair_suggestion_source_service.py": "3b8b2065bf5f1be49912f7c6eb41d865e929ea8f6dd0d40f1ab5873112f388ab"
+  },
+  "new_tests": [
+    "scripts/tests/test_p1_repair_group_filter_identity.py"
+  ],
+  "new_test_utilities": [
+    "scripts/tests/pinboard_filter_identity_scope_contract.py"
+  ],
+  "retained_partial_contracts": [
+    "native0f733c declaration/consumer unknown",
+    "full original source-priority classification and larger P0/P1 parent contracts remain open; no runtime/AppKit/CoreData execution",
+    "FilterBrowserModel must own initial query and use it for checked/hidden state and toggling, independent of later unrelated global query changes.",
+    "Actual filter UI proposal callback must weakly reference the originating SearchBar/coordinator; no fallback global query mutation when that owner is absent."
+  ],
+  "historical_partial_notes": "reports/replica/p0-p1-repair-round171.json",
+  "adaptations": [
+    "Retain current Selection enum and NSAttributedString token adapter; pinboard payload changes from UUID to String. Persisted original query nodes remain raw String, no archive schema or app version changes.",
+    "Use existing tabListTarget(identifier:) with same native first-match local read instead of recreating a mutable global resolver callback. Source data is current native List name; default-resolver branch is the comparison domain.",
+    "Group symbol/color rendering and all UI layout remain outside this identity/title repair; full constructor/DI/private ABI and arbitrary global resolver replacement are not claimed."
+  ],
+  "next_unclosed_work": [
+    "Make FilterBrowserModel own initial query and onQueryChanged callback, as original005e1c; checked/hidden state and006e80 toggling must use this query rather than global UI state.",
+    "Bind actual proposed-query callback weakly to originating native SearchBar, as03f044→041e08→041860. Missing owner skips external mutation; callback dispatch still follows model query assignment.",
+    "Reuse current MainActor strong model loading Task/per-provider source-error builder; preserve raw String group identity and native title fix. Avoid retaining State fallback as UI proposal route.",
+    "Retain0f733c unknown and continue source-priority/parent comparison after concrete filter model repair; no repeated negative pointer/export scans."
+  ],
+  "baseline": ".local/p0-repair/phase-176/baseline.json",
+  "website_preserved": true,
+  "goal_active": true,
+  "current_finite_comparisons": [
+    {
+      "function_id": "Paste:0x1002ddc10",
+      "status": "finite_group5_name_contract_repaired",
+      "completion_audit": ".local/p0-repair/phase-176/group-filter-completion-audit.json"
+    },
+    {
+      "function_id": "Paste:0x100006e80",
+      "status": "partial_identity_done_model_query_pending",
+      "evidence": ".local/p0-repair/phase-176/filter-model-query-gap.json"
+    }
+  ],
+  "reopened_existing_function_ids": [],
+  "repaired_existing_function_ids": [],
+  "additional_pending_contracts": [],
+  "additional_repaired_branch_count": 0,
+  "additional_repaired_contracts": 0,
+  "excluded_subchains": [
+    "P2",
+    "network"
+  ],
+  "previous_goal_turn": {
+    "classification": "progress",
+    "evidence": "round175 one source/four hunks fixed weak owner/editor lifetime;2572 source/static checks passed"
+  },
+  "corrections": [
+    "Raw group identifier must remain String through actual UI candidate/parser/token/query paths; a native provider alone does not prevent UI UUID loss.",
+    "Group title fallback is original input identifier, not the application brand; real default resolver and removed fetch error block now bound.",
+    "Model-owned query and weak actual SearchBar callback remain absent;006e80 is pending despite identity subchain tests passing.",
+    "Historical inverse full-line newline anchoring prevents new raw-value line matching an already-old uuidString prefix."
+  ],
+  "version_changed": false,
+  "compiled": false,
+  "built": false,
+  "installed": false,
+  "application_executed": false,
+  "system_framework_executed": false,
+  "coredata_runtime_executed": false,
+  "coredata_migration_executed": false,
+  "network_used": false,
+  "committed": false,
+  "pushed": false,
+  "published": false,
+  "website_deployed": false,
+  "user_data_modified": false,
+  "source_inputs": {
+    "reports/replica/p0-p1-repair-round175.json": "5c2ded646ea5bc83b94da7192cad34826ca4b3ec782e812b2d93147870128957",
+    "reports/replica/p0-p1-difference-backlog-v80.json": "a695a5b9f8121c1e50144ca55abc7ab283593c845d65132aba6c8f1f82a68cd8",
+    "reports/replica/p0-p1-repair-round176.md": "78f64cc78052f5c49b9299186bae9c23bbb3e29581da0afe1b317ab89bf8b5d7",
+    "reports/replica/p0-p1-repair-round176.patch": "ca3426f24c810e020173835debeea5510e8883c15bf699ca88433feb57b90bba",
+    "AGENTS.md": "414ae26f40075dfee28d685767272506e6071af75c4dea75ba1b4adbee915e14",
+    "CHANGELOG.md": "dced4e6809c8bb2a4d2e66b3f027ca671b6d0ccd0951e21743c40fe106773166",
+    "reports/replica/offline-migration-plan.md": "48d54dd06d1a76c361ac1a9c290ee81fe92d23336f284822d46a1be0dc571544",
+    ".local/download-links/change-report.json": "aef5bfd7f8f4351e74d490f873f1457cf166dc89b04cedbdee120da0481af551",
+    "package.json": "f0a905887d0886e4d00fbd6797fa1998c54475c17e1e8ed70c5fe57b75e99492",
+    "replica/Package.swift": "f453c3628260a6d67f719ea5fa73f45d1ced8ba68a133f6763f26d5066e7272e",
+    ".local/p0-repair/phase-176/reviewed-changes.json": "f09bba3396eca6acde9448a25e51273810d0e55354f0a0f47f8fdfddaf357990",
+    ".local/p0-repair/phase-176/inverse-correction.json": "9cc95be3e449566ef18368712ebf8d6cce7ba2c3ad81ca7f6a0c713e6718f05f",
+    ".local/p0-repair/phase-176/post-audit-tests.log": "84d9c829b4b4c1800ec298e190b4fe67303c0c60a8b94b08f187571050b5583b",
+    ".local/p0-repair/phase-176/next-actions.json": "acbe14c03b11467c15913f6e92440fb82c099964953d45be9eb6e53d7ecaa330",
+    ".local/p0-repair/phase-176/0x10032aee0.asm": "8c6a519f6f4cfc921aa55d257f857f1c51427711cff2669010c92922242519a7",
+    ".local/p0-repair/phase-176/targeted-service.log": "4b4ea1280fba6160fd39904a52b16f3aad69b4d02e007cf234c80bc7734e09b1",
+    ".local/p0-repair/phase-176/first-tests.log": "f07d1b3dcd4796908327b799929d26f4aa1cd2251413c7d68ba4c3b35412cad8",
+    ".local/p0-repair/phase-176/model-query-gap.py": "8ad5b01f0b09a04d5ac38428053345b56a6493c3ca1a2f5ef42eb2e16b96365d",
+    ".local/p0-repair/phase-176/group-filter-completion-audit.json": "39f4b7a9b1c96bba8533db1bab5a874565680872fd9c668629b69310629edba7",
+    ".local/p0-repair/phase-176/group-filter-identity-contract.json": "1a62f607479343c1311851d4d3be7fc9f9bcc20df495d6c0a6db9034847a46e6",
+    ".local/p0-repair/phase-176/filter-model-query-gap.json": "b61f8fab4dd0775498f76d08661192d108dc4894e0179d3cc9536815fe29a70d",
+    ".local/p0-repair/phase-176/targeted-tests.log": "922ba05148fadf0a8b03d254d14decf38cdb80110e960ccdcc7eedee1d41fd1c",
+    ".local/p0-repair/phase-176/update-tests.py": "30ad2fcc259fcc2542f18a3f7326d1ec534d14bf8d5ca56c3f5c2de98cd75908",
+    ".local/p0-repair/phase-176/0x10007d78c.asm": "454eb28e10d16e99d6e16e1f9d884fffd529b873c308494e50e527f37924917c",
+    ".local/p0-repair/phase-176/edit.py": "d1d52a1f38b4f4ebcd3da2ad2b1bd2b49fc44cb4b4aa0a6a38ce5ab593512c77",
+    ".local/p0-repair/phase-176/finalize.py": "abf9872fed2f8a28f3c87aea5a71716b2f714a5455f17bb22003b8174a755961",
+    ".local/p0-repair/phase-176/0x10007d0e0.asm": "0fa58aa92a813a58c0eb62969090210c64a38ee12f8a654a504543bd58b32a5c",
+    ".local/p0-repair/phase-176/targeted-after-adjustment.log": "7b0a23549f66565dfb2e0907d96fdfab3b3dedd5e8350a94455b3e184173b736",
+    ".local/p0-repair/phase-176/test-summary.json": "b81d70b94437807528e4c58b4f856dbed8d90cc600689044c4e431248222d588",
+    ".local/p0-repair/phase-176/update-tests-followup.py": "984b84a3442ebb00331af350fa91d2f03c1730bf502e699563a161ad69ae56e5",
+    ".local/p0-repair/phase-176/0x1002ddc10.asm": "ff0d1f6ce7cd54df38ec0d6c84acc60dd8b6f37f2c498588f99182cdade2035a",
+    ".local/p0-repair/phase-176/first-test-summary.json": "2f899a0ee383efefd0ec5809a959fed5c0b9e98f3715f322d9fe9c704abf3da1",
+    ".local/p0-repair/phase-176/baseline.json": "0648291a9210ca7c75504d2bd5626044a6014c0a4a008b898a0d12dfbe827590",
+    ".local/p0-repair/phase-176/run-tests.py": "d0fd377cb164b467939000af7c1fcaaa47215e85a1bf9fa9c7b8c500e8373703",
+    ".local/p0-repair/phase-176/proof.py": "5a6f5f19814cb3e10f70d24cac719f24c2102e62773739e5e8a79a04e69369cb",
+    ".local/p0-repair/phase-176/tests.log": "b774ea02644a079c6435a7ff18a2efdef217eb5a91e5ea74e34497a1e05539ef",
+    ".local/p0-repair/phase-176/0x10003f044.c": "e1f22388fc56bfeb039372db3e1f95cddbb759e6766fb91c8bae58743690bddb",
+    ".local/p0-repair/phase-176/fresh-audit.json": "1c10dc332f21b52bc542a6cfe1b28e504cc5b537bce2f83bf18d6662a49afe78",
+    ".local/p0-repair/phase-176/completion-audit.py": "70e62ecad551ccf77937c86f35c4b5d3a354f20631e3501b0f573fd2586a8ca0",
+    ".local/p0-repair/phase-176/test-scope-adjustments.json": "890f79d14c6b0163eb18bcb1e71c82cc1378b9e96116cd171f5711c47fe4c1aa",
+    "replica/Sources/Pasto/UI/FilterBrowser.swift": "d5b72088943cef939844116f099f0b8f2bb8bd5a3a006d276dd3fd2ade671a8f",
+    "replica/Sources/Pasto/UI/SearchEditor.swift": "6a1ef8d5c40a9ba374248ce80aa47b642bc0893d450ea900b1ba9e1fc094163c",
+    "scripts/tests/text_storage_owner_scope_contract.py": "a50b57af6458b639dafd6f45a9ef95494b2ecf193131c0dab4586cdbe0e832d1",
+    "scripts/tests/test_p1_repair_coder_source_resolution.py": "3d7ffe9fb6caba7c3192b2f4b09c56fa1a23630309d91bc0b62c94eec2a9a309",
+    "scripts/tests/test_p1_repair_text_storage_owner.py": "a0c8be44fd79dae5123e15ab3dc3a10cc52f723fba15f771cbccf836b1e7eb39",
+    "scripts/tests/test_p1_repair_suggestion_source_service.py": "3b8b2065bf5f1be49912f7c6eb41d865e929ea8f6dd0d40f1ab5873112f388ab",
+    "scripts/tests/test_p1_repair_group_filter_identity.py": "7bbec8c8850b4c18b4dff0a5da4ea441355941f62362146be8f85934fb5411f0",
+    "scripts/tests/pinboard_filter_identity_scope_contract.py": "443ff200cc18fea17522c1f599481d4f67e60609bbf934173eda2c3cae98dcd3"
+  },
+  "resolved_unknown_function_ids": [],
+  "cumulative_resolved_unknown_function_ids": [
+    "Paste:0x10004430c"
+  ],
+  "unknown_resolutions": [],
+  "current_parent_work_items": [
+    {
+      "function_id": "Paste:0x100006e80",
+      "status": "confirmed_pending_source_repair",
+      "evidence": ".local/p0-repair/phase-176/filter-model-query-gap.json",
+      "missing": [
+        "FilterBrowserModel must own initial query and use it for checked/hidden state and toggling, independent of later unrelated global query changes.",
+        "Actual filter UI proposal callback must weakly reference the originating SearchBar/coordinator; no fallback global query mutation when that owner is absent."
+      ]
+    },
+    {
+      "function_id": "Paste:0x100042908",
+      "status": "unsupported_coder_support_reuse_verified",
+      "evidence": ".local/p0-repair/phase-176/group-filter-identity-contract.json",
+      "migration_credit": false
+    },
+    {
+      "function_id": "Paste:0x100005e1c",
+      "status": "finite_candidate_load_reusable_query_state_pending_with006e80",
+      "evidence": ".local/p0-repair/phase-176/group-filter-identity-contract.json"
+    },
+    {
+      "function_id": "Paste:0x1000f733c",
+      "status": "source_declaration_consumer_unknown",
+      "evidence": ".local/p0-repair/phase-175/export-trie-evidence.json"
+    }
+  ],
+  "historical_partial_followups_superseded_by": {
+    "Paste:0x100367f78": {
+      "report": "reports/replica/p0-p1-repair-round171.json",
+      "scope": "finite native all-List source/renderer/selection and previously staged local List actions; historical records retained, not current pending gaps"
+    }
+  }
+}

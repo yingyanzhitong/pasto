@@ -1,0 +1,280 @@
+{
+  "kind": "p0_p1_round10_root_static_proof",
+  "binary_path": ".local/paste-arm64-static.bin",
+  "binary_sha256": "871f00354fbb1c165d858a98e6d19d6f43cb9d3f9f958b3e07c7f07eb5c19afb",
+  "file_backed_segments": [
+    {
+      "name": "__PAGEZERO",
+      "vmaddr": 0,
+      "vmsize": 4294967296,
+      "fileoff": 0,
+      "filesize": 0
+    },
+    {
+      "name": "__TEXT",
+      "vmaddr": 4294967296,
+      "vmsize": 15351808,
+      "fileoff": 0,
+      "filesize": 15351808
+    },
+    {
+      "name": "__DATA_CONST",
+      "vmaddr": 4310319104,
+      "vmsize": 671744,
+      "fileoff": 15351808,
+      "filesize": 671744
+    },
+    {
+      "name": "__DATA",
+      "vmaddr": 4310990848,
+      "vmsize": 1736704,
+      "fileoff": 16023552,
+      "filesize": 1064960
+    },
+    {
+      "name": "__LINKEDIT",
+      "vmaddr": 4312727552,
+      "vmsize": 1966080,
+      "fileoff": 17088512,
+      "filesize": 1956752
+    }
+  ],
+  "text_setter": {
+    "body": {
+      "address": "0x1000f733c",
+      "slice_file_offset": 1012540,
+      "bytes": "f657bda9f44f01a9fd7b02a9fd830091f30301aa1c022c94f50300aae00313aa8e142c94e00314aae20315aabe5a2c94e00315aafd7b42a9f44f41a9f657c3a8fa122c14"
+    },
+    "objc_stub": {
+      "address": "0x100c0de60",
+      "slice_file_offset": 12639840,
+      "bytes": "e11b00b021d041f9d01400f010d640f9"
+    },
+    "selector_slot": {
+      "address": "0x100f8a3a0",
+      "slice_file_offset": 16294816,
+      "bytes": "e6b9df0000001000"
+    },
+    "selector_name": {
+      "address": "0x100dfb9e6",
+      "slice_file_offset": 14662118,
+      "bytes": "736574537472696e673a00"
+    },
+    "sdk_imports": [
+      {
+        "address": "0x100bf7bc0",
+        "body_hex": "9015009010e643f900021fd6",
+        "symbol": "_$sSS10FoundationE19_bridgeToObjectiveCSo8NSStringCyF",
+        "pointer_address": "0x100ea77c8",
+        "pointer_raw_value": "0x801000000000020e",
+        "dyld_binding": {
+          "import_index": 526,
+          "import_table_slice_file_offset": 17090928,
+          "symbol": "_$sSS10FoundationE19_bridgeToObjectiveCSo8NSStringCyF",
+          "dylib_ordinal": 3,
+          "dylib": {
+            "install_name": "/System/Library/Frameworks/Foundation.framework/Versions/C/Foundation",
+            "load_command": "0xc",
+            "current_version": 329385220,
+            "current_version_string": "5026.5.4",
+            "compatibility_version": 19660800,
+            "compatibility_version_string": "300.0.0"
+          },
+          "weak_import": false,
+          "import_addend": 0,
+          "mechanism": "LC_DYLD_CHAINED_FIXUPS",
+          "fixups_header_slice_file_offset": 17088512,
+          "pointer_format": 6,
+          "imports_format": 1,
+          "segment_index": 2,
+          "page_index": 0,
+          "page_start": 0,
+          "pointer_slice_file_offset": 15366088,
+          "pointer_raw_value": "0x801000000000020e",
+          "pointer_addend": 0,
+          "effective_addend": 0
+        }
+      },
+      {
+        "address": "0x100bfc594",
+        "body_hex": "901500d010b240f900021fd6",
+        "symbol": "_swift_bridgeObjectRelease",
+        "pointer_address": "0x100eae160",
+        "pointer_raw_value": "0x8010000000000f40",
+        "dyld_binding": {
+          "import_index": 3904,
+          "import_table_slice_file_offset": 17104440,
+          "symbol": "_swift_bridgeObjectRelease",
+          "dylib_ordinal": 45,
+          "dylib": {
+            "install_name": "/usr/lib/swift/libswiftCore.dylib",
+            "load_command": "0xc",
+            "current_version": 0,
+            "current_version_string": "0.0.0",
+            "compatibility_version": 0,
+            "compatibility_version_string": "0.0.0"
+          },
+          "weak_import": false,
+          "import_addend": 0,
+          "mechanism": "LC_DYLD_CHAINED_FIXUPS",
+          "fixups_header_slice_file_offset": 17088512,
+          "pointer_format": 6,
+          "imports_format": 1,
+          "segment_index": 2,
+          "page_index": 2,
+          "page_start": 0,
+          "pointer_slice_file_offset": 15393120,
+          "pointer_raw_value": "0x8010000000000f40",
+          "pointer_addend": 0,
+          "effective_addend": 0
+        }
+      },
+      {
+        "address": "0x100bfbf64",
+        "body_hex": "701500b010ea40f900021fd6",
+        "symbol": "_objc_release",
+        "pointer_address": "0x100ea81d0",
+        "pointer_raw_value": "0x801000000000034e",
+        "dyld_binding": {
+          "import_index": 846,
+          "import_table_slice_file_offset": 17092208,
+          "symbol": "_objc_release",
+          "dylib_ordinal": 5,
+          "dylib": {
+            "install_name": "/usr/lib/libobjc.A.dylib",
+            "load_command": "0xc",
+            "current_version": 14942208,
+            "current_version_string": "228.0.0",
+            "compatibility_version": 65536,
+            "compatibility_version_string": "1.0.0"
+          },
+          "weak_import": false,
+          "import_addend": 0,
+          "mechanism": "LC_DYLD_CHAINED_FIXUPS",
+          "fixups_header_slice_file_offset": 17088512,
+          "pointer_format": 6,
+          "imports_format": 1,
+          "segment_index": 2,
+          "page_index": 1,
+          "page_start": 0,
+          "pointer_slice_file_offset": 15368656,
+          "pointer_raw_value": "0x801000000000034e",
+          "pointer_addend": 0,
+          "effective_addend": 0
+        }
+      }
+    ]
+  },
+  "bounded_reference_scan": [
+    {
+      "segment": "__TEXT",
+      "first_vmaddr": "0x100000000",
+      "fileoff": 0,
+      "filesize": 15351808,
+      "hits": []
+    },
+    {
+      "segment": "__DATA_CONST",
+      "first_vmaddr": "0x100ea4000",
+      "fileoff": 15351808,
+      "filesize": 671744,
+      "hits": []
+    },
+    {
+      "segment": "__DATA",
+      "first_vmaddr": "0x100f48000",
+      "fileoff": 16023552,
+      "filesize": 1064960,
+      "hits": []
+    },
+    {
+      "segment": "__LINKEDIT",
+      "first_vmaddr": "0x1010f0000",
+      "fileoff": 17088512,
+      "filesize": 1956752,
+      "hits": []
+    }
+  ],
+  "scan_limits": [
+    "aligned_direct_B_BL",
+    "aligned_relative32",
+    "aligned_rebased_pointer64",
+    "negative_scan_does_not_prove_no_indirect_or_inlined_consumer"
+  ],
+  "compiled": false,
+  "application_executed": false,
+  "search_channel_lifetime": {
+    "init_and_store": {
+      "address": "0x10007e7ec",
+      "slice_file_offset": 518124,
+      "bytes": "d24fff97487900f0084946f9606a28f8ba8350f8e8031aaaf40313aaa8fcff97"
+    },
+    "map_callback": {
+      "address": "0x10007df1c",
+      "slice_file_offset": 515868,
+      "bytes": "000000b000603891a80359f8e10313aab50358f8e20315aae30314aaf40316aaa6dd2d94"
+    },
+    "query_gate_and_get": {
+      "address": "0x10007e024",
+      "slice_file_offset": 516132,
+      "bytes": "337f099420010036e00314aa64fa2d94e00316aa02000014e00314aa60fa2d94150080d20a000014487900f0084946f9d56a68f8e00315aa5ffa2d94e00314aa57fa2d94e00316aa55fa2d94750200f9"
+    },
+    "cache_getter": {
+      "address": "0x1003b8bfc",
+      "slice_file_offset": 3902460,
+      "bytes": "f657bda9f44f01a9fd7b02a9fd830091800a40f9600000b4f30300aa0c000014000000f000101a91e10314aa0f87fe97f30300aa950a40f9800a00f9680f2194e00315aa600f2194000080d2640f2194e00313aafd7b42a9f44f41a9f657c3a8c0035fd6"
+    },
+    "search_vm_offset_slot": {
+      "address": "0x100fa9c90",
+      "slice_file_offset": 16424080,
+      "bytes": "0000000000000000"
+    }
+  },
+  "drop_repository_dispatch": {
+    "callsite": {
+      "address": "0x1003badb8",
+      "slice_file_offset": 3911096,
+      "bytes": "860b40f9c81840f9c40640f9e0031aaae10319aae20318aae30317aae5031baa00013fd6"
+    },
+    "repository_witness": {
+      "address": "0x100eccad0",
+      "slice_file_offset": 15518416,
+      "bytes": "302ec40000001000a0caec000000100050caec0000001000"
+    },
+    "inherited_witness": {
+      "address": "0x100ecca50",
+      "slice_file_offset": 15518288,
+      "bytes": "102ec40000001000ac3f360000001000cc3f360000001000f03f360000001000104036000000100014403600000010003440360000001000"
+    },
+    "classlist_slot": {
+      "address": "0x100f45d18",
+      "slice_file_offset": 16014616,
+      "bytes": "d810fc0000001000"
+    },
+    "class_data": {
+      "address": "0x100fc10d8",
+      "slice_file_offset": 16519384,
+      "bytes": "9810fc000000100075150000000010804512000000002080000000000000000062d7f50000004000"
+    },
+    "class_ro": {
+      "address": "0x100f5d760",
+      "slice_file_offset": 16111456,
+      "bytes": "8000000010000000180000000000000000000000000000006067dd0000003000"
+    },
+    "class_name": {
+      "address": "0x100dd6760",
+      "slice_file_offset": 14509920,
+      "bytes": "5f547443395061737465436f726531344974656d5265706f7369746f727900"
+    },
+    "di_witness_install": {
+      "address": "0x100357cf0",
+      "slice_file_offset": 3505392,
+      "bytes": "406300b000002791414700f021c01e91020000f042a01c91a35b00b063402b91f5050014"
+    },
+    "move_thunk": {
+      "address": "0x100364034",
+      "slice_file_offset": 3555380,
+      "bytes": "f44fbea9fd7b01a9fd430091940240f950f9ff97fd7b41a9f44fc2a8c0035fd6"
+    }
+  }
+}

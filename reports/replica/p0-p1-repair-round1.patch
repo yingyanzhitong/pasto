@@ -1,0 +1,455 @@
+--- before/replica/Sources/Pasto/AppMain.swift
++++ after/replica/Sources/Pasto/AppMain.swift
+@@ -357,16 +357,13 @@
+         let app = NSWorkspace.shared.frontmostApplication
+         if app?.processIdentifier != ProcessInfo.processInfo.processIdentifier {
+             handoffPreviousApplication = app
+-        } else if handoffPreviousApplication == nil {
+-            // Menu-bar/reopen entry points may already have activated Pasto.
+-            handoffPreviousApplication = targetApplication
+         }
+     }
+ 
+     private func restorePanelApplication(restore: Bool) {
+         // 0x1000b11ac: restore onWillClose, then clear the saved application.
+         defer { handoffPreviousApplication = nil }
+-        guard restore, let previous = handoffPreviousApplication, !previous.isTerminated,
++        guard restore, let previous = handoffPreviousApplication,
+               previous.processIdentifier != ProcessInfo.processInfo.processIdentifier else { return }
+         previous.activate(options: .activateIgnoringOtherApps)
+     }
+--- before/replica/Sources/Pasto/UI/ReplicaNativeCardCollection.swift
++++ after/replica/Sources/Pasto/UI/ReplicaNativeCardCollection.swift
+@@ -87,6 +87,15 @@
+         }
+         lastPrimaryID = primary
+         layoutCollection()
++        if let pending = state.pendingNeighborSelection {
++            DispatchQueue.main.async { [weak self, weak state] in
++                guard let self, let state, self.state === state,
++                      state.pendingNeighborSelection?.token == pending.token else { return }
++                let currentIDs = state.visibleItems.map(\.id)
++                guard self.items.map(\.id) == currentIDs else { return }
++                state.consumePendingNeighborSelection(token: pending.token, items: self.items)
++            }
++        }
+         // Deliver after the SwiftUI update transaction; selection publication must not reenter it.
+         if state.pendingListFocus != nil {
+             DispatchQueue.main.async { [weak self, weak state] in
+@@ -120,6 +129,19 @@
+     override var acceptsFirstResponder: Bool { true }
+     override var canBecomeKeyView: Bool { true }
+ 
++    override func keyDown(with event: NSEvent) {
++        if let specialKey = event.specialKey {
++            switch specialKey {
++            case .backspace, .delete, .deleteForward:
++                state?.deleteSelection()
++                return
++            default:
++                break
++            }
++        }
++        super.keyDown(with: event)
++    }
++
+     override func selectAll(_ sender: Any?) {
+         state?.selectAll()
+     }
+@@ -175,6 +197,7 @@
+     }
+ 
+     func detachObservers() {
++        state?.cancelPendingNeighborSelection()
+         clearFocusTarget()
+         if let boundsObserver { NotificationCenter.default.removeObserver(boundsObserver) }
+         boundsObserver = nil
+--- before/replica/Sources/Pasto/UI/ReplicaUIController.swift
++++ after/replica/Sources/Pasto/UI/ReplicaUIController.swift
+@@ -22,6 +22,12 @@
+         let permanently: Bool
+         let beforeIDs: [UUID]
+         let neighborID: UUID?
++    }
++
++    struct PendingNeighborSelection {
++        let token: UUID
++        let id: UUID
++        let beforeIDs: [UUID]
+     }
+ 
+     let store: ClipboardStore
+@@ -43,6 +49,7 @@
+     @Published var pendingPinboardDeletionID: UUID?
+     @Published var pinboardDeletionError: String?
+     @Published var pendingItemDeletion: ItemDeletionRequest?
++    @Published var pendingNeighborSelection: PendingNeighborSelection?
+     @Published var itemDeletionError: String?
+     @Published var tabRenameRequest: (key: String, token: UUID)?
+     @Published var showDeleted = false { didSet {
+@@ -260,6 +267,7 @@
+     }
+ 
+     private func selectIndex(_ index: Int, mode: UInt8, items: [ClipboardItem], animated: Bool = true) {
++        cancelPendingNeighborSelection()
+         if items.indices.contains(index), orderedSelectionIDs == [items[index].id] { return }
+         let positions = Dictionary(uniqueKeysWithValues: items.enumerated().map { ($0.element.id, $0.offset) })
+         var value = OriginalOrderedSelection(selectedIndexes: orderedSelectionIDs.compactMap { positions[$0] },
+@@ -275,6 +283,7 @@
+ 
+     // f228a50's double-click path sets the singleton directly, without a reveal/delegate callback.
+     func selectForDoubleClick(at index: Int) {
++        cancelPendingNeighborSelection()
+         let items = visibleItems
+         guard items.indices.contains(index) else { return }
+         let id = items[index].id
+@@ -283,6 +292,7 @@
+     }
+ 
+     func select(_ item: ClipboardItem, modifiers: NSEvent.ModifierFlags = []) {
++        cancelPendingNeighborSelection()
+         controller?.panel.makeFirstResponder(nil)
+         let items = visibleItems
+         guard let index = items.firstIndex(where: { $0.id == item.id }) else { return }
+@@ -296,6 +306,7 @@
+ 
+     // f228128 preserves an existing multi-selection and does not change first responder.
+     func selectForContextMenu(_ item: ClipboardItem) {
++        cancelPendingNeighborSelection()
+         let items = visibleItems
+         guard let index = items.firstIndex(where: { $0.id == item.id }),
+               !selection.contains(item.id) else { return }
+@@ -379,6 +390,7 @@
+ 
+     func deleteSelection() {
+         guard !hasPendingDeletion else { return }
++        cancelPendingNeighborSelection()
+         let before = visibleItems
+         // 0x100068db8 deletes selected indexes, never a fallback primary item.
+         let ids = selection.intersection(Set(before.map(\.id)))
+@@ -401,9 +413,24 @@
+     }
+ 
+     func cancelItemDeletion() {
++        cancelPendingNeighborSelection()
+         guard pendingItemDeletion != nil || itemDeletionError != nil else { return }
+         pendingItemDeletion = nil
+         itemDeletionError = nil
++    }
++
++    func cancelPendingNeighborSelection(token: UUID? = nil) {
++        guard let request = pendingNeighborSelection,
++              token == nil || request.token == token else { return }
++        pendingNeighborSelection = nil
++    }
++
++    func consumePendingNeighborSelection(token: UUID, items: [ClipboardItem]) {
++        guard let request = pendingNeighborSelection, request.token == token else { return }
++        pendingNeighborSelection = nil
++        guard items.map(\.id) != request.beforeIDs,
++              let index = items.firstIndex(where: { $0.id == request.id }) else { return }
++        selectIndex(index, mode: 0, items: items)
+     }
+ 
+     func confirmItemDeletion() {
+@@ -424,8 +451,9 @@
+         applyOrderedSelection(remaining,
+             anchor: rangeAnchorID.flatMap { visible.contains($0) ? $0 : nil },
+             primary: primaryID.flatMap { remaining.contains($0) ? $0 : nil })
+-        if let neighborID = request.neighborID, let index = items.firstIndex(where: { $0.id == neighborID }) {
+-            selectIndex(index, mode: 0, items: items)
++        if let neighborID = request.neighborID, visible.contains(neighborID) {
++            pendingNeighborSelection = PendingNeighborSelection(
++                token: UUID(), id: neighborID, beforeIDs: request.beforeIDs)
+         }
+     }
+ 
+@@ -453,11 +481,13 @@
+     }
+ 
+     func selectAll() {
++        cancelPendingNeighborSelection()
+         allowsEmptySelection = false
+         let ids = visibleItems.map(\.id)
+         applyOrderedSelection(ids, anchor: ids.last, primary: primaryID)
+     }
+     func deselectAll() {
++        cancelPendingNeighborSelection()
+         allowsEmptySelection = true
+         applyOrderedSelection([], anchor: nil, primary: nil)
+     }
+@@ -968,7 +998,7 @@
+     }
+ 
+     func renameItem(_ item: ClipboardItem) {
+-        guard let title = prompt(title: "重命名", message: "", initial: item.title) else { return }
++        guard let title = prompt(title: "重命名", message: "", initial: item.title, allowsEmpty: true) else { return }
+         state.perform { try store.updateItem(id: item.id, title: title, text: nil) }
+     }
+ 
+@@ -987,7 +1017,7 @@
+ 
+     func copySelection(plainTextOnly: Bool) {
+         let items = state.selectedItems
+-        guard !items.isEmpty else { return }
++        guard !items.isEmpty else { NSSound.beep(); return }
+         copy(ids: items.map(\.id), plainTextOnly: plainTextOnly)
+     }
+ 
+@@ -1320,7 +1350,7 @@
+         alert.runModal()
+     }
+ 
+-    private func prompt(title: String, message: String, initial: String) -> String? {
++    private func prompt(title: String, message: String, initial: String, allowsEmpty: Bool = false) -> String? {
+         let alert = NSAlert()
+         sharingPolicy.apply(to: alert.window)
+         alert.messageText = title
+@@ -1333,7 +1363,7 @@
+         alert.window.initialFirstResponder = input
+         guard alert.runModal() == .alertFirstButtonReturn else { return nil }
+         let name = input.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
+-        return name.isEmpty ? nil : name
++        return name.isEmpty && !allowsEmpty ? nil : name
+     }
+ 
+     private func restorePanelFrame() {
+@@ -1521,9 +1551,6 @@
+         }
+         if !isEditing, let specialKey = event.specialKey {
+             switch specialKey {
+-            case .backspace, .delete, .deleteForward:
+-                state.deleteSelection()
+-                return true
+             case .carriageReturn, .enter:
+                 return OriginalSearchCommands.f_10004867c(selector: NSSelectorFromString("insertNewline:"),
+                     onEnter: { [self] in pasteSelection(plainTextOnly: plain) }, onCancel: nil)
+--- before/replica/Sources/PastoCore/ClipboardStore.swift
++++ after/replica/Sources/PastoCore/ClipboardStore.swift
+@@ -546,7 +546,8 @@
+ 
+     func addWithInsertionResult(_ item: ClipboardItem,
+                                 sourceApplication: SourceApplicationRecord? = nil,
+-                                recordCapture: Bool = false) throws -> (id: UUID, isNew: Bool) {
++                                recordCapture: Bool = false,
++                                sourceProvider: (() -> (name: String, bundleID: String?, application: SourceApplicationRecord?))? = nil) throws -> (id: UUID, isNew: Bool) {
+         var item = item
+         if let sourceApplication {
+             item.sourceApplicationBundleID = sourceApplication.bundleIdentifier
+@@ -611,6 +612,16 @@
+                 state.items.removeAll { $0.id == item.id }
+                 state.items.append(item)
+                 result = (state.items.count - 1, true)
++            }
++            if let sourceProvider {
++                let source = sourceProvider()
++                state.items[result.index].sourceName = source.name
++                state.items[result.index].sourceBundleID = source.bundleID
++                state.items[result.index].sourceApplicationBundleID = source.application?.bundleIdentifier
++                state.items[result.index].sourceApplicationRelationIsKnown = true
++                if let application = source.application {
++                    Self.upsertSourceApplication(application, in: &state)
++                }
+             }
+             if recordCapture {
+                 // 0x10037b034 → 0x100361ec0: stamp history after content/source
+@@ -760,7 +771,7 @@
+             guard let i = state.items.firstIndex(where: { $0.id == id }) else { throw ClipboardStoreError.itemNotFound }
+             if let title {
+                 state.items[i].title = title
+-                state.items[i].hasExplicitTitle = true
++                state.items[i].hasExplicitTitle = !title.isEmpty
+             }
+             if let text {
+                 state.items[i].plainText = text
+--- before/replica/Sources/PastoCore/OriginalPasteboard.swift
++++ after/replica/Sources/PastoCore/OriginalPasteboard.swift
+@@ -21,16 +21,26 @@
+ 
+     public required init?(coder: NSCoder) {
+         super.init()
+-        guard let types = coder.decodeArrayOfObjects(ofClass: NSString.self, forKey: "types") as? [String],
+-              let values = coder.decodeDictionary(withKeyClass: NSString.self, objectClass: NSData.self,
+-                                                 forKey: "dataByType") as? [String: Data] else { return nil }
++        guard let types = coder.decodeArrayOfObjects(ofClass: NSString.self, forKey: "types") as? [String] else {
++            return nil
++        }
++        let values: [String: Data]
++        if coder.containsValue(forKey: "data") {
++            guard let decoded = coder.decodeDictionary(withKeyClass: NSString.self, objectClass: NSData.self,
++                                                       forKey: "data") as? [String: Data] else { return nil }
++            values = decoded
++        } else {
++            guard let legacy = coder.decodeDictionary(withKeyClass: NSString.self, objectClass: NSData.self,
++                                                      forKey: "dataByType") as? [String: Data] else { return nil }
++            values = legacy
++        }
+         orderedTypes = types
+         dataByType = values
+     }
+ 
+     public func f_10037f520(with coder: NSCoder) {
+         coder.encode(orderedTypes as NSArray, forKey: "types")
+-        coder.encode(dataByType as NSDictionary, forKey: "dataByType")
++        coder.encode(dataByType as NSDictionary, forKey: "data")
+     }
+ 
+     public func encode(with coder: NSCoder) {
+--- before/replica/Sources/PastoCore/OriginalPasteboardImageRestore.swift
++++ after/replica/Sources/PastoCore/OriginalPasteboardImageRestore.swift
+@@ -11,13 +11,18 @@
+     }
+ 
+     public func prepare(_ items: [OriginalPasteboardItem], sourceName: String?, timestamp: Date?) -> [OriginalPasteboardItem] {
++        prepare(sourceName: sourceName, timestamp: timestamp) { items }
++    }
++
++    public func prepare(sourceName: String?, timestamp: Date?,
++                        loadItems: () throws -> [OriginalPasteboardItem]) rethrows -> [OriginalPasteboardItem] {
+         // Product isolation adapter; the original algorithm starts at its supplied temporary root.
+         do {
+             try FileManager.default.createDirectory(at: temporaryRoot, withIntermediateDirectories: true)
+         } catch {
+             diagnostics.f_1000d468c().f_1000d4e0c("Error while creating temporary images directory: \(error.localizedDescription)")
+         }
+-        return f_100383df4(items, sourceName: sourceName, timestamp: timestamp)
++        return try f_100383df4(sourceName: sourceName, timestamp: timestamp, loadItems: loadItems)
+     }
+ 
+     public func f_100384824() -> URL? {
+@@ -36,7 +41,19 @@
+ 
+     /// Value projection of the original entity-based image preparation branch.
+     public func f_100383df4(_ items: [OriginalPasteboardItem], sourceName: String?, timestamp: Date?) -> [OriginalPasteboardItem] {
+-        guard let directory = f_100384824() else { return items }
++        f_100383df4(sourceName: sourceName, timestamp: timestamp) { items }
++    }
++
++    public func f_100383df4(sourceName: String?, timestamp: Date?,
++                            loadItems: () throws -> [OriginalPasteboardItem]) rethrows -> [OriginalPasteboardItem] {
++        let directory = f_100384824()
++        let items = try loadItems()
++        guard let directory else { return items }
++        return f_100383df4(items, sourceName: sourceName, timestamp: timestamp, directory: directory)
++    }
++
++    private func f_100383df4(_ items: [OriginalPasteboardItem], sourceName: String?, timestamp: Date?,
++                             directory: URL) -> [OriginalPasteboardItem] {
+         let formatter = DateFormatter()
+         formatter.dateFormat = "yyyy-MM-dd HH.mm.ss"
+         let name = (sourceName ?? "Pasto") + " " + formatter.string(from: timestamp ?? Date.now)
+@@ -71,7 +88,7 @@
+         do {
+             let files = try FileManager.default.contentsOfDirectory(at: directory, includingPropertiesForKeys: nil, options: [])
+             for file in files {
+-                let values = try file.resourceValues(forKeys: [.creationDateKey])
++                guard let values = try? file.resourceValues(forKeys: [.creationDateKey]) else { continue }
+                 if let created = values.creationDate, created < cutoff {
+                     try FileManager.default.removeItem(at: file)
+                 }
+--- before/replica/Sources/PastoCore/Pasteboard.swift
++++ after/replica/Sources/PastoCore/Pasteboard.swift
+@@ -78,13 +78,11 @@
+         return items
+     }
+ 
+-    /// Archive-based checksums need the original runtime class-name evidence.
+-    /// Only branches independent of that archive representation are offered.
++    /// 0x1003214c8 routes every classified kind through 0x1003216bc.
++    /// The archive route is restored; native archive bytes/class identity are not proven equivalent.
+     public nonisolated static func knownPasteboardChecksum(from payloads: [String: Data]) throws -> String? {
+         let items = try originalPasteboardItems(from: payloads)
+         let kind = OriginalPasteboardClassification.f_10032362c(items)
+-        guard kind != .unknown else { return nil }
+-        if kind == .files, !items.contains(where: { $0.f_10037cc6c() != nil }) { return nil }
+         return OriginalPasteboardChecksums.f_1003216bc(items, kind: kind)
+     }
+ 
+@@ -168,7 +166,8 @@
+ 
+     func captureWithInsertionResult(pasteboard: NSPasteboard, sourceName: String, sourceBundleID: String?,
+                                     snapshot: [OriginalPasteboardItem]? = nil, respectMonitoringPolicy: Bool = true,
+-                                    sourceApplication: SourceApplicationRecord? = nil) throws -> (id: UUID, isNew: Bool)? {
++                                    sourceApplication: SourceApplicationRecord? = nil,
++                                    sourceProvider: (() -> (name: String, bundleID: String?, application: SourceApplicationRecord?))? = nil) throws -> (id: UUID, isNew: Bool)? {
+         let rawItems = snapshot == nil ? pasteboard.pasteboardItems ?? [] : []
+         let types = Set(snapshot?.flatMap { $0.f_10037da6c() } ?? rawItems.flatMap { $0.types.map(\.rawValue) })
+         if respectMonitoringPolicy {
+@@ -243,7 +242,8 @@
+         }
+         let result = try addWithInsertionResult(ClipboardItem(title: "", kind: kind, plainText: plainText, sourceName: sourceName,
+                                        sourceBundleID: sourceBundleID, payloads: payloads),
+-                         sourceApplication: sourceApplication, recordCapture: true)
++                         sourceApplication: sourceApplication, recordCapture: true,
++                         sourceProvider: sourceProvider)
+         if kind == .image { startBackgroundTextRecognition(id: result.id) }
+         return result
+     }
+@@ -287,10 +287,14 @@
+             case .color: kind = .color
+             case .unknown: kind = .unknown
+             }
+-            var representations = try Self.originalPasteboardItems(from: item.payloads)
++            let representations: [OriginalPasteboardItem]
+             if !OriginalPasteboardRestore.usesPlainProjection(kind: kind, options: options), kind == .image {
+-                representations = Self.imageRestore.prepare(representations, sourceName: application?.name,
+-                                                            timestamp: item.isInHistory ? item.createdAt : nil)
++                representations = try Self.imageRestore.prepare(sourceName: application?.name,
++                    timestamp: item.isInHistory ? item.createdAt : nil) {
++                        try Self.originalPasteboardItems(from: item.payloads)
++                    }
++            } else {
++                representations = try Self.originalPasteboardItems(from: item.payloads)
+             }
+             return .init(kind: kind, items: representations, sourceBundleID: application?.bundleIdentifier)
+         }
+@@ -365,12 +369,13 @@
+                 guard kind == .image, item.imageData == recognizedImageData else { throw RecognizedImageTextCopyError.imageChanged }
+                 guard let text = item.recognizedText, !text.isEmpty else { throw RecognizedImageTextCopyError.noRecognizedText }
+                 representations = [OriginalPasteboardItem.f_10037c6d4(text)]
++            } else if !plain, kind == .image {
++                representations = try Self.imageRestore.prepare(sourceName: application?.name,
++                    timestamp: item.isInHistory ? item.createdAt : nil) {
++                        try Self.ordinaryRestoreRepresentations(for: item, plainTextProjection: plain)
++                    }
+             } else {
+                 representations = try Self.ordinaryRestoreRepresentations(for: item, plainTextProjection: plain)
+-            }
+-            if !plain, kind == .image {
+-                representations = Self.imageRestore.prepare(representations, sourceName: application?.name,
+-                                                            timestamp: item.isInHistory ? item.createdAt : nil)
+             }
+             return .init(kind: kind, items: representations, sourceBundleID: application?.bundleIdentifier)
+         }
+@@ -387,7 +392,11 @@
+             state.persistChangeCount?(state.lastChangeCount)
+         }
+         // 0x10037a144: performAndWait + save, then undo cleanup and DidRestore, before deactivation.
+-        try recordRestoredItems(ids)
++        do {
++            try recordRestoredItems(ids)
++        } catch {
++            // Original 0x10037a144 releases the transaction error and continues below.
++        }
+         Self.restoreUndoManager.f_1000da768().removeAllActions()
+         didRestoreItem.send()
+     }
+@@ -582,11 +591,14 @@
+                                                       kind: OriginalPasteboardClassification.f_10032362c(items)) != nil else {
+             throw OriginalPasteboardItemCreationError.unsupportedContent
+         }
+-        let app = NSWorkspace.shared.frontmostApplication
+-        guard let captured = try store.captureWithInsertionResult(pasteboard: pasteboard, sourceName: app?.localizedName ?? "未知应用",
+-                                               sourceBundleID: app?.bundleIdentifier, snapshot: items,
++        guard let captured = try store.captureWithInsertionResult(pasteboard: pasteboard, sourceName: "未知应用",
++                                               sourceBundleID: nil, snapshot: items,
+                                                respectMonitoringPolicy: false,
+-                                               sourceApplication: OriginalSourceApplication.snapshot(app)) else {
++                                               sourceProvider: {
++                                                   let app = NSWorkspace.shared.frontmostApplication
++                                                   return (app?.localizedName ?? "未知应用", app?.bundleIdentifier,
++                                                           OriginalSourceApplication.snapshot(app))
++                                               }) else {
+             throw OriginalPasteboardItemCreationError.unsupportedContent
+         }
+         onCapture?(captured.id)

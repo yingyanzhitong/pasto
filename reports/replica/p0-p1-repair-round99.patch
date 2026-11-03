@@ -1,0 +1,478 @@
+--- phase-99-before/replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift
++++ replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift
+@@ -406,10 +406,12 @@
+     private let itemID: UUID
+     private var pinButton: OriginalToolbarButton?
+     private var sharingPicker: NSSharingServicePicker?
++    private let input: ClipboardRestoreItem?
+ 
+     init(state: ReplicaUIState, item: ClipboardItem, input: ClipboardRestoreItem?) {
+         self.state = state
+         itemID = item.id
++        self.input = input
+         super.init(frame: .zero)
+         let close = NSButton()
+         f_1000123d4(close)
+@@ -458,14 +460,24 @@
+                 .map { OriginalPreviewSharing.f_100320cc0($0) } ?? false
+             self.refreshPinAppearance(current)
+         }
+-        let receive: (ClipboardRestoreItem) -> Void = { [weak self] current in
++        let receive: (ClipboardRestoreItem) -> Void = { [weak self, weak share] current in
+             guard let self else { return }
+             if current.isDeleted {
+                 self.titleLabel.f_100011d28()
+                 self.window?.performClose(nil)
+                 return
+             }
+-            update(current.resolvedItem())
++            if let title = current.previewTitle() {
++                let field = self.titleLabel.f_100013084()
++                field.f_10023b600(title.defaultTitle)
++                field.f_10023b214(title.title)
++                if let pin = current.previewPinboard() {
++                    self.refreshNativePinAppearance(isPinned: pin.isPinned, colorCode: pin.colorCode)
++                }
++                share?.isEnabled = current.previewSharingContent().map(OriginalPreviewSharing.f_100320cc0) ?? false
++            } else {
++                update(current.resolvedItem())
++            }
+         }
+         itemObservation = input?.observeChanges(receive)
+         if itemObservation != nil, let input {
+@@ -480,12 +492,21 @@
+         }
+         pinboardObservation = state.store.$pinboards.sink { [weak self] boards in
+             MainActor.assumeIsolated {
+-                guard let self, let item = self.state?.store.items.first(where: { $0.id == self.itemID }) else { return }
+-                self.refreshPinAppearance(item, boards: boards)
++                guard let self, self.input?.isDeleted != true else { return }
++                if let pin = self.input?.previewPinboard() {
++                    self.refreshNativePinAppearance(isPinned: pin.isPinned, colorCode: pin.colorCode)
++                } else if let item = self.state?.store.items.first(where: { $0.id == self.itemID }) {
++                    self.refreshPinAppearance(item, boards: boards)
++                }
+             }
+         }
+     }
+     required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
++
++    private func refreshNativePinAppearance(isPinned: Bool, colorCode: UInt64?) {
++        pinButton?.symbol = isPinned ? "circle.fill" : "circle.dashed"
++        pinButton?.contentTintColor = colorCode.map { OriginalPinboardColor(canonicalColorCode: $0).color() }
++    }
+ 
+     private func refreshPinAppearance(_ item: ClipboardItem, boards: [Pinboard]? = nil) {
+         let owner: Pinboard?
+@@ -574,6 +595,12 @@
+     }
+ 
+     private func showSharingPicker(from button: NSButton) {
++        if let content = input?.previewSharingContent() {
++            let picker = OriginalPreviewSharing.f_1000183e0([content])
++            sharingPicker = picker
++            picker.show(relativeTo: .zero, of: button, preferredEdge: .minY)
++            return
++        }
+         guard let state, let item = state.store.items.first(where: { $0.id == itemID }) else { return }
+         do {
+             let picker = OriginalPreviewSharing.f_1000183e0([try Self.sharingContent(item)])
+--- phase-99-before/replica/Sources/PastoCore/ClipboardItemDataPersistence.swift
++++ replica/Sources/PastoCore/ClipboardItemDataPersistence.swift
+@@ -27,6 +27,23 @@
+         preview.name = "rawPreview"; preview.attributeType = .binaryDataAttributeType; preview.isOptional = true
+         item.properties += [kind, preview, content]
+         model.entities.append(data)
++    }
++
++    // 31b218: raw getter exceptions yield no representations; invalid local graphs stay optional.
++    @MainActor static func readItems(from object: PastoItemEntity) -> [OriginalPasteboardItem]? {
++        guard let data = object.value(forKey: "data") as? NSManagedObject else { return nil }
++        let raw: Data
++        do {
++            raw = try OriginalObjCExceptionBridge.f_1002ffc68 {
++                guard let raw = data.value(forKey: "rawPasteboardItems") as? Data else {
++                    throw CocoaError(.fileReadCorruptFile)
++                }
++                return raw
++            }
++        } catch is OriginalObjCExceptionError {
++            return []
++        } catch { return nil }
++        return autoreleasepool { OriginalPasteboardDataCodec.f_10031aeec(raw) }
+     }
+ 
+     // 0x100360ff8: type/checksum, delete old data, create/encode replacement,
+--- phase-99-before/replica/Sources/PastoCore/ClipboardItemObservation.swift
++++ replica/Sources/PastoCore/ClipboardItemObservation.swift
+@@ -34,19 +34,7 @@
+     // 3c05d4 reads Item.data directly; unrelated archived value metadata is not a text dependency.
+     public var attributedText: NSAttributedString? {
+         guard !object.isDeleted else { return nil }
+-        guard let data = object.value(forKey: "data") as? NSManagedObject else { return nil }
+-        let raw: Data
+-        do {
+-            raw = try OriginalObjCExceptionBridge.f_1002ffc68 {
+-                guard let raw = data.value(forKey: "rawPasteboardItems") as? Data else {
+-                    throw CocoaError(.fileReadCorruptFile)
+-                }
+-                return raw
+-            }
+-        } catch is OriginalObjCExceptionError {
+-            return NSAttributedString(string: "")
+-        } catch { return nil }
+-        let items = autoreleasepool { OriginalPasteboardDataCodec.f_10031aeec(raw) }
++        guard let items = ClipboardItemDataPersistence.readItems(from: object) else { return nil }
+         return items.first?.f_10037d33c() ?? NSAttributedString(string: "")
+     }
+ 
+--- phase-99-before/replica/Sources/PastoCore/ClipboardRestoreItem.swift
++++ replica/Sources/PastoCore/ClipboardRestoreItem.swift
+@@ -59,6 +59,31 @@
+             }
+     }
+ 
++    // 309008/308f88 read title/type/preview, independently of archived value content.
++    public func previewTitle() -> (defaultTitle: String, title: String)? {
++        guard let object = nativeObject else { return nil }
++        let rawType = (object.value(forKey: "rawType") as? NSNumber)?.intValue ?? 0
++        let count = rawType == 3
++            ? OriginalImagePreviewMetadataCodec.decodeFiles(object.value(forKey: "rawPreview") as? Data)?.paths.count : nil
++        let defaultTitle = OriginalPreviewTitles.f_100309008(rawType: rawType, fileCount: count)
++        return (defaultTitle, OriginalPreviewTitles.f_100308f88(object.value(forKey: "title") as? String,
++                                                             defaultTitle: defaultTitle))
++    }
++
++    // 31bc94/3250f0 filter the native owner by rawType before reading its attributes.
++    public func previewPinboard() -> (isPinned: Bool, colorCode: UInt64?)? {
++        guard let object = nativeObject else { return nil }
++        guard let list = object.value(forKey: "list") as? NSManagedObject,
++              (list.value(forKey: "rawType") as? NSNumber)?.int64Value == 2 else { return (false, nil) }
++        return (true, OriginalPinboardAttributes.colorCode(from: list.value(forKey: "rawAttributes") as? Data))
++    }
++
++    public func previewSharingContent() -> OriginalPreviewSharing.Content? {
++        guard let object = nativeObject else { return nil }
++        let rawType = (object.value(forKey: "rawType") as? NSNumber)?.intValue ?? 0
++        return .init(items: ClipboardItemDataPersistence.readItems(from: object) ?? [], rawType: rawType)
++    }
++
+     public func resolvedItem() -> ClipboardItem { resolve() }
+     public func observeItem() -> ClipboardItemObservation? { makeObservation() }
+ }
+--- phase-99-before/scripts/tests/native_text_read_scope_contract.py
++++ scripts/tests/native_text_read_scope_contract.py
+@@ -1,5 +1,6 @@
+ """Exact native text raw-data read deltas for historical frozen contracts only."""
+ from pathlib import Path
++from native_preview_header_scope_contract import pre_native_preview_header
+ CHANGES = [['replica/Sources/PastoCore/ClipboardItemObservation.swift',
+   '    public var onChange: ((ClipboardItem) -> Void)?\n',
+   '    public var onChange: ((ClipboardItem) -> Void)?\n'
+@@ -81,6 +82,7 @@
+   '    }\n']]
+ 
+ def pre_native_text_read(source):
++    source = pre_native_preview_header(source)
+     for path, before, after in reversed(CHANGES):
+         if after in source:
+             assert source.count(after) == 1, path
+--- phase-99-before/scripts/tests/test_p1_repair_native_text_read.py
++++ scripts/tests/test_p1_repair_native_text_read.py
+@@ -7,13 +7,14 @@
+ from test_offline_p0_contracts import body
+ from test_p0_repair_checksum_routing import original_fragment
+ from native_text_read_scope_contract import CHANGES,pre_native_text_read
++from native_preview_header_scope_contract import pre_native_preview_header,pre_native_preview_header_bytes
+ 
+ class NativeTextReadContracts(unittest.TestCase):
+     @classmethod
+     def setUpClass(cls):
+         cls.phase=ROOT/'.local/p0-repair/phase-98';cls.proof=json.loads((cls.phase/'native-text-read-contract.json').read_text());cls.base=json.loads((cls.phase/'baseline.json').read_text())
+         cls.paths=dict(observer='replica/Sources/PastoCore/ClipboardItemObservation.swift',adapter='replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift')
+-        cls.src={k:(ROOT/p).read_text()for k,p in cls.paths.items()};cls.reader=body(cls.src['observer'],'public var attributedText:');cls.consume=body(cls.src['observer'],'private func consume(')
++        cls.src={k:pre_native_preview_header((ROOT/p).read_text())for k,p in cls.paths.items()};cls.reader=body(cls.src['observer'],'public var attributedText:');cls.consume=body(cls.src['observer'],'private func consume(')
+         start=cls.src['adapter'].index('private final class ReplicaInlineTextPreviewContent:');end=cls.src['adapter'].index('private final class ReplicaPreviewActionMenuItem:',start);cls.text=cls.src['adapter'][start:end]
+         ns={};exec((ROOT/cls.proof['decoder']['path']).read_text().split("idx={r['address']",1)[0],ns);cls.ns=ns
+     def original(self,a):
+@@ -84,7 +85,7 @@
+     def test_rich_text_decoder_and_normalization_helpers_are_reused_unchanged(self):
+         rich=(ROOT/'replica/Sources/PastoCore/OriginalPasteboard.swift').read_text();s=body(rich,'public func f_10037d33c()');self.order(s,['f_10037ebdc([.flatRTFD, .rtfd, .rtf])','f_10037c9a8()','NSMutableAttributedString','Self.f_100309924'])
+         codec=(ROOT/'replica/Sources/PastoCore/OriginalPasteboardDataCodec.swift').read_text();self.assertIn('decodeIfValid(data) ?? []',body(codec,'public static func f_10031aeec('))
+-        for p,h in self.proof['shared_sources'].items():self.assertEqual(hashlib.sha256((ROOT/p).read_bytes()).hexdigest(),h)
++        for p,h in self.proof['shared_sources'].items():self.assertEqual(hashlib.sha256(pre_native_preview_header_bytes(ROOT/p)).hexdigest(),h)
+ 
+     def test_nine_existing_commit_lifecycle_and_header_methods_are_unchanged(self):
+         self.assertEqual(len(self.proof['unchanged_methods']),9)
+@@ -92,7 +93,7 @@
+             now=body((ROOT/r['path']).read_text(),r['symbol']);self.assertEqual(hashlib.sha256(now.encode()).hexdigest(),r['sha256']);self.assertEqual(now,body((self.phase/'before'/r['path']).read_text(),r['symbol']))
+ 
+     def test_eight_exact_hunks_two_existing_files_no_writer_model_version_changes(self):
+-        self.assertEqual(len(CHANGES),8);sha=lambda p:hashlib.sha256((ROOT/p).read_bytes()).hexdigest()
++        self.assertEqual(len(CHANGES),8);sha=lambda p:hashlib.sha256(pre_native_preview_header_bytes(ROOT/p)).hexdigest()
+         files={str(p.relative_to(ROOT))for p in(ROOT/'replica/Sources').rglob('*')if p.is_file()};self.assertEqual(files,set(self.base['production']));self.assertEqual({p for p,h in self.base['production'].items()if sha(p)!=h},set(self.paths.values()))
+         for key,p in self.paths.items():self.assertEqual(pre_native_text_read(self.src[key]),(self.phase/'before'/p).read_text())
+         for group in ['current_sources','shared_sources']:
+--- phase-99-before/scripts/tests/test_p1_repair_preview_entity_changes.py
++++ scripts/tests/test_p1_repair_preview_entity_changes.py
+@@ -9,13 +9,14 @@
+ from preview_entity_changes_scope_contract import CHANGES,pre_preview_entity_changes
+ from popover_entity_input_scope_contract import pre_popover_entity_input_bytes
+ from native_text_read_scope_contract import pre_native_text_read_bytes
++from native_preview_header_scope_contract import pre_native_preview_header
+ 
+ class PreviewEntityChangeContracts(unittest.TestCase):
+     @classmethod
+     def setUpClass(cls):
+         cls.phase=ROOT/'.local/p0-repair/phase-94';cls.proof=json.loads((cls.phase/'preview-entity-changes-contract.json').read_text());cls.base=json.loads((cls.phase/'baseline.json').read_text())
+         cls.paths=dict(handle='replica/Sources/PastoCore/ClipboardRestoreItem.swift',adapter='replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift')
+-        cls.src={k:(ROOT/p).read_text()for k,p in cls.paths.items()}
++        cls.src={k:pre_native_preview_header((ROOT/p).read_text())for k,p in cls.paths.items()}
+         cls.header=cls.src['adapter'][cls.src['adapter'].index('private final class ReplicaInlinePreviewHeader:'):]
+         cls.init=body(cls.header,'init(state: ReplicaUIState, item: ClipboardItem, input: ClipboardRestoreItem?)')
+         ns={};exec((ROOT/cls.proof['decoder']['path']).read_text().split("idx={r['address']",1)[0],ns);cls.ns=ns
+@@ -105,7 +106,7 @@
+         self.assertIn('let update: (ClipboardItem) -> Void = { [weak self, weak share] current in',self.init)
+         self.assertIn('let receive: (ClipboardRestoreItem) -> Void = { [weak self] current in',self.init)
+         for r in self.proof['unchanged_methods']:
+-            s=body((ROOT/r['path']).read_text(),r['symbol']);self.assertEqual(hashlib.sha256(s.encode()).hexdigest(),r['sha256']);self.assertEqual(s,body((self.phase/'before'/r['path']).read_text(),r['symbol']))
++            s=body(pre_native_preview_header((ROOT/r['path']).read_text()),r['symbol']);self.assertEqual(hashlib.sha256(s.encode()).hexdigest(),r['sha256']);self.assertEqual(s,body((self.phase/'before'/r['path']).read_text(),r['symbol']))
+ 
+     def test_six_exact_hunks_only_two_files_and_no_package_or_shared_storage_changes(self):
+         self.assertEqual(len(CHANGES),6);sha=lambda p:hashlib.sha256(pre_popover_entity_input_bytes(ROOT/p)).hexdigest()
+--- /dev/null
++++ scripts/tests/test_p1_repair_native_preview_header.py
+@@ -0,0 +1,83 @@
++"""Native preview header source dependency contracts; no framework execution."""
++from pathlib import Path
++import hashlib,json,sys,unittest
++ROOT=Path(__file__).resolve().parents[2]
++sys.path[:0]=[str(ROOT/'scripts'),str(ROOT/'scripts/tests')]
++from function_ledger import source_fragments
++from test_offline_p0_contracts import body
++from test_p0_repair_checksum_routing import original_fragment
++from native_preview_header_scope_contract import CHANGES,pre_native_preview_header
++
++class NativePreviewHeaderContracts(unittest.TestCase):
++    @classmethod
++    def setUpClass(cls):
++        cls.phase=ROOT/'.local/p0-repair/phase-99';cls.proof=json.loads((cls.phase/'native-preview-header-contract.json').read_text());cls.base=json.loads((cls.phase/'baseline.json').read_text())
++        cls.src={p:(ROOT/p).read_text()for p in cls.proof['current_sources']}
++        cls.handle=cls.src['replica/Sources/PastoCore/ClipboardRestoreItem.swift'];cls.data=cls.src['replica/Sources/PastoCore/ClipboardItemDataPersistence.swift'];cls.observer=cls.src['replica/Sources/PastoCore/ClipboardItemObservation.swift'];cls.adapter=cls.src['replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift']
++        cls.header=cls.adapter[cls.adapter.index('private final class ReplicaInlinePreviewHeader:'):];cls.init=body(cls.header,'init(state: ReplicaUIState, item: ClipboardItem, input: ClipboardRestoreItem?)')
++        ns={};exec((ROOT/cls.proof['decoder']['path']).read_text().split("idx={r['address']",1)[0],ns);cls.ns=ns
++    def original(self,a):
++        r=next(r for r in self.proof['original_fragments']if r['address']==a);return original_fragment((ROOT/r['path']).read_text(),a[2:])
++    def order(self,s,tokens):
++        pos=[s.index(t)for t in tokens];self.assertEqual(pos,sorted(pos))
++    def test_original_fragments_and_evidence_are_current(self):
++        self.assertEqual(len(self.proof['original_fragments']),14)
++        for r in self.proof['original_fragments']:self.assertEqual(source_fragments(ROOT/r['path'])[r['address']]['sha256'],r['sha256'])
++        for r in [self.proof['binary'],self.proof['decoder']]+self.proof['reused_evidence']:self.assertEqual(hashlib.sha256((ROOT/r['path']).read_bytes()).hexdigest(),r['sha256'])
++    def test_actual_ARM_header_getters_and_share_click_calls(self):
++        self.assertEqual(len(self.proof['ARM_calls']),12)
++        for r in self.proof['ARM_calls']:
++            pc=int(r['address'],16);b=self.ns['read'](pc,4);self.assertEqual(b.hex(),r['bytes']);w=int.from_bytes(b,'little');self.assertEqual(w&0x7c000000,0x14000000);d=w&0x3ffffff
++            if d&0x2000000:d-=0x4000000
++            self.assertEqual(pc+4*d,int(r['target'],16))
++    def test_original_header_reads_metadata_before_share_enable(self):
++        self.order(self.original('0x100011e00'),['FUN_100309008()','FUN_10023b600(','FUN_100308f88(','FUN_10023b214(','FUN_10031bc94()','FUN_100320cc0()'])
++        self.assertIn('objc_stub::title',self.original('0x100308f88'));self.assertIn('if (uVar1 != 0)',self.original('0x100308f88'))
++    def test_title_reads_native_fields_without_DTO_projection(self):
++        s=body(self.handle,'public func previewTitle()');self.order(s,['guard let object = nativeObject','value(forKey: "rawType")','rawType == 3','decodeFiles(object.value(forKey: "rawPreview")','f_100309008','f_100308f88(object.value(forKey: "title")'])
++        for token in ['resolvedItem','ClipboardPersistence','sourceApplication','displayOrder','fetch(','store.','UUID()']:self.assertNotIn(token,s)
++    def test_new_cross_file_API_symbols_exist_with_accessible_signatures(self):
++        codec=(ROOT/'replica/Sources/PastoCore/OriginalImagePreviewMetadataCodec.swift').read_text()
++        self.assertIn('public enum OriginalImagePreviewMetadataCodec',codec);self.assertIn('public static func decodeFiles(',codec)
++        self.assertNotIn('OriginalItemPreviewMetadataCodec',self.handle)
++        self.assertIn('@MainActor static func readItems(from object: PastoItemEntity)',self.data)
++        for name in ['previewTitle','previewPinboard','previewSharingContent']:self.assertIn('public func '+name+'()',self.handle)
++    def test_owner_must_be_native_pinboard_type_before_attributes(self):
++        s=body(self.handle,'public func previewPinboard()');self.order(s,['guard let object = nativeObject','value(forKey: "list")','value(forKey: "rawType")','== 2','return (false, nil)','OriginalPinboardAttributes.colorCode'])
++        self.assertNotIn('store.',s);self.assertNotIn('resolvedItem',s)
++        self.assertIn('objc_stub::list',self.original('0x10031bc94'));self.assertIn('return IVar1 == 2',self.original('0x1003250f0'))
++    def test_shared_reader_extraction_preserves_prior_exception_policy(self):
++        old=body((self.phase/'before/replica/Sources/PastoCore/ClipboardItemObservation.swift').read_text(),'public var attributedText:')
++        expected=old.replace('        guard !object.isDeleted else { return nil }\n','').replace('return NSAttributedString(string: "")','return []').replace('        let items = autoreleasepool { OriginalPasteboardDataCodec.f_10031aeec(raw) }\n        return items.first?.f_10037d33c() ?? NSAttributedString(string: "")','        return autoreleasepool { OriginalPasteboardDataCodec.f_10031aeec(raw) }')
++        s=body(self.data,'@MainActor static func readItems(');self.assertEqual(s,expected)
++        self.order(s,['object.value(forKey: "data")','OriginalObjCExceptionBridge','data.value(forKey: "rawPasteboardItems")','catch is OriginalObjCExceptionError','return []','catch { return nil }','autoreleasepool'])
++    def test_text_observer_keeps_deleted_guard_and_first_representation_semantics(self):
++        s=body(self.observer,'public var attributedText:');self.order(s,['guard !object.isDeleted','ClipboardItemDataPersistence.readItems(from: object)','items.first?.f_10037d33c()','NSAttributedString(string: "")'])
++        self.assertNotIn('resolvedItem',s);self.assertNotIn('ClipboardPersistence',s)
++    def test_native_sharing_reads_same_entity_archive_and_type(self):
++        s=body(self.handle,'public func previewSharingContent()');self.order(s,['guard let object = nativeObject','object.value(forKey: "rawType")','ClipboardItemDataPersistence.readItems(from: object) ?? []','rawType: rawType'])
++        for token in ['store.','resolvedItem','ClipboardPersistence','UUID','Date()']:self.assertNotIn(token,s)
++    def test_delete_closes_before_native_refresh_and_legacy_fallback(self):
++        s=body(self.init,'let receive: (ClipboardRestoreItem) -> Void =');self.order(s,['if current.isDeleted','f_100011d28()','performClose(nil)','\n                return\n','if let title = current.previewTitle()','current.previewPinboard()','current.previewSharingContent()','} else {','update(current.resolvedItem())'])
++        self.assertNotIn('resolvedItem',body(s,'if let title = current.previewTitle()'));self.assertIn('[weak self, weak share]',s)
++    def test_initial_and_later_entity_events_share_the_native_consumer(self):
++        tail=self.init[self.init.index('itemObservation = input?.observeChanges(receive)'):]
++        self.order(tail,['input?.observeChanges(receive)','if itemObservation != nil, let input','receive(input)','} else {','state.store.$items.sink'])
++        self.assertIn('self.input = input',self.init);self.assertIn('private let input: ClipboardRestoreItem?',self.header)
++    def test_group_signal_avoids_deleted_native_reads_and_stale_store_join(self):
++        s=body(self.init,'pinboardObservation = state.store.$pinboards.sink');self.order(s,['self.input?.isDeleted != true','if let pin = self.input?.previewPinboard()','refreshNativePinAppearance','} else if let item = self.state?.store.items.first'])
++        self.assertNotIn('store.',body(s,'if let pin = self.input?.previewPinboard()'))
++        native=body(self.header,'private func refreshNativePinAppearance(');self.assertIn('isPinned ? "circle.fill" : "circle.dashed"',native);self.assertIn('OriginalPinboardColor(canonicalColorCode: $0).color()',native)
++    def test_share_click_uses_captured_entity_before_legacy_cache_lookup(self):
++        s=body(self.header,'private func showSharingPicker(');self.order(s,['if let content = input?.previewSharingContent()','OriginalPreviewSharing.f_1000183e0([content])','sharingPicker = picker','picker.show(relativeTo: .zero, of: button, preferredEdge: .minY)','return','state.store.items.first'])
++        self.order(self.original('0x10007a948'),['+ 0x70))()','FUN_1000183e0()','objc_stub::showRelativeToRect_ofView_preferredEdge_'])
++    def test_ten_exact_hunks_four_files_and_shared_helpers_unchanged(self):
++        self.assertEqual(len(CHANGES),10);files={str(p.relative_to(ROOT))for p in(ROOT/'replica/Sources').rglob('*')if p.is_file()};self.assertEqual(files,set(self.base['production']))
++        sha=lambda p:hashlib.sha256((ROOT/p).read_bytes()).hexdigest()
++        self.assertEqual({p for p,h in self.base['production'].items()if sha(p)!=h},set(self.src))
++        for p,s in self.src.items():self.assertEqual(pre_native_preview_header(s),(self.phase/'before'/p).read_text());self.assertEqual(sha(p),self.proof['current_sources'][p])
++        for p,h in self.proof['shared_sources'].items():self.assertEqual(sha(p),h);self.assertEqual(h,self.base['production'][p])
++        for r in self.proof['unchanged_methods']:self.assertEqual(hashlib.sha256(body((ROOT/r['path']).read_text(),r['symbol']).encode()).hexdigest(),r['sha256'])
++    def test_finite_dependency_fix_does_not_claim_entire_header_or_runtime_equivalence(self):
++        self.assertEqual(self.proof['function_id'],'Paste:0x100011e00');self.assertEqual(self.proof['new_difference_records'],1);self.assertTrue(self.proof['finite_contract_verified']);self.assertFalse(self.proof['full_function_migration_verified']);self.assertFalse(self.proof['runtime_executed'])
++        for token in ['Missing data','permissions','pinboards','04430c']:self.assertTrue(any(token in r for r in self.proof['remaining']),token)
+--- /dev/null
++++ scripts/tests/native_preview_header_scope_contract.py
+@@ -0,0 +1,147 @@
++"""Exact native preview header metadata deltas for historical contracts only."""
++from pathlib import Path
++CHANGES = [['replica/Sources/PastoCore/ClipboardItemDataPersistence.swift',
++  '    // 0x100360ff8: type/checksum, delete old data, create/encode replacement,\n',
++  '    // 31b218: raw getter exceptions yield no representations; invalid local graphs stay optional.\n'
++  '    @MainActor static func readItems(from object: PastoItemEntity) -> [OriginalPasteboardItem]? {\n'
++  '        guard let data = object.value(forKey: "data") as? NSManagedObject else { return nil }\n'
++  '        let raw: Data\n'
++  '        do {\n'
++  '            raw = try OriginalObjCExceptionBridge.f_1002ffc68 {\n'
++  '                guard let raw = data.value(forKey: "rawPasteboardItems") as? Data else {\n'
++  '                    throw CocoaError(.fileReadCorruptFile)\n'
++  '                }\n'
++  '                return raw\n'
++  '            }\n'
++  '        } catch is OriginalObjCExceptionError {\n'
++  '            return []\n'
++  '        } catch { return nil }\n'
++  '        return autoreleasepool { OriginalPasteboardDataCodec.f_10031aeec(raw) }\n'
++  '    }\n'
++  '\n'
++  '    // 0x100360ff8: type/checksum, delete old data, create/encode replacement,\n'],
++ ['replica/Sources/PastoCore/ClipboardItemObservation.swift',
++  '        guard let data = object.value(forKey: "data") as? NSManagedObject else { return nil }\n'
++  '        let raw: Data\n'
++  '        do {\n'
++  '            raw = try OriginalObjCExceptionBridge.f_1002ffc68 {\n'
++  '                guard let raw = data.value(forKey: "rawPasteboardItems") as? Data else {\n'
++  '                    throw CocoaError(.fileReadCorruptFile)\n'
++  '                }\n'
++  '                return raw\n'
++  '            }\n'
++  '        } catch is OriginalObjCExceptionError {\n'
++  '            return NSAttributedString(string: "")\n'
++  '        } catch { return nil }\n'
++  '        let items = autoreleasepool { OriginalPasteboardDataCodec.f_10031aeec(raw) }\n',
++  '        guard let items = ClipboardItemDataPersistence.readItems(from: object) else { return nil }\n'],
++ ['replica/Sources/PastoCore/ClipboardRestoreItem.swift',
++  '    public func resolvedItem() -> ClipboardItem { resolve() }\n',
++  '    // 309008/308f88 read title/type/preview, independently of archived value content.\n'
++  '    public func previewTitle() -> (defaultTitle: String, title: String)? {\n'
++  '        guard let object = nativeObject else { return nil }\n'
++  '        let rawType = (object.value(forKey: "rawType") as? NSNumber)?.intValue ?? 0\n'
++  '        let count = rawType == 3\n'
++  '            ? OriginalImagePreviewMetadataCodec.decodeFiles(object.value(forKey: "rawPreview") as? '
++  'Data)?.paths.count : nil\n'
++  '        let defaultTitle = OriginalPreviewTitles.f_100309008(rawType: rawType, fileCount: count)\n'
++  '        return (defaultTitle, OriginalPreviewTitles.f_100308f88(object.value(forKey: "title") as? '
++  'String,\n'
++  '                                                             defaultTitle: defaultTitle))\n'
++  '    }\n'
++  '\n'
++  '    // 31bc94/3250f0 filter the native owner by rawType before reading its attributes.\n'
++  '    public func previewPinboard() -> (isPinned: Bool, colorCode: UInt64?)? {\n'
++  '        guard let object = nativeObject else { return nil }\n'
++  '        guard let list = object.value(forKey: "list") as? NSManagedObject,\n'
++  '              (list.value(forKey: "rawType") as? NSNumber)?.int64Value == 2 else { return (false, nil) }\n'
++  '        return (true, OriginalPinboardAttributes.colorCode(from: list.value(forKey: "rawAttributes") as? '
++  'Data))\n'
++  '    }\n'
++  '\n'
++  '    public func previewSharingContent() -> OriginalPreviewSharing.Content? {\n'
++  '        guard let object = nativeObject else { return nil }\n'
++  '        let rawType = (object.value(forKey: "rawType") as? NSNumber)?.intValue ?? 0\n'
++  '        return .init(items: ClipboardItemDataPersistence.readItems(from: object) ?? [], rawType: '
++  'rawType)\n'
++  '    }\n'
++  '\n'
++  '    public func resolvedItem() -> ClipboardItem { resolve() }\n'],
++ ['replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift',
++  '    private var sharingPicker: NSSharingServicePicker?\n',
++  '    private var sharingPicker: NSSharingServicePicker?\n    private let input: ClipboardRestoreItem?\n'],
++ ['replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift',
++  '    init(state: ReplicaUIState, item: ClipboardItem, input: ClipboardRestoreItem?) {\n'
++  '        self.state = state\n'
++  '        itemID = item.id\n'
++  '        super.init(frame: .zero)\n',
++  '    init(state: ReplicaUIState, item: ClipboardItem, input: ClipboardRestoreItem?) {\n'
++  '        self.state = state\n'
++  '        itemID = item.id\n'
++  '        self.input = input\n'
++  '        super.init(frame: .zero)\n'],
++ ['replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift',
++  '        let receive: (ClipboardRestoreItem) -> Void = { [weak self] current in\n',
++  '        let receive: (ClipboardRestoreItem) -> Void = { [weak self, weak share] current in\n'],
++ ['replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift',
++  '            update(current.resolvedItem())\n'
++  '        }\n'
++  '        itemObservation = input?.observeChanges(receive)\n',
++  '            if let title = current.previewTitle() {\n'
++  '                let field = self.titleLabel.f_100013084()\n'
++  '                field.f_10023b600(title.defaultTitle)\n'
++  '                field.f_10023b214(title.title)\n'
++  '                if let pin = current.previewPinboard() {\n'
++  '                    self.refreshNativePinAppearance(isPinned: pin.isPinned, colorCode: pin.colorCode)\n'
++  '                }\n'
++  '                share?.isEnabled = '
++  'current.previewSharingContent().map(OriginalPreviewSharing.f_100320cc0) ?? false\n'
++  '            } else {\n'
++  '                update(current.resolvedItem())\n'
++  '            }\n'
++  '        }\n'
++  '        itemObservation = input?.observeChanges(receive)\n'],
++ ['replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift',
++  '                guard let self, let item = self.state?.store.items.first(where: { $0.id == self.itemID }) '
++  'else { return }\n'
++  '                self.refreshPinAppearance(item, boards: boards)\n',
++  '                guard let self, self.input?.isDeleted != true else { return }\n'
++  '                if let pin = self.input?.previewPinboard() {\n'
++  '                    self.refreshNativePinAppearance(isPinned: pin.isPinned, colorCode: pin.colorCode)\n'
++  '                } else if let item = self.state?.store.items.first(where: { $0.id == self.itemID }) {\n'
++  '                    self.refreshPinAppearance(item, boards: boards)\n'
++  '                }\n'],
++ ['replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift',
++  '    private func refreshPinAppearance(_ item: ClipboardItem, boards: [Pinboard]? = nil) {\n',
++  '    private func refreshNativePinAppearance(isPinned: Bool, colorCode: UInt64?) {\n'
++  '        pinButton?.symbol = isPinned ? "circle.fill" : "circle.dashed"\n'
++  '        pinButton?.contentTintColor = colorCode.map { OriginalPinboardColor(canonicalColorCode: '
++  '$0).color() }\n'
++  '    }\n'
++  '\n'
++  '    private func refreshPinAppearance(_ item: ClipboardItem, boards: [Pinboard]? = nil) {\n'],
++ ['replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift',
++  '    private func showSharingPicker(from button: NSButton) {\n'
++  '        guard let state, let item = state.store.items.first(where: { $0.id == itemID }) else { return }\n',
++  '    private func showSharingPicker(from button: NSButton) {\n'
++  '        if let content = input?.previewSharingContent() {\n'
++  '            let picker = OriginalPreviewSharing.f_1000183e0([content])\n'
++  '            sharingPicker = picker\n'
++  '            picker.show(relativeTo: .zero, of: button, preferredEdge: .minY)\n'
++  '            return\n'
++  '        }\n'
++  '        guard let state, let item = state.store.items.first(where: { $0.id == itemID }) else { return '
++  '}\n']]
++
++def pre_native_preview_header(source):
++    for path, before, after in reversed(CHANGES):
++        if after in source:
++            assert source.count(after) == 1, path
++            source = source.replace(after, before, 1)
++    return source
++
++def pre_native_preview_header_bytes(path):
++    data = Path(path).read_bytes()
++    if str(path).endswith(".swift"):
++        return pre_native_preview_header(data.decode()).encode()
++    return data

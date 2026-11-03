@@ -1,0 +1,62 @@
+{
+  "kind": "new_cross_architecture_positive_evidence_for_unresolved_setter",
+  "date": "2026-11-03",
+  "fixed_denominator": 959,
+  "p0": 353,
+  "p1": 606,
+  "counts": {
+    "finite_contract_consistent": 691,
+    "source_repaired": 258,
+    "user_adaptation": 9,
+    "evidence_insufficient": 1
+  },
+  "finite_comparison_percent": 99.9,
+  "confirmed_unfixed_finite_differences": 0,
+  "evidence_insufficient": 1,
+  "unknown_function_ids": [
+    "Paste:0x1000f733c"
+  ],
+  "new_evidence": [
+    "原始同包Intel切片实际注册NSTextView(PastePlatform) text/setText:；属性text类型NSString、nonatomic、copy，两架构相同。",
+    "注册setter内原始源文件标识为PastePlatform/NSTextView+UIKit.swift。",
+    "Intel0x1001077e0是单独函数边界，String桥接→bridgeObjectRelease→setString:→objc_release尾调用，与ARM候选副作用吻合。"
+  ],
+  "not_proven": [
+    "该Intel候选与ARM0f733c共享同一原始Swift声明的直接符号/元数据绑定。",
+    "原始Swift入口真实消费者；直接调用字节候选为空不证明不可达。",
+    "ObjC属性声明不自动等于未注册Swift入口的完整声明或ABI。"
+  ],
+  "production_modified": false,
+  "old_tests_modified": false,
+  "new_repaired_function_count": 0,
+  "full_function_migration_verified": false,
+  "full_function_completion_percent": null,
+  "verification": {
+    "passed": 16,
+    "path": ".local/p0-p1-resumed-audit/2026-11-03-cross-architecture/verification.json"
+  },
+  "previous_report": "reports/replica/p0-p1-completion-audit-2026-11-03.json",
+  "evidence_files": {
+    ".local/p0-p1-resumed-audit/2026-11-03-cross-architecture/x86-registration.json": "a8472b09222a122e1a4c280c5e17943676afce96947a31f0df2a7051fdcb4cc9",
+    ".local/p0-p1-resumed-audit/2026-11-03-cross-architecture/x86-category-properties.json": "d2d2e7f5dc9fee4d86cacbac0d0c87f7d14b1948e98ceae9a911ee3d8a3e24de",
+    ".local/p0-p1-resumed-audit/2026-11-03-cross-architecture/inspect.py": "564bc01df8a87d3afa0e4ef045fea78e5d2563f6779725ead98aecca45d8683e",
+    ".local/p0-p1-resumed-audit/2026-11-03-cross-architecture/baseline.json": "8a0a51442188d57af05cbc6ac925050cf471ebf0e257bd047ddfa6936fded909",
+    ".local/p0-p1-resumed-audit/2026-11-03-cross-architecture/arm-category-properties.json": "c027fe92367db83d60f0838cb021540a19202db62ff3971ec1426dad02eb3c49",
+    ".local/p0-p1-resumed-audit/2026-11-03-cross-architecture/verify-and-report.py": "0208a0f18354450b7f65cb5e6afbe9a32755b79c9ba399ef68e8376a12f0433d",
+    ".local/p0-p1-resumed-audit/2026-11-03-cross-architecture/x86-text-accessors.asm": "6f6190e1b0c80fd2d136c88895be60627da849fbca968b8d8a8f1a672cb343c8",
+    ".local/p0-p1-resumed-audit/2026-11-03-cross-architecture/x86-setter-candidate.json": "04e71e6d107668bf4f6b5693ad8121349c6232217cc0acf576f93f155fcfce16",
+    ".local/p0-p1-resumed-audit/2026-11-03-cross-architecture/verification.json": "d102e23943d0af2122680d9819df9116fd2995d12ac67b84a12391019c0df89a"
+  },
+  "compiled": false,
+  "built": false,
+  "installed": false,
+  "application_executed": false,
+  "framework_executed": false,
+  "network_used": false,
+  "committed": false,
+  "pushed": false,
+  "published": false,
+  "resumed_blocked_audit_turn": 1,
+  "goal_status": "active",
+  "next_action": "现有两架构材料仍不能直接绑定原Swift声明与消费者；需要新增原始符号/声明证据，保持未知，不重复旧阴性扫描。"
+}

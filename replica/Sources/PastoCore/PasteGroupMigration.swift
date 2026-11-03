@@ -80,7 +80,7 @@ public enum PasteGroupMigration {
         for entity in model.entities { entity.managedObjectClassName = NSStringFromClass(NSManagedObject.self) }
         let required: [String: Set<String>] = [
             "ListEntity": ["identifier", "name", "rawType", "rawAttributes", "metadata"],
-            "ItemEntity": ["identifier", "title", "createdAt", "updatedAt", "timestamp", "list",
+            "ItemEntity": ["identifier", "checksum", "title", "createdAt", "updatedAt", "timestamp", "list",
                            "data", "sourceApplication", "device", "rawPreview", "displayOrderInPinboard"],
             "ItemDataEntity": ["rawPasteboardItems"],
             "ListMetadataEntity": ["index"],
@@ -104,18 +104,26 @@ public enum PasteGroupMigration {
         }
     }
 
-    private static func identifier(_ object: NSManagedObject, kind: String) throws -> UUID {
+    private static func sourceIdentifier(_ object: NSManagedObject, kind: String) throws -> String {
         let value = object.value(forKey: "identifier")
         let source = (value as? UUID)?.uuidString ?? (value as? String)
         guard let source, !source.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             throw MigrationError.invalidIdentifier
         }
+        return source
+    }
+
+    private static func identifier(_ source: String, kind: String) -> UUID {
         // Stable import namespace avoids colliding with, or overwriting, existing Pasto content.
         let digest = SHA256.hash(data: Data("Pasto/PasteMigration/\(kind)/\(source)".utf8))
         var bytes = Array(digest.prefix(16))
         bytes[6] = (bytes[6] & 0x0f) | 0x50
         bytes[8] = (bytes[8] & 0x3f) | 0x80
         return bytes.withUnsafeBufferPointer { NSUUID(uuidBytes: $0.baseAddress!) as UUID }
+    }
+
+    private static func identifier(_ object: NSManagedObject, kind: String) throws -> UUID {
+        identifier(try sourceIdentifier(object, kind: kind), kind: kind)
     }
 
     private static func snapshot(in context: NSManagedObjectContext) throws -> Snapshot {
@@ -138,7 +146,8 @@ public enum PasteGroupMigration {
             items.sortDescriptors = [NSSortDescriptor(key: "displayOrderInPinboard", ascending: true),
                                       NSSortDescriptor(key: "identifier", ascending: true)]
             for object in try context.fetch(items) {
-                let id = try identifier(object, kind: "item")
+                let sourceIdentifier = try sourceIdentifier(object, kind: "item")
+                let id = identifier(sourceIdentifier, kind: "item")
                 guard let dataObject = object.value(forKey: "data") as? NSManagedObject,
                       let raw = dataObject.value(forKey: "rawPasteboardItems") as? Data,
                       let representations = OriginalPasteboardDataCodec.decodeIfValid(raw),
@@ -177,7 +186,10 @@ public enum PasteGroupMigration {
                 let device = object.value(forKey: "device") as? NSManagedObject
                 let title = object.value(forKey: "title") as? String
                 let created = object.value(forKey: "createdAt") as? Date ?? Date(timeIntervalSinceReferenceDate: 0)
-                result.items.append(ClipboardItem(id: id, createdAt: created,
+                let nativeChecksum = object.value(forKey: "checksum") as? String
+                result.items.append(ClipboardItem(id: id, nativeIdentifier: id.uuidString,
+                    nativeChecksum: nativeChecksum, sourceIdentifier: sourceIdentifier,
+                    createdAt: created,
                     updatedAt: object.value(forKey: "updatedAt") as? Date ?? created,
                     title: title ?? "", kind: kind, plainText: text, sourceName: sourceName, sourceBundleID: bundleID,
                     payloads: payloads, pinboardIDs: [boardID],

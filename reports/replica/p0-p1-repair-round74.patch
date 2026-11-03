@@ -1,0 +1,558 @@
+--- phase-74-before/replica/Sources/Pasto/UI/ReplicaNativeCardCollection.swift
++++ replica/Sources/Pasto/UI/ReplicaNativeCardCollection.swift
+@@ -43,11 +43,13 @@
+         }
+     }
+     private var items: [ClipboardItem] = []
++    private var itemReferences: [UUID: ClipboardCollectionItemReference] = [:]
+     private var hasReceivedCollectionSnapshot = false
+     private var collectionOwnerGeneration: UInt64 = 0
+     private struct PendingSnapshot {
+         let items: [ClipboardItem]
+         let changedIDs: Set<UUID>
++        let itemReferences: [UUID: ClipboardCollectionItemReference]
+     }
+     private var pendingSnapshot: PendingSnapshot?
+     private var snapshotDrainScheduled = false
+@@ -99,18 +101,22 @@
+             pendingSnapshot = nil
+             snapshotDrainScheduled = false
+             items = []
++            itemReferences = [:]
+         }
+         self.state = state
+         state.collectionOwner = self
+         self.cardSide = cardSide
+         if replacesState { installListAttributesObservation(state: state) }
+         let incomingItems = state.visibleItems
++        let incomingItemReferences = state.collectionItemReferences
+         let changedIDs = state.takeCollectionChangedIDs(owner: self)
+         // f1b912c replaces the pending items; f1b9214 schedules at most one drain.
+         // Selection-only redraws do not change the pending data or its changed IDs.
+-        if pendingSnapshot?.items != incomingItems || !changedIDs.isEmpty {
++        if pendingSnapshot?.items != incomingItems || !changedIDs.isEmpty
++            || pendingSnapshot?.itemReferences != incomingItemReferences {
+             pendingSnapshot = PendingSnapshot(items: incomingItems,
+-                changedIDs: (pendingSnapshot?.changedIDs ?? []).union(changedIDs))
++                changedIDs: (pendingSnapshot?.changedIDs ?? []).union(changedIDs),
++                itemReferences: incomingItemReferences)
+         }
+         scheduleSnapshotDrain()
+     }
+@@ -124,6 +130,7 @@
+         snapshotDrainScheduled = false
+         hasReceivedCollectionSnapshot = false
+         items = []
++        itemReferences = [:]
+         installListAttributesObservation(state: state)
+         update(state: state, cardSide: cardSide)
+     }
+@@ -211,6 +218,7 @@
+             hasReceivedCollectionSnapshot = true
+             // Apply data and selection within the same drain, in original mutation-before-reload order.
+             items = pending.items
++            itemReferences = pending.itemReferences
+             let primary = state.primaryID
+             if primary != lastPrimaryID { needsPrimaryReveal = primary != nil }
+             if let request = state.pendingListFocus, state.isCollectionSearchQueryEmpty,
+@@ -346,6 +354,7 @@
+         collectionOwnerGeneration &+= 1
+         pendingSnapshot = nil
+         snapshotDrainScheduled = false
++        itemReferences = [:]
+         if let state, state.collectionOwner === self {
+             state.listAttributesSource = nil
+             state.cancelPendingNeighborSelection()
+@@ -449,6 +458,11 @@
+         return max(0, min(items.count - 1, first))...max(0, min(items.count - 1, last))
+     }
+ 
++    private func renderedItem(at index: Int) -> ClipboardItem {
++        let item = items[index]
++        return itemReferences[item.id]?.requiredItem() ?? item
++    }
++
+     private func tileCells() {
+         guard let state else { return }
+         let desired = visibleIndexes().map { Set($0) } ?? []
+@@ -459,7 +473,7 @@
+             }
+         }
+         for index in desired.sorted() {
+-            let item = items[index]
++            let item = renderedItem(at: index)
+             let cell: ReplicaNativeCardCell
+             let needsInsertion: Bool
+             if let existing = cells[index], existing.itemID == item.id {
+@@ -484,7 +498,7 @@
+     private func refreshCellRoots() {
+         guard let state else { return }
+         for (index, cell) in cells where items.indices.contains(index) && cell.itemID == items[index].id {
+-            cell.update(state: state, item: items[index], side: cardSide, index: index)
++            cell.update(state: state, item: renderedItem(at: index), side: cardSide, index: index)
+         }
+     }
+ 
+--- phase-74-before/replica/Sources/Pasto/UI/ReplicaSearchIndex.swift
++++ replica/Sources/Pasto/UI/ReplicaSearchIndex.swift
+@@ -109,6 +109,7 @@
+     private(set) var orderedIdentifiers: [UUID] = []
+     private var resultSource: ClipboardSearchCollection?
+     private var resultObservation: AnyCancellable?
++    var resultItemReferences: [UUID: ClipboardCollectionItemReference] { resultSource?.value.itemReferences ?? [:] }
+     var onCollectionUpdate: ((Set<UUID>) -> Void)?
+     private(set) var error: Error?
+     var onUpdate: (() -> Void)?
+--- phase-74-before/replica/Sources/Pasto/UI/ReplicaUIController.swift
++++ replica/Sources/Pasto/UI/ReplicaUIController.swift
+@@ -266,6 +266,11 @@
+ 
+     var searchFailed: Bool { !isCollectionSearchQueryEmpty && searchIndex.error != nil }
+     func retrySearch() { searchIndex.retry() }
++
++    var collectionItemReferences: [UUID: ClipboardCollectionItemReference] {
++        guard !showDeleted else { return [:] }
++        return isCollectionSearchQueryEmpty ? (listCollection?.value.itemReferences ?? [:]) : searchIndex.resultItemReferences
++    }
+ 
+     var visibleItems: [ClipboardItem] {
+         if isCollectionSearchQueryEmpty {
+--- phase-74-before/replica/Sources/PastoCore/ClipboardSearchCollection.swift
++++ replica/Sources/PastoCore/ClipboardSearchCollection.swift
+@@ -9,6 +9,20 @@
+     public struct Snapshot: Equatable {
+         public let identifiers: [UUID]
+         public let updatedIdentifiers: Set<UUID>
++        public let itemReferences: [UUID: ClipboardCollectionItemReference]
++
++        init(identifiers: [UUID], updatedIdentifiers: Set<UUID>,
++             itemReferences: [UUID: ClipboardCollectionItemReference] = [:]) {
++            self.identifiers = identifiers
++            self.updatedIdentifiers = updatedIdentifiers
++            self.itemReferences = itemReferences
++        }
++
++        @MainActor public func item(at index: Int) -> ClipboardItem {
++            let identifier = identifiers[index]
++            guard let reference = itemReferences[identifier] else { fatalError("Missing collection item reference") }
++            return reference.requiredItem()
++        }
+     }
+ 
+     private let context: NSManagedObjectContext
+@@ -106,8 +120,14 @@
+                   let identifier = UUID(uuidString: key) else { return nil }
+             return (objectID, identifier)
+         })
++        var references: [UUID: ClipboardCollectionItemReference] = [:]
++        for objectID in value.ids {
++            guard let identifier = keys[objectID] else { continue }
++            references[identifier] = ClipboardCollectionItemReference(context: context, objectID: objectID)
++        }
+         subject.send(Snapshot(identifiers: value.ids.compactMap { keys[$0] },
+-                              updatedIdentifiers: Set(value.updated.compactMap { keys[$0] })))
++                              updatedIdentifiers: Set(value.updated.compactMap { keys[$0] }),
++                              itemReferences: references))
+     }
+ 
+     private func objectsDidChange(_ notification: Notification) {
+--- /dev/null
++++ replica/Sources/PastoCore/ClipboardCollectionItemReference.swift
+@@ -0,0 +1,30 @@
++import CoreData
++import Foundation
++
++/// A published object identity can outlive the source snapshot that supplied it.
++public struct ClipboardCollectionItemReference: Equatable {
++    private let context: NSManagedObjectContext
++    private let objectID: NSManagedObjectID
++
++    init(context: NSManagedObjectContext, objectID: NSManagedObjectID) {
++        self.context = context
++        self.objectID = objectID
++    }
++
++    public static func == (lhs: Self, rhs: Self) -> Bool {
++        lhs.context === rhs.context && lhs.objectID == rhs.objectID
++    }
++
++    // 3544dc: optional ID lookup, then the expected concrete entity class.
++    @MainActor public func item() -> ClipboardItem? {
++        guard let object = (try? context.existingObject(with: objectID)) as? PastoItemEntity else { return nil }
++        // Project the existing local representation only when the consumer asks for content.
++        return try? ClipboardPersistence.item(object)
++    }
++
++    // 35440c keeps a missing indexed element distinct from optional ID lookup.
++    @MainActor public func requiredItem() -> ClipboardItem {
++        guard let item = item() else { fatalError("Missing collection item") }
++        return item
++    }
++}
+--- phase-74-before/scripts/tests/collection_initial_ids_scope_contract.py
++++ scripts/tests/collection_initial_ids_scope_contract.py
+@@ -3,6 +3,8 @@
+ 
+ 
+ def without_initial_ID_route(source):
++    from live_item_render_scope_contract import pre_live_render
++    source = pre_live_render(source)
+     old = '        let initial = (controller.fetchedObjects ?? []).map(\\.objectID)\n'
+     new = '        let initial = initialObjectIDs()\n'
+     if new not in source:
+--- phase-74-before/scripts/tests/item_order_scope_contract.py
++++ scripts/tests/item_order_scope_contract.py
+@@ -54,6 +54,8 @@
+ 
+ 
+ def without_list_UI_insertions(source):
++    from live_item_render_scope_contract import pre_live_render
++    source = pre_live_render(source)
+     source = source.replace('    private var listCollection: ClipboardSearchCollection?\n    private var listCollectionObservation: AnyCancellable?\n', '', 1)
+     declaration = '    private func installListCollectionSource()'
+     if declaration in source:
+--- phase-74-before/scripts/tests/list_attributes_scope_contract.py
++++ scripts/tests/list_attributes_scope_contract.py
+@@ -16,6 +16,8 @@
+ 
+ 
+ def pre_attributes_host(test, current):
++    from live_item_render_scope_contract import pre_live_render
++    current = pre_live_render(current)
+     previous = (ROOT / '.local/p0-repair/phase-65/before' / HOST).read_text()
+     pairs = {
+         'func update(state: ReplicaUIState, cardSide: CGFloat)': (
+--- phase-74-before/scripts/tests/test_p1_repair_FRC_result_source.py
++++ scripts/tests/test_p1_repair_FRC_result_source.py
+@@ -13,6 +13,7 @@
+ from test_offline_p0_contracts import body
+ from test_p0_repair_checksum_routing import original_fragment
+ from frc_result_scope_contract import assert_factory_addition_only, assert_query_result_only, assert_ui_frc_only, assert_visible_order_only, assert_list_context_only
++from live_item_render_scope_contract import pre_live_render
+ 
+ 
+ class FRCResultSourceContracts(unittest.TestCase):
+@@ -26,7 +27,7 @@
+                          store='replica/Sources/PastoCore/ClipboardStore.swift',
+                          index='replica/Sources/Pasto/UI/ReplicaSearchIndex.swift',
+                          ui='replica/Sources/Pasto/UI/ReplicaUIController.swift')
+-        cls.sources = {k: (ROOT / p).read_text() for k, p in cls.paths.items()}
++        cls.sources = {k: pre_live_render((ROOT / p).read_text()) for k, p in cls.paths.items()}
+         cls.source = cls.sources['source']; cls.index = cls.sources['index']; cls.ui = cls.sources['ui']
+         cls.original = {r['address']: original_fragment((ROOT / r['path']).read_text(), r['address'][2:]) for r in cls.proof['original_fragments']}
+ 
+@@ -55,12 +56,12 @@
+             elif path == self.paths['store']:
+                 self.assertEqual(without_list_factory((ROOT / path).read_text(), public=True), frozen.decode())
+             elif path == self.paths['source']:
+-                current = (ROOT / path).read_text()
++                current = pre_live_render((ROOT / path).read_text())
+                 assert_common_FRC_ctor_only(self, current, frozen.decode())
+                 for marker in ['private func receive(', 'private func flushPending()', 'private func objectsDidChange(', 'nonisolated func controller(']:
+                     self.assertEqual(body(current, marker), body(frozen.decode(), marker))
+             else:
+-                self.assertEqual((ROOT / path).read_bytes(), frozen)
++                self.assertEqual(pre_live_render((ROOT / path).read_text()).encode(), frozen)
+ 
+     def test_real_runtime_method_table_selects_difference_not_snapshot_or_legacy(self):
+         delegate = self.proof['difference_delegate']
+--- phase-74-before/scripts/tests/test_p1_repair_collection_initial_ids.py
++++ scripts/tests/test_p1_repair_collection_initial_ids.py
+@@ -12,6 +12,7 @@
+ from test_offline_p0_contracts import body
+ from test_p0_repair_checksum_routing import original_fragment
+ from collection_initial_ids_scope_contract import assert_initial_ID_route_only
++from live_item_render_scope_contract import pre_live_render, pre_live_render_bytes, REFERENCE_PATH
+ 
+ 
+ class CollectionInitialIDContracts(unittest.TestCase):
+@@ -21,7 +22,7 @@
+         cls.proof = json.loads((cls.phase / 'initial-ID-contract.json').read_text())
+         cls.base = json.loads((cls.phase / 'baseline.json').read_text())
+         cls.path = 'replica/Sources/PastoCore/ClipboardSearchCollection.swift'
+-        cls.source = (ROOT / cls.path).read_text()
++        cls.source = pre_live_render((ROOT / cls.path).read_text())
+         cls.before = (cls.phase / 'before' / cls.path).read_text()
+         cls.original = {r['address']: original_fragment((ROOT / r['path']).read_text(), r['address'][2:])
+                         for r in cls.proof['original_fragments']}
+@@ -162,9 +163,9 @@
+             self.assertEqual('ids' if use_ids else 'frc', expected)
+ 
+     def test_one_production_file_changed_without_schema_storage_or_UI_edits(self):
+-        changed = [p for p, h in self.base['production'].items() if hashlib.sha256((ROOT / p).read_bytes()).hexdigest() != h]
++        changed = [p for p, h in self.base['production'].items() if hashlib.sha256(pre_live_render_bytes(ROOT / p)).hexdigest() != h]
+         self.assertEqual(changed, [self.path])
+-        self.assertEqual({str(p.relative_to(ROOT)) for p in (ROOT / 'replica/Sources').rglob('*') if p.is_file()}, set(self.base['production']))
++        self.assertEqual({str(p.relative_to(ROOT)) for p in (ROOT / 'replica/Sources').rglob('*') if p.is_file()} - {REFERENCE_PATH}, set(self.base['production']))
+         for p in ['replica/Package.swift', 'package.json']:
+             self.assertEqual(hashlib.sha256((ROOT / p).read_bytes()).hexdigest(), self.base['other'][p])
+ 
+--- phase-74-before/scripts/tests/test_p1_repair_list_attributes_observation.py
++++ scripts/tests/test_p1_repair_list_attributes_observation.py
+@@ -57,6 +57,9 @@
+                 self.assertEqual(body((ROOT / path).read_text(), marker), body(frozen, marker))
+             elif path == self.paths['state']:
+                 assert_ui_frc_only(self, (ROOT / path).read_text(), frozen)
++            elif path == self.paths['host']:
++                from live_item_render_scope_contract import pre_live_render
++                self.assertEqual(pre_live_render((ROOT / path).read_text()), frozen)
+             else:
+                 self.assertEqual((ROOT / path).read_text(), frozen)
+ 
+--- phase-74-before/scripts/tests/test_p1_repair_native_list_order.py
++++ scripts/tests/test_p1_repair_native_list_order.py
+@@ -14,6 +14,7 @@
+ from item_order_scope_contract import (without_order_persistence, without_list_factory, without_list_request,
+     without_list_UI_insertions, assert_history_list_projection_only, assert_common_FRC_ctor_only, assert_order_migration_only)
+ from collection_initial_ids_scope_contract import assert_initial_ID_route_only
++from live_item_render_scope_contract import pre_live_render, pre_live_render_bytes, REFERENCE_PATH
+ 
+ 
+ class NativeListOrderContracts(unittest.TestCase):
+@@ -28,7 +29,7 @@
+             store='replica/Sources/PastoCore/ClipboardStore.swift',
+             frc='replica/Sources/PastoCore/ClipboardSearchCollection.swift',
+             ui='replica/Sources/Pasto/UI/ReplicaUIController.swift')
+-        cls.source = {k: (ROOT / p).read_text() for k, p in cls.paths.items()}
++        cls.source = {k: pre_live_render((ROOT / p).read_text()) for k, p in cls.paths.items()}
+         cls.original = {r['address']: original_fragment((ROOT / r['path']).read_text(), r['address'][2:]) for r in cls.proof['original_fragments']}
+ 
+     def before(self, key): return (self.phase / 'before' / self.paths[key]).read_text()
+@@ -45,7 +46,7 @@
+             if path == self.paths['frc']:
+                 assert_initial_ID_route_only(self, (ROOT / path).read_text(), frozen.decode())
+             else:
+-                self.assertEqual((ROOT / path).read_bytes(), frozen)
++                self.assertEqual(pre_live_render((ROOT / path).read_text()).encode(), frozen)
+ 
+     def test_original_MOM_has_Item_order_and_List_metadata_but_no_invented_ItemMetadata(self):
+         model = self.proof['model']
+@@ -259,9 +260,9 @@
+ 
+     def test_only_five_existing_files_and_one_new_order_adapter_change(self):
+         actual = {str(p.relative_to(ROOT)) for p in (ROOT / 'replica/Sources').rglob('*') if p.is_file()}
+-        changed = {p for p, digest in self.base['production'].items() if hashlib.sha256((ROOT / p).read_bytes()).hexdigest() != digest}
++        changed = {p for p, digest in self.base['production'].items() if hashlib.sha256(pre_live_render_bytes(ROOT / p)).hexdigest() != digest}
+         self.assertEqual(changed, set(self.paths.values()) - {self.paths['order']})
+-        self.assertEqual(actual - set(self.base['production']), {self.paths['order']})
++        self.assertEqual(actual - set(self.base['production']) - {REFERENCE_PATH}, {self.paths['order']})
+         self.assertEqual(without_order_persistence(self.source['persistence']), self.before('persistence'))
+         self.assertEqual(without_list_factory(self.source['store'], public=True), self.before('store'))
+         self.assertEqual(without_list_request(self.source['lists']), self.before('lists'))
+--- /dev/null
++++ scripts/tests/test_p1_repair_live_item_render.py
+@@ -0,0 +1,153 @@
++"""Actual visible-card live references; source/static checks only, actions remain open."""
++import hashlib
++import json
++from pathlib import Path
++import sys
++import unittest
++
++ROOT = Path(__file__).resolve().parents[2]
++sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'scripts/tests')]
++from function_ledger import source_fragments
++from test_offline_p0_contracts import body
++from live_item_render_scope_contract import pre_live_render, REFERENCE_PATH
++
++
++class LiveItemRenderContracts(unittest.TestCase):
++    @classmethod
++    def setUpClass(cls):
++        cls.phase = ROOT / '.local/p0-repair/phase-74'
++        cls.proof = json.loads((cls.phase / 'live-item-render-contract.json').read_text())
++        cls.base = json.loads((cls.phase / 'baseline.json').read_text())
++        cls.paths = dict(reference=REFERENCE_PATH, source='replica/Sources/PastoCore/ClipboardSearchCollection.swift',
++            index='replica/Sources/Pasto/UI/ReplicaSearchIndex.swift',
++            ui='replica/Sources/Pasto/UI/ReplicaUIController.swift',
++            host='replica/Sources/Pasto/UI/ReplicaNativeCardCollection.swift')
++        cls.source = {k: (ROOT / p).read_text() for k, p in cls.paths.items()}
++
++    def before(self, key): return (self.phase / 'before' / self.paths[key]).read_text()
++
++    def test_original_live_getter_evidence_and_five_actual_sources_are_bound(self):
++        old = self.proof['original_proof']
++        self.assertEqual(hashlib.sha256((ROOT / old['path']).read_bytes()).hexdigest(), old['sha256'])
++        self.assertEqual(hashlib.sha256((ROOT / self.proof['binary']['path']).read_bytes()).hexdigest(), self.proof['binary']['sha256'])
++        for row in self.proof['original_fragments']:
++            self.assertEqual(source_fragments(ROOT / row['path'])[row['address']]['sha256'], row['sha256'])
++        for p, digest in self.proof['current_sources'].items():
++            self.assertEqual(hashlib.sha256((ROOT / p).read_bytes()).hexdigest(), digest)
++            self.assertEqual((ROOT / p).read_bytes(), (self.phase / 'after' / p).read_bytes())
++
++    def test_reference_stores_actual_context_and_object_ID_without_payload_cache(self):
++        ref = self.source['reference']
++        self.assertIn('private let context: NSManagedObjectContext', ref)
++        self.assertIn('private let objectID: NSManagedObjectID', ref)
++        init = body(ref, 'init(context:')
++        self.assertIn('self.context = context', init);self.assertIn('self.objectID = objectID', init)
++        for token in ['existingObject', 'ClipboardPersistence.item', 'context.fetch', 'Store', 'UUID']:
++            self.assertNotIn(token, init)
++        self.assertNotIn('private var', ref)
++        self.assertIn('lhs.context === rhs.context && lhs.objectID == rhs.objectID', ref)
++
++    def test_optional_live_read_checks_class_and_reuses_existing_projection(self):
++        ref = self.source['reference'];lookup = body(ref, 'public func item()')
++        self.assertIn('@MainActor public func item()', ref)
++        self.assertIn('(try? context.existingObject(with: objectID)) as? PastoItemEntity else { return nil }', lookup)
++        self.assertIn('return try? ClipboardPersistence.item(object)', lookup)
++        for token in ['fatalError', 'refresh(', 'reset(', 'save(', 'store.items', 'object(with:', 'context.fetch']:
++            self.assertNotIn(token, lookup)
++
++    def test_required_and_indexed_access_keep_nil_and_array_bounds_failures_distinct(self):
++        required = body(self.source['reference'], 'public func requiredItem()')
++        self.assertIn('guard let item = item() else { fatalError(', required)
++        self.assertIn('return item', required)
++        lookup = body(self.source['source'], 'public func item(at index:')
++        order = ['let identifier = identifiers[index]', 'itemReferences[identifier]', 'fatalError(', 'reference.requiredItem()']
++        self.assertEqual([lookup.index(t) for t in order], sorted(lookup.index(t) for t in order))
++        self.assertNotIn('compactMap', lookup)
++
++    def test_flush_builds_handles_from_same_published_IDs_without_decoding_content(self):
++        flush = body(self.source['source'], 'private func flushPending()')
++        self.assertLess(flush.index('pending = nil'), flush.index('var references:'))
++        self.assertIn('for objectID in value.ids', flush)
++        self.assertIn('guard let identifier = keys[objectID] else { continue }', flush)
++        self.assertIn('references[identifier] = ClipboardCollectionItemReference(context: context, objectID: objectID)', flush)
++        self.assertLess(flush.index('references[identifier] ='), flush.index('subject.send('))
++        self.assertIn('itemReferences: references', flush)
++        for token in ['ClipboardPersistence.item', 'requiredItem()', '.payloads', 'JSONDecoder']:
++            self.assertNotIn(token, flush)
++
++    def test_ordinary_search_and_trash_routes_supply_only_corresponding_reference_maps(self):
++        self.assertIn('var resultItemReferences: [UUID: ClipboardCollectionItemReference] { resultSource?.value.itemReferences ?? [:] }', self.source['index'])
++        getter = body(self.source['ui'], 'var collectionItemReferences:')
++        self.assertIn('guard !showDeleted else { return [:] }', getter)
++        self.assertIn('isCollectionSearchQueryEmpty ? (listCollection?.value.itemReferences ?? [:]) : searchIndex.resultItemReferences', getter)
++        for token in ['store.items', '.item()', 'requiredItem()', '.map']:
++            self.assertNotIn(token, getter)
++
++    def test_pending_snapshot_captures_reference_epoch_even_for_equal_cached_values(self):
++        update = body(self.source['host'], 'func update(state: ReplicaUIState, cardSide: CGFloat)')
++        self.assertIn('let incomingItemReferences = state.collectionItemReferences', update)
++        self.assertIn('|| pendingSnapshot?.itemReferences != incomingItemReferences', update)
++        self.assertIn('itemReferences: incomingItemReferences', update)
++        self.assertLess(update.index('let incomingItemReferences'), update.index('pendingSnapshot = PendingSnapshot('))
++        pending = body(self.source['host'], 'private struct PendingSnapshot')
++        self.assertIn('let itemReferences: [UUID: ClipboardCollectionItemReference]', pending)
++        for token in ['requiredItem()', '.item()', 'ClipboardPersistence.item']:
++            self.assertNotIn(token, update)
++
++    def test_applier_installs_captured_handles_before_layout_without_current_source_lookup(self):
++        drain = body(self.source['host'], 'private func drainCollectionSnapshots()')
++        order = ['pendingSnapshot = nil', 'items = pending.items', 'itemReferences = pending.itemReferences', 'layoutCollection()']
++        self.assertEqual([drain.index(t) for t in order], sorted(drain.index(t) for t in order))
++        self.assertNotIn('state.collectionItemReferences', drain)
++        self.assertNotIn('requiredItem()', drain)
++
++    def test_visible_render_and_focus_refresh_use_required_live_item_when_handle_exists(self):
++        host = self.source['host'];render = body(host, 'private func renderedItem(at index:')
++        self.assertIn('let item = items[index]', render)
++        self.assertIn('return itemReferences[item.id]?.requiredItem() ?? item', render)
++        tile = body(host, 'private func tileCells()')
++        self.assertLess(tile.index('for index in desired.sorted()'), tile.index('let item = renderedItem(at: index)'))
++        self.assertIn('cell.update(state: state, item: item,', tile)
++        refresh = body(host, 'private func refreshCellRoots()')
++        self.assertIn('cell.update(state: state, item: renderedItem(at: index),', refresh)
++        # A present handle's required lookup traps; the old DTO is only the absent-handle adapter.
++        self.assertNotIn('try?', render)
++        self.assertNotIn('?.item()', render)
++
++    def test_owner_replacement_model_replacement_and_detach_clear_applied_handles(self):
++        host = self.source['host']
++        update = body(host, 'func update(state: ReplicaUIState, cardSide: CGFloat)')
++        prelude = update[:update.index('        self.state = state')]
++        self.assertIn('itemReferences = [:]', body(prelude, 'if replacesState'))
++        for signature in ['func replaceCollectionModel(', 'func detachObservers()']:
++            method = body(host, signature)
++            self.assertIn('itemReferences = [:]', method)
++            self.assertLess(method.index('pendingSnapshot = nil'), method.index('itemReferences = [:]'))
++
++    def test_all_previous_methods_are_identical_outside_explicit_reference_render_blocks(self):
++        for key in ['source', 'index', 'ui', 'host']:
++            self.assertEqual(pre_live_render(self.source[key]), self.before(key))
++        for marker in ['private func receive(', 'private func objectsDidChange(', 'nonisolated func controller(']:
++            self.assertEqual(body(self.source['source'], marker), body(self.before('source'), marker))
++
++    def test_metadata_selection_and_action_migration_remains_open_not_silently_completed(self):
++        ui = self.source['ui'];host = self.source['host']
++        self.assertEqual(body(ui, 'var visibleItems:'), body(self.before('ui'), 'var visibleItems:'))
++        self.assertEqual(body(ui, 'var selectedItems:'), body(self.before('ui'), 'var selectedItems:'))
++        self.assertEqual(body(host, 'func appliedItems('), body(self.before('host'), 'func appliedItems('))
++        self.assertEqual(self.proof['remaining_confirmed_differences'], ['Paste:0x1003544dc'])
++        self.assertEqual(self.proof['repaired_finite_contracts'], [])
++        self.assertFalse(self.proof['full_function_migration_verified'])
++
++    def test_only_four_existing_production_files_and_one_reference_adapter_change(self):
++        sha = lambda p: hashlib.sha256((ROOT / p).read_bytes()).hexdigest()
++        changed = {p for p, digest in self.base['production'].items() if sha(p) != digest}
++        self.assertEqual(changed, {self.paths[k] for k in ['source', 'index', 'ui', 'host']})
++        current = {str(p.relative_to(ROOT)) for p in (ROOT / 'replica/Sources').rglob('*') if p.is_file()}
++        self.assertEqual(current - set(self.base['production']), {REFERENCE_PATH})
++        for p in ['replica/Package.swift', 'package.json']:
++            self.assertEqual(sha(p), self.base['other'][p])
++
++
++if __name__ == '__main__':
++    unittest.main()
+--- /dev/null
++++ scripts/tests/live_item_render_scope_contract.py
+@@ -0,0 +1,58 @@
++"""Compare earlier contracts outside phase74's explicit reference/render additions."""
++from test_offline_p0_contracts import body
++from pathlib import Path
++
++REFERENCE_PATH = 'replica/Sources/PastoCore/ClipboardCollectionItemReference.swift'
++
++
++def pre_live_render_bytes(path):
++    path = Path(path)
++    value = path.read_bytes()
++    return pre_live_render(value.decode()).encode() if path.suffix == '.swift' else value
++
++
++def remove_declaration(source, declaration, signature):
++    start = source.index(declaration)
++    value = body(source, signature)
++    end = source.index(value, start) + len(value) + 2
++    return source[:start] + source[end:]
++
++
++def pre_live_render(source):
++    if 'public let itemReferences: [UUID: ClipboardCollectionItemReference]' in source:
++        snapshot = body(source, 'public struct Snapshot: Equatable')
++        prefix, sep, _ = snapshot.partition('        public let itemReferences:')
++        assert sep and prefix == '{\n        public let identifiers: [UUID]\n        public let updatedIdentifiers: Set<UUID>\n'
++        source = source.replace(snapshot, prefix + '    }', 1)
++        start = source.index('        var references: [UUID: ClipboardCollectionItemReference] = [:]\n')
++        end = source.index('        subject.send(', start)
++        source = source[:start] + source[end:]
++        new = '                              updatedIdentifiers: Set(value.updated.compactMap { keys[$0] }),\n                              itemReferences: references))'
++        assert source.count(new) == 1
++        source = source.replace(new, '                              updatedIdentifiers: Set(value.updated.compactMap { keys[$0] })))', 1)
++    line = '    var resultItemReferences: [UUID: ClipboardCollectionItemReference] { resultSource?.value.itemReferences ?? [:] }\n'
++    if line in source:
++        source = source.replace(line, '', 1)
++    if '    var collectionItemReferences:' in source:
++        source = remove_declaration(source, '    var collectionItemReferences:', 'var collectionItemReferences:')
++    if '    private func renderedItem(at index:' in source:
++        source = remove_declaration(source, '    private func renderedItem(at index:', 'private func renderedItem(at index:')
++        for line, count in [
++            ('    private var itemReferences: [UUID: ClipboardCollectionItemReference] = [:]\n', 1),
++            ('        let itemReferences: [UUID: ClipboardCollectionItemReference]\n', 1),
++            ('            itemReferences = [:]\n', 1),
++            ('        itemReferences = [:]\n', 2),
++            ('            itemReferences = pending.itemReferences\n', 1)]:
++            assert source.count(line) == count, (line, source.count(line))
++            source = source.replace(line, '')
++        source = source.replace('        let incomingItemReferences = state.collectionItemReferences\n', '', 1)
++        source = source.replace('        if pendingSnapshot?.items != incomingItems || !changedIDs.isEmpty\n            || pendingSnapshot?.itemReferences != incomingItemReferences {',
++                                '        if pendingSnapshot?.items != incomingItems || !changedIDs.isEmpty {', 1)
++        new = '                changedIDs: (pendingSnapshot?.changedIDs ?? []).union(changedIDs),\n                itemReferences: incomingItemReferences)'
++        assert source.count(new) == 1
++        source = source.replace(new, '                changedIDs: (pendingSnapshot?.changedIDs ?? []).union(changedIDs))', 1)
++        assert source.count('            let item = renderedItem(at: index)\n') == 1
++        source = source.replace('            let item = renderedItem(at: index)\n', '            let item = items[index]\n', 1)
++        source = source.replace('cell.update(state: state, item: renderedItem(at: index), side:',
++                                'cell.update(state: state, item: items[index], side:', 1)
++    return source

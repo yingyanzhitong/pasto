@@ -1,0 +1,130 @@
+{
+  "kind": "fixed_p0_p1_text_preview_parent_repair",
+  "date": "2026-11-03",
+  "previous_report": "reports/replica/p0-p1-fixed-review-2026-11-03.json",
+  "scope": {
+    "path": "reports/replica/p0-p1-review-scope-v6.json",
+    "denominator": 959,
+    "P0": 353,
+    "P1": 606,
+    "expanded": false
+  },
+  "current_round_repaired_function_ids": [
+    "Paste:0x1003c04f0"
+  ],
+  "current_round_repaired_count": 1,
+  "previous_classification": "finite_contract_consistent_with_explicit_parent_boundary",
+  "change": "Independent text preview model; replace current entity, reload first representation and both baselines, then invoke copied callback using three distinct weak-owner phases.",
+  "current_production_entry": "makeOriginalReplicaNativePreview -> makeReplicaTextPreview -> OriginalTextPreviewModel",
+  "evidence_summary": {
+    "native_functions": 13,
+    "complete_machine_ranges": 13,
+    "direct_branches": 252,
+    "selectors": 25,
+    "import_calls": 168
+  },
+  "preservation": [
+    "Deleted candidate exits before model load.",
+    "Model updates while editing; weak view callback redraws only nonediting editor.",
+    "Commit uses the model-held current input, then existing transaction/error cleanup and model reload.",
+    "Begin/cancel, separate focus hook, display/colors, raw observer, text-storage async bridge, rich/plain decoder and legacy value route preserved."
+  ],
+  "counts": {
+    "finite_contract_consistent": 693,
+    "source_repaired": 256,
+    "user_adaptation": 9,
+    "evidence_insufficient": 1
+  },
+  "by_priority": {
+    "P0": {
+      "finite_contract_consistent": 267,
+      "source_repaired": 82,
+      "user_adaptation": 4
+    },
+    "P1": {
+      "finite_contract_consistent": 426,
+      "source_repaired": 174,
+      "user_adaptation": 5,
+      "evidence_insufficient": 1
+    }
+  },
+  "finite_comparison_progress": {
+    "numerator": 958,
+    "denominator": 959,
+    "percent": 99.9
+  },
+  "confirmed_unfixed_finite_differences": 0,
+  "evidence_insufficient_count": 1,
+  "unknown_function_ids": [
+    "Paste:0x1000f733c"
+  ],
+  "exact_total_outstanding": null,
+  "full_function_migration_verified": false,
+  "migration_completion_percent": null,
+  "remaining_boundaries": [
+    "0f733c declaration and real consumer contract remain unclosed; do not infer unreachable or guess a business call.",
+    "Private Swift ABI, optimized ARC destruction timing, CoreData faults/reentrancy and all framework behavior remain outside static verification.",
+    "Constructor geometry/layout, P2 and network/account/licensing are excluded. Support addresses are evidence, not new denominator entries.",
+    "Other historical finite results do not prove every input or complete parent graph; this report does not claim product acceptance."
+  ],
+  "tests": {
+    "current_source_checks": 103,
+    "failures": 0,
+    "errors": 0,
+    "new_checks": 21,
+    "source_substitution": false,
+    "omitted_historical_checks": {
+      "test_fixed_p0_p1_review.FixedPriorityReview.test_all_original_fragments_and_current_source_bindings_match": "Previous review binds the before-model adapter hash; retained as historical evidence.",
+      "test_fixed_p0_p1_review.FixedPriorityReview.test_only_five_production_files_changed_and_recorded_diffs_are_exact": "Previous five-file snapshot predates this recorded native model repair.",
+      "test_p1_repair_text_edit_mode.TextEditModeContracts.test12_neighbors12_shared_sources_unchanged": "Three previously frozen methods intentionally changed; new test checks the exact three and preserves the other nine. All baseline shared files are checked independently.",
+      "test_p1_repair_text_edit_mode.TextEditModeContracts.test_commit_reload_and_observer_updates_unchanged": "New model changes commit input and native observer routing; new current-source contracts replace this historical invariant.",
+      "test_p1_repair_text_edit_mode.TextEditModeContracts.test_two_exact_hunks_one_file247_inverse_and366_historical_python_preserved": "Historical phase187 scope snapshot predates model addition; not a current behavior check."
+    },
+    "initial_failure": "One aggregate old method-hash invariant failed for commit/reload/fallback setter intentionally changed here; new test validates precisely those three and the other nine unchanged bodies.",
+    "trace_model_limitation": "Five Python weak-reference trace models illustrate source scope; they do not execute Swift ARC/CoreData/AppKit.",
+    "previous_logs_retained": true
+  },
+  "production_changes": {
+    "replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift": {
+      "before_sha256": "f960f429ee4f3f95c57515dec8684397d86e25d4a0d8ef9984913473315ff68a",
+      "after_sha256": "358beb5a0f91f0b0285f536ef31dbe0fc1072061a0219e95e6f88861de9f1c28",
+      "added": false,
+      "diff": "--- replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift\n+++ replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift\n@@ -240,12 +240,15 @@\n     private weak var state: ReplicaUIState?\n     private let itemID: UUID\n     private let editInput: ClipboardRestoreItem?\n+    private let nativeTextModel: OriginalTextPreviewModel?\n     private var nativeItemObservation: ClipboardItemObservation?\n     private var itemObservation: AnyCancellable?\n     private var contentObservation: AnyCancellable?\n     private var storageBridge: OriginalPreviewTextStorageBridge?\n-    private var originalText: NSAttributedString\n-    private var editingText: NSAttributedString\n+    private var fallbackOriginalText: NSAttributedString\n+    private var fallbackEditingText: NSAttributedString\n+    private var originalText: NSAttributedString { nativeTextModel?.originalText ?? fallbackOriginalText }\n+    private var editingText: NSAttributedString { nativeTextModel?.editingText ?? fallbackEditingText }\n     private(set) var canCommit = false\n     var onCanCommitEditing: ((Bool) -> Void)?\n     var onCancel: (() -> Void)?\n@@ -257,18 +260,23 @@\n         guard let itemID = input?.id ?? item?.id else { preconditionFailure(\"Missing preview input\") }\n         self.itemID = itemID\n         editInput = input\n+        let nativeModel = input.flatMap { OriginalTextPreviewModel(input: $0) }\n+        nativeTextModel = nativeModel\n         let nativeSource: ClipboardItemObservation?\n-        if let input { nativeSource = input.observeItem() }\n+        if nativeModel != nil { nativeSource = nil }\n+        else if let input { nativeSource = input.observeItem() }\n         else { nativeSource = state.store.observeItem(id: itemID) }\n         nativeItemObservation = nativeSource\n         let initial: NSAttributedString\n-        if let nativeSource {\n+        if let nativeModel {\n+            initial = nativeModel.originalText\n+        } else if let nativeSource {\n             initial = nativeSource.attributedText ?? NSAttributedString(string: \"\")\n         } else if let item = item ?? input?.resolvedItem() {\n             initial = Self.attributedContent(item)\n         } else { preconditionFailure(\"Missing preview content\") }\n-        originalText = initial\n-        editingText = OriginalPreviewAttributedText.normalizedEditingText(initial)\n+        fallbackOriginalText = initial\n+        fallbackEditingText = nativeModel?.editingText ?? OriginalPreviewAttributedText.normalizedEditingText(initial)\n         document = ReplicaRichTextDocument(content: initial)\n         text = ReplicaInlinePreviewTextView(frame: .zero)\n         super.init(frame: .zero)\n@@ -309,7 +317,12 @@\n                 self.onCanCommitEditing?(self.canCommit)\n             }\n         }\n-        if let nativeSource {\n+        if let nativeModel {\n+            nativeModel.onChange = { [weak self] in\n+                guard let self, !self.text.isEditable else { return }\n+                self.displayStoredModel()\n+            }\n+        } else if let nativeSource {\n             nativeSource.onTextChange = { [weak self] current in\n                 self?.receiveStoredText(current)\n             }\n@@ -372,7 +385,7 @@\n         guard let state else { return }\n         do {\n             let content = OriginalPreviewAttributedText.f_100212ccc(editor: text)\n-            if let editInput {\n+            if let editInput = nativeTextModel?.item ?? editInput {\n                 try state.store.updateTextPreviewItem(editInput, attributedString: content)\n             } else {\n                 try state.store.updateTextPreviewItem(id: itemID, attributedString: content)\n@@ -385,7 +398,9 @@\n     }\n \n     private func reloadStoredContent() {\n-        if let nativeItemObservation {\n+        if let nativeTextModel {\n+            nativeTextModel.reload()\n+        } else if let nativeItemObservation {\n             guard let current = nativeItemObservation.attributedText else { return }\n             replaceStoredText(current)\n         } else {\n@@ -410,9 +425,9 @@\n     }\n \n     private func replaceStoredText(_ text: NSAttributedString) {\n-        // Paste f_1003c04f0 refreshes both model values even while the editor is active.\n-        originalText = text\n-        editingText = OriginalPreviewAttributedText.normalizedEditingText(originalText)\n+        // Legacy value input keeps its existing two stored baselines.\n+        fallbackOriginalText = text\n+        fallbackEditingText = OriginalPreviewAttributedText.normalizedEditingText(fallbackOriginalText)\n     }\n \n     private func displayStoredModel() {\n"
+    },
+    "replica/Sources/PastoCore/OriginalTextPreviewModel.swift": {
+      "before_sha256": null,
+      "after_sha256": "a01858a301a5a5d4ae5fe8492f92644c4b99fc628eaeeaa4cd34d0ca76376cd6",
+      "added": true,
+      "diff": "--- /dev/null\n+++ replica/Sources/PastoCore/OriginalTextPreviewModel.swift\n@@ -0,0 +1,67 @@\n+import AppKit\n+import Combine\n+\n+/// The text model owns its input and derived values independently of the preview view.\n+@MainActor\n+public final class OriginalTextPreviewModel {\n+    public var onChange: (() -> Void)?\n+    public private(set) var originalText = NSAttributedString(string: \"\")\n+    public private(set) var editingText = NSAttributedString(string: \"\")\n+    private var input: ClipboardRestoreItem\n+    private var observation: AnyCancellable?\n+    public var item: ClipboardRestoreItem { input }\n+\n+    public init?(input: ClipboardRestoreItem) {\n+        guard input.hasNativeEntity else { return nil }\n+        self.input = input\n+        observation = input.observeChanges { [weak self] current in\n+            Self.receive(current, from: { [weak self] in self })\n+        }\n+        reload()\n+    }\n+\n+    // 3c05d4: read the held entity's first representation, then replace both model values.\n+    public func reload() {\n+        guard let object = input.nativeObject else { preconditionFailure(\"Text model requires a native item\") }\n+        let items = ClipboardItemDataPersistence.readItems(from: object) ?? []\n+        originalText = items.first?.f_10037d33c() ?? NSAttributedString(string: \"\")\n+        editingText = OriginalPreviewAttributedText.normalizedEditingText(originalText)\n+    }\n+\n+    // 3c04f0: each phase has its own strong-owner scope; retain the callback, not the owner.\n+    private static func receive(_ current: ClipboardRestoreItem,\n+                                from loadOwner: () -> OriginalTextPreviewModel?) {\n+        guard !current.isDeleted else { return }\n+        replaceInputAndReleasePrevious(current, from: loadOwner)\n+        reload(from: loadOwner)\n+        let callback = changeCallback(from: loadOwner)\n+        callback?()\n+    }\n+\n+    @inline(never)\n+    private static func replaceInputAndReleasePrevious(_ current: ClipboardRestoreItem,\n+                                                       from loadOwner: () -> OriginalTextPreviewModel?) {\n+        withExtendedLifetime(replaceInput(current, from: loadOwner)) {}\n+    }\n+\n+    @inline(never)\n+    private static func replaceInput(_ current: ClipboardRestoreItem,\n+                                     from loadOwner: () -> OriginalTextPreviewModel?) -> ClipboardRestoreItem? {\n+        guard let owner = loadOwner() else { return nil }\n+        let previous = owner.input\n+        owner.input = current\n+        return previous\n+    }\n+\n+    @inline(never)\n+    private static func reload(from loadOwner: () -> OriginalTextPreviewModel?) {\n+        guard let owner = loadOwner() else { return }\n+        owner.reload()\n+    }\n+\n+    @inline(never)\n+    private static func changeCallback(from loadOwner: () -> OriginalTextPreviewModel?) -> (() -> Void)? {\n+        guard let owner = loadOwner() else { return nil }\n+        return owner.onChange\n+    }\n+}\n"
+    }
+  },
+  "existing_production_unchanged": 246,
+  "production_added": 1,
+  "old_test_files_modified": 0,
+  "patch": "reports/replica/p0-p1-text-model-parent-review-2026-11-03.patch",
+  "source_inputs": {
+    "reports/replica/p0-p1-fixed-review-2026-11-03.json": "a8c49eaf7634ccfd7d1c73cb1fb0780d6fb38c99c6db6d250032341302277317",
+    ".local/p0-p1-parent-review/2026-11-03-text-model/baseline.json": "11d9a6e8bea34c1413b603671e890cc9e0b844337a65448cd650536bdccb618e",
+    ".local/p0-p1-parent-review/2026-11-03-text-model/contract.json": "602debbab5b465bc6054e990de515076af1644ef692366ad31dcf62f6c7029fc",
+    ".local/p0-p1-parent-review/2026-11-03-text-model/source-delta.json": "207bbaf6dc5760180833161be02b65089de5ea735dc50149c1654d6a6e02d59a",
+    ".local/p0-p1-parent-review/2026-11-03-text-model/test-summary.json": "2a7a7824104a7d160ecbd2fd5ca492fb31daa89df094fc6c3b4bfafec3af94ff",
+    ".local/p0-p1-parent-review/2026-11-03-text-model/first-test-summary.json": "8882ef9f856a5b22413791e79b6c878386ba3438c4b530df758fa6bf9a43bd7e",
+    ".local/p0-p1-parent-review/2026-11-03-text-model/proof.py": "ea754760b516e0ddc2b3dd4caac6d0d72b2a340b86f6edee6852ff7ccd078a51",
+    ".local/p0-p1-parent-review/2026-11-03-text-model/run-tests.py": "c4678346aef74c5ed35e52e6b6d248839ee3e391a37147f723eec83ad7ad7613",
+    "scripts/tests/test_p1_text_model_parent_contract.py": "361c343af1f179a73ff3f380bd70958b465fee32760b4d95b8ed5000d0107295"
+  },
+  "head_unchanged": "050e6878a5a52f96fe33aa40f48bb8a056cd0f05",
+  "version_unchanged": "1.0.2",
+  "function_map_unchanged": "ea781c82f93e580a940f0804fa120e01e9030357d10aee157fe4a135143b8985",
+  "compiled": false,
+  "built": false,
+  "installed": false,
+  "application_executed": false,
+  "framework_executed": false,
+  "network_used": false,
+  "committed": false,
+  "pushed": false,
+  "published": false,
+  "user_data_modified": false,
+  "goal_should_remain_active": true
+}

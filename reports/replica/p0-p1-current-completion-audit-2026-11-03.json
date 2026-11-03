@@ -1,0 +1,266 @@
+{
+  "kind": "current_P0_P1_completion_and_blocker_audit",
+  "date": "2026-11-03",
+  "scope": {
+    "path": "reports/replica/p0-p1-review-scope-v9.json",
+    "sha256": "53db1ce56344ab2b58ad5f4b4446ca8a5094a6fb2154206149c0156fc2a3f593"
+  },
+  "authoritative_records": {
+    "path": "reports/replica/p0-p1-editor-paste-review-2026-11-03.json",
+    "sha256": "20a536d418f1c6bd61d72e563a6d545517d6bcd6b9460f45e651b22a33f7984c"
+  },
+  "finite_comparison_progress": {
+    "numerator": 972,
+    "denominator": 973,
+    "percent": 99.9
+  },
+  "counts": {
+    "finite_contract_consistent": 692,
+    "source_repaired": 271,
+    "user_adaptation": 9,
+    "evidence_insufficient": 1
+  },
+  "by_priority": {
+    "P0": {
+      "finite_contract_consistent": 267,
+      "source_repaired": 93,
+      "user_adaptation": 4
+    },
+    "P1": {
+      "finite_contract_consistent": 425,
+      "source_repaired": 178,
+      "user_adaptation": 5,
+      "evidence_insufficient": 1
+    }
+  },
+  "unknown_function_ids": [
+    "Paste:0x1000f733c"
+  ],
+  "confirmed_unfixed_finite_differences": 0,
+  "requirements": [
+    {
+      "requirement": "最新限定P0/P1本地模块，以固定分母核算",
+      "status": "proven_for_current_finite_worklist",
+      "evidence": "reports/replica/p0-p1-review-scope-v9.json",
+      "boundary": "不把80703条反编译库存或P2/网络分支改算为完成"
+    },
+    {
+      "requirement": "原函数输入、返回、分支、副作用和实际消费者对照",
+      "status": "incomplete",
+      "evidence": "reports/replica/p0-p1-editor-paste-review-2026-11-03.json",
+      "boundary": "972条仅所列有限源码合同；0f733c缺原声明与真实消费者直接绑定，不能作整函数一比一结论"
+    },
+    {
+      "requirement": "保留已有改动，只修复已证差异",
+      "status": "proven_for_recorded_source_chain",
+      "evidence": ".local/p0-p1-completion-audit/2026-11-03-current/source-chain.json",
+      "boundary": "247→249生产文件全部能由已记录补丁在内存精确重放"
+    },
+    {
+      "requirement": "运行无需编译的源码/静态检查",
+      "status": "proven_for_listed_checks",
+      "evidence": [
+        {
+          "path": ".local/p0-p1-parent-review/2026-11-03-editor-paste/test-summary.json",
+          "sha256": "e9c1362adf67ab0b012e13b9d99e939d2f70855cd51b1161af264e2d353a5675",
+          "tests": 132,
+          "failures": 0,
+          "errors": 0,
+          "source_substitution": false,
+          "historical_omissions": {
+            "test_p0_undo_metadata_boundary.UndoMetadataBoundary.test_only_two_recorded_files_changed_and_all_prior_tests_preserved": "Historical whole-project/file hashes predate recorded repairs; new baseline proves only the actual paste override changed and all old tests and shared normalization remain unchanged. Historical source is not substituted.",
+            "test_p0_context_undo.ContextUndoContracts.test_only_two_existing_production_sources_changed_and_one_added": "Historical whole-project/file hashes predate recorded repairs; new baseline proves only the actual paste override changed and all old tests and shared normalization remain unchanged. Historical source is not substituted.",
+            "test_p0_context_undo.ContextUndoContracts.test_original_current_binary_and_helper_inputs_bound": "Historical context patch file hashes predate this recorded metadata adapter correction. New tests rebind all current sources and revalidate the prior native ranges.",
+            "test_p0_context_undo.ContextUndoContracts.test_synchronous_save_returns_true_for_unchanged_and_success_cases": "The historical exact call string predates the optional pre-save hook. New tests verify the unchanged default behavior and guarded atomic hook order.",
+            "test_p0_panel_undo_provider.PanelUndoProvider.test_only_one_production_file_changed_and_old_tests_preserved": "Previous panel-only delta snapshot predates the recorded context Undo integration; new test validates all current production and old test files.",
+            "test_p0_panel_undo_provider.PanelUndoProvider.test_window_manager_patch_does_not_claim_all_undo_operations_work": "Historical context-preservation assertion intentionally superseded by this context patch. New tests preserve snapshot-reader nil manager and bootstrap ordering; no full Undo runtime claim.",
+            "test_p1_text_model_parent_contract.TextModelParentContracts.test_only_one_existing_production_changed_one_added_and_old_tests_preserved": "Historical whole-project/file hashes predate recorded repairs; new baseline proves only the actual paste override changed and all old tests and shared normalization remain unchanged. Historical source is not substituted.",
+            "test_p1_text_model_parent_contract.TextModelParentContracts.test_original_fragments_binary_and_current_sources_fresh": "Historical whole-project/file hashes predate recorded repairs; new baseline proves only the actual paste override changed and all old tests and shared normalization remain unchanged. Historical source is not substituted.",
+            "test_p1_can_commit_live_baseline.LiveBaselineContracts.test_only_two_small_source_changes_and_all_other_inputs_preserved": "Historical whole-project/file hashes predate recorded repairs; new baseline proves only the actual paste override changed and all old tests and shared normalization remain unchanged. Historical source is not substituted.",
+            "test_p1_can_commit_live_baseline.LiveBaselineContracts.test_original_fragments_and_current_source_hashes": "Historical whole-project/file hashes predate recorded repairs; new baseline proves only the actual paste override changed and all old tests and shared normalization remain unchanged. Historical source is not substituted.",
+            "test_p1_text_display_live_reads.DisplayReadContracts.test_all_original_and_current_source_inputs_fresh": "Historical whole-project/file hashes predate recorded repairs; new baseline proves only the actual paste override changed and all old tests and shared normalization remain unchanged. Historical source is not substituted.",
+            "test_p1_text_display_live_reads.DisplayReadContracts.test_only_one_method_changed_and_every_other_existing_file_preserved": "Historical whole-project/file hashes predate recorded repairs; new baseline proves only the actual paste override changed and all old tests and shared normalization remain unchanged. Historical source is not substituted."
+          },
+          "production_still_matches_recorded_result": true
+        },
+        {
+          "path": ".local/p0-p1-parent-review/2026-11-03-editor-ocr-delivery/test-summary.json",
+          "sha256": "b951d7bf44b050a4d3e70c8bd8b80efdf4b402c767cfe4a32a4514d114197540",
+          "tests": 40,
+          "failures": 0,
+          "errors": 0,
+          "source_substitution": false,
+          "historical_omissions": {
+            "test_p1_search_ocr_batch.SearchOCRBatch.test_original_fragments_and_current_source_inputs_fresh": "Historical whole-source hashes for Store/Persistence predate context/Undo repair. All native ranges/fragments and current source hashes are independently bound in this audit.",
+            "test_p1_search_ocr_batch.SearchOCRBatch.test_only_two_lines_changed_and_all_other_production_and_old_tests_preserved": "Historical whole-project baseline predates later repairs. This audit checks all current production/tests unchanged.",
+            "test_p1_repair_index_ocr_queue.IndexOCRQueueContracts.test_raw_fragments_engine_and_prior_lifecycle_inputs_are_hash_bound": "Historical inverse-source reconstruction excluded; only tests on actual current source are run."
+          },
+          "production_still_matches_recorded_result": true
+        },
+        {
+          "path": ".local/p0-p1-parent-review/2026-11-03-copy-delete-post-undo/test-summary-first.json",
+          "sha256": "edfebce6fdb4e824bfeca35b709e26407edb4237f154a6c38e9a3159da7f802b",
+          "tests": 46,
+          "failures": 0,
+          "errors": 0,
+          "source_substitution": false,
+          "historical_omissions": {
+            "test_p0_restore_safety_batch.RestoreSafetyBatch.test_original_and_current_source_inputs_fresh": "Historical whole-source hashes predate later Undo repair; fresh native fragments and current source hashes will be bound separately.",
+            "test_p0_restore_safety_batch.RestoreSafetyBatch.test_no_production_or_prior_test_and_report_changes": "Historical project baseline is superseded. This audit preserves all current production sources and old tests."
+          },
+          "production_still_matches_recorded_result": true
+        }
+      ],
+      "boundary": "当前源码仍对应最近132+40+46项通过结果；没有执行AppKit/CoreData或实际粘贴"
+    },
+    {
+      "requirement": "不编译、构建、安装、运行、联网、提交或发布",
+      "status": "observed_this_audit",
+      "evidence": {
+        "head": "050e6878a5a52f96fe33aa40f48bb8a056cd0f05",
+        "function_map_sha256": "ea781c82f93e580a940f0804fa120e01e9030357d10aee157fe4a135143b8985",
+        "arm64_sha256": "871f00354fbb1c165d858a98e6d19d6f43cb9d3f9f958b3e07c7f07eb5c19afb",
+        "intel_sha256": "3b07e29c71c3926746ec4019425edfce7dfd1be5db50b3566ef57a5a7a2fb526",
+        "installed_original_sha256": "7255357661f83d0d10ae8eaedefa64442cb3b1c300d8963ac50cb8547251d9af"
+      },
+      "boundary": "本轮工具仅本地源码/证据读取、Python检查及报告写入"
+    },
+    {
+      "requirement": "排除网络/P2并跳过两个指定失败地址，保留用户适配",
+      "status": "proven_for_fixed_scope",
+      "evidence": "reports/replica/p0-p1-review-scope-v9.json",
+      "boundary": "9条用户适配保留，未改品牌规则与全函数台账"
+    },
+    {
+      "requirement": "完整迁移并通过当前范围验收",
+      "status": "not_proven",
+      "evidence": [
+        "Paste:0x1000f733c"
+      ],
+      "boundary": "不能用有限合同总数或静态绿色检查替代全函数证明"
+    }
+  ],
+  "source_chain": {
+    "steps": 18,
+    "distinct_paths": 13,
+    "initial_production": 247,
+    "current_production": 249,
+    "added": 2,
+    "existing_changed": 11,
+    "unchanged": 236,
+    "all_diffs_replayed_in_memory": true
+  },
+  "original_fragments_revalidated": 973,
+  "tests_reused": [
+    {
+      "path": ".local/p0-p1-parent-review/2026-11-03-editor-paste/test-summary.json",
+      "sha256": "e9c1362adf67ab0b012e13b9d99e939d2f70855cd51b1161af264e2d353a5675",
+      "tests": 132,
+      "failures": 0,
+      "errors": 0,
+      "source_substitution": false,
+      "historical_omissions": {
+        "test_p0_undo_metadata_boundary.UndoMetadataBoundary.test_only_two_recorded_files_changed_and_all_prior_tests_preserved": "Historical whole-project/file hashes predate recorded repairs; new baseline proves only the actual paste override changed and all old tests and shared normalization remain unchanged. Historical source is not substituted.",
+        "test_p0_context_undo.ContextUndoContracts.test_only_two_existing_production_sources_changed_and_one_added": "Historical whole-project/file hashes predate recorded repairs; new baseline proves only the actual paste override changed and all old tests and shared normalization remain unchanged. Historical source is not substituted.",
+        "test_p0_context_undo.ContextUndoContracts.test_original_current_binary_and_helper_inputs_bound": "Historical context patch file hashes predate this recorded metadata adapter correction. New tests rebind all current sources and revalidate the prior native ranges.",
+        "test_p0_context_undo.ContextUndoContracts.test_synchronous_save_returns_true_for_unchanged_and_success_cases": "The historical exact call string predates the optional pre-save hook. New tests verify the unchanged default behavior and guarded atomic hook order.",
+        "test_p0_panel_undo_provider.PanelUndoProvider.test_only_one_production_file_changed_and_old_tests_preserved": "Previous panel-only delta snapshot predates the recorded context Undo integration; new test validates all current production and old test files.",
+        "test_p0_panel_undo_provider.PanelUndoProvider.test_window_manager_patch_does_not_claim_all_undo_operations_work": "Historical context-preservation assertion intentionally superseded by this context patch. New tests preserve snapshot-reader nil manager and bootstrap ordering; no full Undo runtime claim.",
+        "test_p1_text_model_parent_contract.TextModelParentContracts.test_only_one_existing_production_changed_one_added_and_old_tests_preserved": "Historical whole-project/file hashes predate recorded repairs; new baseline proves only the actual paste override changed and all old tests and shared normalization remain unchanged. Historical source is not substituted.",
+        "test_p1_text_model_parent_contract.TextModelParentContracts.test_original_fragments_binary_and_current_sources_fresh": "Historical whole-project/file hashes predate recorded repairs; new baseline proves only the actual paste override changed and all old tests and shared normalization remain unchanged. Historical source is not substituted.",
+        "test_p1_can_commit_live_baseline.LiveBaselineContracts.test_only_two_small_source_changes_and_all_other_inputs_preserved": "Historical whole-project/file hashes predate recorded repairs; new baseline proves only the actual paste override changed and all old tests and shared normalization remain unchanged. Historical source is not substituted.",
+        "test_p1_can_commit_live_baseline.LiveBaselineContracts.test_original_fragments_and_current_source_hashes": "Historical whole-project/file hashes predate recorded repairs; new baseline proves only the actual paste override changed and all old tests and shared normalization remain unchanged. Historical source is not substituted.",
+        "test_p1_text_display_live_reads.DisplayReadContracts.test_all_original_and_current_source_inputs_fresh": "Historical whole-project/file hashes predate recorded repairs; new baseline proves only the actual paste override changed and all old tests and shared normalization remain unchanged. Historical source is not substituted.",
+        "test_p1_text_display_live_reads.DisplayReadContracts.test_only_one_method_changed_and_every_other_existing_file_preserved": "Historical whole-project/file hashes predate recorded repairs; new baseline proves only the actual paste override changed and all old tests and shared normalization remain unchanged. Historical source is not substituted."
+      },
+      "production_still_matches_recorded_result": true
+    },
+    {
+      "path": ".local/p0-p1-parent-review/2026-11-03-editor-ocr-delivery/test-summary.json",
+      "sha256": "b951d7bf44b050a4d3e70c8bd8b80efdf4b402c767cfe4a32a4514d114197540",
+      "tests": 40,
+      "failures": 0,
+      "errors": 0,
+      "source_substitution": false,
+      "historical_omissions": {
+        "test_p1_search_ocr_batch.SearchOCRBatch.test_original_fragments_and_current_source_inputs_fresh": "Historical whole-source hashes for Store/Persistence predate context/Undo repair. All native ranges/fragments and current source hashes are independently bound in this audit.",
+        "test_p1_search_ocr_batch.SearchOCRBatch.test_only_two_lines_changed_and_all_other_production_and_old_tests_preserved": "Historical whole-project baseline predates later repairs. This audit checks all current production/tests unchanged.",
+        "test_p1_repair_index_ocr_queue.IndexOCRQueueContracts.test_raw_fragments_engine_and_prior_lifecycle_inputs_are_hash_bound": "Historical inverse-source reconstruction excluded; only tests on actual current source are run."
+      },
+      "production_still_matches_recorded_result": true
+    },
+    {
+      "path": ".local/p0-p1-parent-review/2026-11-03-copy-delete-post-undo/test-summary-first.json",
+      "sha256": "edfebce6fdb4e824bfeca35b709e26407edb4237f154a6c38e9a3159da7f802b",
+      "tests": 46,
+      "failures": 0,
+      "errors": 0,
+      "source_substitution": false,
+      "historical_omissions": {
+        "test_p0_restore_safety_batch.RestoreSafetyBatch.test_original_and_current_source_inputs_fresh": "Historical whole-source hashes predate later Undo repair; fresh native fragments and current source hashes will be bound separately.",
+        "test_p0_restore_safety_batch.RestoreSafetyBatch.test_no_production_or_prior_test_and_report_changes": "Historical project baseline is superseded. This audit preserves all current production sources and old tests."
+      },
+      "production_still_matches_recorded_result": true
+    }
+  ],
+  "production_changed_this_audit": 0,
+  "old_tests_changed": false,
+  "cross_architecture_evidence": {
+    "path": "reports/replica/p0-p1-cross-architecture-setter-2026-11-03.json",
+    "sha256": "d990fbf9c7242293425c0cd7c12e8a9c9bacbf95971fc716e6e12fc2d3d98931",
+    "not_proven": [
+      "该Intel候选与ARM0f733c共享同一原始Swift声明的直接符号/元数据绑定。",
+      "原始Swift入口真实消费者；直接调用字节候选为空不证明不可达。",
+      "ObjC属性声明不自动等于未注册Swift入口的完整声明或ABI。"
+    ]
+  },
+  "blocker": {
+    "function_id": "Paste:0x1000f733c",
+    "kind": "missing_direct_original_declaration_and_consumer_binding",
+    "user_has_corresponding_symbols": false,
+    "remaining_local_code_defect_proven": false,
+    "no_safe_invented_consumer": true,
+    "no_missing_value_treated_as_success": true,
+    "repeated_consecutive_goal_turns": [
+      "editor-ocr-delivery: existing contracts reused; same unknown retained",
+      "copy-delete-post-undo: existing contracts reused; same unknown retained",
+      "current-completion-audit: all current sources replay; same unknown remains"
+    ],
+    "can_progress_by_repeating_existing_scans": false,
+    "resume_condition": "新增可直接绑定的原始符号/声明/消费者证据，或用户明确调整此项验收范围；不重复索取用户已确认没有的文件。"
+  },
+  "completion_proven": false,
+  "full_function_migration_verified": false,
+  "migration_completion_percent": null,
+  "goal_status_recommended": "blocked",
+  "invariants": {
+    "head": "050e6878a5a52f96fe33aa40f48bb8a056cd0f05",
+    "function_map_sha256": "ea781c82f93e580a940f0804fa120e01e9030357d10aee157fe4a135143b8985",
+    "arm64_sha256": "871f00354fbb1c165d858a98e6d19d6f43cb9d3f9f958b3e07c7f07eb5c19afb",
+    "intel_sha256": "3b07e29c71c3926746ec4019425edfce7dfd1be5db50b3566ef57a5a7a2fb526",
+    "installed_original_sha256": "7255357661f83d0d10ae8eaedefa64442cb3b1c300d8963ac50cb8547251d9af"
+  },
+  "compiled": false,
+  "built": false,
+  "installed": false,
+  "application_executed": false,
+  "framework_executed": false,
+  "network_used": false,
+  "committed": false,
+  "pushed": false,
+  "published": false,
+  "report_inputs": {
+    "reports/replica/p0-p1-fixed-review-2026-11-03.json": "a8c49eaf7634ccfd7d1c73cb1fb0780d6fb38c99c6db6d250032341302277317",
+    "reports/replica/p0-p1-text-model-parent-review-2026-11-03.json": "3e596f0491ba9e3efd7f3272da09028f7df9a50695972af164a3e9ccd124fa03",
+    "reports/replica/p0-p1-can-commit-parent-review-2026-11-03.json": "659626a2c1d8d95be4fee5637c075b71f8dfaa908708fd5fca26b29b17028728",
+    "reports/replica/p0-p1-text-display-parent-review-2026-11-03.json": "c09dedcd78d78c4ee33efe39764bfbff8ade9eddcc94604558021d72184d1dfd",
+    "reports/replica/p0-p1-group-operation-review-2026-11-03.json": "2b43beecfd48bfd3f9b99b9f1feb5bdb93e73e8dcb1081d54afa63fc6bb19f1d",
+    "reports/replica/p0-p1-stack-selection-review-2026-11-03.json": "12e38663a4a8d6aff3e77f00f2f0d55e347ce83df6e79c328d0d236188bcf124",
+    "reports/replica/p0-p1-search-ocr-review-2026-11-03.json": "8c614fc66040ebca87c33f3f3ec5a444694bdf67784c4eab9aadcc9477b5bd49",
+    "reports/replica/p0-p1-restore-safety-review-2026-11-03.json": "cd392c3b9c2909bbec5166239a5920da0482c895bf1717b3ba77856832b18ab4",
+    "reports/replica/p0-p1-panel-undo-provider-review-2026-11-03.json": "3ee5ac964141ae23bc7ea5b28f759d4b066bac759b95af082fc705a54bf8624b",
+    "reports/replica/p0-p1-context-undo-review-2026-11-03.json": "07423e4ffafcde33389cd1af6e52e1c3b2627b54b1ecf228316b8ab228c296d6",
+    "reports/replica/p0-p1-undo-metadata-review-2026-11-03.json": "235e85a12848ba14e4d42ab49226f2ec814300bd647266c4110fde5f5692c522",
+    "reports/replica/p0-p1-editor-paste-review-2026-11-03.json": "20a536d418f1c6bd61d72e563a6d545517d6bcd6b9460f45e651b22a33f7984c"
+  }
+}

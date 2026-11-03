@@ -1,0 +1,268 @@
+--- a/replica/Sources/PastoCore/ClipboardPersistence.swift
++++ b/replica/Sources/PastoCore/ClipboardPersistence.swift
+@@ -351,6 +351,10 @@
+ 
+     func searchNativeItems(identifiers: [String]?) throws -> [ClipboardItem] {
+         try snapshotReader.searchNativeItems(identifiers: identifiers)
++    }
++
++    func localListMenuState(_ target: ClipboardListTarget) -> (rawType: Int64?, isEmpty: Bool) {
++        context.performAndWait { lists.menuState(for: target.nativeObject) }
+     }
+ 
+     func localListMenuState(identifier: String) -> (rawType: Int64?, isEmpty: Bool) {
+@@ -948,7 +952,7 @@
+                     viewHistoryToken = context.persistentStoreCoordinator?.currentPersistentHistoryToken(fromStores: nil)
+                     viewRevision = root.value(forKey: "revision") as? UUID
+                 }
+-                outcome.state.pinboards = transaction.repository.lists.projectCreatedPinboards(outcome.state.pinboards)
++                outcome.state.pinboards = transaction.repository.lists.projectNativePinboards(outcome.state.pinboards)
+                 return outcome
+             }
+         }
+--- a/replica/Sources/PastoCore/ClipboardStore.swift
++++ b/replica/Sources/PastoCore/ClipboardStore.swift
+@@ -54,6 +54,9 @@
+     public let directoryURL: URL
+     public var searchSourceIdentifier: String? { persistence.searchSourceIdentifier }
+     public var collectionItemUpdates: AnyPublisher<Set<UUID>, Never> { persistence.collectionItemUpdates }
++    public func localListMenuState(_ target: ClipboardListTarget) -> (rawType: Int64?, isEmpty: Bool) {
++        persistence.localListMenuState(target)
++    }
+     public func makeTabListCollection() -> ClipboardPinboardCollection { persistence.makeTabListCollection() }
+     public func tabListTarget(identifier: String) -> ClipboardListTarget? { persistence.tabListTarget(identifier: identifier) }
+     public func makeListCollection(identifier: String) -> ClipboardSearchCollection? {
+@@ -1371,6 +1374,47 @@
+            let index = metadata.value(forKey: "index") as? NSNumber { board.sortOrder = index.intValue }
+         return (board, result.target)
+     }
++    public func renameList(_ target: ClipboardListTarget, rawName: String) throws {
++        try mutateInTransaction { state, transaction in
++            let lists = transaction.repository.lists
++            lists.retainNativeList(target.nativeObject)
++            lists.updateName(on: target.nativeObject) { $0 = OriginalPinboardTitle.normalizedRename(rawName) }
++            projectNativeList(target, into: &state)
++        }
++    }
++
++    public func updateListColor(_ target: ClipboardListTarget, colorCode: UInt64) throws {
++        try mutateInTransaction { state, transaction in
++            let lists = transaction.repository.lists
++            lists.retainNativeList(target.nativeObject)
++            lists.updateColor(on: target.nativeObject) { $0 = colorCode }
++            projectNativeList(target, into: &state)
++        }
++    }
++
++    private func projectNativeList(_ target: ClipboardListTarget, into state: inout StoreState) {
++        if target.identifier == Self.historyListIdentifier {
++            state.preferences.historyTitle = target.name
++            return
++        }
++        guard let id = UUID(uuidString: target.identifier) else { return }
++        guard let index = state.pinboards.firstIndex(where: { $0.id == id }) else {
++            if let board = target.pinboardValue { state.pinboards.append(board) }
++            return
++        }
++        state.pinboards[index].name = target.name
++        state.pinboards[index].rawType = Int16(exactly: target.rawType) ?? 0
++        let attributes = target.nativeObject.value(forKey: "rawAttributes") as? Data
++        if state.pinboards[index].rawAttributes != attributes {
++            state.pinboards[index].rawAttributes = attributes
++            if let color = OriginalPinboardAttributes.colorCode(from: attributes) {
++                state.pinboards[index].colorHex = String(format: "#%06llX", color)
++            }
++        }
++        if let metadata = target.nativeObject.value(forKey: "metadata") as? NSManagedObject,
++           let order = metadata.value(forKey: "index") as? NSNumber { state.pinboards[index].sortOrder = order.intValue }
++    }
++
+     public func renamePinboard(id: UUID, name: String) throws {
+         guard !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { throw ClipboardStoreError.invalidPinboardName }
+         try mutate { state in
+--- a/replica/Sources/PastoCore/ClipboardListPersistence.swift
++++ b/replica/Sources/PastoCore/ClipboardListPersistence.swift
+@@ -26,6 +26,9 @@
+     }
+     public var name: String {
+         String._unconditionallyBridgeFromObjectiveC(nativeObject.value(forKey: "name") as? NSString)
++    }
++    public var colorCode: UInt64? {
++        OriginalPinboardAttributes.colorCode(from: nativeObject.value(forKey: "rawAttributes") as? Data)
+     }
+     public var rawType: Int64 { (nativeObject.value(forKey: "rawType") as? NSNumber)?.int64Value ?? 0 }
+     public var pinboardValue: Pinboard? {
+@@ -46,7 +49,7 @@
+     static let historyIdentifier = "sharedPasteboardHistory"
+     private let context: NSManagedObjectContext
+     var refreshHistoryAfterOperation = false
+-    private var createdPinboards: [String: PastoListEntity] = [:]
++    private var nativeLists: [String: NSManagedObject] = [:]
+ 
+     init(context: NSManagedObjectContext) { self.context = context }
+ 
+@@ -189,6 +192,10 @@
+     // 0x100325130/329088: count managed history/group members; count errors mean empty.
+     func menuState(identifier: String) -> (rawType: Int64?, isEmpty: Bool) {
+         guard let list = try? list(identifier: identifier) else { return (nil, true) }
++        return menuState(for: list)
++    }
++
++    func menuState(for list: NSManagedObject) -> (rawType: Int64?, isEmpty: Bool) {
+         let rawType = (list.value(forKey: "rawType") as? NSNumber)?.int64Value ?? 0
+         guard let context = list.managedObjectContext else { return (rawType, true) }
+         let request = PastoItemEntity.defaultFetchRequest()
+@@ -249,13 +256,37 @@
+         return list
+     }
+ 
++    func retainNativeList(_ list: NSManagedObject) {
++        let identifier = String._unconditionallyBridgeFromObjectiveC(list.value(forKey: "identifier") as? NSString)
++        nativeLists[identifier] = list
++    }
++
++    // 36c448: the callback edits the first read; compare against a fresh second read before setting.
++    func updateName(on list: NSManagedObject, _ update: (inout String) -> Void) {
++        var value = String._unconditionallyBridgeFromObjectiveC(list.value(forKey: "name") as? NSString)
++        update(&value)
++        let current = String._unconditionallyBridgeFromObjectiveC(list.value(forKey: "name") as? NSString)
++        if current != value { list.setValue(value, forKey: "name") }
++    }
++
++    // 36c614: only a decoded pinboard case is editable; encode failure still writes nil attributes.
++    func updateColor(on list: NSManagedObject, _ update: (inout UInt64) -> Void) {
++        guard case let .pinboard(old)? = OriginalPinboardAttributes.decoded(
++            from: list.value(forKey: "rawAttributes") as? Data) else { return }
++        var value = old
++        update(&value)
++        guard old != value else { return }
++        let attributes = try? OriginalPinboardAttributes.encoded(colorCode: value)
++        list.setValue(attributes, forKey: "rawAttributes")
++    }
++
+     // 0x100368560: insert/name first, attempt permanent ID, then encode attributes and set type.
+     func insertPinboard(identifier: String, name: String,
+                         encodeAttributes: () throws -> Data?) throws -> (object: NSManagedObject, attributes: Data?) {
+         let list = PastoListEntity(context: context)
+         list.setValue(identifier, forKey: "identifier")
+         list.setValue(name, forKey: "name")
+-        createdPinboards[identifier] = list
++        nativeLists[identifier] = list
+         // ARM 3686b8...3686e8 releases a permanent-ID error and rejoins the encoding path.
+         try? context.obtainPermanentIDs(for: [list])
+         let attributes = try? encodeAttributes()
+@@ -295,11 +326,11 @@
+                     rawType: Int64(board.rawType ?? 2), attributes: board.rawAttributes, index: Int64(board.sortOrder))
+                 lists[identifier] = list
+             }
++            // Native operations already changed this exact List; do not replay fields from a value snapshot.
++            if nativeLists[identifier] === list { continue }
+             set(board.name, key: "name", on: list)
+             set(Int64(board.rawType ?? 2), key: "rawType", on: list)
+             set(board.rawAttributes, key: "rawAttributes", on: list)
+-            // A newly created native List supplies metadata/index in validateForInsert, not this value adapter.
+-            if createdPinboards[identifier] === list { continue }
+             guard let metadata = list.value(forKey: "metadata") as? NSManagedObject else {
+                 throw CocoaError(.fileReadCorruptFile)
+             }
+@@ -308,11 +339,11 @@
+         return history
+     }
+ 
+-    // Saving has already run the List validator. Project only its created objects, without another fetch/save.
+-    func projectCreatedPinboards(_ pinboards: [Pinboard]) -> [Pinboard] {
+-        guard !createdPinboards.isEmpty else { return pinboards }
++    // Saving has already run the List validator. Project native input objects without another fetch/save.
++    func projectNativePinboards(_ pinboards: [Pinboard]) -> [Pinboard] {
++        guard !nativeLists.isEmpty else { return pinboards }
+         return pinboards.map { board in
+-            guard let list = createdPinboards[board.id.uuidString],
++            guard let list = nativeLists[board.id.uuidString],
+                   let metadata = list.value(forKey: "metadata") as? NSManagedObject,
+                   let index = metadata.value(forKey: "index") as? NSNumber else { return board }
+             var value = board
+--- a/replica/Sources/Pasto/UI/PanelViews.swift
++++ b/replica/Sources/Pasto/UI/PanelViews.swift
+@@ -149,7 +149,7 @@
+         state.tabListTargets.map { target in
+             let board = target.pinboardValue
+             var tab = boardButton(target.name, board: board, target: target)
+-            tab.menuProvider = { localListMenu(for: board) }
++            tab.menuProvider = { localListMenu(for: board, target: target) }
+             if let board {
+                 tab.dragString = "paste-pinboard:" + board.id.uuidString
+                 tab.onDropString = { value in
+@@ -163,32 +163,31 @@
+     }
+ 
+     // 0x100021f00: offline rename, typed deletion, then color choices.
+-    private func localListMenu(for board: Pinboard?) -> NSMenu {
++    private func localListMenu(for board: Pinboard?, target: ClipboardListTarget) -> NSMenu {
+         let menu = NSMenu()
+         menu.autoenablesItems = false
+-        menu.addItem(OriginalPanelTabMenuItem(title: "重命名") { requestTabRename(board?.id) })
++        menu.addItem(OriginalPanelTabMenuItem(title: "重命名") { requestTabRename(target.identifier) })
+         // Resolve and count only when the native context menu is requested.
+-        let list = state.store.localListMenuState(pinboardID: board?.id)
++        let list = state.store.localListMenuState(target)
+         if list.rawType == 1 {
+             if !list.isEmpty {
+                 menu.addItem(OriginalPanelTabMenuItem(title: "删除历史…") { state.controller?.clearHistory() })
+             }
+-        } else if list.rawType == 2, let board {
+-            menu.addItem(OriginalPanelTabMenuItem(title: list.isEmpty ? "删除" : "删除…") {
+-                state.controller?.removePinboard(board)
+-            })
++        } else if list.rawType == 2 {
++            if let board {
++                menu.addItem(OriginalPanelTabMenuItem(title: list.isEmpty ? "删除" : "删除…") {
++                    state.controller?.removePinboard(board)
++                })
++            }
+             menu.addItem(.separator())
+             // Keep the requested named color rows and colored dots as the local presentation adapter.
+             let colors = NSMenu()
+             colors.autoenablesItems = false
+-            let selectedColor = OriginalPinboardAttributes.colorCode(from: board.rawAttributes)
+-                .map { OriginalPinboardColor(canonicalColorCode: $0) }
++            let selectedColor = target.colorCode.map { OriginalPinboardColor(canonicalColorCode: $0) }
+             for color in OriginalPinboardColor.allCases {
+-                let item = OriginalPanelTabMenuItem(title: colorName(color)) {
+-                    state.perform {
+-                        try state.store.updatePinboard(id: board.id,
+-                            colorHex: String(format: "%06llX", color.canonicalColorCode))
+-                    }
++                let item = OriginalPanelTabMenuItem(title: colorName(color)) { [weak menu] in
++                    try? state.store.updateListColor(target, colorCode: color.canonicalColorCode)
++                    menu?.cancelTracking()
+                 }
+                 item.image = colorMenuImage(color)
+                 item.state = selectedColor == color ? .on : .off
+@@ -239,8 +238,8 @@
+         return parseColor(board.colorHex) ?? .red
+     }
+ 
+-    private func requestTabRename(_ id: UUID?) {
+-        state.tabRenameRequest = (key: id?.uuidString ?? ClipboardStore.historyListIdentifier, token: UUID())
++    private func requestTabRename(_ identifier: String) {
++        state.tabRenameRequest = (key: identifier, token: UUID())
+     }
+ 
+     private func boardButton(_ name: String, board: Pinboard?, target: ClipboardListTarget) -> OriginalPinboardTab {
+@@ -256,14 +255,8 @@
+                 },
+                 onEnd: { if state.tabRenameRequest?.key == key { state.tabRenameRequest = nil } },
+                 onCommit: { value in
+-                    if let board {
+-                        state.perform { try state.store.renamePinboardFromTab(id: board.id, rawName: value) }
+-                        return state.store.pinboards.first(where: { $0.id == board.id })?.name ?? name
+-                    } else {
+-                        state.store.preferences.historyTitle = OriginalPinboardTitle.normalizedRename(value)
+-                        state.perform { try state.store.save() }
+-                        return state.store.preferences.historyTitle
+-                    }
++                    try? state.store.renameList(target, rawName: value)
++                    return target.name
+                 })
+     }
+ 

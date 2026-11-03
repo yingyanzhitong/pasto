@@ -1,0 +1,74 @@
+{
+  "round": 24,
+  "records": [
+    {
+      "function_id": "Paste:0x1003095bc",
+      "decision": "admit",
+      "reason": "已纳P1文本编辑生产3eb330直接调用的属性存在性判断，含自主全范围枚举/早停值决策，旧646与239边界均未纳；独立记录但不计额外独立bug。"
+    },
+    {
+      "function_id": "Paste:0x1001ff0d0",
+      "decision": "support_only",
+      "reason": "通用动态表面颜色once accessor，在已纳SearchField构造的本地显示域作支持，不把通用界面扩为P1独立业务。"
+    },
+    {
+      "function_id": "Paste:0x1002356a8",
+      "decision": "support_only",
+      "reason": "通用LayerBackedView背景setter，在搜索构造的已纳显示域作支持，其它通用界面P2不扩展。"
+    },
+    {
+      "function_id": "Paste:0x100309008",
+      "decision": "support_only",
+      "reason": "跨内容类型本地默认预览标题getter；在已审重命名fallback域作支持，普通内容预览P2不扩展。"
+    },
+    {
+      "function_id": "Paste:0x100206b5c",
+      "decision": "admit",
+      "reason": "已纳P1父函数中的业务值转换，有独立输入分支及真实当前消费者；有限合同已比较，不作完整迁移。"
+    },
+    {
+      "function_id": "Paste:0x100207648",
+      "decision": "admit",
+      "reason": "已纳P1父函数中的业务值转换，有独立输入分支及真实当前消费者；有限合同已比较，不作完整迁移。"
+    },
+    {
+      "function_id": "Paste:0x100066570",
+      "decision": "support_only",
+      "reason": "在当前P0 copy分支只作为065ed8/066068共享恢复/失败beep及deactivate支持；独立OSD提示UI属P2，未扩张为新增P0业务比较。",
+      "source": ".local/p0-review/p0-p1-round24-p0-boundary-review.json"
+    },
+    {
+      "function_id": "Paste:0x1003b9490",
+      "decision": "hold_domain",
+      "reason": "逐项日期/rawType标签交owner+0x40存在值的witness+0x20，尚未绑定真实消费模块；可能为遥测投影，不能只因copy caller而纳入离线业务或判Pasto缺失。需查protocol/owner字段。",
+      "source": ".local/p0-review/p0-p1-round24-p0-boundary-review.json"
+    },
+    {
+      "function_id": "Paste:0x1003614c0",
+      "decision": "already_in_scope",
+      "reason": "主审纠正：原v3已纳此地址并有difference_confirmed；子审未找到映射的说法不替代既有固定History消费者证据，不新增分母。",
+      "source": ".local/p0-review/p0-p1-round24-p0-boundary-review.json"
+    },
+    {
+      "function_id": "Paste:0x100368080",
+      "decision": "support_only",
+      "reason": "已纳368250父记录支持的identifier查找/reuse；不重复作独立业务单元。",
+      "source": ".local/p0-review/p0-p1-round24-p0-boundary-review.json"
+    }
+  ],
+  "source_candidates": ".local/p0-review/p0-p1-round24-direct-callee-candidates.json",
+  "candidate_count": 682,
+  "classification_counts": {
+    "admit": 3,
+    "support_only": 5,
+    "hold_domain": 1,
+    "already_in_scope": 1
+  },
+  "full_original_priority_classification_complete": false,
+  "classification_is_not_migration": true,
+  "source_inputs": {
+    ".local/p0-review/p0-p1-round24-root-boundary-review.json": "5b2907731161854479a3b34248df3ee11e9118109736d850d23330c2e4cee854",
+    ".local/p0-review/p0-p1-round24-p0-boundary-review.json": "b403bb99f7ee27294603b75f01648b1683ed65d6e9d43738fff69e12ad3acda6",
+    ".local/p0-review/p0-p1-round24-direct-callee-candidates.json": "2b2ba520e019f656dbee01aca24d390c8cf3591b8c944a131b97c6381eb4561a"
+  }
+}

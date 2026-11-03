@@ -1,0 +1,13 @@
+# 第一百三十八轮：顶部预览状态的实际消费者范围
+
+上一轮是实质修复：补事件时点原生identifier/URI。本轮沿真实$topmost消费者核查，确认其性质再决定是否接线，未因Pasto暂无相关订阅而猜造键盘逻辑。
+
+原0b0b20读取ItemPreviewWindowManager::_topmost的Published.projectedValue，并与另两源combineLatest3，compactMap/removeDuplicates后sink。实际ARM传给sink的函数指针由0b1110 ADRP+0b1114 ADD定位0b26ac，该函数转0b1c94；后者有明确Paste/AppDelegate+Handoff.swift路径并调用af2cd0更新activity。af2958实际导入_OBJC_CLASS_$_NSUserActivity，保存同controller+0x70 activity字段；真实selector setEligibleForHandoff:以true调用。因此已定位的是跨设备接续状态订阅，按用户排除联网/Handoff范围，仅排除这一条订阅子链，不添加本地键盘/编辑服务的猜测订阅。
+
+不把整个混合AppDelegate方法排除：0b098c的frontmost app采样/激活、0b11ac的entries空时恢复previous app与清理仍是本地行为。当前hidePanel将registry.windows.isEmpty传给panelWillClose，AppMain restorePanelApplication仍有restore门、previous.activate和defer清理；全部保持。onAllPreviewsClosed到0b1370的已定位子链只清handoff snapshot/controller，没有由此臆造新的键盘或焦点动作。本地Registry本身topmost发布也保留。
+
+12原片段、11真实ARM字、sink函数指针构造、NSUserActivity真实dyld class bind、setEligibleForHandoff真selector及5个本地方法摘要绑定；新增8项Python/源码/Mach-O静态检查通过。生产247文件和全部旧Python测试字节均未变，上一轮2146项完整检查的源码输入保持，不无理由重跑旧整套，也不声称本轮重跑2154项。未编译或运行系统框架。
+
+本轮新增可核验的消费者范围证据，未改生产代码、未新增差异记录、未将网络排除算迁移完成。沿用v48的208记录186组：P0 77/77、P1 131/131、总208/208（100%）仅已确认有限差异。只能说已正向追出这一条订阅，不证明没有其他间接/DI消费者；04430c/0f733c两未知及完整P1工厂/DTO/错误/生命周期父合同继续，整体迁移率未知。
+
+版本1.0.2、HEAD、function-map及官网/README下载链9份改动保持。仅本地证据、测试和文档变更；未编译、构建、安装、运行应用/框架、联网、提交、推送、打标签、发布或部署。

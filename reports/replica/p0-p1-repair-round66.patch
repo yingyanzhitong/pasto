@@ -1,0 +1,894 @@
+--- phase-66-before/replica/Sources/Pasto/UI/AuxiliaryViews.swift
++++ replica/Sources/Pasto/UI/AuxiliaryViews.swift
+@@ -250,10 +250,7 @@
+         controller.makeCell = { item in
+             NSHostingView(rootView:
+                 OriginalStackSnippetCellView(item: item, imageProvider: { item in
+-                    if let application = state.store.sourceApplication(for: item) {
+-                        return application.rawIcon.flatMap(NSImage.init(data:)) ?? NSImage()
+-                    }
+-                    return NSImage(systemSymbolName: "doc.on.clipboard.fill", accessibilityDescription: nil)
++                    OriginalStackCategoryIcons.image(for: state.store.originalContentKind(of: item))
+                 }).frame(maxWidth: .infinity).frame(height: 44)
+                 .contextMenu {
+                     Button("复制") { state.controller?.copy(item: item, plainTextOnly: false) }
+--- phase-66-before/replica/Sources/PastoCore/ClipboardPersistence.swift
++++ replica/Sources/PastoCore/ClipboardPersistence.swift
+@@ -316,6 +316,18 @@
+         }
+     }
+ 
++    func itemContentKind(identifier: String) -> OriginalPasteboardContentKind {
++        context.performAndWait {
++            let request = PastoItemEntity.defaultFetchRequest()
++            request.predicate = NSPredicate(format: "key == %@", identifier)
++            request.fetchLimit = 1
++            guard let object = (try? context.fetch(request))?.first else { return .unknown }
++            let raw = (object.value(forKey: "rawType") as? NSNumber)?.int64Value ?? 0
++            guard let value = UInt8(exactly: raw) else { return .unknown }
++            return OriginalPasteboardContentKind(rawValue: value) ?? .unknown
++        }
++    }
++
+     private func fetch(_ entity: String, keys: [String]? = nil) throws -> [NSManagedObject] {
+         if entity == PastoItemEntity.entityName {
+             let request = PastoItemEntity.defaultFetchRequest()
+--- phase-66-before/replica/Sources/PastoCore/ClipboardStore.swift
++++ replica/Sources/PastoCore/ClipboardStore.swift
+@@ -56,6 +56,9 @@
+     public var collectionItemUpdates: AnyPublisher<Set<UUID>, Never> { persistence.collectionItemUpdates }
+     public func observeListAttributes(pinboardID: UUID?) -> ClipboardListAttributesObservation? {
+         persistence.observeListAttributes(identifier: pinboardID?.uuidString ?? Self.historyListIdentifier)
++    }
++    public func originalContentKind(of item: ClipboardItem) -> OriginalPasteboardContentKind {
++        persistence.itemContentKind(identifier: item.id.uuidString)
+     }
+     public func observeSearchChanges(_ consume: @escaping ([OriginalSearchHistoryChange]) async throws -> Void) async {
+         await persistence.observeSearchChanges(consume)
+--- /dev/null
++++ replica/Sources/PastoCore/OriginalStackCategoryIcons.swift
+@@ -0,0 +1,28 @@
++import AppKit
++import Foundation
++
++public enum OriginalStackCategoryIcons {
++    // 0x100051d2c: these are category images, independent of the source application.
++    public static func name(for kind: OriginalPasteboardContentKind) -> String {
++        switch kind {
++        case .files: return "icon.file"
++        case .color, .text: return "icon.text"
++        case .link: return "icon.link"
++        case .unknown, .image: return "icon.unknown"
++        }
++    }
++
++    @MainActor private static let resources: Bundle = {
++        guard let url = Bundle.module.url(forResource: "OriginalStackIcons", withExtension: "bundle"),
++              let bundle = Bundle(url: url) else { preconditionFailure("Missing Stack icon resource bundle") }
++        return bundle
++    }()
++
++    @MainActor public static func image(for kind: OriginalPasteboardContentKind) -> NSImage {
++        let assetName = name(for: kind)
++        guard let image = resources.image(forResource: NSImage.Name(assetName)) else {
++            preconditionFailure("Missing Stack category image: \(assetName)")
++        }
++        return image
++    }
++}
+--- /dev/null
++++ replica/Sources/PastoCore/OriginalStackIcons.bundle/Contents/Info.plist
+@@ -0,0 +1,14 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
++<plist version="1.0">
++<dict>
++	<key>CFBundleDevelopmentRegion</key>
++	<string>en</string>
++	<key>CFBundleIdentifier</key>
++	<string>com.yingyanzhitong.pasto.stack-icons</string>
++	<key>CFBundleName</key>
++	<string>PastoStackIcons</string>
++	<key>CFBundlePackageType</key>
++	<string>BNDL</string>
++</dict>
++</plist>
+--- phase-66-before/scripts/tests/test_p1_repair_list_attributes_observation.py
++++ scripts/tests/test_p1_repair_list_attributes_observation.py
+@@ -48,8 +48,13 @@
+             self.assertEqual(hashlib.sha256((ROOT / row['path']).read_bytes()).hexdigest(), row['sha256'])
+         self.assertEqual(set(self.proof['current_sources']), set(self.paths.values()))
+         for path, digest in self.proof['current_sources'].items():
+-            self.assertEqual(hashlib.sha256((ROOT / path).read_bytes()).hexdigest(), digest)
+-            self.assertEqual((ROOT / path).read_bytes(), (self.phase / 'after' / path).read_bytes())
++            frozen = (self.phase / 'after' / path).read_text()
++            self.assertEqual(hashlib.sha256((self.phase / 'after' / path).read_bytes()).hexdigest(), digest)
++            if path in [self.paths['persistence'], self.paths['store']]:
++                marker = 'func observeListAttributes('
++                self.assertEqual(body((ROOT / path).read_text(), marker), body(frozen, marker))
++            else:
++                self.assertEqual((ROOT / path).read_text(), frozen)
+ 
+     def test_real_context_imports_bind_four_keys_and_exact_event_types(self):
+         rows = self.proof['context_key_bindings']
+@@ -208,7 +213,10 @@
+ 
+     def test_read_reset_commit_and_store_producers_remain_unchanged_outside_new_factory(self):
+         for key, marker in [('persistence', 'func observeListAttributes('), ('store', 'public func observeListAttributes(')]:
+-            current, previous = self.sources[key], self.before(key)
++            # The round65 insertion-only proof remains tied to its real post-edit snapshot;
++            # round66 adds an independent rawType getter. Bind the actual observer factory too.
++            current, previous = (self.phase / 'after' / self.paths[key]).read_text(), self.before(key)
++            self.assertEqual(body(self.sources[key], marker), body(current, marker))
+             start = current.index('    ' + marker)
+             method = body(current, marker)
+             end = current.index(method, start) + len(method) + (2 if key == 'persistence' else 1)
+@@ -219,7 +227,8 @@
+ 
+     def test_only_six_existing_sources_and_one_real_observer_added_no_FRC_claim(self):
+         base = json.loads((self.phase / 'baseline.json').read_text())
+-        changed = {p for p, digest in base['production'].items() if hashlib.sha256((ROOT / p).read_bytes()).hexdigest() != digest}
++        changed = {p for p, digest in base['production'].items() # Historical round65 exact edit set, before round66's separate Stack migration.
++                   if hashlib.sha256((ROOT / '.local/p0-repair/phase-66/before' / p).read_bytes()).hexdigest() != digest}
+         self.assertEqual(changed, set(self.paths.values()) - {self.paths['observer']})
+         self.assertFalse((self.phase / 'before' / self.paths['observer']).exists())
+         self.assertEqual([r['function_id'] for r in self.proof['contracts']], ['Paste:0x1003b9264', 'Paste:0x1003bb7bc'])
+--- /dev/null
++++ scripts/tests/test_p1_repair_stack_category_icons.py
+@@ -0,0 +1,234 @@
++"""Static original-code/asset linkage checks. No AppKit/CoreUI/native image loading."""
++import hashlib
++import json
++import plistlib
++import re
++import struct
++import sys
++import unittest
++from pathlib import Path
++
++ROOT = Path(__file__).resolve().parents[2]
++sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'scripts/tests')]
++from function_ledger import source_fragments
++from test_offline_p0_contracts import body
++from extract_stack_icon_catalog import Catalog, extract, NAMES
++
++
++class StackCategoryIconContracts(unittest.TestCase):
++    @classmethod
++    def setUpClass(cls):
++        cls.phase = ROOT / '.local/p0-repair/phase-66'
++        cls.proof = json.loads((cls.phase / 'stack-category-icon-contract.json').read_text())
++        cls.manifest = json.loads((cls.phase / 'catalog-extraction.json').read_text())
++        cls.paths = {'icons': 'replica/Sources/PastoCore/OriginalStackCategoryIcons.swift',
++                     'car': 'replica/Sources/PastoCore/OriginalStackIcons.bundle/Contents/Resources/Assets.car',
++                     'plist': 'replica/Sources/PastoCore/OriginalStackIcons.bundle/Contents/Info.plist',
++                     'persistence': 'replica/Sources/PastoCore/ClipboardPersistence.swift',
++                     'store': 'replica/Sources/PastoCore/ClipboardStore.swift',
++                     'ui': 'replica/Sources/Pasto/UI/AuxiliaryViews.swift'}
++        cls.source_bytes = (cls.phase / 'original-Assets.car').read_bytes()
++        cls.output_bytes = (ROOT / cls.paths['car']).read_bytes()
++        cls.original = Catalog(cls.source_bytes)
++        cls.catalog = Catalog(cls.output_bytes)
++        cls.icons = (ROOT / cls.paths['icons']).read_text()
++        cls.persistence = (ROOT / cls.paths['persistence']).read_text()
++        cls.store = (ROOT / cls.paths['store']).read_text()
++        cls.ui = (ROOT / cls.paths['ui']).read_text()
++
++    def test_original_fragments_binary_strings_selectors_and_current_sources_are_hash_bound(self):
++        self.assertEqual(len(self.proof['original_fragments']), 4)
++        for row in self.proof['original_fragments']:
++            self.assertEqual(source_fragments(ROOT / row['path'])[row['address']]['sha256'], row['sha256'])
++        for row in [self.proof['binary'], self.proof['original_catalog'], self.proof['original_catalog']['rea_evidence'],
++                    self.proof['catalog_extraction'], self.proof['original_asset_metadata'], self.proof['sdk']] + self.proof['arm_disassemblies']:
++            self.assertEqual(hashlib.sha256((ROOT / row['path']).read_bytes()).hexdigest(), row['sha256'])
++        for path, digest in self.proof['current_sources'].items():
++            self.assertEqual(hashlib.sha256((ROOT / path).read_bytes()).hexdigest(), digest)
++            self.assertEqual((ROOT / path).read_bytes(), (self.phase / 'after' / path).read_bytes())
++        self.assertEqual({r['decoded'] for r in self.proof['native_small_strings']}, set(NAMES))
++        for row in self.proof['native_selectors']:
++            self.assertTrue(row['chain']['declared_chain_reachable'])
++            self.assertEqual(bytes.fromhex(row['selector_bytes']), row['selector'].encode() + b'\0')
++
++    def test_real_category_switch_matches_native_six_values_including_color_text_and_image_unknown(self):
++        mapper = body(self.icons, 'public static func name(')
++        pairs = re.findall(r'case (.+?): return "([^"]+)"', mapper)
++        actual = {case.strip().lstrip('.'): name for cases, name in pairs for case in cases.split(',')}
++        self.assertEqual(actual, dict(files='icon.file', color='icon.text', text='icon.text',
++                                      link='icon.link', unknown='icon.unknown', image='icon.unknown'))
++        self.assertNotIn('systemSymbol', mapper)
++        words = {r['address']: struct.unpack('<I', bytes.fromhex(r['bytes']))[0] for r in self.proof['ARM_words']}
++        self.assertEqual(words['0x10031ebb8'], 0xf100181f)
++        self.assertEqual(words['0x10031ebbc'], 0x1a9f3000)
++
++    def test_subset_has_only_four_public_facets_eight_scale_records_and_three_required_atlases(self):
++        facets = {self.catalog.block(key).decode() for _, key in self.catalog.tree('FACETKEYS')[2]}
++        self.assertEqual(facets, set(NAMES))
++        self.assertEqual(len(self.manifest['renditions']), 8)
++        self.assertEqual(len(self.catalog.renditions()), 11)
++        self.assertEqual(self.manifest['atlas_blocks'], [146, 156, 158])
++        self.assertEqual(len(self.output_bytes), 43032)
++        self.assertLess(len(self.output_bytes), len(self.source_bytes) // 50)
++
++    def test_BOM_block_ranges_counts_and_leaf_nodes_are_self_consistent(self):
++        _, live, index, size, variables, var_size = struct.unpack_from('>6I', self.output_bytes, 8)
++        self.assertEqual(live, len(self.manifest['kept_blocks']))
++        self.assertEqual(index + size, len(self.output_bytes))
++        self.assertLessEqual(variables + var_size, index)
++        ranges = sorted((offset, offset + length) for offset, length in self.catalog.locations if length)
++        self.assertTrue(all(begin >= 512 and begin % 16 == 0 and end <= variables for begin, end in ranges))
++        self.assertTrue(all(left[1] <= right[0] for left, right in zip(ranges, ranges[1:])))
++        self.assertEqual(struct.unpack_from('<I', self.catalog.block(self.catalog.variables['CARHEADER']), 16)[0], 11)
++        for name in ['RENDITIONS', 'FACETKEYS', 'APPEARANCEKEYS', 'BITMAPKEYS']:
++            self.catalog.tree(name)
++
++    def test_all_kept_rendition_keys_records_and_atlas_compressed_bytes_are_identical_to_original(self):
++        originals = self.original.renditions()
++        for key, pair in self.catalog.renditions().items():
++            self.assertEqual(pair, originals[key])
++            for index in pair:
++                self.assertEqual(self.catalog.block(index), self.original.block(index))
++        for row in self.manifest['renditions']:
++            self.assertEqual(hashlib.sha256(self.catalog.block(row['rendition_block'])).hexdigest(), row['rendition_sha256'])
++            self.assertEqual(hashlib.sha256(self.catalog.block(row['atlas_block'])).hexdigest(), row['atlas_sha256'])
++        self.assertFalse(self.manifest['pixel_data_decoded'])
++        self.assertFalse(self.manifest['pixel_data_reencoded'])
++        self.assertFalse(self.manifest['native_framework_executed'])
++
++    def test_every_INLK_target_key_and_crop_resolves_inside_the_subset_without_external_resources(self):
++        references = set()
++        for row in self.manifest['renditions']:
++            pair, crop = self.catalog.linked_atlas(self.catalog.block(row['rendition_block']))
++            self.assertEqual(pair[0], row['atlas_block'])
++            self.assertEqual(crop, row['crop'])
++            self.assertGreaterEqual(crop['x'], 0)
++            self.assertGreaterEqual(crop['y'], 0)
++            self.assertLessEqual(crop['x'] + crop['width'], crop['atlas_width'])
++            self.assertLessEqual(crop['y'] + crop['height'], crop['atlas_height'])
++            references.add(pair[0])
++        self.assertEqual(references, set(self.manifest['atlas_blocks']))
++
++    def test_one_and_two_scale_template_metadata_matches_original_asset_info(self):
++        metadata = json.loads((ROOT / self.proof['original_asset_metadata']['path']).read_text())
++        rows = {r['RenditionName']: r for r in metadata if r.get('Name') in NAMES}
++        self.assertEqual(len(rows), 8)
++        for row in self.manifest['renditions']:
++            data = self.catalog.block(row['rendition_block'])
++            info = rows[row['name']]
++            width, height, scale = struct.unpack_from('<III', data, 12)
++            self.assertEqual((width, height, scale), (info['PixelWidth'], info['PixelHeight'], info['Scale'] * 100))
++            self.assertEqual((width, height), (20 * info['Scale'], 20 * info['Scale']))
++            self.assertEqual(struct.unpack_from('<I', data, 8)[0], 8)
++            self.assertEqual(data[24:28], b' 8AG')
++            self.assertEqual(info['Template Mode'], 'template')
++            self.assertEqual(info['ColorModel'], 'Monochrome')
++
++    def test_pure_Python_extraction_reproduces_resource_and_manifest_without_native_decode(self):
++        output, manifest = extract(self.source_bytes)
++        self.assertEqual(output, self.output_bytes)
++        self.assertEqual(manifest, self.manifest)
++        self.assertEqual(hashlib.sha256(output).hexdigest(), manifest['output_sha256'])
++        self.assertEqual(hashlib.sha256(self.source_bytes).hexdigest(), manifest['source_sha256'])
++
++    def test_bitmap_inline_hash_metadata_and_appearance_keys_are_not_misread_as_offsets(self):
++        for name in ['BITMAPKEYS', 'APPEARANCEKEYS']:
++            old_header, old_node, old_pairs = self.original.tree(name)
++            header, node, pairs = self.catalog.tree(name)
++            self.assertEqual((header, node, pairs), (old_header, old_node, old_pairs))
++            self.assertEqual(self.catalog.block(header), self.original.block(header))
++            self.assertEqual(self.catalog.block(node), self.original.block(node))
++            for value, key in pairs:
++                self.assertEqual(self.catalog.block(value), self.original.block(value))
++                if name != 'BITMAPKEYS': self.assertEqual(self.catalog.block(key), self.original.block(key))
++        self.assertTrue(any(key >= self.catalog.index_count for _, key in self.catalog.tree('BITMAPKEYS')[2]))
++
++    def test_missing_required_atlas_reference_is_detected_without_loading_CoreUI(self):
++        data = bytearray(self.source_bytes)
++        header, node, pairs = self.original.tree('RENDITIONS')
++        atlas = self.manifest['atlas_blocks'][0]
++        kept = [pair for pair in pairs if pair[0] != atlas]
++        self.assertEqual(len(pairs) - len(kept), 1)
++        header_offset, _ = self.original.locations[header]
++        node_offset, _ = self.original.locations[node]
++        struct.pack_into('>I', data, header_offset + 16, len(kept))
++        struct.pack_into('>H', data, node_offset + 2, len(kept))
++        for i, pair in enumerate(kept): struct.pack_into('>II', data, node_offset + 12 + i * 8, *pair)
++        with self.assertRaises(KeyError): extract(bytes(data))
++
++    def test_SwiftPM_and_existing_packager_include_private_BNDL_inside_core_resources(self):
++        package = (ROOT / 'replica/Package.swift').read_text()
++        self.assertIn('.copy("OriginalStackIcons.bundle")', package)
++        info = plistlib.loads((ROOT / self.paths['plist']).read_bytes())
++        self.assertEqual(info['CFBundlePackageType'], 'BNDL')
++        self.assertEqual(info['CFBundleIdentifier'], 'com.yingyanzhitong.pasto.stack-icons')
++        self.assertNotIn('CFBundleExecutable', info)
++        self.assertIn('ditto "$binary_root/Pasto_PastoCore.bundle" "$bundle/Contents/Resources/Pasto_PastoCore.bundle"',
++                      (ROOT / 'replica/scripts/build-app.sh').read_text())
++        self.assertIn('Bundle.module.url(forResource: "OriginalStackIcons", withExtension: "bundle")', self.icons)
++        self.assertIn('let bundle = Bundle(url: url)', self.icons)
++
++    def test_named_lookup_has_missing_resource_traps_and_no_source_app_or_system_symbol_fallback(self):
++        image = body(self.icons, 'public static func image(')
++        self.assertIn('resources.image(forResource: NSImage.Name(assetName))', image)
++        self.assertIn('preconditionFailure("Missing Stack category image:', image)
++        self.assertIn('preconditionFailure("Missing Stack icon resource bundle")', self.icons)
++        for forbidden in ['/Applications/', '.local/', 'systemSymbolName', 'rawIcon', 'sourceApplication', 'NSImage()']:
++            self.assertNotIn(forbidden, self.icons)
++        self.assertIn('imageForResource:(NSImageName)name', Path(self.proof['sdk']['path']).read_text())
++
++    def test_real_Stack_provider_uses_managed_rawType_and_exact_nontruncating_kind_domain(self):
++        method = body(self.persistence, 'func itemContentKind(')
++        for token in ['context.performAndWait', 'PastoItemEntity.defaultFetchRequest()', 'NSPredicate(format: "key == %@", identifier)',
++                      'request.fetchLimit = 1', '(try? context.fetch(request))?.first',
++                      '(object.value(forKey: "rawType") as? NSNumber)?.int64Value ?? 0',
++                      'UInt8(exactly: raw)', 'OriginalPasteboardContentKind(rawValue: value) ?? .unknown']:
++            self.assertIn(token, method)
++        self.assertNotIn('uint8Value', method)
++        self.assertNotIn('reset(', method)
++        store = body(self.store, 'public func originalContentKind(')
++        self.assertIn('persistence.itemContentKind(identifier: item.id.uuidString)', store)
++        self.assertIn('OriginalStackCategoryIcons.image(for: state.store.originalContentKind(of: item))', self.ui)
++        provider = self.ui.split('OriginalStackSnippetCellView(item: item, imageProvider:', 1)[1].split('}).frame', 1)[0]
++        for forbidden in ['sourceApplication', 'rawIcon', 'systemSymbolName', 'NSImage()']:
++            self.assertNotIn(forbidden, provider)
++
++    def test_existing_cell_outlet_text_order_and_all_other_real_sources_are_preserved(self):
++        cell_path = 'replica/Sources/Pasto/UI/OriginalStackSnippetCell.swift'
++        self.assertEqual((ROOT / cell_path).read_bytes(), (self.phase / 'before' / cell_path).read_bytes())
++        cell = body((ROOT / cell_path).read_text(), 'func f_1000519f8(')
++        ordered = ['if let imageView { imageView.image = imageProvider(item) }',
++                   'textField?.maximumNumberOfLines = 2', 'OriginalStackSnippetText.f_100051ec8(item)']
++        self.assertEqual([cell.index(t) for t in ordered], sorted(cell.index(t) for t in ordered))
++        for key, marker in [('persistence', 'func itemContentKind('), ('store', 'public func originalContentKind(')]:
++            current = (ROOT / self.paths[key]).read_text()
++            previous = (self.phase / 'before' / self.paths[key]).read_text()
++            start = current.index('    ' + marker)
++            method = body(current, marker)
++            end = current.index(method, start) + len(method) + (2 if key == 'persistence' else 1)
++            self.assertEqual((current[:start], current[end:]), (previous[:start], previous[start:]))
++
++    def test_only_three_existing_production_files_and_three_bundle_loader_files_change(self):
++        base = json.loads((self.phase / 'baseline.json').read_text())
++        current = {str(p.relative_to(ROOT)) for p in (ROOT / 'replica/Sources').rglob('*') if p.is_file()}
++        changed = {p for p, h in base['production'].items() if hashlib.sha256((ROOT / p).read_bytes()).hexdigest() != h}
++        self.assertEqual(changed, {self.paths[k] for k in ['persistence', 'store', 'ui']})
++        self.assertEqual(current - set(base['production']), {self.paths[k] for k in ['icons', 'car', 'plist']})
++        row, = self.proof['contracts']
++        self.assertEqual(row['function_id'], 'Paste:0x1000519f8')
++        self.assertFalse(self.proof['full_function_migration_verified'])
++        self.assertEqual(self.proof['function_map_markers_upgraded'], 0)
++        self.assertTrue(any('365e18 FRC' in text for text in self.proof['retained_partial_contracts']))
++
++    def test_vendor_resource_attribution_and_full_catalog_are_kept_separate(self):
++        notice = (ROOT / 'NOTICE.md').read_text()
++        self.assertIn(self.paths['car'], notice)
++        self.assertIn('不适用本项目 MIT 授权', notice)
++        self.assertEqual(len(self.source_bytes), 2850696)
++        self.assertEqual(len(self.output_bytes), 43032)
++        names = {self.catalog.block(key).decode() for _, key in self.catalog.tree('FACETKEYS')[2]}
++        self.assertEqual(names, set(NAMES))
++        self.assertNotIn('AppIcon', names)
++
++
++if __name__ == '__main__': unittest.main()
+--- /dev/null
++++ scripts/extract_stack_icon_catalog.py
+@@ -0,0 +1,197 @@
++#!/usr/bin/env python3
++"""Extract the four original Stack category names without decoding/re-encoding pixels.
++
++Reads the single-leaf BOM/CSI form of the inspected Paste 6.6.6 catalog only.
++Keeps original rendition records and their required packed grayscale atlases verbatim.
++No CoreUI/AppKit/assetutil/compiler execution or third-party Python dependencies.
++"""
++import argparse
++import hashlib
++import json
++import struct
++from pathlib import Path
++
++NAMES = ('icon.file', 'icon.link', 'icon.text', 'icon.unknown')
++SHA = lambda data: hashlib.sha256(data).hexdigest()
++
++
++class Catalog:
++    def __init__(self, data):
++        self.data = data
++        assert data[:8] == b'BOMStore'
++        version, live, index, length, variables, size = struct.unpack_from('>6I', data, 8)
++        assert version == 1 and index + length <= len(data) and variables + size <= len(data)
++        self.index_count, = struct.unpack_from('>I', data, index)
++        self.locations = [struct.unpack_from('>II', data, index + 4 + i * 8) for i in range(self.index_count)]
++        assert sum(size > 0 for _, size in self.locations) == live
++        assert all(offset + size <= len(data) for offset, size in self.locations)
++        self.variables_data = data[variables:variables + size]
++        count, = struct.unpack_from('>I', self.variables_data)
++        self.variables = {}
++        cursor = 4
++        for _ in range(count):
++            block, length = struct.unpack_from('>IB', self.variables_data, cursor)
++            cursor += 5
++            name = self.variables_data[cursor:cursor + length].decode('ascii')
++            cursor += length
++            self.variables[name] = block
++        assert cursor == len(self.variables_data)
++        fmt = self.block(self.variables['KEYFORMAT'])
++        assert fmt[:4] == b'tmfk'
++        count, = struct.unpack_from('<I', fmt, 8)
++        self.atoms = struct.unpack_from('<' + 'I' * count, fmt, 12)
++
++    def block(self, index):
++        offset, size = self.locations[index]
++        assert size > 0
++        return self.data[offset:offset + size]
++
++    def tree(self, name):
++        header_id = self.variables[name]
++        header = self.block(header_id)
++        magic, version, node_id, node_size, count = struct.unpack_from('>4s4I', header)
++        assert magic == b'tree' and version == 1
++        node = self.block(node_id)
++        leaf, node_count, forward, backward = struct.unpack_from('>HHII', node)
++        assert leaf == 1 and node_count == count and forward == backward == 0 and len(node) >= 12 + count * 8
++        return header_id, node_id, [struct.unpack_from('>II', node, 12 + i * 8) for i in range(count)]
++
++    def renditions(self):
++        return {struct.unpack('<' + 'H' * len(self.atoms), self.block(key)): (value, key)
++                for value, key in self.tree('RENDITIONS')[2]}
++
++    @staticmethod
++    def rendition_name(data):
++        assert data[:4] == b'ISTC'
++        return data[40:168].split(b'\0', 1)[0].decode('utf-8')
++
++    def linked_atlas(self, data):
++        assert data[:4] == b'ISTC'
++        metadata_size, = struct.unpack_from('<I', data, 168)
++        cursor, end, link = 184, 184 + metadata_size, None
++        assert end == len(data)  # requested category records contain only metadata/atlas links
++        while cursor < end:
++            tag, length = struct.unpack_from('<II', data, cursor)
++            cursor += 8
++            payload = data[cursor:cursor + length]
++            assert len(payload) == length
++            cursor += length
++            if tag == 1010:
++                assert link is None
++                link = payload
++        assert cursor == end and link is not None and link[:4] == b'KLNI'
++        flags, x, y, width, height = struct.unpack_from('<5I', link, 4)
++        assert flags == 0 and (width, height) == struct.unpack_from('<II', data, 12)
++        assert struct.unpack_from('<3H', link, 24) == (12, 20, 0)
++        values, cursor = {}, 30
++        while cursor < len(link):
++            atom, value = struct.unpack_from('<HH', link, cursor)
++            cursor += 4
++            if atom == 0:
++                assert value == 0 and cursor == len(link)
++                break
++            assert atom in self.atoms and atom not in values
++            values[atom] = value
++        key = tuple(values.get(atom, 0) for atom in self.atoms)
++        value_id, key_id = self.renditions()[key]
++        atlas = self.block(value_id)
++        atlas_width, atlas_height = struct.unpack_from('<II', atlas, 12)
++        assert x + width <= atlas_width and y + height <= atlas_height
++        assert atlas[24:28] == data[24:28] == b' 8AG'
++        assert self.rendition_name(atlas).startswith('ZZZZPackedAsset-')
++        return (value_id, key_id), dict(x=x, y=y, width=width, height=height,
++                                      atlas_width=atlas_width, atlas_height=atlas_height, atlas_key=list(key))
++
++
++def extract(data):
++    source = Catalog(data)
++    assert set(source.variables) == {'CARHEADER', 'RENDITIONS', 'FACETKEYS', 'APPEARANCEKEYS',
++                                     'KEYFORMAT', 'EXTENDED_METADATA', 'BITMAPKEYS'}
++    replacements = {}
++    keep = set(source.variables.values())
++    rendered, selected, atlas_ids = [], [], set()
++    for key, (value_id, key_id) in source.renditions().items():
++        rendition = source.block(value_id)
++        name = source.rendition_name(rendition)
++        if name not in {n + suffix for n in NAMES for suffix in ('.png', '@2x.png')}:
++            continue
++        atlas, rect = source.linked_atlas(rendition)
++        rendered.append((value_id, key_id))
++        atlas_ids.add(atlas)
++        selected.append(dict(name=name, rendition_block=value_id, key_block=key_id,
++                             rendition_sha256=SHA(rendition), key=list(key), crop=rect,
++                             atlas_block=atlas[0], atlas_sha256=SHA(source.block(atlas[0]))))
++    assert len(selected) == 8 and {r['name'] for r in selected} == {n + s for n in NAMES for s in ('.png', '@2x.png')}
++    selected_render_pairs = set(rendered) | atlas_ids
++    facets = []
++    for value_id, key_id in source.tree('FACETKEYS')[2]:
++        if source.block(key_id).decode('utf-8') in NAMES:
++            facets.append((value_id, key_id))
++    assert len(facets) == 4
++    for tree_name in ['RENDITIONS', 'FACETKEYS', 'APPEARANCEKEYS', 'BITMAPKEYS']:
++        header_id, node_id, original_pairs = source.tree(tree_name)
++        keep.add(node_id)
++        pairs = ([pair for pair in original_pairs if pair in selected_render_pairs] if tree_name == 'RENDITIONS'
++                 else facets if tree_name == 'FACETKEYS' else original_pairs)
++        header = bytearray(source.block(header_id))
++        struct.pack_into('>I', header, 16, len(pairs))
++        node = bytearray(len(source.block(node_id)))
++        struct.pack_into('>HHII', node, 0, 1, len(pairs), 0, 0)
++        for i, (value_id, key_id) in enumerate(pairs):
++            struct.pack_into('>II', node, 12 + i * 8, value_id, key_id)
++            keep.add(value_id)
++            # BITMAPKEYS' second word is an inline hash, not a BOM block reference.
++            if tree_name != 'BITMAPKEYS': keep.add(key_id)
++        replacements[header_id], replacements[node_id] = bytes(header), bytes(node)
++    header_id = source.variables['CARHEADER']
++    header = bytearray(source.block(header_id))
++    assert struct.unpack_from('<I', header, 16)[0] == len(source.tree('RENDITIONS')[2])
++    struct.pack_into('<I', header, 16, len(selected_render_pairs))
++    replacements[header_id] = bytes(header)
++    output = bytearray(512)
++    locations = [(0, 0)] * source.index_count
++    def align(): output.extend(b'\0' * (-len(output) % 16))
++    for index in sorted(keep):
++        align()
++        block = replacements.get(index, source.block(index))
++        locations[index] = (len(output), len(block))
++        output.extend(block)
++    align()
++    variables_offset = len(output)
++    output.extend(source.variables_data)
++    align()
++    index_offset = len(output)
++    output.extend(struct.pack('>I', source.index_count))
++    output.extend(b''.join(struct.pack('>II', *location) for location in locations))
++    output.extend(b'\0' * 20)
++    struct.pack_into('>8s6I', output, 0, b'BOMStore', 1, len(keep), index_offset,
++                     len(output) - index_offset, variables_offset, len(source.variables_data))
++    result = bytes(output)
++    extracted = Catalog(result)
++    assert set(extracted.renditions()) == {key for key, pair in source.renditions().items() if pair in selected_render_pairs}
++    assert {extracted.block(key).decode() for _, key in extracted.tree('FACETKEYS')[2]} == set(NAMES)
++    for pair in selected_render_pairs:
++        for index in pair:
++            assert source.block(index) == extracted.block(index)
++    for row in selected:
++        extracted.linked_atlas(extracted.block(row['rendition_block']))
++    return result, dict(source_sha256=SHA(data), output_sha256=SHA(result), source_bytes=len(data),
++                        output_bytes=len(result), named_assets=list(NAMES), renditions=selected,
++                        atlas_blocks=sorted(value for value, _ in atlas_ids), kept_blocks=sorted(keep),
++                        pixel_data_decoded=False, pixel_data_reencoded=False, native_framework_executed=False)
++
++
++def main():
++    parser = argparse.ArgumentParser(description=__doc__)
++    parser.add_argument('source', type=Path)
++    parser.add_argument('destination', type=Path)
++    parser.add_argument('--manifest', type=Path, required=True)
++    args = parser.parse_args()
++    output, manifest = extract(args.source.read_bytes())
++    args.destination.parent.mkdir(parents=True, exist_ok=True)
++    args.destination.write_bytes(output)
++    args.manifest.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + '\n')
++    print(json.dumps({k: manifest[k] for k in ['source_bytes', 'output_bytes', 'named_assets', 'atlas_blocks']}))
++
++
++if __name__ == '__main__': main()
+--- phase-66-before/replica/Package.swift
++++ replica/Package.swift
+@@ -14,7 +14,7 @@
+     ],
+     targets: [
+         .target(name: "PastoObjC", publicHeadersPath: "include"),
+-        .target(name: "PastoCore", dependencies: ["PastoObjC"], resources: [.process("Resources")]),
++        .target(name: "PastoCore", dependencies: ["PastoObjC"], resources: [.process("Resources"), .copy("OriginalStackIcons.bundle")]),
+         .executableTarget(name: "Pasto", dependencies: ["PastoCore", "PastoObjC"]),
+         .executableTarget(name: "PastoHelper"),
+         .executableTarget(name: "PastoMCP", dependencies: ["PastoCore"]),
+--- phase-66-before/NOTICE.md
++++ NOTICE.md
+@@ -10,6 +10,7 @@
+ 
+ - `decompiled/` 中由原应用机器码恢复的伪代码、汇编及相关原应用片段。
+ - 从原应用提取的本地化文字、图片或其他素材。当前 `replica/Sources/PastoCore/Resources/*/Localizable.strings` 中恢复的原版本地化资源属于此类；在独立实现中展示或做品牌适配，不会使原文字变成本项目原创内容。
++- `replica/Sources/PastoCore/OriginalStackIcons.bundle/Contents/Resources/Assets.car` 是从原目录提取的四种 Stack 类别图标及其必需灰度图集，保留原始像素压缩数据；它属于原应用素材，不适用本项目 MIT 授权。提取工具和资源包描述文件为独立编写。
+ - 研究报告或元数据文件中包含的原应用代码片段、原符号和其他恢复材料。独立撰写的分析文字可以适用 MIT，其中嵌入的第三方内容仍保留其原有权利。
+ - 原应用及工具依赖的二进制、安装包和第三方组件。
+ 
+diff --git a/replica/Sources/PastoCore/OriginalStackIcons.bundle/Contents/Resources/Assets.car b/replica/Sources/PastoCore/OriginalStackIcons.bundle/Contents/Resources/Assets.car
+new file mode 100644
+index 0000000000000000000000000000000000000000..6fbe9631914f25930cd0a43eb7c1dad75f67ee20
+GIT binary patch
+literal 43032
+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
+L{zUNjcgp_)Y59w%
+
+literal 0
+HcmV?d00001
+

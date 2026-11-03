@@ -1,0 +1,28 @@
+--- before/replica/Sources/PastoCore/ClipboardSearchRecord.swift
++++ after/replica/Sources/PastoCore/ClipboardSearchRecord.swift
+@@ -174,9 +174,24 @@
+ 
+     func content() -> String? {
+         read(contentDiagnostics: contentDiagnostics) { object, items in
+-            ClipboardSearchRecordContent.nativeText(items, kind: kind,
++            if items.isEmpty { diagnoseEmptyRepresentations(for: object) }
++            return ClipboardSearchRecordContent.nativeText(items, kind: kind,
+                 preview: object.value(forKey: "rawPreview") as? Data)
+         }
++    }
++
++    // 3724f0: this second raw read is diagnostic-only; failure must not stop typed fallback.
++    private func diagnoseEmptyRepresentations(for object: NSManagedObject) {
++        guard let data = object.value(forKey: "data") as? NSManagedObject else { return }
++        let raw = (try? OriginalObjCExceptionBridge.f_1002ffc68 {
++            guard let raw = data.value(forKey: "rawPasteboardItems") as? Data else {
++                throw CocoaError(.fileReadCorruptFile)
++            }
++            return raw
++        }) ?? Data()
++        let prefix = raw.prefix(6).map { String(format: "%02x", $0) }.joined()
++        contentDiagnostics.f_1000d468c().f_1000d4df0(
++            "Item has no pasteboard data for content indexing (type: \(kind), rawSize: \(raw.count), rawPrefix: \(prefix))")
+     }
+ 
+     func imageData() -> Data? {

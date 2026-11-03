@@ -1,0 +1,432 @@
+{
+  "kind": "offline_source_contract_review",
+  "round": 5,
+  "status": "source-checks-passed-goal-active",
+  "generated_at": "2026-10-29T13:30:04.020436+00:00",
+  "previous_goal_turn": "progress",
+  "priority": "P0",
+  "module": "deletion_data_safety",
+  "functions": [
+    {
+      "function_id": "Paste:0x100068db8",
+      "status": "partial_local_branch_aligned",
+      "contract": "按真实选中索引取实体并在确认前计算邻项；修复空选区回退首项；普通多选转入确认后事务。",
+      "original": {
+        "path": "decompiled/Paste/part-0035.c",
+        "sha256": "f13bed6342ae19f3b0216b91f01e377f15dc7e9314326c04a6e1a7139e5a9623"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "func deleteSelection()"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1000691c8",
+      "status": "existing_local_contract_reused",
+      "contract": "先选max+1再min-1的非选中有效邻项；保留当前UUID适配，非连续选区不改为首项。",
+      "original": {
+        "path": "decompiled/Paste/part-0035.c",
+        "sha256": "ece8bca0191e208db833b9f0b76b1b6ba3ba7797e9f7ea9d359bc74dafd0b031"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "func deleteSelection()"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x100069158",
+      "status": "partial_runtime_adapter",
+      "contract": "事务回调写pendingNeighborSelectionID；当前成功后按捕获UUID选邻项，未冒称原applier异步回填等价。",
+      "original": {
+        "path": "decompiled/Paste/part-0035.c",
+        "sha256": "fdc00aca0fe94afaedd020da717c642465d9731deef6de237986e930fcdb71f3"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "func confirmItemDeletion()"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1000765a4",
+      "status": "partial_runtime_adapter",
+      "contract": "弱引用闭包转发邻项回调；当前用MainActor状态直接续行，生成ABI不计完整。",
+      "original": {
+        "path": "decompiled/Paste/part-0038.c",
+        "sha256": "acf90c34d6560032719c48c651a1fea61978f8e945432331c1a2c015395332d5"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "func confirmItemDeletion()"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1003ba5c4",
+      "status": "partial_local_branch_aligned_user_presentation",
+      "contract": "普通本地count<2直接执行，count>=2需确认；捕获原集合后执行；按用户要求使用面板内确认，原NSAlert presenter未照搬。",
+      "original": {
+        "path": "decompiled/Paste/part-0294.c",
+        "sha256": "2eae0abdfad6c636ce757b417bb31e7795d10a4c7215c5fec752334227efdefe"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "func deleteSelection()"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "func confirmItemDeletion()"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1003baac8",
+      "status": "partial_error_boundary_pending",
+      "contract": "原事务调用后可选callback；Pasto只在成功时选择邻项，错误保留请求原位显示，完整错误/Undo边界继续待证。",
+      "original": {
+        "path": "decompiled/Paste/part-0294.c",
+        "sha256": "e620379e37ddacfc3ff3b5a7330346e63c0d9b45a2ee6e9a36e9184af3ac04f7"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "func confirmItemDeletion()"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1003bba90",
+      "status": "partial_runtime_adapter",
+      "contract": "确认按钮闭包转发通用事务闭包；当前面板按钮调用同一确认方法。",
+      "original": {
+        "path": "decompiled/Paste/part-0295.c",
+        "sha256": "4c7415ba9eddda0d9d0dca391d4c57a17a70b495c3ef55caa10d6580bf3ddec1"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/PanelViews.swift",
+          "symbol": "private func itemDeletionConfirmation("
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1003bba9c",
+      "status": "partial_runtime_adapter",
+      "contract": "恢复捕获集合与回调后调用事务；当前不可变请求保存IDs/上下文/邻项，取消无写入。",
+      "original": {
+        "path": "decompiled/Paste/part-0295.c",
+        "sha256": "2aa2626bf50785bcc3730b65875d270baf3367a570da7d52902af6addd4cefe5"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "struct ItemDeletionRequest"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1003bbbb0",
+      "status": "partial_runtime_adapter",
+      "contract": "捕获集合转发仓库派发；当前确认路径复用现有store。",
+      "original": {
+        "path": "decompiled/Paste/part-0295.c",
+        "sha256": "dc8fd710a20a8955d19e15e4f60cfce6aa8bcd234bd1bf449b6a2e4762a3cc2d"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "func confirmItemDeletion()"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1003bab24",
+      "status": "partial_repository_adapter",
+      "contract": "从viewModel上下文经仓库witness+0x40派发；当前沿历史/分组/搜索分支调用独立仓库API。",
+      "original": {
+        "path": "decompiled/Paste/part-0294.c",
+        "sha256": "7474f36959aebefe83aad07a453b95412d33c1f874d36f6094551dce5781d41a"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "func confirmItemDeletion()"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x100357cf0",
+      "status": "dependency_boundary_pending",
+      "contract": "原仓库依赖解析入口；只核对派发依赖位置，未声明全容器语义等价。",
+      "original": {
+        "path": "decompiled/Paste/part-0271.c",
+        "sha256": "ef398f3cbaee129357958e18dbfbe89666495bc8561d1e805ecafe455193b541"
+      },
+      "source_references": []
+    },
+    {
+      "function_id": "Paste:0x100364074",
+      "status": "partial_runtime_adapter",
+      "contract": "原repo witness包装直转3636b4；当前在确认入口按捕获的上下文分派。",
+      "original": {
+        "path": "decompiled/Paste/part-0275.c",
+        "sha256": "f760dcb9375fe52b33d251ae062d4c20bcaf3ebf02fc1efd571253d15694a53f"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "func confirmItemDeletion()"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1003636b4",
+      "status": "existing_local_contract_reused",
+      "contract": "上下文高2位非0进入指定列表移除；search tag0进入全局对象删除，不能误改为仅移出历史。",
+      "original": {
+        "path": "decompiled/Paste/part-0275.c",
+        "sha256": "814398bd3c2099e585f55df24892175298555ad41ed89f4cfb2f21d96a793be9"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "func confirmItemDeletion()"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x100363004",
+      "status": "existing_local_contract_reused",
+      "contract": "history rawType1清timestamp；group rawType2只清匹配list；没有timestamp和list才删除实体。保留Pasto旧多归属兼容。",
+      "original": {
+        "path": "decompiled/Paste/part-0275.c",
+        "sha256": "f047472ac2826762d45bdd8a0f8cc2c543d37515652b6a691992c1eabeceb379"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/ClipboardStore.swift",
+          "symbol": "public func delete(ids: Set<UUID>, contextPinboardID: UUID?)"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1003637c0",
+      "status": "partial_repository_adapter",
+      "contract": "原managedObjectContext.deleteObject；当前全局删除选中UUID，无分组保留条件，独立模型身份不计原ABI等价。",
+      "original": {
+        "path": "decompiled/Paste/part-0275.c",
+        "sha256": "e71cbd1bcaf47a06d1af384c90b17a8527e534eac32b24e83d7151cde92cd2bb"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/ClipboardStore.swift",
+          "symbol": "public func permanentlyDelete(ids: Set<UUID>)"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1003ba464",
+      "status": "permission_predicate_pending",
+      "contract": "原allSatisfy许可检查；共享权限排除，独立本地实体权限父合同未凭一个allSatisfy符号认定完整。",
+      "original": {
+        "path": "decompiled/Paste/part-0294.c",
+        "sha256": "7a760014d4f6c36c1927eb2aa664a05b36214ccba432086832024905944821fc"
+      },
+      "source_references": []
+    },
+    {
+      "function_id": "Paste:0x1003babbc",
+      "status": "shared_predicate_read_only_boundary",
+      "contract": "contains谓词桥接3babd8(a5)，仅用于区分共享确认；不实现网络模块。",
+      "original": {
+        "path": "decompiled/Paste/part-0294.c",
+        "sha256": "18e33d549d24d2ae48bd90b06856afcd4e19cd496b0cefa4b39325e851f580af"
+      },
+      "source_references": []
+    },
+    {
+      "function_id": "Paste:0x1003babd8",
+      "status": "shared_predicate_read_only_boundary",
+      "contract": "确认含item.list、pinboard类型与shared角色，不能把任何pinboard内容当共享。",
+      "original": {
+        "path": "decompiled/Paste/part-0294.c",
+        "sha256": "c7db761987fced6effbe67fbde4061dc7f0433cc1e719c1405fd24918c81735d"
+      },
+      "source_references": []
+    },
+    {
+      "function_id": "Paste:0x100321210",
+      "status": "shared_predicate_read_only_boundary",
+      "contract": "要求list存在、rawType2且share metadata存在，普通本地组不因此触发shared文案。",
+      "original": {
+        "path": "decompiled/Paste/part-0257.c",
+        "sha256": "50a20b2653438ccd09673e26f8d66dbafb4aff8816f6d4a69f2b14c3f46ce915"
+      },
+      "source_references": []
+    },
+    {
+      "function_id": "Paste:0x1003250f0",
+      "status": "shared_predicate_read_only_boundary",
+      "contract": "rawType==2只代表pinboard；不单独等同shared归属。",
+      "original": {
+        "path": "decompiled/Paste/part-0259.c",
+        "sha256": "c6785cd5db36fe90afb7d8749249d02d62a63434de708b81aa1ec2a54e2ade13"
+      },
+      "source_references": []
+    },
+    {
+      "function_id": "Paste:0x100328f38",
+      "status": "shared_predicate_read_only_boundary",
+      "contract": "share角色可写判定只用于证实contains的共享分支边界，不迁移联网权限。",
+      "original": {
+        "path": "decompiled/Paste/part-0261.c",
+        "sha256": "18620b49fa890ab681cb1c0fa2f6f6f9773b99d1daf949542894215ee8778efb"
+      },
+      "source_references": []
+    },
+    {
+      "function_id": "Paste:0x1002ff310",
+      "status": "partial_transaction_adapter",
+      "contract": "原NSManagedObjectContext.performAndWait事务包装；当前复用CoreData增量commit-before-publish，错误/通知/Undo完整父待证。",
+      "original": {
+        "path": "decompiled/Paste/part-0249.c",
+        "sha256": "383e5876b86d7239b636a53e7a5192784218106090660f89f0c134b3954812a6"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/ClipboardStore.swift",
+          "symbol": "private func mutate<T>(historyAction: Bool = false,"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1000ce40c",
+      "status": "existing_error_getter_reference_repaired",
+      "contract": "读取并保留message返回；历史getter/跳板实现继续复用，只将错误构造消费者引用移至上轮校验生产者，不重复增加迁移数。",
+      "original": {
+        "path": "decompiled/Paste/part-0065.c",
+        "sha256": "fea7a9af37102c93673471c725d8723c67f888da7ef50febf80c8d2ddc3f44ba"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutRecorder.swift",
+          "symbol": "public var errorDescription: String? { message }"
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutValidation.swift",
+          "symbol": "func f_1001ebce4(shortcut: OriginalShortcutValue,"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x100481754",
+      "status": "existing_error_getter_reference_repaired",
+      "contract": "读取并保留message返回；历史getter/跳板实现继续复用，只将错误构造消费者引用移至上轮校验生产者，不重复增加迁移数。",
+      "original": {
+        "path": "decompiled/Paste/part-0367.c",
+        "sha256": "04a21871a91ddd662755172908694774041606705eef2c05faa6f22143bc2964"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutRecorder.swift",
+          "symbol": "public var errorDescription: String? { message }"
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutValidation.swift",
+          "symbol": "func f_1001ebce4(shortcut: OriginalShortcutValue,"
+        }
+      ]
+    }
+  ],
+  "reviewed_count": 24,
+  "current_review_unique_count": 92,
+  "current_review_inventory_percent": 0.1134,
+  "new_partial_bindings": [
+    "Paste:0x100068db8",
+    "Paste:0x1000691c8",
+    "Paste:0x1003ba5c4",
+    "Paste:0x1003bab24",
+    "Paste:0x1003636b4",
+    "Paste:0x1003637c0"
+  ],
+  "source_sha256": {
+    "replica/Sources/Pasto/UI/ReplicaUIController.swift": "de4da8b8de79b51afdc5735a5c0517c606e79c399cf2c470dfbd443f9ed3baa1",
+    "replica/Sources/Pasto/UI/PanelViews.swift": "13d62e5ff0790baac339dad3828237ca90e9112918dc2597fd49a91e101ab9e1",
+    "replica/Sources/PastoCore/ClipboardStore.swift": "99856fa91a53529f5f9aa359665069316d6f4d5f98890015ee98d4ec69c378a0",
+    "replica/Sources/PastoCore/ClipboardPersistence.swift": "31978e6879ac1a0a645cfc0c89ab59d31dc0bccd9ddbe19a080d93273eebecb9",
+    "scripts/tests/test_offline_p0_contracts.py": "d0f1dc982b1be226daee67e291da4cbbbf31883db7a1ac396f1f293205c5b25c",
+    "replica/Sources/PastoCore/OriginalShortcutValidation.swift": "da33abb96f3ebe25afc85a5817c977df28f2a1791c98d776617a6697e4378c30",
+    "replica/Sources/PastoCore/OriginalShortcutRecorder.swift": "ba907c942f91fe336506e9a47576051f285bfce47ccd43315cb111aedbd237f2"
+  },
+  "confirmed_gaps_fixed": [
+    "普通本地多选未确认直接删除",
+    "空选区错误删除首条记录"
+  ],
+  "user_requested_adaptations": [
+    "非空分组及多选确认保留在底部panel内，原版原生NSAlert呈现不照搬",
+    "Pasto多分组旧数据兼容保留"
+  ],
+  "additional_safety_adapters": [
+    "捕获IDs/上下文/邻项后再确认，不读取确认时的新选区",
+    "查询/分组/回收站上下文变化及面板关闭取消请求",
+    "事务错误原位展示，请求与选区保留"
+  ],
+  "tests": {
+    "passed": true,
+    "total": 49,
+    "scope": "Python source contracts, original code-file checks and ledger tests only"
+  },
+  "new_fully_migrated_function_count": 0,
+  "historical_ledger": {
+    "numerator": 1648,
+    "denominator": 81123,
+    "percent": 2.0315,
+    "stale_evidence": true
+  },
+  "current_partial_count": 424,
+  "compiled": false,
+  "application_executed": false,
+  "user_data_modified": false,
+  "ui_or_mcp_tests_executed": false,
+  "network_used": false,
+  "committed": false,
+  "pushed": false,
+  "module_complete": false,
+  "next_work": [
+    "继续本地事务错误与删除后的pendingNeighborSelectionID消费路径",
+    "对照历史保留与孤立内容清理，再切换P0采集格式保真"
+  ],
+  "source_reference_repairs": [
+    {
+      "function_id": "Paste:0x1000ce40c",
+      "old": {
+        "path": "replica/Sources/PastoCore/OriginalShortcutDependencies.swift",
+        "symbol": "return OriginalShortcutRecorderError(message)"
+      },
+      "current": {
+        "path": "replica/Sources/PastoCore/OriginalShortcutValidation.swift",
+        "symbol": "func f_1001ebce4(shortcut: OriginalShortcutValue,"
+      },
+      "state_unchanged": true
+    },
+    {
+      "function_id": "Paste:0x100481754",
+      "old": {
+        "path": "replica/Sources/PastoCore/OriginalShortcutDependencies.swift",
+        "symbol": "return OriginalShortcutRecorderError(message)"
+      },
+      "current": {
+        "path": "replica/Sources/PastoCore/OriginalShortcutValidation.swift",
+        "symbol": "func f_1001ebce4(shortcut: OriginalShortcutValue,"
+      },
+      "state_unchanged": true
+    }
+  ]
+}

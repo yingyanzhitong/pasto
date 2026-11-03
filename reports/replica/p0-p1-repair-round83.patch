@@ -1,0 +1,669 @@
+--- phase-83-before/replica/Sources/Pasto/AppMain.swift
++++ replica/Sources/Pasto/AppMain.swift
+@@ -168,11 +168,12 @@
+                     NSApp.sendAction(#selector(NSText.paste(_:)), to: nil, from: nil)
+                     return
+                 }
+-                guard let first = self.ui.state.stackItems.first else { return }
++                guard let first = self.ui.state.stackItemIDs.first else { return }
++                let input = self.ui.state.stackRestoreItem(for: first)
+                 self.targetApplication = NSWorkspace.shared.frontmostApplication
+                 self.ui.consumeStackHead()
+-                _ = self.paste(ids: [first.id], plain: false, forceDirect: true)
+-                if self.ui.state.stackItems.isEmpty { self.ui.hideStack() }
++                _ = self.paste(ids: [first], plain: false, forceDirect: true, restoreItems: input.map { [$0] })
++                if self.ui.state.stackItemIDs.isEmpty { self.ui.hideStack() }
+             }
+             configureGlobalHotKeys(force: true)
+             accessibilityObservation = accessibilityService.f_100ae5e90().sink { [weak self] _ in
+@@ -298,7 +299,7 @@
+     }
+ 
+     private func configureStackPasteShortcut() {
+-        let enabled = ui.isStackVisible && !ui.state.stackItems.isEmpty && !isRecordingHotKey
++        let enabled = ui.isStackVisible && !ui.state.stackItemIDs.isEmpty && !isRecordingHotKey
+             && !arguments.contains("--no-global-hotkey") && pasteboard.name == NSPasteboard.general.name
+         guard enabled != stackPasteRegistered else { return }
+         stackPasteHotKey.unregister()
+--- phase-83-before/replica/Sources/Pasto/UI/AuxiliaryViews.swift
++++ replica/Sources/Pasto/UI/AuxiliaryViews.swift
+@@ -212,12 +212,12 @@
+                         .accessibilityLabel("反转 Stack 顺序")
+                 }.buttonStyle(.plain).padding(.horizontal, 8)
+             }.frame(height: 32)
+-            if state.stackItems.isEmpty {
++            if state.stackItemIDs.isEmpty {
+                 Text("Empty").font(.system(size: 12)).foregroundStyle(.secondary)
+                     .frame(maxWidth: .infinity).frame(height: 44)
+             } else {
+                 ReplicaStackTable(state: state)
+-                    .frame(height: CGFloat(min(10, max(1, state.stackItems.count)) * 44))
++                    .frame(height: CGFloat(min(10, max(1, state.stackItemIDs.count)) * 44))
+             }
+         }
+         .frame(width: 264)
+@@ -240,7 +240,7 @@
+         controller.removeActionTitle = OriginalShortcutRecorder.removeTitle
+         controller.removeSnippet = { expectedIDs, row in
+             let visibleOffsets = state.stackIDs.indices.filter { index in
+-                state.store.items.contains { $0.id == state.stackIDs[index] && !$0.isDeleted }
++                state.hasStackItem(state.stackIDs[index])
+             }
+             guard visibleOffsets.indices.contains(row),
+                   visibleOffsets.map({ state.stackIDs[$0] }) == expectedIDs else { return false }
+@@ -254,11 +254,15 @@
+                     OriginalStackCategoryIcons.image(for: state.store.originalContentKind(of: item))
+                 }).frame(maxWidth: .infinity).frame(height: 44)
+                 .contextMenu {
+-                    Button("复制") { state.controller?.copy(item: item, plainTextOnly: false) }
++                    Button("复制") {
++                        if let current = state.stackItem(for: item.id) {
++                            state.controller?.copy(item: current, plainTextOnly: false)
++                        }
++                    }
+                     Button("粘贴") {
+-                        if state.controller?.paste(item: item, plainTextOnly: false) == true {
++                        if state.controller?.pasteStackItem(id: item.id, plainTextOnly: false) == true {
+                             controller?.removeRow(at: row, expectedIDs: expectedIDs)
+-                            if state.stackItems.isEmpty { state.controller?.hideStack() }
++                            if state.stackItemIDs.isEmpty { state.controller?.hideStack() }
+                         }
+                     }
+                     Button("预览") { state.controller?.showPreview(item: item) }
+--- phase-83-before/replica/Sources/Pasto/UI/PanelViews.swift
++++ replica/Sources/Pasto/UI/PanelViews.swift
+@@ -657,8 +657,7 @@
+                 Button("从所有 Pasto 移除") { state.assignSelection(to: nil) }
+             }
+             Button("添加到 Pasto Stack") {
+-                for selected in state.selectedItems { state.addToStack(selected) }
+-                state.controller?.showStack()
++                state.controller?.addSelectionToStack()
+             }
+             Button("全选") { state.selectAll() }
+             Button("取消全选") { state.deselectAll() }
+--- phase-83-before/replica/Sources/Pasto/UI/ReplicaUIController.swift
++++ replica/Sources/Pasto/UI/ReplicaUIController.swift
+@@ -73,8 +73,11 @@
+     @Published var primaryID: UUID?
+     @Published var searchFocus = UUID()
+     @Published var searchVisible = false
++    private var stackRestoreInputs: [UUID: ClipboardRestoreItem] = [:]
+     @Published var stackIDs: [UUID] = [] {
+         didSet {
++            let retainedIDs = Set(stackIDs)
++            stackRestoreInputs = stackRestoreInputs.filter { retainedIDs.contains($0.key) }
+             guard oldValue != stackIDs, store.preferences.stackItemIDs != stackIDs else { return }
+             store.preferences.stackItemIDs = stackIDs
+             perform { try store.save() }
+@@ -327,8 +330,24 @@
+         return items.first { $0.id == primaryID }?.requiredItem()
+             ?? selectedItems.first ?? items.first?.requiredItem()
+     }
++    var stackItemIDs: [UUID] { stackIDs.filter { hasStackItem($0) } }
++
+     var stackItems: [ClipboardItem] {
+-        stackIDs.compactMap { id in store.items.first { $0.id == id && !$0.isDeleted } }
++        stackIDs.compactMap { stackItem(for: $0) }
++    }
++
++    func hasStackItem(_ id: UUID) -> Bool {
++        stackRestoreInputs[id] != nil || store.items.contains { $0.id == id && !$0.isDeleted }
++    }
++
++    func stackItem(for id: UUID) -> ClipboardItem? {
++        if let input = stackRestoreInputs[id] { return input.resolvedItem() }
++        // UUID queues saved by older versions retain their existing value adapter.
++        return store.items.first { $0.id == id && !$0.isDeleted }
++    }
++
++    func stackRestoreItem(for id: UUID) -> ClipboardRestoreItem? {
++        stackRestoreInputs[id]
+     }
+     var preferredScheme: ColorScheme? {
+         switch store.preferences.appearance {
+@@ -692,8 +711,9 @@
+         perform { try store.assign(orderedIDs: ids, to: id) }
+     }
+ 
+-    func addToStack(_ item: ClipboardItem) {
+-        let previousIDs = stackItems.map(\.id)
++    func addToStack(_ item: ClipboardItem, restoreItem: ClipboardRestoreItem? = nil) {
++        let previousIDs = stackItemIDs
++        if let restoreItem { stackRestoreInputs[item.id] = restoreItem }
+         let append = store.preferences.stackReversed
+         let insertionIndex = append ? previousIDs.count : 0
+         stackIDs.insert(item.id, at: append ? stackIDs.count : 0)
+@@ -1211,7 +1231,7 @@
+ 
+     func stackContentsChanged() {
+         if let window = stackWindow {
+-            let height = CGFloat(32 + min(10, max(1, state.stackItems.count)) * 44)
++            let height = CGFloat(32 + min(10, max(1, state.stackItemIDs.count)) * 44)
+             let top = window.frame.maxY
+             window.setFrame(.init(x: window.frame.minX, y: top - height, width: 264, height: height), display: true)
+         }
+@@ -1224,13 +1244,33 @@
+     }
+ 
+     private func captureLatestItemIntoStack() {
+-        // 0x100083758 resolves the history list; 0x10008339c takes its first item.
+-        guard let item = store.search(query: "").first else { return }
+-        captureIntoStack(id: item.id)
++        // 083758 -> 363d58 creates the history collection; 1b8054 reads its first entity.
++        guard isStackVisible, let collection = store.makeListCollection(pinboardID: nil) else { return }
++        let snapshot = collection.value
++        guard let identifier = snapshot.identifiers.first else { return }
++        guard let reference = snapshot.itemReferences[identifier] else { fatalError("Missing Stack item reference") }
++        let input = reference.requiredRestoreItem(id: identifier)
++        state.addToStack(input.resolvedItem(), restoreItem: input)
++    }
++
++    func addSelectionToStack() {
++        for input in appliedRestoreItems() {
++            state.addToStack(input.resolvedItem(), restoreItem: input)
++        }
++        showStack()
++    }
++
++    @discardableResult
++    func pasteStackItem(id: UUID, plainTextOnly: Bool) -> Bool {
++        if let input = state.stackRestoreItem(for: id) {
++            return paste(restoreItems: [input], plainTextOnly: plainTextOnly)
++        }
++        // Saved UUID-only queues keep the writer's reload and deletion validation.
++        return paste(ids: [id], plainTextOnly: plainTextOnly)
+     }
+ 
+     func consumeStackHead() {
+-        let previousIDs = state.stackItems.map(\.id)
++        let previousIDs = state.stackItemIDs
+         guard let first = previousIDs.first else { return }
+         guard let index = state.stackIDs.firstIndex(of: first) else { return }
+         state.stackIDs.remove(at: index)
+--- phase-83-before/scripts/tests/stack_registration_scope_contract.py
++++ scripts/tests/stack_registration_scope_contract.py
+@@ -1,5 +1,6 @@
+ """Single reviewed registration delta; old frozen contracts retain their original input."""
+ from pathlib import Path
++from stack_native_input_scope_contract import pre_stack_native_inputs
+ 
+ APP_PATH = 'replica/Sources/Pasto/AppMain.swift'
+ PREVIOUS = ('            && !arguments.contains("--no-global-hotkey") && pasteboard.name == NSPasteboard.general.name\n'
+@@ -7,6 +8,7 @@
+ CURRENT = '            && !arguments.contains("--no-global-hotkey") && pasteboard.name == NSPasteboard.general.name\n'
+ 
+ def pre_stack_registration(source):
++    source = pre_stack_native_inputs(source)
+     if CURRENT in source and PREVIOUS not in source:
+         assert source.count(CURRENT) == 1
+         return source.replace(CURRENT, PREVIOUS, 1)
+--- phase-83-before/scripts/tests/test_capture_repository_contracts.py
++++ scripts/tests/test_capture_repository_contracts.py
+@@ -101,14 +101,17 @@
+ 
+     def test_stack_uses_latest_history_instead_of_current_panel_query_or_raw_storage_order(self):
+         capture = body(self.ui, "private func captureLatestItemIntoStack()")
+-        self.assertIn('guard let item = store.search(query: "").first else { return }', capture)
+-        self.assertIn("captureIntoStack(id: item.id)", capture)
+-        for wrong_scope in ["visibleItems", "selection", "store.items.first", "pinboardID"]:
++        self.assertIn("store.makeListCollection(pinboardID: nil)", capture)
++        self.assertIn("snapshot.identifiers.first", capture)
++        self.assertIn("reference.requiredRestoreItem(id: identifier)", capture)
++        self.assertIn("state.addToStack(input.resolvedItem(), restoreItem: input)", capture)
++        for wrong_scope in ["visibleItems", "selection", "store.items.first", "store.search", "state.pinboardID"]:
+             self.assertNotIn(wrong_scope, capture)
+-        query = body(self.store, "public func search(query:")
+-        self.assertIn("pinboardID != nil || !terms.isEmpty || includeDeleted || item.isInHistory", query)
+-        history = body(query, "if pinboardID == nil, terms.isEmpty, !includeDeleted")
+-        self.assertIn("matches.sorted { $0.createdAt > $1.createdAt }", history)
++        factory = body(self.store, "public func makeListCollection(pinboardID:")
++        self.assertIn("pinboardID?.uuidString ?? Self.historyListIdentifier", factory)
++        history_request = body((CORE / "ClipboardListPersistence.swift").read_text(), "func itemRequest(for list:")
++        self.assertIn('NSSortDescriptor(key: "timestamp", ascending: false)', history_request)
++        self.assertIn('NSPredicate(format: "timestamp != nil")', history_request)
+ 
+     def test_empty_history_query_checks_scope_before_skipping_content_decoding(self):
+         query = body(self.store, "public func search(query:")
+--- phase-83-before/scripts/tests/test_p1_repair_list_attributes_observation.py
++++ scripts/tests/test_p1_repair_list_attributes_observation.py
+@@ -61,7 +61,8 @@
+                 from live_item_render_scope_contract import pre_live_render
+                 self.assertEqual(pre_live_render((ROOT / path).read_text()), frozen)
+             else:
+-                self.assertEqual((ROOT / path).read_text(), frozen)
++                from stack_native_input_scope_contract import pre_stack_native_inputs
++                self.assertEqual(pre_stack_native_inputs((ROOT / path).read_text()), frozen)
+ 
+     def test_real_context_imports_bind_four_keys_and_exact_event_types(self):
+         rows = self.proof['context_key_bindings']
+--- phase-83-before/scripts/tests/test_p1_repair_stack_occurrences.py
++++ scripts/tests/test_p1_repair_stack_occurrences.py
+@@ -12,6 +12,7 @@
+ from test_offline_p0_contracts import body
+ from test_p0_repair_checksum_routing import original_fragment
+ from stack_occurrence_scope_contract import CHANGES, pre_stack_occurrences
++from stack_native_input_scope_contract import pre_stack_native_inputs, pre_stack_native_inputs_bytes
+ 
+ 
+ class StackOccurrenceContracts(unittest.TestCase):
+@@ -23,7 +24,7 @@
+         cls.paths = dict(ui='replica/Sources/Pasto/UI/ReplicaUIController.swift',
+             table='replica/Sources/PastoCore/OriginalStackTableController.swift',
+             view='replica/Sources/Pasto/UI/AuxiliaryViews.swift')
+-        cls.source = {k: (ROOT / p).read_text() for k, p in cls.paths.items()}
++        cls.source = {k: pre_stack_native_inputs((ROOT / p).read_text()) for k, p in cls.paths.items()}
+         cls.ui=cls.source['ui'];cls.table=cls.source['table'];cls.view=cls.source['view']
+ 
+     def before(self, key): return (self.phase / 'before' / self.paths[key]).read_text()
+@@ -72,7 +73,7 @@
+     def test_three_current_sources_and_frozen_after_snapshots_are_bound(self):
+         self.assertEqual(set(self.proof['current_sources']),set(self.paths.values()))
+         for p,h in self.proof['current_sources'].items():
+-            raw=(ROOT/p).read_bytes();self.assertEqual(hashlib.sha256(raw).hexdigest(),h)
++            raw=pre_stack_native_inputs_bytes(ROOT/p);self.assertEqual(hashlib.sha256(raw).hexdigest(),h)
+             self.assertEqual(raw,(self.phase/'after'/p).read_bytes())
+ 
+     def test_add_to_stack_only_removes_old_dedup_guard_and_preserves_direction_and_animation(self):
+@@ -181,7 +182,7 @@
+         for key in self.paths:self.assertEqual(pre_stack_occurrences(self.source[key]),self.before(key))
+         from stack_registration_scope_contract import APP_PATH, pre_stack_registration
+         def sha(p):
+-            raw=(ROOT/p).read_bytes()
++            raw=pre_stack_native_inputs_bytes(ROOT/p)
+             if p == APP_PATH:
+                 raw=pre_stack_registration(raw.decode()).encode()
+             return hashlib.sha256(raw).hexdigest()
+--- phase-83-before/scripts/tests/test_p1_repair_stack_registration.py
++++ scripts/tests/test_p1_repair_stack_registration.py
+@@ -11,13 +11,14 @@
+ from test_offline_p0_contracts import body
+ from test_p0_repair_checksum_routing import original_fragment
+ from stack_registration_scope_contract import APP_PATH, CURRENT, PREVIOUS, pre_stack_registration
++from stack_native_input_scope_contract import pre_stack_native_inputs, pre_stack_native_inputs_bytes
+ 
+ class StackRegistrationContracts(unittest.TestCase):
+     @classmethod
+     def setUpClass(cls):
+         cls.phase=ROOT/'.local/p0-repair/phase-82'
+         cls.proof=json.loads((cls.phase/'stack-registration-contract.json').read_text())
+-        cls.current=(ROOT/APP_PATH).read_text()
++        cls.current=pre_stack_native_inputs((ROOT/APP_PATH).read_text())
+         cls.before=(cls.phase/'before'/APP_PATH).read_text()
+ 
+     def original(self,address):
+@@ -68,7 +69,7 @@
+         self.assertEqual(pre_stack_registration(self.current),self.before)
+         self.assertEqual(pre_stack_registration(self.before),self.before)
+         for p,h in self.proof['current_sources'].items():
+-            self.assertEqual(hashlib.sha256((ROOT/p).read_bytes()).hexdigest(),h)
++            self.assertEqual(hashlib.sha256(pre_stack_native_inputs_bytes(ROOT/p)).hexdigest(),h)
+ 
+     def test_current_register_keeps_queue_visibility_board_and_recorder_gates(self):
+         source=body(self.current,'private func configureStackPasteShortcut()')
+--- /dev/null
++++ scripts/tests/test_p1_repair_stack_native_input.py
+@@ -0,0 +1,190 @@
++"""Stack captured entities and actual restore consumers, verified without native execution."""
++import hashlib
++import json
++from pathlib import Path
++import sys
++import unittest
++
++ROOT=Path(__file__).resolve().parents[2]
++sys.path[:0]=[str(ROOT/'scripts'),str(ROOT/'scripts/tests')]
++from function_ledger import source_fragments
++from test_offline_p0_contracts import body
++from test_p0_repair_checksum_routing import original_fragment
++from stack_native_input_scope_contract import CHANGES, pre_stack_native_inputs
++
++class StackNativeInputContracts(unittest.TestCase):
++    @classmethod
++    def setUpClass(cls):
++        cls.phase=ROOT/'.local/p0-repair/phase-83'
++        cls.proof=json.loads((cls.phase/'stack-native-input-contract.json').read_text())
++        cls.base=json.loads((cls.phase/'baseline.json').read_text())
++        cls.paths=dict(ui='replica/Sources/Pasto/UI/ReplicaUIController.swift',app='replica/Sources/Pasto/AppMain.swift',aux='replica/Sources/Pasto/UI/AuxiliaryViews.swift',panel='replica/Sources/Pasto/UI/PanelViews.swift')
++        cls.source={k:(ROOT/p).read_text()for k,p in cls.paths.items()}
++
++    def before(self,key):return (self.phase/'before'/self.paths[key]).read_text()
++    def original(self,address):
++        r=next(r for r in self.proof['original_fragments']if r['address']==address)
++        return original_fragment((ROOT/r['path']).read_text(),address[2:])
++
++    def test_original_fragments_binary_and_real_calls_bound(self):
++        self.assertEqual(len(self.proof['original_fragments']),10)
++        for r in self.proof['original_fragments']:
++            self.assertEqual(source_fragments(ROOT/r['path'])[r['address']]['sha256'],r['sha256'])
++        r=self.proof['binary'];raw=(ROOT/r['path']).read_bytes()
++        self.assertEqual(hashlib.sha256(raw).hexdigest(),r['sha256'])
++        self.assertEqual(len(self.proof['ARM_calls']),6)
++        for r in self.proof['ARM_calls']:
++            pc=int(r['address'],16);b=raw[pc-0x100000000:pc-0x100000000+4];self.assertEqual(b.hex(),r['bytes'])
++            w=int.from_bytes(b,'little');self.assertEqual(w&0xfc000000,0x94000000);d=w&0x3ffffff
++            if d&0x2000000:d-=0x4000000
++            self.assertEqual(pc+d*4,int(r['target'],16))
++
++    def test_original_producer_creates_collection_and_gets_first_entity(self):
++        source=self.original('0x100363d58')
++        self.assertLess(source.index('FUN_100329088()'),source.index('FUN_100365db4()'))
++        self.assertGreaterEqual(source.count('_swift_allocObject()'),2)
++        capture=self.original('0x10008339c');self.assertIn('FUN_1001b8054(&local_58,0,',capture)
++        self.assertIn('if (local_58 == 0)',capture);self.assertIn('FUN_100089a18(_Var12,_Var12,local_58)',capture)
++        indexed=self.original('0x1001b8054');self.assertIn('(param_4 + 0x18)',indexed);self.assertIn('(param_4 + 0x20)',indexed)
++
++    def test_original_pop_preserves_entity_for_restoration(self):
++        source=self.original('0x100083e58')
++        self.assertLess(source.index('FUN_10008413c()'),source.index('FUN_100085a6c('))
++        self.assertIn('*(long *)(puVar10 + 0x20) = lVar6',source)
++        self.assertIn('FUN_100085a6c(puVar10)',source)
++        self.assertIn('FUN_10037a144(param_1.unknown',self.original('0x100085a6c'))
++
++    def test_all_four_production_and_seven_shared_source_inputs_bound(self):
++        self.assertEqual(len(self.proof['current_sources']),4)
++        self.assertEqual(len(self.proof['supporting_sources']),7)
++        for group in ['current_sources','supporting_sources']:
++            for p,h in self.proof[group].items():self.assertEqual(hashlib.sha256((ROOT/p).read_bytes()).hexdigest(),h)
++        for p in self.proof['current_sources']:self.assertEqual((ROOT/p).read_bytes(),(self.phase/'after'/p).read_bytes())
++
++    def test_native_capture_uses_new_history_snapshot_and_required_entity_without_cache_join(self):
++        source=body(self.source['ui'],'private func captureLatestItemIntoStack()')
++        for t in ['guard isStackVisible','store.makeListCollection(pinboardID: nil)','let snapshot = collection.value','snapshot.identifiers.first','snapshot.itemReferences[identifier]','reference.requiredRestoreItem(id: identifier)','state.addToStack(input.resolvedItem(), restoreItem: input)']:self.assertIn(t,source)
++        for t in ['store.items','store.search','captureIntoStack(id:','.async','listCollection?.value']:self.assertNotIn(t,source)
++        self.assertIn('fatalError("Missing Stack item reference")',source)
++
++    def test_shared_reference_and_restore_handle_hold_actual_entity(self):
++        ref=(ROOT/'replica/Sources/PastoCore/ClipboardCollectionItemReference.swift').read_text()
++        source=body(ref,'public func requiredRestoreItem(id: UUID)')
++        self.assertIn('context.existingObject(with: objectID)',source)
++        self.assertIn('as? PastoItemEntity',source);self.assertIn('ClipboardRestoreItem(id: id, object: object)',source)
++        restore=(ROOT/'replica/Sources/PastoCore/ClipboardRestoreItem.swift').read_text()
++        source=body(restore,'init(id: UUID, object: PastoItemEntity)')
++        self.assertIn('resolve = {',source);self.assertIn('ClipboardPersistence.item(object)',source)
++        self.assertNotIn('[weak',source)
++
++    def test_queue_keeps_native_inputs_until_last_duplicate_removed(self):
++        source=self.source['ui']
++        self.assertIn('private var stackRestoreInputs: [UUID: ClipboardRestoreItem] = [:]',source)
++        start=source.index('@Published var stackIDs:');end=source.index('@Published var hotKeyStatusMessage',start);changed=source[start:end]
++        self.assertLess(changed.index('let retainedIDs = Set(stackIDs)'),changed.index('guard oldValue != stackIDs'))
++        self.assertIn('stackRestoreInputs.filter { retainedIDs.contains($0.key) }',changed)
++        # Occurrence identity remains the array's order; retaining by ID does not collapse the array.
++        ids=['A','B','A'];handles={'A':object(),'B':object()};a=handles['A']
++        ids.pop(0);handles={k:v for k,v in handles.items()if k in set(ids)}
++        self.assertIs(handles['A'],a);self.assertEqual(ids,['B','A'])
++        ids.pop(1);handles={k:v for k,v in handles.items()if k in set(ids)}
++        self.assertNotIn('A',handles)
++
++    def test_native_item_precedes_legacy_cache_and_never_silently_drops_known_input(self):
++        source=body(self.source['ui'],'func stackItem(for id: UUID)')
++        self.assertLess(source.index('input.resolvedItem()'),source.index('store.items.first'))
++        self.assertNotIn('try?',source)
++        restore=body(self.source['ui'],'func stackRestoreItem(for id: UUID)')
++        self.assertIn('stackRestoreInputs[id]',restore)
++        self.assertNotIn('ClipboardRestoreItem(item:',restore)
++        self.assertNotIn('stackItem(for:',restore)
++        self.assertIn('stackIDs.compactMap { stackItem(for: $0) }',self.source['ui'])
++
++    def test_native_input_is_registered_before_id_insertion_and_existing_direction_preserved(self):
++        source=body(self.source['ui'],'func addToStack(')
++        self.assertLess(source.index('let previousIDs'),source.index('stackRestoreInputs[item.id] = restoreItem'))
++        self.assertLess(source.index('stackRestoreInputs[item.id] = restoreItem'),source.index('stackIDs.insert'))
++        self.assertIn('stackIDs.insert(item.id, at: append ? stackIDs.count : 0)',source)
++        old=body(self.before('ui'),'func addToStack(')
++        expected=old.replace('let previousIDs = stackItems.map(\\.id)', 'let previousIDs = stackItemIDs', 1)
++        expected=expected.replace('        let previousIDs = stackItemIDs\n', '        let previousIDs = stackItemIDs\n        if let restoreItem { stackRestoreInputs[item.id] = restoreItem }\n', 1)
++        self.assertEqual(source,expected)
++
++    def test_real_selection_menu_uses_applied_restore_handles_in_existing_order(self):
++        self.assertIn('state.controller?.addSelectionToStack()',self.source['panel'])
++        source=body(self.source['ui'],'func addSelectionToStack()')
++        self.assertIn('for input in appliedRestoreItems()',source)
++        self.assertLess(source.index('state.addToStack(input.resolvedItem(), restoreItem: input)'),source.index('showStack()'))
++        self.assertNotIn('Set(',source)
++        signature='private func appliedRestoreItems(orderedIDs:'
++        self.assertEqual(body(self.source['ui'],signature),body(self.before('ui'),signature))
++
++    def test_hotkey_keeps_handle_before_pop_and_passes_it_to_real_writer(self):
++        source=self.source['app'];start=source.index('stackPasteHotKey.action =');end=source.index('configureGlobalHotKeys(force: true)',start);action=source[start:end]
++        self.assertLess(action.index('stackRestoreItem(for: first)'),action.index('consumeStackHead()'))
++        self.assertLess(action.index('consumeStackHead()'),action.index('self.paste(ids:'))
++        self.assertIn('forceDirect: true, restoreItems: input.map { [$0] }',action)
++        self.assertIn('stackItemIDs.first',action)
++        self.assertNotIn('stackItems',action)
++        self.assertIn('if NSApp.isActive',action)
++        self.assertEqual(body(source,'private func paste(ids: [UUID]'),body(self.before('app'),'private func paste(ids: [UUID]'))
++
++    def test_real_context_copy_and_paste_consume_current_queue_input(self):
++        source=self.source['aux']
++        self.assertIn('if let current = state.stackItem(for: item.id)',source)
++        self.assertIn('copy(item: current, plainTextOnly: false)',source)
++        self.assertIn('pasteStackItem(id: item.id, plainTextOnly: false)',source)
++        router=body(self.source['ui'],'func pasteStackItem(id: UUID')
++        self.assertIn('state.stackRestoreItem(for: id)',router)
++        self.assertIn('paste(restoreItems: [input], plainTextOnly: plainTextOnly)',router)
++        self.assertIn('return paste(ids: [id], plainTextOnly: plainTextOnly)',router)
++        self.assertIn('controller?.removeRow(at: row, expectedIDs: expectedIDs)',source)
++
++    def test_actual_row_mapping_accepts_native_input_absent_from_old_store_cache(self):
++        self.assertIn('state.hasStackItem(state.stackIDs[index])',self.source['aux'])
++        self.assertNotIn('state.store.items.contains { $0.id == state.stackIDs[index]',self.source['aux'])
++        source=body(self.source['ui'],'func hasStackItem(_ id: UUID)')
++        self.assertIn('stackRestoreInputs[id] != nil || store.items.contains',source)
++        self.assertIn('visibleOffsets.map({ state.stackIDs[$0] }) == expectedIDs',self.source['aux'])
++
++    def test_pop_reverse_notification_and_writer_bodies_unchanged(self):
++        for signature in ['func reverseStack()','func captureIntoStack(id: UUID)','func showStack()']:
++            self.assertEqual(body(self.source['ui'],signature),body(self.before('ui'),signature))
++        for p,h in self.proof['supporting_sources'].items():self.assertEqual(h,self.base['production'][p])
++
++    def test_only_reviewed_hunks_and_no_schema_or_package_change(self):
++        self.assertEqual(len(CHANGES),22)
++        for k in self.paths:self.assertEqual(pre_stack_native_inputs(self.source[k]),self.before(k))
++        sha=lambda p:hashlib.sha256((ROOT/p).read_bytes()).hexdigest()
++        self.assertEqual({p for p,h in self.base['production'].items()if sha(p)!=h},set(self.paths.values()))
++        self.assertEqual({str(p.relative_to(ROOT))for p in (ROOT/'replica/Sources').rglob('*')if p.is_file()},set(self.base['production']))
++        for p in ['replica/Package.swift','package.json']:self.assertEqual(sha(p),self.base['other'][p])
++
++    def test_identity_only_checks_do_not_decode_native_stack_payloads(self):
++        ui=self.source['ui']
++        self.assertIn('var stackItemIDs: [UUID] { stackIDs.filter { hasStackItem($0) } }',ui)
++        for signature in ['func hasStackItem(_ id: UUID)','func stackRestoreItem(for id: UUID)']:
++            source=body(ui,signature)
++            self.assertNotIn('resolvedItem()',source)
++        consume=body(ui,'func consumeStackHead()')
++        previous=body(self.before('ui'),'func consumeStackHead()')
++        self.assertEqual(consume,previous.replace('state.stackItems.map(\\.id)','state.stackItemIDs',1))
++        self.assertIn('max(1, state.stackItemIDs.count)',ui)
++        self.assertIn('!ui.state.stackItemIDs.isEmpty',body(self.source['app'],'private func configureStackPasteShortcut()'))
++        self.assertIn('max(1, state.stackItemIDs.count)',self.source['aux'])
++
++    def test_legacy_queue_still_uses_id_writer_reload_and_deleted_check(self):
++        source=(ROOT/'replica/Sources/PastoCore/Pasteboard.swift').read_text()
++        self.assertIn('try reload()',source)
++        self.assertIn('!$0.isDeleted',source)
++        router=body(self.source['ui'],'func pasteStackItem(id: UUID')
++        self.assertIn('return paste(ids: [id], plainTextOnly: plainTextOnly)',router)
++        getter=body(self.source['ui'],'func stackRestoreItem(for id: UUID)')
++        self.assertNotIn('ClipboardRestoreItem(item:',getter)
++
++    def test_no_full_equivalence_or_completion_claim(self):
++        self.assertFalse(self.proof['finite_difference_counter_changed'])
++        self.assertFalse(self.proof['performance_measured'])
++        self.assertTrue(any('Persisted UUID' in r for r in self.proof['remaining']))
++        self.assertTrue(any('complete native entity/DI/ABI' in r for r in self.proof['remaining']))
++        self.assertTrue(any('04430c' in r for r in self.proof['remaining']))
+--- /dev/null
++++ scripts/tests/stack_native_input_scope_contract.py
+@@ -0,0 +1,170 @@
++"""Only the nine reviewed Stack native-input deltas, for frozen historical checks."""
++from pathlib import Path
++
++CHANGES = [['replica/Sources/Pasto/UI/ReplicaUIController.swift',
++  '    @Published var stackIDs: [UUID] = [] {\n        didSet {\n',
++  '    private var stackRestoreInputs: [UUID: ClipboardRestoreItem] = [:]\n'
++  '    @Published var stackIDs: [UUID] = [] {\n'
++  '        didSet {\n'
++  '            let retainedIDs = Set(stackIDs)\n'
++  '            stackRestoreInputs = stackRestoreInputs.filter { retainedIDs.contains($0.key) }\n'],
++ ['replica/Sources/Pasto/UI/ReplicaUIController.swift',
++  '    var stackItems: [ClipboardItem] {\n'
++  '        stackIDs.compactMap { id in store.items.first { $0.id == id && !$0.isDeleted } }\n'
++  '    }\n',
++  '    var stackItems: [ClipboardItem] {\n'
++  '        stackIDs.compactMap { stackItem(for: $0) }\n'
++  '    }\n'
++  '\n'
++  '    func hasStackItem(_ id: UUID) -> Bool {\n'
++  '        stackRestoreInputs[id] != nil || store.items.contains { $0.id == id && !$0.isDeleted }\n'
++  '    }\n'
++  '\n'
++  '    func stackItem(for id: UUID) -> ClipboardItem? {\n'
++  '        if let input = stackRestoreInputs[id] { return input.resolvedItem() }\n'
++  '        // UUID queues saved by older versions retain their existing value adapter.\n'
++  '        return store.items.first { $0.id == id && !$0.isDeleted }\n'
++  '    }\n'
++  '\n'
++  '    func stackRestoreItem(for id: UUID) -> ClipboardRestoreItem? {\n'
++  '        if let input = stackRestoreInputs[id] { return input }\n'
++  '        guard let item = stackItem(for: id) else { return nil }\n'
++  '        return ClipboardRestoreItem(item: item)\n'
++  '    }\n'],
++ ['replica/Sources/Pasto/UI/ReplicaUIController.swift',
++  '    func addToStack(_ item: ClipboardItem) {\n        let previousIDs = stackItems.map(\\.id)\n',
++  '    func addToStack(_ item: ClipboardItem, restoreItem: ClipboardRestoreItem? = nil) {\n'
++  '        let previousIDs = stackItems.map(\\.id)\n'
++  '        if let restoreItem { stackRestoreInputs[item.id] = restoreItem }\n'],
++ ['replica/Sources/Pasto/UI/ReplicaUIController.swift',
++  '    private func captureLatestItemIntoStack() {\n'
++  '        // 0x100083758 resolves the history list; 0x10008339c takes its first item.\n'
++  '        guard let item = store.search(query: "").first else { return }\n'
++  '        captureIntoStack(id: item.id)\n'
++  '    }\n',
++  '    private func captureLatestItemIntoStack() {\n'
++  '        // 083758 -> 363d58 creates the history collection; 1b8054 reads its first entity.\n'
++  '        guard isStackVisible, let collection = store.makeListCollection(pinboardID: nil) else { '
++  'return }\n'
++  '        let snapshot = collection.value\n'
++  '        guard let identifier = snapshot.identifiers.first else { return }\n'
++  '        guard let reference = snapshot.itemReferences[identifier] else { fatalError("Missing '
++  'Stack item reference") }\n'
++  '        let input = reference.requiredRestoreItem(id: identifier)\n'
++  '        state.addToStack(input.resolvedItem(), restoreItem: input)\n'
++  '    }\n'
++  '\n'
++  '    func addSelectionToStack() {\n'
++  '        for input in appliedRestoreItems() {\n'
++  '            state.addToStack(input.resolvedItem(), restoreItem: input)\n'
++  '        }\n'
++  '        showStack()\n'
++  '    }\n'
++  '\n'
++  '    @discardableResult\n'
++  '    func pasteStackItem(id: UUID, plainTextOnly: Bool) -> Bool {\n'
++  '        guard let input = state.stackRestoreItem(for: id) else { return false }\n'
++  '        return paste(restoreItems: [input], plainTextOnly: plainTextOnly)\n'
++  '    }\n'],
++ ['replica/Sources/Pasto/AppMain.swift',
++  '                guard let first = self.ui.state.stackItems.first else { return }\n'
++  '                self.targetApplication = NSWorkspace.shared.frontmostApplication\n'
++  '                self.ui.consumeStackHead()\n'
++  '                _ = self.paste(ids: [first.id], plain: false, forceDirect: true)\n',
++  '                guard let first = self.ui.state.stackItems.first,\n'
++  '                      let input = self.ui.state.stackRestoreItem(for: first.id) else { return '
++  '}\n'
++  '                self.targetApplication = NSWorkspace.shared.frontmostApplication\n'
++  '                self.ui.consumeStackHead()\n'
++  '                _ = self.paste(ids: [input.id], plain: false, forceDirect: true, restoreItems: '
++  '[input])\n'],
++ ['replica/Sources/Pasto/UI/AuxiliaryViews.swift',
++  '                state.store.items.contains { $0.id == state.stackIDs[index] && !$0.isDeleted '
++  '}\n',
++  '                state.hasStackItem(state.stackIDs[index])\n'],
++ ['replica/Sources/Pasto/UI/AuxiliaryViews.swift',
++  '                    Button("复制") { state.controller?.copy(item: item, plainTextOnly: false) }\n',
++  '                    Button("复制") {\n'
++  '                        if let current = state.stackItem(for: item.id) {\n'
++  '                            state.controller?.copy(item: current, plainTextOnly: false)\n'
++  '                        }\n'
++  '                    }\n'],
++ ['replica/Sources/Pasto/UI/AuxiliaryViews.swift',
++  '                        if state.controller?.paste(item: item, plainTextOnly: false) == true '
++  '{\n',
++  '                        if state.controller?.pasteStackItem(id: item.id, plainTextOnly: false) '
++  '== true {\n'],
++ ['replica/Sources/Pasto/UI/PanelViews.swift',
++  '                for selected in state.selectedItems { state.addToStack(selected) }\n'
++  '                state.controller?.showStack()\n',
++  '                state.controller?.addSelectionToStack()\n'],
++ ['replica/Sources/Pasto/UI/ReplicaUIController.swift',
++  '    var stackItems: [ClipboardItem] {\n',
++  '    var stackItemIDs: [UUID] { stackIDs.filter { hasStackItem($0) } }\n'
++  '\n'
++  '    var stackItems: [ClipboardItem] {\n'],
++ ['replica/Sources/Pasto/UI/ReplicaUIController.swift',
++  '    func stackRestoreItem(for id: UUID) -> ClipboardRestoreItem? {\n'
++  '        if let input = stackRestoreInputs[id] { return input }\n'
++  '        guard let item = stackItem(for: id) else { return nil }\n'
++  '        return ClipboardRestoreItem(item: item)\n'
++  '    }\n',
++  '    func stackRestoreItem(for id: UUID) -> ClipboardRestoreItem? {\n'
++  '        stackRestoreInputs[id]\n'
++  '    }\n'],
++ ['replica/Sources/Pasto/UI/ReplicaUIController.swift',
++  '        let previousIDs = stackItems.map(\\.id)\n',
++  '        let previousIDs = stackItemIDs\n'],
++ ['replica/Sources/Pasto/UI/ReplicaUIController.swift',
++  '        let previousIDs = state.stackItems.map(\\.id)\n',
++  '        let previousIDs = state.stackItemIDs\n'],
++ ['replica/Sources/Pasto/UI/ReplicaUIController.swift',
++  '            let height = CGFloat(32 + min(10, max(1, state.stackItems.count)) * 44)\n',
++  '            let height = CGFloat(32 + min(10, max(1, state.stackItemIDs.count)) * 44)\n'],
++ ['replica/Sources/Pasto/UI/ReplicaUIController.swift',
++  '        guard let input = state.stackRestoreItem(for: id) else { return false }\n'
++  '        return paste(restoreItems: [input], plainTextOnly: plainTextOnly)\n',
++  '        if let input = state.stackRestoreItem(for: id) {\n'
++  '            return paste(restoreItems: [input], plainTextOnly: plainTextOnly)\n'
++  '        }\n'
++  "        // Saved UUID-only queues keep the writer's reload and deletion validation.\n"
++  '        return paste(ids: [id], plainTextOnly: plainTextOnly)\n'],
++ ['replica/Sources/Pasto/AppMain.swift',
++  '                guard let first = self.ui.state.stackItems.first,\n'
++  '                      let input = self.ui.state.stackRestoreItem(for: first.id) else { return '
++  '}\n',
++  '                guard let first = self.ui.state.stackItemIDs.first else { return }\n'
++  '                let input = self.ui.state.stackRestoreItem(for: first)\n'],
++ ['replica/Sources/Pasto/AppMain.swift',
++  '                _ = self.paste(ids: [input.id], plain: false, forceDirect: true, restoreItems: '
++  '[input])\n',
++  '                _ = self.paste(ids: [first], plain: false, forceDirect: true, restoreItems: '
++  'input.map { [$0] })\n'],
++ ['replica/Sources/Pasto/AppMain.swift',
++  '                if self.ui.state.stackItems.isEmpty { self.ui.hideStack() }\n',
++  '                if self.ui.state.stackItemIDs.isEmpty { self.ui.hideStack() }\n'],
++ ['replica/Sources/Pasto/AppMain.swift',
++  '        let enabled = ui.isStackVisible && !ui.state.stackItems.isEmpty && !isRecordingHotKey\n',
++  '        let enabled = ui.isStackVisible && !ui.state.stackItemIDs.isEmpty && '
++  '!isRecordingHotKey\n'],
++ ['replica/Sources/Pasto/UI/AuxiliaryViews.swift',
++  '            if state.stackItems.isEmpty {\n',
++  '            if state.stackItemIDs.isEmpty {\n'],
++ ['replica/Sources/Pasto/UI/AuxiliaryViews.swift',
++  '                    .frame(height: CGFloat(min(10, max(1, state.stackItems.count)) * 44))\n',
++  '                    .frame(height: CGFloat(min(10, max(1, state.stackItemIDs.count)) * 44))\n'],
++ ['replica/Sources/Pasto/UI/AuxiliaryViews.swift',
++  '                            if state.stackItems.isEmpty { state.controller?.hideStack() }\n',
++  '                            if state.stackItemIDs.isEmpty { state.controller?.hideStack() }\n']]
++
++def pre_stack_native_inputs(source):
++    for path, previous, current in reversed(CHANGES):
++        if current in source:
++            assert source.count(current) == 1, path
++            source = source.replace(current, previous, 1)
++    return source
++
++def pre_stack_native_inputs_bytes(path):
++    path = Path(path)
++    value = path.read_bytes()
++    return pre_stack_native_inputs(value.decode()).encode() if path.suffix == '.swift' else value

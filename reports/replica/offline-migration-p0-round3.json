@@ -1,0 +1,704 @@
+{
+  "kind": "offline_source_contract_review",
+  "round": 3,
+  "generated_at": "2026-10-29T13:04:44.435848+00:00",
+  "previous_goal_turn": "progress",
+  "priority": "P0",
+  "module": "copy_restore",
+  "records": [
+    {
+      "function_id": "Paste:0x100069fe0",
+      "status": "partial_parent_or_adapter",
+      "contract": "Cmd-C精确normalized签名，normalCmd优先0，再Cmd|配置plain→3；复制不叠全局plain。",
+      "original": {
+        "path": "decompiled/Paste/part-0035.c",
+        "sha256": "c7457bcee6863fb71878ee74a20394a338dc36bbf11e7cfdb281d46dc0f34832"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalCollectionShortcutActions.swift",
+          "symbol": "public static func copyOptions("
+        }
+      ],
+      "source_sha256": {
+        "replica/Sources/PastoCore/OriginalCollectionShortcutActions.swift": "01be6b33a11e469bcbbe4afe6b12ff4f3ee7ef64e7f4a7cc64d8ff654379f9fb"
+      }
+    },
+    {
+      "function_id": "Paste:0x100065ed8",
+      "status": "partial_parent_or_adapter",
+      "contract": "原本地事务保存调用链参照；当前独立持久化适配不声明完整原函数等价。",
+      "original": {
+        "path": "decompiled/Paste/part-0035.c",
+        "sha256": "2ca24cf38d051444bcd9849f65cbd27a5b06d3ffe3df7fd0be9aea85b8162200"
+      },
+      "source_references": [],
+      "source_sha256": {}
+    },
+    {
+      "function_id": "Paste:0x1003b936c",
+      "status": "partial_parent_or_adapter",
+      "contract": "原本地事务保存调用链参照；当前独立持久化适配不声明完整原函数等价。",
+      "original": {
+        "path": "decompiled/Paste/part-0294.c",
+        "sha256": "81d75c3e3734ab4919c9fbbee0280ba0079a68161ebd9a2aa064f7222dae405e"
+      },
+      "source_references": [],
+      "source_sha256": {}
+    },
+    {
+      "function_id": "Paste:0x10037a144",
+      "status": "partial_parent_or_adapter",
+      "contract": "空restore直接返回无save/writer/repo；非空processor→writer（不以Bool门控）→当前count持久→repo recency→共享Undo→DidRestore。",
+      "original": {
+        "path": "decompiled/Paste/part-0281.c",
+        "sha256": "5724312d1aea18384eac7e73d7de2ee7a35f06ebf4ecb263ac685b66802884c3"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/Pasteboard.swift",
+          "symbol": "state.persistChangeCount?(state.lastChangeCount)"
+        },
+        {
+          "path": "replica/Sources/PastoCore/Pasteboard.swift",
+          "symbol": "captureState.persistChangeCount = { [defaults] count in"
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalPasteboardCaptureState.swift",
+          "symbol": "var persistChangeCount: ((Int) -> Void)?"
+        }
+      ],
+      "source_sha256": {
+        "replica/Sources/PastoCore/Pasteboard.swift": "94774459e9255149bc0e0443f7f45ced17c723d62f7ae7d91b975f52fa4b54a2",
+        "replica/Sources/PastoCore/OriginalPasteboardCaptureState.swift": "91f582575946ec8e4238d539ac477be694bb0adc1ce4f9a184747e43ba670f5f"
+      }
+    },
+    {
+      "function_id": "Paste:0x10037875c",
+      "status": "source_contract_reused",
+      "contract": "按输入项顺序建立 NSPasteboardItem；按每项有序 types 遍历，仅对 dataByType 存在的 Data 调用 setData；保留空项和空输入，统一 clearContents 后 writeObjects，最后更新接收者 lastChangeCount。原版不检查写入返回值；复刻只将返回值另存供既有上层错误策略读取。",
+      "original": {
+        "path": "decompiled/Paste/part-0281.c",
+        "sha256": "871169f701273dd0bbd5c728079fb8722566e9c9de95e89f81c8ea3eb81bb12f"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPasteboard.swift",
+          "symbol": "f_10037875c"
+        },
+        {
+          "path": "replica/Sources/PastoCore/Pasteboard.swift",
+          "symbol": "writeToPasteboard"
+        }
+      ],
+      "source_sha256": {
+        "replica/Sources/PastoCore/OriginalPasteboard.swift": "bda6fc26104af712cbf89c0e974c5d84a17b99b89f15def8b2b8c422fc0b3674",
+        "replica/Sources/PastoCore/Pasteboard.swift": "94774459e9255149bc0e0443f7f45ced17c723d62f7ae7d91b975f52fa4b54a2"
+      }
+    },
+    {
+      "function_id": "Paste:0x1002ff310",
+      "status": "partial_parent_or_adapter",
+      "contract": "原本地事务保存调用链参照；当前独立持久化适配不声明完整原函数等价。",
+      "original": {
+        "path": "decompiled/Paste/part-0249.c",
+        "sha256": "383e5876b86d7239b636a53e7a5192784218106090660f89f0c134b3954812a6"
+      },
+      "source_references": [],
+      "source_sha256": {}
+    },
+    {
+      "function_id": "Paste:0x1003088e0",
+      "status": "partial_parent_or_adapter",
+      "contract": "原本地事务保存调用链参照；当前独立持久化适配不声明完整原函数等价。",
+      "original": {
+        "path": "decompiled/Paste/part-0250.c",
+        "sha256": "c5c50d0f34bf72e41f28f4c8665c68977503a9e3946b07eafe88157db833f7c2"
+      },
+      "source_references": [],
+      "source_sha256": {}
+    },
+    {
+      "function_id": "Paste:0x100302b78",
+      "status": "partial_parent_or_adapter",
+      "contract": "原本地事务保存调用链参照；当前独立持久化适配不声明完整原函数等价。",
+      "original": {
+        "path": "decompiled/Paste/part-0249.c",
+        "sha256": "a4e300e47e2a0d119114d9546387641e0471ec99ce0d839a45d96233e578e51e"
+      },
+      "source_references": [],
+      "source_sha256": {}
+    },
+    {
+      "function_id": "Paste:0x100308968",
+      "status": "partial_parent_or_adapter",
+      "contract": "原本地事务保存调用链参照；当前独立持久化适配不声明完整原函数等价。",
+      "original": {
+        "path": "decompiled/Paste/part-0251.c",
+        "sha256": "f907f7cc0c1f2383f84f4fbc8cd1442e04c0ddef71ee46bd49698e9fc2d76500"
+      },
+      "source_references": [],
+      "source_sha256": {}
+    },
+    {
+      "function_id": "Paste:0x10030844c",
+      "status": "partial_parent_or_adapter",
+      "contract": "原本地事务保存调用链参照；当前独立持久化适配不声明完整原函数等价。",
+      "original": {
+        "path": "decompiled/Paste/part-0250.c",
+        "sha256": "94e10d9e48fc8a6438a55b6f60d0739a12ba1957d15b74f346112debb9ea1fdf"
+      },
+      "source_references": [],
+      "source_sha256": {}
+    },
+    {
+      "function_id": "Paste:0x10035e614",
+      "status": "partial_parent_or_adapter",
+      "contract": "原本地事务保存调用链参照；当前独立持久化适配不声明完整原函数等价。",
+      "original": {
+        "path": "decompiled/Paste/part-0273.c",
+        "sha256": "f0256ff55665a3505666225406dd67aeedcce035cdf1f45fd07615333cd603ee"
+      },
+      "source_references": [],
+      "source_sha256": {}
+    },
+    {
+      "function_id": "Paste:0x10037b620",
+      "status": "partial_parent_or_adapter",
+      "contract": "原本地事务保存调用链参照；当前独立持久化适配不声明完整原函数等价。",
+      "original": {
+        "path": "decompiled/Paste/part-0281.c",
+        "sha256": "632f22110d7b246cbe155804529a03fe92bb1444e0eb42cb164199946989eae4"
+      },
+      "source_references": [],
+      "source_sha256": {}
+    },
+    {
+      "function_id": "Paste:0x10037ade4",
+      "status": "partial_parent_or_adapter",
+      "contract": "在恢复后的事务context中取得repository协议，将selected实体Sequence和manager预建transaction-context传给repository base witness+0x28。原当期witness eccad0+0x10→ecca50，+0x28→f364014→f3614c0，history rawType1→f361ec0。",
+      "original": {
+        "path": "decompiled/Paste/part-0281.c",
+        "sha256": "6a3ccbe561d367be24b3e114ed02ba897b177a7877768659fafca8b97fdc5633"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/ClipboardStore.swift",
+          "symbol": "func recordRestoredItems(_ ids: [UUID]) throws"
+        },
+        {
+          "path": "replica/Sources/PastoCore/ClipboardStore.swift",
+          "symbol": "mutate<T>"
+        },
+        {
+          "path": "replica/Sources/PastoCore/Pasteboard.swift",
+          "symbol": "try recordRestoredItems(ids)"
+        }
+      ],
+      "source_sha256": {
+        "replica/Sources/PastoCore/ClipboardStore.swift": "99856fa91a53529f5f9aa359665069316d6f4d5f98890015ee98d4ec69c378a0",
+        "replica/Sources/PastoCore/Pasteboard.swift": "94774459e9255149bc0e0443f7f45ced17c723d62f7ae7d91b975f52fa4b54a2"
+      }
+    },
+    {
+      "function_id": "Paste:0x100364014",
+      "status": "partial_parent_or_adapter",
+      "contract": "原本地事务保存调用链参照；当前独立持久化适配不声明完整原函数等价。",
+      "original": {
+        "path": "decompiled/Paste/part-0275.c",
+        "sha256": "6fe84ffe69ef9ddb9157270c131a10d28808b6292b071080c8e1e20507181a66"
+      },
+      "source_references": [],
+      "source_sha256": {}
+    },
+    {
+      "function_id": "Paste:0x1003614c0",
+      "status": "partial_parent_or_adapter",
+      "contract": "原share权限guard后先处理输入实体，再按history/pinboard分支；无CKShare普通本地路径复用实体。",
+      "original": {
+        "path": "decompiled/Paste/part-0275.c",
+        "sha256": "b0a338c54e6b7ecba2fc975209724a433a3f0a078f26ee8ee6db9ebac100a1ff"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/ClipboardStore.swift",
+          "symbol": "public func assign(ids: Set<UUID>, to pinboardID: UUID?)"
+        }
+      ],
+      "source_sha256": {
+        "replica/Sources/PastoCore/ClipboardStore.swift": "99856fa91a53529f5f9aa359665069316d6f4d5f98890015ee98d4ec69c378a0"
+      }
+    },
+    {
+      "function_id": "Paste:0x100361ec0",
+      "status": "partial_parent_or_adapter",
+      "contract": "history动作先f364108按输入逆序，逐实体Date()/setTimestamp，然后读取原history attributes按策略执行清理与后继repository处理。",
+      "original": {
+        "path": "decompiled/Paste/part-0275.c",
+        "sha256": "5bfb083d3e5789a39c9852d061483c67f3c8e06de08a737359ae1b5e9eebb518"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/ClipboardStore.swift",
+          "symbol": "func recordRestoredItems(_ ids: [UUID]) throws"
+        },
+        {
+          "path": "replica/Sources/PastoCore/ClipboardStore.swift",
+          "symbol": "normalize(_ state:"
+        }
+      ],
+      "source_sha256": {
+        "replica/Sources/PastoCore/ClipboardStore.swift": "99856fa91a53529f5f9aa359665069316d6f4d5f98890015ee98d4ec69c378a0"
+      }
+    },
+    {
+      "function_id": "Paste:0x100364108",
+      "status": "partial_parent_or_adapter",
+      "contract": "原反转数组helper与recordRestoredItems中ids.reversed的值顺序对应；未把它误当历史过期算法。",
+      "original": {
+        "path": "decompiled/Paste/part-0275.c",
+        "sha256": "c51412bee71457978b6dc8edd65d729afacd111224d5ab1b87c88313fcdc208d"
+      },
+      "source_references": [],
+      "source_sha256": {}
+    },
+    {
+      "function_id": "Paste:0x100019a84",
+      "status": "partial_parent_or_adapter",
+      "contract": "当前hidePanel新增用户指定的确认清理/焦点交接；原0.2秒、guarded close及生命周期父仍需独立核对。",
+      "original": {
+        "path": "decompiled/Paste/part-0010.c",
+        "sha256": "0f4dbd0361dffc812f278f3a032c73d392ac4b179391dfb2da955b78486fa6dd"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "func hidePanel()"
+        }
+      ],
+      "source_sha256": {
+        "replica/Sources/Pasto/UI/ReplicaUIController.swift": "cca57756364e95a40e832c21cfd777def564998b07cec1cfcd4bf71b7faae79a"
+      }
+    },
+    {
+      "function_id": "Paste:0x10038222c",
+      "status": "partial_parent_or_adapter",
+      "contract": "两选项位、单选直接返回、多选any text/link合并、source及marker顺序和RTF/UTF8结果值已对照；原实体、解码/准备及完整父不升级。",
+      "original": {
+        "path": "decompiled/Paste/part-0283.c",
+        "sha256": "0e533584b50666951b14314072d89c7453463abc73f7c989e4315fe4d29b162d"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPasteboardRestore.swift",
+          "symbol": "f_10038222c"
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalPasteboardRestore.swift",
+          "symbol": "usesPlainProjection"
+        },
+        {
+          "path": "replica/Sources/PastoCore/Pasteboard.swift",
+          "symbol": "options: OriginalPasteboardRestore.Options"
+        }
+      ],
+      "source_sha256": {
+        "replica/Sources/PastoCore/OriginalPasteboardRestore.swift": "bf309c94b15bb4db46acedc6ba535d1f060aa3a8d74257053a773cf7200dd2c6",
+        "replica/Sources/PastoCore/Pasteboard.swift": "94774459e9255149bc0e0443f7f45ced17c723d62f7ae7d91b975f52fa4b54a2"
+      }
+    },
+    {
+      "function_id": "Paste:0x100383a0c",
+      "status": "source_contract_reused",
+      "contract": "创建空NSMutableAttributedString；顺序遍历输入attributed strings，仅当当前result.string非空时先追加separator的无属性NSAttributedString，然后追加当前content；保留源attributes，最终返回同一mutable result。",
+      "original": {
+        "path": "decompiled/Paste/part-0283.c",
+        "sha256": "2cd92feb8843e09a28a87625caa470b164a04510f7706687cf21cbd307464666"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPasteboardRestore.swift",
+          "symbol": "f_100383a0c"
+        },
+        {
+          "path": "replica/Sources/PastoCore/Pasteboard.swift",
+          "symbol": "writeToPasteboard(ids:"
+        }
+      ],
+      "source_sha256": {
+        "replica/Sources/PastoCore/OriginalPasteboardRestore.swift": "bf309c94b15bb4db46acedc6ba535d1f060aa3a8d74257053a773cf7200dd2c6",
+        "replica/Sources/PastoCore/Pasteboard.swift": "94774459e9255149bc0e0443f7f45ced17c723d62f7ae7d91b975f52fa4b54a2"
+      }
+    },
+    {
+      "function_id": "Paste:0x100381fdc",
+      "status": "source_contract_reused",
+      "contract": "NSAttributedString全UTF16范围data(from:documentAttributes:)：documentType为RTF，characterEncoding为Foundation.String.Encoding.utf8；NSError/Swift error路径吞错误返回nil，成功返回桥接Data。",
+      "original": {
+        "path": "decompiled/Paste/part-0283.c",
+        "sha256": "b4c010ec7f4f3b56a66c78931a4a06874c902bc928ce8607d91eeb237e175fc0"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPasteboardRestore.swift",
+          "symbol": "f_100381fdc"
+        },
+        {
+          "path": "replica/Sources/PastoCore/Pasteboard.swift",
+          "symbol": "writeToPasteboard(ids:"
+        }
+      ],
+      "source_sha256": {
+        "replica/Sources/PastoCore/OriginalPasteboardRestore.swift": "bf309c94b15bb4db46acedc6ba535d1f060aa3a8d74257053a773cf7200dd2c6",
+        "replica/Sources/PastoCore/Pasteboard.swift": "94774459e9255149bc0e0443f7f45ced17c723d62f7ae7d91b975f52fa4b54a2"
+      }
+    },
+    {
+      "function_id": "Paste:0x10031bcdc",
+      "status": "partial_parent_or_adapter",
+      "contract": "有序普通文本compactMap含空串、再逐项建UTF8表示可复用；原实体data读取/ItemData边界仍partial。",
+      "original": {
+        "path": "decompiled/Paste/part-0257.c",
+        "sha256": "2370a678c913e025fd1893a08ac39cd3740ac9a96b4ec2a2d64191b6a2c7efd6"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPasteboardRestore.swift",
+          "symbol": "f_10031bcdc"
+        },
+        {
+          "path": "replica/Sources/PastoCore/Pasteboard.swift",
+          "symbol": "writeToPasteboard(ids:"
+        }
+      ],
+      "source_sha256": {
+        "replica/Sources/PastoCore/OriginalPasteboardRestore.swift": "bf309c94b15bb4db46acedc6ba535d1f060aa3a8d74257053a773cf7200dd2c6",
+        "replica/Sources/PastoCore/Pasteboard.swift": "94774459e9255149bc0e0443f7f45ced17c723d62f7ae7d91b975f52fa4b54a2"
+      }
+    },
+    {
+      "function_id": "Paste:0x100383d90",
+      "status": "partial_parent_or_adapter",
+      "contract": "原本地事务保存调用链参照；当前独立持久化适配不声明完整原函数等价。",
+      "original": {
+        "path": "decompiled/Paste/part-0283.c",
+        "sha256": "e04c47bf348c0b5a0508289c7919eaf18bdeb603a59a51a366ef2eea299cb942"
+      },
+      "source_references": [],
+      "source_sha256": {}
+    },
+    {
+      "function_id": "Paste:0x10037aa3c",
+      "status": "partial_parent_or_adapter",
+      "contract": "原本地事务保存调用链参照；当前独立持久化适配不声明完整原函数等价。",
+      "original": {
+        "path": "decompiled/Paste/part-0281.c",
+        "sha256": "30cd68e0d865cc9926fc4d58154027503a2f1f46e35c0e16dd643d141157a453"
+      },
+      "source_references": [],
+      "source_sha256": {}
+    },
+    {
+      "function_id": "Paste:0x10037d33c",
+      "status": "source_contract_reused",
+      "contract": "先按 flatRTFD、rtfd、rtf 优先级恢复富文本；成功则构造 NSMutableAttributedString，枚举整个 UTF-16 范围的属性，将每个 paragraphStyle 的 textBlocks 清空；富文本均失败则取原版文本优先级结果构造 NSAttributedString，无文本返回 nil。",
+      "original": {
+        "path": "decompiled/Paste/part-0282.c",
+        "sha256": "e6c647662aa3d6d9d6eb32df20a7adfff3e94e03f20de5a240344e08a9b1f93e"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPasteboard.swift",
+          "symbol": "f_10037d33c"
+        }
+      ],
+      "source_sha256": {
+        "replica/Sources/PastoCore/OriginalPasteboard.swift": "bda6fc26104af712cbf89c0e974c5d84a17b99b89f15def8b2b8c422fc0b3674"
+      }
+    },
+    {
+      "function_id": "Paste:0x10037ebdc",
+      "status": "source_contract_reused",
+      "contract": "按传入 UTType 列表顺序查询 Data，每项依次尝试 NSAttributedString(rtfd:)、NSAttributedString(rtf:)、通用 NSAttributedString(data:options:[:])；第一个成功结果即返回，失败继续下一项；全部失败返回 nil。",
+      "original": {
+        "path": "decompiled/Paste/part-0282.c",
+        "sha256": "44d559dded6936605d9f72c8757d5c829771de318f191216547cbf8d3a38bafc"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPasteboard.swift",
+          "symbol": "f_10037ebdc"
+        }
+      ],
+      "source_sha256": {
+        "replica/Sources/PastoCore/OriginalPasteboard.swift": "bda6fc26104af712cbf89c0e974c5d84a17b99b89f15def8b2b8c422fc0b3674"
+      }
+    },
+    {
+      "function_id": "Paste:0x100383574",
+      "status": "source_contract_reused",
+      "contract": "遍历原orderedTypes快照；type包含任一patterns子串时，稳定删除全部同名types及其data键；未命中保留原顺序，空pattern按String.contains语义。",
+      "original": {
+        "path": "decompiled/Paste/part-0283.c",
+        "sha256": "c5dd3d91d590e3e5b1fd4f7bea35a39606a2d55fab0cb45c4ee58f32b819c5de"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPasteboard.swift",
+          "symbol": "f_100383574"
+        }
+      ],
+      "source_sha256": {
+        "replica/Sources/PastoCore/OriginalPasteboard.swift": "bda6fc26104af712cbf89c0e974c5d84a17b99b89f15def8b2b8c422fc0b3674"
+      }
+    },
+    {
+      "function_id": "Paste:0x1003838bc",
+      "status": "source_contract_reused",
+      "contract": "向types追加com.wiheads.paste，并将其data设为空Data；重复调用仍追加同名type，不删除其他格式。",
+      "original": {
+        "path": "decompiled/Paste/part-0283.c",
+        "sha256": "fa857e3ad22e80dd2b9b27b03a67222f8287b18971ac48c8d2134eaef55da8a7"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPasteboard.swift",
+          "symbol": "f_1003838bc"
+        }
+      ],
+      "source_sha256": {
+        "replica/Sources/PastoCore/OriginalPasteboard.swift": "bda6fc26104af712cbf89c0e974c5d84a17b99b89f15def8b2b8c422fc0b3674"
+      }
+    },
+    {
+      "function_id": "Paste:0x10037c9a8",
+      "status": "source_contract_reused",
+      "contract": "依次按 UTType.plainText、utf8PlainText、text、url 查询 Data 并严格 UTF-8 解码；缺失或非法编码继续下一项；空字符串为有效结果；全失败返回 nil。",
+      "original": {
+        "path": "decompiled/Paste/part-0282.c",
+        "sha256": "e9d65806599a62e3596ac8e89b10cd04870da0243ccc2fb307ad98d7d080c28d"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPasteboard.swift",
+          "symbol": "f_10037c9a8"
+        },
+        {
+          "path": "replica/Sources/PastoCore/Pasteboard.swift",
+          "symbol": "capture"
+        }
+      ],
+      "source_sha256": {
+        "replica/Sources/PastoCore/OriginalPasteboard.swift": "bda6fc26104af712cbf89c0e974c5d84a17b99b89f15def8b2b8c422fc0b3674",
+        "replica/Sources/PastoCore/Pasteboard.swift": "94774459e9255149bc0e0443f7f45ced17c723d62f7ae7d91b975f52fa4b54a2"
+      }
+    },
+    {
+      "function_id": "Paste:0x100066068",
+      "status": "partial_parent_or_adapter",
+      "contract": "偏好/force及AX/三态权限本地分支仍使用已有适配；异步MainActor任务到原字符发送的完整调度与目标激活需续追。",
+      "original": {
+        "path": "decompiled/Paste/part-0035.c",
+        "sha256": "c50e9dd2bd7f938a24cc576c71c17d205fd397b7dabf2468608646f05d6ceb86"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/AppMain.swift",
+          "symbol": "var copyInsteadOfPaste = !(forceDirect || store.preferences.pasteToActiveApp)"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/OriginalAccessibilityModals.swift",
+          "symbol": "enum OriginalPasteToOtherAppsModal"
+        },
+        {
+          "path": "replica/Sources/Pasto/AppMain.swift",
+          "symbol": "if store.preferences.alwaysPastePlainText { restoreOptions.insert(.plainTextAndLinks) }"
+        }
+      ],
+      "source_sha256": {
+        "replica/Sources/Pasto/AppMain.swift": "c8843d0cdc8448beea808b5f6acbba5eb4bd5a1c1d3dd0030e2a2ddea2f129fb",
+        "replica/Sources/Pasto/UI/OriginalAccessibilityModals.swift": "b4894f98cbd41b6d036739c4828a88efa1d7dfb6ac672d784f80a5be2a02f627"
+      }
+    },
+    {
+      "function_id": "Paste:0x100ae6428",
+      "status": "partial_parent_or_adapter",
+      "contract": "补齐Character入口及0..<128精确扫描；nil source不否决，down设置Command后创建up，各自存在时按tap2依序发送。原诊断、布局helper及目标等待适配仍partial。",
+      "original": {
+        "path": "decompiled/Paste/part-1008.c",
+        "sha256": "cdc8749884ed35ae72c05e834b4c20c38f7ddeaed6f10679b7425c45247bfdfd"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPasteKeyTranslation.swift",
+          "symbol": "func pasteKeyCode() -> CGKeyCode?"
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalPasteKeyTranslation.swift",
+          "symbol": "func f_100ae6428(_ character: Character)"
+        },
+        {
+          "path": "replica/Sources/Pasto/AppMain.swift",
+          "symbol": "private func waitForTarget("
+        }
+      ],
+      "source_sha256": {
+        "replica/Sources/PastoCore/OriginalPasteKeyTranslation.swift": "fb07d24cd1d92b1674e5871ba01f38b522ff367ce79b726eee3bb1b8b273bbe6",
+        "replica/Sources/Pasto/AppMain.swift": "c8843d0cdc8448beea808b5f6acbba5eb4bd5a1c1d3dd0030e2a2ddea2f129fb"
+      }
+    },
+    {
+      "function_id": "Paste:0x100ae6678",
+      "status": "partial_parent_or_adapter",
+      "contract": "4 UTF16缓冲、首个有效UnicodeScalar及UCKeyTranslate display参数已有；源缺失时trap，layout property/bytes缺失时当前nil适配未与原无保护路径等同，保持待证。",
+      "original": {
+        "path": "decompiled/Paste/part-1008.c",
+        "sha256": "08bb9736ff2a530cfe5fda0c17e99bc36da9b6a24996cc14da5a93f8617602ff"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPasteKeyTranslation.swift",
+          "symbol": "func f_100ae6678(keyCode: UInt16)"
+        }
+      ],
+      "source_sha256": {
+        "replica/Sources/PastoCore/OriginalPasteKeyTranslation.swift": "fb07d24cd1d92b1674e5871ba01f38b522ff367ce79b726eee3bb1b8b273bbe6"
+      }
+    }
+  ],
+  "reviewed_count": 32,
+  "reused_leaf_contracts": 8,
+  "current_review_unique_count": 59,
+  "current_review_inventory_percent": 0.0727,
+  "historical_evidence_reuse": {
+    "report": "reports/replica/copy-original-flow-audit.json",
+    "all_18_original_file_hashes_match": true,
+    "full_current_compilation_claim": false,
+    "method_bindings": [
+      {
+        "path": "replica/Sources/PastoCore/ClipboardStore.swift",
+        "signature": "private func mutate<T>(historyAction: Bool = false,",
+        "baseline_commit": "5ac3695c",
+        "baseline_body_sha256": "daa9f96317e8c62ed38394ca09190bc355003945e2114c7c4026a145b50c33f9",
+        "current_body_sha256": "daa9f96317e8c62ed38394ca09190bc355003945e2114c7c4026a145b50c33f9",
+        "identical": true
+      },
+      {
+        "path": "replica/Sources/PastoCore/ClipboardStore.swift",
+        "signature": "func recordRestoredItems(_ ids: [UUID]) throws",
+        "baseline_commit": "5ac3695c",
+        "baseline_body_sha256": "31d5952e404ad2027f0254a1e7124cffb3280d911a3e6c135ca74396ed0e66d0",
+        "current_body_sha256": "31d5952e404ad2027f0254a1e7124cffb3280d911a3e6c135ca74396ed0e66d0",
+        "identical": true
+      },
+      {
+        "path": "replica/Sources/PastoCore/ClipboardStore.swift",
+        "signature": "private func normalize(_ state: inout StoreState)",
+        "baseline_commit": "5ac3695c",
+        "baseline_body_sha256": "dc618f5eeb68dd312ba1140582f3f5e4a386f3c923c684c35c5ec229c8f98c6e",
+        "current_body_sha256": "dc618f5eeb68dd312ba1140582f3f5e4a386f3c923c684c35c5ec229c8f98c6e",
+        "identical": true
+      },
+      {
+        "path": "replica/Sources/PastoCore/ClipboardStore.swift",
+        "signature": "private func expireHistory(_ state: inout StoreState)",
+        "baseline_commit": "5ac3695c",
+        "baseline_body_sha256": "a259228e2ac6fa339eef90d34f33d3185cbd1a5bf83ad45134a30514d91a7ce9",
+        "current_body_sha256": "a259228e2ac6fa339eef90d34f33d3185cbd1a5bf83ad45134a30514d91a7ce9",
+        "identical": true
+      },
+      {
+        "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+        "signature": "private func performCopy(_ write: () throws -> Void)",
+        "baseline_commit": "5ac3695c",
+        "baseline_body_sha256": "b84aebff39b945c13553c4617af47e576e97fca262a5b9c9495a2bd31177244d",
+        "current_body_sha256": "b84aebff39b945c13553c4617af47e576e97fca262a5b9c9495a2bd31177244d",
+        "identical": true
+      },
+      {
+        "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+        "signature": "func copy(ids: [UUID], plainTextOnly: Bool)",
+        "baseline_commit": "5ac3695c",
+        "baseline_body_sha256": "cc144da90345aaba9bf319b205a9238f1a9743726ebb35242a423fcad487d048",
+        "current_body_sha256": "cc144da90345aaba9bf319b205a9238f1a9743726ebb35242a423fcad487d048",
+        "identical": true
+      },
+      {
+        "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+        "signature": "func paste(ids: [UUID], plainTextOnly: Bool) -> Bool",
+        "baseline_commit": "5ac3695c",
+        "baseline_body_sha256": "6f95c3b61e558dc3e1385d4283e4e933c4252ef432758d7f12eb949afa151907",
+        "current_body_sha256": "6f95c3b61e558dc3e1385d4283e4e933c4252ef432758d7f12eb949afa151907",
+        "identical": true
+      },
+      {
+        "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+        "signature": "func hidePanel()",
+        "baseline_commit": "5ac3695c",
+        "baseline_body_sha256": "073b17d60c9250344501e44c5f7862298421b2b45297b8f54652a39cc0ad5e70",
+        "current_body_sha256": "5379aa693b9c9eb7e8da0db07eb6cb2b156b378a03e656362befc679958a9319",
+        "identical": false
+      },
+      {
+        "path": "replica/Sources/Pasto/AppMain.swift",
+        "signature": "private func paste(ids: [UUID], plain: Bool, forceDirect: Bool = false) -> Bool",
+        "baseline_commit": "5ac3695c",
+        "baseline_body_sha256": "5bc2e54a93a98d0ad02eba223028fe7b81fb3c91693e14b9ba8832ff96deeb1c",
+        "current_body_sha256": "5bc2e54a93a98d0ad02eba223028fe7b81fb3c91693e14b9ba8832ff96deeb1c",
+        "identical": true
+      },
+      {
+        "path": "replica/Sources/Pasto/AppMain.swift",
+        "signature": "private func waitForTarget(_ target: NSRunningApplication, deadline: Date, generation: UUID, changeCount: Int)",
+        "baseline_commit": "5ac3695c",
+        "baseline_body_sha256": "72b9fd209791c8c0164ea4dd823262517cc10fc82b9387478606e70174fe7dc8",
+        "current_body_sha256": "ea55e6a09dddd13ea7c40a8c2fc13ba7ac6ea18bfb95d464c648231b09d0cdd5",
+        "identical": false
+      }
+    ],
+    "unchanged_methods": 8
+  },
+  "source_sha256": {
+    "replica/Sources/PastoCore/OriginalPasteKeyTranslation.swift": "fb07d24cd1d92b1674e5871ba01f38b522ff367ce79b726eee3bb1b8b273bbe6",
+    "replica/Sources/Pasto/AppMain.swift": "c8843d0cdc8448beea808b5f6acbba5eb4bd5a1c1d3dd0030e2a2ddea2f129fb",
+    "replica/Sources/PastoCore/Pasteboard.swift": "94774459e9255149bc0e0443f7f45ced17c723d62f7ae7d91b975f52fa4b54a2",
+    "replica/Sources/PastoCore/ClipboardPersistence.swift": "31978e6879ac1a0a645cfc0c89ab59d31dc0bccd9ddbe19a080d93273eebecb9",
+    "replica/Sources/PastoCore/ClipboardStore.swift": "99856fa91a53529f5f9aa359665069316d6f4d5f98890015ee98d4ec69c378a0",
+    "replica/Sources/PastoCore/OriginalPasteboard.swift": "bda6fc26104af712cbf89c0e974c5d84a17b99b89f15def8b2b8c422fc0b3674",
+    "replica/Sources/PastoCore/OriginalPasteboardRestore.swift": "bf309c94b15bb4db46acedc6ba535d1f060aa3a8d74257053a773cf7200dd2c6",
+    "scripts/tests/test_offline_p0_contracts.py": "a1d9faaa9b588815f36daa41e7c6d3fe2301e82af408d2be7628e659e84cf4ef"
+  },
+  "sdk_header_evidence": {
+    "name": "CoreGraphics/CGEvent.h",
+    "sdk": "26.5",
+    "sha256": "82c0ad9eb7c2f1ccfe8483fe96f5d71493ee1f5b4a6a68458ba9c07dd728f8bb",
+    "keyboard_event_source_nullable": true,
+    "compiler_invoked": false
+  },
+  "tests": {
+    "passed": true,
+    "total": 37,
+    "plain_option_source_cases": 24,
+    "event_allocation_source_cases": 8,
+    "scope": "Python source-contract and ledger-tool tests only"
+  },
+  "new_fully_migrated_function_count": 0,
+  "historical_ledger": {
+    "numerator": 1648,
+    "denominator": 81123,
+    "percent": 2.0315,
+    "stale_evidence": true
+  },
+  "compiled": false,
+  "application_executed": false,
+  "keyboard_events_posted_by_agent": false,
+  "ui_or_mcp_tests_executed": false,
+  "network_used": false,
+  "committed": false,
+  "pushed": false,
+  "module_complete": false,
+  "next_work": [
+    "继续0x100066068的MainActor任务到字符sender之间的实际调度",
+    "P0事务/删除数据安全；布局helper无保护路径保留待证"
+  ]
+}

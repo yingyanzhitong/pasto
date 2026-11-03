@@ -1,0 +1,237 @@
+--- a/replica/Sources/PastoCore/ClipboardPersistence.swift
++++ b/replica/Sources/PastoCore/ClipboardPersistence.swift
+@@ -612,6 +612,18 @@
+             }
+             assignedItemIDs.formUnion(values.map(\.id))
+             return values
++        }
++
++        func removePinboard(_ list: NSManagedObject) -> [PastoItemEntity] {
++            let affected = lists.removePinboard(list)
++            // Compatibility identifiers are read only after all native mutations, never as an input gate.
++            for object in affected {
++                guard let key = object.value(forKey: "key") as? String, let id = UUID(uuidString: key) else { continue }
++                assignedItemIDs.insert(id)
++                unassignedItemIDs.insert(id)
++                if object.isDeleted { alreadyDeletedItemIDs.insert(id) }
++            }
++            return affected
+         }
+ 
+         // 363a3c/36299c: retain sequence order; a non-pinboard owner is a no-op.
+--- a/replica/Sources/PastoCore/ClipboardStore.swift
++++ b/replica/Sources/PastoCore/ClipboardStore.swift
+@@ -1429,6 +1429,45 @@
+             state.pinboards[i].name = name
+         }
+     }
++    public func removeList(_ target: ClipboardListTarget) throws {
++        try mutateInTransaction { state, transaction in
++            let identifier = target.identifier
++            let affected = transaction.repository.removePinboard(target.nativeObject)
++            if let id = UUID(uuidString: identifier) {
++                state.pinboards.removeAll { $0.id == id }
++                for index in state.items.indices {
++                    state.items[index].pinboardIDs.remove(id)
++                    if state.items[index].pinboardOwnerID == id { state.items[index].pinboardOwnerID = nil }
++                }
++            }
++            for object in affected {
++                guard let key = object.value(forKey: "key") as? String, let id = UUID(uuidString: key) else { continue }
++                if object.isDeleted {
++                    state.items.removeAll { $0.id == id }
++                    continue
++                }
++                let index = state.items.firstIndex { $0.id == id }
++                var item: ClipboardItem
++                if let index { item = state.items[index] }
++                else { item = try ClipboardPersistence.item(object) }
++                item.isInHistory = object.value(forKey: "timestamp") != nil
++                if let owner = object.value(forKey: "list") as? NSManagedObject,
++                   (owner.value(forKey: "rawType") as? NSNumber)?.int64Value == 2,
++                   let ownerIdentifier = owner.value(forKey: "identifier") as? String,
++                   let ownerID = UUID(uuidString: ownerIdentifier) {
++                    item.pinboardOwnerID = ownerID
++                    item.pinboardIDs = [ownerID]
++                } else {
++                    item.pinboardOwnerID = nil
++                    item.pinboardIDs.removeAll()
++                }
++                try ClipboardItemOrderPersistence.project(&item, from: object)
++                if let index { state.items[index] = item }
++                else { state.items.append(item) }
++            }
++        }
++    }
++
+     public func removePinboard(id: UUID) throws {
+         try mutate { state in
+             let affected = Set(state.items.filter { $0.pinboardIDs.contains(id) }.map(\.id))
+--- a/replica/Sources/PastoCore/ClipboardListPersistence.swift
++++ b/replica/Sources/PastoCore/ClipboardListPersistence.swift
+@@ -21,6 +21,7 @@
+ @MainActor
+ public struct ClipboardListTarget {
+     let nativeObject: NSManagedObject
++    public var isDeleted: Bool { nativeObject.isDeleted }
+     public var identifier: String {
+         String._unconditionallyBridgeFromObjectiveC(nativeObject.value(forKey: "identifier") as? NSString)
+     }
+@@ -261,6 +262,25 @@
+         nativeLists[identifier] = list
+     }
+ 
++    // 368818/363004, local pinboard branch: fetch errors use an empty sequence, then delete the same List.
++    func removePinboard(_ list: NSManagedObject) -> [PastoItemEntity] {
++        let items: [PastoItemEntity]
++        if let context = list.managedObjectContext {
++            items = (try? context.fetch(itemRequest(for: list))) ?? []
++        } else { items = [] }
++        for item in items {
++            if (list.value(forKey: "rawType") as? NSNumber)?.int64Value == 2,
++               let owner = item.value(forKey: "list") as? NSManagedObject, owner.isEqual(list) {
++                item.setValue(nil, forKey: "list")
++            }
++            if item.value(forKey: "timestamp") == nil, item.value(forKey: "list") == nil {
++                item.managedObjectContext?.delete(item)
++            }
++        }
++        list.managedObjectContext?.delete(list)
++        return items
++    }
++
+     // 36c448: the callback edits the first read; compare against a fresh second read before setting.
+     func updateName(on list: NSManagedObject, _ update: (inout String) -> Void) {
+         var value = String._unconditionallyBridgeFromObjectiveC(list.value(forKey: "name") as? NSString)
+--- a/replica/Sources/Pasto/UI/ReplicaUIController.swift
++++ b/replica/Sources/Pasto/UI/ReplicaUIController.swift
+@@ -57,7 +57,7 @@
+     @Published var pinboardID: UUID? { didSet {
+         if oldValue != pinboardID { cancelItemDeletion() }
+     } }
+-    @Published var pendingPinboardDeletionID: UUID?
++    @Published var pendingPinboardDeletion: ClipboardListTarget?
+     @Published var pinboardDeletionError: String?
+     @Published var pendingItemDeletion: ItemDeletionRequest?
+     @Published var pendingNeighborSelection: PendingNeighborSelection?
+@@ -221,7 +221,7 @@
+     var isSearchQueryEmpty: Bool { OriginalSearchQuery.f_1002ddcf0(searchQueryNodes) }
+     var searchInputPublisher: AnyPublisher<[OriginalSearchQueryNode], Never> { searchQueryChanges.eraseToAnyPublisher() }
+     var isCollectionSearchQueryEmpty: Bool { OriginalSearchQuery.f_1002ddcf0(collectionSearchQueryNodes) }
+-    var hasPendingDeletion: Bool { pendingPinboardDeletionID != nil || pendingItemDeletion != nil }
++    var hasPendingDeletion: Bool { pendingPinboardDeletion != nil || pendingItemDeletion != nil }
+ 
+     private func searchInputChanged() {
+         searchQueryChanges.send(searchQueryNodes)
+@@ -436,8 +436,8 @@
+     }
+ 
+     func normalizeSelection() {
+-        if let id = pendingPinboardDeletionID, !store.pinboards.contains(where: { $0.id == id }) {
+-            pendingPinboardDeletionID = nil
++        if pendingPinboardDeletion?.isDeleted == true {
++            pendingPinboardDeletion = nil
+             pinboardDeletionError = nil
+         }
+         // Native List delivery owns removal and neighboring-list selection.
+@@ -1776,15 +1776,14 @@
+         state.perform { try store.renamePinboard(id: board.id, name: name) }
+     }
+ 
+-    func removePinboard(_ board: Pinboard) {
+-        guard store.pinboards.contains(where: { $0.id == board.id }) else { return }
++    func removePinboard(_ target: ClipboardListTarget) {
+         state.cancelItemDeletion()
+         state.pinboardDeletionError = nil
+-        state.pendingPinboardDeletionID = board.id
++        state.pendingPinboardDeletion = target
+         // 0x1003c4f00: an empty local group is deleted without confirmation.
+         // Nonempty confirmation stays inside the panel by user request, instead
+         // of the original 0x100022ad0 → 0x1003b6cfc NSAlert.runModal presenter.
+-        if store.localListMenuState(pinboardID: board.id).isEmpty {
++        if store.localListMenuState(target).isEmpty {
+             confirmPinboardRemoval()
+         } else {
+             panel.makeFirstResponder(nil)
+@@ -1792,7 +1791,7 @@
+     }
+ 
+     func cancelPinboardRemoval() {
+-        state.pendingPinboardDeletionID = nil
++        state.pendingPinboardDeletion = nil
+         state.pinboardDeletionError = nil
+     }
+ 
+@@ -1802,13 +1801,9 @@
+     }
+ 
+     func confirmPinboardRemoval() {
+-        guard let id = state.pendingPinboardDeletionID else { return }
+-        guard store.pinboards.contains(where: { $0.id == id }) else {
+-            cancelPinboardRemoval()
+-            return
+-        }
++        guard let target = state.pendingPinboardDeletion else { return }
+         do {
+-            try store.removePinboard(id: id)
++            try store.removeList(target)
+             cancelPinboardRemoval()
+             // The native List snapshot chooses the adjacent surviving list.
+         } catch {
+--- a/replica/Sources/Pasto/UI/PanelViews.swift
++++ b/replica/Sources/Pasto/UI/PanelViews.swift
+@@ -35,8 +35,8 @@
+                         if let request = state.pendingItemDeletion {
+                             itemDeletionConfirmation(request)
+                                 .frame(width: min(360, max(0, geometry.size.width - 32)))
+-                        } else if let board = state.store.pinboards.first(where: { $0.id == state.pendingPinboardDeletionID }) {
+-                            pinboardDeletionConfirmation(board)
++                        } else if let target = state.pendingPinboardDeletion {
++                            pinboardDeletionConfirmation(target)
+                                 .frame(width: min(360, max(0, geometry.size.width - 32)))
+                         }
+                     }
+@@ -59,8 +59,8 @@
+         return 0
+     }
+ 
+-    private func pinboardDeletionConfirmation(_ board: Pinboard) -> some View {
+-        deletionConfirmation(title: "删除“\(board.name)”？",
++    private func pinboardDeletionConfirmation(_ target: ClipboardListTarget) -> some View {
++        deletionConfirmation(title: "删除“\(target.name)”？",
+             message: "保留历史和其他分组中的内容，仅属于此分组的内容将被删除。",
+             error: state.pinboardDeletionError, confirmTitle: "删除分组", kind: "group",
+             cancel: { state.controller?.cancelPinboardRemoval() },
+@@ -149,7 +149,7 @@
+         state.tabListTargets.map { target in
+             let board = target.pinboardValue
+             var tab = boardButton(target.name, board: board, target: target)
+-            tab.menuProvider = { localListMenu(for: board, target: target) }
++            tab.menuProvider = { localListMenu(for: target) }
+             if let board {
+                 tab.dragString = "paste-pinboard:" + board.id.uuidString
+                 tab.onDropString = { value in
+@@ -163,7 +163,7 @@
+     }
+ 
+     // 0x100021f00: offline rename, typed deletion, then color choices.
+-    private func localListMenu(for board: Pinboard?, target: ClipboardListTarget) -> NSMenu {
++    private func localListMenu(for target: ClipboardListTarget) -> NSMenu {
+         let menu = NSMenu()
+         menu.autoenablesItems = false
+         menu.addItem(OriginalPanelTabMenuItem(title: "重命名") { requestTabRename(target.identifier) })
+@@ -174,11 +174,9 @@
+                 menu.addItem(OriginalPanelTabMenuItem(title: "删除历史…") { state.controller?.clearHistory() })
+             }
+         } else if list.rawType == 2 {
+-            if let board {
+-                menu.addItem(OriginalPanelTabMenuItem(title: list.isEmpty ? "删除" : "删除…") {
+-                    state.controller?.removePinboard(board)
+-                })
+-            }
++            menu.addItem(OriginalPanelTabMenuItem(title: list.isEmpty ? "删除" : "删除…") {
++                state.controller?.removePinboard(target)
++            })
+             menu.addItem(.separator())
+             // Keep the requested named color rows and colored dots as the local presentation adapter.
+             let colors = NSMenu()

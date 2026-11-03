@@ -1,0 +1,99 @@
+--- replica/Sources/PastoCore/ClipboardPersistence.swift
++++ replica/Sources/PastoCore/ClipboardPersistence.swift
+@@ -31,6 +31,8 @@
+     private let sources: ClipboardSourcePersistence
+     private let itemUpdatesSubject = PassthroughSubject<Set<UUID>, Never>()
+     private var contextChangesObservation: AnyCancellable?
++    private let contentUndoManager = OriginalDependency(\OriginalDependencyValues.pasteboardUndoManager)
++    private var undoChangesObservation: AnyCancellable?
+ 
+     init(directoryURL: URL) throws {
+         databaseURL = directoryURL.appendingPathComponent("clipboard.sqlite")
+@@ -72,6 +74,29 @@
+         itemUpdatesSubject.eraseToAnyPublisher()
+     }
+ 
++    // 0x10035cc80: extensions skip the main-context manager and its two publishers.
++    // Pasto's compatibility-root migration finishes before enabling user Undo.
++    func configureUndoRegistration() {
++        guard !Bundle.main.bundlePath.hasSuffix(".appex") else { return }
++        context.undoManager = contentUndoManager.f_1000da768()
++        undoChangesObservation = NotificationCenter.default.publisher(
++            for: .NSUndoManagerDidUndoChange, object: contentUndoManager.f_1000da768())
++            .merge(with: NotificationCenter.default.publisher(
++                for: .NSUndoManagerDidRedoChange, object: contentUndoManager.f_1000da768()))
++            .sink { [weak self] _ in
++                MainActor.assumeIsolated {
++                    guard let context = Self.undoContext(from: { self }) else { return }
++                    OriginalContextUndo.f_10035ca9c(context)
++                }
++            }
++    }
++
++    // 0x10035f32c -> 0x10035dd04 releases the weak owner before saving its context.
++    @inline(never)
++    private static func undoContext(from loadOwner: () -> ClipboardPersistence?) -> NSManagedObjectContext? {
++        loadOwner()?.context
++    }
++
+     private func publishChangedItemIDs(from notification: Notification) {
+         let updated = notification.userInfo?[NSUpdatedObjectsKey] as? Set<NSManagedObject> ?? []
+         let refreshed = notification.userInfo?[NSRefreshedObjectsKey] as? Set<NSManagedObject> ?? []
+@@ -513,7 +538,16 @@
+         let transactions = try snapshotReader.transactions(after: viewHistoryToken)
+         context.performAndWait {
+             for transaction in transactions {
++                let before = context.insertedObjects.count + context.updatedObjects.count + context.deletedObjects.count
++                // 0x100396df4: incoming context merges must not become user Undo actions.
++                context.undoManager?.disableUndoRegistration()
+                 context.mergeChanges(fromContextDidSave: transaction.objectIDNotification())
++                context.undoManager?.enableUndoRegistration()
++                let after = context.insertedObjects.count + context.updatedObjects.count + context.deletedObjects.count
++                if before < after {
++                    Self.transactionDiagnostics.f_1000d468c().f_1000d4db8(
++                        "[SYNC:MERGE] viewContext dirty objects: \(before) → \(after) (inserted: \(context.insertedObjects.count), updated: \(context.updatedObjects.count), deleted: \(context.deletedObjects.count))")
++                }
+             }
+         }
+         if let token = transactions.last?.token { viewHistoryToken = token }
+--- replica/Sources/PastoCore/ClipboardStore.swift
++++ replica/Sources/PastoCore/ClipboardStore.swift
+@@ -160,6 +160,7 @@
+             }
+         }
+         try reload()
++        persistence.configureUndoRegistration()
+     }
+ 
+     private var stateURL: URL { directoryURL.appendingPathComponent("clipboard.json") }
+--- replica/Sources/PastoCore/OriginalContextUndo.swift
++++ replica/Sources/PastoCore/OriginalContextUndo.swift
+@@ -0,0 +1,28 @@
++import CoreData
++import Foundation
++
++/// Source counterpart of the original synchronous Undo/Redo context-save path.
++@MainActor
++enum OriginalContextUndo {
++    private static let diagnostics = OriginalNamedDiagnostic.f_1000d4624(name: "DB")
++
++    // 0x10035ca9c -> 0x10035f228: keep a successful result when there are no changes.
++    @discardableResult
++    static func f_10035ca9c(_ context: NSManagedObjectContext) -> Bool {
++        var succeeded = true
++        context.performAndWait { f_10035e4d8(context, succeeded: &succeeded) }
++        return succeeded
++    }
++
++    // 0x10035e4d8: Ghidra drops this failure branch; ARM restores rollback/false/log.
++    static func f_10035e4d8(_ context: NSManagedObjectContext, succeeded: inout Bool) {
++        guard context.hasChanges else { return }
++        do {
++            try OriginalObjCExceptionBridge.f_1002ff9c8 { try context.save() }
++        } catch {
++            context.rollback()
++            succeeded = false
++            diagnostics.f_1000d468c().f_1000d4e0c("Error saving managed object context: \(error)")
++        }
++    }
++}

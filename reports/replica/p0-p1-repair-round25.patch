@@ -1,0 +1,237 @@
+--- phase-25-before/replica/Sources/Pasto/UI/ReplicaNativeCardCollection.swift
++++ replica/Sources/Pasto/UI/ReplicaNativeCardCollection.swift
+@@ -466,8 +466,7 @@
+     }
+ 
+     private func select(_ index: Int, modifiers: NSEvent.ModifierFlags = []) {
+-        guard let state else { return }
+-        let current = state.visibleItems
++        guard let state, let current = appliedItems(for: state) else { return }
+         guard current.indices.contains(index) else { return }
+         state.select(current[index], modifiers: modifiers)
+     }
+@@ -491,7 +490,7 @@
+             lastPrimaryID = state.primaryID
+             needsPrimaryReveal = false
+             refreshCellRoots()
+-            let current = state.visibleItems
++            let current = appliedItems(for: state) ?? []
+             if current.indices.contains(index) {
+                 let plain = NSEvent.ModifierFlags(rawValue: state.store.preferences.plainTextModifierRawValue)
+                 state.controller?.paste(item: current[index], plainTextOnly: event.modifierFlags.isSuperset(of: plain))
+--- phase-25-before/replica/Sources/Pasto/UI/ReplicaUIController.swift
++++ replica/Sources/Pasto/UI/ReplicaUIController.swift
+@@ -365,10 +365,15 @@
+         }
+     }
+ 
++    private var pointerSelectionItems: [ClipboardItem] {
++        guard let collectionOwner else { return visibleItems }
++        return collectionOwner.appliedItems(for: self) ?? []
++    }
++
+     // f228a50's double-click path sets the singleton directly, without a reveal/delegate callback.
+     func selectForDoubleClick(at index: Int) {
+         cancelPendingNeighborSelection()
+-        let items = visibleItems
++        let items = pointerSelectionItems
+         guard items.indices.contains(index) else { return }
+         let id = items[index].id
+         allowsEmptySelection = false
+@@ -378,20 +383,20 @@
+     func select(_ item: ClipboardItem, modifiers: NSEvent.ModifierFlags = []) {
+         cancelPendingNeighborSelection()
+         controller?.panel.makeFirstResponder(nil)
+-        let items = visibleItems
++        let items = pointerSelectionItems
+         guard let index = items.firstIndex(where: { $0.id == item.id }) else { return }
+         selectIndex(index, mode: OriginalOrderedSelection.mode(modifierFlags: modifiers.rawValue), items: items)
+     }
+ 
+     // f2287ec keeps the captured numeric index and does not move first responder.
+     func selectAfterPressDelay(at index: Int) {
+-        selectIndex(index, mode: 0, items: visibleItems)
++        selectIndex(index, mode: 0, items: pointerSelectionItems)
+     }
+ 
+     // f228128 preserves an existing multi-selection and does not change first responder.
+     func selectForContextMenu(_ item: ClipboardItem) {
+         cancelPendingNeighborSelection()
+-        let items = visibleItems
++        let items = pointerSelectionItems
+         guard let index = items.firstIndex(where: { $0.id == item.id }),
+               !selection.contains(item.id) else { return }
+         selectIndex(index, mode: 0, items: items)
+--- /dev/null
++++ scripts/tests/test_p0_repair_pointer_applied_input.py
+@@ -0,0 +1,170 @@
++"""C/ARM and source input contracts; never executes Swift, AppKit or Paste."""
++import hashlib
++import json
++from pathlib import Path
++import struct
++import sys
++import unittest
++
++ROOT = Path(__file__).resolve().parents[2]
++sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'scripts/tests')]
++from function_ledger import source_fragments
++from test_offline_p0_contracts import body
++from test_p0_repair_checksum_routing import original_fragment
++
++UI = 'replica/Sources/Pasto/UI/ReplicaUIController.swift'
++HOST = 'replica/Sources/Pasto/UI/ReplicaNativeCardCollection.swift'
++
++
++class PointerAppliedInput(unittest.TestCase):
++    @classmethod
++    def setUpClass(cls):
++        cls.phase = ROOT / '.local/p0-repair/phase-25'
++        cls.proof = json.loads((cls.phase / 'pointer-input-contract.json').read_text())
++        cls.ui = (ROOT / UI).read_text()
++        cls.host = (ROOT / HOST).read_text()
++        cls.raw = (ROOT / cls.proof['binary']['path']).read_bytes()
++
++    def native(self, address):
++        r = next(r for r in self.proof['original_fragments'] if r['address'] == address)
++        return original_fragment((ROOT / r['path']).read_text(), address[2:])
++
++    def offset(self, address):
++        s = next(s for s in self.proof['file_backed_segments']
++                 if s['vmaddr'] <= address < s['vmaddr'] + s['filesize'])
++        return s['fileoff'] + address - s['vmaddr']
++
++    def word(self, address):
++        return struct.unpack_from('<I', self.raw, self.offset(address))[0]
++
++    def pointer(self, address):
++        return 0x100000000 + (struct.unpack_from('<Q', self.raw, self.offset(address))[0] & ((1 << 36) - 1))
++
++    def branch(self, address, link=True):
++        word = self.word(address)
++        self.assertEqual(word & 0xfc000000, 0x94000000 if link else 0x14000000)
++        immediate = word & 0x3ffffff
++        if immediate & (1 << 25):
++            immediate -= 1 << 26
++        return address + 4 * immediate
++
++    def test_original_fragments_binary_and_machine_ranges_are_bound(self):
++        for r in self.proof['original_fragments']:
++            self.assertEqual(source_fragments(ROOT / r['path'])[r['address']]['sha256'], r['sha256'])
++        self.assertEqual(hashlib.sha256(self.raw).hexdigest(), self.proof['binary']['sha256'])
++        for r in self.proof['machine_ranges']:
++            self.assertEqual(self.offset(int(r['start'], 16)), r['file_offset'])
++            data = self.raw[r['file_offset']:r['file_offset'] + r['length']]
++            self.assertEqual(data.hex(), r['hex'])
++            self.assertEqual(hashlib.sha256(data).hexdigest(), r['sha256'])
++            if 'instruction_count' in r:
++                self.assertEqual(r['instruction_count'], r['length'] // 4)
++
++    def test_installed_real_delegate_thunk_forwards_clicked_index_and_event(self):
++        constructor = self.native('0x1000671a8')
++        self.assertIn('+ 0xf8))(self,&PTR_PTR_100eb26c8)', constructor)
++        self.assertEqual(self.pointer(0x100f91400), 0x10022a7c0)
++        setter = self.native('0x10022a7c0')
++        self.assertIn('FUN_10022a7cc(param_1,param_2,&_TtC7PasteUI14CollectionView::delegate)', setter)
++        self.assertEqual(self.pointer(0x100eb26c8 + 0x18), 0x10006f288)
++        self.assertEqual(self.word(0x10006f288), 0xaa0103e0)  # index x1 -> x0
++        self.assertEqual(self.word(0x10006f28c), 0xaa0203e1)  # event x2 -> x1
++        self.assertEqual(self.branch(0x10006f290, link=False), 0x100075a6c)
++
++    def test_original_mouse_down_selects_before_real_restore_consumer(self):
++        self.assertEqual(self.branch(0x100227d70), 0x100228568)
++        self.assertEqual(self.branch(0x100227dd8), 0x100228a50)
++        self.assertEqual(self.word(0x100227e1c), 0xf9400ee8)  # witness+0x18
++        self.assertEqual(self.word(0x100227e30), 0xd63f0100)  # blr x8
++        consumer = self.native('0x100075a6c')
++        self.assertLess(consumer.index('FUN_1001b9698('), consumer.index('FUN_100066068('))
++        self.assertEqual(self.branch(0x100075bcc), 0x1001b9698)
++        self.assertEqual(self.branch(0x100075cec), 0x100066068)
++
++    def test_original_resolver_subscripts_applied_array_with_bounds_check(self):
++        source = self.native('0x1001b9698')
++        self.assertIn('local_80 = unaff_x20[2]', source)
++        self.assertIn('(param_2 < local_98) || (local_90 <= param_2)', source)
++        self.assertIn('get_subscript(lVar4,param_2,unaff_x20[2],lVar2)', source)
++        double = self.native('0x100228a50')
++        self.assertIn('(-1 < param_1) && (param_1 < lVar4)', double)
++        self.assertIn('FUN_100228f6c()', double)
++        self.assertNotIn('FUN_10022c9c4', double)
++
++    def test_pointer_adapter_uses_actual_owner_and_only_unattached_projection_fallback(self):
++        source = body(self.ui, 'private var pointerSelectionItems: [ClipboardItem]')
++        self.assertIn('guard let collectionOwner else { return visibleItems }', source)
++        self.assertIn('return collectionOwner.appliedItems(for: self) ?? []', source)
++        self.assertEqual(source.count('visibleItems'), 1)
++        applied = body(self.host, 'func appliedItems(for state: ReplicaUIState)')
++        self.assertIn('self.state === state, state.collectionOwner === self', applied)
++        self.assertIn('return items', applied)
++        self.assertNotIn('drainCollectionSnapshots', applied)
++
++    def test_all_pointer_selection_entries_use_applied_input_and_preserve_rules(self):
++        signatures = ['func selectForDoubleClick(at index: Int)',
++                      'func select(_ item: ClipboardItem, modifiers:',
++                      'func selectAfterPressDelay(at index: Int)',
++                      'func selectForContextMenu(_ item: ClipboardItem)']
++        for signature in signatures:
++            source = body(self.ui, signature)
++            self.assertIn('pointerSelectionItems', source)
++            self.assertNotIn('visibleItems', source)
++        double = body(self.ui, signatures[0])
++        self.assertIn('applyOrderedSelection([id], anchor: id, primary: id)', double)
++        self.assertNotIn('revealSelection', double)
++        context = body(self.ui, signatures[3])
++        self.assertIn('!selection.contains(item.id)', context)
++        self.assertNotIn('makeFirstResponder', context)
++
++    def test_native_numeric_hit_and_restore_never_reread_future_projection(self):
++        select = body(self.host, 'private func select(_ index: Int, modifiers:')
++        self.assertIn('let current = appliedItems(for: state)', select)
++        mouse = body(self.host, 'override func mouseDown(with event: NSEvent)')
++        self.assertNotIn('state.visibleItems', mouse)
++        double = mouse[mouse.index('if event.clickCount == 2'):mouse.index('initialDragLocation = point')]
++        order = ['state.selectForDoubleClick(at: index)', 'refreshCellRoots()',
++                 'let current = appliedItems(for: state) ?? []', 'if current.indices.contains(index)',
++                 'paste(item: current[index]']
++        self.assertEqual([double.index(x) for x in order], sorted(double.index(x) for x in order))
++        self.assertIn('event.modifierFlags.isSuperset(of: plain)', double)
++        self.assertNotIn('drainCollectionSnapshots', double)
++
++    def test_long_press_keeps_numeric_index_at_fire_without_capturing_item_identity(self):
++        timer = body(self.host, 'override func mouseDown(with event: NSEvent)')
++        self.assertIn('withTimeInterval: 0.45', timer)
++        self.assertIn('[weak self]', timer)
++        self.assertIn('selectAfterPressDelay(at: index)', timer)
++        source = body(self.ui, 'func selectAfterPressDelay(at index: Int)')
++        self.assertIn('selectIndex(index, mode: 0, items: pointerSelectionItems)', source)
++        self.assertNotIn('makeFirstResponder', source)
++        native = self.native('0x1002287ec')
++        self.assertIn('_swift_unknownObjectWeakLoadStrong()', native)
++        self.assertIn('FUN_100228c78(param_2,param_3,1)', native)
++        self.assertIn('FUN_100228778', self.native('0x100228b64'))
++        self.assertIn('FUN_1002287ec', self.native('0x100228b8c'))
++
++    def test_counterexamples_exercise_pending_reorder_removal_and_timer_swap(self):
++        a, b, timer = self.proof['counterexamples']
++        self.assertNotEqual(a['applied'][a['clicked_index']], a['projected'][a['clicked_index']])
++        self.assertEqual(a['applied'][a['clicked_index']], a['original_restored'])
++        self.assertEqual(a['original_restored'], a['after_restored'])
++        self.assertEqual(b['projected'], [])
++        self.assertEqual(b['applied'][b['clicked_index']], b['after_restored'])
++        self.assertNotEqual(timer['applied_at_press'][timer['captured_press_index']], timer['after_selected'])
++        self.assertEqual(timer['applied_at_timer'][timer['captured_press_index']], timer['after_selected'])
++        self.assertFalse(timer['captured_identity'])
++
++    def test_historical_contracts_are_retained_and_latest_order_is_explicit(self):
++        self.assertEqual(self.proof['execution_order'], ['repair_P0', 'review_P1', 'repair_P1'])
++        self.assertFalse(self.proof['full_function_migration_verified'])
++        self.assertIn('drag', {r['area'] for r in self.proof['retained_partial_contracts']})
++        plan = (ROOT / 'reports/replica/offline-migration-plan.md').read_text()
++        self.assertIn('先修复P0，再检查P1，最后修复P1', plan)
++        active = [l for l in plan.splitlines() if l.startswith('| P') and '| in_progress |' in l]
++        self.assertEqual(len(active), 1)
++        self.assertIn('P0', active[0])
++
++
++if __name__ == '__main__':
++    unittest.main()

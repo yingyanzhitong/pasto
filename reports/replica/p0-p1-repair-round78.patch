@@ -1,0 +1,450 @@
+--- phase-78-before/replica/Sources/PastoCore/ClipboardPersistence.swift
++++ replica/Sources/PastoCore/ClipboardPersistence.swift
+@@ -224,6 +224,7 @@
+             item.pinboardIDs.insert(owner)
+         } else { item.pinboardOwnerID = nil }
+         try ClipboardItemOrderPersistence.project(&item, from: object)
++        try ClipboardSourcePersistence.projectApplication(&item, from: object)
+         return item
+     }
+ 
+@@ -419,6 +420,8 @@
+         value.createdAt = Date(timeIntervalSinceReferenceDate: 0)
+         value.updatedAt = value.createdAt; value.isInHistory = false
+         value.pinboardOrder = nil
++        value.sourceApplicationSnapshot = nil
++        value.hasSourceApplicationSnapshot = false
+         return value
+     }
+ 
+--- phase-78-before/replica/Sources/PastoCore/ClipboardSourcePersistence.swift
++++ replica/Sources/PastoCore/ClipboardSourcePersistence.swift
+@@ -108,6 +108,26 @@
+         }
+     }
+ 
++    // 38222c / 383df4 consume the selected entity's current sourceApplication relation.
++    nonisolated static func projectApplication(_ item: inout ClipboardItem, from object: NSManagedObject) throws {
++        item.hasSourceApplicationSnapshot = true
++        item.sourceApplicationRelationIsKnown = true
++        guard let application = object.value(forKey: "sourceApplication") as? NSManagedObject else {
++            item.sourceApplicationSnapshot = nil
++            item.sourceApplicationBundleID = nil
++            return
++        }
++        guard let identifier = application.value(forKey: "bundleIdentifier") as? String,
++              let name = application.value(forKey: "name") as? String,
++              let color = application.value(forKey: "rawColor") as? NSNumber else {
++            throw CocoaError(.fileReadCorruptFile)
++        }
++        item.sourceApplicationBundleID = identifier
++        item.sourceApplicationSnapshot = SourceApplicationRecord(bundleIdentifier: identifier, name: name,
++            rawIcon: application.value(forKey: "rawIcon") as? Data,
++            rawColor: UInt64(bitPattern: color.int64Value))
++    }
++
+     // 0x10030e070 / 0x10030ed6c share this dictionary/name query shape.
+     private func names(in entity: String, matching query: String) throws -> [String] {
+         let request = NSFetchRequest<NSDictionary>(entityName: entity)
+--- phase-78-before/replica/Sources/PastoCore/ClipboardStore.swift
++++ replica/Sources/PastoCore/ClipboardStore.swift
+@@ -381,6 +381,7 @@
+     }
+ 
+     public func sourceApplication(for item: ClipboardItem) -> SourceApplicationRecord? {
++        if item.hasSourceApplicationSnapshot { return item.sourceApplicationSnapshot }
+         guard let identifier = item.sourceApplicationBundleID else { return nil }
+         return sourceApplications.first { $0.bundleIdentifier == identifier }
+     }
+--- phase-78-before/replica/Sources/PastoCore/Models.swift
++++ replica/Sources/PastoCore/Models.swift
+@@ -36,6 +36,18 @@
+     public var payloads: [String: Data]
+     public var imagePreviewMetadata: OriginalImagePreviewMetadata?
+     public var rawPreview: Data?
++
++    // This is a read-time projection of the native relation, never archived as item content.
++    public var sourceApplicationSnapshot: SourceApplicationRecord? = nil
++    public var hasSourceApplicationSnapshot = false
++
++    private enum CodingKeys: String, CodingKey {
++        case id, nativeIdentifier, nativeChecksum, sourceIdentifier, createdAt
++        case updatedAt, title, hasExplicitTitle, kind, plainText
++        case sourceName, sourceBundleID, sourceApplicationBundleID, sourceApplicationRelationIsKnown, sourceDevice
++        case isInHistory, payloads, imagePreviewMetadata, rawPreview, pinboardIDs
++        case pinboardOwnerID, pinboardOrder, isDeleted
++    }
+ 
+     public var originalTitle: String? {
+         if hasExplicitTitle == false || (hasExplicitTitle == nil && title.isEmpty) { return nil }
+--- phase-78-before/scripts/tests/item_order_scope_contract.py
++++ scripts/tests/item_order_scope_contract.py
+@@ -1,5 +1,6 @@
+ """Explicit phase70 deltas for historical source contracts; actual new paths have separate tests."""
+ from test_offline_p0_contracts import body
++from native_application_scope_contract import pre_native_application
+ 
+ ORDER_MODEL = '        if includeItemOrder { ClipboardItemOrderPersistence.addField(to: model) }\n'
+ ORDER_PROJECT = '        try ClipboardItemOrderPersistence.project(&item, from: object)\n'
+@@ -14,6 +15,7 @@
+ 
+ 
+ def without_order_projection(source):
++    source = pre_native_application(source)
+     return source.replace(ORDER_PROJECT, '', 1).replace(ORDER_BOOTSTRAP, '', 1).replace(ORDER_CONTENT, '', 1)
+ 
+ 
+@@ -37,6 +39,7 @@
+ 
+ 
+ def without_list_factory(source, public=False):
++    source = pre_native_application(source)
+     marker = ('public ' if public else '') + 'func makeListCollection('
+     declaration = '    ' + marker
+     if declaration not in source: return source
+--- phase-78-before/scripts/tests/modal_restore_scope_contract.py
++++ scripts/tests/modal_restore_scope_contract.py
+@@ -4,6 +4,7 @@
+ These literal hunks preserve the historical scope; they do not replace its evidence.
+ """
+ from pathlib import Path
++from native_application_scope_contract import pre_native_application
+ 
+ RESTORE_ITEM_PATH = 'replica/Sources/PastoCore/ClipboardRestoreItem.swift'
+ 
+@@ -193,6 +194,7 @@
+   '    }\n')]
+ 
+ def pre_modal_restore(source):
++    source = pre_native_application(source)
+     for path, previous, current in HUNKS:
+         if current in source:
+             assert source.count(current) == 1, path
+--- phase-78-before/scripts/tests/test_p1_repair_filter_loading.py
++++ scripts/tests/test_p1_repair_filter_loading.py
+@@ -10,6 +10,7 @@
+ sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'scripts/tests')]
+ from function_ledger import source_fragments
+ from test_offline_p0_contracts import body
++from native_application_scope_contract import pre_native_application_bytes
+ from test_p0_repair_checksum_routing import original_fragment
+ 
+ 
+@@ -126,4 +127,4 @@
+             self.assertIn(token, limitations)
+         for path in ['replica/Sources/Pasto/UI/ReplicaSearchSuggestionSource.swift',
+                      'replica/Sources/PastoCore/ClipboardSourcePersistence.swift']:
+-            self.assertEqual((ROOT / path).read_bytes(), (self.phase / 'before' / path).read_bytes())
++            self.assertEqual(pre_native_application_bytes(ROOT / path), (self.phase / 'before' / path).read_bytes())
+--- phase-78-before/scripts/tests/test_p1_repair_modal_restore_input.py
++++ scripts/tests/test_p1_repair_modal_restore_input.py
+@@ -10,6 +10,7 @@
+ sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'scripts/tests')]
+ from function_ledger import source_fragments
+ from test_offline_p0_contracts import body
++from native_application_scope_contract import pre_native_application_bytes
+ from test_p0_repair_checksum_routing import original_fragment
+ from modal_restore_scope_contract import RESTORE_ITEM_PATH, pre_modal_restore, HUNKS
+ 
+@@ -174,7 +175,7 @@
+             self.assertEqual(pre_modal_restore(self.source[key]), self.before(key))
+         files = {str(p.relative_to(ROOT)) for p in (ROOT / 'replica/Sources').rglob('*') if p.is_file()}
+         self.assertEqual(files - set(self.base['production']), {RESTORE_ITEM_PATH})
+-        sha = lambda p: hashlib.sha256((ROOT / p).read_bytes()).hexdigest()
++        sha = lambda p: hashlib.sha256(pre_native_application_bytes(ROOT / p)).hexdigest()
+         changed = {p for p, h in self.base['production'].items() if sha(p) != h}
+         self.assertEqual(changed, set(self.paths.values()) - {RESTORE_ITEM_PATH})
+         for p in ['replica/Package.swift', 'package.json']:
+--- phase-78-before/scripts/tests/test_p1_repair_native_sources.py
++++ scripts/tests/test_p1_repair_native_sources.py
+@@ -11,6 +11,7 @@
+ sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'scripts/tests')]
+ from function_ledger import source_fragments
+ from test_offline_p0_contracts import body
++from native_application_scope_contract import pre_native_application_bytes
+ from test_p0_repair_checksum_routing import original_fragment
+ 
+ 
+@@ -114,7 +115,7 @@
+         self.assertNotIn('Host.', device)
+         self.assertNotIn('currentDevice', device)
+         models = ROOT / 'replica/Sources/PastoCore/Models.swift'
+-        self.assertEqual(models.read_bytes(), (self.phase / 'before' / models.relative_to(ROOT)).read_bytes())
++        self.assertEqual(pre_native_application_bytes(models), (self.phase / 'before' / models.relative_to(ROOT)).read_bytes())
+ 
+     def test_application_metadata_reuses_bundle_identity_and_avoids_equal_field_writes(self):
+         application = body(self.source, 'func application(_ value:')
+--- /dev/null
++++ scripts/tests/test_p1_repair_live_application_projection.py
+@@ -0,0 +1,205 @@
++"""Live source-application relation reaches real consumers; source/Mach-O checks only."""
++import hashlib
++import json
++from pathlib import Path
++import re
++import struct
++import sys
++import unittest
++
++ROOT = Path(__file__).resolve().parents[2]
++sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'scripts/tests')]
++from function_ledger import source_fragments
++from test_offline_p0_contracts import body
++from test_p0_repair_checksum_routing import original_fragment
++from native_application_scope_contract import INSERTIONS, pre_native_application
++
++
++class LiveApplicationProjectionContracts(unittest.TestCase):
++    @classmethod
++    def setUpClass(cls):
++        cls.phase = ROOT / '.local/p0-repair/phase-78'
++        cls.proof = json.loads((cls.phase / 'live-application-contract.json').read_text())
++        cls.base = json.loads((cls.phase / 'baseline.json').read_text())
++        cls.paths = {k: 'replica/Sources/PastoCore/' + name + '.swift' for k, name in
++                     [('model', 'Models'), ('source', 'ClipboardSourcePersistence'),
++                      ('persistence', 'ClipboardPersistence'), ('store', 'ClipboardStore')]}
++        cls.source = {k: (ROOT / p).read_text() for k, p in cls.paths.items()}
++        cls.project = body(cls.source['source'], 'nonisolated static func projectApplication(')
++
++    def before(self, key): return (self.phase / 'before' / self.paths[key]).read_text()
++
++    def test_original_fragments_binary_and_actual_six_call_branch_words_are_bound(self):
++        self.assertEqual(len(self.proof['original_fragments']), 3)
++        for r in self.proof['original_fragments']:
++            self.assertEqual(source_fragments(ROOT / r['path'])[r['address']]['sha256'], r['sha256'])
++        raw = (ROOT / self.proof['binary']['path']).read_bytes()
++        self.assertEqual(hashlib.sha256(raw).hexdigest(), self.proof['binary']['sha256'])
++        self.assertEqual(len(self.proof['ARM_words']), 6)
++        for r in self.proof['ARM_words']:
++            a = int(r['address'], 16) - 0x100000000
++            self.assertEqual(raw[a:a + 4].hex(), r['bytes'])
++        for r in self.proof['arm_disassemblies'] + [self.proof['decoder'], self.proof['prior_model_proof']]:
++            self.assertEqual(hashlib.sha256((ROOT / r['path']).read_bytes()).hexdigest(), r['sha256'])
++
++    def test_three_real_selector_chains_bind_selected_relation_identifier_and_name(self):
++        ns = {};p = ROOT / self.proof['decoder']['path']
++        exec(p.read_text().split("idx={r['address']", 1)[0], ns)
++        self.assertEqual([r['selector'] for r in self.proof['selectors']], ['sourceApplication', 'bundleIdentifier', 'name'])
++        for r in self.proof['selectors']:
++            a = int(r['stub_address'], 16)
++            self.assertEqual(ns['read'](a, 20).hex(), r['stub_bytes'])
++            value, chain = ns['reachable_pointer'](int(r['pointer_address'], 16))
++            self.assertEqual(hex(value), r['pointer_raw']);self.assertEqual(chain, r['chain'])
++            target = ns['base'] + (value & ((1 << 36) - 1))
++            self.assertEqual(hex(target), r['selector_address'])
++            off = ns['offset'](target);raw = ns['raw']
++            self.assertEqual(raw[off:raw.index(b'\0', off)].decode(), r['selector'])
++
++    def test_original_bundle_and_image_name_consumers_use_relation_with_nil_branch(self):
++        fragments = {r['address']: original_fragment((ROOT / r['path']).read_text(), r['address'][2:])
++                     for r in self.proof['original_fragments']}
++        processor = fragments['0x10038222c'];image = fragments['0x100383df4']
++        self.assertIn('objc_stub::sourceApplication((ID)local_138)', processor)
++        self.assertLess(processor.index('if (local_100 == 0)'), processor.index('objc_stub::bundleIdentifier(local_100)'))
++        self.assertIn('objc_stub::sourceApplication(param_1)', image)
++        self.assertLess(image.index('if (IVar17 == 0)'), image.index('objc_stub::name(IVar17)'))
++        words = {int(r['address'], 16): int.from_bytes(bytes.fromhex(r['bytes']), 'little') for r in self.proof['ARM_words']}
++        for pc, target in [(0x100382718, 0x100c0ef60), (0x10038272c, 0x100bfea60),
++                           (0x10038415c, 0x100c0ef60), (0x100384170, 0x100c07060)]:
++            w = words[pc];self.assertEqual(w >> 26, 0b100101)
++            delta = w & 0x3ffffff
++            if delta & 0x2000000: delta -= 0x4000000
++            self.assertEqual(pc + delta * 4, target)
++
++    def test_original_model_has_optional_relation_and_required_name_identifier_color(self):
++        model = self.proof['original_model']
++        self.assertEqual(hashlib.sha256((ROOT / model['path']).read_bytes()).hexdigest(), model['sha256'])
++        schema = model['schema'];relation = schema['ItemEntity']['fields']['sourceApplication']
++        self.assertTrue(relation['NSIsOptional'])
++        self.assertEqual(relation['_NSDestinationEntityName'], 'ApplicationEntity')
++        fields = schema['ApplicationEntity']['fields']
++        for k in ['bundleIdentifier', 'name', 'rawColor']: self.assertFalse(fields[k].get('NSIsOptional', False))
++        self.assertEqual(fields['rawColor']['NSAttributeType'], 300)
++        self.assertTrue(fields['rawIcon']['NSIsOptional'])
++
++    def test_current_four_sources_and_after_snapshots_are_bound(self):
++        self.assertEqual(set(self.proof['current_sources']), set(self.paths.values()))
++        for p, h in self.proof['current_sources'].items():
++            raw = (ROOT / p).read_bytes()
++            self.assertEqual(hashlib.sha256(raw).hexdigest(), h)
++            self.assertEqual(raw, (self.phase / 'after' / p).read_bytes())
++
++    def test_authoritative_nil_clears_old_relation_without_fallback(self):
++        p = self.project
++        self.assertLess(p.index('item.hasSourceApplicationSnapshot = true'), p.index('guard let application'))
++        self.assertIn('item.sourceApplicationRelationIsKnown = true', p)
++        missing = body(p, 'guard let application =')
++        self.assertIn('item.sourceApplicationSnapshot = nil', missing)
++        self.assertIn('item.sourceApplicationBundleID = nil', missing)
++        self.assertIn('return', missing)
++        for token in ['sourceApplications', 'sourceBundleID', 'sourceName', 'first(where:', 'decode(', 'try?']:
++            self.assertNotIn(token, p)
++
++    def test_present_relation_reads_current_name_icon_and_unsigned_color_bits(self):
++        p = self.project
++        for token in ['application.value(forKey: "bundleIdentifier") as? String',
++                      'application.value(forKey: "name") as? String',
++                      'application.value(forKey: "rawColor") as? NSNumber',
++                      'application.value(forKey: "rawIcon") as? Data',
++                      'UInt64(bitPattern: color.int64Value)', 'item.sourceApplicationBundleID = identifier',
++                      'SourceApplicationRecord(bundleIdentifier: identifier, name: name']:
++            self.assertIn(token, p)
++        self.assertIn('throw CocoaError(.fileReadCorruptFile)', p)
++        self.assertNotIn('UInt64(color.int64Value)', p)
++        for token in ['context.', 'Task {', 'save(', 'reload(', 'reset(', 'fetch(', 'Date()']:
++            self.assertNotIn(token, p)
++
++    def test_archive_keys_are_exactly_all_twenty_three_previous_stored_fields(self):
++        old = body(self.before('model'), 'public struct ClipboardItem:')
++        stored = set(re.findall(r'^    public var (\w+):[^\n{]+$', old, re.M))
++        self.assertEqual(len(stored), 23)
++        model = body(self.source['model'], 'public struct ClipboardItem:')
++        coding = body(model, 'private enum CodingKeys: String, CodingKey')
++        keys = set()
++        for line in coding.splitlines():
++            if line.strip().startswith('case '): keys.update(x.strip() for x in line.strip()[5:].split(','))
++        self.assertEqual(keys, stored)
++        for transient in ['sourceApplicationSnapshot', 'hasSourceApplicationSnapshot']:
++            self.assertNotIn(transient, coding)
++        self.assertIn('public var sourceApplicationSnapshot: SourceApplicationRecord? = nil', model)
++        self.assertIn('public var hasSourceApplicationSnapshot = false', model)
++        self.assertEqual(body(self.source['model'], 'public init(id: UUID = UUID(), nativeIdentifier:'),
++                         body(self.before('model'), 'public init(id: UUID = UUID(), nativeIdentifier:'))
++
++    def test_transient_source_snapshot_is_removed_before_content_equality_and_encoding(self):
++        current = body(self.source['persistence'], 'private func content(_ item:')
++        previous = body(self.before('persistence'), 'private func content(_ item:')
++        self.assertEqual(pre_native_application(current), previous)
++        for token in ['value.sourceApplicationSnapshot = nil', 'value.hasSourceApplicationSnapshot = false']:
++            self.assertLess(current.index(token), current.index('return value'))
++        commit = body(self.source['persistence'], 'func commit<T>(')
++        self.assertEqual(commit, body(self.before('persistence'), 'func commit<T>('))
++        self.assertIn('old.map(content) != content(item)', commit)
++        self.assertIn('try encode(content(item))', commit)
++
++    def test_shared_item_projection_adds_only_native_source_read_and_no_query(self):
++        current = body(self.source['persistence'], 'nonisolated static func item(')
++        previous = body(self.before('persistence'), 'nonisolated static func item(')
++        line = '        try ClipboardSourcePersistence.projectApplication(&item, from: object)\n'
++        self.assertEqual(current.count(line), 1)
++        self.assertEqual(current.replace(line, '', 1), previous)
++        self.assertLess(current.index(line), current.index('return item'))
++        for token in ['context.', 'save(', 'reload()', 'fetch(', 'Task {']:
++            self.assertNotIn(token, current)
++
++    def test_actual_getter_prefers_native_snapshot_including_nil_before_legacy_lookup(self):
++        current = body(self.source['store'], 'public func sourceApplication(for item:')
++        previous = body(self.before('store'), 'public func sourceApplication(for item:')
++        line = '        if item.hasSourceApplicationSnapshot { return item.sourceApplicationSnapshot }\n'
++        self.assertEqual(current.replace(line, '', 1), previous)
++        self.assertLess(current.index('if item.hasSourceApplicationSnapshot'), current.index('guard let identifier'))
++        self.assertIn('sourceApplications.first { $0.bundleIdentifier == identifier }', current)
++        self.assertNotIn('if let snapshot', current)  # nil is authoritative, not a cache miss
++
++    def test_real_render_selection_and_modal_holder_use_same_shared_projection(self):
++        reference = (ROOT / 'replica/Sources/PastoCore/ClipboardCollectionItemReference.swift').read_text()
++        holder = (ROOT / 'replica/Sources/PastoCore/ClipboardRestoreItem.swift').read_text()
++        self.assertIn('ClipboardPersistence.item(object)', body(reference, 'public func item()'))
++        self.assertIn('ClipboardPersistence.item(object)', body(holder, 'init(id: UUID, object:'))
++        host = (ROOT / 'replica/Sources/Pasto/UI/ReplicaNativeCardCollection.swift').read_text()
++        self.assertIn('requiredItem()', body(host, 'private func renderedItem(at index:'))
++        self.assertIn('renderedItem(at: index)', body(host, 'func appliedSelectedItems(for state:'))
++
++    def test_real_writer_icon_and_color_consumers_read_source_getter(self):
++        writer = (ROOT / 'replica/Sources/PastoCore/Pasteboard.swift').read_text()
++        f = body(writer, 'private func writeToPasteboard(ids:')
++        for token in ['let application = sourceApplication(for: item)',
++                      'imageRestore.prepare(sourceName: application?.name',
++                      'sourceBundleID: application?.bundleIdentifier']:
++            self.assertIn(token, f)
++        panel = (ROOT / 'replica/Sources/Pasto/UI/PanelViews.swift').read_text()
++        self.assertIn('if let application = store.sourceApplication(for: item)', panel)
++        self.assertIn('SourceAppColor.color(application: store.sourceApplication(for: item))', panel)
++        self.assertNotIn('item.sourceBundleID', f)
++
++    def test_only_five_reviewed_insertions_change_four_existing_files_no_schema_or_UI_delta(self):
++        self.assertEqual(len(INSERTIONS), 5)
++        for key in self.paths:
++            self.assertEqual(pre_native_application(self.source[key]), self.before(key))
++        sha = lambda p: hashlib.sha256((ROOT / p).read_bytes()).hexdigest()
++        self.assertEqual({p for p, h in self.base['production'].items() if sha(p) != h}, set(self.paths.values()))
++        files = {str(p.relative_to(ROOT)) for p in (ROOT / 'replica/Sources').rglob('*') if p.is_file()}
++        self.assertEqual(files, set(self.base['production']))
++        for p in ['replica/Package.swift', 'package.json']:
++            self.assertEqual(sha(p), self.base['other'][p])
++
++    def test_full_provider_unknowns_and_runtime_remain_unclosed(self):
++        self.assertFalse(self.proof['full_function_migration_verified'])
++        self.assertEqual(self.proof['repaired_finite_contracts'], [])
++        self.assertEqual(self.proof['remaining_confirmed_differences'], ['Paste:0x1003544dc'])
++        self.assertTrue(any('metadata' in r for r in self.proof['remaining_work']))
++        self.assertTrue(any('Unknown04430c/0f733c' in r for r in self.proof['remaining_work']))
++
++
++if __name__ == '__main__': unittest.main()
+--- /dev/null
++++ scripts/tests/native_application_scope_contract.py
+@@ -0,0 +1,63 @@
++"""Isolate the phase78 native application projection for earlier frozen source contracts.
++
++New raw-source/encoding-key/consumer checks live in test_p1_repair_live_application_projection.
++Only these five reviewed insertions are removed; immutable earlier evidence remains unchanged.
++"""
++from pathlib import Path
++
++INSERTIONS = [('replica/Sources/PastoCore/ClipboardPersistence.swift',
++  '        try ClipboardSourcePersistence.projectApplication(&item, from: object)\n'),
++ ('replica/Sources/PastoCore/ClipboardPersistence.swift',
++  '        value.sourceApplicationSnapshot = nil\n        value.hasSourceApplicationSnapshot = false\n'),
++ ('replica/Sources/PastoCore/ClipboardStore.swift',
++  '        if item.hasSourceApplicationSnapshot { return item.sourceApplicationSnapshot }\n'),
++ ('replica/Sources/PastoCore/ClipboardSourcePersistence.swift',
++  "    // 38222c / 383df4 consume the selected entity's current sourceApplication relation.\n"
++  '    nonisolated static func projectApplication(_ item: inout ClipboardItem, from object: NSManagedObject) '
++  'throws {\n'
++  '        item.hasSourceApplicationSnapshot = true\n'
++  '        item.sourceApplicationRelationIsKnown = true\n'
++  '        guard let application = object.value(forKey: "sourceApplication") as? NSManagedObject else {\n'
++  '            item.sourceApplicationSnapshot = nil\n'
++  '            item.sourceApplicationBundleID = nil\n'
++  '            return\n'
++  '        }\n'
++  '        guard let identifier = application.value(forKey: "bundleIdentifier") as? String,\n'
++  '              let name = application.value(forKey: "name") as? String,\n'
++  '              let color = application.value(forKey: "rawColor") as? NSNumber else {\n'
++  '            throw CocoaError(.fileReadCorruptFile)\n'
++  '        }\n'
++  '        item.sourceApplicationBundleID = identifier\n'
++  '        item.sourceApplicationSnapshot = SourceApplicationRecord(bundleIdentifier: identifier, name: '
++  'name,\n'
++  '            rawIcon: application.value(forKey: "rawIcon") as? Data,\n'
++  '            rawColor: UInt64(bitPattern: color.int64Value))\n'
++  '    }\n'
++  '\n'),
++ ('replica/Sources/PastoCore/Models.swift',
++  '\n'
++  '    // This is a read-time projection of the native relation, never archived as item content.\n'
++  '    public var sourceApplicationSnapshot: SourceApplicationRecord? = nil\n'
++  '    public var hasSourceApplicationSnapshot = false\n'
++  '\n'
++  '    private enum CodingKeys: String, CodingKey {\n'
++  '        case id, nativeIdentifier, nativeChecksum, sourceIdentifier, createdAt\n'
++  '        case updatedAt, title, hasExplicitTitle, kind, plainText\n'
++  '        case sourceName, sourceBundleID, sourceApplicationBundleID, sourceApplicationRelationIsKnown, '
++  'sourceDevice\n'
++  '        case isInHistory, payloads, imagePreviewMetadata, rawPreview, pinboardIDs\n'
++  '        case pinboardOwnerID, pinboardOrder, isDeleted\n'
++  '    }\n')]
++
++def pre_native_application(source):
++    for path, addition in INSERTIONS:
++        if addition in source:
++            assert source.count(addition) == 1, path
++            source = source.replace(addition, '', 1)
++    return source
++
++
++def pre_native_application_bytes(path):
++    path = Path(path)
++    value = path.read_bytes()
++    return pre_native_application(value.decode()).encode() if path.suffix == '.swift' else value

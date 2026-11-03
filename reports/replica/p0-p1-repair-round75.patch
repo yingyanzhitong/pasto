@@ -1,0 +1,329 @@
+--- phase-75-before/replica/Sources/Pasto/UI/ReplicaNativeCardCollection.swift
++++ replica/Sources/Pasto/UI/ReplicaNativeCardCollection.swift
+@@ -163,6 +163,15 @@
+     func appliedItems(for state: ReplicaUIState) -> [ClipboardItem]? {
+         guard self.state === state, state.collectionOwner === self else { return nil }
+         return items
++    }
++
++    func appliedSelectedItems(for state: ReplicaUIState, orderedIDs: [UUID]) -> [ClipboardItem]? {
++        guard self.state === state, state.collectionOwner === self else { return nil }
++        let positions = Dictionary(uniqueKeysWithValues: items.enumerated().map { ($0.element.id, $0.offset) })
++        return orderedIDs.compactMap { identifier in
++            guard let index = positions[identifier] else { return nil }
++            return renderedItem(at: index)
++        }
+     }
+ 
+     // 0x100228ee8 -> 0x100228f6c: deliver selection to visible cells synchronously.
+@@ -569,7 +578,7 @@
+         guard let applied = appliedItems(for: state) else { return }
+         let positions = Dictionary(uniqueKeysWithValues: applied.enumerated().map { ($0.element.id, $0.offset) })
+         let indexes = state.orderedSelectionIDs.filter { state.selection.contains($0) }.compactMap { positions[$0] }
+-        let selected = indexes.map { applied[$0] }
++        let selected = indexes.map { renderedItem(at: $0) }
+         let plain = NSEvent.ModifierFlags(rawValue: state.store.preferences.plainTextModifierRawValue)
+         let options: OriginalPasteboardRestore.Options = NSEvent.modifierFlags.isSuperset(of: plain) ? .plainText : []
+         do {
+--- phase-75-before/replica/Sources/Pasto/UI/ReplicaUIController.swift
++++ replica/Sources/Pasto/UI/ReplicaUIController.swift
+@@ -297,8 +297,14 @@
+         }
+     }
+     var selectedItems: [ClipboardItem] {
++        let ids = orderedSelectionIDs.filter { selection.contains($0) }
++        if let collectionOwner { return collectionOwner.appliedSelectedItems(for: self, orderedIDs: ids) ?? [] }
+         let byID = Dictionary(uniqueKeysWithValues: visibleItems.map { ($0.id, $0) })
+-        return orderedSelectionIDs.compactMap { selection.contains($0) ? byID[$0] : nil }
++        let references = collectionItemReferences
++        return ids.compactMap { identifier in
++            guard let item = byID[identifier] else { return nil }
++            return references[identifier]?.requiredItem() ?? item
++        }
+     }
+     var primaryItem: ClipboardItem? {
+         visibleItems.first { $0.id == primaryID } ?? selectedItems.first ?? visibleItems.first
+@@ -1781,8 +1787,11 @@
+     }
+ 
+     private func appliedSelectionItems() -> [ClipboardItem] {
+-        let byID = Dictionary(uniqueKeysWithValues: (appliedCollectionItems() ?? []).map { ($0.id, $0) })
+-        return state.collectionSelectionSnapshot().orderedIDs.compactMap { byID[$0] }
++        guard let panel = loadedPanel,
++              let collection = (panel as? ReplicaPanel)?.collectionFocusTarget as? ReplicaNativeCollectionHost,
++              collection.window === panel else { return [] }
++        return collection.appliedSelectedItems(for: state,
++            orderedIDs: state.collectionSelectionSnapshot().orderedIDs) ?? []
+     }
+ 
+     // 0x100064da0: filter first, deactivate once, then decode each accepted preview again.
+--- phase-75-before/scripts/tests/live_item_render_scope_contract.py
++++ scripts/tests/live_item_render_scope_contract.py
+@@ -19,6 +19,8 @@
+ 
+ 
+ def pre_live_render(source):
++    from live_item_selection_scope_contract import pre_live_selection
++    source = pre_live_selection(source)
+     if 'public let itemReferences: [UUID: ClipboardCollectionItemReference]' in source:
+         snapshot = body(source, 'public struct Snapshot: Equatable')
+         prefix, sep, _ = snapshot.partition('        public let itemReferences:')
+--- phase-75-before/scripts/tests/test_p0_repair_drag_applied_input.py
++++ scripts/tests/test_p0_repair_drag_applied_input.py
+@@ -97,7 +97,7 @@
+         source = body(self.host, 'private func beginNativeDrag(_ event: NSEvent, state: ReplicaUIState)')
+         order = ['let positions = Dictionary(uniqueKeysWithValues: applied.enumerated()',
+                  'let indexes = state.orderedSelectionIDs.filter { state.selection.contains($0) }.compactMap { positions[$0] }',
+-                 'let selected = indexes.map { applied[$0] }',
++                 'let selected = indexes.map { renderedItem(at: $0) }',
+                  'dragPasteboardGroups(for: selected', 'selected.map { ReplicaNativeDragItemReference($0) }',
+                  'zip(indexes, draggingWriters)']
+         self.assertEqual([source.index(s) for s in order], sorted(source.index(s) for s in order))
+--- phase-75-before/scripts/tests/test_p0_repair_edit_router.py
++++ scripts/tests/test_p0_repair_edit_router.py
+@@ -53,8 +53,8 @@
+ 
+     def test_selection_comes_from_applied_items_in_order_with_missing_ids_omitted(self):
+         selection = body(self.ui, 'private func appliedSelectionItems()')
+-        self.assertIn('appliedCollectionItems()', selection)
+-        self.assertIn('state.collectionSelectionSnapshot().orderedIDs.compactMap', selection)
++        self.assertIn('collection.appliedSelectedItems(for: state,', selection)
++        self.assertIn('orderedIDs: state.collectionSelectionSnapshot().orderedIDs', selection)
+         self.assertNotIn('visibleItems', selection)
+         self.assertNotIn('store.items', selection)
+ 
+--- phase-75-before/scripts/tests/test_p0_repair_open_selection.py
++++ scripts/tests/test_p0_repair_open_selection.py
+@@ -42,8 +42,9 @@
+ 
+     def test_copy_and_open_resolve_ordered_selection_only_in_applied_snapshot(self):
+         helper = body(self.ui, 'private func appliedSelectionItems()')
+-        self.assertIn('(appliedCollectionItems() ?? []).map { ($0.id, $0) }', helper)
+-        self.assertIn('orderedIDs.compactMap { byID[$0] }', helper)
++        self.assertIn('collection.appliedSelectedItems(for: state,', helper)
++        self.assertIn('orderedIDs: state.collectionSelectionSnapshot().orderedIDs', helper)
++        self.assertIn('collection.window === panel else { return [] }', helper)
+         self.assertNotIn('visibleItems', helper)
+         self.assertNotIn('store.items', helper)
+         self.assertNotIn('.sorted', helper)
+--- phase-75-before/scripts/tests/test_p0_repair_selection_snapshot_consumers.py
++++ scripts/tests/test_p0_repair_selection_snapshot_consumers.py
+@@ -97,8 +97,8 @@
+         self.assertIn('paste(ids: items.map(\.id), plainTextOnly: plainTextOnly)', paste)
+         self.assertNotIn('state.selectedItems', paste)
+         selection = body(self.ui, 'private func appliedSelectionItems()')
+-        self.assertIn('(appliedCollectionItems() ?? [])', selection)
+-        self.assertIn('collectionSelectionSnapshot().orderedIDs.compactMap { byID[$0] }', selection)
++        self.assertIn('collection.appliedSelectedItems(for: state,', selection)
++        self.assertIn('orderedIDs: state.collectionSelectionSnapshot().orderedIDs', selection)
+ 
+     def test_space_uses_last_applied_selection_without_changing_preview_timing(self):
+         handle = body(self.ui, 'private func handleKey(_ event: NSEvent)')
+--- phase-75-before/scripts/tests/test_p1_repair_live_item_render.py
++++ scripts/tests/test_p1_repair_live_item_render.py
+@@ -10,6 +10,7 @@
+ from function_ledger import source_fragments
+ from test_offline_p0_contracts import body
+ from live_item_render_scope_contract import pre_live_render, REFERENCE_PATH
++from live_item_selection_scope_contract import pre_live_selection, pre_live_selection_bytes
+ 
+ 
+ class LiveItemRenderContracts(unittest.TestCase):
+@@ -22,7 +23,7 @@
+             index='replica/Sources/Pasto/UI/ReplicaSearchIndex.swift',
+             ui='replica/Sources/Pasto/UI/ReplicaUIController.swift',
+             host='replica/Sources/Pasto/UI/ReplicaNativeCardCollection.swift')
+-        cls.source = {k: (ROOT / p).read_text() for k, p in cls.paths.items()}
++        cls.source = {k: pre_live_selection((ROOT / p).read_text()) for k, p in cls.paths.items()}
+ 
+     def before(self, key): return (self.phase / 'before' / self.paths[key]).read_text()
+ 
+@@ -33,8 +34,8 @@
+         for row in self.proof['original_fragments']:
+             self.assertEqual(source_fragments(ROOT / row['path'])[row['address']]['sha256'], row['sha256'])
+         for p, digest in self.proof['current_sources'].items():
+-            self.assertEqual(hashlib.sha256((ROOT / p).read_bytes()).hexdigest(), digest)
+-            self.assertEqual((ROOT / p).read_bytes(), (self.phase / 'after' / p).read_bytes())
++            self.assertEqual(hashlib.sha256(pre_live_selection_bytes(ROOT / p)).hexdigest(), digest)
++            self.assertEqual(pre_live_selection_bytes(ROOT / p), (self.phase / 'after' / p).read_bytes())
+ 
+     def test_reference_stores_actual_context_and_object_ID_without_payload_cache(self):
+         ref = self.source['reference']
+@@ -140,7 +141,7 @@
+         self.assertFalse(self.proof['full_function_migration_verified'])
+ 
+     def test_only_four_existing_production_files_and_one_reference_adapter_change(self):
+-        sha = lambda p: hashlib.sha256((ROOT / p).read_bytes()).hexdigest()
++        sha = lambda p: hashlib.sha256(pre_live_selection_bytes(ROOT / p)).hexdigest()
+         changed = {p for p, digest in self.base['production'].items() if sha(p) != digest}
+         self.assertEqual(changed, {self.paths[k] for k in ['source', 'index', 'ui', 'host']})
+         current = {str(p.relative_to(ROOT)) for p in (ROOT / 'replica/Sources').rglob('*') if p.is_file()}
+--- /dev/null
++++ scripts/tests/test_p1_repair_live_item_selection.py
+@@ -0,0 +1,124 @@
++"""Selected live payloads use the applied epoch; source-only, not native execution."""
++import hashlib
++import json
++from pathlib import Path
++import sys
++import unittest
++
++ROOT = Path(__file__).resolve().parents[2]
++sys.path[:0] = [str(ROOT / 'scripts/tests')]
++from test_offline_p0_contracts import body
++from live_item_selection_scope_contract import pre_live_selection
++
++
++class LiveItemSelectionContracts(unittest.TestCase):
++    @classmethod
++    def setUpClass(cls):
++        cls.phase = ROOT / '.local/p0-repair/phase-75'
++        cls.proof = json.loads((cls.phase / 'live-selection-contract.json').read_text())
++        cls.base = json.loads((cls.phase / 'baseline.json').read_text())
++        cls.paths = dict(host='replica/Sources/Pasto/UI/ReplicaNativeCardCollection.swift',
++                         ui='replica/Sources/Pasto/UI/ReplicaUIController.swift')
++        cls.source = {k: (ROOT / p).read_text() for k, p in cls.paths.items()}
++
++    def before(self, key): return (self.phase / 'before' / self.paths[key]).read_text()
++
++    def test_original_live_getter_evidence_and_two_production_sources_are_bound(self):
++        old = self.proof['original_proof']
++        self.assertEqual(hashlib.sha256((ROOT / old['path']).read_bytes()).hexdigest(), old['sha256'])
++        for path, digest in self.proof['current_sources'].items():
++            self.assertEqual(hashlib.sha256((ROOT / path).read_bytes()).hexdigest(), digest)
++            self.assertEqual((ROOT / path).read_bytes(), (self.phase / 'after' / path).read_bytes())
++
++    def test_host_owner_gate_precedes_applied_identity_lookup(self):
++        selected = body(self.source['host'], 'func appliedSelectedItems(for state:')
++        self.assertIn('guard self.state === state, state.collectionOwner === self else { return nil }', selected)
++        self.assertLess(selected.index('guard self.state === state'), selected.index('let positions ='))
++        self.assertIn('items.enumerated().map { ($0.element.id, $0.offset) }', selected)
++        for token in ['visibleItems', 'collectionItemReferences', 'store.items', 'pendingSnapshot', 'source.value']:
++            self.assertNotIn(token, selected)
++
++    def test_requested_order_and_missing_ID_filter_precede_selected_only_live_read(self):
++        selected = body(self.source['host'], 'func appliedSelectedItems(for state:')
++        order = ['return orderedIDs.compactMap', 'guard let index = positions[identifier] else { return nil }',
++                 'return renderedItem(at: index)']
++        self.assertEqual([selected.index(t) for t in order], sorted(selected.index(t) for t in order))
++        for token in ['.sorted', 'Set(orderedIDs)', 'items.map { renderedItem', 'items.indices.map', 'save(', 'reset(']:
++            self.assertNotIn(token, selected)
++
++    def test_state_selection_filters_active_selection_and_uses_applied_owner_without_projection_fallback(self):
++        selected = body(self.source['ui'], 'var selectedItems:')
++        self.assertIn('let ids = orderedSelectionIDs.filter { selection.contains($0) }', selected)
++        self.assertIn('if let collectionOwner { return collectionOwner.appliedSelectedItems(for: self, orderedIDs: ids) ?? [] }', selected)
++        self.assertLess(selected.index('if let collectionOwner'), selected.index('let byID ='))
++        self.assertNotIn('if let items = collectionOwner?', selected)
++
++    def test_ownerless_projection_resolves_only_selected_members_with_current_handles(self):
++        selected = body(self.source['ui'], 'var selectedItems:')
++        self.assertIn('let references = collectionItemReferences', selected)
++        self.assertIn('return ids.compactMap', selected)
++        self.assertLess(selected.index('guard let item = byID[identifier] else { return nil }'),
++                        selected.index('references[identifier]?.requiredItem() ?? item'))
++        self.assertNotIn('visibleItems.map { $0.requiredItem', selected)
++
++    def test_controller_selection_uses_existing_panel_actual_window_and_applied_host(self):
++        selected = body(self.source['ui'], 'private func appliedSelectionItems()')
++        for token in ['guard let panel = loadedPanel', 'collectionFocusTarget as? ReplicaNativeCollectionHost',
++                      'collection.window === panel else { return [] }', 'collection.appliedSelectedItems(for: state,',
++                      'orderedIDs: state.collectionSelectionSnapshot().orderedIDs) ?? []']:
++            self.assertIn(token, selected)
++        for token in ['visibleItems', 'store.items', 'appliedCollectionItems()', 'ensurePanel', '.sorted']:
++            self.assertNotIn(token, selected)
++
++    def test_copy_and_paste_keep_existing_empty_guards_and_ID_dispatch(self):
++        for signature in ['func copySelection(plainTextOnly:', 'func pasteSelection(plainTextOnly:',
++                          'func copy(ids:', 'func paste(ids:', 'private func performCopy(']:
++            self.assertEqual(body(self.source['ui'], signature), body(self.before('ui'), signature))
++        copy = body(self.source['ui'], 'func copySelection(plainTextOnly:')
++        self.assertIn('let items = appliedSelectionItems()', copy)
++        self.assertIn('guard !items.isEmpty else { NSSound.beep(); return }', copy)
++
++    def test_open_edit_write_and_space_keep_real_applied_selection_consumers(self):
++        ui = self.source['ui']
++        self.assertIn('let selected = appliedSelectionItems()', body(ui, 'private func openAppliedSelection()'))
++        self.assertIn('appliedSelectionItems().filter', body(ui, 'private func writeAppliedSelection()'))
++        keys = body(ui, 'private func handleKey(')
++        self.assertIn('editItems(appliedSelectionItems())', keys)
++        self.assertIn('appliedSelectionItems().last', keys)
++        self.assertEqual(keys, body(self.before('ui'), 'private func handleKey('))
++
++    def test_drag_reads_selected_live_values_at_applied_preview_indexes(self):
++        drag = body(self.source['host'], 'private func beginNativeDrag(')
++        order = ['let positions = Dictionary', 'let indexes = state.orderedSelectionIDs.filter',
++                 'let selected = indexes.map { renderedItem(at: $0) }', 'dragPasteboardGroups(for: selected',
++                 'selected.map { ReplicaNativeDragItemReference($0) }', 'zip(indexes, draggingWriters)']
++        self.assertEqual([drag.index(t) for t in order], sorted(drag.index(t) for t in order))
++        self.assertNotIn('drainCollectionSnapshots()', drag)
++        self.assertNotIn('state.visibleItems', drag)
++
++    def test_metadata_applier_and_all_other_methods_are_preserved(self):
++        for key in self.paths:
++            self.assertEqual(pre_live_selection(self.source[key]), self.before(key))
++        for signature in ['func appliedItems(', 'private func drainCollectionSnapshots()', 'private func tileCells()']:
++            self.assertEqual(body(self.source['host'], signature), body(self.before('host'), signature))
++        self.assertEqual(body(self.source['ui'], 'var visibleItems:'), body(self.before('ui'), 'var visibleItems:'))
++
++    def test_only_two_existing_UI_files_change_without_provider_model_or_writer_edits(self):
++        sha = lambda p: hashlib.sha256((ROOT / p).read_bytes()).hexdigest()
++        self.assertEqual({p for p, h in self.base['production'].items() if sha(p) != h}, set(self.paths.values()))
++        self.assertEqual({str(p.relative_to(ROOT)) for p in (ROOT / 'replica/Sources').rglob('*') if p.is_file()}, set(self.base['production']))
++        for p in ['replica/Package.swift', 'package.json']:
++            self.assertEqual(sha(p), self.base['other'][p])
++
++    def test_restoration_writer_and_metadata_gap_are_not_marked_complete(self):
++        writer = (ROOT / 'replica/Sources/PastoCore/Pasteboard.swift').read_text()
++        restore = body(writer, 'private func writeToPasteboard(ids:')
++        self.assertIn('try reload()', restore)
++        self.assertIn('items.first(where:', restore)
++        self.assertFalse(self.proof['full_function_migration_verified'])
++        self.assertEqual(self.proof['remaining_confirmed_differences'], ['Paste:0x1003544dc'])
++        self.assertEqual(self.proof['repaired_finite_contracts'], [])
++
++
++if __name__ == '__main__':
++    unittest.main()
+--- /dev/null
++++ scripts/tests/live_item_selection_scope_contract.py
+@@ -0,0 +1,39 @@
++"""Explicit phase75 selected-value delta for frozen earlier contracts."""
++from pathlib import Path
++from test_offline_p0_contracts import body
++
++
++def pre_live_selection(source):
++    declaration = '    func appliedSelectedItems(for state: ReplicaUIState, orderedIDs: [UUID])'
++    if declaration in source:
++        start = source.index(declaration)
++        method = body(source, 'func appliedSelectedItems(for state:')
++        end = source.index(method, start) + len(method) + 2
++        source = source[:start] + source[end:]
++        assert source.count('let selected = indexes.map { renderedItem(at: $0) }') == 1
++        source = source.replace('let selected = indexes.map { renderedItem(at: $0) }',
++                                'let selected = indexes.map { applied[$0] }', 1)
++    if 'let ids = orderedSelectionIDs.filter { selection.contains($0) }' in source:
++        selected = body(source, 'var selectedItems:')
++        assert 'collectionOwner.appliedSelectedItems(for: self, orderedIDs: ids) ?? []' in selected
++        assert 'references[identifier]?.requiredItem() ?? item' in selected
++        old = '''{
++        let byID = Dictionary(uniqueKeysWithValues: visibleItems.map { ($0.id, $0) })
++        return orderedSelectionIDs.compactMap { selection.contains($0) ? byID[$0] : nil }
++    }'''
++        source = source.replace(selected, old, 1)
++        applied = body(source, 'private func appliedSelectionItems()')
++        assert 'collection.window === panel else { return [] }' in applied
++        assert 'collection.appliedSelectedItems(for: state,' in applied
++        old = '''{
++        let byID = Dictionary(uniqueKeysWithValues: (appliedCollectionItems() ?? []).map { ($0.id, $0) })
++        return state.collectionSelectionSnapshot().orderedIDs.compactMap { byID[$0] }
++    }'''
++        source = source.replace(applied, old, 1)
++    return source
++
++
++def pre_live_selection_bytes(path):
++    path = Path(path)
++    value = path.read_bytes()
++    return pre_live_selection(value.decode()).encode() if path.suffix == '.swift' else value

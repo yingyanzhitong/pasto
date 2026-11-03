@@ -1,0 +1,22 @@
+--- before/replica/Sources/PastoCore/OriginalStackTableController.swift
++++ after/replica/Sources/PastoCore/OriginalStackTableController.swift
+@@ -1,4 +1,10 @@
+ import AppKit
++
++@MainActor
++private final class OriginalStackTableView: NSTableView {
++    // 0a0b2c: the Stack table permits window dragging independently of row selection.
++    override var mouseDownCanMoveWindow: Bool { true }
++}
+ 
+ /// Recovered Stack table behavior. Presentation of an individual replica item is supplied by the UI.
+ @MainActor public final class OriginalStackTableController: NSObject, NSTableViewDataSource, NSTableViewDelegate {
+@@ -20,7 +26,7 @@
+     private var heightConstraint: NSLayoutConstraint?
+ 
+     public override init() {
+-        tableView = NSTableView(frame: .init(x: 0, y: 0, width: 264, height: 44))
++        tableView = OriginalStackTableView(frame: .init(x: 0, y: 0, width: 264, height: 44))
+         scrollView = NSScrollView(frame: tableView.frame)
+         super.init()
+         let column = NSTableColumn(identifier: .init("snippet"))

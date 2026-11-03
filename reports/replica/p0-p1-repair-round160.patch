@@ -1,0 +1,53 @@
+--- a/replica/Sources/PastoCore/ClipboardPersistence.swift
++++ b/replica/Sources/PastoCore/ClipboardPersistence.swift
+@@ -15,6 +15,7 @@
+ /// Entity identities remain the existing UUIDs; this is not the original vendor's store schema.
+ @MainActor
+ final class ClipboardPersistence {
++    private static let transactionDiagnostics = OriginalNamedDiagnostic.f_1000d4624(name: "DB")
+     private enum StoreModelError: Error {
+         case unknownSchema
+     }
+@@ -760,7 +761,7 @@
+     }
+ 
+     /// Caller holds the process-shared flock across read / merge / transaction / publish.
+-    /// The native transaction propagates callback/save errors without resetting or rolling back.
++    /// Callback errors propagate directly; save errors diagnose and roll back this context.
+     func commit(_ state: StoreState, previous: StoreState?, deletingItemIDs: [UUID] = []) throws {
+         _ = try commit(previous: previous, deletingItemIDs: deletingItemIDs) { transaction in
+             try transaction.repository.lists.synchronize(pinboards: state.pinboards,
+@@ -905,7 +906,32 @@
+                 try transaction.repository.lists.refreshHistoryIfNeeded()
+                 if context.hasChanges {
+                     root.setValue(UUID(), forKey: "revision")
+-                    try OriginalObjCExceptionBridge.f_1002ff9c8 { try context.save() }
++                    do {
++                        try OriginalObjCExceptionBridge.f_1002ff9c8 { try context.save() }
++                    } catch {
++                        // 0x100302b78: snapshot before validation, then roll back and rethrow the save error.
++                        let inserted = context.insertedObjects
++                        let updated = context.updatedObjects
++                        let deleted = context.deletedObjects
++                        Self.transactionDiagnostics.f_1000d468c().f_1000d4e0c(
++                            "Error saving managed object context (inserted: \(inserted.count), updated: \(updated.count), deleted: \(deleted.count)): \(error)")
++                        for object in inserted {
++                            do { try object.validateForInsert() }
++                            catch {
++                                Self.transactionDiagnostics.f_1000d468c().f_1000d4e0c(
++                                    "  Invalid inserted: \(object.entity.name ?? "?") \(object.objectID) — \(error)")
++                            }
++                        }
++                        for object in updated {
++                            do { try object.validateForUpdate() }
++                            catch {
++                                Self.transactionDiagnostics.f_1000d468c().f_1000d4e0c(
++                                    "  Invalid updated: \(object.entity.name ?? "?") \(object.objectID) — \(error)")
++                            }
++                        }
++                        context.rollback()
++                        throw error
++                    }
+                     // Store callers hold their existing cross-process lock through this save/cursor update.
+                     viewHistoryToken = context.persistentStoreCoordinator?.currentPersistentHistoryToken(fromStores: nil)
+                     viewRevision = root.value(forKey: "revision") as? UUID

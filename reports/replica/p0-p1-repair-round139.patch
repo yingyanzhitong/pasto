@@ -1,0 +1,57 @@
+--- before/replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift
++++ after/replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift
+@@ -2,7 +2,7 @@
+ import Combine
+ import PastoCore
+ 
+-// Native text/color/image creation reads its captured entity; other content keeps its adapter.
++// Native text/color/image/link creation reads its captured entity; other content keeps its adapter.
+ @MainActor
+ func makeOriginalReplicaNativePreview(state: ReplicaUIState, input: ClipboardRestoreItem) -> OriginalItemPreviewView {
+     let rawType = input.previewRawType()
+@@ -16,6 +16,11 @@
+     }
+     if rawType == 1 {
+         let content = ReplicaImagePreviewContent(state: state, item: nil, input: input)
++        return makeReplicaContentPreview(state: state, item: nil, input: input, content: content,
++            contentSize: content.preferredPreviewSize, metadata: content.previewMetadataView)
++    }
++    if rawType == 4 {
++        let content = ReplicaLinkPreviewContent(state: state, item: nil, input: input)
+         return makeReplicaContentPreview(state: state, item: nil, input: input, content: content,
+             contentSize: content.preferredPreviewSize, metadata: content.previewMetadataView)
+     }
+--- before/replica/Sources/Pasto/UI/ReplicaLinkPreviewContent.swift
++++ after/replica/Sources/Pasto/UI/ReplicaLinkPreviewContent.swift
+@@ -24,11 +24,12 @@
+     private var openButton: OriginalToolbarButton?
+     private var itemObservation: AnyCancellable?
+ 
+-    init(state: ReplicaUIState, item: ClipboardItem, input: ClipboardRestoreItem? = nil) {
++    init(state: ReplicaUIState, item: ClipboardItem?, input: ClipboardRestoreItem? = nil) {
+         self.state = state
+-        itemID = item.id
++        guard let itemID = input?.id ?? item?.id else { preconditionFailure("Link preview requires an item") }
++        self.itemID = itemID
+         editInput = input
+-        readOnlyContent = makeReplicaReadOnlyPreviewContent(store: state.store, item: item)
++        readOnlyContent = makeReplicaReadOnlyPreviewContent(store: state.store, itemID: itemID)
+         super.init(frame: .zero)
+         textView.isSelectable = true
+         textView.isEditable = true
+--- before/replica/Sources/Pasto/UI/ReplicaReadOnlyPreviewContent.swift
++++ after/replica/Sources/Pasto/UI/ReplicaReadOnlyPreviewContent.swift
+@@ -6,7 +6,12 @@
+ /// Nontext editing and the original per-kind metadata remain separate dependencies.
+ @MainActor
+ func makeReplicaReadOnlyPreviewContent(store: ClipboardStore, item: ClipboardItem) -> NSView {
+-    NSHostingView(rootView: ReplicaReadOnlyPreviewContent(store: store, itemID: item.id))
++    makeReplicaReadOnlyPreviewContent(store: store, itemID: item.id)
++}
++
++@MainActor
++func makeReplicaReadOnlyPreviewContent(store: ClipboardStore, itemID: UUID) -> NSView {
++    NSHostingView(rootView: ReplicaReadOnlyPreviewContent(store: store, itemID: itemID))
+ }
+ 
+ @MainActor

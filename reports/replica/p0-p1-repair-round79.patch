@@ -1,0 +1,1073 @@
+--- phase-79-before/replica/Sources/Pasto/UI/ReplicaNativeCardCollection.swift
++++ replica/Sources/Pasto/UI/ReplicaNativeCardCollection.swift
+@@ -42,12 +42,12 @@
+         default: return true
+         }
+     }
+-    private var items: [ClipboardItem] = []
++    private var items: [ClipboardCollectionEntry] = []
+     private var itemReferences: [UUID: ClipboardCollectionItemReference] = [:]
+     private var hasReceivedCollectionSnapshot = false
+     private var collectionOwnerGeneration: UInt64 = 0
+     private struct PendingSnapshot {
+-        let items: [ClipboardItem]
++        let items: [ClipboardCollectionEntry]
+         let changedIDs: Set<UUID>
+         let itemReferences: [UUID: ClipboardCollectionItemReference]
+     }
+@@ -160,7 +160,7 @@
+         tileCells()
+     }
+ 
+-    func appliedItems(for state: ReplicaUIState) -> [ClipboardItem]? {
++    func appliedItems(for state: ReplicaUIState) -> [ClipboardCollectionEntry]? {
+         guard self.state === state, state.collectionOwner === self else { return nil }
+         return items
+     }
+@@ -179,8 +179,7 @@
+         let positions = Dictionary(uniqueKeysWithValues: items.enumerated().map { ($0.element.id, $0.offset) })
+         return orderedIDs.compactMap { identifier in
+             guard let index = positions[identifier] else { return nil }
+-            let item = items[index]
+-            return itemReferences[identifier]?.requiredRestoreItem(id: identifier) ?? ClipboardRestoreItem(item: item)
++            return items[index].requiredRestoreItem()
+         }
+     }
+ 
+@@ -478,8 +477,7 @@
+     }
+ 
+     private func renderedItem(at index: Int) -> ClipboardItem {
+-        let item = items[index]
+-        return itemReferences[item.id]?.requiredItem() ?? item
++        items[index].requiredItem()
+     }
+ 
+     private func tileCells() {
+@@ -533,7 +531,7 @@
+     private func select(_ index: Int, modifiers: NSEvent.ModifierFlags = []) {
+         guard let state, let current = appliedItems(for: state) else { return }
+         guard current.indices.contains(index) else { return }
+-        state.select(current[index], modifiers: modifiers)
++        state.select(renderedItem(at: index), modifiers: modifiers)
+     }
+ 
+     override func mouseDown(with event: NSEvent) {
+@@ -558,7 +556,7 @@
+             let current = appliedItems(for: state) ?? []
+             if current.indices.contains(index) {
+                 let plain = NSEvent.ModifierFlags(rawValue: state.store.preferences.plainTextModifierRawValue)
+-                state.controller?.paste(item: current[index], plainTextOnly: event.modifierFlags.isSuperset(of: plain))
++                state.controller?.paste(itemID: current[index].id, plainTextOnly: event.modifierFlags.isSuperset(of: plain))
+             }
+             return
+         }
+--- phase-79-before/replica/Sources/Pasto/UI/ReplicaUIController.swift
++++ replica/Sources/Pasto/UI/ReplicaUIController.swift
+@@ -272,42 +272,60 @@
+         return isCollectionSearchQueryEmpty ? (listCollection?.value.itemReferences ?? [:]) : searchIndex.resultItemReferences
+     }
+ 
+-    var visibleItems: [ClipboardItem] {
++    var visibleItems: [ClipboardCollectionEntry] {
+         if isCollectionSearchQueryEmpty {
+             if showDeleted {
+-                return store.search(query: "", pinboardID: pinboardID, includeDeleted: true).filter(\.isDeleted)
+-            }
+-            let items = Dictionary(uniqueKeysWithValues: store.items.map { ($0.id, $0) })
+-            let identifiers = listCollection?.value.identifiers ?? []
+-            let native = identifiers.compactMap { items[$0] }.filter { !$0.isDeleted }
++                return store.search(query: "", pinboardID: pinboardID, includeDeleted: true)
++                    .filter(\.isDeleted).map { ClipboardCollectionEntry(item: $0) }
++            }
++            let snapshot = listCollection?.value
++            let native = collectionEntries(identifiers: snapshot?.identifiers ?? [],
++                references: snapshot?.itemReferences ?? [:])
+             if let pinboardID {
+-                // Older local archives can retain secondary memberships beyond the native single owner.
+-                let legacy = store.items(in: pinboardID).filter { $0.pinboardOwnerID != pinboardID }
++                // Preserve old local archives with secondary memberships outside the native single owner.
++                let archived = store.items(in: pinboardID)
++                let legacy = archived.filter { $0.pinboardOwnerID != pinboardID }
+                 if !legacy.isEmpty {
+-                    let retained = Set(identifiers).union(legacy.map(\.id))
+-                    return store.items(in: pinboardID).filter { retained.contains($0.id) }
++                    let byID = Dictionary(uniqueKeysWithValues: native.map { ($0.id, $0) })
++                    let retained = Set(native.map(\.id)).union(legacy.map(\.id))
++                    let merged = archived.filter { retained.contains($0.id) }.map {
++                        byID[$0.id] ?? ClipboardCollectionEntry(item: $0)
++                    }
++                    let included = Set(merged.map(\.id))
++                    return merged + native.filter { !included.contains($0.id) }
+                 }
+             }
+             return native
+         }
+-        let items = Dictionary(uniqueKeysWithValues: store.items.map { ($0.id, $0) })
+-        return searchIndex.orderedIdentifiers.compactMap { identifier in
+-            guard let item = items[identifier], showDeleted ? item.isDeleted : !item.isDeleted else { return nil }
+-            return item
+-        }
+-    }
++        if showDeleted {
++            let archived = Dictionary(uniqueKeysWithValues: store.items.map { ($0.id, $0) })
++            return searchIndex.orderedIdentifiers.compactMap { identifier in
++                guard let item = archived[identifier], item.isDeleted else { return nil }
++                return ClipboardCollectionEntry(item: item)
++            }
++        }
++        return collectionEntries(identifiers: searchIndex.orderedIdentifiers,
++            references: searchIndex.resultItemReferences)
++    }
++    private func collectionEntries(identifiers: [UUID], references: [UUID: ClipboardCollectionItemReference]) -> [ClipboardCollectionEntry] {
++        // Imported legacy trash is a local compatibility case; cached payload availability is not membership.
++        let deleted = Set(store.items.filter(\.isDeleted).map(\.id))
++        return identifiers.filter { !deleted.contains($0) }.map { identifier in
++            guard let reference = references[identifier] else { fatalError("Missing collection item reference") }
++            return ClipboardCollectionEntry(id: identifier, reference: reference)
++        }
++    }
++
+     var selectedItems: [ClipboardItem] {
+         let ids = orderedSelectionIDs.filter { selection.contains($0) }
+         if let collectionOwner { return collectionOwner.appliedSelectedItems(for: self, orderedIDs: ids) ?? [] }
+         let byID = Dictionary(uniqueKeysWithValues: visibleItems.map { ($0.id, $0) })
+-        let references = collectionItemReferences
+-        return ids.compactMap { identifier in
+-            guard let item = byID[identifier] else { return nil }
+-            return references[identifier]?.requiredItem() ?? item
+-        }
++        return ids.compactMap { byID[$0]?.requiredItem() }
+     }
+     var primaryItem: ClipboardItem? {
+-        visibleItems.first { $0.id == primaryID } ?? selectedItems.first ?? visibleItems.first
++        let items = pointerSelectionItems
++        return items.first { $0.id == primaryID }?.requiredItem()
++            ?? selectedItems.first ?? items.first?.requiredItem()
+     }
+     var stackItems: [ClipboardItem] {
+         stackIDs.compactMap { id in store.items.first { $0.id == id && !$0.isDeleted } }
+@@ -338,11 +356,11 @@
+     }
+ 
+     // 0x100228c78 receives an index in the applied collection, without moving first responder.
+-    func selectFirstAppliedItem(items: [ClipboardItem]) {
++    func selectFirstAppliedItem(items: [ClipboardCollectionEntry]) {
+         selectIndex(0, mode: 0, items: items)
+     }
+ 
+-    func selectAppliedItem(at index: Int, items: [ClipboardItem]) {
++    func selectAppliedItem(at index: Int, items: [ClipboardCollectionEntry]) {
+         selectIndex(index, mode: 0, items: items)
+     }
+ 
+@@ -351,7 +369,7 @@
+                                     primaryID: primaryID, allowsEmptySelection: allowsEmptySelection)
+     }
+ 
+-    func applyFullCollectionReload(items: [ClipboardItem]) {
++    func applyFullCollectionReload(items: [ClipboardCollectionEntry]) {
+         let firstID = items.first?.id
+         allowsEmptySelection = false
+         applyOrderedSelection(firstID.map { [$0] } ?? [], anchor: firstID, primary: firstID)
+@@ -359,7 +377,7 @@
+ 
+     // 0x1002234e0: preserve the surviving selection order, including an empty
+     // selection, and use its last endpoint after the new collection is applied.
+-    func applyIncrementalCollectionSnapshot(items: [ClipboardItem]) {
++    func applyIncrementalCollectionSnapshot(items: [ClipboardCollectionEntry]) {
+         let visible = Set(items.map(\.id))
+         let ids = orderedSelectionIDs.filter { selection.contains($0) && visible.contains($0) }
+         allowsEmptySelection = ids.isEmpty
+@@ -415,7 +433,7 @@
+         applyOrderedSelection(ids, anchor: anchor, primary: primary)
+     }
+ 
+-    private func selectIndex(_ index: Int, mode: UInt8, items: [ClipboardItem], animated: Bool = true) {
++    private func selectIndex(_ index: Int, mode: UInt8, items: [ClipboardCollectionEntry], animated: Bool = true) {
+         cancelPendingNeighborSelection()
+         if items.indices.contains(index), orderedSelectionIDs == [items[index].id] { return }
+         let positions = Dictionary(uniqueKeysWithValues: items.enumerated().map { ($0.element.id, $0.offset) })
+@@ -430,7 +448,7 @@
+         }
+     }
+ 
+-    private var pointerSelectionItems: [ClipboardItem] {
++    private var pointerSelectionItems: [ClipboardCollectionEntry] {
+         guard let collectionOwner else { return visibleItems }
+         return collectionOwner.appliedItems(for: self) ?? []
+     }
+@@ -619,7 +637,7 @@
+         pendingNeighborSelection = nil
+     }
+ 
+-    func consumePendingNeighborSelection(token: UUID, items: [ClipboardItem]) {
++    func consumePendingNeighborSelection(token: UUID, items: [ClipboardCollectionEntry]) {
+         guard let request = pendingNeighborSelection, request.token == token else { return }
+         pendingNeighborSelection = nil
+         guard items.map(\.id) != request.beforeIDs,
+@@ -1287,10 +1305,15 @@
+ 
+     @discardableResult
+     func paste(item: ClipboardItem, plainTextOnly: Bool) -> Bool {
+-        if let input = appliedRestoreItems(orderedIDs: [item.id]).first {
++        paste(itemID: item.id, plainTextOnly: plainTextOnly)
++    }
++
++    @discardableResult
++    func paste(itemID: UUID, plainTextOnly: Bool) -> Bool {
++        if let input = appliedRestoreItems(orderedIDs: [itemID]).first {
+             return paste(restoreItems: [input], plainTextOnly: plainTextOnly)
+         }
+-        return paste(ids: [item.id], plainTextOnly: plainTextOnly)
++        return paste(ids: [itemID], plainTextOnly: plainTextOnly)
+     }
+ 
+     @discardableResult
+@@ -1795,7 +1818,7 @@
+         NSApp.activate(ignoringOtherApps: true)
+     }
+ 
+-    private func appliedCollectionItems() -> [ClipboardItem]? {
++    private func appliedCollectionItems() -> [ClipboardCollectionEntry]? {
+         guard let panel = loadedPanel,
+               let collection = (panel as? ReplicaPanel)?.collectionFocusTarget as? ReplicaNativeCollectionHost,
+               collection.window === panel else { return nil }
+@@ -1889,7 +1912,7 @@
+         func performQuickPaste(_ action: OriginalCollectionShortcutActions.QuickPasteAction) {
+             guard let items = appliedCollectionItems() else { return }
+             if items.indices.contains(action.index) {
+-                paste(item: items[action.index], plainTextOnly: action.options.contains(.plainTextAndLinks))
++                paste(itemID: items[action.index].id, plainTextOnly: action.options.contains(.plainTextAndLinks))
+             }
+             if let appliedItems = appliedCollectionItems() { state.selectFirstAppliedItem(items: appliedItems) }
+         }
+--- /dev/null
++++ replica/Sources/PastoCore/ClipboardCollectionEntry.swift
+@@ -0,0 +1,32 @@
++import Foundation
++
++/// Collection membership is an identity/reference snapshot; payload is read only by a consumer.
++public struct ClipboardCollectionEntry: Identifiable, Equatable {
++    public let id: UUID
++    private let reference: ClipboardCollectionItemReference?
++    private let legacyItem: ClipboardItem?
++
++    public init(id: UUID, reference: ClipboardCollectionItemReference) {
++        self.id = id
++        self.reference = reference
++        legacyItem = nil
++    }
++
++    public init(item: ClipboardItem) {
++        id = item.id
++        reference = nil
++        legacyItem = item
++    }
++
++    @MainActor public func requiredItem() -> ClipboardItem {
++        if let reference { return reference.requiredItem() }
++        guard let legacyItem else { fatalError("Missing collection entry") }
++        return legacyItem
++    }
++
++    @MainActor public func requiredRestoreItem() -> ClipboardRestoreItem {
++        if let reference { return reference.requiredRestoreItem(id: id) }
++        guard let legacyItem else { fatalError("Missing collection entry") }
++        return ClipboardRestoreItem(item: legacyItem)
++    }
++}
+--- phase-79-before/scripts/tests/frc_result_scope_contract.py
++++ scripts/tests/frc_result_scope_contract.py
+@@ -57,6 +57,8 @@
+ 
+ 
+ def assert_visible_order_only(test, current, previous):
++    from collection_membership_scope_contract import pre_collection_membership
++    current = pre_collection_membership(current)
+     from item_order_scope_contract import assert_history_list_projection_only
+     marker = '        let items = Dictionary(uniqueKeysWithValues: store.items.map { ($0.id, $0) })'
+     head, sep, tail = current.rpartition(marker);test.assertTrue(sep)
+--- phase-79-before/scripts/tests/native_application_scope_contract.py
++++ scripts/tests/native_application_scope_contract.py
+@@ -4,6 +4,7 @@
+ Only these five reviewed insertions are removed; immutable earlier evidence remains unchanged.
+ """
+ from pathlib import Path
++from collection_membership_scope_contract import pre_collection_membership
+ 
+ INSERTIONS = [('replica/Sources/PastoCore/ClipboardPersistence.swift',
+   '        try ClipboardSourcePersistence.projectApplication(&item, from: object)\n'),
+@@ -50,6 +51,7 @@
+   '    }\n')]
+ 
+ def pre_native_application(source):
++    source = pre_collection_membership(source)
+     for path, addition in INSERTIONS:
+         if addition in source:
+             assert source.count(addition) == 1, path
+--- phase-79-before/scripts/tests/test_p0_repair_incremental_selection_delivery.py
++++ scripts/tests/test_p0_repair_incremental_selection_delivery.py
+@@ -11,6 +11,7 @@
+ sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'scripts/tests')]
+ from function_ledger import source_fragments
+ from test_offline_p0_contracts import body
++from collection_membership_scope_contract import pre_collection_membership, pre_collection_membership_bytes, ENTRY_PATH
+ from list_attributes_scope_contract import pre_attributes_host
+ from test_p0_repair_checksum_routing import original_fragment
+ 
+@@ -23,8 +24,8 @@
+     def setUpClass(cls):
+         cls.phase = ROOT / '.local/p0-repair/phase-23'
+         cls.proof = json.loads((cls.phase / 'incremental-root-contract.json').read_text())
+-        cls.ui = (ROOT / UI).read_text()
+-        cls.host = (ROOT / HOST).read_text()
++        cls.ui = pre_collection_membership((ROOT / UI).read_text())
++        cls.host = pre_collection_membership((ROOT / HOST).read_text())
+ 
+     def original(self, address):
+         r = next(r for r in self.proof['original_fragments'] if r['address'] == address)
+--- phase-79-before/scripts/tests/test_p0_repair_neighbor.py
++++ scripts/tests/test_p0_repair_neighbor.py
+@@ -4,6 +4,7 @@
+ import re
+ import unittest
+ from pathlib import Path
++from collection_membership_scope_contract import pre_collection_membership
+ 
+ 
+ ROOT = Path(__file__).resolve().parents[2]
+@@ -41,7 +42,7 @@
+     @classmethod
+     def setUpClass(cls):
+         cls.result = json.loads(RESULT.read_text())
+-        cls.controller = CONTROLLER.read_text()
++        cls.controller = pre_collection_membership(CONTROLLER.read_text())
+         cls.collection = COLLECTION.read_text()
+ 
+     def test_original_pending_id_is_set_then_consumed_by_applier_update(self):
+@@ -122,7 +123,7 @@
+         for row in self.result["current_references"]:
+             path = ROOT / row["path"]
+             self.assertTrue(path.is_file())
+-            source = path.read_text()
++            source = pre_collection_membership(path.read_text())
+             self.assertIn(row["symbol"], source)
+ 
+ 
+--- phase-79-before/scripts/tests/test_p0_repair_pointer_applied_input.py
++++ scripts/tests/test_p0_repair_pointer_applied_input.py
+@@ -10,6 +10,7 @@
+ sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'scripts/tests')]
+ from function_ledger import source_fragments
+ from test_offline_p0_contracts import body
++from collection_membership_scope_contract import pre_collection_membership, pre_collection_membership_bytes, ENTRY_PATH
+ from test_p0_repair_checksum_routing import original_fragment
+ 
+ UI = 'replica/Sources/Pasto/UI/ReplicaUIController.swift'
+@@ -21,8 +22,8 @@
+     def setUpClass(cls):
+         cls.phase = ROOT / '.local/p0-repair/phase-25'
+         cls.proof = json.loads((cls.phase / 'pointer-input-contract.json').read_text())
+-        cls.ui = (ROOT / UI).read_text()
+-        cls.host = (ROOT / HOST).read_text()
++        cls.ui = pre_collection_membership((ROOT / UI).read_text())
++        cls.host = pre_collection_membership((ROOT / HOST).read_text())
+         cls.raw = (ROOT / cls.proof['binary']['path']).read_bytes()
+ 
+     def native(self, address):
+--- phase-79-before/scripts/tests/test_p0_repair_reload_selection_policy.py
++++ scripts/tests/test_p0_repair_reload_selection_policy.py
+@@ -10,6 +10,7 @@
+ sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'scripts/tests')]
+ from function_ledger import source_fragments
+ from test_offline_p0_contracts import body
++from collection_membership_scope_contract import pre_collection_membership, pre_collection_membership_bytes, ENTRY_PATH
+ from test_p0_repair_checksum_routing import original_fragment
+ 
+ UI = 'replica/Sources/Pasto/UI/ReplicaUIController.swift'
+@@ -21,8 +22,8 @@
+     def setUpClass(cls):
+         cls.phase = ROOT / '.local/p0-repair/phase-22'
+         cls.proof = json.loads((cls.phase / 'reload-root-contract.json').read_text())
+-        cls.ui = (ROOT / UI).read_text()
+-        cls.host = (ROOT / HOST).read_text()
++        cls.ui = pre_collection_membership((ROOT / UI).read_text())
++        cls.host = pre_collection_membership((ROOT / HOST).read_text())
+ 
+     def original(self, address):
+         r = next(r for r in self.proof['original_fragments'] if r['address'] == address)
+--- phase-79-before/scripts/tests/test_p0_repair_snapshot.py
++++ scripts/tests/test_p0_repair_snapshot.py
+@@ -4,6 +4,7 @@
+ import re
+ import unittest
+ from pathlib import Path
++from collection_membership_scope_contract import pre_collection_membership
+ 
+ 
+ ROOT = Path(__file__).resolve().parents[2]
+@@ -41,7 +42,7 @@
+         cls.controller_path = ROOT / "replica/Sources/Pasto/UI/ReplicaUIController.swift"
+         cls.host_path = ROOT / "replica/Sources/Pasto/UI/ReplicaNativeCardCollection.swift"
+         cls.algorithm_path = ROOT / "replica/Sources/PastoCore/OriginalCollectionSnapshot.swift"
+-        cls.controller = cls.controller_path.read_text()
++        cls.controller = pre_collection_membership(cls.controller_path.read_text())
+         cls.host = cls.host_path.read_text()
+         cls.algorithm = cls.algorithm_path.read_text()
+ 
+@@ -157,7 +158,7 @@
+     def test_report_binds_live_method_references_and_static_check(self):
+         for row in self.result["current_references"]:
+             path = ROOT / row["path"]
+-            source = path.read_text()
++            source = pre_collection_membership(path.read_text())
+             if row["symbol"] == "func applyFullCollectionReload(items: [ClipboardItem], ifSelectionUnchangedFrom expected: CollectionSelectionSnapshot) -> Bool":
+                 historical = ROOT / ".local/p0-repair/phase-3/before" / row["path"]
+                 self.assertIn(row["symbol"], historical.read_text())
+--- phase-79-before/scripts/tests/test_p1_repair_collection_initial_ids.py
++++ scripts/tests/test_p1_repair_collection_initial_ids.py
+@@ -10,6 +10,7 @@
+ sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'scripts/tests')]
+ from function_ledger import source_fragments
+ from test_offline_p0_contracts import body
++from collection_membership_scope_contract import ENTRY_PATH, pre_collection_membership_bytes
+ from modal_restore_scope_contract import RESTORE_ITEM_PATH, pre_modal_restore, pre_modal_restore_bytes
+ from test_p0_repair_checksum_routing import original_fragment
+ from collection_initial_ids_scope_contract import assert_initial_ID_route_only
+@@ -166,7 +167,7 @@
+     def test_one_production_file_changed_without_schema_storage_or_UI_edits(self):
+         changed = [p for p, h in self.base['production'].items() if hashlib.sha256(pre_live_render_bytes(ROOT / p)).hexdigest() != h]
+         self.assertEqual(changed, [self.path])
+-        self.assertEqual({str(p.relative_to(ROOT)) for p in (ROOT / 'replica/Sources').rglob('*') if p.is_file()} - {REFERENCE_PATH, RESTORE_ITEM_PATH}, set(self.base['production']))
++        self.assertEqual({str(p.relative_to(ROOT)) for p in (ROOT / 'replica/Sources').rglob('*') if p.is_file()} - {REFERENCE_PATH, RESTORE_ITEM_PATH, ENTRY_PATH}, set(self.base['production']))
+         for p in ['replica/Package.swift', 'package.json']:
+             self.assertEqual(hashlib.sha256((ROOT / p).read_bytes()).hexdigest(), self.base['other'][p])
+ 
+--- phase-79-before/scripts/tests/test_p1_repair_list_provider_dispatch.py
++++ scripts/tests/test_p1_repair_list_provider_dispatch.py
+@@ -10,6 +10,7 @@
+ sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'scripts/tests')]
+ from function_ledger import source_fragments
+ from test_offline_p0_contracts import body
++from collection_membership_scope_contract import pre_collection_membership, pre_collection_membership_bytes, ENTRY_PATH
+ from test_p0_repair_checksum_routing import original_fragment
+ 
+ 
+@@ -24,7 +25,7 @@
+         cls.read = staticmethod(cls.decoder['read'])
+         cls.original = {r['address']: original_fragment((ROOT / r['path']).read_text(), r['address'][2:])
+                         for r in cls.proof['original_fragments']}
+-        cls.sources = {Path(p).name: (ROOT / p).read_text() for p in cls.proof['current_sources']}
++        cls.sources = {Path(p).name: pre_collection_membership((ROOT / p).read_text()) for p in cls.proof['current_sources']}
+ 
+     def test_original_twelve_fragments_and_static_disassembly_inputs_are_bound(self):
+         self.assertEqual(len(self.proof['original_fragments']), 12)
+--- phase-79-before/scripts/tests/test_p1_repair_list_selection.py
++++ scripts/tests/test_p1_repair_list_selection.py
+@@ -13,6 +13,7 @@
+ sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'scripts/tests')]
+ from function_ledger import source_fragments
+ from test_offline_p0_contracts import body
++from collection_membership_scope_contract import pre_collection_membership, pre_collection_membership_bytes, ENTRY_PATH
+ from list_attributes_scope_contract import pre_attributes_host
+ from test_p0_repair_checksum_routing import original_fragment
+ 
+@@ -24,7 +25,7 @@
+         cls.proof = json.loads((cls.phase / 'list-selection-contract.json').read_text())
+         cls.ui_path = 'replica/Sources/Pasto/UI/ReplicaUIController.swift'
+         cls.store_path = 'replica/Sources/PastoCore/ClipboardStore.swift'
+-        cls.ui = (ROOT / cls.ui_path).read_text()
++        cls.ui = pre_collection_membership((ROOT / cls.ui_path).read_text())
+         cls.choose = body(cls.ui, 'func chooseBoard(')
+         cls.select = body(cls.ui, 'private func selectListIdentifier(')
+         cls.delivery = body(cls.ui, 'private func installListSelectionDelivery()')
+--- phase-79-before/scripts/tests/test_p1_repair_live_application_projection.py
++++ scripts/tests/test_p1_repair_live_application_projection.py
+@@ -11,6 +11,7 @@
+ sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'scripts/tests')]
+ from function_ledger import source_fragments
+ from test_offline_p0_contracts import body
++from collection_membership_scope_contract import ENTRY_PATH, pre_collection_membership_bytes
+ from test_p0_repair_checksum_routing import original_fragment
+ from native_application_scope_contract import INSERTIONS, pre_native_application
+ 
+@@ -187,10 +188,10 @@
+         self.assertEqual(len(INSERTIONS), 5)
+         for key in self.paths:
+             self.assertEqual(pre_native_application(self.source[key]), self.before(key))
+-        sha = lambda p: hashlib.sha256((ROOT / p).read_bytes()).hexdigest()
++        sha = lambda p: hashlib.sha256(pre_collection_membership_bytes(ROOT / p)).hexdigest()
+         self.assertEqual({p for p, h in self.base['production'].items() if sha(p) != h}, set(self.paths.values()))
+         files = {str(p.relative_to(ROOT)) for p in (ROOT / 'replica/Sources').rglob('*') if p.is_file()}
+-        self.assertEqual(files, set(self.base['production']))
++        self.assertEqual(files - {ENTRY_PATH}, set(self.base['production']))
+         for p in ['replica/Package.swift', 'package.json']:
+             self.assertEqual(sha(p), self.base['other'][p])
+ 
+--- phase-79-before/scripts/tests/test_p1_repair_live_item_render.py
++++ scripts/tests/test_p1_repair_live_item_render.py
+@@ -9,6 +9,7 @@
+ sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'scripts/tests')]
+ from function_ledger import source_fragments
+ from test_offline_p0_contracts import body
++from collection_membership_scope_contract import ENTRY_PATH, pre_collection_membership_bytes
+ from modal_restore_scope_contract import RESTORE_ITEM_PATH, pre_modal_restore, pre_modal_restore_bytes
+ from live_item_render_scope_contract import pre_live_render, REFERENCE_PATH
+ from live_item_selection_scope_contract import pre_live_selection, pre_live_selection_bytes
+@@ -146,7 +147,7 @@
+         changed = {p for p, digest in self.base['production'].items() if sha(p) != digest}
+         self.assertEqual(changed, {self.paths[k] for k in ['source', 'index', 'ui', 'host']})
+         current = {str(p.relative_to(ROOT)) for p in (ROOT / 'replica/Sources').rglob('*') if p.is_file()}
+-        self.assertEqual(current - set(self.base['production']), {REFERENCE_PATH, RESTORE_ITEM_PATH})
++        self.assertEqual(current - set(self.base['production']), {REFERENCE_PATH, RESTORE_ITEM_PATH, ENTRY_PATH})
+         for p in ['replica/Package.swift', 'package.json']:
+             self.assertEqual(sha(p), self.base['other'][p])
+ 
+--- phase-79-before/scripts/tests/test_p1_repair_live_item_selection.py
++++ scripts/tests/test_p1_repair_live_item_selection.py
+@@ -8,6 +8,7 @@
+ ROOT = Path(__file__).resolve().parents[2]
+ sys.path[:0] = [str(ROOT / 'scripts/tests')]
+ from test_offline_p0_contracts import body
++from collection_membership_scope_contract import ENTRY_PATH, pre_collection_membership_bytes
+ from modal_restore_scope_contract import RESTORE_ITEM_PATH, pre_modal_restore, pre_modal_restore_bytes
+ from live_item_selection_scope_contract import pre_live_selection
+ from resolved_copy_scope_contract import pre_resolved_copy, pre_resolved_copy_bytes
+@@ -108,7 +109,7 @@
+     def test_only_two_existing_UI_files_change_without_provider_model_or_writer_edits(self):
+         sha = lambda p: hashlib.sha256(pre_resolved_copy_bytes(ROOT / p)).hexdigest()
+         self.assertEqual({p for p, h in self.base['production'].items() if sha(p) != h}, set(self.paths.values()))
+-        self.assertEqual({str(p.relative_to(ROOT)) for p in (ROOT / 'replica/Sources').rglob('*') if p.is_file()} - {RESTORE_ITEM_PATH}, set(self.base['production']))
++        self.assertEqual({str(p.relative_to(ROOT)) for p in (ROOT / 'replica/Sources').rglob('*') if p.is_file()} - {RESTORE_ITEM_PATH, ENTRY_PATH}, set(self.base['production']))
+         for p in ['replica/Package.swift', 'package.json']:
+             self.assertEqual(sha(p), self.base['other'][p])
+ 
+--- phase-79-before/scripts/tests/test_p1_repair_modal_restore_input.py
++++ scripts/tests/test_p1_repair_modal_restore_input.py
+@@ -10,6 +10,7 @@
+ sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'scripts/tests')]
+ from function_ledger import source_fragments
+ from test_offline_p0_contracts import body
++from collection_membership_scope_contract import pre_collection_membership, pre_collection_membership_bytes, ENTRY_PATH
+ from native_application_scope_contract import pre_native_application_bytes
+ from test_p0_repair_checksum_routing import original_fragment
+ from modal_restore_scope_contract import RESTORE_ITEM_PATH, pre_modal_restore, HUNKS
+@@ -27,7 +28,7 @@
+             ui='replica/Sources/Pasto/UI/ReplicaUIController.swift',
+             host='replica/Sources/Pasto/UI/ReplicaNativeCardCollection.swift',
+             app='replica/Sources/Pasto/AppMain.swift')
+-        cls.source = {k: (ROOT / p).read_text() for k, p in cls.paths.items()}
++        cls.source = {k: pre_collection_membership((ROOT / p).read_text()) for k, p in cls.paths.items()}
+ 
+     def before(self, key): return (self.phase / 'before' / self.paths[key]).read_text()
+     def app_action(self): return body(self.source['app'], 'private func paste(ids: [UUID], plain: Bool, forceDirect: Bool = false,')
+@@ -64,7 +65,7 @@
+     def test_real_current_sources_and_frozen_after_snapshots_are_bound(self):
+         self.assertEqual(set(self.paths.values()), set(self.proof['current_sources']))
+         for p, h in self.proof['current_sources'].items():
+-            raw = (ROOT / p).read_bytes()
++            raw = pre_collection_membership_bytes(ROOT / p)
+             self.assertEqual(hashlib.sha256(raw).hexdigest(), h)
+             self.assertEqual(raw, (self.phase / 'after' / p).read_bytes())
+ 
+@@ -174,7 +175,7 @@
+         for key in ['reference', 'writer', 'ui', 'host', 'app']:
+             self.assertEqual(pre_modal_restore(self.source[key]), self.before(key))
+         files = {str(p.relative_to(ROOT)) for p in (ROOT / 'replica/Sources').rglob('*') if p.is_file()}
+-        self.assertEqual(files - set(self.base['production']), {RESTORE_ITEM_PATH})
++        self.assertEqual(files - set(self.base['production']), {RESTORE_ITEM_PATH, ENTRY_PATH})
+         sha = lambda p: hashlib.sha256(pre_native_application_bytes(ROOT / p)).hexdigest()
+         changed = {p for p, h in self.base['production'].items() if sha(p) != h}
+         self.assertEqual(changed, set(self.paths.values()) - {RESTORE_ITEM_PATH})
+--- phase-79-before/scripts/tests/test_p1_repair_native_list_order.py
++++ scripts/tests/test_p1_repair_native_list_order.py
+@@ -10,6 +10,7 @@
+ sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'scripts/tests')]
+ from function_ledger import source_fragments
+ from test_offline_p0_contracts import body
++from collection_membership_scope_contract import ENTRY_PATH, pre_collection_membership_bytes
+ from modal_restore_scope_contract import RESTORE_ITEM_PATH, pre_modal_restore, pre_modal_restore_bytes
+ from test_p0_repair_checksum_routing import original_fragment
+ from item_order_scope_contract import (without_order_persistence, without_list_factory, without_list_request,
+@@ -263,7 +264,7 @@
+         actual = {str(p.relative_to(ROOT)) for p in (ROOT / 'replica/Sources').rglob('*') if p.is_file()}
+         changed = {p for p, digest in self.base['production'].items() if hashlib.sha256(pre_live_render_bytes(ROOT / p)).hexdigest() != digest}
+         self.assertEqual(changed, set(self.paths.values()) - {self.paths['order']})
+-        self.assertEqual(actual - set(self.base['production']) - {REFERENCE_PATH, RESTORE_ITEM_PATH}, {self.paths['order']})
++        self.assertEqual(actual - set(self.base['production']) - {REFERENCE_PATH, RESTORE_ITEM_PATH, ENTRY_PATH}, {self.paths['order']})
+         self.assertEqual(without_order_persistence(self.source['persistence']), self.before('persistence'))
+         self.assertEqual(without_list_factory(self.source['store'], public=True), self.before('store'))
+         self.assertEqual(without_list_request(self.source['lists']), self.before('lists'))
+--- phase-79-before/scripts/tests/test_p1_repair_resolved_copy_input.py
++++ scripts/tests/test_p1_repair_resolved_copy_input.py
+@@ -10,6 +10,7 @@
+ sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'scripts/tests')]
+ from function_ledger import source_fragments
+ from test_offline_p0_contracts import body
++from collection_membership_scope_contract import ENTRY_PATH, pre_collection_membership_bytes
+ from modal_restore_scope_contract import RESTORE_ITEM_PATH, pre_modal_restore, pre_modal_restore_bytes
+ from resolved_copy_scope_contract import pre_resolved_copy
+ 
+@@ -101,7 +102,7 @@
+     def test_only_two_files_change_without_schema_or_package_changes(self):
+         sha = lambda p: hashlib.sha256(pre_modal_restore_bytes(ROOT / p)).hexdigest()
+         self.assertEqual({p for p, h in self.base['production'].items() if sha(p) != h}, set(self.paths.values()))
+-        self.assertEqual({str(p.relative_to(ROOT)) for p in (ROOT / 'replica/Sources').rglob('*') if p.is_file()} - {RESTORE_ITEM_PATH}, set(self.base['production']))
++        self.assertEqual({str(p.relative_to(ROOT)) for p in (ROOT / 'replica/Sources').rglob('*') if p.is_file()} - {RESTORE_ITEM_PATH, ENTRY_PATH}, set(self.base['production']))
+         for p in ['replica/Package.swift', 'package.json']:
+             self.assertEqual(sha(p), self.base['other'][p])
+ 
+--- /dev/null
++++ scripts/tests/test_p1_repair_reference_membership.py
+@@ -0,0 +1,228 @@
++"""Reference-backed membership and actual consumers; no Swift/framework/runtime execution."""
++import hashlib
++import json
++from pathlib import Path
++import sys
++import unittest
++
++ROOT = Path(__file__).resolve().parents[2]
++sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'scripts/tests')]
++from function_ledger import source_fragments
++from test_offline_p0_contracts import body
++from test_p0_repair_checksum_routing import original_fragment
++from collection_membership_scope_contract import ENTRY_PATH, CHANGES, pre_collection_membership
++
++
++class ReferenceMembershipContracts(unittest.TestCase):
++    @classmethod
++    def setUpClass(cls):
++        cls.phase = ROOT / '.local/p0-repair/phase-79'
++        cls.proof = json.loads((cls.phase / 'reference-membership-contract.json').read_text())
++        cls.base = json.loads((cls.phase / 'baseline.json').read_text())
++        cls.paths = dict(entry=ENTRY_PATH, ui='replica/Sources/Pasto/UI/ReplicaUIController.swift',
++                         host='replica/Sources/Pasto/UI/ReplicaNativeCardCollection.swift')
++        cls.source = {k: (ROOT / p).read_text() for k, p in cls.paths.items()}
++        cls.ui = cls.source['ui'];cls.host = cls.source['host'];cls.entry = cls.source['entry']
++
++    def before(self, key): return (self.phase / 'before' / self.paths[key]).read_text()
++
++    def test_original_provider_evidence_fourteen_fragments_and_binary_are_bound(self):
++        r = self.proof['original_live_provider_proof']
++        self.assertEqual(hashlib.sha256((ROOT / r['path']).read_bytes()).hexdigest(), r['sha256'])
++        self.assertEqual(len(self.proof['original_fragments']), 14)
++        for r in self.proof['original_fragments']:
++            self.assertEqual(source_fragments(ROOT / r['path'])[r['address']]['sha256'], r['sha256'])
++        r = self.proof['binary']
++        self.assertEqual(hashlib.sha256((ROOT / r['path']).read_bytes()).hexdigest(), r['sha256'])
++
++    def test_original_membership_is_cached_ids_and_indexed_content_is_separate_required_lookup(self):
++        refs = {r['address']: r for r in self.proof['original_fragments']}
++        def f(address):
++            r = refs[address];return original_fragment((ROOT / r['path']).read_text(), address[2:])
++        ids = f('0x1003543a4');indexed = f('0x10035440c');lookup = f('0x1003544dc')
++        self.assertIn('_swift_bridgeObjectRetain(*(undefined8 *)(lVar1 + 0x10))', ids)
++        self.assertNotIn('existingObject', ids)
++        self.assertIn('if ((long)param_1 < 0)', indexed)
++        self.assertIn('FUN_1003544dc()', indexed)
++        self.assertIn('SoftwareBreakpoint', indexed)
++        self.assertIn('objc_stub::FUN_100c02080(local_58,param_1,&local_78)', lookup)
++        prior = json.loads((ROOT / self.proof['original_live_provider_proof']['path']).read_text())
++        self.assertIn('existingObjectWithID:error:', json.dumps(prior))
++
++    def test_current_three_files_and_after_snapshots_are_bound(self):
++        self.assertEqual(set(self.proof['current_sources']), set(self.paths.values()))
++        for p, h in self.proof['current_sources'].items():
++            raw = (ROOT / p).read_bytes()
++            self.assertEqual(hashlib.sha256(raw).hexdigest(), h)
++            self.assertEqual(raw, (self.phase / 'after' / p).read_bytes())
++
++    def test_native_entry_initialization_retains_identity_and_reference_without_payload(self):
++        self.assertIn('public struct ClipboardCollectionEntry: Identifiable, Equatable', self.entry)
++        f = body(self.entry, 'public init(id: UUID, reference:')
++        self.assertIn('self.id = id', f);self.assertIn('self.reference = reference', f)
++        self.assertIn('legacyItem = nil', f)
++        for token in ['requiredItem(', 'resolvedItem(', 'existingObject', 'ClipboardPersistence', 'payload', 'UUID()']:
++            self.assertNotIn(token, f)
++        self.assertIn('private let reference: ClipboardCollectionItemReference?', self.entry)
++
++    def test_native_entry_content_is_required_and_does_not_fall_back_on_resolution_failure(self):
++        f = body(self.entry, 'public func requiredItem()')
++        self.assertLess(f.index('if let reference { return reference.requiredItem() }'), f.index('guard let legacyItem'))
++        self.assertIn('fatalError("Missing collection entry")', f)
++        self.assertIn('return legacyItem', f)
++        self.assertNotIn('try?', f);self.assertNotIn('??', f)
++
++    def test_restore_entry_holds_entity_without_eager_payload_read(self):
++        f = body(self.entry, 'public func requiredRestoreItem()')
++        self.assertIn('reference.requiredRestoreItem(id: id)', f)
++        self.assertIn('ClipboardRestoreItem(item: legacyItem)', f)
++        for token in ['requiredItem()', 'resolvedItem()', 'ClipboardPersistence', 'store.items']:
++            self.assertNotIn(token, f)
++        holder = (ROOT / 'replica/Sources/PastoCore/ClipboardCollectionItemReference.swift').read_text()
++        hold = body(holder, 'public func requiredRestoreItem(id:')
++        self.assertIn('ClipboardRestoreItem(id: id, object: object)', hold)
++        self.assertNotIn('ClipboardPersistence.item', hold)
++
++    def test_member_factory_never_requires_presence_in_cached_value_dictionary(self):
++        f = body(self.ui, 'private func collectionEntries(')
++        self.assertIn('identifiers.filter { !deleted.contains($0) }.map { identifier in', f)
++        self.assertIn('references[identifier]', f)
++        self.assertIn('ClipboardCollectionEntry(id: identifier, reference: reference)', f)
++        self.assertIn('fatalError("Missing collection item reference")', f)
++        for token in ['items[identifier]', 'items.first', 'compactMap', 'requiredItem(', 'decode(', '.payloads', 'UUID(uuidString:']:
++            self.assertNotIn(token, f)
++        self.assertIn('let deleted = Set(store.items.filter(\\.isDeleted).map(\\.id))', f)
++        # A source ID absent from Store has no membership-presence guard in the production factory.
++        self.assertNotIn('contains(identifier)', f)
++
++    def test_ordinary_list_uses_one_captured_snapshot_for_both_order_and_references(self):
++        visible = body(self.ui, 'var visibleItems:')
++        self.assertEqual(visible.count('listCollection?.value'), 1)
++        self.assertIn('let snapshot = listCollection?.value', visible)
++        self.assertIn('collectionEntries(identifiers: snapshot?.identifiers ?? [],', visible)
++        self.assertIn('references: snapshot?.itemReferences ?? [:]', visible)
++        self.assertNotIn('identifiers.compactMap { items[$0] }', visible)
++        self.assertIn('return native', visible)
++
++    def test_search_membership_uses_retained_result_ids_and_references(self):
++        visible = body(self.ui, 'var visibleItems:')
++        self.assertIn('return collectionEntries(identifiers: searchIndex.orderedIdentifiers,', visible)
++        self.assertIn('references: searchIndex.resultItemReferences)', visible)
++        search = (ROOT / 'replica/Sources/Pasto/UI/ReplicaSearchIndex.swift').read_text()
++        self.assertIn('orderedIdentifiers = source?.value.identifiers ?? []', search)
++        self.assertIn('resultSource?.value.itemReferences ?? [:]', search)
++        self.assertEqual(hashlib.sha256(search.encode()).hexdigest(), self.base['production']['replica/Sources/Pasto/UI/ReplicaSearchIndex.swift'])
++
++    def test_legacy_secondary_membership_retains_archive_order_without_dropping_new_native_ids(self):
++        f = body(self.ui, 'var visibleItems:')
++        for token in ['let archived = store.items(in: pinboardID)',
++                      'let legacy = archived.filter { $0.pinboardOwnerID != pinboardID }',
++                      'let merged = archived.filter { retained.contains($0.id) }.map',
++                      'byID[$0.id] ?? ClipboardCollectionEntry(item: $0)',
++                      'return merged + native.filter { !included.contains($0.id) }']:
++            self.assertIn(token, f)
++        self.assertIn('with secondary memberships', f)
++
++    def test_legacy_trash_keeps_frozen_value_entries_and_explicit_local_filter(self):
++        f = body(self.entry, 'public init(item: ClipboardItem)')
++        self.assertIn('reference = nil', f);self.assertIn('legacyItem = item', f)
++        visible = body(self.ui, 'var visibleItems:')
++        self.assertIn('.filter(\\.isDeleted).map { ClipboardCollectionEntry(item: $0) }', visible)
++        self.assertIn('guard let item = archived[identifier], item.isDeleted else { return nil }', visible)
++        self.assertTrue(any('tombstones' in s for s in self.proof['adaptations']))
++
++    def test_eight_identity_only_selection_helpers_change_only_array_type(self):
++        for marker in ['func selectFirstAppliedItem(', 'func selectAppliedItem(', 'func applyFullCollectionReload(',
++                       'func applyIncrementalCollectionSnapshot(', 'private func selectIndex(',
++                       'private var pointerSelectionItems:', 'func consumePendingNeighborSelection(',
++                       'private func appliedCollectionItems()']:
++            actual = body(self.ui, marker)
++            self.assertEqual(actual, body(self.before('ui'), marker))
++            for token in ['requiredItem(', 'resolvedItem(', '.payloads', 'decode(', 'fetch(']:
++                self.assertNotIn(token, actual)
++        self.assertIn('private var pointerSelectionItems: [ClipboardCollectionEntry]', self.ui)
++        self.assertIn('private func appliedCollectionItems() -> [ClipboardCollectionEntry]?', self.ui)
++
++    def test_primary_resolves_only_requested_applied_entry_before_selected_and_first_fallback(self):
++        f = body(self.ui, 'var primaryItem:')
++        self.assertIn('let items = pointerSelectionItems', f)
++        self.assertIn('items.first { $0.id == primaryID }?.requiredItem()', f)
++        self.assertIn('?? selectedItems.first ?? items.first?.requiredItem()', f)
++        self.assertNotIn('visibleItems', f)
++        pointer = body(self.ui, 'private var pointerSelectionItems:')
++        self.assertIn('guard let collectionOwner else { return visibleItems }', pointer)
++        self.assertIn('collectionOwner.appliedItems(for: self) ?? []', pointer)
++
++    def test_owner_and_ownerless_selected_values_use_applied_or_same_entry_reference(self):
++        f = body(self.ui, 'var selectedItems:')
++        self.assertIn('if let collectionOwner { return collectionOwner.appliedSelectedItems(for: self, orderedIDs: ids) ?? [] }', f)
++        self.assertIn('return ids.compactMap { byID[$0]?.requiredItem() }', f)
++        self.assertNotIn('collectionItemReferences', f)
++        self.assertNotIn('store.items', f)
++        host = body(self.host, 'func appliedSelectedItems(for state:')
++        self.assertIn('self.state === state, state.collectionOwner === self', host)
++        self.assertIn('return renderedItem(at: index)', host)
++
++    def test_applier_captures_reference_entries_and_preserves_full_update_selection_timing(self):
++        self.assertIn('private var items: [ClipboardCollectionEntry] = []', self.host)
++        pending = body(self.host, 'private struct PendingSnapshot')
++        self.assertIn('let items: [ClipboardCollectionEntry]', pending)
++        for marker in ['func update(state: ReplicaUIState, cardSide: CGFloat)', 'private func drainCollectionSnapshots()',
++                       'private func restorePendingListFocus(state:', 'private func scheduleSnapshotDrain()']:
++            self.assertEqual(body(self.host, marker), body(self.before('host'), marker))
++        f = body(self.host, 'func appliedItems(for state:')
++        self.assertIn('return items', f)
++        self.assertNotIn('requiredItem', f)
++
++    def test_render_drag_and_selected_consumers_read_only_requested_entry_values(self):
++        self.assertEqual(body(self.host, 'private func renderedItem(at index:').strip(), '{\n        items[index].requiredItem()\n    }')
++        for marker in ['private func tileCells()', 'private func refreshCellRoots()', 'private func beginNativeDrag(']:
++            self.assertEqual(body(self.host, marker), body(self.before('host'), marker))
++        self.assertIn('let selected = indexes.map { renderedItem(at: $0) }', body(self.host, 'private func beginNativeDrag('))
++        self.assertIn('let item = renderedItem(at: index)', body(self.host, 'private func tileCells()'))
++
++    def test_item_id_paste_route_preserves_previous_hold_and_compatibility_contract(self):
++        thin = body(self.ui, 'func paste(item:')
++        self.assertEqual(thin.strip(), '{\n        paste(itemID: item.id, plainTextOnly: plainTextOnly)\n    }')
++        direct = body(self.ui, 'func paste(itemID:')
++        self.assertEqual(direct.replace('itemID', 'item.id'), body(self.before('ui'), 'func paste(item:'))
++        f = body(self.host, 'func appliedRestoreItems(for state:')
++        self.assertIn('return items[index].requiredRestoreItem()', f)
++        self.assertNotIn('ClipboardRestoreItem(item:', f)
++        self.assertNotIn('renderedItem(', f)
++
++    def test_double_and_numeric_actions_pass_applied_identity_without_eager_all_item_reads(self):
++        mouse = body(self.host, 'override func mouseDown(with event:')
++        self.assertIn('paste(itemID: current[index].id, plainTextOnly:', mouse)
++        handle = body(self.ui, 'private func handleKey(')
++        quick = body(handle, 'func performQuickPaste(')
++        self.assertIn('paste(itemID: items[action.index].id, plainTextOnly:', quick)
++        self.assertEqual(quick.count('appliedCollectionItems()'), 2)
++        self.assertIn('state.selectFirstAppliedItem(items: appliedItems)', quick)
++        for f in [quick, mouse]: self.assertNotIn('.map { $0.requiredItem()', f)
++        self.assertEqual(pre_collection_membership(handle), body(self.before('ui'), 'private func handleKey('))
++
++    def test_only_reviewed_membership_deltas_and_one_entry_type_change_production(self):
++        self.assertEqual(len(CHANGES), 23)
++        for key in ['ui', 'host']:
++            self.assertEqual(pre_collection_membership(self.source[key]), self.before(key))
++        sha = lambda p: hashlib.sha256((ROOT / p).read_bytes()).hexdigest()
++        self.assertEqual({p for p, h in self.base['production'].items() if sha(p) != h}, {self.paths['ui'], self.paths['host']})
++        files = {str(p.relative_to(ROOT)) for p in (ROOT / 'replica/Sources').rglob('*') if p.is_file()}
++        self.assertEqual(files - set(self.base['production']), {ENTRY_PATH})
++        for p in ['replica/Package.swift', 'package.json']:
++            self.assertEqual(sha(p), self.base['other'][p])
++        # No save/restore/model implementation is altered by changing collection metadata representation.
++        for p in ['replica/Sources/PastoCore/Pasteboard.swift', 'replica/Sources/PastoCore/ClipboardPersistence.swift',
++                  'replica/Sources/Pasto/AppMain.swift']:
++            self.assertEqual(sha(p), self.base['production'][p])
++
++    def test_finite_full_provider_and_unknown_contracts_are_not_silently_closed(self):
++        self.assertFalse(self.proof['full_function_migration_verified'])
++        self.assertEqual(self.proof['repaired_finite_contracts'], [])
++        self.assertEqual(self.proof['remaining_confirmed_differences'], ['Paste:0x1003544dc'])
++        self.assertTrue(any('persistence' in r for r in self.proof['remaining_work']))
++        self.assertTrue(any('Unknown04430c/0f733c' in r for r in self.proof['remaining_work']))
++
++
++if __name__ == '__main__': unittest.main()
+--- /dev/null
++++ scripts/tests/collection_membership_scope_contract.py
+@@ -0,0 +1,219 @@
++"""The explicit phase79 identity/reference membership delta for earlier frozen contracts.
++
++Actual current membership, item/restore consumers and ID-only selection paths are
++checked from raw production in test_p1_repair_reference_membership. Historical
++contracts remove only these reviewed literal bodies/signatures/call-site changes.
++"""
++from pathlib import Path
++
++ENTRY_PATH = 'replica/Sources/PastoCore/ClipboardCollectionEntry.swift'
++
++CHANGES = [('replica/Sources/Pasto/UI/ReplicaUIController.swift',
++  '',
++  '    private func collectionEntries(identifiers: [UUID], references: [UUID: '
++  'ClipboardCollectionItemReference]) -> [ClipboardCollectionEntry] {\n'
++  '        // Imported legacy trash is a local compatibility case; cached payload availability is not '
++  'membership.\n'
++  '        let deleted = Set(store.items.filter(\\.isDeleted).map(\\.id))\n'
++  '        return identifiers.filter { !deleted.contains($0) }.map { identifier in\n'
++  '            guard let reference = references[identifier] else { fatalError("Missing collection item '
++  'reference") }\n'
++  '            return ClipboardCollectionEntry(id: identifier, reference: reference)\n'
++  '        }\n'
++  '    }\n'
++  '\n'),
++ ('replica/Sources/Pasto/UI/ReplicaUIController.swift',
++  '',
++  '    @discardableResult\n'
++  '    func paste(itemID: UUID, plainTextOnly: Bool) -> Bool {\n'
++  '        if let input = appliedRestoreItems(orderedIDs: [itemID]).first {\n'
++  '            return paste(restoreItems: [input], plainTextOnly: plainTextOnly)\n'
++  '        }\n'
++  '        return paste(ids: [itemID], plainTextOnly: plainTextOnly)\n'
++  '    }\n'
++  '\n'),
++ ('replica/Sources/Pasto/UI/ReplicaUIController.swift',
++  '{\n'
++  '        if isCollectionSearchQueryEmpty {\n'
++  '            if showDeleted {\n'
++  '                return store.search(query: "", pinboardID: pinboardID, includeDeleted: '
++  'true).filter(\\.isDeleted)\n'
++  '            }\n'
++  '            let items = Dictionary(uniqueKeysWithValues: store.items.map { ($0.id, $0) })\n'
++  '            let identifiers = listCollection?.value.identifiers ?? []\n'
++  '            let native = identifiers.compactMap { items[$0] }.filter { !$0.isDeleted }\n'
++  '            if let pinboardID {\n'
++  '                // Older local archives can retain secondary memberships beyond the native single owner.\n'
++  '                let legacy = store.items(in: pinboardID).filter { $0.pinboardOwnerID != pinboardID }\n'
++  '                if !legacy.isEmpty {\n'
++  '                    let retained = Set(identifiers).union(legacy.map(\\.id))\n'
++  '                    return store.items(in: pinboardID).filter { retained.contains($0.id) }\n'
++  '                }\n'
++  '            }\n'
++  '            return native\n'
++  '        }\n'
++  '        let items = Dictionary(uniqueKeysWithValues: store.items.map { ($0.id, $0) })\n'
++  '        return searchIndex.orderedIdentifiers.compactMap { identifier in\n'
++  '            guard let item = items[identifier], showDeleted ? item.isDeleted : !item.isDeleted else { '
++  'return nil }\n'
++  '            return item\n'
++  '        }\n'
++  '    }',
++  '{\n'
++  '        if isCollectionSearchQueryEmpty {\n'
++  '            if showDeleted {\n'
++  '                return store.search(query: "", pinboardID: pinboardID, includeDeleted: true)\n'
++  '                    .filter(\\.isDeleted).map { ClipboardCollectionEntry(item: $0) }\n'
++  '            }\n'
++  '            let snapshot = listCollection?.value\n'
++  '            let native = collectionEntries(identifiers: snapshot?.identifiers ?? [],\n'
++  '                references: snapshot?.itemReferences ?? [:])\n'
++  '            if let pinboardID {\n'
++  '                // Preserve old local archives with secondary memberships outside the native single '
++  'owner.\n'
++  '                let archived = store.items(in: pinboardID)\n'
++  '                let legacy = archived.filter { $0.pinboardOwnerID != pinboardID }\n'
++  '                if !legacy.isEmpty {\n'
++  '                    let byID = Dictionary(uniqueKeysWithValues: native.map { ($0.id, $0) })\n'
++  '                    let retained = Set(native.map(\\.id)).union(legacy.map(\\.id))\n'
++  '                    let merged = archived.filter { retained.contains($0.id) }.map {\n'
++  '                        byID[$0.id] ?? ClipboardCollectionEntry(item: $0)\n'
++  '                    }\n'
++  '                    let included = Set(merged.map(\\.id))\n'
++  '                    return merged + native.filter { !included.contains($0.id) }\n'
++  '                }\n'
++  '            }\n'
++  '            return native\n'
++  '        }\n'
++  '        if showDeleted {\n'
++  '            let archived = Dictionary(uniqueKeysWithValues: store.items.map { ($0.id, $0) })\n'
++  '            return searchIndex.orderedIdentifiers.compactMap { identifier in\n'
++  '                guard let item = archived[identifier], item.isDeleted else { return nil }\n'
++  '                return ClipboardCollectionEntry(item: item)\n'
++  '            }\n'
++  '        }\n'
++  '        return collectionEntries(identifiers: searchIndex.orderedIdentifiers,\n'
++  '            references: searchIndex.resultItemReferences)\n'
++  '    }'),
++ ('replica/Sources/Pasto/UI/ReplicaUIController.swift',
++  '{\n'
++  '        let ids = orderedSelectionIDs.filter { selection.contains($0) }\n'
++  '        if let collectionOwner { return collectionOwner.appliedSelectedItems(for: self, orderedIDs: ids) '
++  '?? [] }\n'
++  '        let byID = Dictionary(uniqueKeysWithValues: visibleItems.map { ($0.id, $0) })\n'
++  '        let references = collectionItemReferences\n'
++  '        return ids.compactMap { identifier in\n'
++  '            guard let item = byID[identifier] else { return nil }\n'
++  '            return references[identifier]?.requiredItem() ?? item\n'
++  '        }\n'
++  '    }',
++  '{\n'
++  '        let ids = orderedSelectionIDs.filter { selection.contains($0) }\n'
++  '        if let collectionOwner { return collectionOwner.appliedSelectedItems(for: self, orderedIDs: ids) '
++  '?? [] }\n'
++  '        let byID = Dictionary(uniqueKeysWithValues: visibleItems.map { ($0.id, $0) })\n'
++  '        return ids.compactMap { byID[$0]?.requiredItem() }\n'
++  '    }'),
++ ('replica/Sources/Pasto/UI/ReplicaUIController.swift',
++  '{\n        visibleItems.first { $0.id == primaryID } ?? selectedItems.first ?? visibleItems.first\n    }',
++  '{\n'
++  '        let items = pointerSelectionItems\n'
++  '        return items.first { $0.id == primaryID }?.requiredItem()\n'
++  '            ?? selectedItems.first ?? items.first?.requiredItem()\n'
++  '    }'),
++ ('replica/Sources/Pasto/UI/ReplicaUIController.swift',
++  '{\n'
++  '        if let input = appliedRestoreItems(orderedIDs: [item.id]).first {\n'
++  '            return paste(restoreItems: [input], plainTextOnly: plainTextOnly)\n'
++  '        }\n'
++  '        return paste(ids: [item.id], plainTextOnly: plainTextOnly)\n'
++  '    }',
++  '{\n        paste(itemID: item.id, plainTextOnly: plainTextOnly)\n    }'),
++ ('replica/Sources/Pasto/UI/ReplicaUIController.swift',
++  '    var visibleItems: [ClipboardItem] {\n',
++  '    var visibleItems: [ClipboardCollectionEntry] {\n'),
++ ('replica/Sources/Pasto/UI/ReplicaUIController.swift',
++  '    func selectFirstAppliedItem(items: [ClipboardItem]) {\n',
++  '    func selectFirstAppliedItem(items: [ClipboardCollectionEntry]) {\n'),
++ ('replica/Sources/Pasto/UI/ReplicaUIController.swift',
++  '    func selectAppliedItem(at index: Int, items: [ClipboardItem]) {\n',
++  '    func selectAppliedItem(at index: Int, items: [ClipboardCollectionEntry]) {\n'),
++ ('replica/Sources/Pasto/UI/ReplicaUIController.swift',
++  '    func applyFullCollectionReload(items: [ClipboardItem]) {\n',
++  '    func applyFullCollectionReload(items: [ClipboardCollectionEntry]) {\n'),
++ ('replica/Sources/Pasto/UI/ReplicaUIController.swift',
++  '    func applyIncrementalCollectionSnapshot(items: [ClipboardItem]) {\n',
++  '    func applyIncrementalCollectionSnapshot(items: [ClipboardCollectionEntry]) {\n'),
++ ('replica/Sources/Pasto/UI/ReplicaUIController.swift',
++  '    private func selectIndex(_ index: Int, mode: UInt8, items: [ClipboardItem], animated: Bool = true) '
++  '{\n',
++  '    private func selectIndex(_ index: Int, mode: UInt8, items: [ClipboardCollectionEntry], animated: Bool '
++  '= true) {\n'),
++ ('replica/Sources/Pasto/UI/ReplicaUIController.swift',
++  '    private var pointerSelectionItems: [ClipboardItem] {\n',
++  '    private var pointerSelectionItems: [ClipboardCollectionEntry] {\n'),
++ ('replica/Sources/Pasto/UI/ReplicaUIController.swift',
++  '    func consumePendingNeighborSelection(token: UUID, items: [ClipboardItem]) {\n',
++  '    func consumePendingNeighborSelection(token: UUID, items: [ClipboardCollectionEntry]) {\n'),
++ ('replica/Sources/Pasto/UI/ReplicaUIController.swift',
++  '    private func appliedCollectionItems() -> [ClipboardItem]? {\n',
++  '    private func appliedCollectionItems() -> [ClipboardCollectionEntry]? {\n'),
++ ('replica/Sources/Pasto/UI/ReplicaUIController.swift',
++  '                paste(item: items[action.index], plainTextOnly: '
++  'action.options.contains(.plainTextAndLinks))\n',
++  '                paste(itemID: items[action.index].id, plainTextOnly: '
++  'action.options.contains(.plainTextAndLinks))\n'),
++ ('replica/Sources/Pasto/UI/ReplicaNativeCardCollection.swift',
++  '{\n'
++  '        guard self.state === state, state.collectionOwner === self else { return nil }\n'
++  '        let positions = Dictionary(uniqueKeysWithValues: items.enumerated().map { ($0.element.id, '
++  '$0.offset) })\n'
++  '        return orderedIDs.compactMap { identifier in\n'
++  '            guard let index = positions[identifier] else { return nil }\n'
++  '            let item = items[index]\n'
++  '            return itemReferences[identifier]?.requiredRestoreItem(id: identifier) ?? '
++  'ClipboardRestoreItem(item: item)\n'
++  '        }\n'
++  '    }',
++  '{\n'
++  '        guard self.state === state, state.collectionOwner === self else { return nil }\n'
++  '        let positions = Dictionary(uniqueKeysWithValues: items.enumerated().map { ($0.element.id, '
++  '$0.offset) })\n'
++  '        return orderedIDs.compactMap { identifier in\n'
++  '            guard let index = positions[identifier] else { return nil }\n'
++  '            return items[index].requiredRestoreItem()\n'
++  '        }\n'
++  '    }'),
++ ('replica/Sources/Pasto/UI/ReplicaNativeCardCollection.swift',
++  '{\n        let item = items[index]\n        return itemReferences[item.id]?.requiredItem() ?? item\n    }',
++  '{\n        items[index].requiredItem()\n    }'),
++ ('replica/Sources/Pasto/UI/ReplicaNativeCardCollection.swift',
++  '    private var items: [ClipboardItem] = []\n',
++  '    private var items: [ClipboardCollectionEntry] = []\n'),
++ ('replica/Sources/Pasto/UI/ReplicaNativeCardCollection.swift',
++  '        let items: [ClipboardItem]\n',
++  '        let items: [ClipboardCollectionEntry]\n'),
++ ('replica/Sources/Pasto/UI/ReplicaNativeCardCollection.swift',
++  '    func appliedItems(for state: ReplicaUIState) -> [ClipboardItem]? {\n',
++  '    func appliedItems(for state: ReplicaUIState) -> [ClipboardCollectionEntry]? {\n'),
++ ('replica/Sources/Pasto/UI/ReplicaNativeCardCollection.swift',
++  '        state.select(current[index], modifiers: modifiers)\n',
++  '        state.select(renderedItem(at: index), modifiers: modifiers)\n'),
++ ('replica/Sources/Pasto/UI/ReplicaNativeCardCollection.swift',
++  '                state.controller?.paste(item: current[index], plainTextOnly: '
++  'event.modifierFlags.isSuperset(of: plain))\n',
++  '                state.controller?.paste(itemID: current[index].id, plainTextOnly: '
++  'event.modifierFlags.isSuperset(of: plain))\n')]
++
++def pre_collection_membership(source):
++    for path, previous, current in CHANGES:
++        if current in source:
++            assert source.count(current) == 1, path
++            source = source.replace(current, previous, 1)
++    return source
++
++
++def pre_collection_membership_bytes(path):
++    path = Path(path)
++    value = path.read_bytes()
++    return pre_collection_membership(value.decode()).encode() if path.suffix == '.swift' else value

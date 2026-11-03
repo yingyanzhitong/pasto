@@ -1,0 +1,15 @@
+--- a/replica/Sources/PastoCore/Pasteboard.swift
++++ b/replica/Sources/PastoCore/Pasteboard.swift
+@@ -387,7 +387,11 @@
+             state.persistChangeCount?(state.lastChangeCount)
+         }
+         // 0x10037a144: performAndWait + save, then undo cleanup and DidRestore, before deactivation.
+-        try recordRestoredItems(ids)
++        do {
++            try recordRestoredItems(ids)
++        } catch {
++            // Original 0x10037a144 releases the transaction error and continues below.
++        }
+         Self.restoreUndoManager.f_1000da768().removeAllActions()
+         didRestoreItem.send()
+     }

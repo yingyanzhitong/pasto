@@ -1,5 +1,6 @@
 import AppKit
 import Combine
+import CoreData
 import Darwin
 import Foundation
 
@@ -45,11 +46,96 @@ public final class ClipboardStore: ObservableObject {
     @Published public var pinboards: [Pinboard] = []
     @Published public private(set) var sourceApplications: [SourceApplicationRecord] = []
     public let didRestoreItem = PassthroughSubject<Void, Never>()
+    public static let didRestoreItemNotification = Notification.Name("pasteboardHistoryManagerDidRestoreItem")
     public let preferenceChanges = PassthroughSubject<(old: AppPreferences, new: AppPreferences), Never>()
     @Published public var preferences = AppPreferences() {
         didSet { preferenceChanges.send((oldValue, preferences)) }
     }
     public let directoryURL: URL
+    public var searchSourceIdentifier: String? { persistence.searchSourceIdentifier }
+    public var collectionItemUpdates: AnyPublisher<Set<UUID>, Never> { persistence.collectionItemUpdates }
+    public func localListMenuState(_ target: ClipboardListTarget) -> (rawType: Int64?, isEmpty: Bool) {
+        persistence.localListMenuState(target)
+    }
+    public func makeTabListCollection() -> ClipboardPinboardCollection { persistence.makeTabListCollection() }
+    public func tabListTarget(identifier: String) -> ClipboardListTarget? { persistence.tabListTarget(identifier: identifier) }
+    public func makeListCollection(identifier: String) -> ClipboardSearchCollection? {
+        persistence.makeListCollection(identifier: identifier)
+    }
+    public func makePinboardCollection() -> ClipboardPinboardCollection {
+        persistence.makePinboardCollection()
+    }
+    public func observeListAttributes(pinboardID: UUID?) -> ClipboardListAttributesObservation? {
+        persistence.observeListAttributes(identifier: pinboardID?.uuidString ?? Self.historyListIdentifier)
+    }
+    public func observeItem(id: UUID) -> ClipboardItemObservation? {
+        persistence.observeItem(identifier: id.uuidString)
+    }
+    public func originalContentKind(of item: ClipboardItem) -> OriginalPasteboardContentKind {
+        persistence.itemContentKind(identifier: item.id.uuidString)
+    }
+    public func observeSearchChanges(_ consume: @escaping ([OriginalSearchHistoryChange]) async throws -> Void) async {
+        await persistence.observeSearchChanges(consume)
+    }
+    // Local equivalent of the startup viewContext-backed suggestion-source registration.
+    public func makeSearchListNameResolver() -> (String) -> String? {
+        persistence.makeSearchListNameResolver()
+    }
+
+    public func makeSearchSuggestionProvider() -> OriginalSearchSuggestions.Provider {
+        let persistence = self.persistence
+        return OriginalSearchSuggestions.Provider(
+            app: { try persistence.searchApplicationNames(matching: $0) },
+            device: { try persistence.searchDeviceNames(matching: $0) },
+            pinboard: { try persistence.searchPinboardNames(matching: $0) })
+    }
+
+    public func searchPinboardNames(matching query: String) throws -> [(identifier: String, name: String)] {
+        try persistence.searchPinboardNames(matching: query)
+    }
+
+    public func searchApplicationNames(matching query: String) throws -> [String] {
+        try persistence.searchApplicationNames(matching: query)
+    }
+
+    public func searchDeviceNames(matching query: String) throws -> [String] {
+        try persistence.searchDeviceNames(matching: query)
+    }
+
+    public func searchApplicationImage(named name: String) -> NSImage? {
+        persistence.searchApplicationImage(named: name)
+    }
+
+    public func searchDeviceType(named name: String) -> UInt8? {
+        persistence.searchDeviceType(named: name)
+    }
+
+    public func searchItems(identifiers: [String]?) throws -> [ClipboardItem] {
+        try persistence.searchItems(identifiers: identifiers)
+    }
+    public func makeListCollection(pinboardID: UUID?) -> ClipboardSearchCollection? {
+        persistence.makeListCollection(identifier: pinboardID?.uuidString ?? Self.historyListIdentifier)
+    }
+    public func makeSearchCollection(identifiers: [String]) -> ClipboardSearchCollection? {
+        persistence.makeSearchCollection(identifiers: identifiers)
+    }
+    public func searchNativeItems(identifiers: [String]?) throws -> [ClipboardItem] {
+        try persistence.searchNativeItems(identifiers: identifiers)
+    }
+
+    public func searchIndexRecords(identifiers: [String]?) throws -> [ClipboardSearchRecord] {
+        try persistence.searchIndexRecords(identifiers: identifiers)
+    }
+
+    public func searchIndexIdentifiers(before timestamp: Date?) throws -> [String] {
+        try persistence.searchIndexIdentifiers(before: timestamp)
+    }
+
+    public static let historyListIdentifier = ClipboardListPersistence.historyIdentifier
+
+    public func localListMenuState(pinboardID: UUID?) -> (rawType: Int64?, isEmpty: Bool) {
+        persistence.localListMenuState(identifier: pinboardID?.uuidString ?? ClipboardListPersistence.historyIdentifier)
+    }
     private var baseline = StoreState()
     private var diskRevision: UUID?
     private let persistence: ClipboardPersistence
@@ -74,6 +160,7 @@ public final class ClipboardStore: ObservableObject {
             }
         }
         try reload()
+        persistence.configureUndoRegistration()
     }
 
     private var stateURL: URL { directoryURL.appendingPathComponent("clipboard.json") }
@@ -109,6 +196,10 @@ public final class ClipboardStore: ObservableObject {
         guard state.schemaVersion == 1 else { throw ClipboardStoreError.unsupportedArchiveVersion }
         guard Set(state.items.map(\.id)).count == state.items.count,
               Set(state.pinboards.map(\.id)).count == state.pinboards.count else {
+            throw ClipboardStoreError.duplicateIdentifiers
+        }
+        let effectiveItemIdentifiers = state.items.map { $0.nativeIdentifier ?? $0.id.uuidString }
+        guard Set(effectiveItemIdentifiers).count == effectiveItemIdentifiers.count else {
             throw ClipboardStoreError.duplicateIdentifiers
         }
         let boardIDs = Set(state.pinboards.map(\.id))
@@ -190,6 +281,9 @@ public final class ClipboardStore: ObservableObject {
                 value.hasExplicitTitle = local.hasExplicitTitle
             }
             if local.kind != base.kind { value.kind = local.kind }
+            if local.nativeIdentifier != base.nativeIdentifier { value.nativeIdentifier = local.nativeIdentifier }
+            if local.nativeChecksum != base.nativeChecksum { value.nativeChecksum = local.nativeChecksum }
+            if local.sourceIdentifier != base.sourceIdentifier { value.sourceIdentifier = local.sourceIdentifier }
             if local.plainText != base.plainText { value.plainText = local.plainText }
             if local.sourceName != base.sourceName { value.sourceName = local.sourceName }
             if local.sourceBundleID != base.sourceBundleID { value.sourceBundleID = local.sourceBundleID }
@@ -279,6 +373,10 @@ public final class ClipboardStore: ObservableObject {
     }
 
     private func normalize(_ state: inout StoreState) {
+        // Legacy value-only groups use type 2 in the managed graph; canonicalize before publishing too.
+        for i in state.pinboards.indices where state.pinboards[i].rawType == nil {
+            state.pinboards[i].rawType = 2
+        }
         let boards = Set(state.pinboards.map(\.id))
         for i in state.items.indices {
             state.items[i].pinboardIDs.formIntersection(boards)
@@ -310,35 +408,121 @@ public final class ClipboardStore: ObservableObject {
     }
 
     public func sourceApplication(for item: ClipboardItem) -> SourceApplicationRecord? {
+        if item.hasSourceApplicationSnapshot { return item.sourceApplicationSnapshot }
         guard let identifier = item.sourceApplicationBundleID else { return nil }
         return sourceApplications.first { $0.bundleIdentifier == identifier }
     }
 
     public func pinboardOwner(for item: ClipboardItem) -> Pinboard? {
         guard let identifier = item.pinboardOwnerID else { return nil }
-        return pinboards.first { $0.id == identifier }
+        // 0x10031bc94/3250f0: a related list is an owning group only when rawType is exactly 2.
+        return pinboards.first { $0.id == identifier && $0.rawType == 2 }
     }
 
-    private func expireHistory(_ state: inout StoreState) {
-        guard state.preferences.historyRetentionDays > 0 else { return }
-        let cutoff = Date().addingTimeInterval(-Double(state.preferences.historyRetentionDays) * 86_400)
+    private func expireHistory(_ state: inout StoreState, capacity: Int) {
+        guard capacity > 0 else { return }
+        let interval = -capacity * 24 * 60 * 60
+        let cutoff = Date(timeIntervalSinceNow: Double(interval))
         state.items.removeAll { $0.isInHistory && $0.pinboardIDs.isEmpty && $0.createdAt < cutoff }
     }
 
-    private func mutate<T>(historyAction: Bool = false, _ change: (inout StoreState) throws -> T) throws -> T {
+    struct HistoryRestoreOperation {
+        let local: StoreState
+        let previous: StoreState
+        let native: ClipboardPersistence.HistoryRestoreSelection
+    }
+
+    func prepareHistoryRestore(_ selected: [ClipboardItem]) throws -> HistoryRestoreOperation {
         let local = current
         try validate(local)
         return try withLock {
-            let remote = try latestState()
-            var state = merge(local, onto: remote)
-            let result = try change(&state)
-            try validate(state)
-            normalize(&state)
-            if historyAction || state.preferences.historyRetentionDays != remote.preferences.historyRetentionDays {
-                expireHistory(&state)
+            var state = local
+            var previous = baseline
+            // Keep the selected native input while adapting a newer persisted state for restoration metadata.
+            if try revision() != diskRevision {
+                previous = try latestState()
+                state = merge(local, onto: previous)
+                try validate(state)
             }
-            if state.cloudKitJournal != nil { try Self.captureCloudKit(&state, previous: remote) }
-            try persistence.commit(state, previous: remote)
+            let available = Set(state.items.filter { !$0.isDeleted }.map(\.id))
+            guard selected.allSatisfy({ available.contains($0.id) }) else { throw ClipboardStoreError.itemNotFound }
+            return HistoryRestoreOperation(local: state, previous: previous,
+                native: try persistence.prepareHistoryRestore(ids: selected.map(\.id)))
+        }
+    }
+
+    func prepareHistoryRestore(_ selected: [ClipboardRestoreItem]) throws -> HistoryRestoreOperation {
+        let local = current
+        try validate(local)
+        return try withLock {
+            var state = local
+            var previous = baseline
+            // Keep the selected native input while adapting a newer persisted state for restoration metadata.
+            if try revision() != diskRevision {
+                previous = try latestState()
+                state = merge(local, onto: previous)
+                try validate(state)
+            }
+            let legacy = selected.filter { $0.nativeObject == nil }
+            if !legacy.isEmpty {
+                let available = Set(state.items.filter { !$0.isDeleted }.map(\.id))
+                guard legacy.allSatisfy({ available.contains($0.id) }) else { throw ClipboardStoreError.itemNotFound }
+            }
+            return HistoryRestoreOperation(local: state, previous: previous,
+                native: try persistence.prepareHistoryRestore(inputs: selected))
+        }
+    }
+
+    private func mutate<T>(historyAction: Bool = false, deletingItemIDs: [UUID] = [], restoringItemIDs: [UUID] = [],
+                           refreshHistoryAfterChange: (() -> Bool)? = nil,
+                           _ change: (inout StoreState) throws -> T) throws -> T {
+        try mutateInTransaction(historyAction: historyAction, deletingItemIDs: deletingItemIDs,
+                                restoringItemIDs: restoringItemIDs, refreshHistoryAfterChange: refreshHistoryAfterChange) { state, _ in
+            try change(&state)
+        }
+    }
+
+    private func mutateInTransaction<T>(historyAction: Bool = false, deletingItemIDs: [UUID] = [], restoringItemIDs: [UUID] = [],
+                                        refreshHistoryAfterChange: (() -> Bool)? = nil,
+                                        preparedRestore: HistoryRestoreOperation? = nil,
+                                        _ change: (inout StoreState, ClipboardPersistence.Transaction) throws -> T) throws -> T {
+        let local = preparedRestore?.local ?? current
+        try validate(local)
+        return try withLock {
+            let remote = try preparedRestore?.previous ?? latestState()
+            let (state, result) = try persistence.commit(previous: remote, deletingItemIDs: deletingItemIDs,
+                                                       preparedTransaction: preparedRestore?.native.transaction) { transaction in
+                // A prepared restore keeps its native selection and value snapshot across the pasteboard write.
+                var state = preparedRestore?.local ?? merge(local, onto: remote)
+                let result = try change(&state, transaction)
+                if preparedRestore == nil, !restoringItemIDs.isEmpty {
+                    let available = Set(state.items.filter { !$0.isDeleted }.map(\.id))
+                    guard restoringItemIDs.allSatisfy({ available.contains($0) }) else {
+                        throw ClipboardStoreError.itemNotFound
+                    }
+                }
+                try validate(state)
+                normalize(&state)
+                let lists = transaction.repository.lists
+                let history = try lists.synchronize(pinboards: state.pinboards, preferences: state.preferences, previous: remote)
+                if !restoringItemIDs.isEmpty {
+                    let positions = Dictionary(uniqueKeysWithValues: state.items.enumerated().map { ($0.element.id, $0.offset) })
+                    let targets = try preparedRestore?.native.targets ?? transaction.repository.prepareHistoryItems(restoringItemIDs)
+                    for update in transaction.repository.restoreHistoryItems(targets) {
+                        guard let index = positions[update.id] else { continue }
+                        state.items[index].createdAt = update.timestamp
+                        state.items[index].updatedAt = update.timestamp
+                        state.items[index].isInHistory = true
+                    }
+                    normalize(&state)
+                }
+                if historyAction || state.preferences.historyRetentionDays != remote.preferences.historyRetentionDays {
+                    if let capacity = lists.historyCapacity(of: history) { expireHistory(&state, capacity: capacity) }
+                }
+                lists.refreshHistoryAfterOperation = historyAction || (refreshHistoryAfterChange?() ?? false)
+                if state.cloudKitJournal != nil { try Self.captureCloudKit(&state, previous: remote) }
+                return (state: state, result: result)
+            }
             diskRevision = try revision()
             publish(state)
             return result
@@ -347,17 +531,14 @@ public final class ClipboardStore: ObservableObject {
 
     /// Restore promotes the selected content in reverse order, as the original history repository does.
     func recordRestoredItems(_ ids: [UUID]) throws {
-        try mutate(historyAction: true) { state in
-            for id in ids.reversed() {
-                guard let index = state.items.firstIndex(where: { $0.id == id && !$0.isDeleted }) else {
-                    throw ClipboardStoreError.itemNotFound
-                }
-                let timestamp = Date()
-                state.items[index].createdAt = timestamp
-                state.items[index].updatedAt = timestamp
-                state.items[index].isInHistory = true
-            }
-        }
+        guard !ids.isEmpty else { return }
+        try mutate(historyAction: true, restoringItemIDs: ids) { _ in }
+    }
+
+    func recordRestoredSelection(_ operation: HistoryRestoreOperation) throws {
+        guard !operation.native.targets.isEmpty else { return }
+        try mutateInTransaction(historyAction: true, restoringItemIDs: operation.native.targets.map(\.id),
+                                preparedRestore: operation) { _, _ in }
     }
 
     public func save() throws { try mutate { _ in } }
@@ -532,37 +713,76 @@ public final class ClipboardStore: ObservableObject {
         return item
     }
 
+    private static func refreshNativeChecksum(_ item: inout ClipboardItem) {
+        item.nativeChecksum = try? knownPasteboardChecksum(from: item.payloads)
+    }
+
     @discardableResult
     public func add(_ item: ClipboardItem, sourceApplication: SourceApplicationRecord? = nil) throws -> UUID {
         try addWithInsertionResult(item, sourceApplication: sourceApplication).id
     }
 
     func addWithInsertionResult(_ item: ClipboardItem,
-                                sourceApplication: SourceApplicationRecord? = nil) throws -> (id: UUID, isNew: Bool) {
+                                sourceApplication: SourceApplicationRecord? = nil,
+                                recordCapture: Bool = false,
+                                sourceProvider: (() -> (name: String, bundleID: String?, application: SourceApplicationRecord?))? = nil) throws -> (id: UUID, isNew: Bool) {
         var item = item
         if let sourceApplication {
             item.sourceApplicationBundleID = sourceApplication.bundleIdentifier
             item.sourceApplicationRelationIsKnown = true
         }
-        let checksum = try? Self.knownPasteboardChecksum(from: item.payloads)
-        return try mutate(historyAction: item.isInHistory) { state in
-            item = Self.withPreviewMetadata(item, binaryPropertyList: state.preferences.useBinaryPlist,
-                preferQuickLookThumbnails: state.preferences.fileQuickLookThumbnailsEnabled,
-                generateMissingContentPreview: true)
+        var checksum: String? = nil
+        if !recordCapture {
+            checksum = try? Self.knownPasteboardChecksum(from: item.payloads)
+            if item.nativeIdentifier == nil { item.nativeIdentifier = item.id.uuidString }
+            item.nativeChecksum = checksum
+        }
+        return try mutateInTransaction(historyAction: recordCapture || item.isInHistory) { state, transaction in
+            if recordCapture {
+                checksum = try Self.knownPasteboardChecksum(from: item.payloads)
+                guard item.nativeIdentifier != nil || checksum != nil else {
+                    throw OriginalPasteboardItemCreationError.unsupportedContent
+                }
+                if item.nativeIdentifier == nil { item.nativeIdentifier = checksum }
+                item.nativeChecksum = checksum
+                item.rawPreview = nil
+                item.imagePreviewMetadata = nil
+            } else {
+                item = Self.withPreviewMetadata(item, binaryPropertyList: state.preferences.useBinaryPlist,
+                    preferQuickLookThumbnails: state.preferences.fileQuickLookThumbnailsEnabled,
+                    generateMissingContentPreview: true)
+            }
             if let sourceApplication { Self.upsertSourceApplication(sourceApplication, in: &state) }
             if let owner = item.pinboardOwnerID,
                !item.pinboardIDs.contains(owner) || !state.pinboards.contains(where: { $0.id == owner }) {
                 throw ClipboardStoreError.pinboardNotFound
             }
-            if let i = state.items.firstIndex(where: { previous in
-                if let checksum, let previousChecksum = try? Self.knownPasteboardChecksum(from: previous.payloads) {
-                    return checksum == previousChecksum
+            let capturedTarget = recordCapture ? try transaction.repository.capturedItem(checksum: checksum) : nil
+            let existingIndex: Int?
+            if recordCapture {
+                if let capturedTarget {
+                    if let index = state.items.firstIndex(where: { $0.id == capturedTarget.id }) {
+                        existingIndex = index
+                    } else {
+                        state.items.append(try ClipboardPersistence.capturedItemValue(capturedTarget.object,
+                            id: capturedTarget.id, replacingContentWith: item))
+                        existingIndex = state.items.count - 1
+                    }
+                } else { existingIndex = nil }
+            } else {
+                existingIndex = state.items.firstIndex(where: { previous in
+                if let checksum {
+                    let previousChecksum = try? Self.knownPasteboardChecksum(from: previous.payloads)
+                    if let previousChecksum { return checksum == previousChecksum }
                 }
                 let explicitIdentity = Self.hasValidExplicitPasteboardRepresentations(previous.payloads)
                     && Self.hasValidExplicitPasteboardRepresentations(item.payloads)
                 return (explicitIdentity || previous.kind == item.kind && previous.plainText == item.plainText)
                     && Self.hasSamePasteboardRepresentations(previous.payloads, item.payloads)
-            }) {
+                })
+            }
+            let result: (index: Int, isNew: Bool)
+            if let i = existingIndex {
                 let analysis = state.items[i].kind == .image && item.kind == .image
                     ? state.items[i].payloads.filter { Self.analysisPayloadKeys.contains($0.key) } : [:]
                 state.items[i].kind = item.kind
@@ -573,12 +793,14 @@ public final class ClipboardStore: ObservableObject {
                 for (type, data) in analysis where state.items[i].payloads[type] == nil {
                     state.items[i].payloads[type] = data
                 }
-                state.items[i].updatedAt = max(Date(), item.updatedAt)
+                if !recordCapture { state.items[i].updatedAt = max(Date(), item.updatedAt) }
                 state.items[i].sourceName = item.sourceName
                 state.items[i].sourceBundleID = item.sourceBundleID
                 state.items[i].sourceApplicationBundleID = item.sourceApplicationBundleID
                 state.items[i].sourceApplicationRelationIsKnown = item.sourceApplicationRelationIsKnown
-                state.items[i].sourceDevice = item.sourceDevice
+                state.items[i].nativeChecksum = checksum
+                if state.items[i].nativeIdentifier == nil { state.items[i].nativeIdentifier = state.items[i].id.uuidString }
+                // 0x100360ff8 updates the existing content, not its creation device.
                 if item.isInHistory { state.items[i].createdAt = item.createdAt }
                 state.items[i].isInHistory = state.items[i].isInHistory || item.isInHistory
                 state.items[i].isDeleted = false
@@ -597,11 +819,57 @@ public final class ClipboardStore: ObservableObject {
                         state.items[i].pinboardIDs.formUnion(item.pinboardIDs)
                     }
                 }
-                return (state.items[i].id, false)
+                result = (i, false)
+            } else {
+                state.items.removeAll { $0.id == item.id }
+                state.items.append(item)
+                result = (state.items.count - 1, true)
             }
-            state.items.removeAll { $0.id == item.id }
-            state.items.append(item)
-            return (item.id, true)
+            let target: (id: UUID, object: NSManagedObject)?
+            if recordCapture {
+                target = try capturedTarget ?? transaction.repository.prepareHistoryItems([state.items[result.index].id]).first!
+                if target!.object.value(forKey: "nativeIdentifier") == nil {
+                    target!.object.setValue(state.items[result.index].nativeIdentifier, forKey: "nativeIdentifier")
+                }
+                if capturedTarget == nil {
+                    state.items[result.index].sourceDevice = transaction.repository.initializeCapturedDevice(target!)
+                }
+                let items = try Self.originalPasteboardItems(from: state.items[result.index].payloads)
+                let kind = OriginalPasteboardClassification.f_10032362c(items)
+                if let checksum = OriginalPasteboardChecksums.f_1003216bc(items, kind: kind) {
+                    var value = state.items[result.index]
+                    let preferences = state.preferences
+                    transaction.repository.replaceCapturedItemData(target!, items: items, kind: kind, checksum: checksum,
+                        useBinaryPlist: preferences.useBinaryPlist) {
+                            value = Self.withPreviewMetadata(value, binaryPropertyList: preferences.useBinaryPlist,
+                                preferQuickLookThumbnails: preferences.fileQuickLookThumbnailsEnabled,
+                                generateMissingContentPreview: true)
+                            return value.rawPreview
+                        }
+                    state.items[result.index] = value
+                }
+            } else { target = nil }
+            if let sourceProvider {
+                let source = sourceProvider()
+                state.items[result.index].sourceName = source.name
+                state.items[result.index].sourceBundleID = source.bundleID
+                state.items[result.index].sourceApplicationBundleID = source.application?.bundleIdentifier
+                state.items[result.index].sourceApplicationRelationIsKnown = true
+                if let application = source.application {
+                    Self.upsertSourceApplication(application, in: &state)
+                }
+            }
+            if recordCapture {
+                // 0x10037b034 → 0x100361ec0: stamp history after content/source
+                // updates, not before preview generation or checksum lookup.
+                try transaction.repository.applyCapturedSources(target!, item: state.items[result.index],
+                    applications: state.sourceApplications, preserveDevice: true)
+                let timestamp = transaction.repository.restoreHistoryItems([target!])[0].timestamp
+                state.items[result.index].createdAt = timestamp
+                state.items[result.index].updatedAt = timestamp
+                state.items[result.index].isInHistory = true
+            }
+            return (state.items[result.index].id, result.isNew)
         }
     }
 
@@ -626,7 +894,9 @@ public final class ClipboardStore: ObservableObject {
         }
         let payloads = [NSPasteboard.PasteboardType.string.rawValue: Data(content.utf8),
                         Self.orderedPasteboardTypesPayloadKey: try JSONEncoder().encode(representation.f_10037da6c())]
-        let checksum = try Self.knownPasteboardChecksum(from: payloads)
+        guard let checksum = try Self.knownPasteboardChecksum(from: payloads) else {
+            throw OriginalPasteboardItemCreationError.unsupportedContent
+        }
         let historyAction: Bool
         switch destination {
         case .history: historyAction = true
@@ -644,7 +914,7 @@ public final class ClipboardStore: ObservableObject {
             }
             let existing = state.items.firstIndex { previous in
                 guard !previous.isDeleted else { return false }
-                if let checksum, let previousChecksum = try? Self.knownPasteboardChecksum(from: previous.payloads) {
+                if let previousChecksum = try? Self.knownPasteboardChecksum(from: previous.payloads) {
                     return checksum == previousChecksum
                 }
                 let explicitIdentity = Self.hasValidExplicitPasteboardRepresentations(previous.payloads)
@@ -658,12 +928,15 @@ public final class ClipboardStore: ObservableObject {
                 state.items[index].kind = kind
                 state.items[index].plainText = content
                 state.items[index].payloads = payloads
+                state.items[index].nativeChecksum = checksum
+                if state.items[index].nativeIdentifier == nil { state.items[index].nativeIdentifier = state.items[index].id.uuidString }
                 state.items[index].imagePreviewMetadata = nil
                 state.items[index].rawPreview = nil
                 state.items[index].updatedAt = Date()
             } else {
                 index = state.items.count
-                state.items.append(ClipboardItem(kind: kind, plainText: content, sourceName: "",
+                state.items.append(ClipboardItem(nativeIdentifier: checksum, nativeChecksum: checksum,
+                                                 kind: kind, plainText: content, sourceName: "",
                                                  payloads: payloads, isInHistory: false))
             }
             state.items[index] = Self.withPreviewMetadata(state.items[index],
@@ -701,6 +974,7 @@ public final class ClipboardStore: ObservableObject {
             guard (includeDeleted || !item.isDeleted), kind == nil || item.kind == kind,
                   pinboardID == nil || item.pinboardIDs.contains(pinboardID!),
                   pinboardID != nil || !terms.isEmpty || includeDeleted || item.isInHistory else { return false }
+            if terms.isEmpty { return true }
             let haystack = folded([item.title, item.plainText ?? "", item.recognizedText ?? "", item.sourceName, item.sourceBundleID ?? "", item.kind.displayName].joined(separator: "\n"))
             return terms.allSatisfy { haystack.contains($0) }
         }
@@ -735,12 +1009,40 @@ public final class ClipboardStore: ObservableObject {
         }
     }
 
+    public func updateItem(_ input: ClipboardRestoreItem, title: String) throws {
+        guard let object = input.nativeObject else {
+            try updateItem(id: input.id, title: title, text: nil)
+            return
+        }
+        try OriginalPreviewTitles.f_1003bae08(title,
+            originalTitle: object.value(forKey: "title") as? String,
+            defaultTitle: OriginalPreviewTitles.f_100309008(
+                rawType: Int((object.value(forKey: "rawType") as? NSNumber)?.int64Value ?? 0),
+                fileCount: OriginalImagePreviewMetadataCodec.decodeFiles(object.value(forKey: "rawPreview") as? Data)?.paths.count)) { replacement in
+            try mutateInTransaction { state, _ in
+                var item = input.resolvedItem()
+                item.title = replacement ?? ""
+                item.hasExplicitTitle = replacement != nil
+                ClipboardItemTitlePersistence.update(item, on: object)
+                if let index = state.items.firstIndex(where: { $0.id == input.id }) {
+                    state.items[index] = item
+                } else { state.items.append(item) }
+            }
+        }
+    }
+
     public func updateItem(id: UUID, title: String? = nil, text: String? = nil) throws {
         try mutate { state in
             guard let i = state.items.firstIndex(where: { $0.id == id }) else { throw ClipboardStoreError.itemNotFound }
             if let title {
-                state.items[i].title = title
-                state.items[i].hasExplicitTitle = true
+                let item = state.items[i]
+                OriginalPreviewTitles.f_1003bae08(title, originalTitle: item.originalTitle,
+                    defaultTitle: OriginalPreviewTitles.f_100309008(
+                        rawType: Int(originalContentKind(of: item).rawValue),
+                        fileCount: item.decodedFilePreviewMetadata?.paths.count)) { replacement in
+                    state.items[i].title = replacement ?? ""
+                    state.items[i].hasExplicitTitle = replacement != nil
+                }
             }
             if let text {
                 state.items[i].plainText = text
@@ -769,39 +1071,84 @@ public final class ClipboardStore: ObservableObject {
                         OriginalLinkPreviewMetadataGenerator.generate([representation]),
                         binaryPropertyList: state.preferences.useBinaryPlist)
                 }
+                Self.refreshNativeChecksum(&state.items[i])
+                state.items[i].updatedAt = Date()
             }
-            state.items[i].updatedAt = Date()
         }
     }
 
     public func updateTextPreviewItem(id: UUID, attributedString: NSAttributedString) throws {
-        let representation = OriginalTextPreviewSubmission.makeItem(attributedString)
-        let types = representation.f_10037da6c()
-        var payloads: [String: Data] = [:]
-        for type in types {
-            if let data = representation.f_10037d810(forType: type) { payloads[type] = data }
+        try updateTextPreviewItem(id: id, input: nil, attributedString: attributedString)
+    }
+
+    public func updateTextPreviewItem(_ input: ClipboardRestoreItem, attributedString: NSAttributedString) throws {
+        try updateTextPreviewItem(id: input.id, input: input, attributedString: attributedString)
+    }
+
+    private func updateTextPreviewItem(id: UUID, input: ClipboardRestoreItem?, attributedString: NSAttributedString) throws {
+        try replacePreviewContent(id: id, input: input, plainText: attributedString.string) {
+            OriginalTextPreviewSubmission.makeItem(attributedString)
         }
-        payloads[Self.orderedPasteboardTypesPayloadKey] = try JSONEncoder().encode(types)
-        let kind: ClipboardKind
-        switch OriginalPasteboardClassification.f_10032362c([representation]) {
-        case .unknown: kind = .unknown
-        case .image: kind = .image
-        case .color: kind = .color
-        case .files: kind = .files
-        case .link: kind = .link
-        case .text: kind = types.contains(NSPasteboard.PasteboardType.rtf.rawValue) ? .richText : .text
-        }
-        try mutate { state in
-            guard let i = state.items.firstIndex(where: { $0.id == id }) else { throw ClipboardStoreError.itemNotFound }
-            var item = state.items[i]
+    }
+
+    // All local content writers submit the captured entity through Writing +0x18 / 360ff8.
+    private func replacePreviewContent(id: UUID, input: ClipboardRestoreItem?, plainText: @autoclosure () -> String?,
+                                       makeRepresentation: () -> OriginalPasteboardItem) throws {
+        try mutateInTransaction { state, transaction in
+            let nativeObject = input?.nativeObject
+            var index = state.items.firstIndex(where: { $0.id == id })
+            guard nativeObject != nil || index != nil else { throw ClipboardStoreError.itemNotFound }
+            let representation = makeRepresentation()
+            let items = [representation]
+            let nativeKind = OriginalPasteboardClassification.f_10032362c(items)
+            guard let checksum = OriginalPasteboardChecksums.f_1003216bc(items, kind: nativeKind) else { return }
+            let types = representation.f_10037da6c()
+            var payloads: [String: Data] = [:]
+            for type in types {
+                if let data = representation.f_10037d810(forType: type) { payloads[type] = data }
+            }
+            payloads[Self.orderedPasteboardTypesPayloadKey] = try JSONEncoder().encode(types)
+            let kind: ClipboardKind
+            switch nativeKind {
+            case .unknown: kind = .unknown
+            case .image: kind = .image
+            case .color: kind = .color
+            case .files: kind = .files
+            case .link: kind = .link
+            case .text: kind = types.contains(NSPasteboard.PasteboardType.rtf.rawValue) ? .richText : .text
+            }
+            let target: (id: UUID, object: NSManagedObject)
+            var item: ClipboardItem
+            if let nativeObject, let input {
+                target = (id: id, object: nativeObject)
+                item = input.resolvedItem()
+                if index == nil {
+                    index = state.items.count
+                    state.items.append(item)
+                }
+            } else {
+                target = try transaction.repository.prepareHistoryItems([id]).first!
+                item = state.items[index!]
+            }
+            let i = index!
             item.payloads = payloads
-            item.plainText = attributedString.string
+            item.plainText = plainText()
             item.kind = kind
             item.imagePreviewMetadata = nil
             item.rawPreview = nil
-            item.updatedAt = Date()
-            state.items[i] = Self.withPreviewMetadata(item, binaryPropertyList: state.preferences.useBinaryPlist,
-                preferQuickLookThumbnails: state.preferences.fileQuickLookThumbnailsEnabled, generateMissingContentPreview: true)
+            // Native content replacement preserves recency; retain the old value-only adapter's clock.
+            if nativeObject == nil { item.updatedAt = Date() }
+            item.nativeChecksum = checksum
+            let preferences = state.preferences
+            // Editing shares 0x100360ff8 with capture: replace data before producing its preview.
+            transaction.repository.replaceCapturedItemData(target, items: items, kind: nativeKind, checksum: checksum,
+                useBinaryPlist: preferences.useBinaryPlist) {
+                    item = Self.withPreviewMetadata(item, binaryPropertyList: preferences.useBinaryPlist,
+                        preferQuickLookThumbnails: preferences.fileQuickLookThumbnailsEnabled,
+                        generateMissingContentPreview: true)
+                    return item.rawPreview
+                }
+            state.items[i] = item
         }
     }
 
@@ -821,11 +1168,28 @@ public final class ClipboardStore: ObservableObject {
                     .flatMap(OriginalTextPreviewMetadataGenerator.generate),
                 binaryPropertyList: state.preferences.useBinaryPlist)
             state.items[i].updatedAt = Date()
+            Self.refreshNativeChecksum(&state.items[i])
         }
     }
 
     public func updateImageItem(id: UUID, payloads: [String: Data]) throws {
         try updateImageItem(id: id, payloads: payloads, allowingEmptyRepresentation: false)
+    }
+
+    public func updateImagePreviewItem(_ input: ClipboardRestoreItem, payloads: [String: Data]) throws {
+        guard input.nativeObject != nil else {
+            try updateImagePreviewItem(id: input.id, payloads: payloads)
+            return
+        }
+        let imageTypes = ["public.png", "public.jpeg", "public.heic", "public.tiff", "com.apple.icns", "com.compuserve.gif"]
+        let types = imageTypes.filter { payloads[$0] != nil }
+        guard !types.isEmpty || payloads.isEmpty else {
+            throw OriginalPasteboardItemCreationError.unsupportedContent
+        }
+        try replacePreviewContent(id: input.id, input: input, plainText: nil) {
+            OriginalPasteboardItem(types: types, dataByType: payloads)
+        }
+        startBackgroundTextRecognition(id: input.id)
     }
 
     public func updateImagePreviewItem(id: UUID, payloads: [String: Data]) throws {
@@ -855,8 +1219,23 @@ public final class ClipboardStore: ObservableObject {
             state.items[i].plainText = nil
             state.items[i].kind = types.isEmpty ? .unknown : .image
             state.items[i].updatedAt = Date()
+            Self.refreshNativeChecksum(&state.items[i])
         }
         startBackgroundTextRecognition(id: id)
+    }
+
+    public func updateLinkItem(_ input: ClipboardRestoreItem, url: URL) throws {
+        guard let object = input.nativeObject else {
+            try updateLinkItem(id: input.id, url: url)
+            return
+        }
+        let name: String?
+        if let previous = OriginalImagePreviewMetadataCodec.decodeLink(object.value(forKey: "rawPreview") as? Data) {
+            name = previous.name
+        } else { name = "" }
+        try replacePreviewContent(id: input.id, input: input, plainText: url.absoluteString) {
+            OriginalPasteboardItem.f_10037c7bc(url, title: name)
+        }
     }
 
     public func updateLinkItem(id: UUID, url: URL) throws {
@@ -882,6 +1261,17 @@ public final class ClipboardStore: ObservableObject {
                 OriginalLinkPreviewMetadataGenerator.generate([representation]),
                 binaryPropertyList: state.preferences.useBinaryPlist)
             state.items[i].updatedAt = Date()
+            Self.refreshNativeChecksum(&state.items[i])
+        }
+    }
+
+    public func updateColorItem(_ input: ClipboardRestoreItem, text: String) throws {
+        guard input.nativeObject != nil else {
+            try updateColorItem(id: input.id, text: text)
+            return
+        }
+        try replacePreviewContent(id: input.id, input: input, plainText: text) {
+            OriginalPasteboardItem.f_10037c6d4(text)
         }
     }
 
@@ -898,12 +1288,23 @@ public final class ClipboardStore: ObservableObject {
                 OriginalColorPreviewMetadataGenerator.generate([OriginalPasteboardItem.f_10037c6d4(text)]),
                 binaryPropertyList: state.preferences.useBinaryPlist)
             state.items[i].updatedAt = Date()
+            Self.refreshNativeChecksum(&state.items[i])
         }
     }
 
     public func delete(ids: Set<UUID>) throws { try setDeleted(ids: ids, deleted: true) }
     public func delete(ids: Set<UUID>, contextPinboardID: UUID?) throws {
-        try mutate { state in
+        try delete(orderedIDs: ids.sorted { $0.uuidString < $1.uuidString }, contextPinboardID: contextPinboardID)
+    }
+    public func delete(orderedIDs: [UUID], contextPinboardID: UUID?) throws {
+        try delete(orderedIDs: orderedIDs, currentPinboardID: { contextPinboardID })
+    }
+    public func delete(orderedIDs: [UUID], currentPinboardID: () -> UUID?) throws {
+        let ids = Set(orderedIDs)
+        var refreshHistory = false
+        try mutate(deletingItemIDs: orderedIDs, refreshHistoryAfterChange: { refreshHistory }) { state in
+            let contextPinboardID = currentPinboardID()
+            refreshHistory = contextPinboardID == nil
             for i in state.items.indices where ids.contains(state.items[i].id) {
                 if let contextPinboardID {
                     state.items[i].pinboardIDs.remove(contextPinboardID)
@@ -924,24 +1325,34 @@ public final class ClipboardStore: ObservableObject {
         }
     }
     public func permanentlyDelete(ids: Set<UUID>) throws {
-        try mutate { state in state.items.removeAll { ids.contains($0.id) } }
+        try permanentlyDelete(orderedIDs: ids.sorted { $0.uuidString < $1.uuidString })
+    }
+    public func permanentlyDelete(orderedIDs: [UUID]) throws {
+        let ids = Set(orderedIDs)
+        try mutate(deletingItemIDs: orderedIDs) { state in state.items.removeAll { ids.contains($0.id) } }
     }
 
     @discardableResult
     public func createPinboard(name: String, colorHex: String? = nil) throws -> Pinboard {
         guard !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { throw ClipboardStoreError.invalidPinboardName }
-        return try insertPinboard(name: name, colorHex: colorHex)
+        return try insertPinboard(name: name, colorHex: colorHex).board
     }
 
     /// The original AppIntent rejects an empty string without trimming the supplied name.
     @discardableResult
     public func createPinboardFromIntent(name: String) throws -> Pinboard {
         guard !name.isEmpty else { throw ClipboardStoreError.invalidPinboardName }
-        return try insertPinboard(name: name, colorHex: nil)
+        return try insertPinboard(name: name, colorHex: nil).board
     }
 
-    private func insertPinboard(name: String, colorHex: String?) throws -> Pinboard {
-        return try mutate { state in
+    // 367c5c/368560: preserve the created List entity for subsequent group assignment.
+    public func createPinboardTarget(name: String) throws -> ClipboardPinboardTarget {
+        guard !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { throw ClipboardStoreError.invalidPinboardName }
+        return try insertPinboard(name: name, colorHex: nil).target
+    }
+
+    private func insertPinboard(name: String, colorHex: String?) throws -> (board: Pinboard, target: ClipboardPinboardTarget) {
+        let result: (board: Pinboard, target: ClipboardPinboardTarget) = try mutateInTransaction { state, transaction in
             let code: UInt64?
             let value: String
             if let colorHex {
@@ -961,13 +1372,62 @@ public final class ClipboardStore: ObservableObject {
                 code = color.canonicalColorCode
                 value = String(format: "#%06llX", color.canonicalColorCode)
             }
-            let attributes = try code.map { try OriginalPinboardAttributes.encoded(colorCode: $0) }
-            let board = Pinboard(name: name, colorHex: value, sortOrder: (state.pinboards.map(\.sortOrder).max() ?? -1) + 1,
-                                 rawType: 2, rawAttributes: attributes)
+            let id = UUID()
+            let created = try transaction.repository.lists.insertPinboard(identifier: id.uuidString,
+                name: name) {
+                try code.map { try OriginalPinboardAttributes.encoded(colorCode: $0) }
+            }
+            let board = Pinboard(id: id, name: name, colorHex: value, sortOrder: 0,
+                                 rawType: 2, rawAttributes: created.attributes)
             state.pinboards.append(board)
-            return board
+            return (board, ClipboardPinboardTarget(id: id, object: created.object))
+        }
+        var board = result.board
+        if let metadata = result.target.nativeObject.value(forKey: "metadata") as? NSManagedObject,
+           let index = metadata.value(forKey: "index") as? NSNumber { board.sortOrder = index.intValue }
+        return (board, result.target)
+    }
+    public func renameList(_ target: ClipboardListTarget, rawName: String) throws {
+        try mutateInTransaction { state, transaction in
+            let lists = transaction.repository.lists
+            lists.retainNativeList(target.nativeObject)
+            lists.updateName(on: target.nativeObject) { $0 = OriginalPinboardTitle.normalizedRename(rawName) }
+            projectNativeList(target, into: &state)
         }
     }
+
+    public func updateListColor(_ target: ClipboardListTarget, colorCode: UInt64) throws {
+        try mutateInTransaction { state, transaction in
+            let lists = transaction.repository.lists
+            lists.retainNativeList(target.nativeObject)
+            lists.updateColor(on: target.nativeObject) { $0 = colorCode }
+            projectNativeList(target, into: &state)
+        }
+    }
+
+    private func projectNativeList(_ target: ClipboardListTarget, into state: inout StoreState) {
+        if target.identifier == Self.historyListIdentifier {
+            state.preferences.historyTitle = target.name
+            return
+        }
+        guard let id = UUID(uuidString: target.identifier) else { return }
+        guard let index = state.pinboards.firstIndex(where: { $0.id == id }) else {
+            if let board = target.pinboardValue { state.pinboards.append(board) }
+            return
+        }
+        state.pinboards[index].name = target.name
+        state.pinboards[index].rawType = Int16(exactly: target.rawType) ?? 0
+        let attributes = target.nativeObject.value(forKey: "rawAttributes") as? Data
+        if state.pinboards[index].rawAttributes != attributes {
+            state.pinboards[index].rawAttributes = attributes
+            if let color = OriginalPinboardAttributes.colorCode(from: attributes) {
+                state.pinboards[index].colorHex = String(format: "#%06llX", color)
+            }
+        }
+        if let metadata = target.nativeObject.value(forKey: "metadata") as? NSManagedObject,
+           let order = metadata.value(forKey: "index") as? NSNumber { state.pinboards[index].sortOrder = order.intValue }
+    }
+
     public func renamePinboard(id: UUID, name: String) throws {
         guard !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { throw ClipboardStoreError.invalidPinboardName }
         try mutate { state in
@@ -982,6 +1442,45 @@ public final class ClipboardStore: ObservableObject {
             state.pinboards[i].name = name
         }
     }
+    public func removeList(_ target: ClipboardListTarget) throws {
+        try mutateInTransaction { state, transaction in
+            let identifier = target.identifier
+            let affected = transaction.repository.removePinboard(target.nativeObject)
+            if let id = UUID(uuidString: identifier) {
+                state.pinboards.removeAll { $0.id == id }
+                for index in state.items.indices {
+                    state.items[index].pinboardIDs.remove(id)
+                    if state.items[index].pinboardOwnerID == id { state.items[index].pinboardOwnerID = nil }
+                }
+            }
+            for object in affected {
+                guard let key = object.value(forKey: "key") as? String, let id = UUID(uuidString: key) else { continue }
+                if object.isDeleted {
+                    state.items.removeAll { $0.id == id }
+                    continue
+                }
+                let index = state.items.firstIndex { $0.id == id }
+                var item: ClipboardItem
+                if let index { item = state.items[index] }
+                else { item = try ClipboardPersistence.item(object) }
+                item.isInHistory = object.value(forKey: "timestamp") != nil
+                if let owner = object.value(forKey: "list") as? NSManagedObject,
+                   (owner.value(forKey: "rawType") as? NSNumber)?.int64Value == 2,
+                   let ownerIdentifier = owner.value(forKey: "identifier") as? String,
+                   let ownerID = UUID(uuidString: ownerIdentifier) {
+                    item.pinboardOwnerID = ownerID
+                    item.pinboardIDs = [ownerID]
+                } else {
+                    item.pinboardOwnerID = nil
+                    item.pinboardIDs.removeAll()
+                }
+                try ClipboardItemOrderPersistence.project(&item, from: object)
+                if let index { state.items[index] = item }
+                else { state.items.append(item) }
+            }
+        }
+    }
+
     public func removePinboard(id: UUID) throws {
         try mutate { state in
             let affected = Set(state.items.filter { $0.pinboardIDs.contains(id) }.map(\.id))
@@ -999,6 +1498,8 @@ public final class ClipboardStore: ObservableObject {
         try mutate { state in
             guard var item = state.items.first(where: { $0.id == id && !$0.isDeleted }) else { throw ClipboardStoreError.itemNotFound }
             item.id = UUID()
+            item.nativeIdentifier = item.id.uuidString
+            Self.refreshNativeChecksum(&item)
             item.createdAt = Date()
             item.updatedAt = item.createdAt
             state.items.append(item)
@@ -1006,7 +1507,96 @@ public final class ClipboardStore: ObservableObject {
         }
     }
     public func assign(ids: Set<UUID>, to pinboardID: UUID?) throws {
-        try assign(orderedIDs: items.filter { ids.contains($0.id) }.map(\.id), to: pinboardID)
+        var ordered = items.filter { ids.contains($0.id) }.map(\.id)
+        let cached = Set(ordered)
+        // A UUID absent from the cached value array must still reach the transaction's current state.
+        ordered += ids.subtracting(cached).sorted { $0.uuidString < $1.uuidString }
+        try assign(orderedIDs: ordered, to: pinboardID)
+    }
+
+    /// Native tab item-drop keeps the supplied List through String lookup and local repository dispatch.
+    public func dropItems(identifiers: [String], to target: ClipboardListTarget) throws {
+        try mutateInTransaction { state, transaction in
+            let values = try transaction.repository.dropItems(identifiers: identifiers, to: target.nativeObject)
+            state.items.removeAll { transaction.repository.alreadyDeletedItemIDs.contains($0.id) }
+            for item in values {
+                if let index = state.items.firstIndex(where: { $0.id == item.id }) {
+                    state.items[index] = item
+                } else {
+                    state.items.append(item)
+                }
+            }
+        }
+    }
+
+    /// The local group menu retains its supplied entities through the repository transaction.
+    public func assign(items: [ClipboardRestoreItem], to pinboardID: UUID?) throws {
+        try assign(items: items, pinboardID: pinboardID, nativePinboard: nil)
+    }
+
+    public func assign(items: [ClipboardRestoreItem], to target: ClipboardPinboardTarget) throws {
+        try assign(items: items, pinboardID: target.id, nativePinboard: target.nativeObject)
+    }
+
+    private func assign(items: [ClipboardRestoreItem], pinboardID: UUID?, nativePinboard: NSManagedObject?) throws {
+        if pinboardID == nil, items.allSatisfy({ $0.nativeObject != nil }) {
+            try unassignNative(items: items)
+            return
+        }
+        guard let pinboardID, items.allSatisfy({ $0.nativeObject != nil }) else {
+            try assign(orderedIDs: items.map(\.id), to: pinboardID)
+            return
+        }
+        guard !items.isEmpty else { return }
+        try mutateInTransaction { state, transaction in
+            let pinboard: NSManagedObject
+            if let nativePinboard {
+                pinboard = nativePinboard
+            } else {
+                guard let current = try transaction.repository.lists.list(identifier: pinboardID.uuidString) else {
+                    throw ClipboardStoreError.pinboardNotFound
+                }
+                pinboard = current
+            }
+            let destination = try transaction.repository.assignItems(items.map { $0.nativeObject! }, to: pinboard)
+            for item in destination {
+                if let index = state.items.firstIndex(where: { $0.id == item.id }) {
+                    state.items[index] = item
+                } else {
+                    state.items.append(item)
+                }
+            }
+        }
+    }
+
+    private func unassignNative(items: [ClipboardRestoreItem]) throws {
+        try mutateInTransaction { state, transaction in
+            let affected = transaction.repository.unassignItems(items.map { (id: $0.id, object: $0.nativeObject!) })
+            // Native sequence mutations finish before compatibility projection can fail.
+            for target in affected {
+                if target.object.isDeleted {
+                    state.items.removeAll { $0.id == target.id }
+                    continue
+                }
+                let index = state.items.firstIndex { $0.id == target.id }
+                var item: ClipboardItem
+                if let index { item = state.items[index] }
+                else { item = try ClipboardPersistence.item(target.object) }
+                if let owner = target.object.value(forKey: "list") as? NSManagedObject,
+                   (owner.value(forKey: "rawType") as? NSNumber)?.int64Value == 2,
+                   let identifier = owner.value(forKey: "identifier") as? String,
+                   let ownerID = UUID(uuidString: identifier) {
+                    item.pinboardOwnerID = ownerID
+                    item.pinboardIDs = [ownerID]
+                } else {
+                    item.pinboardOwnerID = nil
+                    item.pinboardIDs.removeAll()
+                }
+                try ClipboardItemOrderPersistence.project(&item, from: target.object)
+                if let index { state.items[index] = item }
+                else { state.items.append(item) }
+            }
+        }
     }
 
     public func assign(orderedIDs: [UUID], to pinboardID: UUID?) throws {
@@ -1071,6 +1661,15 @@ public final class ClipboardStore: ObservableObject {
                 }
             }
             if let sortOrder { state.pinboards[i].sortOrder = sortOrder }
+        }
+    }
+
+    public func moveList(_ target: ClipboardListTarget, toOffset offset: Int) throws {
+        try mutateInTransaction { state, transaction in
+            let ordered = transaction.repository.lists.moveList(target.nativeObject, toOffset: offset)
+            for object in ordered {
+                projectNativeList(ClipboardListTarget(object: object), into: &state)
+            }
         }
     }
 
@@ -1175,6 +1774,11 @@ public final class ClipboardStore: ObservableObject {
                 if let existing = items[item.id], existing.pinboardIDs == item.pinboardIDs {
                     if item.pinboardOrder == nil { item.pinboardOrder = existing.pinboardOrder }
                     if item.pinboardOwnerID == nil { item.pinboardOwnerID = existing.pinboardOwnerID }
+                }
+                if let existing = items[item.id] {
+                    if item.nativeIdentifier == nil { item.nativeIdentifier = existing.nativeIdentifier }
+                    if item.nativeChecksum == nil { item.nativeChecksum = existing.nativeChecksum }
+                    if item.sourceIdentifier == nil { item.sourceIdentifier = existing.sourceIdentifier }
                 }
                 items[item.id] = item
             }

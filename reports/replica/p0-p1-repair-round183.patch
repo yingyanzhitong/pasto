@@ -1,0 +1,349 @@
+--- a/replica/Sources/Pasto/UI/ReplicaSearchSuggestionsMenu.swift
++++ b/replica/Sources/Pasto/UI/ReplicaSearchSuggestionsMenu.swift
+@@ -21,14 +21,7 @@
+         }
+     }
+ 
+-    private let scroller = SuggestionsScroller()
+-    private var rows: [Row] = []
+-    private var selectedIndex: Int?
+-    private var mouseSelectionCooldown: DispatchWorkItem?
+-    private var accept: ((Int) -> Void)?
+-    private var escape: (() -> Void)?
+-    private weak var anchorView: NSView?
+-    private var keyboardMonitor: Any?
++    private var storedScroller: SuggestionsScroller?
+     private var mouseMonitor: Any?
+     private var lostFocusObserver: NSObjectProtocol?
+ 
+@@ -42,35 +35,29 @@
+         isOpaque = false
+         level = .init(rawValue: 101)
+         isReleasedWhenClosed = false
+-        contentView = scroller
+-        scroller.onHover = { [weak self] index in
+-            guard let self, self.mouseSelectionCooldown == nil else { return }
+-            self.select(index, reveal: false)
+-        }
+-        scroller.onExit = { [weak self] in
+-            guard let self, self.mouseSelectionCooldown == nil else { return }
+-            self.selectedIndex = nil
+-            self.scroller.select(nil)
+-        }
+-        scroller.onAccept = { [weak self] index in self?.acceptRow(index) }
++    }
++
++    private func suggestionScroller() -> SuggestionsScroller {
++        if let storedScroller { return storedScroller }
++        let scroller = SuggestionsScroller()
++        storedScroller = scroller
++        return scroller
+     }
+ 
+     deinit {
+         MainActor.assumeIsolated {
+             removeMonitors()
+-            scroller.dispose()
++            storedScroller?.dispose()
+         }
+     }
+ 
+     func show(rows: [Row], anchorRect: NSRect, in anchorView: NSView,
+               onAccept: @escaping (Int) -> Void, onEscape: @escaping () -> Void) {
+-        escape = onEscape
+-        self.rows = rows
+-        accept = onAccept
+-        selectedIndex = nil
+-        scroller.setRows(rows)
+-        scroller.select(selectedIndex)
++        let scroller = suggestionScroller()
++        scroller.onEscape = onEscape
++        scroller.setRows(rows, onAccept: onAccept)
+         guard let parent = anchorView.window else { return }
++        contentView = scroller
+         let width = max(120, scroller.fittingSize.width)
+         setFrame(.init(x: frame.minX, y: frame.minY, width: width, height: frame.height), display: false)
+         scroller.layoutSubtreeIfNeeded()
+@@ -91,99 +78,55 @@
+         }
+         display()
+         orderFront(nil)
+-        self.anchorView = anchorView
+-        installMonitors(parent: parent)
++        installMonitors(parent: parent, anchorView: anchorView)
+     }
+ 
+     func dismiss() {
+         removeMonitors()
+         self.parent?.removeChildWindow(self)
+         orderOut(nil)
+-        accept = nil
+-        escape = nil
+-        anchorView = nil
+-    }
+-
+-    /// Original suggestion navigation leaves unsupported keys with the editor.
+-    @discardableResult
+-    func handleKeyDown(_ event: NSEvent) -> Bool {
+-        guard isVisible else { return false }
+-        switch OriginalNavigationKey.f_100219ddc(event) {
+-        case .down: moveSelection(by: 1)
+-        case .up: moveSelection(by: -1)
+-        case .home: moveSelection(by: -rows.count)
+-        case .pageUp: moveSelection(by: -5)
+-        case .end: moveSelection(by: rows.count)
+-        case .pageDown: moveSelection(by: 5)
+-        case .enter, .tab, .right:
+-            guard let selectedIndex else { return false }
+-            acceptRow(selectedIndex)
+-        case .escape:
+-            let forwardToPanel = parent is ReplicaPanel && (event.window ?? NSApp.keyWindow) === parent
+-            cancel()
+-            return !forwardToPanel
+-        default: return false
+-        }
+-        return true
+-    }
+-
+-    private func moveSelection(by offset: Int) {
+-        guard !rows.isEmpty else { return }
+-        mouseSelectionCooldown?.cancel()
+-        let index = selectedIndex.map { max(0, min(rows.count - 1, $0 + offset)) }
+-            ?? (offset > 0 ? 0 : rows.count - 1)
+-        selectedIndex = index
+-        scroller.select(index)
+-        scroller.revealSelection()
+-        let cooldown = DispatchWorkItem { [weak self] in
+-            MainActor.assumeIsolated { self?.mouseSelectionCooldown = nil }
+-        }
+-        mouseSelectionCooldown = cooldown
+-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1, execute: cooldown)
+-    }
+-
+-    private func select(_ index: Int, reveal: Bool) {
+-        selectedIndex = index
+-        scroller.select(index)
+-        if reveal { scroller.revealSelection() }
+-    }
+-
+-    private func acceptRow(_ index: Int) {
+-        guard index < rows.count else { return }
+-        precondition(index >= 0)
+-        accept?(index)
+-    }
+-
+-    private func cancel() {
+-        let callback = escape
+-        dismiss()
++    }
++
++    // Keep the first weak-owner comparison separate from the later callback read.
++    @inline(never)
++    private static func isMenuWindow(_ event: NSEvent, owner: () -> ReplicaSearchSuggestionsMenu?) -> Bool {
++        let menu: NSWindow? = owner()
++        return event.window == menu
++    }
++
++    @inline(never)
++    private static func escapeCallback(owner: () -> ReplicaSearchSuggestionsMenu?) -> (() -> Void)? {
++        owner()?.storedScroller?.onEscape
++    }
++
++    private static func handleMouseDown(_ event: NSEvent, anchorView: NSView,
++                                        owner: () -> ReplicaSearchSuggestionsMenu?) {
++        if isMenuWindow(event, owner: owner) { return }
++        if let eventWindow = event.window, let anchorWindow = anchorView.window,
++           eventWindow == anchorWindow,
++           anchorView.bounds.contains(anchorView.convert(event.locationInWindow, from: nil)) { return }
++        let callback = escapeCallback(owner: owner)
+         callback?()
+     }
+ 
+-    private func installMonitors(parent: NSWindow) {
++    private func installMonitors(parent: NSWindow, anchorView: NSView) {
+         removeMonitors()
+-        keyboardMonitor = NSEvent.addLocalMonitorForEvents(matching: .init(rawValue: 0x400)) { [weak self] event in
+-            let handled = MainActor.assumeIsolated { self?.handleKeyDown(event) ?? false }
+-            return handled ? nil : event
+-        }
+         mouseMonitor = NSEvent.addLocalMonitorForEvents(matching: .init(rawValue: 0x200000a)) { [weak self] event in
+             MainActor.assumeIsolated {
+-                guard let self, self.isVisible else { return }
+-                if event.window === self { return }
+-                if let anchor = self.anchorView, event.window === anchor.window,
+-                   anchor.bounds.contains(anchor.convert(event.locationInWindow, from: nil)) { return }
+-                self.cancel()
++                Self.handleMouseDown(event, anchorView: anchorView, owner: { [weak self] in self })
+             }
+             return event
+         }
+         lostFocusObserver = NotificationCenter.default.addObserver(forName: NSWindow.didResignKeyNotification,
+             object: parent, queue: .main) { [weak self] _ in
+-                MainActor.assumeIsolated { self?.cancel() }
++                MainActor.assumeIsolated {
++                    let callback = Self.escapeCallback(owner: { [weak self] in self })
++                    callback?()
++                }
+             }
+     }
+ 
+     private func removeMonitors() {
+-        if let keyboardMonitor { NSEvent.removeMonitor(keyboardMonitor); self.keyboardMonitor = nil }
+         if let mouseMonitor { NSEvent.removeMonitor(mouseMonitor); self.mouseMonitor = nil }
+         if let lostFocusObserver { NotificationCenter.default.removeObserver(lostFocusObserver); self.lostFocusObserver = nil }
+     }
+@@ -198,9 +141,10 @@
+     private let up = SuggestionsScrollIndicator(symbol: "chevron.up")
+     private let down = SuggestionsScrollIndicator(symbol: "chevron.down")
+     private var boundsObserver: NSObjectProtocol?
+-    var onHover: ((Int) -> Void)?
+-    var onAccept: ((Int) -> Void)?
+-    var onExit: (() -> Void)?
++    var onEscape: (() -> Void)? {
++        get { list.onEscape }
++        set { list.onEscape = newValue }
++    }
+ 
+     override init(frame frameRect: NSRect) {
+         super.init(frame: frameRect)
+@@ -215,9 +159,6 @@
+         addSubview(scrollView)
+         addSubview(up)
+         addSubview(down)
+-        list.onHover = { [weak self] in self?.onHover?($0) }
+-        list.onAccept = { [weak self] in self?.onAccept?($0) }
+-        list.onExit = { [weak self] in self?.onExit?() }
+         up.canScroll = { [weak self] in
+             guard let self else { return false }
+             return self.scrollView.documentVisibleRect.minY > 0
+@@ -254,9 +195,10 @@
+     override var fittingSize: NSSize { list.fittingSize }
+     var firstTitleRectInWindow: NSRect? { list.firstTitleRectInWindow }
+ 
+-    func setRows(_ rows: [ReplicaSearchSuggestionsMenu.Row]) { list.setRows(rows); needsLayout = true }
+-    func select(_ index: Int?) { list.select(index) }
+-    func revealSelection() { list.revealSelection(); updateIndicators() }
++    func setRows(_ rows: [ReplicaSearchSuggestionsMenu.Row], onAccept: @escaping (Int) -> Void) {
++        list.setRows(rows, onAccept: onAccept)
++        needsLayout = true
++    }
+ 
+     override func viewDidMoveToWindow() {
+         super.viewDidMoveToWindow()
+@@ -325,11 +267,16 @@
+ 
+ @MainActor
+ private final class SuggestionsList: NSView {
++    private struct Item {
++        let row: ReplicaSearchSuggestionsMenu.Row
++        let onAccept: () -> Void
++    }
++    private var items: [Item] = []
+     private var rows: [SuggestionRowView] = []
+     private var selectedIndex: Int?
+-    var onHover: ((Int) -> Void)?
+-    var onAccept: ((Int) -> Void)?
+-    var onExit: (() -> Void)?
++    private var mouseSelectionCooldown: DispatchWorkItem?
++    private var keyboardMonitor: Any?
++    var onEscape: (() -> Void)?
+     var firstTitleRectInWindow: NSRect? { rows.first?.titleRectInWindow }
+     override var isFlipped: Bool { true }
+ 
+@@ -338,18 +285,91 @@
+               height: rows.reduce(10) { $0 + $1.fittingSize.height })
+     }
+ 
+-    func setRows(_ items: [ReplicaSearchSuggestionsMenu.Row]) {
++    func setRows(_ values: [ReplicaSearchSuggestionsMenu.Row], onAccept: @escaping (Int) -> Void) {
++        items = values.enumerated().map { index, row in
++            Item(row: row, onAccept: { onAccept(index) })
++        }
+         select(nil)
+         rows.forEach { $0.removeFromSuperview() }
+         rows = items.enumerated().map { index, item in
+-            let row = SuggestionRowView(item: item)
+-            row.onHover = { [weak self] in self?.onHover?(index) }
+-            row.onAccept = { [weak self] in self?.onAccept?(index) }
+-            row.onExit = { [weak self] in self?.onExit?() }
++            let row = SuggestionRowView(item: item.row)
++            row.onHover = { [weak self] in
++                guard let self, self.mouseSelectionCooldown == nil else { return }
++                self.select(index)
++            }
++            row.onAccept = item.onAccept
++            row.onExit = { [weak self] in
++                guard let self, self.mouseSelectionCooldown == nil else { return }
++                self.select(nil)
++            }
+             addSubview(row)
+             return row
+         }
+         needsLayout = true
++    }
++
++    deinit {
++        MainActor.assumeIsolated { removeKeyboardMonitor() }
++    }
++
++    override func viewDidMoveToWindow() {
++        super.viewDidMoveToWindow()
++        removeKeyboardMonitor()
++        if window != nil { installKeyboardMonitor() }
++    }
++
++    private func installKeyboardMonitor() {
++        keyboardMonitor = NSEvent.addLocalMonitorForEvents(matching: .init(rawValue: 0x400)) { [weak self] event in
++            let handled = MainActor.assumeIsolated { self?.handleKeyDown(event) ?? false }
++            return handled ? nil : event
++        }
++    }
++
++    private func removeKeyboardMonitor() {
++        if let keyboardMonitor { NSEvent.removeMonitor(keyboardMonitor); self.keyboardMonitor = nil }
++    }
++
++    /// Original suggestion navigation leaves unsupported keys with the editor.
++    @discardableResult
++    private func handleKeyDown(_ event: NSEvent) -> Bool {
++        switch OriginalNavigationKey.f_100219ddc(event) {
++        case .down: moveSelection(by: 1)
++        case .up: moveSelection(by: -1)
++        case .home: moveSelection(by: -items.count)
++        case .pageUp: moveSelection(by: -5)
++        case .end: moveSelection(by: items.count)
++        case .pageDown: moveSelection(by: 5)
++        case .enter, .tab, .right:
++            guard let selectedIndex else { return false }
++            acceptRow(selectedIndex)
++        case .escape:
++            let parent = window?.parent
++            let forwardToPanel = parent is ReplicaPanel && (event.window ?? NSApp.keyWindow) === parent
++            onEscape?()
++            return !forwardToPanel
++        default: return false
++        }
++        return true
++    }
++
++    private func moveSelection(by offset: Int) {
++        guard !items.isEmpty else { return }
++        mouseSelectionCooldown?.cancel()
++        let index = selectedIndex.map { max(0, min(items.count - 1, $0 + offset)) }
++            ?? (offset > 0 ? 0 : items.count - 1)
++        select(index)
++        revealSelection()
++        let cooldown = DispatchWorkItem { [weak self] in
++            MainActor.assumeIsolated { self?.mouseSelectionCooldown = nil }
++        }
++        mouseSelectionCooldown = cooldown
++        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1, execute: cooldown)
++    }
++
++    private func acceptRow(_ index: Int) {
++        guard index < items.count else { return }
++        precondition(index >= 0)
++        items[index].onAccept()
+     }
+ 
+     override func layout() {

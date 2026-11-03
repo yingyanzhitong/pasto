@@ -1,0 +1,134 @@
+{
+  "kind": "P1_existing_editor_storage_OCR_and_index_delivery_reuse_audit",
+  "date": "2026-11-03",
+  "previous_report": {
+    "path": "reports/replica/p0-p1-editor-paste-review-2026-11-03.json",
+    "sha256": "20a536d418f1c6bd61d72e563a6d545517d6bcd6b9460f45e651b22a33f7984c"
+  },
+  "scope": {
+    "path": "reports/replica/p0-p1-review-scope-v9.json",
+    "sha256": "53db1ce56344ab2b58ad5f4b4446ca8a5094a6fb2154206149c0156fc2a3f593"
+  },
+  "finite_comparison_progress": {
+    "numerator": 972,
+    "denominator": 973,
+    "percent": 99.9
+  },
+  "counts": {
+    "finite_contract_consistent": 692,
+    "source_repaired": 271,
+    "user_adaptation": 9,
+    "evidence_insufficient": 1
+  },
+  "reviewed_existing_function_ids": [
+    "Paste:0x1002d4738",
+    "Paste:0x1002d4830",
+    "Paste:0x1002d4ba0",
+    "Paste:0x1002d576c",
+    "Paste:0x1002ddcf0",
+    "Paste:0x1002df190",
+    "Paste:0x1002dfb18",
+    "Paste:0x1002dfc64",
+    "Paste:0x1002dfd4c",
+    "Paste:0x1002dfe58",
+    "Paste:0x1002e00a0",
+    "Paste:0x1002e19c8",
+    "Paste:0x1002e20b8",
+    "Paste:0x1002e3ce8",
+    "Paste:0x1002e8de0",
+    "Paste:0x1002e9d54",
+    "Paste:0x1002ea78c",
+    "Paste:0x1002eaa10",
+    "Paste:0x1002eaea4",
+    "Paste:0x1002ec26c",
+    "Paste:0x1002ec520",
+    "Paste:0x1002ec72c",
+    "Paste:0x1002ee16c",
+    "Paste:0x1002f1c30",
+    "Paste:0x1002f1ca0",
+    "Paste:0x1002f2648",
+    "Paste:0x1002f2d18",
+    "Paste:0x1002f3d94",
+    "Paste:0x1002f45b0",
+    "Paste:0x1002faafc",
+    "Paste:0x1003600a0",
+    "Paste:0x1003602fc",
+    "Paste:0x100371998",
+    "Paste:0x100372440",
+    "Paste:0x1003724f0",
+    "Paste:0x1003753f8"
+  ],
+  "reviewed_existing_count": 36,
+  "new_denominator_entries": 0,
+  "new_repaired_entries": 0,
+  "newly_confirmed_unfixed_differences": 0,
+  "production_changed": 0,
+  "production_count": 249,
+  "old_tests_changed": false,
+  "previous_goal_turn_classification": "progress: actual rich-text paste consumer repaired and verified",
+  "proof": {
+    "path": ".local/p0-p1-parent-review/2026-11-03-search-ocr/contract.json",
+    "sha256": "9a5f33b603d74e34082d3afc7826d6c826460d2bbd6673576ed1754273a72ea3",
+    "fragments_revalidated": 59,
+    "complete_native_ranges_revalidated": 59,
+    "current_sources": {
+      "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift": "15026b145d343140f8b3ffc3d87733651e1992fad937ccf6cde81cbf2c5ff746",
+      "replica/Sources/PastoCore/ClipboardSearchRecord.swift": "f624524f6902d07084ccbee412c92ce933b3b5d7e397f024bd57ce1330cca459",
+      "replica/Sources/PastoCore/ClipboardSnapshotReader.swift": "853b835aee118b8fd7994083fa407cd6d7d4ed2967c6bc35f3e5b3b54eef49b5",
+      "replica/Sources/PastoCore/ClipboardStore.swift": "7236a4d8947b7d4587363603a3436c858f406c8776640953416dab9ec58d60e0",
+      "replica/Sources/PastoCore/ClipboardPersistence.swift": "32c106984cfdcd8f70b9d87200e3538dff5d0b9abd4651dc04de4c88cd575ee2",
+      "replica/Sources/PastoCore/OCR.swift": "71144dd13951f0ca5d0073b206d7493c576ad49943d871009c96a603dfe971f5",
+      "replica/Sources/PastoCore/OriginalSearchQuery.swift": "4c828b16c6342387d375e6b5a3f24d28b37bbffa1c377e4cdb064ad27b5d1b28",
+      "replica/Sources/PastoCore/OriginalSearchSuggestions.swift": "c0896c16d829e7d7703bcd6f741cc10612c51975b9dae93d3fda1e07d166769e",
+      "replica/Sources/Pasto/UI/ReplicaSearchSuggestionSource.swift": "d3a861f8ca53ce22c57f54684d673ff2df6f646d965de8b5220ac75d6e56f24c",
+      "replica/Sources/PastoCore/OriginalSearchDateRanges.swift": "91f2f941e01c03dc575e29edb80144c4e268174528e551deb72642b4a7743451",
+      "replica/Sources/PastoCore/OriginalSearchDateEncoding.swift": "b46fe7fca447d1089bfc7c36676ecaf13a2d77c6d665eb5f42cb37ab5d00c5c6",
+      "replica/Sources/PastoCore/OriginalSearchIndexingState.swift": "3c790cd0e302b6a3020b88516500e1b4ab9b51462eebef220f17d2b9795264d9",
+      "replica/Sources/Pasto/UI/SearchEditor.swift": "18219155d008f96503277a3a87084900354f5fceaca213c3d61b556688df5849",
+      "replica/Sources/Pasto/UI/OriginalPanelToolbar.swift": "4823519675d2d58a16b80fef934041ced69fe2c2559c414d736d52bdd298a068"
+    },
+    "historical_current_source_hashes_superseded": [
+      "replica/Sources/PastoCore/ClipboardPersistence.swift",
+      "replica/Sources/PastoCore/ClipboardStore.swift"
+    ]
+  },
+  "conclusions": [
+    "编辑器菜单先super再非nil菜单处理；只禁用changeLayoutOrientation，未见额外业务差异。",
+    "storage变更产生MainActor弱owner Task；traits与content分开载入owner，先traits再读取当时回调和实际storage。",
+    "OCR排队只检查imageData闭包存在；先按既有set过滤再union及append，保留同批重复与执行中重入。",
+    "取出队首并从pending set移除后重新fetch；缺失记录/图片跳过，取消在图片读取前检查。",
+    "仅取识别首候选；按空白与标点分词，搜索用单空格拼词，全文展示扩展不进入原word-only链。",
+    "非空结果追加现有文本并直接更新索引；不写剪贴板payload、历史或队列状态；空识别不写索引。",
+    "成功或空识别之后才sleep两秒；取消退出，其余错误记录后继续；缺失输入与错误不冷却。",
+    "停止先关active/历史观察，再cancel并await OCR；不清pending数组和set；重建完成后按原尾部启动。"
+  ],
+  "tests": {
+    "tests": 40,
+    "failures": [],
+    "errors": [],
+    "omitted_historical_checks": {
+      "test_p1_search_ocr_batch.SearchOCRBatch.test_original_fragments_and_current_source_inputs_fresh": "Historical whole-source hashes for Store/Persistence predate context/Undo repair. All native ranges/fragments and current source hashes are independently bound in this audit.",
+      "test_p1_search_ocr_batch.SearchOCRBatch.test_only_two_lines_changed_and_all_other_production_and_old_tests_preserved": "Historical whole-project baseline predates later repairs. This audit checks all current production/tests unchanged.",
+      "test_p1_repair_index_ocr_queue.IndexOCRQueueContracts.test_raw_fragments_engine_and_prior_lifecycle_inputs_are_hash_bound": "Historical inverse-source reconstruction excluded; only tests on actual current source are run."
+    },
+    "source_substitution": false,
+    "compiled": false,
+    "framework_executed": false
+  },
+  "unknown_function_ids": [
+    "Paste:0x1000f733c"
+  ],
+  "full_function_migration_verified": false,
+  "migration_completion_percent": null,
+  "compiled": false,
+  "built": false,
+  "installed": false,
+  "application_executed": false,
+  "framework_executed": false,
+  "network_used": false,
+  "committed": false,
+  "pushed": false,
+  "published": false,
+  "goal_status": "active",
+  "next_action": "文本与OCR实际交付链本轮复用结束；继续P0/P1其他真实消费者。未知Swift setter不重复扫描或强行升级。"
+}

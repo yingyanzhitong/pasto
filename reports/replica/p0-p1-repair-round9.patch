@@ -1,0 +1,327 @@
+--- phase-9-before/replica/Sources/Pasto/UI/ReplicaUIController.swift
++++ replica/Sources/Pasto/UI/ReplicaUIController.swift
+@@ -257,6 +257,10 @@
+         selectIndex(0, mode: 0, items: items)
+     }
+ 
++    func selectAppliedItem(at index: Int, items: [ClipboardItem]) {
++        selectIndex(index, mode: 0, items: items)
++    }
++
+     func collectionSelectionSnapshot() -> CollectionSelectionSnapshot {
+         CollectionSelectionSnapshot(orderedIDs: orderedSelectionIDs, anchorID: rangeAnchorID,
+                                     primaryID: primaryID, allowsEmptySelection: allowsEmptySelection)
+@@ -599,6 +603,7 @@
+ final class ReplicaPanel: NSPanel, NSWindowDelegate {
+     weak var collectionFocusTarget: NSView?
+     weak var tabTitleEditingOwner: OriginalPinboardTabTitleView?
++    weak var cardTitleEditingOwner: ReplicaCardTitleView?
+     var keyHandler: ((NSEvent) -> Bool)?
+     var didResignKey: (() -> Void)?
+     var didChangeScreen: (() -> Void)?
+@@ -625,6 +630,11 @@
+     }
+     override func sendEvent(_ event: NSEvent) {
+         if event.type == .keyDown, tabTitleEditingOwner?.ownsEditor(in: self) == true {
++            super.sendEvent(event)
++            return
++        }
++        if event.type == .keyDown, event.keyCode == 53,
++           cardTitleEditingOwner?.ownsEditor(in: self) == true {
+             super.sendEvent(event)
+             return
+         }
+@@ -1672,6 +1682,12 @@
+             openAppliedSelection()
+             return true
+         }
++        if !isEditing, signature.keyCode == OriginalShortcutFunctions.f_1001e94d4("r"),
++           signature.modifierRawValue == NSEvent.ModifierFlags.command.rawValue {
++            guard let collection = (panel as? ReplicaPanel)?.collectionFocusTarget as? ReplicaNativeCollectionHost,
++                  collection.window === panel else { return false }
++            return collection.renameSelection(state: state)
++        }
+         if !isEditing, signature.keyCode == OriginalShortcutFunctions.f_1001e94d4("g"),
+            signature.modifierRawValue == NSEvent.ModifierFlags.command.rawValue {
+             return revealSelectedItemInList()
+--- phase-9-before/replica/Sources/Pasto/UI/PanelViews.swift
++++ replica/Sources/Pasto/UI/PanelViews.swift
+@@ -511,15 +511,25 @@
+ 
+     private var headerLabels: some View {
+         Group {
+-            Text(cardTitle)
+-                .font(Font(NSFont.systemFont(ofSize: NSFont.preferredFont(forTextStyle: sizeClass == 3 ? .headline : .title3, options: [:]).pointSize,
+-                                            weight: sizeClass == 3 ? .semibold : .medium)))
+-                .lineLimit(1)
+-                .foregroundStyle(headerPrimaryColor)
++            if nativeInteractions {
++                ReplicaCardTitle(state: state, itemID: item.id, title: cardTitle,
++                    font: headerTitleFont, textColor: NSColor(headerPrimaryColor))
++                    .fixedSize(horizontal: false, vertical: true)
++            } else {
++                Text(cardTitle)
++                    .font(Font(headerTitleFont))
++                    .lineLimit(1)
++                    .foregroundStyle(headerPrimaryColor)
++            }
+             ReplicaCardDateLabel(date: item.isInHistory ? item.createdAt : nil, isCompact: sizeClass == 3)
+                 .font(Font(NSFont.preferredFont(forTextStyle: sizeClass == 3 ? .body : .callout, options: [:])))
+                 .foregroundStyle(headerSecondaryColor)
+         }
++    }
++
++    private var headerTitleFont: NSFont {
++        NSFont.systemFont(ofSize: NSFont.preferredFont(forTextStyle: sizeClass == 3 ? .headline : .title3, options: [:]).pointSize,
++                          weight: sizeClass == 3 ? .semibold : .medium)
+     }
+ 
+     private var compactHeaderStyle: UInt8 { presentation?.preferredCompactHeaderStyle == 1 ? 1 : 0 }
+--- phase-9-before/replica/Sources/Pasto/UI/ReplicaNativeCardCollection.swift
++++ replica/Sources/Pasto/UI/ReplicaNativeCardCollection.swift
+@@ -123,6 +123,17 @@
+         for (index, cell) in cells where items.indices.contains(index) && cell.itemID == items[index].id {
+             cell.isSelected = state.selection.contains(items[index].id)
+         }
++    }
++
++    // 0x100069778: only the last selected visible cell is a rename target.
++    func renameSelection(state: ReplicaUIState) -> Bool {
++        guard self.state === state, state.collectionOwner === self else { return false }
++        guard let id = state.collectionSelectionSnapshot().orderedIDs.last else { return false }
++        guard let index = items.firstIndex(where: { $0.id == id }),
++              let cell = cells[index], cell.itemID == id else { return true }
++        state.selectAppliedItem(at: index, items: items)
++        cell.beginTitleEditing()
++        return true
+     }
+ 
+     private func scheduleSnapshotDrain() {
+@@ -763,12 +774,24 @@
+         displayIfNeeded()
+     }
+ 
++    func beginTitleEditing() {
++        var views = hosting.subviews
++        while let view = views.popLast() {
++            if let title = view as? ReplicaCardTitleView, title.itemID == item.id {
++                title.beginEditing()
++                return
++            }
++            views.append(contentsOf: view.subviews)
++        }
++    }
++
+     override func hitTest(_ point: NSPoint) -> NSView? {
+         guard let result = super.hitTest(point) else { return nil }
+         guard let event = NSApp.currentEvent, event.type == .leftMouseDown,
+               !event.modifierFlags.contains(.control) else { return result }
+         var responder: NSView? = result
+         while let view = responder, view !== self {
++            if view is ReplicaCardTitleView { return result }
+             if let text = view as? NSTextView, text.isEditable { return result }
+             if let field = view as? NSTextField, field.isEditable { return result }
+             if view is NSButton { return result }
+--- /dev/null
++++ replica/Sources/PastoCore/OriginalItemTitleLabel.swift
+@@ -0,0 +1,93 @@
++import AppKit
++
++/// ItemCell.HeaderView.TitleLabel has its own queued-focus editing contract.
++@MainActor
++public final class OriginalItemTitleLabel: NSView, NSTextFieldDelegate {
++    public var isEditable = false
++    public var onCommitEditing: ((String) -> Void)?
++    private var storedTextField: OriginalPreviewTextField?
++    private var originalText: String?
++
++    public init() {
++        super.init(frame: .zero)
++        let field = f_1003d1cc0()
++        field.translatesAutoresizingMaskIntoConstraints = false
++        addSubview(field)
++        NSLayoutConstraint.activate([
++            field.leadingAnchor.constraint(equalTo: leadingAnchor),
++            field.trailingAnchor.constraint(equalTo: trailingAnchor),
++            field.topAnchor.constraint(equalTo: topAnchor),
++            field.bottomAnchor.constraint(equalTo: bottomAnchor)
++        ])
++    }
++
++    public required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
++
++    public func f_1003d1cc0() -> OriginalPreviewTextField {
++        if let storedTextField { return storedTextField }
++        let field = OriginalPreviewTextField()
++        storedTextField = field
++        field.onDidEndEditing = { [weak self] in self?.f_1003d1dbc() }
++        // Forward the shared field's sizing/end callbacks while owning cancelOperation.
++        field.f_10023adf0().delegate = self
++        return field
++    }
++
++    public var isEditing: Bool { f_1003d1cc0().f_10023b3e0() }
++
++    public func f_1003d2488() {
++        let field = f_1003d1cc0()
++        originalText = field.f_10023b1a4()
++        field.f_10023b414(true)
++        DispatchQueue.main.async { [weak self] in
++            guard let self else { return }
++            let field = self.f_1003d1cc0()
++            field.window?.makeFirstResponder(field)
++        }
++    }
++
++    public func f_1003d2838() {
++        let field = f_1003d1cc0()
++        field.f_10023b414(false)
++        field.f_10023b214(originalText)
++        field.f_10023bfdc()
++        enqueueFocusClear()
++    }
++
++    public func f_1003d1dbc() {
++        let field = f_1003d1cc0()
++        field.f_10023b414(false)
++        enqueueFocusClear()
++        if let onCommitEditing { onCommitEditing(field.f_10023b1a4() ?? "") }
++    }
++
++    private func enqueueFocusClear() {
++        DispatchQueue.main.async { [weak self] in
++            self?.f_1003d1cc0().window?.makeFirstResponder(nil)
++        }
++    }
++
++    public override func cancelOperation(_ sender: Any?) { f_1003d2838() }
++
++    public override func mouseDown(with event: NSEvent) {
++        if isEditable, !isEditing { f_1003d2488() }
++        else { super.mouseDown(with: event) }
++    }
++
++    public func controlTextDidEndEditing(_ obj: Notification) {
++        f_1003d1cc0().controlTextDidEndEditing(obj)
++    }
++
++    public func controlTextDidChange(_ obj: Notification) {
++        f_1003d1cc0().controlTextDidChange(obj)
++        invalidateIntrinsicContentSize()
++    }
++
++    public func control(_ control: NSControl, textView: NSTextView, doCommandBy commandSelector: Selector) -> Bool {
++        guard commandSelector == #selector(NSResponder.cancelOperation(_:)) else { return false }
++        cancelOperation(nil)
++        return true
++    }
++
++    public override var intrinsicContentSize: NSSize { f_1003d1cc0().intrinsicContentSize }
++}
+--- /dev/null
++++ replica/Sources/Pasto/UI/ReplicaCardTitle.swift
+@@ -0,0 +1,104 @@
++import AppKit
++import SwiftUI
++import PastoCore
++
++@MainActor
++struct ReplicaCardTitle: NSViewRepresentable {
++    let state: ReplicaUIState
++    let itemID: UUID
++    let title: String
++    let font: NSFont
++    let textColor: NSColor
++
++    func makeNSView(context: Context) -> ReplicaCardTitleView {
++        let view = ReplicaCardTitleView(frame: .zero)
++        updateNSView(view, context: context)
++        return view
++    }
++
++    func updateNSView(_ view: ReplicaCardTitleView, context: Context) {
++        view.configure(state: state, itemID: itemID, title: title, font: font, textColor: textColor)
++    }
++
++    func sizeThatFits(_ proposal: ProposedViewSize, nsView: ReplicaCardTitleView, context: Context) -> CGSize? {
++        let size = nsView.intrinsicContentSize
++        return CGSize(width: min(proposal.width ?? size.width, size.width), height: size.height)
++    }
++}
++
++@MainActor
++final class ReplicaCardTitleView: NSView {
++    let label = OriginalItemTitleLabel()
++    private(set) var itemID: UUID?
++    private var lastModelTitle: String?
++    private weak var editingPanel: ReplicaPanel?
++
++    override init(frame frameRect: NSRect) {
++        super.init(frame: frameRect)
++        label.translatesAutoresizingMaskIntoConstraints = false
++        addSubview(label)
++        NSLayoutConstraint.activate([
++            label.leadingAnchor.constraint(equalTo: leadingAnchor),
++            label.trailingAnchor.constraint(equalTo: trailingAnchor),
++            label.topAnchor.constraint(equalTo: topAnchor),
++            label.bottomAnchor.constraint(equalTo: bottomAnchor)
++        ])
++    }
++
++    required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
++
++    func configure(state: ReplicaUIState, itemID: UUID, title: String, font: NSFont, textColor: NSColor) {
++        self.itemID = itemID
++        // Offline lists have no CKShare permission record (0x100328f38's nil path).
++        label.isEditable = true
++        let field = label.f_1003d1cc0()
++        field.f_10023adf0().font = font
++        field.f_10023af6c(textColor)
++        if lastModelTitle != title {
++            lastModelTitle = title
++            field.f_10023b214(title)
++        }
++        invalidateIntrinsicContentSize()
++        field.f_10023adf0().setAccessibilityLabel("重命名项目")
++        label.onCommitEditing = { [weak state] title in
++            guard let state else { return }
++            state.perform { try state.store.updateItem(id: itemID, title: title, text: nil) }
++        }
++    }
++
++    func beginEditing() {
++        guard label.isEditable else { return }
++        editingPanel = window as? ReplicaPanel
++        editingPanel?.cardTitleEditingOwner = self
++        label.f_1003d2488()
++    }
++
++    func ownsEditor(in panel: ReplicaPanel) -> Bool {
++        let field = label.f_1003d1cc0().f_10023adf0()
++        return window === panel && label.isEditing && field.currentEditor() != nil
++            && field.currentEditor() === panel.firstResponder
++    }
++
++    override func viewDidMoveToWindow() {
++        super.viewDidMoveToWindow()
++        if editingPanel !== window {
++            if editingPanel?.cardTitleEditingOwner === self { editingPanel?.cardTitleEditingOwner = nil }
++            editingPanel = nil
++        }
++    }
++
++    override func hitTest(_ point: NSPoint) -> NSView? {
++        guard let result = super.hitTest(point) else { return nil }
++        return label.isEditing ? result : self
++    }
++
++    override func mouseDown(with event: NSEvent) {
++        if label.isEditable, !label.isEditing {
++            editingPanel = window as? ReplicaPanel
++            editingPanel?.cardTitleEditingOwner = self
++            label.mouseDown(with: event)
++        } else { super.mouseDown(with: event) }
++    }
++
++    override var intrinsicContentSize: NSSize { label.intrinsicContentSize }
++}

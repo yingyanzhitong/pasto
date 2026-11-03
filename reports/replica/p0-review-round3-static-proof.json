@@ -1,0 +1,95 @@
+{
+  "kind": "p0_round3_static_proof",
+  "binary_path": ".local/paste-arm64-static.bin",
+  "binary_sha256": "871f00354fbb1c165d858a98e6d19d6f43cb9d3f9f958b3e07c7f07eb5c19afb",
+  "delete_permission_predicate": {
+    "instructions": {
+      "address": "0x1003ba484",
+      "slice_file_offset": 3908740,
+      "bytes": "0000009000d01291010080d2e20308aa150080d2b7f62094"
+    },
+    "target": "0x1003ba4b4",
+    "note": "ADRP+ADD将谓词地址置于x0，随后调用allSatisfy；其函数转3ba4d0检查本地/共享list。"
+  },
+  "copy_all_satisfy_predicate": {
+    "instructions": {
+      "address": "0x10031c4dc",
+      "slice_file_offset": 3261660,
+      "bytes": "0000009000101491010080d2150080d2a26e2394"
+    },
+    "target": "0x10031c504"
+  },
+  "delete_history_refresh": {
+    "stub": {
+      "address": "0x100c08be0",
+      "slice_file_offset": 12618720,
+      "bytes": "011c0090218047f91015009010d640f900021fd6"
+    },
+    "selref": {
+      "address": "0x100f88f00",
+      "slice_file_offset": 16289536,
+      "bytes": "3763df0000001000"
+    },
+    "string": {
+      "address": "0x100df6337",
+      "slice_file_offset": 14639927,
+      "bytes": "726566726573684f626a6563743a6d657267654368616e6765733a00"
+    },
+    "selector": "refreshObject:mergeChanges:",
+    "note": "3636b4/363004取首个实体后refreshObject:mergeChanges:true；不是deleteObject selector。"
+  },
+  "supporting_original_fragments": [
+    {
+      "function_id": "Paste:0x1003ba4b4",
+      "path": "decompiled/Paste/part-0294.c",
+      "sha256": "1aa31ce6d63acddda4c6dd0f07a881e40135aad86a894f4cfc5412a9065c3214"
+    },
+    {
+      "function_id": "Paste:0x1003ba4d0",
+      "path": "decompiled/Paste/part-0294.c",
+      "sha256": "b0c4cf65f48ed6b8f39cfd519927e901db3cce8564a5b8ad607a3842e99723cc"
+    },
+    {
+      "function_id": "Paste:0x100328bc8",
+      "path": "decompiled/Paste/part-0261.c",
+      "sha256": "3b03318b15d47ca2f8726e6975f485f55007b7d2f3a8f92261d941d72abfaf4b"
+    },
+    {
+      "function_id": "Paste:0x1003636b4",
+      "path": "decompiled/Paste/part-0275.c",
+      "sha256": "814398bd3c2099e585f55df24892175298555ad41ed89f4cfb2f21d96a793be9"
+    },
+    {
+      "function_id": "Paste:0x100363004",
+      "path": "decompiled/Paste/part-0275.c",
+      "sha256": "f047472ac2826762d45bdd8a0f8cc2c543d37515652b6a691992c1eabeceb379"
+    },
+    {
+      "function_id": "Paste:0x100302b78",
+      "path": "decompiled/Paste/part-0249.c",
+      "sha256": "a4e300e47e2a0d119114d9546387641e0471ec99ce0d839a45d96233e578e51e"
+    },
+    {
+      "function_id": "Paste:0x1003245fc",
+      "path": "decompiled/Paste/part-0258.c",
+      "sha256": "1e4fea68812a146f51f6a9be7bc5076cd91470e35f6921da9bf4970bb9f85714"
+    },
+    {
+      "function_id": "Paste:0x10031c4c4",
+      "path": "decompiled/Paste/part-0257.c",
+      "sha256": "08bf10c57a26d5c73cb2c91901f34fb807ceb9705e70ccf4fc915a4bed541772"
+    },
+    {
+      "function_id": "Paste:0x10031c504",
+      "path": "decompiled/Paste/part-0257.c",
+      "sha256": "d2765e23f2787a3631899ba0ffeef6e7ca7e9852135c35316a1429dd7f0541c1"
+    },
+    {
+      "function_id": "Paste:0x10031c38c",
+      "path": "decompiled/Paste/part-0257.c",
+      "sha256": "19f96f6e4d0ffebc2815b8b51a6a9f69a2e6710e854bfe6fb1763ffc1b7be76a"
+    }
+  ],
+  "compiled": false,
+  "application_executed": false
+}

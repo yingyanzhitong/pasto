@@ -1,0 +1,128 @@
+{
+  "kind": "fixed_p0_p1_text_display_parent_repair",
+  "date": "2026-11-03",
+  "previous_report": "reports/replica/p0-p1-can-commit-parent-review-2026-11-03.json",
+  "scope": {
+    "path": "reports/replica/p0-p1-review-scope-v6.json",
+    "denominator": 959,
+    "P0": 353,
+    "P1": 606,
+    "expanded": false
+  },
+  "current_round_repaired_function_ids": [
+    "Paste:0x1003eb330"
+  ],
+  "current_round_repaired_count": 1,
+  "evidence_summary": {
+    "native_functions": 13,
+    "complete_machine_ranges": 13,
+    "direct_branches": 229,
+    "selectors": 28,
+    "import_calls": 141
+  },
+  "difference": "Previously eager original/editing arguments ran before isEditable. Native first reads editability, then selected model slot; independently reads editability again before original/plain probe.",
+  "source_repair": "Non-escaping autoclosure parameters preserve current model reads at the corresponding native branches, retaining the selected displayed string across a later probe.",
+  "reused_function_ids": [
+    "Paste:0x1003eb4a8",
+    "Paste:0x1003ec05c",
+    "Paste:0x1003eb8cc"
+  ],
+  "preserved": [
+    "Color analysis intentionally receives a single held original value; entire helper remains unchanged.",
+    "Actual UI consumers continue passing originalText/editingText live expressions; display call precedes colors.",
+    "Independent model, model-change editing gate, begin/cancel, separate focus hook, eligibility callback snapshot, commit and error cleanup remain unchanged."
+  ],
+  "counts": {
+    "finite_contract_consistent": 691,
+    "source_repaired": 258,
+    "user_adaptation": 9,
+    "evidence_insufficient": 1
+  },
+  "by_priority": {
+    "P0": {
+      "finite_contract_consistent": 267,
+      "source_repaired": 82,
+      "user_adaptation": 4
+    },
+    "P1": {
+      "finite_contract_consistent": 424,
+      "source_repaired": 176,
+      "user_adaptation": 5,
+      "evidence_insufficient": 1
+    }
+  },
+  "finite_comparison_progress": {
+    "numerator": 958,
+    "denominator": 959,
+    "percent": 99.9
+  },
+  "confirmed_unfixed_finite_differences": 0,
+  "evidence_insufficient_count": 1,
+  "unknown_function_ids": [
+    "Paste:0x1000f733c"
+  ],
+  "exact_total_outstanding": null,
+  "full_function_migration_verified": false,
+  "migration_completion_percent": null,
+  "tests": {
+    "current_source_checks": 67,
+    "new_checks": 15,
+    "failures": 0,
+    "errors": 0,
+    "source_substitution": false,
+    "omitted_historical_checks": {
+      "test_p1_can_commit_live_baseline.LiveBaselineContracts.test_only_two_small_source_changes_and_all_other_inputs_preserved": "Historical two-file delta snapshot; replaced by current one-method/248-file preservation check.",
+      "test_p1_can_commit_live_baseline.LiveBaselineContracts.test_original_fragments_and_current_source_hashes": "Previous full-file hash predates this exact display-method change; new test binds the current file and shared sources.",
+      "test_p1_text_model_parent_contract.TextModelParentContracts.test_only_one_existing_production_changed_one_added_and_old_tests_preserved": "Historical model-addition snapshot; current baseline includes all previous changes.",
+      "test_p1_text_model_parent_contract.TextModelParentContracts.test_original_fragments_binary_and_current_sources_fresh": "Historical source hash predates later eligibility/display fixes; independent model remains unchanged and is directly bound now.",
+      "test_p1_repair_text_edit_mode.TextEditModeContracts.test12_neighbors12_shared_sources_unchanged": "Phase187 historical snapshot; current full baseline validates every unchanged file.",
+      "test_p1_repair_text_edit_mode.TextEditModeContracts.test_commit_reload_and_observer_updates_unchanged": "Historical methods intentionally changed by prior native-model repair; current model contracts remain tested.",
+      "test_p1_repair_text_edit_mode.TextEditModeContracts.test_existing_display_still_selects_held_original_editing_and_colors_in_order": "Old source assertion requires eager arguments; new native-bound tests verify lazy selected/probe reads and unchanged color order.",
+      "test_p1_repair_text_edit_mode.TextEditModeContracts.test_two_exact_hunks_one_file247_inverse_and366_historical_python_preserved": "Phase187 historical scope snapshot predates later source changes.",
+      "test_p1_repair_preview_commit_error.PreviewCommitError.test_eight_neighbors_and_seven_shared_writer_observer_and_parent_callback_sources_unchanged": "Historical source/neighbor snapshot predates subsequent fixes; current baseline checks all shared files.",
+      "test_p1_repair_preview_commit_error.PreviewCommitError.test_four_exact_method_changes_reverse247_sources_and_do_not_claim_full_parent_migration": "Phase158 247-file delta snapshot is historical."
+    },
+    "trace_model_limitation": "Six new Python order traces model two editability reads, state changes, selected-string retention and rich/plain branches; not Swift/AppKit execution."
+  },
+  "remaining_boundaries": [
+    "0f733c actual declaration/consumer still insufficient; unchanged rather than guessed.",
+    "Private Swift ABI, optimized ARC, all framework fault/reentry inputs and UI runtime behavior remain unverified.",
+    "P2 style/layout, remote capabilities and licensing remain excluded. Supporting functions do not expand fixed denominator.",
+    "Finite source results do not establish complete product or every original function migration."
+  ],
+  "production_changes": {
+    "replica/Sources/PastoCore/OriginalPreviewAttributedText.swift": {
+      "before_sha256": "d73b2ca4f8239394e3a88ef57279ec98f139112ae1d29e2118f18cfacbcb6daf",
+      "after_sha256": "e525ae72bbe7369776f892ae9949d765c6611c28e408617bea06a611a265f478",
+      "diff": "--- replica/Sources/PastoCore/OriginalPreviewAttributedText.swift\n+++ replica/Sources/PastoCore/OriginalPreviewAttributedText.swift\n@@ -153,10 +153,11 @@\n \n     /// Paste 0x1003eb330: the two actual isEditable reads select content and plain styling.\n     @discardableResult\n-    public static func f_1003eb330(original: NSAttributedString, editing: NSAttributedString,\n+    public static func f_1003eb330(original: @autoclosure () -> NSAttributedString,\n+                                  editing: @autoclosure () -> NSAttributedString,\n                                   editor: NSTextView) -> Int {\n-        var displayed = editor.isEditable ? editing : original\n-        if !editor.isEditable, f_1003095bc(original) {\n+        var displayed = editor.isEditable ? editing() : original()\n+        if !editor.isEditable, f_1003095bc(original()) {\n             let plain = NSMutableAttributedString(attributedString: displayed)\n             let range = f_100309700(plain)\n             plain.removeAttribute(.foregroundColor, range: range)\n"
+    }
+  },
+  "existing_production_unchanged": 247,
+  "production_added": 0,
+  "old_test_files_modified": 0,
+  "patch": "reports/replica/p0-p1-text-display-parent-review-2026-11-03.patch",
+  "source_inputs": {
+    "reports/replica/p0-p1-can-commit-parent-review-2026-11-03.json": "659626a2c1d8d95be4fee5637c075b71f8dfaa908708fd5fca26b29b17028728",
+    ".local/p0-p1-parent-review/2026-11-03-text-display/baseline.json": "0d2e190b81c840a87116f8b023d4eebc2e32727085f889cd740c354459188cb7",
+    ".local/p0-p1-parent-review/2026-11-03-text-display/contract.json": "5f6ea35fc8087d50f9e8c43e5fbb7d302bd07dd45c642a8cddae2bd2b844432d",
+    ".local/p0-p1-parent-review/2026-11-03-text-display/source-delta.json": "d62a3a0cce0ce26eda938af87a190c44a86dd70a514f6dfbb5377cc7630e4167",
+    ".local/p0-p1-parent-review/2026-11-03-text-display/test-summary.json": "8d791a6209a80450a655769bc6a382ec2a363f28ced8050593cd2520a79fbc63",
+    ".local/p0-p1-parent-review/2026-11-03-text-display/proof.py": "258a2a492da4b286dfb72307b4e8d57fe08f391c3c53dfc25bcd9b1bbfc14bea",
+    ".local/p0-p1-parent-review/2026-11-03-text-display/run-tests.py": "1de0f62bb6d479c633759530b9702f75a6cba2ba41aaceca23fc7e6d08503455",
+    "scripts/tests/test_p1_text_display_live_reads.py": "a948a7bfaa86650065f8e4121f972a1420bc343f8b4959958fea56f34858674d"
+  },
+  "head_unchanged": "050e6878a5a52f96fe33aa40f48bb8a056cd0f05",
+  "version_unchanged": "1.0.2",
+  "function_map_unchanged": "ea781c82f93e580a940f0804fa120e01e9030357d10aee157fe4a135143b8985",
+  "compiled": false,
+  "built": false,
+  "installed": false,
+  "application_executed": false,
+  "framework_executed": false,
+  "network_used": false,
+  "committed": false,
+  "pushed": false,
+  "published": false,
+  "user_data_modified": false,
+  "goal_should_remain_active": true
+}

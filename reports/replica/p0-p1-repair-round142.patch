@@ -1,0 +1,38 @@
+--- before/replica/Sources/Pasto/UI/PanelViews.swift
++++ after/replica/Sources/Pasto/UI/PanelViews.swift
+@@ -613,6 +613,19 @@
+         }
+     }
+ 
++    // 09e8a8 snapshots off/on/mixed; the single writable source keeps each click one batch action.
++    private func pinboardMenuBindings(for target: ClipboardPinboardTarget,
++                                      items: [ClipboardRestoreItem]) -> [Binding<Bool>] {
++        let matched = items.filter { input in
++            input.isAssigned(to: target)
++                ?? (state.store.pinboardOwner(for: input.resolvedItem())?.id == target.id)
++        }.count
++        let assignment = Binding<Bool>(get: { matched == items.count },
++            set: { _ in state.assignItems(items, to: target) })
++        if matched > 0, matched < items.count { return [assignment, .constant(true)] }
++        return [assignment]
++    }
++
+     @ViewBuilder private var contextMenu: some View {
+         if item.isDeleted {
+             Button("恢复") { state.perform { try state.store.restore(ids: state.selection) } }
+@@ -645,7 +658,14 @@
+             }
+             Menu("添加到 Pasto") {
+                 ForEach(state.pinboardMenuTargets(), id: \.id) { target in
+-                    Button(target.name) { state.assignItems(groupItems, to: target) }
++                    Toggle(sources: pinboardMenuBindings(for: target, items: groupItems), isOn: \.self) {
++                        Label {
++                            Text(target.name)
++                        } icon: {
++                            let color = target.colorCode.map { OriginalPinboardColor(canonicalColorCode: $0).color() } ?? .clear
++                            Image(nsImage: OriginalPinboardHeaderIcon.image(height: 12, shared: false, color: color))
++                        }
++                    }
+                 }
+                 Divider()
+                 Button(OriginalSearchLocalization.text("pasto.action.create-group") + "…") {

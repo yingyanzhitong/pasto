@@ -1,0 +1,278 @@
+{
+  "kind": "offline_source_contract_review",
+  "round": 4,
+  "status": "source-checks-passed-goal-active",
+  "generated_at": "2026-10-29T13:17:17.723925+00:00",
+  "previous_goal_turn": "progress",
+  "priority": "P0",
+  "module": "copy_restore",
+  "records": [
+    {
+      "function_id": "Paste:0x100066068",
+      "status": "partial_source_or_runtime_adapter",
+      "contract": "本地direct成功后排Task再deactivate；去掉独立target activate/yield、50ms轮询、1秒期限与请求代次拒绝。普通copy和权限raw2提前结束保留；完整原对象/DI及所有错误父仍partial。",
+      "original": {
+        "path": "decompiled/Paste/part-0035.c",
+        "sha256": "c50e9dd2bd7f938a24cc576c71c17d205fd397b7dabf2468608646f05d6ceb86"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/AppMain.swift",
+          "symbol": "var copyInsteadOfPaste = !(forceDirect || store.preferences.pasteToActiveApp)"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/OriginalAccessibilityModals.swift",
+          "symbol": "enum OriginalPasteToOtherAppsModal"
+        },
+        {
+          "path": "replica/Sources/Pasto/AppMain.swift",
+          "symbol": "if store.preferences.alwaysPastePlainText { restoreOptions.insert(.plainTextAndLinks) }"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1000645b0",
+      "status": "partial_source_or_runtime_adapter",
+      "contract": "原通用Task factory在默认priority/name路径保留执行器并调用swift_task_create；当前生产Task选择默认MainActor路径。通用name/priority/ABI不等价映射。",
+      "original": {
+        "path": "decompiled/Paste/part-0035.c",
+        "sha256": "7fc83dc070dd0939bf52eae4bc116c4fadbe20932ccbe8c463ff5d700f5f5ffd"
+      },
+      "source_references": []
+    },
+    {
+      "function_id": "Paste:0x1000760b0",
+      "status": "partial_source_or_runtime_adapter",
+      "contract": "原默认Task描述符解析至此，再转0x100071054；当前由Swift Task标准库提供同用途通用调用，不冒认帧布局。",
+      "original": {
+        "path": "decompiled/Paste/part-0037.c",
+        "sha256": "1f5d68ab16cb5820b376a67f4f0f22b2801fe41c2f116f1cdd253691d5d69a8a"
+      },
+      "source_references": []
+    },
+    {
+      "function_id": "Paste:0x100071054",
+      "status": "partial_source_or_runtime_adapter",
+      "contract": "按async descriptor的相对函数地址调用所捕获闭包；当前原生Task接收真实closure。",
+      "original": {
+        "path": "decompiled/Paste/part-0036.c",
+        "sha256": "322d4f791cba999cf03a498ec062efddb7eb7348c8a38d157eb134291c47b7f7"
+      },
+      "source_references": []
+    },
+    {
+      "function_id": "Paste:0x100076018",
+      "status": "partial_source_or_runtime_adapter",
+      "contract": "原闭包保留actor/owner再进0x100053988；当前Task强捕获self，调用同用途async方法。",
+      "original": {
+        "path": "decompiled/Paste/part-0037.c",
+        "sha256": "4cf4d4dc9249f5c2666ebdceb20e92f1247ccae5fdb86250daf1b2faf8711b0a"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/AppMain.swift",
+          "symbol": "Task { @MainActor [self] in"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x100053988",
+      "status": "partial_source_or_runtime_adapter",
+      "contract": "真实AppDelegate为MainActor，async方法在Task中调用固定粘贴方法；原入口显式task_switch到resume。",
+      "original": {
+        "path": "decompiled/Paste/part-0029.c",
+        "sha256": "d223cfc3961acd1d1beb0ee9274afe67da131b5ed39e81ed06c304a412618ae7"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/AppMain.swift",
+          "symbol": "private func f_100053988() async"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x100053a18",
+      "status": "partial_source_or_runtime_adapter",
+      "contract": "原resume解析服务再调用0x100ae641c；当前方法体调用固定v包装，原实例DI仍待证。",
+      "original": {
+        "path": "decompiled/Paste/part-0029.c",
+        "sha256": "93e7961bdb281a815a0bd40e2784809e92f7059b36e76382190b1d1be0c75f91"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/AppMain.swift",
+          "symbol": "OriginalPasteKeyTranslation.f_100ae641c()"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x100ae641c",
+      "status": "partial_source_or_runtime_adapter",
+      "contract": "新增只向通用sender转发字符v的固定包装，不额外激活、延时或回退键码。",
+      "original": {
+        "path": "decompiled/Paste/part-1008.c",
+        "sha256": "a47e09e69cca6cb72f46e19827af1f5620c986004d1642f4846372dce4e4ed6c"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPasteKeyTranslation.swift",
+          "symbol": "func f_100ae641c()"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x100ae6428",
+      "status": "partial_source_or_runtime_adapter",
+      "contract": "保留上轮Character扫描及nullable source/独立down-up分支；本轮真实消费者改为原异步链。",
+      "original": {
+        "path": "decompiled/Paste/part-1008.c",
+        "sha256": "cdc8749884ed35ae72c05e834b4c20c38f7ddeaed6f10679b7425c45247bfdfd"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPasteKeyTranslation.swift",
+          "symbol": "func pasteKeyCode() -> CGKeyCode?"
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalPasteKeyTranslation.swift",
+          "symbol": "func f_100ae6428(_ character: Character)"
+        },
+        {
+          "path": "replica/Sources/Pasto/AppMain.swift",
+          "symbol": "private func f_100053988() async"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x100008284",
+      "status": "partial_source_or_runtime_adapter",
+      "contract": "原async清理器dealloc子帧再返回continuation；当前由Swift原生async返回管理，不把源码调用当原ABI实现。",
+      "original": {
+        "path": "decompiled/Paste/part-0003.c",
+        "sha256": "9a45b8651351ec93cd008e0b0db0a52bb32ba0da10093486350d69d971cee67f"
+      },
+      "source_references": []
+    },
+    {
+      "function_id": "Paste:0x1000b098c",
+      "status": "partial_source_or_runtime_adapter",
+      "contract": "打开前保存前台应用再激活；当前已有before-show回调，菜单栏入口回退属独立应用适配。",
+      "original": {
+        "path": "decompiled/Paste/part-0058.c",
+        "sha256": "fb5f8e88ffb06fd35ecc47648d2bd2fd0b86c2e0d4e36ad1d836b97da189b506"
+      },
+      "source_references": []
+    },
+    {
+      "function_id": "Paste:0x1000b11ac",
+      "status": "partial_source_or_runtime_adapter",
+      "contract": "已有onWillClose应用激活选项2与清空保存值，预览存在时不恢复；本轮保留，未新加目标窗口轮询。",
+      "original": {
+        "path": "decompiled/Paste/part-0058.c",
+        "sha256": "ee1dc707a97c9910ba3716d32c991b574094bfa24a5a0431091114fdb325b129"
+      },
+      "source_references": []
+    },
+    {
+      "function_id": "Paste:0x100019a84",
+      "status": "partial_source_or_runtime_adapter",
+      "contract": "通知与onWillClose先于0.2秒关闭动画；当前保持同事件顺序及用户指定确认状态清理。",
+      "original": {
+        "path": "decompiled/Paste/part-0010.c",
+        "sha256": "0f4dbd0361dffc812f278f3a032c73d392ac4b179391dfb2da955b78486fa6dd"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "func hidePanel()"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1003ba5c4",
+      "status": "gap_queued",
+      "contract": "下一P0差异线索：presenter存在且普通多选count>=2构造确认；当前deleteSelection直接执行。shared contains谓词不与普通pinboard混同，继续核清本地删除上下文。",
+      "original": {
+        "path": "decompiled/Paste/part-0294.c",
+        "sha256": "2eae0abdfad6c636ce757b417bb31e7795d10a4c7215c5fec752334227efdefe"
+      },
+      "source_references": []
+    },
+    {
+      "function_id": "Paste:0x1003baac8",
+      "status": "partial_source_or_runtime_adapter",
+      "contract": "原事务完成后调用可选callback；原错误边界与Pasto throw/回滚及邻项选择不可凭此合并认定全等。",
+      "original": {
+        "path": "decompiled/Paste/part-0294.c",
+        "sha256": "e620379e37ddacfc3ff3b5a7330346e63c0d9b45a2ee6e9a36e9184af3ac04f7"
+      },
+      "source_references": []
+    }
+  ],
+  "reviewed_count": 15,
+  "current_review_unique_count": 71,
+  "current_review_inventory_percent": 0.0875,
+  "async_descriptor_binding": {
+    "binary_sha256": "871f00354fbb1c165d858a98e6d19d6f43cb9d3f9f958b3e07c7f07eb5c19afb",
+    "descriptors": [
+      {
+        "descriptor_address": "0x100c26d68",
+        "segment": "__TEXT",
+        "file_offset": "0xc26d68",
+        "relative_function_offset": -12258640,
+        "target": "0x100076018",
+        "async_frame_size": 32,
+        "bytes": "b0f244ff20000000"
+      },
+      {
+        "descriptor_address": "0x100c26d78",
+        "segment": "__TEXT",
+        "file_offset": "0xc26d78",
+        "relative_function_offset": -12258504,
+        "target": "0x1000760b0",
+        "async_frame_size": 32,
+        "bytes": "38f344ff20000000"
+      }
+    ],
+    "executed": false
+  },
+  "new_partial_bindings": [
+    "Paste:0x100ae641c",
+    "Paste:0x100053988",
+    "Paste:0x100053a18",
+    "Paste:0x100076018"
+  ],
+  "source_sha256": {
+    "replica/Sources/Pasto/AppMain.swift": "3dec19d68aa1e942321f5c3d737303f2f1fe5e9ba4a83c1c00a1f6d6ee8b6d11",
+    "replica/Sources/PastoCore/OriginalPasteKeyTranslation.swift": "23d20d721b737726f0506b560e4027cf751a83593f0205cb19e489177ff186aa",
+    "replica/Sources/Pasto/UI/ReplicaUIController.swift": "cca57756364e95a40e832c21cfd777def564998b07cec1cfcd4bf71b7faae79a",
+    "replica/Sources/PastoCore/ClipboardStore.swift": "99856fa91a53529f5f9aa359665069316d6f4d5f98890015ee98d4ec69c378a0",
+    "scripts/tests/test_offline_p0_contracts.py": "22baea27d22c88b3797c9c45b342a97fc34d11d1e3b499fc23c8a1a802b74d67"
+  },
+  "tests": {
+    "passed": true,
+    "total": 41,
+    "scope": "Python source contracts, original descriptor/code-file checks and ledger tests only"
+  },
+  "new_fully_migrated_function_count": 0,
+  "historical_ledger": {
+    "numerator": 1648,
+    "denominator": 81123,
+    "percent": 2.0315,
+    "stale_evidence": true
+  },
+  "current_partial_count": 418,
+  "compiled": false,
+  "application_executed": false,
+  "keyboard_events_posted_by_agent": false,
+  "ui_or_mcp_tests_executed": false,
+  "network_used": false,
+  "committed": false,
+  "pushed": false,
+  "module_complete": false,
+  "next_module": "P0 deletion_data_safety",
+  "next_work": [
+    "确认0x1003ba5c4普通多选确认与0x1003bab24仓库派发",
+    "按本地当前列表上下文追查删除和历史/分组内容保留规则"
+  ]
+}

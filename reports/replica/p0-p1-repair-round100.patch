@@ -1,0 +1,557 @@
+--- phase-100-before/replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift
++++ replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift
+@@ -1,6 +1,15 @@
+ import AppKit
+ import Combine
+ import PastoCore
++
++// Native text creation does not require the archived value DTO; other content keeps its adapter.
++@MainActor
++func makeOriginalReplicaNativePreview(state: ReplicaUIState, input: ClipboardRestoreItem) -> OriginalItemPreviewView {
++    if input.previewRawType() == 5 {
++        return makeReplicaTextPreview(state: state, item: nil, input: input)
++    }
++    return makeOriginalReplicaPreview(state: state, item: input.resolvedItem(), input: input)
++}
+ 
+ /// Shares preview chrome and editing transitions; per-kind content retains its own contract.
+ @MainActor
+@@ -69,7 +78,16 @@
+ @MainActor
+ func makeOriginalReplicaTextPreview(state: ReplicaUIState, item: ClipboardItem,
+                                     input: ClipboardRestoreItem? = nil) -> OriginalItemPreviewView? {
+-    guard item.kind == .text || item.kind == .richText else { return nil }
++    let isText: Bool
++    if let rawType = input?.previewRawType() { isText = rawType == 5 }
++    else { isText = item.kind == .text || item.kind == .richText }
++    guard isText else { return nil }
++    return makeReplicaTextPreview(state: state, item: item, input: input)
++}
++
++@MainActor
++private func makeReplicaTextPreview(state: ReplicaUIState, item: ClipboardItem?,
++                                    input: ClipboardRestoreItem?) -> OriginalItemPreviewView {
+     let content = ReplicaInlineTextPreviewContent(state: state, item: item, input: input)
+     let header = ReplicaInlinePreviewHeader(state: state, item: item, input: input)
+     let editorHeader = ReplicaInlinePreviewEditorHeader(document: content.document)
+@@ -93,7 +111,7 @@
+ @MainActor
+ private func connectReplicaPreviewHeader(_ header: ReplicaInlinePreviewHeader,
+                                          view: OriginalItemPreviewView,
+-                                         state: ReplicaUIState, item: ClipboardItem,
++                                         state: ReplicaUIState, item: ClipboardItem?,
+                                          input: ClipboardRestoreItem?) {
+     header.onEdit = { [weak view] in view?.f_10007be8c() }
+     header.onClose = { [weak view] in
+@@ -106,7 +124,7 @@
+         withExtendedLifetime(view) {
+             if let input {
+                 state.perform { try state.store.updateItem(input, title: title) }
+-            } else {
++            } else if let item {
+                 state.perform { try state.store.updateItem(id: item.id, title: title, text: nil) }
+             }
+         }
+@@ -211,18 +229,21 @@
+     var onSave: (() -> Void)?
+     var previewEditingToolbar: NSView? { nil }
+ 
+-    init(state: ReplicaUIState, item: ClipboardItem, input: ClipboardRestoreItem?) {
++    init(state: ReplicaUIState, item: ClipboardItem?, input: ClipboardRestoreItem?) {
+         self.state = state
+-        itemID = item.id
++        guard let itemID = input?.id ?? item?.id else { preconditionFailure("Missing preview input") }
++        self.itemID = itemID
+         editInput = input
+         let nativeSource: ClipboardItemObservation?
+         if let input { nativeSource = input.observeItem() }
+-        else { nativeSource = state.store.observeItem(id: item.id) }
++        else { nativeSource = state.store.observeItem(id: itemID) }
+         nativeItemObservation = nativeSource
+         let initial: NSAttributedString
+         if let nativeSource {
+             initial = nativeSource.attributedText ?? NSAttributedString(string: "")
+-        } else { initial = Self.attributedContent(item) }
++        } else if let item = item ?? input?.resolvedItem() {
++            initial = Self.attributedContent(item)
++        } else { preconditionFailure("Missing preview content") }
+         originalText = initial
+         editingText = OriginalPreviewAttributedText.normalizedEditingText(initial)
+         document = ReplicaRichTextDocument(content: initial)
+@@ -408,9 +429,10 @@
+     private var sharingPicker: NSSharingServicePicker?
+     private let input: ClipboardRestoreItem?
+ 
+-    init(state: ReplicaUIState, item: ClipboardItem, input: ClipboardRestoreItem?) {
++    init(state: ReplicaUIState, item: ClipboardItem?, input: ClipboardRestoreItem?) {
+         self.state = state
+-        itemID = item.id
++        guard let itemID = input?.id ?? item?.id else { preconditionFailure("Missing preview input") }
++        self.itemID = itemID
+         self.input = input
+         super.init(frame: .zero)
+         let close = NSButton()
+@@ -485,7 +507,7 @@
+         } else {
+             itemObservation = state.store.$items.sink { items in
+                 MainActor.assumeIsolated {
+-                    guard let current = items.first(where: { $0.id == item.id }) else { return }
++                    guard let current = items.first(where: { $0.id == itemID }) else { return }
+                     update(current)
+                 }
+             }
+--- phase-100-before/replica/Sources/Pasto/UI/ReplicaUIController.swift
++++ replica/Sources/Pasto/UI/ReplicaUIController.swift
+@@ -1476,9 +1476,16 @@
+ 
+     // 0x1000655cc filters the complete input before invoking each item's router.
+     private func editItems(_ items: [ClipboardRestoreItem]) {
+-        let editable = items.filter { Self.allowsContentEditing($0.resolvedItem()) }
++        let editable = items.filter { Self.allowsEditingInput($0) }
+         guard !editable.isEmpty else { NSSound.beep(); return }
+         for input in editable { presentEditingPreview(input: input) }
++    }
++
++    private static func allowsEditingInput(_ input: ClipboardRestoreItem) -> Bool {
++        if let rawType = input.previewRawType() {
++            return [1, 2, 4, 5].contains(rawType)
++        }
++        return allowsContentEditing(input.resolvedItem())
+     }
+ 
+     // 0x10031c2ec: offline lists have no CKShare permission branch.
+@@ -1493,8 +1500,10 @@
+     private func writeAppliedSelection() -> Bool {
+         guard OriginalWritingTools.isAvailable() else { return false }
+         let items = appliedRestoreItems().filter {
++            guard Self.allowsEditingInput($0) else { return false }
++            if let rawType = $0.previewRawType() { return rawType == 5 }
+             let item = $0.resolvedItem()
+-            return Self.allowsContentEditing(item) && (item.kind == .text || item.kind == .richText)
++            return item.kind == .text || item.kind == .richText
+         }
+         guard !items.isEmpty else { return false }
+         editItems(items)
+@@ -1504,13 +1513,12 @@
+ 
+     // 0x1003bb280 → Router witness → 0x100003da0, with beginEditing=true.
+     private func presentEditingPreview(input: ClipboardRestoreItem) {
+-        let item = input.resolvedItem()
+         let window = OriginalPreviewWindow()
+         window.animationBehavior = .documentWindow
+         sharingPolicy.apply(to: window)
+         let registry = previewRegistry
+-        let itemIdentifier = item.id.uuidString
+-        registry.f_100086c10(window: window, itemIdentity: AnyHashable(item.id),
++        let itemIdentifier = input.id.uuidString
++        registry.f_100086c10(window: window, itemIdentity: AnyHashable(input.id),
+                            itemIdentifier: itemIdentifier, isEditing: true)
+         let transition = OriginalPreviewWindowTransition(window: window)
+         let windowIdentity = ObjectIdentifier(window)
+@@ -1519,7 +1527,7 @@
+         transition.onDismissed = { [weak self] _ in
+             _ = self?.editorWindowTransitions.removeValue(forKey: windowIdentity)
+         }
+-        let preview = makeOriginalReplicaPreview(state: state, item: item, input: input)
++        let preview = makeOriginalReplicaNativePreview(state: state, input: input)
+         preview.onEndEditing = { window.close() }
+         preview.onEditingStateChanged = { editing in
+             registry.f_10008727c(isEditing: editing, itemIdentifier: itemIdentifier)
+@@ -1591,7 +1599,7 @@
+     }
+ 
+     private func makePreviewContent(for input: ClipboardRestoreItem) -> NSView {
+-        makeOriginalReplicaPreview(state: state, item: input.resolvedItem(), input: input)
++        makeOriginalReplicaNativePreview(state: state, input: input)
+     }
+ 
+     private func makePreviewPopover() -> OriginalPreviewPopover {
+@@ -1606,7 +1614,7 @@
+         popover.onWillClose = { [weak self] in self?.previewPopover = nil }
+         popover.makeContentView = { [weak self] input in
+             guard let self else { return nil }
+-            return makeOriginalReplicaPreview(state: self.state, item: input.resolvedItem(), input: input)
++            return makeOriginalReplicaNativePreview(state: self.state, input: input)
+         }
+         return popover
+     }
+--- phase-100-before/replica/Sources/PastoCore/ClipboardRestoreItem.swift
++++ replica/Sources/PastoCore/ClipboardRestoreItem.swift
+@@ -59,6 +59,13 @@
+             }
+     }
+ 
++    // 31eba8/31c2ec inspect native type before content creation or editing eligibility.
++    public func previewRawType() -> Int? {
++        guard let object = nativeObject else { return nil }
++        let rawType = (object.value(forKey: "rawType") as? NSNumber)?.intValue ?? 0
++        return (0...5).contains(rawType) ? rawType : 0
++    }
++
+     // 309008/308f88 read title/type/preview, independently of archived value content.
+     public func previewTitle() -> (defaultTitle: String, title: String)? {
+         guard let object = nativeObject else { return nil }
+--- phase-100-before/scripts/tests/native_preview_header_scope_contract.py
++++ scripts/tests/native_preview_header_scope_contract.py
+@@ -1,5 +1,6 @@
+ """Exact native preview header metadata deltas for historical contracts only."""
+ from pathlib import Path
++from text_preview_creation_scope_contract import pre_text_preview_creation
+ CHANGES = [['replica/Sources/PastoCore/ClipboardItemDataPersistence.swift',
+   '    // 0x100360ff8: type/checksum, delete old data, create/encode replacement,\n',
+   '    // 31b218: raw getter exceptions yield no representations; invalid local graphs stay optional.\n'
+@@ -134,6 +135,7 @@
+   '}\n']]
+ 
+ def pre_native_preview_header(source):
++    source=pre_text_preview_creation(source)
+     for path, before, after in reversed(CHANGES):
+         if after in source:
+             assert source.count(after) == 1, path
+--- phase-100-before/scripts/tests/test_p1_repair_entity_lookup.py
++++ scripts/tests/test_p1_repair_entity_lookup.py
+@@ -2,6 +2,7 @@
+ from pathlib import Path
+ import hashlib,itertools,json,sys,unittest
+ ROOT=Path(__file__).resolve().parents[2]
++from text_preview_creation_scope_contract import pre_text_preview_creation
+ sys.path[:0]=[str(ROOT/'scripts'),str(ROOT/'scripts/tests')]
+ from function_ledger import source_fragments
+ from test_offline_p0_contracts import body
+@@ -94,7 +95,7 @@
+ 
+     def test_fourteen_real_render_selection_preview_edit_and_Stack_consumers_are_bound(self):
+         self.assertEqual(len(self.proof['actual_consumers']),14)
+-        for r in self.proof['actual_consumers']:self.assertEqual(hashlib.sha256(body((ROOT/r['path']).read_text(),r['symbol']).encode()).hexdigest(),r['sha256'])
++        for r in self.proof['actual_consumers']:self.assertEqual(hashlib.sha256(body(pre_text_preview_creation((ROOT/r['path']).read_text()),r['symbol']).encode()).hexdigest(),r['sha256'])
+         host=(ROOT/'replica/Sources/Pasto/UI/ReplicaNativeCardCollection.swift').read_text()
+         for marker in ['private func tileCells()','private func refreshCellRoots()']:self.assertIn('requiredRestoreItem()',body(host,marker))
+         self.assertIn('items[index].item()',body(host,'func appliedSelectedItems('));self.assertIn('items[index].restoreItem()',body(host,'func appliedRestoreItems('))
+@@ -102,7 +103,7 @@
+     def test_six_unchanged_provider_membership_and_notification_methods_and_no_old_calls(self):
+         self.assertEqual(len(self.proof['unchanged_methods']),6)
+         for r in self.proof['unchanged_methods']:
+-            now=body((ROOT/r['path']).read_text(),r['symbol']);self.assertEqual(hashlib.sha256(now.encode()).hexdigest(),r['sha256']);self.assertEqual(now,body((self.phase/'before'/r['path']).read_text(),r['symbol']))
++            now=body(pre_text_preview_creation((ROOT/r['path']).read_text()),r['symbol']);self.assertEqual(hashlib.sha256(now.encode()).hexdigest(),r['sha256']);self.assertEqual(now,body((self.phase/'before'/r['path']).read_text(),r['symbol']))
+         for p in(ROOT/'replica/Sources').rglob('*.swift'):
+             s=p.read_text();self.assertNotIn('reference.requiredItem()',s,str(p));self.assertNotIn('reference.item()',s,str(p))
+ 
+--- phase-100-before/scripts/tests/test_p1_repair_native_preview_header.py
++++ scripts/tests/test_p1_repair_native_preview_header.py
+@@ -7,12 +7,13 @@
+ from test_offline_p0_contracts import body
+ from test_p0_repair_checksum_routing import original_fragment
+ from native_preview_header_scope_contract import CHANGES,pre_native_preview_header
++from text_preview_creation_scope_contract import pre_text_preview_creation,pre_text_preview_creation_bytes
+ 
+ class NativePreviewHeaderContracts(unittest.TestCase):
+     @classmethod
+     def setUpClass(cls):
+         cls.phase=ROOT/'.local/p0-repair/phase-99';cls.proof=json.loads((cls.phase/'native-preview-header-contract.json').read_text());cls.base=json.loads((cls.phase/'baseline.json').read_text())
+-        cls.src={p:(ROOT/p).read_text()for p in cls.proof['current_sources']}
++        cls.src={p:pre_text_preview_creation((ROOT/p).read_text())for p in cls.proof['current_sources']}
+         cls.handle=cls.src['replica/Sources/PastoCore/ClipboardRestoreItem.swift'];cls.data=cls.src['replica/Sources/PastoCore/ClipboardItemDataPersistence.swift'];cls.observer=cls.src['replica/Sources/PastoCore/ClipboardItemObservation.swift'];cls.adapter=cls.src['replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift']
+         cls.header=cls.adapter[cls.adapter.index('private final class ReplicaInlinePreviewHeader:'):];cls.init=body(cls.header,'init(state: ReplicaUIState, item: ClipboardItem, input: ClipboardRestoreItem?)')
+         ns={};exec((ROOT/cls.proof['decoder']['path']).read_text().split("idx={r['address']",1)[0],ns);cls.ns=ns
+@@ -73,11 +74,11 @@
+         self.order(self.original('0x10007a948'),['+ 0x70))()','FUN_1000183e0()','objc_stub::showRelativeToRect_ofView_preferredEdge_'])
+     def test_ten_exact_hunks_four_files_and_shared_helpers_unchanged(self):
+         self.assertEqual(len(CHANGES),10);files={str(p.relative_to(ROOT))for p in(ROOT/'replica/Sources').rglob('*')if p.is_file()};self.assertEqual(files,set(self.base['production']))
+-        sha=lambda p:hashlib.sha256((ROOT/p).read_bytes()).hexdigest()
++        sha=lambda p:hashlib.sha256(pre_text_preview_creation_bytes(ROOT/p)).hexdigest()
+         self.assertEqual({p for p,h in self.base['production'].items()if sha(p)!=h},set(self.src))
+         for p,s in self.src.items():self.assertEqual(pre_native_preview_header(s),(self.phase/'before'/p).read_text());self.assertEqual(sha(p),self.proof['current_sources'][p])
+         for p,h in self.proof['shared_sources'].items():self.assertEqual(sha(p),h);self.assertEqual(h,self.base['production'][p])
+-        for r in self.proof['unchanged_methods']:self.assertEqual(hashlib.sha256(body((ROOT/r['path']).read_text(),r['symbol']).encode()).hexdigest(),r['sha256'])
++        for r in self.proof['unchanged_methods']:self.assertEqual(hashlib.sha256(body(pre_text_preview_creation((ROOT/r['path']).read_text()),r['symbol']).encode()).hexdigest(),r['sha256'])
+     def test_finite_dependency_fix_does_not_claim_entire_header_or_runtime_equivalence(self):
+         self.assertEqual(self.proof['function_id'],'Paste:0x100011e00');self.assertEqual(self.proof['new_difference_records'],1);self.assertTrue(self.proof['finite_contract_verified']);self.assertFalse(self.proof['full_function_migration_verified']);self.assertFalse(self.proof['runtime_executed'])
+         for token in ['Missing data','permissions','pinboards','04430c']:self.assertTrue(any(token in r for r in self.proof['remaining']),token)
+--- phase-100-before/scripts/tests/test_p1_repair_native_text_read.py
++++ scripts/tests/test_p1_repair_native_text_read.py
+@@ -2,6 +2,7 @@
+ from pathlib import Path
+ import hashlib,json,struct,sys,unittest
+ ROOT=Path(__file__).resolve().parents[2]
++from text_preview_creation_scope_contract import pre_text_preview_creation
+ sys.path[:0]=[str(ROOT/'scripts'),str(ROOT/'scripts/tests')]
+ from function_ledger import source_fragments
+ from test_offline_p0_contracts import body
+@@ -90,7 +91,7 @@
+     def test_nine_existing_commit_lifecycle_and_header_methods_are_unchanged(self):
+         self.assertEqual(len(self.proof['unchanged_methods']),9)
+         for r in self.proof['unchanged_methods']:
+-            now=body((ROOT/r['path']).read_text(),r['symbol']);self.assertEqual(hashlib.sha256(now.encode()).hexdigest(),r['sha256']);self.assertEqual(now,body((self.phase/'before'/r['path']).read_text(),r['symbol']))
++            now=body(pre_text_preview_creation((ROOT/r['path']).read_text()),r['symbol']);self.assertEqual(hashlib.sha256(now.encode()).hexdigest(),r['sha256']);self.assertEqual(now,body((self.phase/'before'/r['path']).read_text(),r['symbol']))
+ 
+     def test_eight_exact_hunks_two_existing_files_no_writer_model_version_changes(self):
+         self.assertEqual(len(CHANGES),8);sha=lambda p:hashlib.sha256(pre_native_preview_header_bytes(ROOT/p)).hexdigest()
+--- phase-100-before/scripts/tests/test_p1_repair_popover_entity_input.py
++++ scripts/tests/test_p1_repair_popover_entity_input.py
+@@ -2,6 +2,7 @@
+ from pathlib import Path
+ import hashlib,json,sys,unittest
+ ROOT=Path(__file__).resolve().parents[2]
++from text_preview_creation_scope_contract import pre_text_preview_creation
+ sys.path[:0]=[str(ROOT/'scripts'),str(ROOT/'scripts/tests')]
+ from function_ledger import source_fragments
+ from test_offline_p0_contracts import body
+@@ -88,7 +89,7 @@
+     def test_lifecycle_callbacks_window_registry_and_editing_entry_are_unchanged(self):
+         self.assertEqual(len(self.proof['unchanged_methods']),7)
+         for r in self.proof['unchanged_methods']:
+-            now=body((ROOT/r['path']).read_text(),r['symbol']);self.assertEqual(hashlib.sha256(now.encode()).hexdigest(),r['sha256']);self.assertEqual(now,body((self.phase/'before'/r['path']).read_text(),r['symbol']))
++            now=body(pre_text_preview_creation((ROOT/r['path']).read_text()),r['symbol']);self.assertEqual(hashlib.sha256(now.encode()).hexdigest(),r['sha256']);self.assertEqual(now,body((self.phase/'before'/r['path']).read_text(),r['symbol']))
+ 
+     def test_fifteen_reviewed_hunks_four_files_no_shared_writer_or_version_edits(self):
+         self.assertEqual(len(CHANGES),15);sha=lambda p:hashlib.sha256(pre_preview_index_retry_bytes(ROOT/p)).hexdigest()
+--- phase-100-before/scripts/tests/test_p1_repair_preview_index_retry.py
++++ scripts/tests/test_p1_repair_preview_index_retry.py
+@@ -2,6 +2,7 @@
+ from pathlib import Path
+ import hashlib,json,sys,unittest
+ ROOT=Path(__file__).resolve().parents[2]
++from text_preview_creation_scope_contract import pre_text_preview_creation
+ sys.path[:0]=[str(ROOT/'scripts'),str(ROOT/'scripts/tests')]
+ from function_ledger import source_fragments
+ from test_offline_p0_contracts import body
+@@ -89,7 +90,7 @@
+         prefix='\n        if showCollectionPreview(itemID: item.id) { return }';self.assertEqual(now.replace(prefix,'',1),before)
+         self.order(now,['showCollectionPreview(itemID: item.id)','previewRegistry.f_10008747c','show(existing)'])
+         for r in self.proof['unchanged_methods']:
+-            s=body((ROOT/r['path']).read_text(),r['symbol']);self.assertEqual(hashlib.sha256(s.encode()).hexdigest(),r['sha256']);self.assertEqual(s,body((self.phase/'before'/r['path']).read_text(),r['symbol']))
++            s=body(pre_text_preview_creation((ROOT/r['path']).read_text()),r['symbol']);self.assertEqual(hashlib.sha256(s.encode()).hexdigest(),r['sha256']);self.assertEqual(s,body((self.phase/'before'/r['path']).read_text(),r['symbol']))
+ 
+     def test_three_reviewed_hunks_two_existing_files_and_shared_sources_unchanged(self):
+         self.assertEqual(len(CHANGES),3);sha=lambda p:hashlib.sha256(pre_entity_lookup_bytes(ROOT/p)).hexdigest()
+--- /dev/null
++++ scripts/tests/test_p1_repair_text_preview_creation.py
+@@ -0,0 +1,92 @@
++"""Native text factory and edit eligibility: source/Mach-O checks only."""
++from pathlib import Path
++import hashlib,json,sys,unittest
++ROOT=Path(__file__).resolve().parents[2]
++sys.path[:0]=[str(ROOT/'scripts'),str(ROOT/'scripts/tests')]
++from function_ledger import source_fragments
++from test_offline_p0_contracts import body
++from test_p0_repair_checksum_routing import original_fragment
++from text_preview_creation_scope_contract import CHANGES,pre_text_preview_creation
++
++class TextPreviewCreationContracts(unittest.TestCase):
++    @classmethod
++    def setUpClass(cls):
++        cls.phase=ROOT/'.local/p0-repair/phase-100';cls.proof=json.loads((cls.phase/'text-preview-creation-contract.json').read_text());cls.base=json.loads((cls.phase/'baseline.json').read_text())
++        cls.paths=dict(handle='replica/Sources/PastoCore/ClipboardRestoreItem.swift',adapter='replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift',controller='replica/Sources/Pasto/UI/ReplicaUIController.swift')
++        cls.src={k:(ROOT/p).read_text()for k,p in cls.paths.items()};cls.before={k:(cls.phase/'before'/p).read_text()for k,p in cls.paths.items()}
++        ns={};exec((ROOT/cls.proof['decoder']['path']).read_text().split("idx={r['address']",1)[0],ns);cls.ns=ns
++        s=cls.src['adapter'];cls.text=s[s.index('private final class ReplicaInlineTextPreviewContent:'):s.index('private final class ReplicaPreviewActionMenuItem:')];cls.header=s[s.index('private final class ReplicaInlinePreviewHeader:'):]
++    def original(self,a):
++        r=next(r for r in self.proof['original_fragments']if r['address']==a);return original_fragment((ROOT/r['path']).read_text(),a[2:])
++    def order(self,s,tokens):
++        pos=[s.index(t)for t in tokens];self.assertEqual(pos,sorted(pos))
++    def test_original_fragments_binary_and_reused_sources_bound(self):
++        self.assertEqual(len(self.proof['original_fragments']),19)
++        for r in self.proof['original_fragments']:self.assertEqual(source_fragments(ROOT/r['path'])[r['address']]['sha256'],r['sha256'])
++        for r in [self.proof['binary'],self.proof['decoder']]+self.proof['reused_evidence']:self.assertEqual(hashlib.sha256((ROOT/r['path']).read_bytes()).hexdigest(),r['sha256'])
++    def test_eighteen_actual_calls_bind_factory_and_editing_consumers(self):
++        self.assertEqual(len(self.proof['ARM_calls']),18)
++        for r in self.proof['ARM_calls']:
++            pc=int(r['address'],16);b=self.ns['read'](pc,4);self.assertEqual(b.hex(),r['bytes']);w=int.from_bytes(b,'little');self.assertEqual(w&0x7c000000,0x14000000);d=w&0x3ffffff
++            if d&0x2000000:d-=0x4000000
++            self.assertEqual(pc+4*d,int(r['target'],16))
++    def test_inline_factory_passes_same_entity_to_text_model_and_observer(self):
++        s=self.original('0x1003c3c90');self.order(s,['objc_stub::rawType(local_58)','if (uVar1 == 5)','FUN_1003c1fe0()','*(ID *)(IVar8 + 0x38) = local_58','FUN_1003c1c60(local_58,FUN_1003c1f34','FUN_1003c05d4()'])
++        self.assertNotIn('FUN_1003c0390(',s);self.assertIn('does not directly call3c0390',self.proof['correction'])
++        words={r['address']:r['bytes']for r in self.proof['ARM_words']};self.assertEqual(len(words),14)
++        for a,b in words.items():self.assertEqual(self.ns['read'](int(a,16),4).hex(),b)
++        self.assertEqual(words['0x1003c3ef4'],'d41e00f9');self.assertEqual(words['0x1003c3f40'],'e00314aa')
++    def test_allowed_type_table_is_bound_to_real_ARM_data_load(self):
++        r=self.proof['allowed_types'];a=0x10031c310;w=int.from_bytes(self.ns['read'](a,4),'little');imm=((w>>5)&0x7ffff)*4+((w>>29)&3)
++        if imm&(1<<20):imm-=1<<21
++        page=(a&~4095)+(imm<<12);load=int.from_bytes(self.ns['read'](a+4,4),'little');target=page+((load>>10)&0xfff)*4
++        self.assertEqual(target,int(r['address'],16));data=self.ns['read'](target,4);self.assertEqual(data.hex(),r['bytes']);self.assertEqual(list(data),[1,2,4,5])
++    def test_raw_type_getter_matches_original_unsigned_valid_range(self):
++        s=body(self.src['handle'],'public func previewRawType()');self.order(s,['guard let object = nativeObject','object.value(forKey: "rawType")','(0...5).contains(rawType) ? rawType : 0'])
++        for t in ['resolvedItem','ClipboardPersistence','store.','Date()','fetch(']:self.assertNotIn(t,s)
++        self.assertIn('if (5 < IVar2)',self.original('0x10031eba8'))
++        for raw in [-2**63,-1,0,1,2,3,4,5,6,255,2**63-1]:self.assertEqual(raw if 0<=raw<=5 else 0,raw if(raw&((1<<64)-1))<=5 else 0)
++    def test_original_filter_checks_native_type_and_complete_input_before_routing(self):
++        s=self.original('0x1000655cc');self.order(s,['FUN_10031c2ec()','FUN_1003bb280(']);self.assertIn('objc_stub::rawType',self.original('0x10031c2ec'))
++        self.order(self.original('0x10006bed8'),['FUN_10031c2ec()','FUN_10031eba8()','FUN_1000655cc('])
++    def test_native_edit_eligibility_does_not_resolve_DTO(self):
++        s=body(self.src['controller'],'private static func allowsEditingInput(');self.order(s,['if let rawType = input.previewRawType()','return [1, 2, 4, 5].contains(rawType)','return allowsContentEditing(input.resolvedItem())'])
++        self.assertNotIn('resolvedItem',body(s,'if let rawType = input.previewRawType()'))
++        edit=body(self.src['controller'],'private func editItems(');self.order(edit,['items.filter { Self.allowsEditingInput($0) }','guard !editable.isEmpty','for input in editable','presentEditingPreview(input: input)']);self.assertNotIn('resolvedItem',edit)
++    def test_writing_tools_preserves_capability_filter_route_task_order(self):
++        s=body(self.src['controller'],'private func writeAppliedSelection()');self.order(s,['OriginalWritingTools.isAvailable()','appliedRestoreItems().filter','guard Self.allowsEditingInput($0)','if let rawType = $0.previewRawType() { return rawType == 5 }','let item = $0.resolvedItem()','guard !items.isEmpty','editItems(items)','OriginalWritingTools.showAfterDelay()'])
++        self.assertNotIn('resolvedItem',s[:s.index('if let rawType = $0.previewRawType()')])
++    def test_native_text_factory_routes_before_any_DTO_projection(self):
++        s=body(self.src['adapter'],'func makeOriginalReplicaNativePreview(');self.order(s,['if input.previewRawType() == 5','makeReplicaTextPreview(state: state, item: nil, input: input)','return makeOriginalReplicaPreview(state: state, item: input.resolvedItem(), input: input)'])
++        self.assertNotIn('resolvedItem',body(s,'if input.previewRawType() == 5'));self.assertNotIn('ClipboardItem(',s)
++    def test_legacy_and_native_text_factories_share_identical_existing_builder(self):
++        legacy=body(self.src['adapter'],'func makeOriginalReplicaTextPreview(');self.order(legacy,['if let rawType = input?.previewRawType()','else { isText = item.kind','guard isText','makeReplicaTextPreview(state: state, item: item, input: input)'])
++        old=body(self.before['adapter'],'func makeOriginalReplicaTextPreview(').replace('    guard item.kind == .text || item.kind == .richText else { return nil }\n','');self.assertEqual(body(self.src['adapter'],'private func makeReplicaTextPreview('),old)
++    def test_header_native_initialization_needs_identity_not_legacy_value(self):
++        s=body(self.header,'init(state: ReplicaUIState, item: ClipboardItem?, input: ClipboardRestoreItem?)');self.order(s,['guard let itemID = input?.id ?? item?.id','self.itemID = itemID','self.input = input','super.init','itemObservation = input?.observeChanges(receive)','receive(input)'])
++        self.assertNotIn('resolvedItem',s[:s.index('let receive:')]);self.assertIn('items.first(where: { $0.id == itemID })',s)
++    def test_text_reads_native_observer_before_optional_legacy_resolution(self):
++        s=body(self.text,'init(state: ReplicaUIState, item: ClipboardItem?, input: ClipboardRestoreItem?)');self.order(s,['guard let itemID = input?.id ?? item?.id','if let input { nativeSource = input.observeItem() }','else { nativeSource = state.store.observeItem(id: itemID) }','if let nativeSource','initial = nativeSource.attributedText','else if let item = item ?? input?.resolvedItem()','Self.attributedContent(item)','originalText = initial'])
++        self.assertNotIn('resolvedItem',body(s,'if let nativeSource {\n            initial ='))
++    def test_controller_native_preview_edit_and_detach_all_reach_same_factory(self):
++        s=self.src['controller'];self.assertEqual(s.count('makeOriginalReplicaNativePreview('),3)
++        preview=body(s,'private func makePreviewContent(');self.assertIn('makeOriginalReplicaNativePreview(state: state, input: input)',preview);self.assertNotIn('resolvedItem',preview)
++        popover=body(s,'private func makePreviewPopover()');self.assertIn('makeOriginalReplicaNativePreview(state: self.state, input: input)',popover);self.assertNotIn('resolvedItem',popover)
++        self.assertNotIn('makeOriginalReplicaPreview(',s)
++    def test_edit_window_registration_and_transition_keep_same_input_identity(self):
++        s=body(self.src['controller'],'private func presentEditingPreview(');self.order(s,['let window = OriginalPreviewWindow()','let itemIdentifier = input.id.uuidString','registry.f_100086c10(window: window, itemIdentity: AnyHashable(input.id)','OriginalPreviewWindowTransition(window: window)','makeOriginalReplicaNativePreview(state: state, input: input)','preview.f_10007be8c()','transition.present(controller)','focusPreviewEditing()'])
++        self.assertNotIn('resolvedItem',s);self.assertNotIn('let item =',s)
++    def test_text_UI_subscriptions_and_editor_behavior_after_initial_read_are_unchanged(self):
++        marker='originalText = initial';new=body(self.text,'init(state: ReplicaUIState, item: ClipboardItem?, input: ClipboardRestoreItem?)');old=self.before['adapter'];old=old[old.index('private final class ReplicaInlineTextPreviewContent:'):old.index('private final class ReplicaPreviewActionMenuItem:')];old=body(old,'init(state: ReplicaUIState, item: ClipboardItem, input: ClipboardRestoreItem?)');self.assertEqual(new[new.index(marker):],old[old.index(marker):])
++    def test_fifteen_existing_commit_observation_and_lifecycle_methods_remain_unchanged(self):
++        self.assertEqual(len(self.proof['unchanged_methods']),15)
++        for r in self.proof['unchanged_methods']:
++            s=body((ROOT/r['path']).read_text(),r['symbol']);self.assertEqual(hashlib.sha256(s.encode()).hexdigest(),r['sha256']);self.assertEqual(s,body((self.phase/'before'/r['path']).read_text(),r['symbol']))
++    def test_exact_delta_scope_and_historical_reversal_are_idempotent(self):
++        self.assertEqual(len(CHANGES),18);sha=lambda p:hashlib.sha256((ROOT/p).read_bytes()).hexdigest();current={str(p.relative_to(ROOT))for p in(ROOT/'replica/Sources').rglob('*')if p.is_file()};self.assertEqual(current,set(self.base['production']))
++        self.assertEqual({p for p,h in self.base['production'].items()if sha(p)!=h},set(self.paths.values()))
++        for k,p in self.paths.items():self.assertEqual(pre_text_preview_creation(self.src[k]),self.before[k]);self.assertEqual(pre_text_preview_creation(self.before[k]),self.before[k]);self.assertEqual(sha(p),self.proof['current_sources'][p])
++        for p,h in self.proof['shared_sources'].items():self.assertEqual(sha(p),h);self.assertEqual(h,self.base['production'][p])
++    def test_two_finite_dependency_records_leave_full_factory_permissions_and_model_open(self):
++        self.assertEqual(self.proof['new_difference_records'],2);self.assertEqual({r['function_id']for r in self.proof['contracts']},{'Paste:0x1003c3c90','Paste:0x10031c2ec'});self.assertTrue(self.proof['finite_contract_verified']);self.assertFalse(self.proof['full_function_migration_verified']);self.assertFalse(self.proof['runtime_executed'])
++        for token in ['Nontext','Missing fields','Published','CloudShare','04430c']:self.assertTrue(any(token in s for s in self.proof['remaining']),token)
+--- /dev/null
++++ scripts/tests/text_preview_creation_scope_contract.py
+@@ -0,0 +1,133 @@
++"""Exact phase100 native text creation deltas for historical contracts only."""
++from pathlib import Path
++CHANGES = [['replica/Sources/PastoCore/ClipboardRestoreItem.swift',
++  '    // 309008/308f88 read title/type/preview, independently of archived value content.\n',
++  '    // 31eba8/31c2ec inspect native type before content creation or editing eligibility.\n'
++  '    public func previewRawType() -> Int? {\n'
++  '        guard let object = nativeObject else { return nil }\n'
++  '        let rawType = (object.value(forKey: "rawType") as? NSNumber)?.intValue ?? 0\n'
++  '        return (0...5).contains(rawType) ? rawType : 0\n'
++  '    }\n'
++  '\n'
++  '    // 309008/308f88 read title/type/preview, independently of archived value content.\n'],
++ ['replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift',
++  '/// Shares preview chrome and editing transitions; per-kind content retains its own contract.\n',
++  '// Native text creation does not require the archived value DTO; other content keeps its adapter.\n'
++  '@MainActor\n'
++  'func makeOriginalReplicaNativePreview(state: ReplicaUIState, input: ClipboardRestoreItem) -> '
++  'OriginalItemPreviewView {\n'
++  '    if input.previewRawType() == 5 {\n'
++  '        return makeReplicaTextPreview(state: state, item: nil, input: input)\n'
++  '    }\n'
++  '    return makeOriginalReplicaPreview(state: state, item: input.resolvedItem(), input: input)\n'
++  '}\n'
++  '\n'
++  '/// Shares preview chrome and editing transitions; per-kind content retains its own contract.\n'],
++ ['replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift',
++  '    guard item.kind == .text || item.kind == .richText else { return nil }\n'
++  '    let content = ReplicaInlineTextPreviewContent(state: state, item: item, input: input)\n',
++  '    let isText: Bool\n'
++  '    if let rawType = input?.previewRawType() { isText = rawType == 5 }\n'
++  '    else { isText = item.kind == .text || item.kind == .richText }\n'
++  '    guard isText else { return nil }\n'
++  '    return makeReplicaTextPreview(state: state, item: item, input: input)\n'
++  '}\n'
++  '\n'
++  '@MainActor\n'
++  'private func makeReplicaTextPreview(state: ReplicaUIState, item: ClipboardItem?,\n'
++  '                                    input: ClipboardRestoreItem?) -> OriginalItemPreviewView {\n'
++  '    let content = ReplicaInlineTextPreviewContent(state: state, item: item, input: input)\n'],
++ ['replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift',
++  '                                         state: ReplicaUIState, item: ClipboardItem,\n',
++  '                                         state: ReplicaUIState, item: ClipboardItem?,\n'],
++ ['replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift',
++  '            } else {\n'
++  '                state.perform { try state.store.updateItem(id: item.id, title: title, text: nil) }\n',
++  '            } else if let item {\n'
++  '                state.perform { try state.store.updateItem(id: item.id, title: title, text: nil) }\n'],
++ ['replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift',
++  '    init(state: ReplicaUIState, item: ClipboardItem, input: ClipboardRestoreItem?) {\n'
++  '        self.state = state\n'
++  '        itemID = item.id\n'
++  '        editInput = input\n',
++  '    init(state: ReplicaUIState, item: ClipboardItem?, input: ClipboardRestoreItem?) {\n'
++  '        self.state = state\n'
++  '        guard let itemID = input?.id ?? item?.id else { preconditionFailure("Missing preview input") }\n'
++  '        self.itemID = itemID\n'
++  '        editInput = input\n'],
++ ['replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift',
++  '        else { nativeSource = state.store.observeItem(id: item.id) }\n',
++  '        else { nativeSource = state.store.observeItem(id: itemID) }\n'],
++ ['replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift',
++  '        } else { initial = Self.attributedContent(item) }\n',
++  '        } else if let item = item ?? input?.resolvedItem() {\n'
++  '            initial = Self.attributedContent(item)\n'
++  '        } else { preconditionFailure("Missing preview content") }\n'],
++ ['replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift',
++  '    init(state: ReplicaUIState, item: ClipboardItem, input: ClipboardRestoreItem?) {\n'
++  '        self.state = state\n'
++  '        itemID = item.id\n'
++  '        self.input = input\n',
++  '    init(state: ReplicaUIState, item: ClipboardItem?, input: ClipboardRestoreItem?) {\n'
++  '        self.state = state\n'
++  '        guard let itemID = input?.id ?? item?.id else { preconditionFailure("Missing preview input") }\n'
++  '        self.itemID = itemID\n'
++  '        self.input = input\n'],
++ ['replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift',
++  '                    guard let current = items.first(where: { $0.id == item.id }) else { return }\n',
++  '                    guard let current = items.first(where: { $0.id == itemID }) else { return }\n'],
++ ['replica/Sources/Pasto/UI/ReplicaUIController.swift',
++  '        let editable = items.filter { Self.allowsContentEditing($0.resolvedItem()) }\n',
++  '        let editable = items.filter { Self.allowsEditingInput($0) }\n'],
++ ['replica/Sources/Pasto/UI/ReplicaUIController.swift',
++  '    // 0x10031c2ec: offline lists have no CKShare permission branch.\n',
++  '    private static func allowsEditingInput(_ input: ClipboardRestoreItem) -> Bool {\n'
++  '        if let rawType = input.previewRawType() {\n'
++  '            return [1, 2, 4, 5].contains(rawType)\n'
++  '        }\n'
++  '        return allowsContentEditing(input.resolvedItem())\n'
++  '    }\n'
++  '\n'
++  '    // 0x10031c2ec: offline lists have no CKShare permission branch.\n'],
++ ['replica/Sources/Pasto/UI/ReplicaUIController.swift',
++  '        let items = appliedRestoreItems().filter {\n'
++  '            let item = $0.resolvedItem()\n'
++  '            return Self.allowsContentEditing(item) && (item.kind == .text || item.kind == .richText)\n'
++  '        }\n',
++  '        let items = appliedRestoreItems().filter {\n'
++  '            guard Self.allowsEditingInput($0) else { return false }\n'
++  '            if let rawType = $0.previewRawType() { return rawType == 5 }\n'
++  '            let item = $0.resolvedItem()\n'
++  '            return item.kind == .text || item.kind == .richText\n'
++  '        }\n'],
++ ['replica/Sources/Pasto/UI/ReplicaUIController.swift',
++  '    private func presentEditingPreview(input: ClipboardRestoreItem) {\n'
++  '        let item = input.resolvedItem()\n',
++  '    private func presentEditingPreview(input: ClipboardRestoreItem) {\n'],
++ ['replica/Sources/Pasto/UI/ReplicaUIController.swift',
++  '        let itemIdentifier = item.id.uuidString\n'
++  '        registry.f_100086c10(window: window, itemIdentity: AnyHashable(item.id),\n',
++  '        let itemIdentifier = input.id.uuidString\n'
++  '        registry.f_100086c10(window: window, itemIdentity: AnyHashable(input.id),\n'],
++ ['replica/Sources/Pasto/UI/ReplicaUIController.swift',
++  '        let preview = makeOriginalReplicaPreview(state: state, item: item, input: input)\n',
++  '        let preview = makeOriginalReplicaNativePreview(state: state, input: input)\n'],
++ ['replica/Sources/Pasto/UI/ReplicaUIController.swift',
++  '        makeOriginalReplicaPreview(state: state, item: input.resolvedItem(), input: input)\n',
++  '        makeOriginalReplicaNativePreview(state: state, input: input)\n'],
++ ['replica/Sources/Pasto/UI/ReplicaUIController.swift',
++  '            return makeOriginalReplicaPreview(state: self.state, item: input.resolvedItem(), input: '
++  'input)\n',
++  '            return makeOriginalReplicaNativePreview(state: self.state, input: input)\n']]
++
++def pre_text_preview_creation(source):
++    for _,old,new in reversed(CHANGES):
++        if old.startswith(new) and old in source: continue
++        if new in source:
++            assert source.count(new)==1
++            source=source.replace(new,old,1)
++    return source
++
++def pre_text_preview_creation_bytes(path):
++    p=Path(path)
++    return pre_text_preview_creation(p.read_text()).encode() if p.suffix=='.swift' else p.read_bytes()

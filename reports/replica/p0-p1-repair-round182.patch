@@ -1,0 +1,32 @@
+--- a/replica/Sources/Pasto/UI/ReplicaSearchSuggestionsMenu.swift
++++ b/replica/Sources/Pasto/UI/ReplicaSearchSuggestionsMenu.swift
+@@ -64,15 +64,13 @@
+ 
+     func show(rows: [Row], anchorRect: NSRect, in anchorView: NSView,
+               onAccept: @escaping (Int) -> Void, onEscape: @escaping () -> Void) {
++        escape = onEscape
++        self.rows = rows
++        accept = onAccept
++        selectedIndex = nil
++        scroller.setRows(rows)
++        scroller.select(selectedIndex)
+         guard let parent = anchorView.window else { return }
+-        self.rows = rows
+-        self.anchorView = anchorView
+-        accept = onAccept
+-        escape = onEscape
+-        guard !rows.isEmpty else { dismiss(); return }
+-        scroller.setRows(rows)
+-        selectedIndex = nil
+-        scroller.select(selectedIndex)
+         let width = max(120, scroller.fittingSize.width)
+         setFrame(.init(x: frame.minX, y: frame.minY, width: width, height: frame.height), display: false)
+         scroller.layoutSubtreeIfNeeded()
+@@ -93,6 +91,7 @@
+         }
+         display()
+         orderFront(nil)
++        self.anchorView = anchorView
+         installMonitors(parent: parent)
+     }
+ 

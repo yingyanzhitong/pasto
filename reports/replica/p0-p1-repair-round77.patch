@@ -1,0 +1,838 @@
+--- phase-77-before/replica/Sources/Pasto/AppMain.swift
++++ replica/Sources/Pasto/AppMain.swift
+@@ -108,6 +108,9 @@
+             ui.directPasteItemsHandler = { [weak self] ids, plain in
+                 self?.paste(ids: ids, plain: plain, forceDirect: true) ?? false
+             }
++            ui.pasteRestoreItemsHandler = { [weak self] items, plain, forceDirect in
++                self?.paste(ids: items.map(\.id), plain: plain, forceDirect: forceDirect, restoreItems: items) ?? false
++            }
+             ui.panelDidShow = { [weak self] in self?.rememberPanelApplication() }
+             ui.panelWillClose = { [weak self] restore in self?.restorePanelApplication(restore: restore) }
+             ui.panelDidLoad = { [weak self] in self?.installPanelVisibilityObservation() }
+@@ -460,7 +463,8 @@
+     }
+ 
+     @discardableResult
+-    private func paste(ids: [UUID], plain: Bool, forceDirect: Bool = false) -> Bool {
++    private func paste(ids: [UUID], plain: Bool, forceDirect: Bool = false,
++                       restoreItems: [ClipboardRestoreItem]? = nil) -> Bool {
+         let requestedTarget = targetApplication
+         let hasAccessibilityAccess = accessibilityService.f_100ae5e74()
+         pasteLogger.notice("request ax=\(hasAccessibilityAccess, privacy: .public) post=\(CGPreflightPostEventAccess(), privacy: .public) target=\(requestedTarget?.processIdentifier ?? -1, privacy: .public) front=\(NSWorkspace.shared.frontmostApplication?.processIdentifier ?? -1, privacy: .public)")
+@@ -485,7 +489,13 @@
+         }
+         var restoreOptions: OriginalPasteboardRestore.Options = plain ? .plainText : []
+         if store.preferences.alwaysPastePlainText { restoreOptions.insert(.plainTextAndLinks) }
+-        do { try store.writeToPasteboard(ids: ids, pasteboard: pasteboard, options: restoreOptions) }
++        do {
++            if let restoreItems {
++                try store.writeToPasteboard(restoreItems: restoreItems, pasteboard: pasteboard, options: restoreOptions)
++            } else {
++                try store.writeToPasteboard(ids: ids, pasteboard: pasteboard, options: restoreOptions)
++            }
++        }
+         catch {
+             pasteLogger.error("restore_failed code=\((error as NSError).code, privacy: .public)")
+             ui.presentError(error)
+--- phase-77-before/replica/Sources/Pasto/UI/ReplicaNativeCardCollection.swift
++++ replica/Sources/Pasto/UI/ReplicaNativeCardCollection.swift
+@@ -171,6 +171,16 @@
+         return orderedIDs.compactMap { identifier in
+             guard let index = positions[identifier] else { return nil }
+             return renderedItem(at: index)
++        }
++    }
++
++    func appliedRestoreItems(for state: ReplicaUIState, orderedIDs: [UUID]) -> [ClipboardRestoreItem]? {
++        guard self.state === state, state.collectionOwner === self else { return nil }
++        let positions = Dictionary(uniqueKeysWithValues: items.enumerated().map { ($0.element.id, $0.offset) })
++        return orderedIDs.compactMap { identifier in
++            guard let index = positions[identifier] else { return nil }
++            let item = items[index]
++            return itemReferences[identifier]?.requiredRestoreItem(id: identifier) ?? ClipboardRestoreItem(item: item)
+         }
+     }
+ 
+--- phase-77-before/replica/Sources/Pasto/UI/ReplicaUIController.swift
++++ replica/Sources/Pasto/UI/ReplicaUIController.swift
+@@ -804,6 +804,7 @@
+     var pasteHandler: ((UUID, Bool) -> Bool)?
+     var pasteItemsHandler: (([UUID], Bool) -> Bool)?
+     var directPasteItemsHandler: (([UUID], Bool) -> Bool)?
++    var pasteRestoreItemsHandler: (([ClipboardRestoreItem], Bool, Bool) -> Bool)?
+     var copiedItemsHandler: (() -> Void)?
+     var panelDidShow: (() -> Void)?
+     var panelWillClose: ((_ restorePreviousApplication: Bool) -> Void)?
+@@ -1279,14 +1280,31 @@
+     }
+ 
+     func pasteSelection(plainTextOnly: Bool) {
+-        let items = appliedSelectionItems()
++        let items = appliedRestoreItems()
+         guard !items.isEmpty else { return }
+-        paste(ids: items.map(\.id), plainTextOnly: plainTextOnly)
++        _ = paste(restoreItems: items, plainTextOnly: plainTextOnly)
+     }
+ 
+     @discardableResult
+     func paste(item: ClipboardItem, plainTextOnly: Bool) -> Bool {
+-        paste(ids: [item.id], plainTextOnly: plainTextOnly)
++        if let input = appliedRestoreItems(orderedIDs: [item.id]).first {
++            return paste(restoreItems: [input], plainTextOnly: plainTextOnly)
++        }
++        return paste(ids: [item.id], plainTextOnly: plainTextOnly)
++    }
++
++    @discardableResult
++    private func paste(restoreItems: [ClipboardRestoreItem], plainTextOnly: Bool, forceDirect: Bool = false) -> Bool {
++        guard !restoreItems.isEmpty else { return false }
++        if let pasteRestoreItemsHandler { return pasteRestoreItemsHandler(restoreItems, plainTextOnly, forceDirect) }
++        let ids = restoreItems.map(\.id)
++        if forceDirect {
++            if let directPasteItemsHandler { return directPasteItemsHandler(ids, plainTextOnly) }
++            presentError(NSError(domain: "Pasto", code: 1,
++                userInfo: [NSLocalizedDescriptionKey: "粘贴服务尚未就绪，请使用“拷贝”后粘贴。 "]))
++            return false
++        }
++        return paste(ids: ids, plainTextOnly: plainTextOnly)
+     }
+ 
+     @discardableResult
+@@ -1796,6 +1814,14 @@
+             orderedIDs: state.collectionSelectionSnapshot().orderedIDs) ?? []
+     }
+ 
++    private func appliedRestoreItems(orderedIDs: [UUID]? = nil) -> [ClipboardRestoreItem] {
++        guard let panel = loadedPanel,
++              let collection = (panel as? ReplicaPanel)?.collectionFocusTarget as? ReplicaNativeCollectionHost,
++              collection.window === panel else { return [] }
++        return collection.appliedRestoreItems(for: state,
++            orderedIDs: orderedIDs ?? state.collectionSelectionSnapshot().orderedIDs) ?? []
++    }
++
+     // 0x100064da0: filter first, deactivate once, then decode each accepted preview again.
+     private func openAppliedSelection() {
+         let selected = appliedSelectionItems()
+@@ -1904,15 +1930,7 @@
+         }
+         if !isEditing, signature.keyCode == OriginalShortcutFunctions.f_1001e94d4("v"),
+            signature.modifierRawValue == NSEvent.ModifierFlags.command.rawValue {
+-            let appliedIDs = Set((appliedCollectionItems() ?? []).map(\.id))
+-            let ids = state.collectionSelectionSnapshot().orderedIDs.filter { appliedIDs.contains($0) }
+-            if !ids.isEmpty {
+-                if let directPasteItemsHandler { _ = directPasteItemsHandler(ids, false) }
+-                else {
+-                    presentError(NSError(domain: "Pasto", code: 1,
+-                        userInfo: [NSLocalizedDescriptionKey: "粘贴服务尚未就绪，请使用“拷贝”后粘贴。 "]))
+-                }
+-            }
++            _ = paste(restoreItems: appliedRestoreItems(), plainTextOnly: false, forceDirect: true)
+             return true
+         }
+         if !isEditing, signature.keyCode == OriginalShortcutFunctions.f_1001e94d4("o"),
+--- phase-77-before/replica/Sources/PastoCore/ClipboardCollectionItemReference.swift
++++ replica/Sources/PastoCore/ClipboardCollectionItemReference.swift
+@@ -27,4 +27,11 @@
+         guard let item = item() else { fatalError("Missing collection item") }
+         return item
+     }
++
++    @MainActor public func requiredRestoreItem(id: UUID) -> ClipboardRestoreItem {
++        guard let object = (try? context.existingObject(with: objectID)) as? PastoItemEntity else {
++            fatalError("Missing restore item")
++        }
++        return ClipboardRestoreItem(id: id, object: object)
++    }
+ }
+--- phase-77-before/replica/Sources/PastoCore/Pasteboard.swift
++++ replica/Sources/PastoCore/Pasteboard.swift
+@@ -345,6 +345,13 @@
+         try writeToPasteboard(ids: selectedItems.map(\.id), pasteboard: pasteboard,
+                              options: plainTextOnly ? .plainText : [], recognizedImageData: nil,
+                              resolvedSelection: selectedItems)
++    }
++
++    public func writeToPasteboard(restoreItems: [ClipboardRestoreItem], pasteboard: NSPasteboard,
++                                 options: OriginalPasteboardRestore.Options) throws {
++        let selected = restoreItems.map { $0.resolvedItem() }
++        try writeToPasteboard(ids: restoreItems.map(\.id), pasteboard: pasteboard, options: options,
++                             recognizedImageData: nil, resolvedSelection: selected)
+     }
+ 
+     public func writeToPasteboard(ids: [UUID], pasteboard: NSPasteboard,
+--- /dev/null
++++ replica/Sources/PastoCore/ClipboardRestoreItem.swift
+@@ -0,0 +1,24 @@
++import CoreData
++import Foundation
++
++/// Retains the selected entity across a permission modal; content is read at restoration time.
++@MainActor
++public struct ClipboardRestoreItem {
++    public let id: UUID
++    private let resolve: () -> ClipboardItem
++
++    init(id: UUID, object: PastoItemEntity) {
++        self.id = id
++        resolve = {
++            guard let item = try? ClipboardPersistence.item(object) else { fatalError("Missing restore item content") }
++            return item
++        }
++    }
++
++    public init(item: ClipboardItem) {
++        id = item.id
++        resolve = { item }
++    }
++
++    public func resolvedItem() -> ClipboardItem { resolve() }
++}
+--- phase-77-before/scripts/tests/resolved_copy_scope_contract.py
++++ scripts/tests/resolved_copy_scope_contract.py
+@@ -1,9 +1,11 @@
+ """The explicit resolved-copy input delta, for earlier frozen writer/UI contracts."""
+ from pathlib import Path
++from modal_restore_scope_contract import pre_modal_restore
+ from test_offline_p0_contracts import body
+ 
+ 
+ def pre_resolved_copy(source):
++    source = pre_modal_restore(source)
+     declaration = '    public func writeToPasteboard(selectedItems:'
+     if declaration in source:
+         start = source.index(declaration);value = body(source, 'public func writeToPasteboard(selectedItems:')
+--- phase-77-before/scripts/tests/test_offline_p0_contracts.py
++++ scripts/tests/test_offline_p0_contracts.py
+@@ -305,7 +305,8 @@
+         self.assertNotIn("CGEvent(", sender)
+ 
+     def test_direct_paste_schedules_after_restore_before_deactivation_without_polling(self):
+-        source = (ROOT / "replica/Sources/Pasto/AppMain.swift").read_text()
++        from modal_restore_scope_contract import pre_modal_restore
++        source = pre_modal_restore((ROOT / "replica/Sources/Pasto/AppMain.swift").read_text())
+         action = body(source, "private func paste(ids: [UUID], plain: Bool, forceDirect: Bool = false) -> Bool")
+         self.assertLess(action.index("try store.writeToPasteboard"), action.index("Task { @MainActor [self] in"))
+         task = action.index("Task { @MainActor [self] in")
+@@ -320,7 +321,8 @@
+         self.assertNotIn("target.activate", action)
+ 
+     def test_permission_setup_exit_cannot_schedule_the_same_paste(self):
+-        source = (ROOT / "replica/Sources/Pasto/AppMain.swift").read_text()
++        from modal_restore_scope_contract import pre_modal_restore
++        source = pre_modal_restore((ROOT / "replica/Sources/Pasto/AppMain.swift").read_text())
+         action = body(source, "private func paste(ids: [UUID], plain: Bool, forceDirect: Bool = false) -> Bool")
+         setup = body(action, "if result == 2")
+         self.assertIn("OriginalEnableAccessibilityModal.run(requestOnShow: true)", setup)
+--- phase-77-before/scripts/tests/test_p0_repair_applied_snapshot_inputs.py
++++ scripts/tests/test_p0_repair_applied_snapshot_inputs.py
+@@ -8,14 +8,15 @@
+ sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'scripts/tests')]
+ from function_ledger import source_fragments
+ from test_offline_p0_contracts import body
++from modal_restore_scope_contract import pre_modal_restore
+ 
+ 
+ class AppliedSnapshotInputs(unittest.TestCase):
+     @classmethod
+     def setUpClass(cls):
+-        cls.ui = (ROOT / 'replica/Sources/Pasto/UI/ReplicaUIController.swift').read_text()
++        cls.ui = pre_modal_restore((ROOT / 'replica/Sources/Pasto/UI/ReplicaUIController.swift').read_text())
+         cls.host = (ROOT / 'replica/Sources/Pasto/UI/ReplicaNativeCardCollection.swift').read_text()
+-        cls.app = (ROOT / 'replica/Sources/Pasto/AppMain.swift').read_text()
++        cls.app = pre_modal_restore((ROOT / 'replica/Sources/Pasto/AppMain.swift').read_text())
+         cls.handle = body(cls.ui, 'private func handleKey(_ event: NSEvent) -> Bool')
+ 
+     def test_original_snapshot_and_shortcut_fragments_remain_bound(self):
+--- phase-77-before/scripts/tests/test_p0_repair_navigation_classifier.py
++++ scripts/tests/test_p0_repair_navigation_classifier.py
+@@ -9,6 +9,7 @@
+ sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'scripts/tests')]
+ from function_ledger import source_fragments
+ from test_offline_p0_contracts import body
++from modal_restore_scope_contract import pre_modal_restore
+ from test_p0_repair_checksum_routing import original_fragment
+ 
+ 
+@@ -17,7 +18,7 @@
+     def setUpClass(cls):
+         cls.phase = ROOT / '.local/p0-repair/phase-16'
+         cls.proof = json.loads((cls.phase / 'navigation-root-contract.json').read_text())
+-        cls.ui = (ROOT / 'replica/Sources/Pasto/UI/ReplicaUIController.swift').read_text()
++        cls.ui = pre_modal_restore((ROOT / 'replica/Sources/Pasto/UI/ReplicaUIController.swift').read_text())
+         cls.handle = body(cls.ui, 'private func handleKey(_ event: NSEvent)')
+         cls.classifier = (ROOT / 'replica/Sources/Pasto/UI/OriginalCollectionNavigation.swift').read_text()
+ 
+--- phase-77-before/scripts/tests/test_p0_repair_policy_registration_boundary.py
++++ scripts/tests/test_p0_repair_policy_registration_boundary.py
+@@ -9,6 +9,7 @@
+ sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'scripts/tests')]
+ from function_ledger import source_fragments
+ from test_offline_p0_contracts import body
++from modal_restore_scope_contract import pre_modal_restore
+ from test_p0_repair_checksum_routing import original_fragment
+ 
+ 
+@@ -82,7 +83,7 @@
+         self.assertIn('try save()', expiry)
+ 
+     def test_in_memory_preferences_and_existing_background_refresh_remain_live(self):
+-        main = (ROOT / 'replica/Sources/Pasto/AppMain.swift').read_text()
++        main = pre_modal_restore((ROOT / 'replica/Sources/Pasto/AppMain.swift').read_text())
+         refresh = body(main, 'refreshTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true)')
+         self.assertIn('try self.store.reload()', refresh)
+         self.assertEqual(main, (self.before / 'replica/Sources/Pasto/AppMain.swift').read_text())
+--- phase-77-before/scripts/tests/test_p0_repair_selection_snapshot_consumers.py
++++ scripts/tests/test_p0_repair_selection_snapshot_consumers.py
+@@ -9,6 +9,7 @@
+ sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'scripts/tests')]
+ from function_ledger import source_fragments
+ from test_offline_p0_contracts import body
++from modal_restore_scope_contract import pre_modal_restore
+ from test_p0_repair_checksum_routing import original_fragment
+ 
+ 
+@@ -17,7 +18,7 @@
+     def setUpClass(cls):
+         cls.phase = ROOT / '.local/p0-repair/phase-15'
+         cls.proof = json.loads((cls.phase / 'selection-root-contract.json').read_text())
+-        cls.ui = (ROOT / 'replica/Sources/Pasto/UI/ReplicaUIController.swift').read_text()
++        cls.ui = pre_modal_restore((ROOT / 'replica/Sources/Pasto/UI/ReplicaUIController.swift').read_text())
+         cls.native = (ROOT / 'replica/Sources/Pasto/UI/ReplicaNativeCardCollection.swift').read_text()
+ 
+     def original(self, address):
+--- phase-77-before/scripts/tests/test_p1_repair_collection_initial_ids.py
++++ scripts/tests/test_p1_repair_collection_initial_ids.py
+@@ -10,6 +10,7 @@
+ sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'scripts/tests')]
+ from function_ledger import source_fragments
+ from test_offline_p0_contracts import body
++from modal_restore_scope_contract import RESTORE_ITEM_PATH, pre_modal_restore, pre_modal_restore_bytes
+ from test_p0_repair_checksum_routing import original_fragment
+ from collection_initial_ids_scope_contract import assert_initial_ID_route_only
+ from live_item_render_scope_contract import pre_live_render, pre_live_render_bytes, REFERENCE_PATH
+@@ -165,7 +166,7 @@
+     def test_one_production_file_changed_without_schema_storage_or_UI_edits(self):
+         changed = [p for p, h in self.base['production'].items() if hashlib.sha256(pre_live_render_bytes(ROOT / p)).hexdigest() != h]
+         self.assertEqual(changed, [self.path])
+-        self.assertEqual({str(p.relative_to(ROOT)) for p in (ROOT / 'replica/Sources').rglob('*') if p.is_file()} - {REFERENCE_PATH}, set(self.base['production']))
++        self.assertEqual({str(p.relative_to(ROOT)) for p in (ROOT / 'replica/Sources').rglob('*') if p.is_file()} - {REFERENCE_PATH, RESTORE_ITEM_PATH}, set(self.base['production']))
+         for p in ['replica/Package.swift', 'package.json']:
+             self.assertEqual(hashlib.sha256((ROOT / p).read_bytes()).hexdigest(), self.base['other'][p])
+ 
+--- phase-77-before/scripts/tests/test_p1_repair_live_item_render.py
++++ scripts/tests/test_p1_repair_live_item_render.py
+@@ -9,6 +9,7 @@
+ sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'scripts/tests')]
+ from function_ledger import source_fragments
+ from test_offline_p0_contracts import body
++from modal_restore_scope_contract import RESTORE_ITEM_PATH, pre_modal_restore, pre_modal_restore_bytes
+ from live_item_render_scope_contract import pre_live_render, REFERENCE_PATH
+ from live_item_selection_scope_contract import pre_live_selection, pre_live_selection_bytes
+ 
+@@ -145,7 +146,7 @@
+         changed = {p for p, digest in self.base['production'].items() if sha(p) != digest}
+         self.assertEqual(changed, {self.paths[k] for k in ['source', 'index', 'ui', 'host']})
+         current = {str(p.relative_to(ROOT)) for p in (ROOT / 'replica/Sources').rglob('*') if p.is_file()}
+-        self.assertEqual(current - set(self.base['production']), {REFERENCE_PATH})
++        self.assertEqual(current - set(self.base['production']), {REFERENCE_PATH, RESTORE_ITEM_PATH})
+         for p in ['replica/Package.swift', 'package.json']:
+             self.assertEqual(sha(p), self.base['other'][p])
+ 
+--- phase-77-before/scripts/tests/test_p1_repair_live_item_selection.py
++++ scripts/tests/test_p1_repair_live_item_selection.py
+@@ -8,6 +8,7 @@
+ ROOT = Path(__file__).resolve().parents[2]
+ sys.path[:0] = [str(ROOT / 'scripts/tests')]
+ from test_offline_p0_contracts import body
++from modal_restore_scope_contract import RESTORE_ITEM_PATH, pre_modal_restore, pre_modal_restore_bytes
+ from live_item_selection_scope_contract import pre_live_selection
+ from resolved_copy_scope_contract import pre_resolved_copy, pre_resolved_copy_bytes
+ 
+@@ -107,7 +108,7 @@
+     def test_only_two_existing_UI_files_change_without_provider_model_or_writer_edits(self):
+         sha = lambda p: hashlib.sha256(pre_resolved_copy_bytes(ROOT / p)).hexdigest()
+         self.assertEqual({p for p, h in self.base['production'].items() if sha(p) != h}, set(self.paths.values()))
+-        self.assertEqual({str(p.relative_to(ROOT)) for p in (ROOT / 'replica/Sources').rglob('*') if p.is_file()}, set(self.base['production']))
++        self.assertEqual({str(p.relative_to(ROOT)) for p in (ROOT / 'replica/Sources').rglob('*') if p.is_file()} - {RESTORE_ITEM_PATH}, set(self.base['production']))
+         for p in ['replica/Package.swift', 'package.json']:
+             self.assertEqual(sha(p), self.base['other'][p])
+ 
+--- phase-77-before/scripts/tests/test_p1_repair_native_list_order.py
++++ scripts/tests/test_p1_repair_native_list_order.py
+@@ -10,6 +10,7 @@
+ sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'scripts/tests')]
+ from function_ledger import source_fragments
+ from test_offline_p0_contracts import body
++from modal_restore_scope_contract import RESTORE_ITEM_PATH, pre_modal_restore, pre_modal_restore_bytes
+ from test_p0_repair_checksum_routing import original_fragment
+ from item_order_scope_contract import (without_order_persistence, without_list_factory, without_list_request,
+     without_list_UI_insertions, assert_history_list_projection_only, assert_common_FRC_ctor_only, assert_order_migration_only)
+@@ -262,7 +263,7 @@
+         actual = {str(p.relative_to(ROOT)) for p in (ROOT / 'replica/Sources').rglob('*') if p.is_file()}
+         changed = {p for p, digest in self.base['production'].items() if hashlib.sha256(pre_live_render_bytes(ROOT / p)).hexdigest() != digest}
+         self.assertEqual(changed, set(self.paths.values()) - {self.paths['order']})
+-        self.assertEqual(actual - set(self.base['production']) - {REFERENCE_PATH}, {self.paths['order']})
++        self.assertEqual(actual - set(self.base['production']) - {REFERENCE_PATH, RESTORE_ITEM_PATH}, {self.paths['order']})
+         self.assertEqual(without_order_persistence(self.source['persistence']), self.before('persistence'))
+         self.assertEqual(without_list_factory(self.source['store'], public=True), self.before('store'))
+         self.assertEqual(without_list_request(self.source['lists']), self.before('lists'))
+--- phase-77-before/scripts/tests/test_p1_repair_resolved_copy_input.py
++++ scripts/tests/test_p1_repair_resolved_copy_input.py
+@@ -10,6 +10,7 @@
+ sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'scripts/tests')]
+ from function_ledger import source_fragments
+ from test_offline_p0_contracts import body
++from modal_restore_scope_contract import RESTORE_ITEM_PATH, pre_modal_restore, pre_modal_restore_bytes
+ from resolved_copy_scope_contract import pre_resolved_copy
+ 
+ 
+@@ -20,7 +21,7 @@
+         cls.proof = json.loads((cls.phase / 'resolved-copy-contract.json').read_text())
+         cls.base = json.loads((cls.phase / 'baseline.json').read_text())
+         cls.paths = dict(writer='replica/Sources/PastoCore/Pasteboard.swift', ui='replica/Sources/Pasto/UI/ReplicaUIController.swift')
+-        cls.source = {k: (ROOT / p).read_text() for k, p in cls.paths.items()}
++        cls.source = {k: pre_modal_restore((ROOT / p).read_text()) for k, p in cls.paths.items()}
+ 
+     def before(self, key): return (self.phase / 'before' / self.paths[key]).read_text()
+ 
+@@ -36,8 +37,8 @@
+ 
+     def test_actual_two_source_files_and_after_snapshots_are_bound(self):
+         for p, h in self.proof['current_sources'].items():
+-            self.assertEqual(hashlib.sha256((ROOT / p).read_bytes()).hexdigest(), h)
+-            self.assertEqual((ROOT / p).read_bytes(), (self.phase / 'after' / p).read_bytes())
++            self.assertEqual(hashlib.sha256(pre_modal_restore_bytes(ROOT / p)).hexdigest(), h)
++            self.assertEqual(pre_modal_restore_bytes(ROOT / p), (self.phase / 'after' / p).read_bytes())
+ 
+     def test_selected_overload_forwards_same_values_order_and_plain_option(self):
+         entry = body(self.source['writer'], 'public func writeToPasteboard(selectedItems:')
+@@ -86,11 +87,11 @@
+                           'func pasteSelection(', 'func paste(item:', 'func paste(ids:']:
+             self.assertEqual(body(self.source['ui'], signature), body(self.before('ui'), signature))
+         p = 'replica/Sources/Pasto/AppMain.swift'
+-        self.assertEqual(hashlib.sha256((ROOT / p).read_bytes()).hexdigest(), self.base['production'][p])
++        self.assertEqual(hashlib.sha256(pre_modal_restore_bytes(ROOT / p)).hexdigest(), self.base['production'][p])
+ 
+     def test_existing_history_preparation_and_native_transaction_are_unchanged(self):
+         for p in ['replica/Sources/PastoCore/ClipboardStore.swift', 'replica/Sources/PastoCore/ClipboardPersistence.swift']:
+-            self.assertEqual(hashlib.sha256((ROOT / p).read_bytes()).hexdigest(), self.base['production'][p])
++            self.assertEqual(hashlib.sha256(pre_modal_restore_bytes(ROOT / p)).hexdigest(), self.base['production'][p])
+         self.assertIn('try prepareHistoryRestore(selected)', self.source['writer'])
+ 
+     def test_only_approved_input_and_copy_blocks_differ_from_previous_code(self):
+@@ -98,9 +99,9 @@
+             self.assertEqual(pre_resolved_copy(self.source[key]), self.before(key))
+ 
+     def test_only_two_files_change_without_schema_or_package_changes(self):
+-        sha = lambda p: hashlib.sha256((ROOT / p).read_bytes()).hexdigest()
++        sha = lambda p: hashlib.sha256(pre_modal_restore_bytes(ROOT / p)).hexdigest()
+         self.assertEqual({p for p, h in self.base['production'].items() if sha(p) != h}, set(self.paths.values()))
+-        self.assertEqual({str(p.relative_to(ROOT)) for p in (ROOT / 'replica/Sources').rglob('*') if p.is_file()}, set(self.base['production']))
++        self.assertEqual({str(p.relative_to(ROOT)) for p in (ROOT / 'replica/Sources').rglob('*') if p.is_file()} - {RESTORE_ITEM_PATH}, set(self.base['production']))
+         for p in ['replica/Package.swift', 'package.json']:
+             self.assertEqual(sha(p), self.base['other'][p])
+ 
+--- /dev/null
++++ scripts/tests/test_p1_repair_modal_restore_input.py
+@@ -0,0 +1,191 @@
++"""Real modal restore routes and original binary evidence; source checks, no Swift execution."""
++import hashlib
++import json
++from pathlib import Path
++import struct
++import sys
++import unittest
++
++ROOT = Path(__file__).resolve().parents[2]
++sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'scripts/tests')]
++from function_ledger import source_fragments
++from test_offline_p0_contracts import body
++from test_p0_repair_checksum_routing import original_fragment
++from modal_restore_scope_contract import RESTORE_ITEM_PATH, pre_modal_restore, HUNKS
++
++
++class ModalRestoreInputContracts(unittest.TestCase):
++    @classmethod
++    def setUpClass(cls):
++        cls.phase = ROOT / '.local/p0-repair/phase-77'
++        cls.proof = json.loads((cls.phase / 'modal-restore-contract.json').read_text())
++        cls.base = json.loads((cls.phase / 'baseline.json').read_text())
++        cls.paths = dict(holder=RESTORE_ITEM_PATH,
++            reference='replica/Sources/PastoCore/ClipboardCollectionItemReference.swift',
++            writer='replica/Sources/PastoCore/Pasteboard.swift',
++            ui='replica/Sources/Pasto/UI/ReplicaUIController.swift',
++            host='replica/Sources/Pasto/UI/ReplicaNativeCardCollection.swift',
++            app='replica/Sources/Pasto/AppMain.swift')
++        cls.source = {k: (ROOT / p).read_text() for k, p in cls.paths.items()}
++
++    def before(self, key): return (self.phase / 'before' / self.paths[key]).read_text()
++    def app_action(self): return body(self.source['app'], 'private func paste(ids: [UUID], plain: Bool, forceDirect: Bool = false,')
++
++    def test_six_original_fragments_and_sixteen_machine_words_are_bound(self):
++        self.assertEqual(len(self.proof['original_fragments']), 6)
++        for r in self.proof['original_fragments']:
++            self.assertEqual(source_fragments(ROOT / r['path'])[r['address']]['sha256'], r['sha256'])
++        raw = (ROOT / self.proof['binary']['path']).read_bytes()
++        self.assertEqual(hashlib.sha256(raw).hexdigest(), self.proof['binary']['sha256'])
++        self.assertEqual(len(self.proof['ARM_words']), 16)
++        for r in self.proof['ARM_words']:
++            a = int(r['address'], 16) - 0x100000000
++            self.assertEqual(raw[a:a + 4].hex(), r['bytes'])
++        r = self.proof['arm_disassembly']
++        self.assertEqual(hashlib.sha256((ROOT / r['path']).read_bytes()).hexdigest(), r['sha256'])
++
++    def test_modal_fallback_retains_incoming_entity_sequence_not_new_identifier_query(self):
++        r = next(r for r in self.proof['original_fragments'] if r['address'] == '0x100066068')
++        f = original_fragment((ROOT / r['path']).read_text(), '100066068')
++        self.assertIn('local_e8 = param_1;', f)
++        self.assertIn('FUN_1003b936c(puVar8,local_118,puVar3,puVar4)', f)
++        self.assertLess(f.index('FUN_100ae4f8c()'), f.index('FUN_100066570(param_1,local_118)'))
++        words = {int(r['address'], 16): struct.unpack('<I', bytes.fromhex(r['bytes']))[0] for r in self.proof['ARM_words']}
++        self.assertEqual(words[0x100066094], 0xaa0003f6)  # incoming x0→x22
++        self.assertEqual(words[0x1000662d8], 0xaa1603e0)  # fallback x22→x0
++        for pc, target in [(0x1000662e8, 0x100066570), (0x100066354, 0x1003b936c),
++                           (0x1000664a4, 0x100ae4f8c), (0x100066620, 0x1003b936c)]:
++            word = words[pc];self.assertEqual(word >> 26, 0b100101)
++            imm = word & 0x3ffffff
++            if imm & 0x2000000: imm -= 0x4000000
++            self.assertEqual(pc + imm * 4, target)
++
++    def test_real_current_sources_and_frozen_after_snapshots_are_bound(self):
++        self.assertEqual(set(self.paths.values()), set(self.proof['current_sources']))
++        for p, h in self.proof['current_sources'].items():
++            raw = (ROOT / p).read_bytes()
++            self.assertEqual(hashlib.sha256(raw).hexdigest(), h)
++            self.assertEqual(raw, (self.phase / 'after' / p).read_bytes())
++
++    def test_entity_is_held_before_modal_without_eager_payload_decoding(self):
++        holder = self.source['holder']
++        self.assertIn('@MainActor\npublic struct ClipboardRestoreItem', holder)
++        init = body(holder, 'init(id: UUID, object: PastoItemEntity)')
++        closure = body(init, 'resolve =')
++        self.assertIn('ClipboardPersistence.item(object)', closure)
++        self.assertIn('fatalError("Missing restore item content")', closure)
++        self.assertNotIn('ClipboardPersistence.item', init.replace(closure, ''))
++        for token in ['weak ', 'unowned ', 'store.items', 'reload()', 'UUID()']:
++            self.assertNotIn(token, holder)
++        self.assertEqual(body(holder, 'public func resolvedItem()').strip(), '{ resolve() }')
++
++    def test_reference_resolves_entity_class_once_then_retains_it(self):
++        ref = body(self.source['reference'], 'public func requiredRestoreItem(id: UUID)')
++        self.assertIn('(try? context.existingObject(with: objectID)) as? PastoItemEntity', ref)
++        self.assertLess(ref.index('fatalError("Missing restore item")'), ref.index('return ClipboardRestoreItem(id: id, object: object)'))
++        self.assertNotIn('ClipboardPersistence.item', ref)
++        self.assertNotIn('item()', ref)
++
++    def test_host_uses_applied_owner_order_and_live_reference_not_pending_values(self):
++        f = body(self.source['host'], 'func appliedRestoreItems(for state:')
++        order = ['self.state === state, state.collectionOwner === self', 'let positions =',
++                 'orderedIDs.compactMap', 'guard let index = positions[identifier]',
++                 'itemReferences[identifier]?.requiredRestoreItem(id: identifier)']
++        self.assertEqual([f.index(t) for t in order], sorted(f.index(t) for t in order))
++        self.assertIn('?? ClipboardRestoreItem(item: item)', f)  # explicit legacy row adapter
++        for token in ['pendingSnapshot', 'drainCollectionSnapshots', 'state.visibleItems', 'renderedItem(', 'Set(orderedIDs']:
++            self.assertNotIn(token, f)
++
++    def test_controller_requires_real_loaded_panel_host_and_same_window(self):
++        f = body(self.source['ui'], 'private func appliedRestoreItems(orderedIDs:')
++        for token in ['loadedPanel', 'ReplicaNativeCollectionHost', 'collection.window === panel else { return [] }',
++                      'collection.appliedRestoreItems(for: state,', 'state.collectionSelectionSnapshot().orderedIDs']:
++            self.assertIn(token, f)
++        self.assertNotIn('state.selectedItems', f)
++        self.assertNotIn('state.visibleItems', f)
++
++    def test_double_click_and_return_reach_retained_entity_route(self):
++        f = body(self.source['ui'], 'func pasteSelection(plainTextOnly:')
++        self.assertIn('let items = appliedRestoreItems()', f)
++        self.assertLess(f.index('guard !items.isEmpty'), f.index('paste(restoreItems: items'))
++        f = body(self.source['ui'], 'func paste(item:')
++        self.assertLess(f.index('appliedRestoreItems(orderedIDs: [item.id])'), f.index('paste(restoreItems: [input]'))
++        self.assertIn('return paste(ids: [item.id]', f)  # Stack/outside-applied compatibility
++        mouse = body(self.source['host'], 'override func mouseDown(with event:')
++        self.assertIn('if event.clickCount == 2', mouse)
++        self.assertIn('paste(item: current[index]', mouse)
++        self.assertIn('onEnter: { [self] in pasteSelection(plainTextOnly: plain) }', self.source['ui'])
++
++    def test_command_v_keeps_exact_editing_modifier_gates_and_force_direct(self):
++        f = body(self.source['ui'], 'private func handleKey(_ event: NSEvent)')
++        sig = 'if !isEditing, signature.keyCode == OriginalShortcutFunctions.f_1001e94d4("v")'
++        self.assertIn(sig + ',\n           signature.modifierRawValue == NSEvent.ModifierFlags.command.rawValue', f)
++        route = body(f, sig)
++        self.assertIn('paste(restoreItems: appliedRestoreItems(), plainTextOnly: false, forceDirect: true)', route)
++        self.assertIn('return true', route)
++        self.assertNotIn('Set(', route)
++
++    def test_actual_app_wiring_passes_same_array_and_force_bit_to_existing_worker(self):
++        f = body(self.source['app'], 'ui.pasteRestoreItemsHandler =')
++        self.assertIn('restoreItems: items', f)
++        self.assertIn('forceDirect: forceDirect', f)
++        self.assertIn('ids: items.map(\\.id)', f)
++        route = body(self.source['ui'], 'private func paste(restoreItems:')
++        self.assertLess(route.index('guard !restoreItems.isEmpty'), route.index('pasteRestoreItemsHandler(restoreItems, plainTextOnly, forceDirect)'))
++        self.assertIn('if let directPasteItemsHandler', route)
++        self.assertIn('return paste(ids: ids', route)
++
++    def test_permission_prefix_preference_target_and_setup_exit_are_unchanged(self):
++        current = self.app_action()
++        previous = body(self.before('app'), 'private func paste(ids:')
++        self.assertEqual(current.split('        do {\n            if let restoreItems', 1)[0],
++                         previous.split('        do { try store.writeToPasteboard', 1)[0])
++        setup = body(current, 'if result == 2')
++        for token in ['NSApp.deactivate()', 'OriginalEnableAccessibilityModal.run(requestOnShow: true)', 'return false']:
++            self.assertIn(token, setup)
++        self.assertNotIn('writeToPasteboard', setup)
++        self.assertNotIn('resolvedItem', setup)
++        self.assertLess(current.index('if result == 2'), current.index('if let restoreItems'))
++
++    def test_lazy_content_is_read_only_after_modal_and_shared_writer_keeps_order(self):
++        action = self.app_action()
++        self.assertLess(action.index('OriginalPasteToOtherAppsModal.run()'), action.index('writeToPasteboard(restoreItems:'))
++        worker = body(self.source['writer'], 'public func writeToPasteboard(restoreItems:')
++        self.assertLess(worker.index('restoreItems.map { $0.resolvedItem() }'), worker.index('resolvedSelection: selected'))
++        self.assertIn('ids: restoreItems.map(\\.id)', worker)
++        self.assertIn('options: options', worker)
++        for token in ['reload()', 'Set(', '.filter', '.sorted', 'store.items', 'save(']:
++            self.assertNotIn(token, worker)
++        route = body(action, 'if let restoreItems')
++        self.assertIn('options: restoreOptions', route)
++
++    def test_restoration_failure_focus_handoff_and_hide_tail_are_byte_identical(self):
++        marker = '        catch {\n            pasteLogger.error("restore_failed'
++        current = self.app_action();previous = body(self.before('app'), 'private func paste(ids:')
++        self.assertEqual(current[current.index(marker):], previous[previous.index(marker):])
++        f = body(self.source['writer'], 'private func writeToPasteboard(ids:')
++        self.assertEqual(f, body(self.before('writer'), 'private func writeToPasteboard(ids:'))
++        self.assertLess(f.index('writer.f_10037875c(objects)'), f.index('try recordRestoredSelection(restoration)'))
++        self.assertLess(f.index('try recordRestoredSelection(restoration)'), f.index('removeAllActions()'))
++
++    def test_only_reviewed_hunks_and_one_new_holder_change_production(self):
++        self.assertEqual(len(HUNKS), 10)
++        for key in ['reference', 'writer', 'ui', 'host', 'app']:
++            self.assertEqual(pre_modal_restore(self.source[key]), self.before(key))
++        files = {str(p.relative_to(ROOT)) for p in (ROOT / 'replica/Sources').rglob('*') if p.is_file()}
++        self.assertEqual(files - set(self.base['production']), {RESTORE_ITEM_PATH})
++        sha = lambda p: hashlib.sha256((ROOT / p).read_bytes()).hexdigest()
++        changed = {p for p, h in self.base['production'].items() if sha(p) != h}
++        self.assertEqual(changed, set(self.paths.values()) - {RESTORE_ITEM_PATH})
++        for p in ['replica/Package.swift', 'package.json']:
++            self.assertEqual(sha(p), self.base['other'][p])
++
++    def test_full_provider_and_performance_are_not_marked_complete(self):
++        self.assertFalse(self.proof['full_function_migration_verified'])
++        self.assertEqual(self.proof['repaired_finite_contracts'], [])
++        self.assertEqual(self.proof['remaining_confirmed_differences'], ['Paste:0x1003544dc'])
++        self.assertTrue(any('metadata' in s for s in self.proof['remaining_work']))
++        self.assertTrue(any('performance' in s for s in self.proof['remaining_work']))
++
++
++if __name__ == '__main__': unittest.main()
+--- /dev/null
++++ scripts/tests/modal_restore_scope_contract.py
+@@ -0,0 +1,206 @@
++"""Explicit phase-77 modal-input delta, reversed only for earlier frozen contracts.
++
++Raw production and every new route are checked by test_p1_repair_modal_restore_input.
++These literal hunks preserve the historical scope; they do not replace its evidence.
++"""
++from pathlib import Path
++
++RESTORE_ITEM_PATH = 'replica/Sources/PastoCore/ClipboardRestoreItem.swift'
++
++# path, previous source hunk, reviewed modal-input source hunk
++HUNKS = [('replica/Sources/PastoCore/ClipboardCollectionItemReference.swift',
++  '        return item\n    }\n}\n',
++  '        return item\n'
++  '    }\n'
++  '\n'
++  '    @MainActor public func requiredRestoreItem(id: UUID) -> ClipboardRestoreItem {\n'
++  '        guard let object = (try? context.existingObject(with: objectID)) as? PastoItemEntity else {\n'
++  '            fatalError("Missing restore item")\n'
++  '        }\n'
++  '        return ClipboardRestoreItem(id: id, object: object)\n'
++  '    }\n'
++  '}\n'),
++ ('replica/Sources/PastoCore/Pasteboard.swift',
++  '                             options: plainTextOnly ? .plainText : [], recognizedImageData: nil,\n'
++  '                             resolvedSelection: selectedItems)\n'
++  '    }\n'
++  '\n',
++  '                             options: plainTextOnly ? .plainText : [], recognizedImageData: nil,\n'
++  '                             resolvedSelection: selectedItems)\n'
++  '    }\n'
++  '\n'
++  '    public func writeToPasteboard(restoreItems: [ClipboardRestoreItem], pasteboard: NSPasteboard,\n'
++  '                                 options: OriginalPasteboardRestore.Options) throws {\n'
++  '        let selected = restoreItems.map { $0.resolvedItem() }\n'
++  '        try writeToPasteboard(ids: restoreItems.map(\\.id), pasteboard: pasteboard, options: options,\n'
++  '                             recognizedImageData: nil, resolvedSelection: selected)\n'
++  '    }\n'
++  '\n'),
++ ('replica/Sources/Pasto/AppMain.swift',
++  '            ui.directPasteItemsHandler = { [weak self] ids, plain in\n'
++  '                self?.paste(ids: ids, plain: plain, forceDirect: true) ?? false\n'
++  '            }\n'
++  '            ui.panelDidShow = { [weak self] in self?.rememberPanelApplication() }\n',
++  '            ui.directPasteItemsHandler = { [weak self] ids, plain in\n'
++  '                self?.paste(ids: ids, plain: plain, forceDirect: true) ?? false\n'
++  '            }\n'
++  '            ui.pasteRestoreItemsHandler = { [weak self] items, plain, forceDirect in\n'
++  '                self?.paste(ids: items.map(\\.id), plain: plain, forceDirect: forceDirect, restoreItems: '
++  'items) ?? false\n'
++  '            }\n'
++  '            ui.panelDidShow = { [weak self] in self?.rememberPanelApplication() }\n'),
++ ('replica/Sources/Pasto/AppMain.swift',
++  '\n'
++  '    @discardableResult\n'
++  '    private func paste(ids: [UUID], plain: Bool, forceDirect: Bool = false) -> Bool {\n'
++  '        let requestedTarget = targetApplication\n'
++  '        let hasAccessibilityAccess = accessibilityService.f_100ae5e74()\n',
++  '\n'
++  '    @discardableResult\n'
++  '    private func paste(ids: [UUID], plain: Bool, forceDirect: Bool = false,\n'
++  '                       restoreItems: [ClipboardRestoreItem]? = nil) -> Bool {\n'
++  '        let requestedTarget = targetApplication\n'
++  '        let hasAccessibilityAccess = accessibilityService.f_100ae5e74()\n'),
++ ('replica/Sources/Pasto/AppMain.swift',
++  '        var restoreOptions: OriginalPasteboardRestore.Options = plain ? .plainText : []\n'
++  '        if store.preferences.alwaysPastePlainText { restoreOptions.insert(.plainTextAndLinks) }\n'
++  '        do { try store.writeToPasteboard(ids: ids, pasteboard: pasteboard, options: restoreOptions) }\n'
++  '        catch {\n'
++  '            pasteLogger.error("restore_failed code=\\((error as NSError).code, privacy: .public)")\n',
++  '        var restoreOptions: OriginalPasteboardRestore.Options = plain ? .plainText : []\n'
++  '        if store.preferences.alwaysPastePlainText { restoreOptions.insert(.plainTextAndLinks) }\n'
++  '        do {\n'
++  '            if let restoreItems {\n'
++  '                try store.writeToPasteboard(restoreItems: restoreItems, pasteboard: pasteboard, options: '
++  'restoreOptions)\n'
++  '            } else {\n'
++  '                try store.writeToPasteboard(ids: ids, pasteboard: pasteboard, options: restoreOptions)\n'
++  '            }\n'
++  '        }\n'
++  '        catch {\n'
++  '            pasteLogger.error("restore_failed code=\\((error as NSError).code, privacy: .public)")\n'),
++ ('replica/Sources/Pasto/UI/ReplicaUIController.swift',
++  '    var pasteItemsHandler: (([UUID], Bool) -> Bool)?\n'
++  '    var directPasteItemsHandler: (([UUID], Bool) -> Bool)?\n'
++  '    var copiedItemsHandler: (() -> Void)?\n'
++  '    var panelDidShow: (() -> Void)?\n',
++  '    var pasteItemsHandler: (([UUID], Bool) -> Bool)?\n'
++  '    var directPasteItemsHandler: (([UUID], Bool) -> Bool)?\n'
++  '    var pasteRestoreItemsHandler: (([ClipboardRestoreItem], Bool, Bool) -> Bool)?\n'
++  '    var copiedItemsHandler: (() -> Void)?\n'
++  '    var panelDidShow: (() -> Void)?\n'),
++ ('replica/Sources/Pasto/UI/ReplicaUIController.swift',
++  '\n'
++  '    func pasteSelection(plainTextOnly: Bool) {\n'
++  '        let items = appliedSelectionItems()\n'
++  '        guard !items.isEmpty else { return }\n'
++  '        paste(ids: items.map(\\.id), plainTextOnly: plainTextOnly)\n'
++  '    }\n'
++  '\n'
++  '    @discardableResult\n'
++  '    func paste(item: ClipboardItem, plainTextOnly: Bool) -> Bool {\n'
++  '        paste(ids: [item.id], plainTextOnly: plainTextOnly)\n'
++  '    }\n'
++  '\n',
++  '\n'
++  '    func pasteSelection(plainTextOnly: Bool) {\n'
++  '        let items = appliedRestoreItems()\n'
++  '        guard !items.isEmpty else { return }\n'
++  '        _ = paste(restoreItems: items, plainTextOnly: plainTextOnly)\n'
++  '    }\n'
++  '\n'
++  '    @discardableResult\n'
++  '    func paste(item: ClipboardItem, plainTextOnly: Bool) -> Bool {\n'
++  '        if let input = appliedRestoreItems(orderedIDs: [item.id]).first {\n'
++  '            return paste(restoreItems: [input], plainTextOnly: plainTextOnly)\n'
++  '        }\n'
++  '        return paste(ids: [item.id], plainTextOnly: plainTextOnly)\n'
++  '    }\n'
++  '\n'
++  '    @discardableResult\n'
++  '    private func paste(restoreItems: [ClipboardRestoreItem], plainTextOnly: Bool, forceDirect: Bool = '
++  'false) -> Bool {\n'
++  '        guard !restoreItems.isEmpty else { return false }\n'
++  '        if let pasteRestoreItemsHandler { return pasteRestoreItemsHandler(restoreItems, plainTextOnly, '
++  'forceDirect) }\n'
++  '        let ids = restoreItems.map(\\.id)\n'
++  '        if forceDirect {\n'
++  '            if let directPasteItemsHandler { return directPasteItemsHandler(ids, plainTextOnly) }\n'
++  '            presentError(NSError(domain: "Pasto", code: 1,\n'
++  '                userInfo: [NSLocalizedDescriptionKey: "粘贴服务尚未就绪，请使用“拷贝”后粘贴。 "]))\n'
++  '            return false\n'
++  '        }\n'
++  '        return paste(ids: ids, plainTextOnly: plainTextOnly)\n'
++  '    }\n'
++  '\n'),
++ ('replica/Sources/Pasto/UI/ReplicaUIController.swift',
++  '    }\n'
++  '\n'
++  '    // 0x100064da0: filter first, deactivate once, then decode each accepted preview again.\n'
++  '    private func openAppliedSelection() {\n',
++  '    }\n'
++  '\n'
++  '    private func appliedRestoreItems(orderedIDs: [UUID]? = nil) -> [ClipboardRestoreItem] {\n'
++  '        guard let panel = loadedPanel,\n'
++  '              let collection = (panel as? ReplicaPanel)?.collectionFocusTarget as? '
++  'ReplicaNativeCollectionHost,\n'
++  '              collection.window === panel else { return [] }\n'
++  '        return collection.appliedRestoreItems(for: state,\n'
++  '            orderedIDs: orderedIDs ?? state.collectionSelectionSnapshot().orderedIDs) ?? []\n'
++  '    }\n'
++  '\n'
++  '    // 0x100064da0: filter first, deactivate once, then decode each accepted preview again.\n'
++  '    private func openAppliedSelection() {\n'),
++ ('replica/Sources/Pasto/UI/ReplicaUIController.swift',
++  '        if !isEditing, signature.keyCode == OriginalShortcutFunctions.f_1001e94d4("v"),\n'
++  '           signature.modifierRawValue == NSEvent.ModifierFlags.command.rawValue {\n'
++  '            let appliedIDs = Set((appliedCollectionItems() ?? []).map(\\.id))\n'
++  '            let ids = state.collectionSelectionSnapshot().orderedIDs.filter { appliedIDs.contains($0) }\n'
++  '            if !ids.isEmpty {\n'
++  '                if let directPasteItemsHandler { _ = directPasteItemsHandler(ids, false) }\n'
++  '                else {\n'
++  '                    presentError(NSError(domain: "Pasto", code: 1,\n'
++  '                        userInfo: [NSLocalizedDescriptionKey: "粘贴服务尚未就绪，请使用“拷贝”后粘贴。 "]))\n'
++  '                }\n'
++  '            }\n'
++  '            return true\n'
++  '        }\n',
++  '        if !isEditing, signature.keyCode == OriginalShortcutFunctions.f_1001e94d4("v"),\n'
++  '           signature.modifierRawValue == NSEvent.ModifierFlags.command.rawValue {\n'
++  '            _ = paste(restoreItems: appliedRestoreItems(), plainTextOnly: false, forceDirect: true)\n'
++  '            return true\n'
++  '        }\n'),
++ ('replica/Sources/Pasto/UI/ReplicaNativeCardCollection.swift',
++  '            guard let index = positions[identifier] else { return nil }\n'
++  '            return renderedItem(at: index)\n'
++  '        }\n'
++  '    }\n',
++  '            guard let index = positions[identifier] else { return nil }\n'
++  '            return renderedItem(at: index)\n'
++  '        }\n'
++  '    }\n'
++  '\n'
++  '    func appliedRestoreItems(for state: ReplicaUIState, orderedIDs: [UUID]) -> [ClipboardRestoreItem]? {\n'
++  '        guard self.state === state, state.collectionOwner === self else { return nil }\n'
++  '        let positions = Dictionary(uniqueKeysWithValues: items.enumerated().map { ($0.element.id, '
++  '$0.offset) })\n'
++  '        return orderedIDs.compactMap { identifier in\n'
++  '            guard let index = positions[identifier] else { return nil }\n'
++  '            let item = items[index]\n'
++  '            return itemReferences[identifier]?.requiredRestoreItem(id: identifier) ?? '
++  'ClipboardRestoreItem(item: item)\n'
++  '        }\n'
++  '    }\n')]
++
++def pre_modal_restore(source):
++    for path, previous, current in HUNKS:
++        if current in source:
++            assert source.count(current) == 1, path
++            source = source.replace(current, previous, 1)
++    return source
++
++
++def pre_modal_restore_bytes(path):
++    path = Path(path)
++    value = path.read_bytes()
++    return pre_modal_restore(value.decode()).encode() if path.suffix == '.swift' else value

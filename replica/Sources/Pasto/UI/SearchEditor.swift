@@ -1,10 +1,9 @@
 import AppKit
-import SwiftUI
 import PastoCore
 
 struct ReplicaSearchFilterChip {
     enum Selection: Hashable {
-        case kind(ClipboardKind), source(String), device(String), date(OriginalSearchDateFilter), pinboard(UUID)
+        case kind(ClipboardKind), source(String), device(String), date(OriginalSearchDateFilter), pinboard(String)
     }
     let selection: Selection
     let title: String
@@ -13,39 +12,43 @@ struct ReplicaSearchFilterChip {
 
 private let searchFilterSelectionKey = NSAttributedString.Key("com.pastereplica.search.filter")
 
-/// Bridge the recovered NSTextView delegate into the existing panel. This does
-/// not claim migration of SearchField's remaining layout and filter functions.
+/// Configuration for the native toolbar's retained field/coordinator pair.
+/// The toolbar owns activation and focus; this value owns input projection.
 @MainActor
-struct ReplicaSearchEditor: NSViewRepresentable {
-    @Binding var text: String
-    @Binding var focused: Bool
+struct ReplicaSearchEditor {
     let store: ClipboardStore
+    var queryNodes: [OriginalSearchQueryNode]
     var filters: [ReplicaSearchFilterChip]
     var onInputChange: (String, [ReplicaSearchFilterChip.Selection], [OriginalSearchQueryNode]) -> Void
+    var onLoadSuggestions: (OriginalSearchInputContext.Context) -> [OriginalSearchQueryNode]
     var onEnter: () -> Void
     var onCancel: () -> Void
     var onShowFilters: (NSButton) -> Void
     var onEditingEnded: (NSView) -> Void = { _ in }
+    var onApplySuggestion: ([OriginalSearchQueryNode]) -> Void = { _ in }
+    var onDismissSuggestions: () -> Void = {}
+    var onSuggestionAnchor: (NSRange) -> NSRect? = { _ in nil }
 
-    func makeCoordinator() -> Coordinator { Coordinator(self) }
-
-    func makeNSView(context: Context) -> SearchField {
+    func makeField(coordinator: Coordinator) -> SearchField {
         let field = SearchField(frame: .zero)
         let input = field.f_100045c2c()
         let editor = input.f_100041f9c() as! SearchTextView
+        field.canAcceptFocus = false
+        editor.canAcceptFocus = false
         let scroll = input.f_10004200c()
         editor.frame = NSRect(x: 0, y: 0, width: scroll.contentSize.width, height: 22)
         editor.allowsUndo = true
         editor.autoresizingMask = [.width]
         editor.setAccessibilityLabel("搜索剪贴板")
         editor.setAccessibilityIdentifier("clipboard-search")
-        context.coordinator.attach(field, editor: editor)
-        context.coordinator.updateContents(field, editor: editor)
-        field.onClear = { [weak coordinator = context.coordinator, weak field, weak editor] preserveHistory in
+        coordinator.attach(field, editor: editor)
+        coordinator.updateContents(field, editor: editor)
+        field.onClear = { [weak coordinator, weak field, weak editor] _ in
             guard let coordinator, let field, let editor else { return }
-            coordinator.clearInput(preserveHistory: preserveHistory, field: field, editor: editor)
+            // 041bf0 -> 040c64 ignores the field's flag and selects mode1.
+            coordinator.clearInput(preserveHistory: true, field: field, editor: editor)
         }
-        field.onShowFilters = { [weak coordinator = context.coordinator] button in
+        field.onShowFilters = { [weak coordinator] button in
             coordinator?.dismissSuggestions()
             coordinator?.parent.onShowFilters(button)
         }
@@ -54,19 +57,17 @@ struct ReplicaSearchEditor: NSViewRepresentable {
         return field
     }
 
-    func updateNSView(_ field: SearchField, context: Context) {
-        context.coordinator.parent = self
+    func updateField(_ field: SearchField, coordinator: Coordinator) {
+        coordinator.parent = self
         let input = field.f_100045c2c()
         guard let editor = input.f_100041f9c() as? SearchTextView else { return }
-        context.coordinator.updateContents(field, editor: editor)
-        editor.requestedFocus = focused
-        if focused, let window = editor.window, window.firstResponder !== editor {
-            window.makeFirstResponder(editor)
-        }
+        coordinator.updateContents(field, editor: editor)
     }
 
-    static func dismantleNSView(_ field: SearchField, coordinator: Coordinator) {
+    static func dismantleField(_ field: SearchField, coordinator: Coordinator) {
         coordinator.dismissSuggestions()
+        field.onClear = nil
+        field.onShowFilters = nil
     }
 
     final class SearchField: OriginalSearchField {
@@ -86,8 +87,10 @@ struct ReplicaSearchEditor: NSViewRepresentable {
         private var knownTokens: [ReplicaSearchFilterChip.Selection: NSAttributedString] = [:]
         private let history = OriginalSearchInputHistory(interval: 0.4)
         private var applyingContents = false
+        private var restoringHistory = false
         private var suggestionTask: Task<Void, Never>?
         private var suggestionMenu: ReplicaSearchSuggestionsMenu?
+        weak var suggestionOwner: OriginalPanelSearchBar?
         init(_ parent: ReplicaSearchEditor) { self.parent = parent }
 
         private struct Projection {
@@ -155,17 +158,19 @@ struct ReplicaSearchEditor: NSViewRepresentable {
                 let range = Date(timeIntervalSince1970: Double(start))..<Date(timeIntervalSince1970: Double(end))
                 selection = .date(.init(title: OriginalSearchDateEncoding.f_1002d8e9c(value) ?? value, range: range))
             case 4: selection = .device(value)
-            case 5:
-                guard let id = UUID(uuidString: value) else { return nil }
-                selection = .pinboard(id)
+            case 5: selection = .pinboard(value)
             default: return nil
             }
-            return ReplicaFilterMatching.chip(selection, store: parent.store)
+            return ReplicaFilterMatching.chip(selection, store: parent.store, rawValue: value)
         }
 
         func dismissSuggestions() {
             suggestionTask?.cancel()
             suggestionTask = nil
+            dismissSuggestionMenu()
+        }
+
+        private func dismissSuggestionMenu() {
             suggestionMenu?.dismiss()
             suggestionMenu = nil
         }
@@ -179,54 +184,49 @@ struct ReplicaSearchEditor: NSViewRepresentable {
                 dismissSuggestions()
                 return
             }
-            suggestionTask = Task { @MainActor [weak self, weak field, weak editor] in
-                guard let self, let field, let editor, !Task.isCancelled else { return }
-                let store = self.parent.store
-                let provider = OriginalSearchSuggestions.Provider(
-                    app: { ReplicaSearchSuggestionSource.applications($0, store: store) },
-                    device: { ReplicaSearchSuggestionSource.devices($0, store: store) },
-                    pinboard: { ReplicaSearchSuggestionSource.pinboards($0, store: store) })
-                let candidates = OriginalSearchSuggestions.f_1002df190(
-                    contextNode: context.nodes[context.nodeIndex], currentNodes: context.nodes, provider: provider)
-                guard !Task.isCancelled else { return }
-                let entries = candidates.compactMap { node -> (OriginalSearchQueryNode, ReplicaSearchFilterChip)? in
-                    guard let chip = self.chip(for: node) else { return nil }
-                    return (node, chip)
-                }
-                guard !entries.isEmpty, let manager = editor.textLayoutManager else {
-                    self.dismissSuggestions()
-                    return
-                }
-                manager.textViewportLayoutController.layoutViewport()
-                let textRect = OriginalSearchSuggestionAnchor.f_100046e28(manager, range: context.anchorRange)
-                let anchorRect = editor.convert(textRect, to: field)
-                let menu = self.suggestionMenu ?? ReplicaSearchSuggestionsMenu()
-                self.suggestionMenu = menu
-                menu.show(rows: entries.map { .init(title: $0.1.title, image: $0.1.image, matchQuery: context.text) },
-                          anchorRect: anchorRect, in: field,
-                          onAccept: { [weak self, weak field, weak editor] index in
-                    guard let self, let field, let editor, entries.indices.contains(index) else { return }
-                    self.accept(entries[index].0, context: context, field: field, editor: editor)
-                }, onEscape: { [weak self] in self?.dismissSuggestions() })
+            // 040ec4 weak-loads the SearchBar;040f44 releases it after the child request.
+            suggestionTask = Task { @MainActor [weak owner = suggestionOwner] in
+                guard let owner else { return }
+                defer { withExtendedLifetime(owner) {} }
+                owner.performSuggestionRequest(context)
             }
         }
 
-        private func accept(_ node: OriginalSearchQueryNode, context: OriginalSearchInputContext.Context,
-                            field: SearchField, editor: SearchTextView) {
-            guard case let .filter(tag, filterValue) = node else { return }
-            var nodes = OriginalSearchSuggestions.f_1002dcca4(.filter(tag, filterValue),
+        func performSuggestionRequest(_ context: OriginalSearchInputContext.Context,
+                                      field: SearchField) {
+            let candidates = parent.onLoadSuggestions(context)
+            guard !Task.isCancelled, !candidates.isEmpty else {
+                dismissSuggestionMenu()
+                return
+            }
+            let entries = candidates.compactMap { node -> (OriginalSearchSuggestions.Suggestion, ReplicaSearchFilterChip)? in
+                guard case let .filter(tag, value) = node, let chip = self.chip(for: node) else { return nil }
+                return (.filter(tag, value), chip)
+            }
+            guard !entries.isEmpty else {
+                self.dismissSuggestionMenu()
+                return
+            }
+            let menu = self.suggestionMenu ?? ReplicaSearchSuggestionsMenu()
+            self.suggestionMenu = menu
+            guard let anchorRect = parent.onSuggestionAnchor(context.anchorRange) else { return }
+            let applySuggestion = self.parent.onApplySuggestion
+            let dismissSuggestions = self.parent.onDismissSuggestions
+            menu.show(rows: entries.map { .init(title: $0.1.title, image: $0.1.image, matchQuery: context.text) },
+                      anchorRect: anchorRect, in: field,
+                      onAccept: { index in
+                guard entries.indices.contains(index) else { return }
+                Self.accept(entries[index].0, context: context, apply: applySuggestion)
+            }, onEscape: dismissSuggestions)
+        }
+
+        // 041de0 -> 04160c merges the captured context, then proposes to the weak SearchBar.
+        private static func accept(_ suggestion: OriginalSearchSuggestions.Suggestion,
+                                   context: OriginalSearchInputContext.Context,
+                                   apply: ([OriginalSearchQueryNode]) -> Void) {
+            let nodes = OriginalSearchSuggestions.f_1002dcca4(suggestion,
                 index: context.nodeIndex, addMode: 0, nodes: context.nodes)
-            nodes = OriginalSearchQueryNormalization.f_1002da16c(nodes, flag: 0)
-            guard nodes != currentNodes else { return }
-            let rendered = attributedString(nodes, field: field, editor: editor)
-            let selection = NSRange(location: rendered.length, length: 0)
-            history.f_1002f5e18(.init(nodes: nodes, selection: selection), immediate: true)
-            display(rendered, selection: selection, field: field, editor: editor)
-            let value = contents(rendered, text: rendered.string)
-            currentNodes = nodes
-            renderedFilters = value.filters
-            parent.onInputChange(value.text, value.filters, nodes)
-            dismissSuggestions()
+            apply(nodes)
         }
 
         private func attributedString(_ nodes: [OriginalSearchQueryNode], field: SearchField,
@@ -281,11 +281,8 @@ struct ReplicaSearchEditor: NSViewRepresentable {
             guard !applyingContents, !editor.hasMarkedText(), let storage = editor.textStorage else { return }
             let selections = parent.filters.map(\.selection)
             let previous = contents(storage, text: editor.f_1000f7254())
-            guard previous.text != parent.text || previous.filters != selections || previous.needsNormalization else { return }
-            var buffer = parent.text
-            var nodes = selections.map(\.queryNode)
-            OriginalSearchTextTokens.f_1002f8760(&buffer, into: &nodes)
-            nodes = OriginalSearchQueryNormalization.f_1002da16c(nodes, flag: 0)
+            let nodes = OriginalSearchQueryNormalization.f_1002da16c(parent.queryNodes, flag: 0)
+            guard previous.nodes != nodes || previous.needsNormalization else { return }
             dismissSuggestions()
             let result = attributedString(nodes, field: field, editor: editor)
             let selection = NSRange(location: result.length, length: 0)
@@ -309,40 +306,84 @@ struct ReplicaSearchEditor: NSViewRepresentable {
             guard !editor.hasMarkedText() else { return true }
             let value = contents(proposed, text: proposed.string)
             guard value.nodes != currentNodes else { return true }
-            history.f_1002f5e18(.init(nodes: value.nodes, selection: selection),
-                                immediate: filterCount(value.nodes) != filterCount(currentNodes))
-            publish(value)
-            guard value.needsNormalization else { return true }
-            dismissSuggestions()
+            let previousNodes = currentNodes
+            currentNodes = value.nodes
+            if !restoringHistory {
+                history.f_1002f5e18(.init(nodes: value.nodes, selection: selection),
+                                    immediate: filterCount(value.nodes) != filterCount(previousNodes))
+            }
+            guard value.needsNormalization else {
+                publish(value)
+                return true
+            }
             let rendered = attributedString(value.nodes, field: field, editor: editor)
             display(rendered, selection: NSRange(location: rendered.length, length: 0),
                     field: field, editor: editor)
+            publish(value)
+            dismissSuggestions()
             return false
         }
 
         private func restore(_ snapshot: OriginalSearchInputHistory.Snapshot?,
                              field: SearchField, editor: SearchTextView) -> Bool {
             guard let snapshot else { return false }
-            dismissSuggestions()
+            restoringHistory = true
+            defer { restoringHistory = false }
+            currentNodes = snapshot.nodes
             let rendered = attributedString(snapshot.nodes, field: field, editor: editor)
             display(rendered, selection: snapshot.selection, field: field, editor: editor)
             let value = contents(rendered, text: rendered.string)
-            currentNodes = snapshot.nodes
             renderedFilters = value.filters
             parent.onInputChange(value.text, value.filters, snapshot.nodes)
+            dismissSuggestions()
             return true
         }
 
         func clearInput(preserveHistory: Bool, field: SearchField, editor: SearchTextView) {
-            dismissSuggestions()
-            let selection = NSRange(location: 0, length: 0)
-            if !currentNodes.isEmpty {
-                history.f_1002f5e18(.init(nodes: [], selection: selection), immediate: true)
-            }
-            display(NSAttributedString(string: ""), selection: selection, field: field, editor: editor)
-            publish(Projection(text: "", filters: [], nodes: [], rawNodes: []))
+            // 2f7d60 always runs mode0 query replacement, then optionally
+            // clears history. Clear-button mode1 keeps its newly recorded undo.
+            applyProgrammaticQuery([], field: field, editor: editor)
             if !preserveHistory { history.f_1002f6550() }
         }
+
+        // 2f7744 mode0: internal query -> builder/history -> editor -> public
+        // query -> empty suggestions. The equal-query branch has no callbacks.
+        func applyProgrammaticQuery(_ nodes: [OriginalSearchQueryNode], field: SearchField, editor: SearchTextView) {
+            replaceQuery(nodes, suggestionsEnabled: false, field: field, editor: editor)
+        }
+
+        // SearchBar's filtered nonempty query subscriber selects mode1.
+        func synchronizeQuery(_ nodes: [OriginalSearchQueryNode], field: SearchField, editor: SearchTextView) {
+            replaceQuery(nodes, suggestionsEnabled: true, field: field, editor: editor)
+        }
+
+        private func replaceQuery(_ nodes: [OriginalSearchQueryNode], suggestionsEnabled: Bool,
+                                  field: SearchField, editor: SearchTextView) {
+            let normalized = OriginalSearchQueryNormalization.f_1002da16c(nodes, flag: 0)
+            guard normalized != currentNodes else { return }
+            currentNodes = normalized
+            let rendered = attributedString(normalized, field: field, editor: editor)
+            let selection = NSRange(location: rendered.length, length: 0)
+            if !restoringHistory {
+                history.f_1002f5e18(.init(nodes: normalized, selection: selection), immediate: true)
+            }
+            display(rendered, selection: selection, field: field, editor: editor)
+            renderedFilters = contents(rendered, text: rendered.string).filters
+            publishCurrentQuery()
+            if suggestionsEnabled { updateSuggestions(field, editor: editor) }
+            else { dismissSuggestions() }
+        }
+
+        func publishCurrentQuery() {
+            let text = currentNodes.compactMap { node -> String? in
+                guard case let .text(value) = node else { return nil }
+                return value
+            }.joined()
+            parent.onInputChange(text, renderedFilters, currentNodes)
+        }
+
+        var querySnapshot: [OriginalSearchQueryNode] { currentNodes }
+        var isQueryEmpty: Bool { OriginalSearchQuery.f_1002ddcf0(currentNodes) }
 
         func attach(_ field: SearchField, editor: SearchTextView) {
             let editing = field.editingDelegate!
@@ -357,7 +398,6 @@ struct ReplicaSearchEditor: NSViewRepresentable {
             editing.onEndEditing = { [weak self, weak field] in
                 guard let self, let field else { return }
                 self.dismissSuggestions()
-                if self.parent.focused { self.parent.focused = false }
                 self.parent.onEditingEnded(field)
             }
             editing.onEnter = { [weak self, weak editor] in
@@ -378,9 +418,6 @@ struct ReplicaSearchEditor: NSViewRepresentable {
                 guard let self, let field, let editor else { return false }
                 return self.restore(self.history.f_1002f63b8(), field: field, editor: editor)
             }
-            editor.didFocus = { [weak self] in
-                if self?.parent.focused == false { self?.parent.focused = true }
-            }
             editor.didChange = { [weak self, weak field, weak editor] in
                 guard let self, let field, let editor, !self.applyingContents,
                       !editor.hasMarkedText(), let storage = editor.textStorage else { return }
@@ -396,20 +433,7 @@ struct ReplicaSearchEditor: NSViewRepresentable {
     }
 
     final class SearchTextView: OriginalSearchTextView {
-        var requestedFocus = false
-        var didFocus: (() -> Void)?
         var didChange: (() -> Void)?
-
-        override func viewDidMoveToWindow() {
-            super.viewDidMoveToWindow()
-            if requestedFocus { window?.makeFirstResponder(self) }
-        }
-
-        override func becomeFirstResponder() -> Bool {
-            let accepted = super.becomeFirstResponder()
-            if accepted { didFocus?() }
-            return accepted
-        }
 
         override func didChangeText() {
             super.didChangeText()

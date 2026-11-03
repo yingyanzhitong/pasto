@@ -1,0 +1,765 @@
+--- phase-68-before/replica/Sources/Pasto/UI/ReplicaSearchIndex.swift
++++ replica/Sources/Pasto/UI/ReplicaSearchIndex.swift
+@@ -1,3 +1,4 @@
++import Combine
+ import Foundation
+ import CoreSpotlight
+ import CryptoKit
+@@ -105,6 +106,10 @@
+     private var reindexIdentifiers: [String] = []
+     private(set) var queryString = ""
+     private(set) var identifiers: Set<UUID> = []
++    private(set) var orderedIdentifiers: [UUID] = []
++    private var resultSource: ClipboardSearchCollection?
++    private var resultObservation: AnyCancellable?
++    var onCollectionUpdate: ((Set<UUID>) -> Void)?
+     private(set) var error: Error?
+     var onUpdate: (() -> Void)?
+ 
+@@ -144,9 +149,11 @@
+                 let found = try await Self.matchingIdentifiers(predicate: predicate, limit: Self.maximumResultCount)
+                 try Task.checkCancellation()
+                 if let store {
+-                    identifiers = Set(try store.searchNativeItems(identifiers: Array(found)).map(\.id))
++                    installResultSource(store.makeSearchCollection(identifiers: found))
+                 } else {
+-                    identifiers = Set(entries.filter { found.contains($0.searchIdentifier) }.map(\.id))
++                    installResultSource(nil)
++                    orderedIdentifiers = entries.filter { found.contains($0.searchIdentifier) }.map(\.id)
++                    identifiers = Set(orderedIdentifiers)
+                 }
+                 error = nil
+                 onUpdate?()
+@@ -156,9 +163,22 @@
+                 guard !Task.isCancelled else { return }
+                 logger.error("Search query failed: \(error.localizedDescription, privacy: .public)")
+                 self.error = error
+-                identifiers = []
++                installResultSource(nil)
+                 onUpdate?()
+             }
++        }
++    }
++
++    private func installResultSource(_ source: ClipboardSearchCollection?) {
++        resultObservation = nil
++        resultSource = source
++        orderedIdentifiers = source?.value.identifiers ?? []
++        identifiers = Set(orderedIdentifiers)
++        resultObservation = source?.publisher.dropFirst().sink { [weak self] snapshot in
++            guard let self else { return }
++            self.orderedIdentifiers = snapshot.identifiers
++            self.identifiers = Set(snapshot.identifiers)
++            self.onCollectionUpdate?(snapshot.updatedIdentifiers)
+         }
+     }
+ 
+--- phase-68-before/replica/Sources/Pasto/UI/ReplicaUIController.swift
++++ replica/Sources/Pasto/UI/ReplicaUIController.swift
+@@ -116,6 +116,11 @@
+             self?.objectWillChange.send()
+             self?.normalizeSelection()
+         }
++        searchIndex.onCollectionUpdate = { [weak self] identifiers in
++            guard let self, !self.isCollectionSearchQueryEmpty else { return }
++            self.pendingCollectionChangedIDs.formUnion(identifiers)
++            self.objectWillChange.send()
++        }
+         installListSelectionDelivery()
+         installSearchQueryDelivery()
+         refreshSearch()
+@@ -252,14 +257,10 @@
+             return store.search(query: "", pinboardID: pinboardID, includeDeleted: showDeleted)
+                 .filter { !showDeleted || $0.isDeleted }
+         }
+-        return store.items.filter { item in
+-            (showDeleted ? item.isDeleted : !item.isDeleted)
+-                && searchIndex.identifiers.contains(item.id)
+-        }.sorted {
+-            // 0x100360808 -> ItemEntity.defaultSortDescriptors: timestamp descending.
+-            if $0.isInHistory != $1.isInHistory { return $0.isInHistory }
+-            guard $0.isInHistory else { return false }
+-            return $0.createdAt > $1.createdAt
++        let items = Dictionary(uniqueKeysWithValues: store.items.map { ($0.id, $0) })
++        return searchIndex.orderedIdentifiers.compactMap { identifier in
++            guard let item = items[identifier], showDeleted ? item.isDeleted : !item.isDeleted else { return nil }
++            return item
+         }
+     }
+     var selectedItems: [ClipboardItem] {
+--- phase-68-before/replica/Sources/PastoCore/ClipboardPersistence.swift
++++ replica/Sources/PastoCore/ClipboardPersistence.swift
+@@ -248,6 +248,11 @@
+         try snapshotReader.searchItems(identifiers: identifiers)
+     }
+ 
++    func makeSearchCollection(identifiers: [String]) -> ClipboardSearchCollection? {
++        guard !identifiers.isEmpty else { return nil }
++        return ClipboardSearchCollection(context: context, identifiers: identifiers)
++    }
++
+     func searchNativeItems(identifiers: [String]?) throws -> [ClipboardItem] {
+         try snapshotReader.searchNativeItems(identifiers: identifiers)
+     }
+--- phase-68-before/replica/Sources/PastoCore/ClipboardStore.swift
++++ replica/Sources/PastoCore/ClipboardStore.swift
+@@ -86,6 +86,9 @@
+ 
+     public func searchItems(identifiers: [String]?) throws -> [ClipboardItem] {
+         try persistence.searchItems(identifiers: identifiers)
++    }
++    public func makeSearchCollection(identifiers: [String]) -> ClipboardSearchCollection? {
++        persistence.makeSearchCollection(identifiers: identifiers)
+     }
+     public func searchNativeItems(identifiers: [String]?) throws -> [ClipboardItem] {
+         try persistence.searchNativeItems(identifiers: identifiers)
+--- /dev/null
++++ replica/Sources/PastoCore/ClipboardSearchCollection.swift
+@@ -0,0 +1,117 @@
++import Combine
++import CoreData
++import Foundation
++import os
++
++/// The search result owns a live FRC on the stable view context. IDs are adapted to Pasto's local keys.
++@MainActor
++public final class ClipboardSearchCollection {
++    public struct Snapshot: Equatable {
++        public let identifiers: [UUID]
++        public let updatedIdentifiers: Set<UUID>
++    }
++
++    private let context: NSManagedObjectContext
++    private let controller: NSFetchedResultsController<PastoItemEntity>
++    private let subject = CurrentValueSubject<Snapshot, Never>(Snapshot(identifiers: [], updatedIdentifiers: []))
++    private var differenceDelegate: ClipboardSearchDifferenceDelegate?
++    private var objectsObservation: AnyCancellable?
++    private var objectIDs: [NSManagedObjectID] = []
++    private var pending: (ids: [NSManagedObjectID], updated: Set<NSManagedObjectID>)?
++    private let logger = Logger(subsystem: "com.yingyanzhitong.paste-replica", category: "search-collection")
++
++    init(context: NSManagedObjectContext, identifiers: [String]) {
++        self.context = context
++        let request = PastoItemEntity.defaultFetchRequest()
++        // The second clause preserves existing local records without a native identifier.
++        request.predicate = NSPredicate(
++            format: "nativeIdentifier IN %@ OR (nativeIdentifier == nil AND key IN %@)", identifiers, identifiers)
++        controller = NSFetchedResultsController(fetchRequest: request, managedObjectContext: context,
++                                                sectionNameKeyPath: nil, cacheName: nil)
++        // 365e18: initial fetch failure is fatal; index-record fetch36dc00 has a different error contract.
++        do { try controller.performFetch() }
++        catch { fatalError("Fetched results fetch failed: \(error)") }
++        let initial = (controller.fetchedObjects ?? []).map(\.objectID)
++        let delegate = ClipboardSearchDifferenceDelegate(ids: initial) { [weak self] ids in
++            self?.receive(ids: ids, updated: [])
++        }
++        differenceDelegate = delegate
++        controller.delegate = delegate
++        pending = (initial, [])
++        flushPending()
++        // 365e18 installs same-context object observation only after publishing the initial IDs.
++        objectsObservation = NotificationCenter.default
++            .publisher(for: .NSManagedObjectContextObjectsDidChange, object: context)
++            .sink { [weak self] notification in
++                MainActor.assumeIsolated { self?.objectsDidChange(notification) }
++            }
++        if initial.count != identifiers.count {
++            logger.error("Search found \(identifiers.count) identifiers but fetched \(initial.count) objects")
++        }
++    }
++
++    public var value: Snapshot { subject.value }
++    public var publisher: AnyPublisher<Snapshot, Never> { subject.eraseToAnyPublisher() }
++
++    // 3669fc: replace pending order, union changed IDs and schedule only the first pending delivery.
++    private func receive(ids: [NSManagedObjectID], updated: Set<NSManagedObjectID>) {
++        let schedulesDelivery = pending == nil
++        pending = (ids, (pending?.updated ?? []).union(updated))
++        if schedulesDelivery {
++            context.perform { [weak self] in
++                MainActor.assumeIsolated { self?.flushPending() }
++            }
++        }
++    }
++
++    // 366b38: clear before sending so subscriber reentry starts a new pending batch.
++    private func flushPending() {
++        guard let value = pending else { return }
++        pending = nil
++        objectIDs = value.ids
++        let keys = Dictionary(uniqueKeysWithValues: value.ids.compactMap { objectID -> (NSManagedObjectID, UUID)? in
++            guard let object = try? context.existingObject(with: objectID),
++                  let key = object.value(forKey: "key") as? String,
++                  let identifier = UUID(uuidString: key) else { return nil }
++            return (objectID, identifier)
++        })
++        subject.send(Snapshot(identifiers: value.ids.compactMap { keys[$0] },
++                              updatedIdentifiers: Set(value.updated.compactMap { keys[$0] })))
++    }
++
++    private func objectsDidChange(_ notification: Notification) {
++        let ids = pending?.ids ?? objectIDs
++        let membership = Set(ids)
++        let updated = notification.userInfo?[NSUpdatedObjectsKey] as? Set<NSManagedObject> ?? []
++        let refreshed = notification.userInfo?[NSRefreshedObjectsKey] as? Set<NSManagedObject> ?? []
++        let changed = Set(updated.union(refreshed).map(\.objectID)).intersection(membership)
++        if !changed.isEmpty { receive(ids: ids, updated: changed) }
++    }
++}
++
++/// 354800/354f90: use the difference selector, not the diffable-snapshot or legacy per-object selectors.
++@MainActor
++private final class ClipboardSearchDifferenceDelegate: NSObject, NSFetchedResultsControllerDelegate {
++    private var ids: [NSManagedObjectID]
++    private let handler: ([NSManagedObjectID]) -> Void
++
++    init(ids: [NSManagedObjectID], handler: @escaping ([NSManagedObjectID]) -> Void) {
++        self.ids = ids
++        self.handler = handler
++        super.init()
++    }
++
++    nonisolated func controller(_ controller: NSFetchedResultsController<NSFetchRequestResult>,
++                                didChangeContentWith diff: CollectionDifference<NSManagedObjectID>) {
++        MainActor.assumeIsolated {
++            guard !diff.isEmpty else { return }
++            let expectedCount = controller.sections?.first?.numberOfObjects
++            if let next = ids.applying(diff), expectedCount == nil || next.count == expectedCount {
++                ids = next
++            } else {
++                ids = (controller.fetchedObjects as? [NSManagedObject] ?? []).map(\.objectID)
++            }
++            handler(ids)
++        }
++    }
++}
+--- phase-68-before/scripts/tests/test_p0_repair_identity.py
++++ scripts/tests/test_p0_repair_identity.py
+@@ -205,7 +205,7 @@
+         self.assertIn("found.append(result.item.uniqueIdentifier)", query)
+         self.assertNotIn("UUID(uuidString:", query)
+         replace = method_body(self.index, "private func replaceQuery(with nodes: [OriginalSearchQueryNode])")
+-        self.assertIn("store.searchNativeItems(identifiers: Array(found)).map(\\.id)", replace)
++        self.assertIn("installResultSource(store.makeSearchCollection(identifiers: found))", replace)
+         searchable = method_body(self.index, "private func searchableItem(_ entry: Entry, isUpdate: Bool) -> CSSearchableItem")
+         self.assertIn('uniqueIdentifier: entry.searchIdentifier,', searchable)
+         self.assertNotIn('domain + ":"', searchable)
+--- phase-68-before/scripts/tests/test_p0_repair_identity_boundaries.py
++++ scripts/tests/test_p0_repair_identity_boundaries.py
+@@ -76,7 +76,7 @@
+ 
+     def test_sdk_query_and_history_reindex_use_native_namespace_facade(self):
+         query = method_body(self.index, "private func replaceQuery(with nodes: [OriginalSearchQueryNode])")
+-        self.assertIn("store.searchNativeItems(identifiers: Array(found)).map(\\.id)", query)
++        self.assertIn("installResultSource(store.makeSearchCollection(identifiers: found))", query)
+         live = method_body(self.index, "private func liveEntries(identifiers: [String]?) throws -> [Entry]")
+         self.assertIn("store.searchIndexRecords(identifiers: identifiers)", live)
+         self.assertNotIn("store.searchItems(identifiers:", self.index)
+--- phase-68-before/scripts/tests/test_p1_repair_context_ownership.py
++++ scripts/tests/test_p1_repair_context_ownership.py
+@@ -1,3 +1,4 @@
++from frc_result_scope_contract import assert_factory_addition_only
+ """Source/static contracts only; no Swift/CoreData/framework/database/app execution."""
+ import hashlib
+ import json
+@@ -31,8 +32,12 @@
+         for row in [self.proof['binary']] + self.proof['sdk_headers']:
+             self.assertEqual(hashlib.sha256((ROOT / row['path']).read_bytes()).hexdigest(), row['sha256'])
+         for path, digest in self.proof['current_sources'].items():
+-            self.assertEqual(hashlib.sha256((ROOT / path).read_bytes()).hexdigest(), digest)
+-            self.assertEqual((ROOT / path).read_bytes(), (self.phase / 'after' / path).read_bytes())
++            frozen = (self.phase / 'after' / path).read_bytes()
++            self.assertEqual(hashlib.sha256(frozen).hexdigest(), digest)
++            if path == self.paths['ClipboardPersistence']:
++                assert_factory_addition_only(self, (ROOT / path).read_text(), frozen.decode())
++            else:
++                self.assertEqual((ROOT / path).read_bytes(), frozen)
+ 
+     def test_original_main_view_policy_and_private_history_context_have_real_bindings(self):
+         original = self.original['0x10035cc80']
+@@ -142,7 +147,7 @@
+             self.assertLess(method.index('withLock'), method.index('persistence.commit('))
+         initializer = body(store, 'public init(directoryURL:')
+         self.assertLess(initializer.index('Self.withLock(directoryURL:'), initializer.index('ClipboardPersistence(directoryURL:'))
+-        self.assertEqual(store, (self.phase / 'before/replica/Sources/PastoCore/ClipboardStore.swift').read_text())
++        assert_factory_addition_only(self, store, (self.phase / 'before/replica/Sources/PastoCore/ClipboardStore.swift').read_text(), public=True)
+ 
+     def test_history_keeps_real_consumers_errors_ack_and_global_token_lifecycle(self):
+         history = self.current['OriginalSearchHistory']
+--- phase-68-before/scripts/tests/test_p1_repair_delegate_owner_ack.py
++++ scripts/tests/test_p1_repair_delegate_owner_ack.py
+@@ -1,3 +1,4 @@
++from frc_result_scope_contract import ui_init_segments
+ """Delegate owner scopes and original release/ack ARM; no Swift, ARC or SDK execution."""
+ import hashlib
+ import json
+@@ -128,8 +129,8 @@
+                 frozen_ui = (ROOT / '.local/p0-repair/phase-65/before' / path).read_text()
+                 assert_ui_service_composition_only(self, frozen_ui, (self.phase / 'before' / path).read_text())
+                 marker = 'collectionItemObservation = store.collectionItemUpdates.sink'
+-                self.assertEqual(body(body((ROOT / path).read_text(), 'final class ReplicaUIState:'), 'init(store: ClipboardStore)').split(marker)[0],
+-                                 body(body(frozen_ui, 'final class ReplicaUIState:'), 'init(store: ClipboardStore)').split(marker)[0])
++                self.assertEqual(ui_init_segments(body(body((ROOT / path).read_text(), 'final class ReplicaUIState:'), 'init(store: ClipboardStore)').split(marker)[0]),
++                                 ui_init_segments(body(body(frozen_ui, 'final class ReplicaUIState:'), 'init(store: ClipboardStore)').split(marker)[0]))
+             else:
+                 self.assertEqual((ROOT / path).read_bytes(), (self.phase / 'before' / path).read_bytes())
+ 
+--- phase-68-before/scripts/tests/test_p1_repair_index_observer_replacement.py
++++ scripts/tests/test_p1_repair_index_observer_replacement.py
+@@ -1,3 +1,4 @@
++from frc_result_scope_contract import assert_query_result_only
+ """Original availability/observer gates with native descriptor evidence; no runtime execution."""
+ import hashlib
+ import itertools
+@@ -137,7 +138,7 @@
+         self.assertNotIn('usesSnapshot', self.observer)
+         for marker in ['private func indexInitialSnapshot(', 'private func retryTransientIndexErrors(',
+                        'private func replaceQuery(', 'private func drainOCRQueue()', 'private func clearIndex()']:
+-            assert_write_scope_only(self, body(self.source, marker), body(self.before, marker))
++            (assert_query_result_only if marker == 'private func replaceQuery(' else assert_write_scope_only)(self, body(self.source, marker), body(self.before, marker))
+ 
+     def test_only_one_new_finite_record_and_reused_old_gate_close_not_full_observer(self):
+         self.assertEqual(self.proof['new_function_ids'], ['Paste:0x1002f14cc'])
+--- phase-68-before/scripts/tests/test_p1_repair_list_attributes_observation.py
++++ scripts/tests/test_p1_repair_list_attributes_observation.py
+@@ -1,3 +1,4 @@
++from frc_result_scope_contract import assert_visible_order_only, assert_ui_frc_only
+ """Original-bound list observation contracts; Python/source/Mach-O checks, no native execution."""
+ import hashlib
+ import json
+@@ -53,6 +54,8 @@
+             if path in [self.paths['persistence'], self.paths['store']]:
+                 marker = 'func observeListAttributes('
+                 self.assertEqual(body((ROOT / path).read_text(), marker), body(frozen, marker))
++            elif path == self.paths['state']:
++                assert_ui_frc_only(self, (ROOT / path).read_text(), frozen)
+             else:
+                 self.assertEqual((ROOT / path).read_text(), frozen)
+ 
+@@ -223,7 +226,7 @@
+             self.assertEqual((current[:start], current[end:]), (previous[:start], previous[start:]))
+         for marker in ['private func installSearchQueryDelivery()', 'private func applySelectedList(',
+                        'private func installListSelectionDelivery()', 'func normalizeSelection(', 'var visibleItems:']:
+-            self.assertEqual(body(self.state, marker), body(body(self.before('state'), 'final class ReplicaUIState:'), marker))
++            (assert_visible_order_only if marker == 'var visibleItems:' else lambda t, a, b: t.assertEqual(a, b))(self, body(self.state, marker), body(body(self.before('state'), 'final class ReplicaUIState:'), marker))
+ 
+     def test_only_six_existing_sources_and_one_real_observer_added_no_FRC_claim(self):
+         base = json.loads((self.phase / 'baseline.json').read_text())
+--- phase-68-before/scripts/tests/test_p1_repair_list_selection.py
++++ scripts/tests/test_p1_repair_list_selection.py
+@@ -1,3 +1,4 @@
++from frc_result_scope_contract import assert_visible_order_only
+ """Optional-list force-selection source/ARM checks; does not execute Combine or Swift."""
+ import hashlib
+ import json
+@@ -133,7 +134,7 @@
+         for marker in ['private func installSearchQueryDelivery()', 'var visibleItems:',
+                        'func consumePendingListFocus(', 'func applyFullCollectionReload(',
+                        'func applyIncrementalCollectionSnapshot(', 'func selectedItemTargetLists()']:
+-            self.assertEqual(body(self.ui, marker), body(previous, marker))
++            (assert_visible_order_only if marker == 'var visibleItems:' else lambda t, a, b: t.assertEqual(a, b))(self, body(self.ui, marker), body(previous, marker))
+         self.assertEqual(pre_attributes_host(self, (ROOT / 'replica/Sources/Pasto/UI/ReplicaNativeCardCollection.swift').read_text()).encode(),
+                          (self.phase / 'before/replica/Sources/Pasto/UI/ReplicaNativeCardCollection.swift').read_bytes())
+         for text in [self.choose, self.select, self.delivery, self.consumer]:
+--- phase-68-before/scripts/tests/test_p1_repair_native_search_identifiers.py
++++ scripts/tests/test_p1_repair_native_search_identifiers.py
+@@ -1,3 +1,4 @@
++from frc_result_scope_contract import assert_query_result_only
+ """Native-ID flow/source contracts; no Spotlight, preferences, DB, app or compiler execution."""
+ import hashlib
+ import json
+@@ -133,15 +134,15 @@
+         self.assertLess(self.query.index('try Task.checkCancellation()'), self.query.index('return found'))
+         replace = body(self.source, 'private func replaceQuery(')
+         self.assertLess(replace.index('await Self.matchingIdentifiers('), replace.index('try Task.checkCancellation()'))
+-        self.assertLess(replace.index('try Task.checkCancellation()'), replace.index('store.searchNativeItems('))
+-        self.assertLess(replace.index('store.searchNativeItems('), replace.index('onUpdate?()'))
++        self.assertLess(replace.index('try Task.checkCancellation()'), replace.index('store.makeSearchCollection('))
++        self.assertLess(replace.index('store.makeSearchCollection('), replace.index('onUpdate?()'))
+         before = body(self.before, 'private func replaceQuery(')
+         marker = 'try Task.checkCancellation()'
+-        self.assertEqual(replace[replace.index(marker):], before[before.index(marker):])
++        assert_query_result_only(self, replace[replace.index(marker):], before[before.index(marker):])
+ 
+     def test_local_UUID_adapter_is_after_query_and_native_persistent_fetch_accepts_strings(self):
+         replace = body(self.source, 'private func replaceQuery(')
+-        self.assertIn('Set(try store.searchNativeItems(identifiers: Array(found)).map(\\.id))', replace)
++        self.assertIn('installResultSource(store.makeSearchCollection(identifiers: found))', replace)
+         self.assertNotIn('UUID(uuidString:', replace + self.query)
+         persistence = (ROOT / 'replica/Sources/PastoCore/ClipboardPersistence.swift').read_text()
+         fetch = body(persistence, 'func searchNativeItems(')
+--- phase-68-before/scripts/tests/test_p1_repair_stack_category_icons.py
++++ scripts/tests/test_p1_repair_stack_category_icons.py
+@@ -1,3 +1,4 @@
++from frc_result_scope_contract import assert_factory_addition_only
+ """Static original-code/asset linkage checks. No AppKit/CoreUI/native image loading."""
+ import hashlib
+ import json
+@@ -48,6 +49,8 @@
+             self.assertEqual(hashlib.sha256(frozen).hexdigest(), digest)
+             if path == self.paths['persistence']:
+                 self.assertEqual(body((ROOT / path).read_text(), 'func itemContentKind('), body(frozen.decode(), 'func itemContentKind('))
++            elif path == self.paths['store']:
++                assert_factory_addition_only(self, (ROOT / path).read_text(), frozen.decode(), public=True)
+             else:
+                 self.assertEqual((ROOT / path).read_bytes(), frozen)
+         self.assertEqual({r['decoded'] for r in self.proof['native_small_strings']}, set(NAMES))
+--- phase-68-before/scripts/tests/test_p1_repair_weak_sdk_write_owner.py
++++ scripts/tests/test_p1_repair_weak_sdk_write_owner.py
+@@ -1,3 +1,4 @@
++from frc_result_scope_contract import assert_query_result_only, ui_init_segments
+ """Source/static evidence checks only. Does not execute Swift, CoreData or Spotlight."""
+ import hashlib
+ import json
+@@ -41,12 +42,15 @@
+         for path, digest in self.proof['current_sources'].items():
+             self.assertEqual(hashlib.sha256((self.phase / 'after' / path).read_bytes()).hexdigest(), digest)
+             if path == self.path:
+-                self.assertEqual((ROOT / path).read_bytes(), (self.phase / 'after' / path).read_bytes())
++                frozen = (self.phase / 'after' / path).read_text()
++                for marker in ['private static func writeSearchableItems(', 'private func searchableItem(']:
++                    self.assertEqual(body((ROOT / path).read_text(), marker), body(frozen, marker))
++                assert_query_result_only(self, body((ROOT / path).read_text(), 'private func replaceQuery('), body(frozen, 'private func replaceQuery('))
+             else:
+                 composition = body(body((ROOT / path).read_text(), 'final class ReplicaUIState:'), 'init(store: ClipboardStore)')
+                 previous = body(body((self.phase / 'after' / path).read_text(), 'final class ReplicaUIState:'), 'init(store: ClipboardStore)')
+                 marker = 'collectionItemObservation = store.collectionItemUpdates.sink'
+-                self.assertEqual(composition.split(marker)[0], previous.split(marker)[0])
++                self.assertEqual(ui_init_segments(composition.split(marker)[0]), ui_init_segments(previous.split(marker)[0]))
+ 
+     def test_owner_operations_and_SDK_selector_use_real_chained_imports(self):
+         self.assertEqual({r['symbol'] for r in self.proof['runtime_imports']},
+@@ -155,7 +159,7 @@
+                        'private func searchableItem(', 'private func replaceQuery(',
+                        'nonisolated private static func matchingIdentifiers(', 'nonisolated private func rebuild(',
+                        'private static func performDelegateRebuild(', 'private func enqueueDelegateRebuild(']:
+-            self.assertEqual(body(self.source, marker), body(self.before, marker))
++            (assert_query_result_only if marker == 'private func replaceQuery(' else lambda t, a, b: t.assertEqual(a, b))(self, body(self.source, marker), body(self.before, marker))
+         self.assertEqual(self.source.count('try await retryTransientIndexErrors'), 3)
+         self.assertNotIn('retryTransientIndexErrors', body(self.source, 'private func drainOCRQueue()'))
+ 
+--- /dev/null
++++ scripts/tests/test_p1_repair_FRC_result_source.py
+@@ -0,0 +1,241 @@
++"""Real FRC source/consumer contracts and source-bound semantic fixtures; no native execution."""
++import hashlib
++import itertools
++import json
++import struct
++import sys
++import unittest
++from pathlib import Path
++ROOT = Path(__file__).resolve().parents[2]
++sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'scripts/tests')]
++from function_ledger import source_fragments
++from test_offline_p0_contracts import body
++from test_p0_repair_checksum_routing import original_fragment
++from frc_result_scope_contract import assert_factory_addition_only, assert_query_result_only, assert_ui_frc_only, assert_visible_order_only
++
++
++class FRCResultSourceContracts(unittest.TestCase):
++    @classmethod
++    def setUpClass(cls):
++        cls.phase = ROOT / '.local/p0-repair/phase-68'
++        cls.proof = json.loads((cls.phase / 'FRC-result-contract.json').read_text())
++        cls.base = json.loads((cls.phase / 'baseline.json').read_text())
++        cls.paths = dict(source='replica/Sources/PastoCore/ClipboardSearchCollection.swift',
++                         view='replica/Sources/PastoCore/ClipboardPersistence.swift',
++                         store='replica/Sources/PastoCore/ClipboardStore.swift',
++                         index='replica/Sources/Pasto/UI/ReplicaSearchIndex.swift',
++                         ui='replica/Sources/Pasto/UI/ReplicaUIController.swift')
++        cls.sources = {k: (ROOT / p).read_text() for k, p in cls.paths.items()}
++        cls.source = cls.sources['source']; cls.index = cls.sources['index']; cls.ui = cls.sources['ui']
++        cls.original = {r['address']: original_fragment((ROOT / r['path']).read_text(), r['address'][2:]) for r in cls.proof['original_fragments']}
++
++    def before(self, key): return (self.phase / 'before' / self.paths[key]).read_text()
++
++    def test_fifteen_original_fragments_sdk_headers_and_five_production_files_are_bound(self):
++        self.assertEqual(len(self.proof['original_fragments']), 15)
++        for row in self.proof['original_fragments']:
++            self.assertEqual(source_fragments(ROOT / row['path'])[row['address']]['sha256'], row['sha256'])
++        for row in [self.proof['binary']] + self.proof['sdk_headers'] + self.proof['arm_disassemblies']:
++            self.assertEqual(hashlib.sha256((ROOT / row['path']).read_bytes()).hexdigest(), row['sha256'])
++        for path, digest in self.proof['current_sources'].items():
++            self.assertEqual(hashlib.sha256((ROOT / path).read_bytes()).hexdigest(), digest)
++            self.assertEqual((ROOT / path).read_bytes(), (self.phase / 'after' / path).read_bytes())
++
++    def test_real_runtime_method_table_selects_difference_not_snapshot_or_legacy(self):
++        delegate = self.proof['difference_delegate']
++        flags, count = struct.unpack('<II', bytes.fromhex(delegate['method_list']['bytes'])[:8])
++        self.assertEqual(count, 3); self.assertTrue(flags & 0x80000000)
++        callbacks = [r for r in delegate['methods'] if r['selector'].startswith('controller:')]
++        self.assertEqual([(r['selector'], r['imp']) for r in callbacks], [('controller:didChangeContentWithDifference:', '0x100354f90')])
++        entry, = callbacks
++        address = int(entry['entry']['address'], 16)
++        _, _, imp = struct.unpack('<iii', bytes.fromhex(entry['entry']['bytes']))
++        self.assertEqual(hex(address + 8 + imp), entry['imp'])
++        self.assertEqual(bytes.fromhex(entry['selector_bytes']['bytes']), entry['selector'].encode() + b'\0')
++        self.assertIn('didChangeContentWith diff: CollectionDifference<NSManagedObjectID>', self.source)
++        for forbidden in ['didChangeContentWithSnapshot', 'didChange anObject', 'controllerDidChangeContent']:
++            self.assertNotIn(forbidden, self.source)
++
++    def test_seven_actual_selectors_and_updated_refreshed_imports_have_dyld_chains(self):
++        self.assertEqual([r['selector'] for r in self.proof['selector_bindings']], [
++            'initWithFetchRequest:managedObjectContext:sectionNameKeyPath:cacheName:', 'performFetch:',
++            'fetchedObjects', 'sections', 'numberOfObjects', 'setDelegate:', 'setFetchBatchSize:'])
++        for row in self.proof['selector_bindings']:
++            self.assertTrue(row['chain']['declared_chain_reachable'])
++            self.assertEqual(bytes.fromhex(row['selector_bytes']['bytes']), row['selector'].encode() + b'\0')
++        self.assertEqual([r['symbol'] for r in self.proof['context_key_bindings']], [
++            '_NSUpdatedObjectsKey', '_NSRefreshedObjectsKey', '_NSManagedObjectContextObjectsDidChangeNotification'])
++        for row in self.proof['context_key_bindings']:
++            self.assertTrue(row['chain']['declared_chain_reachable'])
++            self.assertEqual(struct.unpack('<Q', bytes.fromhex(row['bytes']))[0] & 0xffffff, row['ordinal'])
++
++    def test_fetch_error_branch_precedes_delegate_in_actual_ARM(self):
++        words = {int(r['address'], 16): struct.unpack('<I', bytes.fromhex(r['bytes']))[0] for r in self.proof['ARM_words']}
++        call = words[0x100365f9c]; displacement = call & ((1 << 26) - 1)
++        if displacement & (1 << 25): displacement -= 1 << 26
++        self.assertEqual(0x100365f9c + 4 * displacement, 0x100c07c00)
++        branch = words[0x100365fb0]; displacement = (branch >> 5) & 0x7ffff
++        if displacement & (1 << 18): displacement -= 1 << 19
++        self.assertEqual(0x100365fb0 + 4 * displacement, 0x100366284)
++        native = self.original['0x100365e18']
++        self.assertLess(native.index('FUN_100c07c00'), native.index('if ((int)IVar8 == 0)'))
++        failure = native[native.index('if ((int)IVar8 == 0)'):native.index('FUN_100366344();')]
++        self.assertIn('Foundation::__convertNSErrorToError()', failure)
++        self.assertIn('Swift::_assertionFailure', failure)
++        self.assertLess(native.index('FUN_100366344();'), native.index('objc_stub::setDelegate_'))
++
++    def test_real_initializer_fetch_delegate_initial_publish_then_context_observer(self):
++        init = body(self.source, 'init(context:')
++        order = ['PastoItemEntity.defaultFetchRequest()', 'request.predicate =', 'NSFetchedResultsController(fetchRequest:',
++                 'sectionNameKeyPath: nil, cacheName: nil)', 'try controller.performFetch()',
++                 'catch { fatalError(', 'let initial = (controller.fetchedObjects ?? []).map(\\.objectID)',
++                 'ClipboardSearchDifferenceDelegate(ids: initial)', 'differenceDelegate = delegate', 'controller.delegate = delegate',
++                 'pending = (initial, [])', 'flushPending()', 'objectsObservation = NotificationCenter.default']
++        self.assertEqual([init.index(t) for t in order], sorted(init.index(t) for t in order))
++        for forbidden in ['try?', 'throws', 'context.reset()', 'context.save()', 'needsReset', 'acknowledge']:
++            self.assertNotIn(forbidden, init)
++        self.assertEqual(self.source.count('controller.performFetch()'), 1)
++        self.assertIn('private var differenceDelegate: ClipboardSearchDifferenceDelegate?', self.source)
++
++    def test_empty_array_is_nil_source_and_raw_native_identifiers_are_not_preprocessed(self):
++        factory = body(self.sources['view'], 'func makeSearchCollection(')
++        self.assertLess(factory.index('guard !identifiers.isEmpty else { return nil }'), factory.index('ClipboardSearchCollection(context: context, identifiers: identifiers)'))
++        self.assertIn('nativeIdentifier IN %@ OR (nativeIdentifier == nil AND key IN %@)', self.source)
++        init = body(self.source, 'init(context:')
++        for token in ['Set(identifiers)', 'UUID(uuidString:', 'identifiers.filter', 'identifiers.compactMap', 'fetchLimit', 'request.sortDescriptors =']:
++            self.assertNotIn(token, init)
++        self.assertIn('request.fetchBatchSize = 20', (ROOT / 'replica/Sources/PastoCore/OriginalManagedItem.swift').read_text())
++        self.assertIn('NSSortDescriptor(key: "timestamp", ascending: false)', (ROOT / 'replica/Sources/PastoCore/OriginalManagedItem.swift').read_text())
++        self.assertIn('if (lVar11 == 0)', self.original['0x100360808'])
++        self.assertIn('FUN_100c0bb60(self,0x14)', self.original['0x100360808'])
++
++    def test_difference_uses_original_empty_guard_apply_count_and_fetched_fallback(self):
++        callback = body(self.source, 'nonisolated func controller(')
++        order = ['MainActor.assumeIsolated', 'guard !diff.isEmpty else { return }', 'controller.sections?.first?.numberOfObjects',
++                 'if let next = ids.applying(diff), expectedCount == nil || next.count == expectedCount',
++                 'ids = next', 'controller.fetchedObjects as? [NSManagedObject]', 'handler(ids)']
++        self.assertEqual([callback.index(t) for t in order], sorted(callback.index(t) for t in order))
++        for token in ['fatalError', 'throw', 'performFetch', 'context.reset', 'Task {']:
++            self.assertNotIn(token, callback)
++        native = self.original['0x100354800']
++        for token in ['if (local_68 == local_70)', 'RangeReplaceableCollection::_applying', 'if (IVar5 == IVar11)', 'FUN_100c023c0(param_1)', '(*pcVar2)(uVar10,puVar6)']:
++            self.assertIn(token, native)
++
++    def test_object_changes_only_reload_visible_updated_or_refreshed_IDs(self):
++        observer = body(self.source, 'private func objectsDidChange(')
++        for token in ['let ids = pending?.ids ?? objectIDs', 'NSUpdatedObjectsKey', 'NSRefreshedObjectsKey',
++                      'Set(updated.union(refreshed).map(\\.objectID)).intersection(membership)', 'if !changed.isEmpty { receive(ids: ids, updated: changed) }']:
++            self.assertIn(token, observer)
++        for token in ['NSInsertedObjectsKey', 'NSDeletedObjectsKey', 'NSInvalidatedObjectsKey', 'save()', 'reset()']:
++            self.assertNotIn(token, observer)
++        self.assertIn('object: context', body(self.source, 'init(context:'))
++
++    def test_pending_accumulates_before_single_scheduled_weak_delivery_and_clears_before_send(self):
++        receive = body(self.source, 'private func receive(')
++        order = ['let schedulesDelivery = pending == nil', 'pending = (ids, (pending?.updated ?? []).union(updated))',
++                 'if schedulesDelivery', 'context.perform { [weak self]', 'self?.flushPending()']
++        self.assertEqual([receive.index(t) for t in order], sorted(receive.index(t) for t in order))
++        flush = body(self.source, 'private func flushPending()')
++        self.assertLess(flush.index('pending = nil'), flush.index('objectIDs = value.ids'))
++        self.assertLess(flush.index('objectIDs = value.ids'), flush.index('subject.send('))
++        self.assertNotIn('DispatchQueue', self.source)
++        native = self.original['0x100366b38']
++        self.assertLess(native.index('*(ulong *)(unaff_x20 + 0x48) = 0'), native.index('CurrentValueSubject::send'))
++
++    def test_actual_source_retention_and_initial_cache_subscription_have_no_ownership_cycle(self):
++        self.assertIn('private var resultSource: ClipboardSearchCollection?', self.index)
++        self.assertIn('private var resultObservation: AnyCancellable?', self.index)
++        install = body(self.index, 'private func installResultSource(')
++        order = ['resultObservation = nil', 'resultSource = source', 'orderedIdentifiers = source?.value.identifiers ?? []',
++                 'identifiers = Set(orderedIdentifiers)', 'source?.publisher.dropFirst().sink { [weak self] snapshot',
++                 'self.orderedIdentifiers = snapshot.identifiers', 'self.identifiers = Set(snapshot.identifiers)',
++                 'self.onCollectionUpdate?(snapshot.updatedIdentifiers)']
++        self.assertEqual([install.index(t) for t in order], sorted(install.index(t) for t in order))
++        self.assertIn('import Combine\n', self.index)
++        self.assertIn('private let subject = CurrentValueSubject<Snapshot, Never>', self.source)
++        self.assertIn('public var value: Snapshot { subject.value }', self.source)
++        self.assertIn('{ [weak self] ids in', self.source)
++        self.assertIn('.sink { [weak self] notification in', self.source)
++
++    def test_query_success_empty_error_and_cancellation_use_real_source_boundary(self):
++        query = body(self.index, 'private func replaceQuery(')
++        assert_query_result_only(self, query, body(self.before('index'), 'private func replaceQuery('))
++        self.assertLess(query.index('try Task.checkCancellation()'), query.index('store.makeSearchCollection('))
++        self.assertLess(query.index('installResultSource(store.makeSearchCollection('), query.index('onUpdate?()'))
++        cancellation = query.split('catch is CancellationError {', 1)[1].split('} catch {', 1)[0]
++        self.assertNotIn('installResultSource', cancellation)
++        failure = query.split('} catch {', 1)[1]
++        self.assertLess(failure.index('guard !Task.isCancelled'), failure.index('installResultSource(nil)'))
++        fallback = query.split('} else {', 1)[1].split('                error = nil', 1)[0]
++        self.assertLess(fallback.index('installResultSource(nil)'), fallback.index('orderedIdentifiers = entries.filter'))
++        self.assertNotIn('searchNativeItems', query)
++        self.assertEqual(body(self.index, 'nonisolated private static func matchingIdentifiers('), body(self.before('index'), 'nonisolated private static func matchingIdentifiers('))
++
++    def test_actual_UI_visible_items_preserve_FRC_order_and_existing_deleted_compatibility(self):
++        visible = body(self.ui, 'var visibleItems:')
++        assert_visible_order_only(self, visible, body(self.before('ui'), 'var visibleItems:'))
++        self.assertNotIn('.sorted', visible)
++        self.assertNotIn('searchIndex.identifiers.contains', visible)
++        callback = body(self.ui, 'searchIndex.onCollectionUpdate =')
++        self.assertIn('!self.isCollectionSearchQueryEmpty', callback)
++        self.assertIn('self.pendingCollectionChangedIDs.formUnion(identifiers)', callback)
++        self.assertIn('self.objectWillChange.send()', callback)
++        for token in ['normalizeSelection', 'applyOrderedSelection', 'replaceCollectionModel', 'save()']:
++            self.assertNotIn(token, callback)
++        host = (ROOT / 'replica/Sources/Pasto/UI/ReplicaNativeCardCollection.swift').read_text()
++        self.assertIn('let incomingItems = state.visibleItems', host)
++        self.assertIn('state.takeCollectionChangedIDs(owner: self)', host)
++
++    def test_schemas_snapshots_index_error_and_other_UI_lifecycle_are_unchanged(self):
++        assert_factory_addition_only(self, self.sources['view'], self.before('view'))
++        assert_factory_addition_only(self, self.sources['store'], self.before('store'), public=True)
++        assert_ui_frc_only(self, self.ui, self.before('ui'))
++        snapshot = 'replica/Sources/PastoCore/ClipboardSnapshotReader.swift'
++        self.assertEqual(hashlib.sha256((ROOT / snapshot).read_bytes()).hexdigest(), self.base['production'][snapshot])
++        self.assertIn('guard identifiers != nil else { throw error }', (ROOT / snapshot).read_text())
++        self.assertNotIn('fatalError', (ROOT / snapshot).read_text())
++        for marker in ['private func drain() async', 'private func liveEntries(', 'private func retryTransientIndexErrors(', 'private func stopIndexing()', 'private func searchableItem(', 'private static func writeSearchableItems(']:
++            self.assertEqual(body(self.index, marker), body(self.before('index'), marker))
++
++    def test_delta_and_projection_fixtures_cover_apply_failure_count_mismatch_and_empty_diff(self):
++        # Branch table is tied to the production method above, not execution of Swift/CoreData.
++        fixtures = [(False, ['B'], 1, ['B']), (False, None, 1, ['fallback']),
++                    (False, ['B'], 2, ['fallback']), (False, ['B'], None, ['B']),
++                    (True, ['B'], 1, ['old'])]
++        for empty, applied, count, wanted in fixtures:
++            actual = ['old']
++            if not empty:
++                actual = applied if applied is not None and (count is None or len(applied) == count) else ['fallback']
++            self.assertEqual(actual, wanted)
++        # UI projection retains source order while mapping only available local DTOs.
++        values = {'A': False, 'B': True, 'C': False}
++        for deleted in [False, True]:
++            actual = [i for i in ['C', 'missing', 'B', 'A'] if i in values and values[i] == deleted]
++            self.assertEqual(actual, ['B'] if deleted else ['C', 'A'])
++
++    def test_pending_batch_and_reentry_semantics_keep_newest_order_union_and_one_schedule(self):
++        for orders in itertools.permutations([('A', 'B'), ('B',), ('C', 'B')]):
++            pending = None; schedules = 0
++            for n, ids in enumerate(orders):
++                schedules += pending is None
++                pending = (ids, (pending[1] if pending else set()) | {str(n)})
++            self.assertEqual(schedules, 1)
++            self.assertEqual(pending, (orders[-1], {'0', '1', '2'}))
++            sent = pending; pending = None
++            # Flush clears first; a subscriber can queue a fresh batch without losing it.
++            pending = (('reentered',), {'next'}) if pending is None else None
++            self.assertEqual(sent[0], orders[-1]);self.assertEqual(pending[0], ('reentered',))
++
++    def test_fixed_finite_closure_does_not_claim_original_complete_parent_or_native_execution(self):
++        row, = self.proof['contracts']
++        self.assertEqual(row['function_id'], 'Paste:0x100365e18')
++        self.assertFalse(row['full_function_migration_verified'])
++        self.assertFalse(self.proof['full_function_migration_verified'])
++        self.assertEqual(self.proof['function_map_markers_upgraded'], 0)
++        self.assertIn('different producer36dc00', self.proof['comparison_correction'])
++        limits = ' '.join(self.proof['retained_partial_contracts'])
++        for token in ['witness+8', 'not proven API', 'no compile/typecheck', 'Unknown04430c/0f733c', 'general history/group']:
++            self.assertIn(token, limits)
++
++
++if __name__ == '__main__': unittest.main()
+--- /dev/null
++++ scripts/tests/frc_result_scope_contract.py
+@@ -0,0 +1,78 @@
++"""Compare real method segments outside the explicit FRC result-source migration."""
++import re
++from test_offline_p0_contracts import body
++
++
++def query_result_segments(source):
++    # Every replaced block has one exact approved old/new shape; every other character is compared.
++    alternatives = [
++        ('                    identifiers = Set(try store.searchNativeItems(identifiers: Array(found)).map(\\.id))\n',
++         '                    installResultSource(store.makeSearchCollection(identifiers: found))\n'),
++        ('                    identifiers = Set(entries.filter { found.contains($0.searchIdentifier) }.map(\\.id))\n',
++         '                    installResultSource(nil)\n                    orderedIdentifiers = entries.filter { found.contains($0.searchIdentifier) }.map(\\.id)\n                    identifiers = Set(orderedIdentifiers)\n'),
++        ('                identifiers = []\n', '                installResultSource(nil)\n')]
++    result, end = [], 0
++    for old, new in alternatives:
++        present = [(text, match) for text in [old, new] for match in re.finditer('^' + re.escape(text), source, re.M)]
++        if len(present) != 1: raise AssertionError('Unreviewed FRC result block')
++        text, match = present[0]
++        start = match.start()
++        if start < end: raise AssertionError('Unexpected FRC result block order')
++        result.append(source[end:start]); end = start + len(text)
++    result.append(source[end:])
++    return result
++
++
++def assert_query_result_only(test, current, previous):
++    test.assertEqual(query_result_segments(current), query_result_segments(previous))
++
++
++def assert_factory_addition_only(test, current, previous, public=False):
++    marker = ('public ' if public else '') + 'func makeSearchCollection('
++    declaration = '    ' + marker
++    start = current.index(declaration); block = body(current, marker)
++    end = current.index(block, start) + len(block)
++    end += 1 if public else 2
++    test.assertEqual((current[:start], current[end:]), (previous[:start], previous[start:]))
++    if public:
++        test.assertEqual(block.strip(), '{\n        persistence.makeSearchCollection(identifiers: identifiers)\n    }')
++    else:
++        test.assertEqual(block.strip(), '{\n        guard !identifiers.isEmpty else { return nil }\n        return ClipboardSearchCollection(context: context, identifiers: identifiers)\n    }')
++
++
++def ui_init_segments(source):
++    marker = '        searchIndex.onCollectionUpdate = '
++    if marker not in source: return [source[:source.index('        installListSelectionDelivery()')], source[source.index('        installListSelectionDelivery()'):]]
++    start = source.index(marker); block = body(source, 'searchIndex.onCollectionUpdate =')
++    expected = '''{ [weak self] identifiers in
++            guard let self, !self.isCollectionSearchQueryEmpty else { return }
++            self.pendingCollectionChangedIDs.formUnion(identifiers)
++            self.objectWillChange.send()
++        }'''
++    if block != expected: raise AssertionError('Unreviewed FRC UI callback')
++    end = source.index(block, start) + len(block) + 1
++    return [source[:start], source[end:]]
++
++
++def assert_visible_order_only(test, current, previous):
++    marker = '        let items = Dictionary(uniqueKeysWithValues: store.items.map { ($0.id, $0) })'
++    head, sep, tail = current.partition(marker);test.assertTrue(sep)
++    old_head, sep, old_tail = previous.partition('        return store.items.filter { item in')
++    test.assertTrue(sep);test.assertEqual(head, old_head)
++    test.assertEqual(tail, '''
++        return searchIndex.orderedIdentifiers.compactMap { identifier in
++            guard let item = items[identifier], showDeleted ? item.isDeleted : !item.isDeleted else { return nil }
++            return item
++        }
++    }''')
++    test.assertIn('searchIndex.identifiers.contains(item.id)', old_tail)
++    test.assertIn('return $0.createdAt > $1.createdAt', old_tail)
++
++
++def assert_ui_frc_only(test, current, previous):
++    left = ui_init_segments(current); right = ui_init_segments(previous)
++    test.assertEqual(left[0], right[0])
++    a, b = left[1], right[1]
++    current_body = body(a, 'var visibleItems:'); old_body = body(b, 'var visibleItems:')
++    assert_visible_order_only(test, current_body, old_body)
++    test.assertEqual(a.split(current_body), b.split(old_body))

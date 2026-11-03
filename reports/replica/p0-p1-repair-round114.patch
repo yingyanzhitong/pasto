@@ -1,0 +1,398 @@
+--- a/replica/Sources/Pasto/UI/AuxiliaryViews.swift
++++ b/replica/Sources/Pasto/UI/AuxiliaryViews.swift
+@@ -247,29 +247,32 @@
+             state.stackIDs.remove(at: visibleOffsets[row])
+             return true
+         }
+-        controller.makeCell = { [weak controller] item, row in
+-            let expectedIDs = controller?.snippets.map(\.id) ?? []
++        controller.makeNativeCell = { [weak controller] input, row in
++            let expectedIDs = controller?.snippetIDs ?? []
+             return NSHostingView(rootView:
+-                OriginalStackSnippetCellView(item: item, imageProvider: { item in
+-                    OriginalStackCategoryIcons.image(for: state.store.originalContentKind(of: item))
++                OriginalStackSnippetCellView(input: input, imageProvider: { current in
++                    if let rawType = current.previewRawType() {
++                        return OriginalStackCategoryIcons.image(for: OriginalPasteboardContentKind(rawValue: UInt8(rawType)) ?? .unknown)
++                    }
++                    return OriginalStackCategoryIcons.image(for: state.store.originalContentKind(of: current.resolvedItem()))
+                 }).frame(maxWidth: .infinity).frame(height: 44)
+                 .contextMenu {
+                     Button("复制") {
+-                        if let current = state.stackItem(for: item.id) {
++                        if let current = state.stackItem(for: input.id) {
+                             state.controller?.copy(item: current, plainTextOnly: false)
+                         }
+                     }
+                     Button("粘贴") {
+-                        if state.controller?.pasteStackItem(id: item.id, plainTextOnly: false) == true {
++                        if state.controller?.pasteStackItem(id: input.id, plainTextOnly: false) == true {
+                             controller?.removeRow(at: row, expectedIDs: expectedIDs)
+                             if state.stackItemIDs.isEmpty { state.controller?.hideStack() }
+                         }
+                     }
+-                    Button("预览") { state.controller?.showPreview(item: item, input: state.stackRestoreItem(for: item.id)) }
++                    Button("预览") { state.controller?.showPreview(item: input.resolvedItem(), input: input) }
+                     Button("移除") { controller?.removeRow(at: row, expectedIDs: expectedIDs) }
+                 })
+         }
+-        controller.updateSnippets(state.stackItems)
++        controller.updateNativeSnippets(state.stackSnippetInputs)
+     }
+ }
+ 
+--- a/replica/Sources/Pasto/UI/OriginalStackSnippetCell.swift
++++ b/replica/Sources/Pasto/UI/OriginalStackSnippetCell.swift
+@@ -4,25 +4,39 @@
+ 
+ @MainActor
+ struct OriginalStackSnippetCellView: NSViewRepresentable {
+-    let item: ClipboardItem
+-    let imageProvider: (ClipboardItem) -> NSImage?
++    let input: ClipboardRestoreItem
++    let imageProvider: (ClipboardRestoreItem) -> NSImage?
++
++    init(input: ClipboardRestoreItem, imageProvider: @escaping (ClipboardRestoreItem) -> NSImage?) {
++        self.input = input
++        self.imageProvider = imageProvider
++    }
++
++    init(item: ClipboardItem, imageProvider: @escaping (ClipboardItem) -> NSImage?) {
++        input = ClipboardRestoreItem(item: item)
++        self.imageProvider = { imageProvider($0.resolvedItem()) }
++    }
+ 
+     func makeNSView(context: Context) -> OriginalStackSnippetCell {
+-        OriginalStackSnippetCell(imageProvider: imageProvider)
++        OriginalStackSnippetCell(nativeImageProvider: imageProvider)
+     }
+ 
+     func updateNSView(_ view: OriginalStackSnippetCell, context: Context) {
+-        view.imageProvider = imageProvider
+-        view.f_1000519f8(item)
++        view.nativeImageProvider = imageProvider
++        view.updateNativeSnippet(input)
+     }
+ }
+ 
+ @MainActor
+ final class OriginalStackSnippetCell: NSTableCellView {
+-    var imageProvider: (ClipboardItem) -> NSImage?
++    var nativeImageProvider: (ClipboardRestoreItem) -> NSImage?
+ 
+-    init(imageProvider: @escaping (ClipboardItem) -> NSImage?) {
+-        self.imageProvider = imageProvider
++    convenience init(imageProvider: @escaping (ClipboardItem) -> NSImage?) {
++        self.init(nativeImageProvider: { imageProvider($0.resolvedItem()) })
++    }
++
++    init(nativeImageProvider: @escaping (ClipboardRestoreItem) -> NSImage?) {
++        self.nativeImageProvider = nativeImageProvider
+         super.init(frame: .zero)
+         // Retain the replica's existing row dimensions; the original Nib layout is separate.
+         let icon = NSImageView(frame: .zero)
+@@ -55,8 +69,12 @@
+ 
+     /// Paste 0x1000519f8: update only the outlets that exist, in the original order.
+     func f_1000519f8(_ item: ClipboardItem) {
+-        if let imageView { imageView.image = imageProvider(item) }
++        updateNativeSnippet(ClipboardRestoreItem(item: item))
++    }
++
++    func updateNativeSnippet(_ input: ClipboardRestoreItem) {
++        if let imageView { imageView.image = nativeImageProvider(input) }
+         textField?.maximumNumberOfLines = 2
+-        if let textField { textField.stringValue = OriginalStackSnippetText.f_100051ec8(item) }
++        if let textField { textField.stringValue = OriginalStackSnippetText.text(for: input) }
+     }
+ }
+--- a/replica/Sources/Pasto/UI/OriginalStackSnippetText.swift
++++ b/replica/Sources/Pasto/UI/OriginalStackSnippetText.swift
+@@ -6,21 +6,32 @@
+ enum OriginalStackSnippetText {
+     /// Paste 0x100051ec8: derive the Stack label from stored preview metadata.
+     static func f_100051ec8(_ item: ClipboardItem) -> String {
+-        if let metadata = OriginalImagePreviewMetadataCodec.decodeText(item.rawPreview) {
++        label(rawPreview: item.rawPreview) { count in
++            OriginalPreviewTitles.f_100308f88(item.originalTitle,
++                defaultTitle: defaultTitle(item, fileCount: count))
++        }
++    }
++
++    static func text(for input: ClipboardRestoreItem) -> String {
++        guard input.hasNativeEntity else { return f_100051ec8(input.resolvedItem()) }
++        return label(rawPreview: input.previewMetadataData()) { _ in input.previewTitle()!.title }
++    }
++
++    private static func label(rawPreview: Data?, filesTitle: (Int) -> String) -> String {
++        if let metadata = OriginalImagePreviewMetadataCodec.decodeText(rawPreview) {
+             return String(metadata.text.characters)
+         }
+-        if let metadata = OriginalImagePreviewMetadataCodec.decodeLink(item.rawPreview) {
++        if let metadata = OriginalImagePreviewMetadataCodec.decodeLink(rawPreview) {
+             return metadata.url.absoluteString
+         }
+-        if OriginalImagePreviewMetadataCodec.decode(item.rawPreview) != nil { return "Unknown" }
+-        if let metadata = OriginalImagePreviewMetadataCodec.decodeColor(item.rawPreview) {
++        if OriginalImagePreviewMetadataCodec.decode(rawPreview) != nil { return "Unknown" }
++        if let metadata = OriginalImagePreviewMetadataCodec.decodeColor(rawPreview) {
+             return OriginalPreviewColorFormatting.f_100206b5c(
+                 OriginalColorPreviewMetadataGenerator.color(metadata.code))
+         }
+-        if let metadata = OriginalImagePreviewMetadataCodec.decodeFiles(item.rawPreview) {
++        if let metadata = OriginalImagePreviewMetadataCodec.decodeFiles(rawPreview) {
+             if metadata.paths.count > 1 {
+-                return OriginalPreviewTitles.f_100308f88(item.originalTitle,
+-                    defaultTitle: defaultTitle(item, fileCount: metadata.paths.count))
++                return filesTitle(metadata.paths.count)
+             }
+             if let path = metadata.paths.first {
+                 return URL(fileURLWithPath: path).lastPathComponent
+--- a/replica/Sources/Pasto/UI/ReplicaUIController.swift
++++ b/replica/Sources/Pasto/UI/ReplicaUIController.swift
+@@ -337,6 +337,14 @@
+         stackIDs.compactMap { stackItem(for: $0) }
+     }
+ 
++    var stackSnippetInputs: [ClipboardRestoreItem] {
++        stackIDs.compactMap { id in
++            if let input = stackRestoreInputs[id] { return input }
++            return store.items.first { $0.id == id && !$0.isDeleted }
++                .map { ClipboardRestoreItem(item: $0) }
++        }
++    }
++
+     func hasStackItem(_ id: UUID) -> Bool {
+         stackRestoreInputs[id] != nil || store.items.contains { $0.id == id && !$0.isDeleted }
+     }
+@@ -738,20 +746,28 @@
+     }
+ 
+     func addToStack(_ item: ClipboardItem, restoreItem: ClipboardRestoreItem? = nil) {
++        insertStackItem(id: item.id, input: restoreItem)
++    }
++
++    func addToStack(_ input: ClipboardRestoreItem) {
++        insertStackItem(id: input.id, input: input)
++    }
++
++    private func insertStackItem(id: UUID, input: ClipboardRestoreItem?) {
+         let previousIDs = stackItemIDs
+-        if let restoreItem { stackRestoreInputs[item.id] = restoreItem }
++        if let input { stackRestoreInputs[id] = input }
+         let append = store.preferences.stackReversed
+         let insertionIndex = append ? previousIDs.count : 0
+-        stackIDs.insert(item.id, at: append ? stackIDs.count : 0)
+-        controller?.stackTableController?.didInsertSnippet(previousIDs: previousIDs,
+-            updated: stackItems, at: insertionIndex)
++        stackIDs.insert(id, at: append ? stackIDs.count : 0)
++        controller?.stackTableController?.didInsertNativeSnippet(previousIDs: previousIDs,
++            updated: stackSnippetInputs, at: insertionIndex)
+     }
+ 
+     func reverseStack() {
+         OriginalStackFunctions.f_10008468c(&stackIDs)
+         store.preferences.stackReversed.toggle()
+         perform { try store.save() }
+-        controller?.stackTableController?.updateSnippets(stackItems)
++        controller?.stackTableController?.updateNativeSnippets(stackSnippetInputs)
+     }
+ 
+     func selectAll() {
+@@ -1276,7 +1292,7 @@
+         guard let identifier = snapshot.identifiers.first else { return }
+         guard let reference = snapshot.itemReferences[identifier] else { fatalError("Missing Stack item reference") }
+         let input = reference.requiredRestoreItem(id: identifier)
+-        state.addToStack(input.resolvedItem(), restoreItem: input)
++        state.addToStack(input)
+     }
+ 
+     func contextMenuRestoreItems() -> [ClipboardRestoreItem] {
+@@ -1285,7 +1301,7 @@
+ 
+     func addSelectionToStack() {
+         for input in appliedRestoreItems() {
+-            state.addToStack(input.resolvedItem(), restoreItem: input)
++            state.addToStack(input)
+         }
+         showStack()
+     }
+@@ -1304,7 +1320,7 @@
+         guard let first = previousIDs.first else { return }
+         guard let index = state.stackIDs.firstIndex(of: first) else { return }
+         state.stackIDs.remove(at: index)
+-        stackTableController?.didConsumeHead(previousIDs: previousIDs, remaining: state.stackItems)
++        stackTableController?.didConsumeNativeHead(previousIDs: previousIDs, remaining: state.stackSnippetInputs)
+     }
+ 
+     func newTextItem() { showEditor(item: nil) }
+--- a/replica/Sources/PastoCore/ClipboardRestoreItem.swift
++++ b/replica/Sources/PastoCore/ClipboardRestoreItem.swift
+@@ -102,6 +102,11 @@
+         return (owner.value(forKey: "rawType") as? NSNumber)?.int64Value == 2
+     }
+ 
++    // 31ebc8: Stack cells read the current entity preview on row demand.
++    public func previewMetadataData() -> Data? {
++        nativeObject?.value(forKey: "rawPreview") as? Data
++    }
++
+     public func previewSharingContent() -> OriginalPreviewSharing.Content? {
+         guard let object = nativeObject else { return nil }
+         let rawType = (object.value(forKey: "rawType") as? NSNumber)?.intValue ?? 0
+--- a/replica/Sources/PastoCore/OriginalStackTableController.swift
++++ b/replica/Sources/PastoCore/OriginalStackTableController.swift
+@@ -4,10 +4,17 @@
+ @MainActor public final class OriginalStackTableController: NSObject, NSTableViewDataSource, NSTableViewDelegate {
+     public let tableView: NSTableView
+     public let scrollView: NSScrollView
+-    public var snippets: [ClipboardItem] = [] { didSet { snippetsRevision &+= 1 } }
++    private var snippetInputs: [ClipboardRestoreItem] = [] { didSet { snippetsRevision &+= 1 } }
++    // Value-only clients retain their existing API; the production table uses native inputs.
++    public var snippets: [ClipboardItem] {
++        get { snippetInputs.map { $0.resolvedItem() } }
++        set { snippetInputs = newValue.map { ClipboardRestoreItem(item: $0) } }
++    }
++    public var snippetIDs: [UUID] { snippetInputs.map(\.id) }
+     private var snippetsRevision: UInt = 0
+-    private var animatedSnippetsAwaitingRefresh: [ClipboardItem]?
++    private var animatedInputsAwaitingRefresh: [ClipboardRestoreItem]?
+     public var makeCell: ((ClipboardItem, Int) -> NSView)?
++    public var makeNativeCell: ((ClipboardRestoreItem, Int) -> NSView)?
+     public var removeSnippet: (([UUID], Int) -> Bool)?
+     public var removeActionTitle = ""
+     private var heightConstraint: NSLayoutConstraint?
+@@ -43,26 +50,45 @@
+     /// REA 0x100083a20: the animator commits its constant on a later run-loop turn.
+     public func f_100083a20() {
+         let constraint = f_100082b90()
+-        constraint.animator().constant = tableView.rowHeight * CGFloat(min(10, max(1, snippets.count)))
++        constraint.animator().constant = tableView.rowHeight * CGFloat(min(10, max(1, snippetInputs.count)))
+         constraint.isActive = true
+     }
+ 
++    private func sameInputs(_ lhs: [ClipboardRestoreItem], _ rhs: [ClipboardRestoreItem]) -> Bool {
++        guard lhs.count == rhs.count else { return false }
++        return zip(lhs, rhs).allSatisfy { pair in
++            if pair.0.hasNativeEntity || pair.1.hasNativeEntity {
++                return pair.0.hasSameEntity(as: pair.1)
++            }
++            return pair.0.resolvedItem() == pair.1.resolvedItem()
++        }
++    }
++
+     public func updateSnippets(_ values: [ClipboardItem]) {
+-        let preserveRemoval = animatedSnippetsAwaitingRefresh == values && snippets == values
+-        animatedSnippetsAwaitingRefresh = nil
+-        snippets = values
++        updateNativeSnippets(values.map { ClipboardRestoreItem(item: $0) })
++    }
++
++    public func updateNativeSnippets(_ values: [ClipboardRestoreItem]) {
++        let preserveRemoval = animatedInputsAwaitingRefresh.map { sameInputs($0, values) } == true
++            && sameInputs(snippetInputs, values)
++        animatedInputsAwaitingRefresh = nil
++        snippetInputs = values
+         if !preserveRemoval { tableView.reloadData() }
+         f_100083a20()
+     }
+ 
+     public func didInsertSnippet(previousIDs: [UUID], updated: [ClipboardItem], at index: Int) {
++        didInsertNativeSnippet(previousIDs: previousIDs, updated: updated.map { ClipboardRestoreItem(item: $0) }, at: index)
++    }
++
++    public func didInsertNativeSnippet(previousIDs: [UUID], updated: [ClipboardRestoreItem], at index: Int) {
+         guard updated.count == previousIDs.count + 1, updated.indices.contains(index) else { return }
+         var priorIDs = updated.map(\.id)
+         priorIDs.remove(at: index)
+         guard priorIDs == previousIDs else { return }
+-        if snippets.map(\.id) == previousIDs {
+-            snippets = updated
+-            animatedSnippetsAwaitingRefresh = updated
++        if snippetIDs == previousIDs {
++            snippetInputs = updated
++            animatedInputsAwaitingRefresh = updated
+             NSAnimationContext.runAnimationGroup { context in
+                 context.duration = 0.15
+                 f_100083a20()
+@@ -71,8 +97,8 @@
+             }
+         } else {
+             // The observed state may have reached the table before this notification.
+-            if snippets != updated {
+-                snippets = updated
++            if !sameInputs(snippetInputs, updated) {
++                snippetInputs = updated
+                 tableView.reloadData()
+             }
+             f_100083a20()
+@@ -81,10 +107,14 @@
+     }
+ 
+     public func didConsumeHead(previousIDs: [UUID], remaining: [ClipboardItem]) {
++        didConsumeNativeHead(previousIDs: previousIDs, remaining: remaining.map { ClipboardRestoreItem(item: $0) })
++    }
++
++    public func didConsumeNativeHead(previousIDs: [UUID], remaining: [ClipboardRestoreItem]) {
+         guard !previousIDs.isEmpty, Array(previousIDs.dropFirst()) == remaining.map(\.id) else { return }
+-        if snippets.map(\.id) == previousIDs {
+-            snippets = remaining
+-            animatedSnippetsAwaitingRefresh = remaining
++        if snippetIDs == previousIDs {
++            snippetInputs = remaining
++            animatedInputsAwaitingRefresh = remaining
+             NSAnimationContext.runAnimationGroup { context in
+                 context.duration = 0.15
+                 tableView.animator().removeRows(at: IndexSet(integer: 0), withAnimation: .slideUp)
+@@ -93,8 +123,8 @@
+             }
+         } else {
+             // A SwiftUI refresh may already have applied the model change.
+-            if snippets != remaining {
+-                snippets = remaining
++            if !sameInputs(snippetInputs, remaining) {
++                snippetInputs = remaining
+                 tableView.reloadData()
+             }
+             tableView.scrollRowToVisible(0)
+@@ -102,7 +132,7 @@
+         }
+     }
+ 
+-    public func f_100085230() -> Int { snippets.count }
++    public func f_100085230() -> Int { snippetInputs.count }
+     public func f_100085670(row: Int) -> Bool { false }
+ 
+     public func tableView(_ tableView: NSTableView, rowActionsForRow row: Int,
+@@ -110,16 +140,16 @@
+         guard edge == .trailing else { return [] }
+         return [NSTableViewRowAction(style: .destructive, title: removeActionTitle) { [weak self] _, row in
+             guard let self else { return }
+-            self.removeRow(at: row, expectedIDs: self.snippets.map(\.id))
++            self.removeRow(at: row, expectedIDs: self.snippetIDs)
+         }]
+     }
+ 
+     public func removeRow(at row: Int, expectedIDs: [UUID]) {
+-        guard snippets.map(\.id) == expectedIDs, snippets.indices.contains(row),
++        guard snippetIDs == expectedIDs, snippetInputs.indices.contains(row),
+               let removeSnippet else { return }
+         let revision = snippetsRevision
+         guard removeSnippet(expectedIDs, row), snippetsRevision == revision else { return }
+-        snippets.remove(at: row)
++        snippetInputs.remove(at: row)
+         tableView.removeRows(at: IndexSet(integer: row), withAnimation: .slideUp)
+         f_100083a20()
+     }
+@@ -127,7 +157,9 @@
+     public func numberOfRows(in tableView: NSTableView) -> Int { f_100085230() }
+     public func tableView(_ tableView: NSTableView, shouldSelectRow row: Int) -> Bool { f_100085670(row: row) }
+     public func tableView(_ tableView: NSTableView, viewFor tableColumn: NSTableColumn?, row: Int) -> NSView? {
+-        guard snippets.indices.contains(row) else { return nil }
+-        return makeCell?(snippets[row], row)
++        guard snippetInputs.indices.contains(row) else { return nil }
++        let input = snippetInputs[row]
++        if let makeNativeCell { return makeNativeCell(input, row) }
++        return makeCell?(input.resolvedItem(), row)
+     }
+ }

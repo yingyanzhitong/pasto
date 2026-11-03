@@ -1,0 +1,199 @@
+--- phase-27-before/replica/Sources/Pasto/UI/ReplicaNativeCardCollection.swift
++++ replica/Sources/Pasto/UI/ReplicaNativeCardCollection.swift
+@@ -357,13 +357,11 @@
+ 
+     func revealSelection(state: ReplicaUIState, itemID: UUID, animated: Bool,
+         completion: @escaping (Bool) -> Void) {
++        guard self.state === state, state.collectionOwner === self,
++              let index = items.firstIndex(where: { $0.id == itemID }) else { return }
+         // This input selection owns its reveal. Do not also enqueue the primary-ID observer's reveal.
+         lastPrimaryID = state.primaryID
+         needsPrimaryReveal = false
+-        update(state: state, cardSide: cardSide)
+-        // Explicit preview/reveal commands run outside the representable update transaction.
+-        drainCollectionSnapshots()
+-        guard let index = items.firstIndex(where: { $0.id == itemID }) else { return }
+         revealPrimaryCard(at: index, animated: animated, completion: completion)
+     }
+ 
+--- phase-27-before/replica/Sources/Pasto/UI/ReplicaUIController.swift
++++ replica/Sources/Pasto/UI/ReplicaUIController.swift
+@@ -1325,8 +1325,7 @@
+ 
+     // f075e3c resolves the requested index after completion, not the revealed endpoint.
+     private func selectionDidReveal(requestedIndex: Int, collection: ReplicaNativeCollectionHost) {
+-        let items = state.visibleItems
+-        guard items.indices.contains(requestedIndex),
++        guard let items = collection.appliedItems(for: state), items.indices.contains(requestedIndex),
+               let anchor = collection.visibleSelectionAnchor(at: requestedIndex,
+                   itemID: items[requestedIndex].id) else {
+             NSSound.beep()
+--- phase-27-before/scripts/tests/test_p0_repair_snapshot_coalescing.py
++++ scripts/tests/test_p0_repair_snapshot_coalescing.py
+@@ -91,11 +91,15 @@
+         focus=body(self.source,'private func restorePendingListFocus(state: ReplicaUIState)')
+         self.assertIn('self.state === state, state.collectionOwner === self',focus)
+ 
+-    def test_existing_immediate_preview_and_reveal_contracts_flush_after_enqueue(self):
+-        for signature in ['func previewAnchor(for itemID:','func revealSelection(state:']:
+-            method=body(self.source,signature)
+-            self.assertLess(method.index('update(state: state'),method.index('drainCollectionSnapshots()'))
+-            self.assertLess(method.index('drainCollectionSnapshots()'),method.index('items.firstIndex'))
++    def test_preview_adapter_flush_is_separate_from_applied_input_reveal(self):
++        method=body(self.source,'func previewAnchor(for itemID:')
++        self.assertLess(method.index('update(state: state'),method.index('drainCollectionSnapshots()'))
++        self.assertLess(method.index('drainCollectionSnapshots()'),method.index('items.firstIndex'))
++        reveal=body(self.source,'func revealSelection(state:')
++        self.assertIn('self.state === state, state.collectionOwner === self',reveal)
++        self.assertLess(reveal.index('items.firstIndex'),reveal.index('revealPrimaryCard(at: index'))
++        self.assertNotIn('update(state:',reveal)
++        self.assertNotIn('drainCollectionSnapshots()',reveal)
+         update=body(self.source,'func update(state: ReplicaUIState, cardSide: CGFloat)')
+         self.assertNotIn('drainCollectionSnapshots()',update)
+ 
+--- /dev/null
++++ scripts/tests/test_p0_repair_selection_reveal_applied.py
+@@ -0,0 +1,143 @@
++"""Original C/ARM and real reveal consumers; source checks only."""
++import hashlib
++import json
++from pathlib import Path
++import struct
++import sys
++import unittest
++
++ROOT = Path(__file__).resolve().parents[2]
++sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'scripts/tests')]
++from function_ledger import source_fragments
++from test_offline_p0_contracts import body
++from test_p0_repair_checksum_routing import original_fragment
++
++
++class SelectionRevealApplied(unittest.TestCase):
++    @classmethod
++    def setUpClass(cls):
++        cls.phase = ROOT / '.local/p0-repair/phase-27'
++        cls.proof = json.loads((cls.phase / 'selection-reveal-contract.json').read_text())
++        cls.ui = (ROOT / 'replica/Sources/Pasto/UI/ReplicaUIController.swift').read_text()
++        cls.host = (ROOT / 'replica/Sources/Pasto/UI/ReplicaNativeCardCollection.swift').read_text()
++        cls.raw = (ROOT / cls.proof['binary']['path']).read_bytes()
++
++    def native(self, address):
++        r = next(r for r in self.proof['original_fragments'] if r['address'] == address)
++        return original_fragment((ROOT / r['path']).read_text(), address[2:])
++
++    def offset(self, a):
++        s = next(s for s in self.proof['file_backed_segments'] if s['vmaddr'] <= a < s['vmaddr'] + s['filesize'])
++        return s['fileoff'] + a - s['vmaddr']
++
++    def word(self, a):
++        return struct.unpack_from('<I', self.raw, self.offset(a))[0]
++
++    def branch(self, a, link=True):
++        word = self.word(a)
++        self.assertEqual(word & 0xfc000000, 0x94000000 if link else 0x14000000)
++        immediate = word & 0x3ffffff
++        if immediate & (1 << 25):
++            immediate -= 1 << 26
++        return a + 4 * immediate
++
++    def test_original_sources_and_machine_data_are_bound(self):
++        self.assertEqual(hashlib.sha256(self.raw).hexdigest(), self.proof['binary']['sha256'])
++        for r in self.proof['original_fragments']:
++            self.assertEqual(source_fragments(ROOT / r['path'])[r['address']]['sha256'], r['sha256'])
++        for r in self.proof['machine_ranges']:
++            self.assertEqual(self.offset(int(r['start'], 16)), r['file_offset'])
++            raw = self.raw[r['file_offset']:r['file_offset'] + r['length']]
++            self.assertEqual(raw.hex(), r['hex'])
++            self.assertEqual(hashlib.sha256(raw).hexdigest(), r['sha256'])
++            if 'instruction_count' in r:
++                self.assertEqual(r['instruction_count'], r['length'] // 4)
++
++    def test_successful_completion_calls_installed_real_requested_index_delegate(self):
++        ptr = 0x100000000 + (struct.unpack_from('<Q', self.raw, self.offset(0x100eb26e8))[0] & ((1 << 36) - 1))
++        self.assertEqual(ptr, 0x10006f294)
++        self.assertEqual(self.branch(0x10006f298, link=False), 0x100075e3c)
++        self.assertEqual(self.word(0x100228e90), 0xf94012a8)  # witness+0x20
++        self.assertEqual(self.word(0x100228ea4), 0xd63f0100)
++        self.assertEqual(self.branch(0x100075ef4), 0x1001b9698)
++        callback = self.native('0x100228e1c')
++        self.assertIn('if ((param_1 & 1) == 0)', callback)
++        self.assertIn('(lVar3 + 0x20))(param_2,param_3', callback)
++
++    def test_original_reveal_reads_layout_and_scrolls_without_applier_drain(self):
++        source = self.native('0x10022c9c4')
++        self.assertIn('FUN_10022b4f8(auStack_f0)', source)
++        self.assertIn('CollectionView::___lazy_storage___contentLayout', source)
++        self.assertIn('_CGRectIntersectsRect', source)
++        self.assertIn('FUN_100229d4c(dVar10,dVar6,param_6 & 1,0,0)', source)
++        self.assertIn('(*param_7)(1)', source)
++        for forbidden in ['SnapshotApplier', 'FUN_1001b95bc', 'FUN_100223430', 'FUN_1001b9698']:
++            self.assertNotIn(forbidden, source)
++
++    def test_native_reveal_only_uses_applied_owner_and_geometry(self):
++        source = body(self.host, 'func revealSelection(state: ReplicaUIState, itemID: UUID, animated: Bool,')
++        self.assertIn('self.state === state, state.collectionOwner === self', source)
++        self.assertIn('let index = items.firstIndex(where: { $0.id == itemID })', source)
++        self.assertLess(source.index('guard self.state'), source.index('lastPrimaryID = state.primaryID'))
++        self.assertLess(source.index('items.firstIndex'), source.index('revealPrimaryCard(at: index'))
++        for forbidden in ['update(state:', 'drainCollectionSnapshots()', 'pendingSnapshot', 'tileCells()', 'visibleItems']:
++            self.assertNotIn(forbidden, source)
++
++    def test_completion_resolves_current_applied_requested_index_then_its_visible_cell(self):
++        source = body(self.ui, 'private func selectionDidReveal(requestedIndex: Int, collection: ReplicaNativeCollectionHost)')
++        order = ['collection.appliedItems(for: state)', 'items.indices.contains(requestedIndex)',
++                 'collection.visibleSelectionAnchor(at: requestedIndex', 'let item = items[requestedIndex]', 'popover.show(']
++        self.assertEqual([source.index(s) for s in order], sorted(source.index(s) for s in order))
++        self.assertNotIn('state.visibleItems', source)
++        self.assertNotIn('endpointID', source)
++        self.assertIn('NSSound.beep()', source)
++        native = self.native('0x100075e3c')
++        self.assertLess(native.index('FUN_1001b9698('), native.index('CollectionView::visibleCells'))
++        self.assertLess(native.index('CollectionView::visibleCells'), native.index('FUN_10002964c('))
++
++    def test_endpoint_and_requested_index_are_distinct_through_weak_callback(self):
++        source = body(self.ui, 'fileprivate func revealSelection(endpointID: UUID, requestedIndex: Int, animated: Bool)')
++        self.assertIn('itemID: endpointID', source)
++        self.assertIn('[weak self, weak collection]', source)
++        self.assertIn('guard success, let self, let collection', source)
++        self.assertIn('selectionDidReveal(requestedIndex: requestedIndex, collection: collection)', source)
++        native = self.native('0x100228c78')
++        self.assertIn('*(undefined **)(puVar2 + 0x18) = param_1', native)
++        self.assertIn('FUN_10022c9c4(uVar7,param_3 & 1,FUN_100229130,puVar2)', native)
++
++    def test_existing_geometry_immediate_and_async_completion_routes_are_preserved(self):
++        source = body(self.host, 'private func revealPrimaryCard(at index: Int, animated: Bool = true,')
++        self.assertIn('if card.intersects(clip.bounds)', source)
++        self.assertIn('completion?(true)', source)
++        self.assertIn('completion: completion)', source)
++        self.assertEqual(self.branch(0x10022cc50), 0x100229d4c)
++        self.assertEqual(self.branch(0x10022cc7c), 0x100229d4c)
++
++    def test_pending_reorder_and_independent_async_snapshot_cases_are_explicit(self):
++        immediate, asynchronous = self.proof['counterexamples']
++        i = immediate['requested_index']
++        self.assertNotEqual(immediate['applied'][i], immediate['projected'][i])
++        self.assertEqual(immediate['original_callback_item'], immediate['applied'][i])
++        self.assertEqual(immediate['after_callback_item'], immediate['original_callback_item'])
++        self.assertEqual(asynchronous['after_callback_item'], asynchronous['applied_at_completion'][asynchronous['requested_index']])
++        self.assertNotEqual(asynchronous['after_callback_item'], asynchronous['revealed_endpoint'])
++
++    def test_external_setter_has_no_new_speculative_remap_or_false_runtime_claim(self):
++        audit = self.proof['external_selection_audit']
++        self.assertFalse(audit['independent_pointer_or_keyboard_writer_found'])
++        self.assertFalse(audit['full_dynamic_reachability_proven'])
++        before = (self.phase / 'before/replica/Sources/Pasto/UI/ReplicaUIController.swift').read_text()
++        self.assertEqual(body(self.ui, 'private func reconcileExternalSelection()'),
++                         body(before, 'private func reconcileExternalSelection()'))
++
++    def test_partial_feedback_and_preview_contracts_remain_unclosed(self):
++        self.assertFalse(self.proof['full_function_migration_verified'])
++        self.assertIn('FUN_1000679ac()', self.native('0x100075e3c'))
++        self.assertTrue(any('0679ac' in s for s in self.proof['retained_partial_contracts']))
++        preview = body(self.host, 'func previewAnchor(for itemID:')
++        self.assertIn('drainCollectionSnapshots()', preview)
++        self.assertEqual(self.proof['extended_existing_contract']['new_record_count'], 0)
++
++
++if __name__ == '__main__':
++    unittest.main()

@@ -1,0 +1,113 @@
+--- a/replica/Sources/Pasto/UI/ReplicaUIController.swift
++++ b/replica/Sources/Pasto/UI/ReplicaUIController.swift
+@@ -857,13 +857,12 @@
+         }
+     }
+ 
+-    // 097828 converts the final destination index to SwiftUI's pre-removal offset.
+     func moveList(identifier: String, to target: ClipboardListTarget) -> Bool {
+-        guard let source = store.tabListTarget(identifier: identifier), let snapshot = tabListSnapshot,
+-              let sourceIndex = snapshot.index(of: source), let destinationIndex = snapshot.index(of: target) else { return false }
+-        let offset = sourceIndex < destinationIndex ? destinationIndex + 1 : destinationIndex
+-        try? store.moveList(source, toOffset: offset)
+-        return true
++        guard let source = store.tabListTarget(identifier: identifier) else { return false }
++        return toolbarOwner?.moveList(source, to: target, persist: { offset in
++            // 3c4cdc consumes transaction errors; 097828 still performs its applier move.
++            try? self.store.moveList(source, toOffset: offset)
++        }) ?? false
+     }
+ 
+ }
+--- a/replica/Sources/Pasto/UI/OriginalPanelTabBar.swift
++++ b/replica/Sources/Pasto/UI/OriginalPanelTabBar.swift
+@@ -10,6 +10,11 @@
+     private var cells: [String: OriginalPinboardTabView] = [:]
+     private var keys: [String] = []
+     private var isCollapsed = false
++    private var pendingTabs: [OriginalPinboardTab]?
++    private var hasAppliedSnapshot = false
++    private var snapshotDrainScheduled = false
++    private var isApplyingSnapshots = false
++    private var isPerformingLocalMutation = false
+ 
+     override init(frame frameRect: NSRect) {
+         super.init(frame: frameRect)
+@@ -39,6 +44,36 @@
+     }
+ 
+     func configure(_ tabs: [OriginalPinboardTab]) {
++        // 1b912c keeps the latest snapshot; each tab here carries its full configuration.
++        pendingTabs = tabs
++        scheduleSnapshotDrain()
++        // 096430 forces the initial applier delivery after installing its subscription.
++        if !hasAppliedSnapshot { drainSnapshots() }
++    }
++
++    private func scheduleSnapshotDrain() {
++        // 1b9214: applying, scheduled and local-mutation flags gate one main-queue delivery.
++        guard !isApplyingSnapshots, !snapshotDrainScheduled, !isPerformingLocalMutation else { return }
++        snapshotDrainScheduled = true
++        DispatchQueue.main.async { [weak self] in
++            MainActor.assumeIsolated { self?.drainSnapshots() }
++        }
++    }
++
++    private func drainSnapshots() {
++        // 1b95bc clears the pending slot before the renderer, then rechecks for reentry.
++        snapshotDrainScheduled = false
++        guard !isPerformingLocalMutation, !isApplyingSnapshots else { return }
++        isApplyingSnapshots = true
++        while !isPerformingLocalMutation, let tabs = pendingTabs {
++            pendingTabs = nil
++            hasAppliedSnapshot = true
++            applyTabs(tabs)
++        }
++        isApplyingSnapshots = false
++    }
++
++    private func applyTabs(_ tabs: [OriginalPinboardTab]) {
+         let newKeys = tabs.map(\.key)
+         let retainedKeys = Set(newKeys)
+         for key in keys where !retainedKeys.contains(key) {
+@@ -57,6 +92,26 @@
+         }
+         invalidateIntrinsicContentSize()
+         needsLayout = true
++    }
++
++    func moveList(_ source: ClipboardListTarget, to target: ClipboardListTarget,
++                  persist: (Int) -> Void) -> Bool {
++        // 0973d8/097828 use the displayed applier positions, not a newer model snapshot.
++        guard let sourceIndex = keys.firstIndex(where: { cells[$0]?.listTarget?.hasSameObjectID(as: source) == true }),
++              let destinationIndex = keys.firstIndex(where: { cells[$0]?.listTarget?.hasSameObjectID(as: target) == true }) else { return false }
++        // 1b91e4 defers incoming snapshots throughout persistence and the local array move.
++        isPerformingLocalMutation = true
++        persist(sourceIndex < destinationIndex ? destinationIndex + 1 : destinationIndex)
++        // 1b9460: remove first, then insert at min(destination, post-removal count).
++        let key = keys.remove(at: sourceIndex)
++        keys.insert(key, at: min(destinationIndex, keys.count))
++        // Existing NSStackView renderer adapter; 0973d8 rebuilds cells after its applier move.
++        stack.setViews(keys.compactMap { cells[$0] }, in: .leading)
++        invalidateIntrinsicContentSize()
++        needsLayout = true
++        isPerformingLocalMutation = false
++        scheduleSnapshotDrain()
++        return true
+     }
+ 
+     // 099838: locate the same native object, scroll its cell, then start editing after the animation.
+--- a/replica/Sources/Pasto/UI/OriginalPanelToolbar.swift
++++ b/replica/Sources/Pasto/UI/OriginalPanelToolbar.swift
+@@ -130,6 +130,11 @@
+         listEditingObservation = nil
+     }
+ 
++    func moveList(_ source: ClipboardListTarget, to target: ClipboardListTarget,
++                  persist: (Int) -> Void) -> Bool {
++        tabBar.moveList(source, to: target, persist: persist)
++    }
++
+     func applySearchQuery(_ nodes: [OriginalSearchQueryNode]) { searchBar.applySearchQuery(nodes) }
+ 
+     private func f_10000e4c8() -> [NSLayoutConstraint] {

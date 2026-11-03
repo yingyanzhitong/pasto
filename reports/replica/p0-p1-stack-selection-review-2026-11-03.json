@@ -1,0 +1,196 @@
+{
+  "kind": "fixed_p0_p1_stack_selection_batch_reuse",
+  "date": "2026-11-03",
+  "previous_report": "reports/replica/p0-p1-group-operation-review-2026-11-03.json",
+  "scope": {
+    "path": "reports/replica/p0-p1-review-scope-v6.json",
+    "denominator": 959,
+    "P0": 353,
+    "P1": 606,
+    "expanded": false
+  },
+  "operations": [
+    {
+      "operation": "ordered_selection_inputs",
+      "result": "reuse",
+      "source": "ReplicaUIState.collectionSelectionSnapshot -> ReplicaNativeCollectionHost.appliedRestoreItems -> copy/paste/Stack adapters",
+      "contract": "Read ordered IDs from the actual applied collection owner; do not derive output order from selection Set or a newer value snapshot."
+    },
+    {
+      "operation": "native_capture_and_occurrences",
+      "result": "reuse",
+      "native": [
+        "08339c",
+        "083758",
+        "363d58",
+        "1b8054",
+        "089a18",
+        "0898fc"
+      ],
+      "contract": "Read first current native history entity and insert exactly one occurrence. Repeated IDs remain separate array entries; retain native handle until its last occurrence is removed."
+    },
+    {
+      "operation": "reverse_and_direction",
+      "result": "reuse",
+      "native": [
+        "0844fc",
+        "08468c"
+      ],
+      "contract": "Reverse the occurrence array before toggling/persisting future insertion direction."
+    },
+    {
+      "operation": "global_head_consume_restore",
+      "result": "reuse",
+      "native": [
+        "086960",
+        "083df8",
+        "086968",
+        "083e58",
+        "08413c",
+        "089bec",
+        "085a6c"
+      ],
+      "contract": "Keep native input, pop one head, update shortcut state and invoke restore. Restore failure does not put the popped head back; empty queue closes session."
+    },
+    {
+      "operation": "registration_and_session_lifetime",
+      "result": "reuse",
+      "native": [
+        "082c68",
+        "1eaa64",
+        "1eb8d0",
+        "084f14",
+        "083d18",
+        "0a85d8",
+        "0a86c0",
+        "2182a4"
+      ],
+      "contract": "Queue controls shortcut registration without an accessibility precheck. Close releases content/observer and clears transient session; reopen does not load saved legacy UUID queue."
+    }
+  ],
+  "reviewed_existing_function_ids": [
+    "Paste:0x10008339c",
+    "Paste:0x10008468c",
+    "Paste:0x100082c68",
+    "Paste:0x1000a86c0",
+    "Paste:0x100228ee8",
+    "Paste:0x10022df78",
+    "Paste:0x1001eaa64",
+    "Paste:0x1001eb8d0",
+    "Paste:0x1000114fc",
+    "Paste:0x1000114ec",
+    "Paste:0x1000114f4"
+  ],
+  "support_not_added_to_denominator": [
+    "Paste:0x100083758",
+    "Paste:0x100363d58",
+    "Paste:0x1001b8054",
+    "Paste:0x100083e58",
+    "Paste:0x10008413c",
+    "Paste:0x1000844fc",
+    "Paste:0x10008499c",
+    "Paste:0x100084bc4",
+    "Paste:0x100089a18",
+    "Paste:0x1000898fc",
+    "Paste:0x100089bec",
+    "Paste:0x100085a6c",
+    "Paste:0x100086960",
+    "Paste:0x100083df8",
+    "Paste:0x100086968",
+    "Paste:0x100084f14",
+    "Paste:0x100083d18",
+    "Paste:0x1000a85d8",
+    "Paste:0x1002182a4",
+    "Paste:0x10006ba24"
+  ],
+  "evidence_summary": {
+    "native_functions": 31,
+    "complete_machine_ranges": 31,
+    "direct_branches": 499,
+    "selectors": 19,
+    "import_calls": 287
+  },
+  "current_round_repaired_function_ids": [],
+  "current_round_repaired_count": 0,
+  "new_confirmed_differences": [],
+  "counts": {
+    "finite_contract_consistent": 691,
+    "source_repaired": 258,
+    "user_adaptation": 9,
+    "evidence_insufficient": 1
+  },
+  "by_priority": {
+    "P0": {
+      "finite_contract_consistent": 267,
+      "source_repaired": 82,
+      "user_adaptation": 4
+    },
+    "P1": {
+      "finite_contract_consistent": 424,
+      "source_repaired": 176,
+      "user_adaptation": 5,
+      "evidence_insufficient": 1
+    }
+  },
+  "finite_comparison_progress": {
+    "numerator": 958,
+    "denominator": 959,
+    "percent": 99.9
+  },
+  "confirmed_unfixed_finite_differences": 0,
+  "evidence_insufficient_count": 1,
+  "unknown_function_ids": [
+    "Paste:0x1000f733c"
+  ],
+  "exact_total_outstanding": null,
+  "full_function_migration_verified": false,
+  "migration_completion_percent": null,
+  "tests": {
+    "current_source_checks": 25,
+    "new_checks": 25,
+    "failures": 0,
+    "errors": 0,
+    "source_substitution": false,
+    "trace_models": "Six Python queue witnesses: duplicate retention, numeric occurrence removal, pop on failed global restore, both insertion directions/reverse, ordered selected inputs and row-paste extension failure. Not Swift/CoreData execution."
+  },
+  "extensions_and_adapters": [
+    "Existing add-selection and per-row Paste context actions are Pasto extensions; not proven original native menu entries.",
+    "Per-row Paste extension removes only on successful request; original global Stack hotkey instead pops before restore. These are distinct paths.",
+    "Expected-ID/revision stale-action guards and legacy UUID/value fallbacks are Pasto adapter boundaries; original invalid-index traps and every reentry case are not claimed identical."
+  ],
+  "remaining_boundaries": [
+    "Finite source contracts only; all private ABI, optimized ARC, framework fault/reentry and window animations are unverified.",
+    "Original paid entitlement guard and network capabilities are excluded by user scope; no license bypass code is migrated here.",
+    "Explicit add-selection and per-row Paste context actions are existing Pasto extensions; do not claim an original native row-Paste entry without evidence.",
+    "Legacy UUID/value fallbacks remain explicit adapters; primary Stack capture/paste uses retained native input.",
+    "0f733c declaration/actual consumer remains insufficient; unchanged rather than guessed.",
+    "Complete native byte ranges bind evidence; they do not establish semantic equivalence for every instruction or original private ABI."
+  ],
+  "production_modified": false,
+  "existing_production_unchanged": 248,
+  "production_added": 0,
+  "old_test_files_modified": 0,
+  "source_inputs": {
+    "reports/replica/p0-p1-group-operation-review-2026-11-03.json": "2b43beecfd48bfd3f9b99b9f1feb5bdb93e73e8dcb1081d54afa63fc6bb19f1d",
+    ".local/p0-p1-parent-review/2026-11-03-stack-selection/baseline.json": "8d0c23963b5417762504b41e0579872408bdd12b752400865201102e2e2da531",
+    ".local/p0-p1-parent-review/2026-11-03-stack-selection/contract.json": "9a0237e5354f08905661deff02858921dc6e957ae6b4bc9df9a06152bd8844d0",
+    ".local/p0-p1-parent-review/2026-11-03-stack-selection/test-summary.json": "88f6647fa299d401ee1bcd3c5ac8eaa18a937916f6e6531c4e7673af8cb1f066",
+    ".local/p0-p1-parent-review/2026-11-03-stack-selection/proof.py": "46f7c5b5880b759223159eaffefab3ea2fda1dac6f7344e0f01604518ea129b3",
+    "scripts/tests/test_p1_stack_selection_batch.py": "f870b68c8928ea98358146e0ff5f11cf12934a71235fb097b84b199cacbfaae6"
+  },
+  "head_unchanged": "050e6878a5a52f96fe33aa40f48bb8a056cd0f05",
+  "version_unchanged": "1.0.2",
+  "function_map_unchanged": "ea781c82f93e580a940f0804fa120e01e9030357d10aee157fe4a135143b8985",
+  "compiled": false,
+  "built": false,
+  "installed": false,
+  "application_executed": false,
+  "framework_executed": false,
+  "network_used": false,
+  "committed": false,
+  "pushed": false,
+  "published": false,
+  "user_data_modified": false,
+  "goal_should_remain_active": true,
+  "next_action": "Review actual local search/filter/OCR producer-consumer chains without network or P2 scope expansion."
+}

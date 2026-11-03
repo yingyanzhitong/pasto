@@ -1,0 +1,381 @@
+{
+  "kind": "offline_source_contract_review",
+  "round": 17,
+  "status": "source-checks-passed-goal-active",
+  "generated_at": "2026-10-29T15:57:05.155077+00:00",
+  "previous_goal_turn": "progress",
+  "priority": "P1",
+  "module": "targeted_index_batch_progression_and_sdk_continuation",
+  "functions": [
+    {
+      "function_id": "Paste:0x1002ea78c",
+      "status": "fixed_targeted_batch_limit_partial",
+      "contract": "原指定ID路径去空后每批最多100，active且未取消才取下一批。当前已有目标强制ID，在非reset时以100分批；普通增量/全量不冒用此上限。原IDs fetch、active flag及取消静默结束与当前throw恢复仍不同。",
+      "original": {
+        "path": "decompiled/Paste/part-0241.c",
+        "sha256": "ed08b135b870ae114210d0d711fd1cfe8a194d7ee977266e25c3c702d140a900"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "private static let indexingBatchSize = 100"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "let batchSize = !resettingIndex && !forcedIdentifiers.isEmpty"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1002eaa10",
+      "status": "fixed_batch_materialization_partial",
+      "contract": "原每批fetch结果处理OCR候选后，非空才进入bulk builder；无结果仍按输入ID区间推进。当前在每个区间内部才map(searchableItem)，不先物化全部；原live fetch缺项、OCR队列及autorelease边界仍待迁移。",
+      "original": {
+        "path": "decompiled/Paste/part-0241.c",
+        "sha256": "225ad9c690eeaeb2284b4cf7f0df48ad6fd6644a728c65812c7ecb8c67a7d8bb"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "let changed = changedEntries[lowerBound..<upperBound].map(searchableItem)"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1002eaea4",
+      "status": "fixed_sequential_batch_advance_partial",
+      "contract": "原SDK成功才按输入区间+100推进，检查active/Task.isCancelled，失败直接返回不继续；当前逐批await，循环无inner catch，成功后才下一步；当前取消抛出/needsReset策略仍非原静默stop。",
+      "original": {
+        "path": "decompiled/Paste/part-0241.c",
+        "sha256": "5a103f81e26e0e947b6274ff738c19ec8b40f863f19c1dace27788542c490d5e"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "for lowerBound in stride(from: 0, to: changedEntries.count, by: batchSize)"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "try Task.checkCancellation()"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1002eb4d0",
+      "status": "range_copy_adapter_partial",
+      "contract": "原复制原字符串ID数组半开区间，范围/overflow异常trap；当前本地Entry数组半开切片，只对已解析合法UUID实体构造batch，未复制原任意String/ABI。",
+      "original": {
+        "path": "decompiled/Paste/part-0241.c",
+        "sha256": "7cb22c61d516cbe33402df0496238fa086ca062ec8a1e349e60ba12982feb15c"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "let upperBound = min(lowerBound + batchSize, changedEntries.count)"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "changedEntries[lowerBound..<upperBound]"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1002e1bac",
+      "status": "bulk_builder_parent_partial",
+      "contract": "原空输入直接结束，构造searchableItem数组并日志比较textContent，再提交SDK；当前每个非空slice构造，保留已有属性构造，原isUpdate/optional/日志和内容闭包仍partial。",
+      "original": {
+        "path": "decompiled/Paste/part-0239.c",
+        "sha256": "bcf322fb2dab37989504f021febb2fd8b8dface82368f011ab7841215be8800b"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": ".map(searchableItem)"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "index.indexSearchableItems(changed)"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1002e20b8",
+      "status": "sdk_await_adapter_partial",
+      "contract": "原weak服务存在时桥NSArray后调用indexSearchableItems并await checked continuation，弱服务消失返回特殊bool。当前持有index逐批await；原weak bool状态和async布局未复制。",
+      "original": {
+        "path": "decompiled/Paste/part-0239.c",
+        "sha256": "523636c790072d43e8f8a88c14f4a4baeae0f5a35d41f1cba12d2c6159badcbd"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "try await withCheckedThrowingContinuation"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "index.indexSearchableItems(changed)"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1002e2298",
+      "status": "sdk_completion_dispatch_partial",
+      "contract": "原nil error转success22fc，否则2348，按原executor返回；当前nil/error恢复同checked continuation方向，原executor/布尔返回不同。",
+      "original": {
+        "path": "decompiled/Paste/part-0239.c",
+        "sha256": "7c1a9cf8171e62bebb0a776accb368321125d6dbf7981a9816c3ebafcb0e175d"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "if let error { continuation.resume(throwing: error) }"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "else { continuation.resume() }"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1002e22fc",
+      "status": "sdk_success_partial",
+      "contract": "原成功输出false并结束；当前Void continuation成功返回后允许下一批，全请求成功才indexed=current。原bool/弱owner合同仍未全迁移。",
+      "original": {
+        "path": "decompiled/Paste/part-0239.c",
+        "sha256": "65816cfdff88c8bd903eaf6eb846d5a7e70a51d96753b6ac33d9b97a9304d22c"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "else { continuation.resume() }"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "indexed = current"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1002e2348",
+      "status": "sdk_failure_partial",
+      "contract": "原SDK错误向父传播，父不推进下一批；当前resume(throwing:)中断for并进入journal catch，不把半写入标记current；额外reset恢复仍差异。",
+      "original": {
+        "path": "decompiled/Paste/part-0239.c",
+        "sha256": "5bfb47ab930f1d6084c421658d4f3e64507d3482e0740a1dfd157c1d03784d50"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "if let error { continuation.resume(throwing: error) }"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "if !journalCompleted { needsReset = true }"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1002e23a8",
+      "status": "sdk_callback_adapter_partial",
+      "contract": "原错误为空resume成功，非空resume throwing；当前在每批SDK callback同分支，原block捕获及continuation ABI仍适配。",
+      "original": {
+        "path": "decompiled/Paste/part-0239.c",
+        "sha256": "f5538524bb660eac11c84ce36d820a072ebe5c6f3ea97a6c4fb2906cea5036b4"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "index.indexSearchableItems(changed) { error in"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "else { continuation.resume() }"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1002efba0",
+      "status": "full_index_state_entry_pending",
+      "contract": "原完整重建启动分配IndexState/optional多个临时值并进efccc；当前仍是needsReset和内存快照，没有同持久状态。未把指定IDs的100规则扩大为已证实全量规则，保留后续对照。",
+      "original": {
+        "path": "decompiled/Paste/part-0242.c",
+        "sha256": "b7f21c4fe61798a959e0a7708d78d785ef7eb0e052838448364b02903cecf71c"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "let resettingIndex = needsReset"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "? Self.indexingBatchSize : max(changedEntries.count, 1)"
+        }
+      ]
+    }
+  ],
+  "reviewed_count": 11,
+  "current_review_unique_count": 448,
+  "current_review_inventory_percent": 0.5522,
+  "static_bindings": {
+    "original_binary_sha256": "871f00354fbb1c165d858a98e6d19d6f43cb9d3f9f958b3e07c7f07eb5c19afb",
+    "first_batch_limit": {
+      "address": "0x1002ea894",
+      "bytes": "890c8052"
+    },
+    "first_batch_clamp": {
+      "address": "0x1002ea8fc",
+      "bytes": "880c80523f9101f128b1889a"
+    },
+    "next_batch_increment": {
+      "address": "0x1002eb000",
+      "bytes": "749201b1e9779f1a747700f90913063808c14339"
+    },
+    "next_batch_cancel_call": {
+      "address": "0x1002eb01c",
+      "bytes": "26352494c0010036",
+      "target": "0x100bf84b4"
+    },
+    "cancellation_stub": {
+      "address": "0x100bf84b4",
+      "file_offset": 12551348,
+      "container_file_offset": 12551348,
+      "section": "__TEXT,__stubs",
+      "body_size": 12,
+      "body_hex": "b01500d010a646f900021fd6",
+      "instruction_words": [
+        "0xd00015b0",
+        "0xf946a610",
+        "0xd61f0200"
+      ],
+      "instructions": [
+        "adrp x16, PAGE(symbol_pointer)",
+        "ldr x16, [x16, PAGEOFF(symbol_pointer)]",
+        "br x16"
+      ],
+      "pointer_address": "0x100eaed48",
+      "pointer_section": "__DATA_CONST,__got",
+      "pointer_file_offset": 15396168,
+      "pointer_container_file_offset": 15396168,
+      "pointer_raw_value": "0x80100000000010bd",
+      "dyld_binding": {
+        "import_index": 4285,
+        "import_table_slice_file_offset": 17105964,
+        "symbol": "_$sScTss5NeverORszABRs_rlE11isCancelledSbvgZ",
+        "dylib_ordinal": 67,
+        "dylib": {
+          "install_name": "/usr/lib/swift/libswift_Concurrency.dylib",
+          "load_command": "0xc",
+          "current_version": 0,
+          "current_version_string": "0.0.0",
+          "compatibility_version": 0,
+          "compatibility_version_string": "0.0.0"
+        },
+        "weak_import": false,
+        "import_addend": 0,
+        "mechanism": "LC_DYLD_CHAINED_FIXUPS",
+        "fixups_header_slice_file_offset": 17088512,
+        "pointer_format": 6,
+        "imports_format": 1,
+        "segment_index": 2,
+        "page_index": 2,
+        "page_start": 0,
+        "pointer_slice_file_offset": 15396168,
+        "pointer_raw_value": "0x80100000000010bd",
+        "pointer_addend": 0,
+        "effective_addend": 0
+      },
+      "indirect_symbol_index": 2795,
+      "pointer_indirect_symbol_index": 2795,
+      "symbol": "_$sScTss5NeverORszABRs_rlE11isCancelledSbvgZ",
+      "dylib_ordinal": 67,
+      "n_type": 1,
+      "n_sect": 0,
+      "n_desc": 17152,
+      "weak_import": false,
+      "dylib": {
+        "install_name": "/usr/lib/swift/libswift_Concurrency.dylib",
+        "load_command": "0xc",
+        "current_version": 0,
+        "current_version_string": "0.0.0",
+        "compatibility_version": 0,
+        "compatibility_version_string": "0.0.0"
+      },
+      "cpu_type": "0x100000c",
+      "cpu_subtype": "0x0"
+    }
+  },
+  "source_sha256": {
+    "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift": "343714647dfd6fef03751675c2fbb66116261c29b7a8195df8b10cf4d9165e92",
+    "scripts/tests/test_index_batch_contracts.py": "c24abf11c08a0aa47267b064889c79ac0ae43d0f1c1c24b94d428dd4295a5ef7",
+    "scripts/tests/test_search_pipeline_contracts.py": "7d9080582cddb41799e41c2678c2cf28bcbacf1352d78bc4ca45db06c3253aaa"
+  },
+  "new_partial_bindings": [
+    "Paste:0x1002eaa10",
+    "Paste:0x1002eaea4",
+    "Paste:0x1002eb4d0",
+    "Paste:0x1002e1bac",
+    "Paste:0x1002e20b8",
+    "Paste:0x1002e2298",
+    "Paste:0x1002e22fc",
+    "Paste:0x1002e2348",
+    "Paste:0x1002e23a8",
+    "Paste:0x1002efba0"
+  ],
+  "confirmed_differences_fixed": [
+    "已证实的指定ID重索引按独立100条上限逐批构造并await提交，避免一次物化全部CSSearchableItem",
+    "每批前检查取消，错误从SDK continuation传播后不推进下一批；全请求成功才提交内存indexed和应答",
+    "查询取消源码守卫改为定位查询loop之后的检查，避免新增索引检查掩盖查询完成检查缺失"
+  ],
+  "scope_correction": [
+    "100条来自指定ID消费者ea78c/eaea4；全量efba0和普通增量另有入口未闭合，所以未对它们声称100条一比一对齐"
+  ],
+  "tests": {
+    "passed": true,
+    "total": 168,
+    "added_in_round": 9,
+    "scope": "Python source/original-fragment/ARM64 bytes and dyld import evidence only; no Swift compilation or original/replica executable execution"
+  },
+  "new_fully_migrated_function_count": 0,
+  "historical_ledger": {
+    "numerator": 1648,
+    "denominator": 81123,
+    "percent": 2.0315,
+    "stale_evidence": true
+  },
+  "current_partial_count": 524,
+  "compiled": false,
+  "application_executed": false,
+  "original_binary_executed": false,
+  "user_data_modified": false,
+  "network_used": false,
+  "committed": false,
+  "pushed": false,
+  "module_complete": false,
+  "remaining_differences": [
+    "原指定ID分批live fetch、空结果/缺项、OCR队列、active flag与自有snapshot/UUID集合仍不同",
+    "原取消静默停止，当前Task.checkCancellation进入已有throw/needsReset恢复，不能算全部取消状态一致",
+    "原全量IndexState/冷启动schema、普通增量事件路径、索引query任务分离和actor生命周期尚未迁移完成"
+  ],
+  "next_module": "P1 search_and_filter",
+  "next_work": [
+    "继续efccc完整全量启动及IndexState读写，确认全量/增量批次参数和实体事件源",
+    "保持已知指定ID批次范围，复用已有正确方法，未知合同不猜测补齐"
+  ],
+  "inventory_checked": {
+    "mapped_reference_records_checked": 2181,
+    "mapping_states": {
+      "partial": 524,
+      "migrated": 1648,
+      "excluded_by_scope": 9
+    },
+    "reference_issue_counts": {
+      "missing_address_in_evidence": 12
+    },
+    "source_binding_counts": {
+      "current": 322,
+      "not_recorded": 1059,
+      "file_changed_needs_method_review": 267
+    },
+    "unchanged_source_review_count": 317
+  }
+}

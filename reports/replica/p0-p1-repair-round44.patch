@@ -1,0 +1,324 @@
+--- phase-44-before/replica/Sources/Pasto/UI/ReplicaSearchIndex.swift
++++ replica/Sources/Pasto/UI/ReplicaSearchIndex.swift
+@@ -15,6 +15,8 @@
+     private static let indexingBatchSize = 100
+     // 0x1002e6dc4 / 0x1002e74e4: the delete service independently batches 100 input IDs.
+     private static let deletionBatchSize = 100
++
++    private enum IndexingError: Error { case unavailable }
+ 
+     private struct Entry: Equatable {
+         let record: ClipboardSearchRecord
+@@ -314,12 +316,14 @@
+             var requestAcknowledgements = acknowledgements
+             acknowledgements = []
+             var journalCompleted = false
+-            // 0x1002f00dc: nil is not an identity mismatch; retain the previous nonnil identity.
+-            if let previous = lastSourceIdentifier, let current = request.sourceIdentifier, previous != current {
+-                needsReset = true
+-            }
+-            if let current = request.sourceIdentifier { lastSourceIdentifier = current }
+             do {
++                // 0x1002f00dc: nil is not an identity mismatch; retain the previous nonnil identity.
++                if let previous = lastSourceIdentifier, let current = request.sourceIdentifier, previous != current {
++                    needsReset = true
++                }
++                // 0x1002efccc: unavailable indexing must not start a snapshot/write/observer.
++                if needsReset && !CSSearchableIndex.isIndexingAvailable() { throw IndexingError.unavailable }
++                if let current = request.sourceIdentifier { lastSourceIdentifier = current }
+                 let resettingIndex = needsReset
+                 let usesSnapshot = resettingIndex || historyTask == nil
+                 let currentEntries: [Entry]
+@@ -328,7 +332,7 @@
+                 if needsReset {
+                     needsReset = false
+                     try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+-                        index.deleteSearchableItems(withDomainIdentifiers: [domain]) { error in
++                        index.deleteAllSearchableItems { error in
+                             if let error { continuation.resume(throwing: error) }
+                             else { continuation.resume() }
+                         }
+--- phase-44-before/replica/Sources/PastoCore/ClipboardPersistence.swift
++++ replica/Sources/PastoCore/ClipboardPersistence.swift
+@@ -1,6 +1,7 @@
+ import CoreData
+ import Combine
+ import Foundation
++import os
+ 
+ /// Pasto's model adapter for the original performAndWait / hasChanges / save transaction.
+ /// Entity identities remain the existing UUIDs; this is not the original vendor's store schema.
+@@ -15,6 +16,7 @@
+     private let searchHistory: OriginalSearchHistory
+     private let lists: ClipboardListPersistence
+     private let sources: ClipboardSourcePersistence
++    private let searchLogger = Logger(subsystem: "com.yingyanzhitong.paste-replica", category: "search-source")
+     private let itemUpdatesSubject = PassthroughSubject<Set<UUID>, Never>()
+     private var contextChangesObservation: AnyCancellable?
+ 
+@@ -224,6 +226,8 @@
+     func searchIndexRecords(identifiers: [String]?) throws -> [ClipboardSearchRecord] {
+         try perform {
+             context.reset()
++            // 0x10036dc00 resets after projecting records, including the empty/error result.
++            defer { context.reset() }
+             if let identifiers, identifiers.isEmpty { return [] }
+             let request = NSFetchRequest<NSManagedObject>(entityName: "Item")
+             if let identifiers {
+@@ -231,7 +235,14 @@
+                     format: "nativeIdentifier IN %@ OR (nativeIdentifier == nil AND key IN %@)", identifiers, identifiers)
+             }
+             guard let coordinator = context.persistentStoreCoordinator else { throw CocoaError(.fileReadCorruptFile) }
+-            return try context.fetch(request).map { object in
++            let objects: [NSManagedObject]
++            do { objects = try context.fetch(request) }
++            catch {
++                guard identifiers != nil else { throw error }
++                searchLogger.error("Search item fetch failed: \(error.localizedDescription, privacy: .public)")
++                return []
++            }
++            return try objects.map { object in
+                 let value = try decode(ClipboardItem.self, object)
+                 let rawType = (object.value(forKey: "rawType") as? NSNumber)?.uint8Value ?? 0
+                 let kind = OriginalPasteboardContentKind(rawValue: rawType) ?? .unknown
+--- phase-44-before/replica/Sources/PastoCore/OriginalSearchHistory.swift
++++ replica/Sources/PastoCore/OriginalSearchHistory.swift
+@@ -89,17 +89,13 @@
+     }
+ 
+     func observe(_ consume: @escaping ([OriginalSearchHistoryChange]) async throws -> Void) async {
+-        // Pasto-owned preference key; token bytes use the original secure archive representation.
+-        let identity: String? = context.persistentStoreCoordinator?.persistentStores.first?.identifier
+-        let key = identity.map {
+-            "pasto.search.history-token." + $0
+-        }
++        // 0x1003707a8/371394: one app-wide Config slot, independent of store identity.
++        let key = "indexHistoryTokenData"
+         var token: NSPersistentHistoryToken?
+-        if let key, let data = UserDefaults.standard.data(forKey: key) {
++        if let data = UserDefaults.standard.data(forKey: key) {
+             token = try? NSKeyedUnarchiver.unarchivedObject(ofClass: NSPersistentHistoryToken.self, from: data)
+         }
+         func persistToken() {
+-            guard let key else { return }
+             let data = token.flatMap { try? NSKeyedArchiver.archivedData(withRootObject: $0, requiringSecureCoding: true) }
+             UserDefaults.standard.set(data, forKey: key)
+         }
+--- phase-44-before/scripts/tests/test_search_history_contracts.py
++++ scripts/tests/test_search_history_contracts.py
+@@ -117,11 +117,11 @@
+         observe=body(self.history,'func observe(_ consume:')
+         for part in ['NSKeyedUnarchiver.unarchivedObject(ofClass: NSPersistentHistoryToken.self, from: data)',
+                      'NSKeyedArchiver.archivedData(withRootObject: $0, requiringSecureCoding: true)',
+-                     'UserDefaults.standard.set(data, forKey: key)','pasto.search.history-token.']:
++                     'UserDefaults.standard.set(data, forKey: key)','let key = "indexHistoryTokenData"']:
+             self.assertIn(part,observe)
+         self.assertLess(observe.index('await process()'),observe.index('for await _ in notifications()'))
+-        self.assertIn('if let key, let data = UserDefaults.standard.data(forKey: key)',observe)
+-        self.assertIn('guard let key else { return }',body(observe,'func persistToken()'))
++        self.assertIn('if let data = UserDefaults.standard.data(forKey: key)',observe)
++        self.assertNotIn('guard let key',body(observe,'func persistToken()'))
+         self.assertNotIn('guard let identity',observe) # unavailable identity must not disable the stream
+         loop=body(observe,'for await _ in notifications()')
+         self.assertLess(loop.index('guard !Task.isCancelled'),loop.index('await process()'))
+--- /dev/null
++++ scripts/tests/test_p1_repair_index_recovery_prerequisites.py
+@@ -0,0 +1,198 @@
++"""Local source/Mach-O contracts only; no defaults, database or native framework execution."""
++import hashlib
++import json
++import re
++import struct
++import sys
++import unittest
++from pathlib import Path
++
++ROOT = Path(__file__).resolve().parents[2]
++sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'scripts/tests')]
++from function_ledger import source_fragments
++from test_offline_p0_contracts import body
++from test_p0_repair_checksum_routing import original_fragment
++from test_p0_repair_identity import method_body
++
++
++class IndexRecoveryPrerequisites(unittest.TestCase):
++    @classmethod
++    def setUpClass(cls):
++        cls.phase = ROOT / '.local/p0-repair/phase-44'
++        cls.proof = json.loads((cls.phase / 'recovery-prerequisites-contract.json').read_text())
++        cls.history = (ROOT / 'replica/Sources/PastoCore/OriginalSearchHistory.swift').read_text()
++        cls.persistence = (ROOT / 'replica/Sources/PastoCore/ClipboardPersistence.swift').read_text()
++        cls.index = (ROOT / 'replica/Sources/Pasto/UI/ReplicaSearchIndex.swift').read_text()
++        cls.fragments = {r['address']: original_fragment((ROOT / r['path']).read_text(), r['address'][2:])
++                         for r in cls.proof['original_fragments']}
++
++    def before(self, path):
++        return (self.phase / 'before' / path).read_text()
++
++    def test_all_original_fragments_have_unchanged_hashes(self):
++        for row in self.proof['original_fragments']:
++            self.assertEqual(source_fragments(ROOT / row['path'])[row['address']]['sha256'], row['sha256'])
++
++    def test_fixed_token_key_is_bound_to_binary_literal_and_both_config_producers(self):
++        key = self.proof['token_key_binary']
++        self.assertEqual(bytes.fromhex(key['bytes']).decode('ascii'), 'indexHistoryTokenData')
++        self.assertEqual(key['length'], 21)
++        for address in ['0x1003707a8', '0x100371394']:
++            self.assertIn('0xd000000000000015,0x8000000100da3370', self.fragments[address])
++        self.assertIn('standardUserDefaults', self.fragments['0x1002cd57c'])
++
++    def test_actual_observer_uses_fixed_key_for_read_and_write_without_identity_gate(self):
++        observe = body(self.history, 'func observe(_ consume:')
++        self.assertIn('let key = "indexHistoryTokenData"', observe)
++        self.assertIn('UserDefaults.standard.data(forKey: key)', observe)
++        persist = body(observe, 'func persistToken()')
++        self.assertIn('UserDefaults.standard.set(data, forKey: key)', persist)
++        for forbidden in ['persistentStores', 'identity.map', 'history-token.', 'guard let key']:
++            self.assertNotIn(forbidden, observe)
++
++    def test_archive_catchup_notification_and_success_only_advancement_are_unchanged(self):
++        path = 'replica/Sources/PastoCore/OriginalSearchHistory.swift'
++        previous = self.before(path)
++        for marker in ['private func transactions(', 'private func changes(', 'private func notifications()', 'func process() async']:
++            self.assertEqual(body(self.history, marker), body(previous, marker))
++        current = body(self.history, 'func observe(_ consume:')
++        self.assertIn('NSKeyedUnarchiver.unarchivedObject(ofClass: NSPersistentHistoryToken.self, from: data)', current)
++        self.assertIn('NSKeyedArchiver.archivedData(withRootObject: $0, requiringSecureCoding: true)', current)
++        self.assertLess(current.index('persistToken()\n'), current.index('await process()'))
++        self.assertLess(current.index('await process()'), current.index('for await _ in notifications()'))
++
++    def test_different_store_identities_share_original_slot_without_defaults_execution(self):
++        observe = body(self.history, 'func observe(_ consume:')
++        match = re.search(r'let key = "([^"]+)"', observe)
++        self.assertIsNotNone(match)
++        keys = [match[1] for _ in ['store-A', 'store-B', None]]
++        self.assertEqual(keys, ['indexHistoryTokenData'] * 3)
++        old = self.before('replica/Sources/PastoCore/OriginalSearchHistory.swift')
++        self.assertIn('"pasto.search.history-token." + $0', old)
++
++    def test_full_delete_uses_original_native_selector_on_the_owned_named_index(self):
++        selector, = self.proof['native_selector_bindings']
++        self.assertEqual(selector['selector'], 'deleteAllSearchableItemsWithCompletionHandler:')
++        self.assertTrue(selector['chain']['declared_chain_reachable'])
++        self.assertEqual(selector['chain']['pointer_format'], 6)
++        self.assertIn('deleteAllSearchableItemsWithCompletionHandler_(self)', self.fragments['0x1002e267c'])
++        self.assertIn('index = CSSearchableIndex(name: domain)', self.index)
++        self.assertNotIn('CSSearchableIndex.default()', self.index)
++
++    def test_sdk_declarations_confirm_availability_named_index_and_full_delete(self):
++        sdk = self.proof['sdk']
++        raw = Path(sdk['path']).read_bytes()
++        self.assertEqual(hashlib.sha256(raw).hexdigest(), sdk['sha256'])
++        for token in [b'+ (BOOL)isIndexingAvailable', b'initWithName:', b'deleteAllSearchableItemsWithCompletionHandler:']:
++            self.assertIn(token, raw)
++
++    def test_reset_waits_for_delete_completion_before_clearing_memory_and_reindexing(self):
++        drain = body(self.index, 'private func drain() async')
++        reset = method_body(drain, 'if needsReset {')
++        order = ['needsReset = false', 'try await withCheckedThrowingContinuation',
++                 'index.deleteAllSearchableItems', 'continuation.resume(throwing: error)', 'indexed = [:]']
++        offsets = [reset.index(t) for t in order]
++        self.assertEqual(offsets, sorted(offsets))
++        self.assertIn('else { continuation.resume() }', reset)
++        self.assertNotIn('withDomainIdentifiers:', reset)
++        self.assertNotIn('matchingIdentifiers(', reset)
++
++    def test_original_id_fetch_error_sets_empty_array_then_resets_context(self):
++        source = self.fragments['0x10036dc00']
++        self.assertIn('"identifier IN %@"', source)
++        self.assertIn('Error::get_localizedDescription()', source)
++        self.assertIn('self.unknown = PTR___swiftEmptyArrayStorage_100eae0d8', source)
++        self.assertLess(source.index('self.unknown = PTR___swiftEmptyArrayStorage_100eae0d8'),
++                        source.index('objc_stub::reset(local_1d0)'))
++        self.assertLess(source.index('objc_stub::reset(local_1d0)'), source.index('FUN_1002faafc()'))
++
++    def test_native_id_fetch_catches_only_fetch_error_and_returns_empty_before_mapping(self):
++        make = body(self.persistence, 'func searchIndexRecords(')
++        fetch = body(make, 'do ')
++        self.assertIn('objects = try context.fetch(request)', fetch)
++        self.assertNotIn('decode(', fetch)
++        failure = body(make, 'catch')
++        self.assertIn('guard identifiers != nil else { throw error }', failure)
++        self.assertIn('error.localizedDescription', failure)
++        self.assertIn('return []', failure)
++        self.assertLess(make.index('catch'), make.index('return try objects.map'))
++        self.assertIn('let value = try decode(ClipboardItem.self, object)', make)
++        self.assertNotIn('rollback', failure)
++
++    def test_fetch_projection_reset_is_deferred_and_does_not_capture_objects_in_records(self):
++        make = body(self.persistence, 'func searchIndexRecords(')
++        self.assertIn('defer { context.reset() }', make)
++        self.assertEqual(make.count('context.reset()'), 2)  # prior pre-fetch reset retained; original trailing reset added
++        self.assertIn('objectID: object.objectID, kind: kind', make)
++        self.assertIn('content: kind == .image ? nil : { reader.content() }', make)
++        self.assertNotIn('context.save()', make)
++
++    def test_availability_check_blocks_data_sdk_and_observer_but_is_not_claimed_full_worker_fix(self):
++        drain = body(self.index, 'private func drain() async')
++        guard = 'if needsReset && !CSSearchableIndex.isIndexingAvailable() { throw IndexingError.unavailable }'
++        check = drain.index(guard)
++        for token in ['lastSourceIdentifier = current', 'currentEntries = try liveEntries(',
++                      'index.deleteAllSearchableItems', 'index.indexSearchableItems(', 'startHistoryObservation()']:
++            self.assertLess(check, drain.index(token))
++        self.assertIn('worker = Task { [weak self]', body(self.index, 'private func startWorker()'))
++        row, = self.proof['partial_repairs']
++        self.assertEqual(row['function_id'], 'Paste:0x1002efccc')
++        self.assertIn('not scored closed', row['still_open'])
++        self.assertNotIn(row['function_id'], [r['function_id'] for r in self.proof['contracts']])
++
++    def test_binary_state_schema_is_five_fields_with_invalid_count_not_store_identifier(self):
++        meta = self.proof['state_metadata']
++        raw = (ROOT / meta['path']).read_bytes()
++        self.assertEqual(hashlib.sha256(raw).hexdigest(), meta['sha256'])
++        data = json.loads(raw)
++        state, = [d for d in data['descriptors'] if d['name'] == 'IndexingState']
++        self.assertEqual([f['name'] for f in state['fields']],
++                         ['schemaVersion', 'totalItems', 'indexedItems', 'oldestTimestamp', 'invalidItems'])
++        self.assertEqual(state['record_size'], 12)
++        self.assertEqual(state['field_count'], 5)
++        for i in [0, 1, 2, 4]:
++            self.assertEqual(state['fields'][i]['type']['tokens'], [{'ascii': 'Si'}])
++        date = state['fields'][3]['type']['tokens']
++        self.assertEqual(date[0]['symbol'], '_$s10Foundation4DateVMn')
++        self.assertTrue(date[0]['external_binding'])
++        self.assertNotIn('pointer_target', date[0])
++        self.assertEqual(date[1], {'ascii': 'Sg'})
++
++    def test_actor_saved_state_and_store_id_are_separate_config_wrappers(self):
++        meta = json.loads((ROOT / self.proof['state_metadata']['path']).read_text())
++        actor, = [d for d in meta['descriptors'] if d['name'] == 'SpotlightIndexer']
++        fields = {f['name']: f for f in actor['fields']}
++        state = fields['_savedState']['type']['tokens']
++        self.assertEqual(state[0]['nominal'], 'Config')
++        self.assertEqual(state[2]['nominal'], 'IndexingState')
++        self.assertEqual(state[-1], {'ascii': 'SgG'})
++        store = fields['_indexedStoreID']['type']['tokens']
++        self.assertEqual(store[0]['nominal'], 'Config')
++        self.assertEqual(store[-1], {'ascii': 'ySSSgG'})
++        self.assertIn('isRunning', fields)
++        self.assertIn('changeObserverTask', fields)
++
++    def test_persisted_state_key_paths_and_json_codec_are_bound_for_next_migration(self):
++        keys = self.proof['state_metadata']['keys']
++        self.assertEqual([row['key'] for row in keys], ['indexingState', 'indexedStoreID'])
++        for row in keys:
++            value, = struct.unpack('<i', bytes.fromhex(row['initializer_relative_bytes']))
++            self.assertEqual(int(row['initializer_field'], 16) + value, int(row['initializer'], 16))
++            words = [int(w, 16) for w in row['swift_small_string_words']]
++            literal = struct.pack('<2Q', *words)[:(words[1] >> 56) & 15].decode('ascii')
++            self.assertEqual(literal, row['key'])
++        self.assertIn('JSONDecoder::_decode', self.fragments['0x1002cb960'])
++        self.assertIn('JSONEncoder::_encode', self.fragments['0x1002cba94'])
++
++    def test_state_recovery_is_not_faked_by_new_types_or_completion_markers(self):
++        self.assertEqual(len(self.proof['contracts']), 3)
++        self.assertFalse(self.proof['full_function_migration_verified'])
++        self.assertEqual(self.proof['function_map_markers_upgraded'], 0)
++        self.assertNotIn('struct IndexingState', self.index)
++        self.assertIn('private var needsReset = true', self.index)
++        for row in self.proof['contracts']:
++            self.assertFalse(row['full_function_migration_verified'])
++
++
++if __name__ == '__main__':
++    unittest.main()

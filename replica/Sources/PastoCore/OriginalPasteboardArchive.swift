@@ -11,6 +11,8 @@ public enum OriginalPasteboardArchive {
             decoder.decodingFailurePolicy = .setErrorAndReturn
             decoder.setClass(OriginalPasteboardItem.self, forClassName: "PasteCore.PasteboardItem")
             decoder.setClass(OriginalPasteboardItem.self, forClassName: "_TtC9PasteCore14PasteboardItem")
+            decoder.setClass(OriginalPasteboardItem.self, forClassName: "PastoCore.OriginalPasteboardItem")
+            decoder.setClass(OriginalPasteboardItem.self, forClassName: "_TtC9PastoCore22OriginalPasteboardItem")
             defer { decoder.finishDecoding() }
             let root = decoder.decodeObject(of: [NSArray.self, OriginalPasteboardItem.self],
                                             forKey: NSKeyedArchiveRootObjectKey)

@@ -1,0 +1,572 @@
+{
+  "kind": "offline_source_contract_audit",
+  "round": 21,
+  "status": "source-checks-passed-goal-active",
+  "generated_at": "2026-10-29T16:44:04.635204+00:00",
+  "previous_goal_turn": "progress",
+  "priority": "P0",
+  "module": "local_history_consumer_query_task_separation",
+  "functions": [
+    {
+      "function_id": "Paste:0x1003600a0",
+      "status": "source_contract_repaired_partial",
+      "contract": "取消旧查询Task并持有新Task，启动时不发送空结果；当前独立queryTask替换，不等待index worker，不用共享CSSearchQuery槽取消新任务。",
+      "original": {
+        "path": "decompiled/Paste/part-0274.c",
+        "sha256": "b88edc04759b11e82ce122a0a54cccb2520afbcc527173482c485fdbb98a6593"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "private func replaceQuery(with nodes:"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "queryTask?.cancel()"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "queryTask = Task { [weak self]"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1003601e0",
+      "status": "source_contract_repaired_partial",
+      "contract": "原查询任务准备CancellationError类型并进入360240；当前query Task区分CancellationError，执行器/async帧不计全等。",
+      "original": {
+        "path": "decompiled/Paste/part-0274.c",
+        "sha256": "67a8bb24b024e16c7c274f87c73f8e55f5702b98f88cd7c5a7b5bc8b99da1df2"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "queryTask = Task { [weak self]"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "catch is CancellationError"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x100360240",
+      "status": "source_contract_repaired_partial",
+      "contract": "原弱owner存在且Task未取消才调用服务；当前weak self及预取消检查在matchingIdentifiers调用前，查询不再受index await阻塞。",
+      "original": {
+        "path": "decompiled/Paste/part-0274.c",
+        "sha256": "b48cd33949a43922abb16298ab862bac1fd1f255568694dccbf7473506d3859b"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "guard let self, !Task.isCancelled else { return }"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "await Self.matchingIdentifiers("
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1003602fc",
+      "status": "source_contract_repaired_partial",
+      "contract": "取消错误退出保留结果；普通错误记录并形成空结果；成功和失败在交付前检查该Task取消状态。当前取消/ordinary error分别处理，查询生命周期与索引无关；原provider/FRC投影与日志仍适配。",
+      "original": {
+        "path": "decompiled/Paste/part-0274.c",
+        "sha256": "c856babba95ea737b087d792385cac3263cf54f2d242a4cf2ee97d4b4bca1d5d"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "catch is CancellationError"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "guard !Task.isCancelled else { return }"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "identifiers = found"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "identifiers = []"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x100360774",
+      "status": "source_contract_repaired_partial",
+      "contract": "原切MainActor再发布provider；当前query匹配nonisolated async、回MainActor Task后检查取消并发布UUID集合，非原跨执行器帧/原生provider。",
+      "original": {
+        "path": "decompiled/Paste/part-0274.c",
+        "sha256": "267d01066e8afbd54817acf3a4993e589fe861b152707176c17b5b913103e1cc"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "nonisolated private static func matchingIdentifiers("
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "try Task.checkCancellation()"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "identifiers = found"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1003607c4",
+      "status": "source_contract_repaired_partial",
+      "contract": "原释放provider/结果及异步帧；当前Task和Swift ARC负责局部SDK查询/结果生命周期，未造ABI清理包装。",
+      "original": {
+        "path": "decompiled/Paste/part-0274.c",
+        "sha256": "36fd11a4bf508e9e4a462df97881ddbc44e35fdded7a11d4113de3f7ee4f2def"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "let query = CSSearchQuery(queryString: predicate, queryContext: context)"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "queryTask = Task { [weak self]"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1002e2930",
+      "status": "source_contract_repaired_partial",
+      "contract": "空predicate返回空；非空无fetchAttributes的CSSearchQuery与results迭代。现SDK查询局部于nonisolated helper，不再放索引drain；自有store filter/UUID适配保留。",
+      "original": {
+        "path": "decompiled/Paste/part-0239.c",
+        "sha256": "0666ca3631112aba1d4d5b429eb573ecd7c50c917288e9f3875492f97f917d23"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "nonisolated private static func matchingIdentifiers("
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "guard !predicate.isEmpty else { return [] }"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "context.fetchAttributes = []"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1002e2b90",
+      "status": "source_contract_repaired_partial",
+      "contract": "原results next的成功/throw续体；当前独立helper for try await向查询Task返回/抛错，不影响SDK索引任务。",
+      "original": {
+        "path": "decompiled/Paste/part-0239.c",
+        "sha256": "0b5aa3036c6d44958861fe96c7fd8148ca1a3171bb7cee6ab88a303ed7a1fc3f"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "for try await result in query.results"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "await Self.matchingIdentifiers("
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1002e2bf8",
+      "status": "source_contract_repaired_partial",
+      "contract": "每个原始结果取identifier并递增原始count，达到工厂上限100结束；迭代后检查取消。当前helper limit由Self.maximumResultCount传入，返回前和MainActor发布前均检查；UUID去重非原数组。",
+      "original": {
+        "path": "decompiled/Paste/part-0239.c",
+        "sha256": "b9e91698ce5bc163ffb71e7a95511486f75fa89d90ee0e7ba350e897b257f8db"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "limit: Self.maximumResultCount"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "if resultCount == limit { break }"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "try Task.checkCancellation()"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "return found"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1002e2e3c",
+      "status": "source_contract_repaired_partial",
+      "contract": "SDK迭代错误释放局部迭代器后上抛，provider区分取消/普通错误；当前helper无catch、独立Task负责错误，索引错误不再清查询结果。",
+      "original": {
+        "path": "decompiled/Paste/part-0239.c",
+        "sha256": "1d4c580866207aceba19e47281197fcac73f343fc07001f7760ade1a3205bd94"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "for try await result in query.results"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "catch is CancellationError"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "logger.error(\"Search query failed:"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x10035ff00",
+      "status": "source_contract_repaired_partial",
+      "contract": "原query publisher removeDuplicates后启动任务，实体变化不触发换query。当前queryNodes比较独立于Request.entries，普通store更新不替换查询；原Combine生命周期仍适配。",
+      "original": {
+        "path": "decompiled/Paste/part-0274.c",
+        "sha256": "b3fad63fc8b3ccc4325835463ff2884ba293c19224aea0138c71bdd0b32c9bc6"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "if queryNodes != nodes"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "queryNodes = nodes"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "replaceQuery(with: nodes)"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x100364960",
+      "status": "source_contract_repaired_partial",
+      "contract": "原sink入口经3646a8调3600a0；当前防抖query经update→replaceQuery真实调用，不复制ABI转发空壳。",
+      "original": {
+        "path": "decompiled/Paste/part-0275.c",
+        "sha256": "6db3be11dc7cbb9b5dc9c9d71afb20cc687ea921cf69526d58afb3a8b4754946"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "func update(items:"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "replaceQuery(with: nodes)"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1003646a8",
+      "status": "source_contract_repaired_partial",
+      "contract": "原weak provider存活才开始query；当前Task weak self及预取消分支承担实际生产调用，原weak box内存布局未迁移。",
+      "original": {
+        "path": "decompiled/Paste/part-0275.c",
+        "sha256": "dfb41ffbb92598a8739478a4eedbd1766475dc5207c48d10c4663232517a9c92"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "queryTask = Task { [weak self]"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "guard let self, !Task.isCancelled else { return }"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1002e0f7c",
+      "status": "source_contract_repaired_partial",
+      "contract": "原所有节点trim为空则空，非空调用query服务；当前复用query predicate生成并对空predicate返回空，完整原节点服务DI和泛型入口未迁移。",
+      "original": {
+        "path": "decompiled/Paste/part-0239.c",
+        "sha256": "cbd759cf5a30be01d734284108a3365c8dd799009b8733678200913807b5cf8e"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "let predicate = OriginalSearchQuery.f_1002f45b0(nodes)"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "guard !predicate.isEmpty else { return [] }"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1002e36dc",
+      "status": "source_contract_repaired_partial",
+      "contract": "原生成predicate，非空调用2930/结果日志，空返回空；当前replaceQuery生成、helper空guard及局部SDK查询，原服务logger/DI不同。",
+      "original": {
+        "path": "decompiled/Paste/part-0240.c",
+        "sha256": "79400807015a1b6d98e8e81e349b0f83a7c71932366e7fa4ceda152c56efcf01"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "let predicate = OriginalSearchQuery.f_1002f45b0(nodes)"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "CSSearchQuery(queryString: predicate, queryContext: context)"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1002e3858",
+      "status": "source_contract_repaired_partial",
+      "contract": "原query工作成功返回命中数组，失败继续抛错，并有命中计数日志；当前独立helper返回Set，任务成功交付，原数组/计数日志/async续体仍不同。",
+      "original": {
+        "path": "decompiled/Paste/part-0240.c",
+        "sha256": "374d6bd3cb8a04c53ade92a5985d6e920cfa99d19af11d9d04446be701b2763f"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "return found"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "identifiers = found"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x100364f4c",
+      "status": "source_contract_repaired_partial",
+      "contract": "原本次调用走无名字、默认优先级的泛用Task创建，并可支持其他actor/名称分支；当前Swift Task实际创建独立query任务，仅本次语义，泛用工厂完整合同和原执行器不等价。",
+      "original": {
+        "path": "decompiled/Paste/part-0276.c",
+        "sha256": "80dc63b68f30c2c4454fd675d1ee8dd8736f283eba68a89f5179e89fc2104742"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "queryTask = Task { [weak self]"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "private var queryTask: Task<Void, Never>?"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1003649ec",
+      "status": "source_contract_repaired_partial",
+      "contract": "原100c42ec0相对指针指向此任务闭包，捕获weak box/query进入3601e0；当前closure捕获weak self及predicate，不造泛型ABI包装。",
+      "original": {
+        "path": "decompiled/Paste/part-0276.c",
+        "sha256": "6ee3abddd382047fd8b07149f82c8a68c0ec4c49aea11e6fd80581f3f9c1e382"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "queryTask = Task { [weak self]"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "await Self.matchingIdentifiers("
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1002d68c0",
+      "status": "original_actor_seed_gap_confirmed",
+      "contract": "服务构造中的100c3e6d0初始actor串行任务指向此函数，实际只调2e1208返回；不能误称后台全量索引启动。当前worker=nil，不是原actor任务链的completed Task种子。",
+      "original": {
+        "path": "decompiled/Paste/part-0235.c",
+        "sha256": "d7078b1865ce6dafd6a6571ecbd32447b08283d2436cbb9b2ba99d9baad275f6"
+      },
+      "source_references": []
+    },
+    {
+      "function_id": "Paste:0x1002e1208",
+      "status": "original_actor_seed_gap_confirmed",
+      "contract": "原无操作异步返回，作为actor初始串行任务种子被使用；当前没有该链模型，未造空函数增加迁移数。",
+      "original": {
+        "path": "decompiled/Paste/part-0239.c",
+        "sha256": "0303902fd8c1eb253f72c2532b05a9c77befc4a5caad5c8df45b5dda41d960c5"
+      },
+      "source_references": []
+    }
+  ],
+  "reviewed_count": 20,
+  "current_review_unique_count": 498,
+  "current_review_inventory_percent": 0.6139,
+  "static_bindings": {
+    "original_binary_sha256": "871f00354fbb1c165d858a98e6d19d6f43cb9d3f9f958b3e07c7f07eb5c19afb",
+    "query_task_descriptor": {
+      "address": "0x100c42ec0",
+      "bytes": "2c1b72ff20000000",
+      "target": "0x1003649ec",
+      "frame": 32
+    },
+    "initial_serial_task_descriptor": {
+      "address": "0x100c3e6d0",
+      "bytes": "f08169ff20000000",
+      "target": "0x1002d68c0",
+      "frame": 32
+    },
+    "actor_seed_note": "0x1002d68c0 calls no-op async return 0x1002e1208; not an indexing startup task.",
+    "query_owner_task_load": {
+      "address": "0x1003600f4",
+      "bytes": "962640f9"
+    },
+    "cancel_call": {
+      "address": "0x100360120",
+      "bytes": "dc602294",
+      "target": "0x100bf8490"
+    },
+    "cancel_stub": {
+      "address": "0x100bf8490",
+      "body_hex": "b01500d0108e46f900021fd6",
+      "pointer_address": "0x100eaed18",
+      "symbol": "_$sScT6cancelyyF",
+      "dyld_binding": {
+        "import_index": 4279,
+        "import_table_slice_file_offset": 17105940,
+        "symbol": "_$sScT6cancelyyF",
+        "dylib_ordinal": 67,
+        "dylib": {
+          "install_name": "/usr/lib/swift/libswift_Concurrency.dylib",
+          "load_command": "0xc",
+          "current_version": 0,
+          "current_version_string": "0.0.0",
+          "compatibility_version": 0,
+          "compatibility_version_string": "0.0.0"
+        },
+        "weak_import": false,
+        "import_addend": 0,
+        "mechanism": "LC_DYLD_CHAINED_FIXUPS",
+        "fixups_header_slice_file_offset": 17088512,
+        "pointer_format": 6,
+        "imports_format": 1,
+        "segment_index": 2,
+        "page_index": 2,
+        "page_start": 0,
+        "pointer_slice_file_offset": 15396120,
+        "pointer_raw_value": "0x80100000000010b7",
+        "pointer_addend": 0,
+        "effective_addend": 0
+      }
+    }
+  },
+  "unchanged_original_fragments_rechecked": [
+    "Paste:0x1003600a0",
+    "Paste:0x1003601e0",
+    "Paste:0x100360240",
+    "Paste:0x1003602fc",
+    "Paste:0x100360774",
+    "Paste:0x1003607c4",
+    "Paste:0x1002e2930",
+    "Paste:0x1002e2b90",
+    "Paste:0x1002e2bf8",
+    "Paste:0x1002e2e3c",
+    "Paste:0x10035ff00",
+    "Paste:0x100364960",
+    "Paste:0x1003646a8"
+  ],
+  "new_partial_bindings": [
+    "Paste:0x1003601e0",
+    "Paste:0x100360240",
+    "Paste:0x1003602fc",
+    "Paste:0x100360774",
+    "Paste:0x1003607c4",
+    "Paste:0x1002e2b90",
+    "Paste:0x1002e2e3c",
+    "Paste:0x10035ff00",
+    "Paste:0x100364960",
+    "Paste:0x1003646a8",
+    "Paste:0x1002e0f7c",
+    "Paste:0x1002e3858",
+    "Paste:0x100364f4c",
+    "Paste:0x1003649ec"
+  ],
+  "rebound_partial_bindings": [
+    "Paste:0x1003600a0",
+    "Paste:0x1002e2930",
+    "Paste:0x1002e2bf8",
+    "Paste:0x1002e36dc"
+  ],
+  "current_partial_count": 565,
+  "source_sha256": {
+    "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift": "602c05f6c3ab3eb169ab8921ade1147c345299003f79f5088c16311b86e8ee91",
+    "scripts/tests/test_query_task_contracts.py": "2e6afad4c42d47331074d4b15dd71c79a7da551257fe9bea21882a12bc34a070",
+    "scripts/tests/test_search_pipeline_contracts.py": "c36ecf4f6ea40c9549d07c2e64e6ecb3bbb800b76df8ab9006f722ee35796a5f",
+    "scripts/tests/test_search_delivery_contracts.py": "40a7392c6423b7fb0e343afe12a0014766de050d318b736c315e21f8b5172916",
+    "scripts/tests/test_search_history_contracts.py": "f036159592692b09e456395e8c0220a4ed0da11f36a2c821f5873047f5890e44",
+    "scripts/tests/test_index_batch_contracts.py": "5f585b841c8985f84d7bac91305bc49b4a9dd60852c038cc4bf2eeb2cdb48a4e",
+    "scripts/tests/test_index_rebuild_contracts.py": "57f3e4eea657ae2aa0cf2b4ab7f58dc01fef8360420e44307fbfb37e455de836"
+  },
+  "previous_source_sha256": {
+    "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift": "db0eb9697ba611fbe96837d2e6a060fea10ae8f2a0ce3e62cbf20c1c13bad77c"
+  },
+  "production_source_edited": true,
+  "tests": {
+    "passed": true,
+    "total": 203,
+    "added_in_round": 9,
+    "scope": "Python source ownership/cancellation/limit/provenance assertions only; no Swift, SDK, Core Data or application execution."
+  },
+  "new_fully_migrated_function_count": 0,
+  "historical_ledger": {
+    "numerator": 1648,
+    "denominator": 81123,
+    "percent": 2.0315,
+    "stale_evidence": true
+  },
+  "remaining_differences": [
+    "IndexingState持久化/schema/可用性/全量恢复/健康probe仍缺，原actor串行任务链和active错误恢复与当前worker不同",
+    "查询匹配nonisolated async、发布MainActor，但任务自身与原泛用工厂的执行器/优先级/任务本地值和async帧未证全等",
+    "返回UUID Set与原String数组及ItemEntity FRC/provider/nil语义仍适配，完整实体/日志/DI和缺项诊断继续待迁移",
+    "指定ID仍先一次fetch所有目标、SDK才100分批，原逐输入分批fetch/OCR/active及普通增量batch规则仍待对齐",
+    "P0模型/事务错误/Undo、原applier以及其它P0/P1/P2目标不缩减；不以源码检查冒充编译或功能回归"
+  ],
+  "next_module": "P0 data_and_persistence",
+  "next_work": [
+    "先补指定ID按原输入区间逐批live fetch，追普通增量change消费者的force/isUpdate参数，再接IndexingState全量状态",
+    "继续原actor串行任务/active与P0事务错误/Undo，复用完整已实现叶子；保留未闭合差异"
+  ],
+  "compiled": false,
+  "application_executed": false,
+  "original_binary_executed": false,
+  "user_data_modified": false,
+  "network_used": false,
+  "committed": false,
+  "pushed": false,
+  "module_complete": false,
+  "goal_active": true,
+  "inventory": {
+    "mapping_states": {
+      "partial": 565,
+      "migrated": 1648,
+      "excluded_by_scope": 9
+    },
+    "mapped_reference_records_checked": 2222,
+    "source_binding_counts": {
+      "current": 322,
+      "not_recorded": 1059,
+      "file_changed_needs_method_review": 267
+    },
+    "unchanged_source_review_count": 317,
+    "reference_issue_counts": {
+      "missing_address_in_evidence": 12
+    }
+  }
+}

@@ -10,7 +10,7 @@ public final class OriginalSearchTextScroller: NSScrollView {
         hasHorizontalScroller = false
         hasVerticalScroller = false
         drawsBackground = false
-        focusRingType = .none
+        focusRingType = .exterior
         borderType = .noBorder
         documentView = textView
         textView.f_100042fc8()

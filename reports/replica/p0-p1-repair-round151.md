@@ -1,0 +1,15 @@
+# 第一百五十一轮：Item 继承同一原生保存回调
+
+继续既定P0修复→P1检查→P1修复。上一轮List/Metadata willSave源修后，本轮批量核对其它实体，发现同一回调在Item上的P0调用场景仍缺，因此先补Item，再继续P1。不是把已经迁移的List函数重计一遍。
+
+原ItemEntity真实instance method表只有initWithEntity:insertIntoManagedObjectContext:，父类指针明确是SyncableManagedObject；因此其ObjC保存回调直接继承已证3b4b94→3b4984。PastoItemEntity虽已注册为实际model class，却直接继承没有willSave的PastoManagedObject。值层部分操作显式写updatedAt，但原生restoreHistoryItems直接改timestamp、moveItems直接改list/displayOrder，存在nativeRestoreWithoutValue等不重放完整DTO的通路，不能把部分值层赋值当整个回调已迁。
+
+将150轮已证willSave同一函数体从List/Metadata两个leaf移到共同PastoManagedObject。当前实际继承者仅PastoItemEntity、PastoListEntity、PastoListMetadataEntity，均已注册model并明确有updatedAt字段；Item获得同一inserted/syncApply/changedValues门、primitive Date及super尾，List/Metadata继承后函数体与原先两份逐字相同。没有把回调全局挂到NSManagedObject，也没有给缺少updatedAt的本地ItemDataEntity写未知KVC键；未给Item添加不适配其物理schema的createdAt钩子。其它来源实体仍用NSManagedObject，继续按实际原class/字段核对，不冒整个类族完成。
+
+原Item完整一项method表/父指针、四个原片段、150原parent回调证据已绑定；6共享生产源和5条原生writer/index reader方法保持。1源2模式3精确增量，246文件不变。8新增源码检查直接核当前实际父类、三个真实子类、现有model字段、原生writer和原List/Metadata同体继承；完整2322项检查通过。
+
+首轮一处旧base类整块摘要失败，以及旧List叶子方法定位的setUpClass错误（8个旧类用例未执行），日志原样保留。3旧工具5模式5替换只逆隔离该精确callback移动并保历史声明结构；新增Item/实际父类检查读当前源码，不做逆隔离。原业务断言与生产回调体未为测试改变。
+
+v60保持216函数记录194组，既有3b4984附P0 Item有限合同，额外已修合同9→10；主repair及其它记录保留。主有限清单仍P0 77/77（100%）、P1 139/139（100%）、总216/216（100%），不因新增调用场景重复增函数分母。原schema的Item字段可选性/DTO兼容、Application/Device实际类族、完整模型/DI/生命周期及04430c/0f733c两个unknown仍开放，整体完成率未知，目标继续。
+
+版本1.0.2、HEAD、function-map及官网/README下载9文件保持。未编译、构建、安装、CoreData/框架/应用执行、联网、提交、推送或发布。

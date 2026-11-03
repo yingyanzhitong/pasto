@@ -1,0 +1,132 @@
+"""Source/static drag input evidence; no application or framework execution."""
+import hashlib
+import json
+from pathlib import Path
+import struct
+import sys
+import unittest
+
+ROOT = Path(__file__).resolve().parents[2]
+sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'scripts/tests')]
+from function_ledger import source_fragments
+from test_offline_p0_contracts import body
+from native_drag_handle_scope_contract import pre_native_drag_handle
+from test_p0_repair_checksum_routing import original_fragment
+
+
+class DragAppliedInput(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.proof = json.loads((ROOT / '.local/p0-repair/phase-26/drag-input-contract.json').read_text())
+        cls.host = pre_native_drag_handle((ROOT / cls.proof['current_source']['path']).read_text())
+        cls.raw = (ROOT / cls.proof['binary']['path']).read_bytes()
+
+    def offset(self, a):
+        s = next(s for s in self.proof['file_backed_segments'] if s['vmaddr'] <= a < s['vmaddr'] + s['filesize'])
+        return s['fileoff'] + a - s['vmaddr']
+
+    def word(self, a):
+        return struct.unpack_from('<I', self.raw, self.offset(a))[0]
+
+    def branch(self, a, link=True):
+        word = self.word(a)
+        self.assertEqual(word & 0xfc000000, 0x94000000 if link else 0x14000000)
+        immediate = word & 0x3ffffff
+        if immediate & (1 << 25):
+            immediate -= 1 << 26
+        return a + 4 * immediate
+
+    def native(self, a):
+        r = next(r for r in self.proof['original_fragments'] if r['address'] == a)
+        return original_fragment((ROOT / r['path']).read_text(), a[2:])
+
+    def test_new_fragments_and_every_machine_byte_are_bound(self):
+        self.assertEqual(hashlib.sha256(self.raw).hexdigest(), self.proof['binary']['sha256'])
+        for r in self.proof['original_fragments']:
+            self.assertEqual(source_fragments(ROOT / r['path'])[r['address']]['sha256'], r['sha256'])
+        for r in self.proof['machine_ranges']:
+            self.assertEqual(r['file_offset'], self.offset(int(r['start'], 16)))
+            raw = self.raw[r['file_offset']:r['file_offset'] + r['length']]
+            self.assertEqual(raw.hex(), r['hex'])
+            self.assertEqual(hashlib.sha256(raw).hexdigest(), r['sha256'])
+            if 'instruction_count' in r:
+                self.assertEqual(r['instruction_count'], r['length'] // 4)
+        p = self.proof['reused_proof']
+        self.assertEqual(hashlib.sha256((ROOT / p['path']).read_bytes()).hexdigest(), p['sha256'])
+
+    def test_real_drag_delegate_and_applier_resolution_are_machine_bound(self):
+        pointer = 0x100000000 + (struct.unpack_from('<Q', self.raw, self.offset(0x100eb26d8))[0] & ((1 << 36) - 1))
+        self.assertEqual(pointer, 0x10006f280)
+        self.assertEqual(self.branch(0x10006f284, link=False), 0x100075718)
+        self.assertEqual(self.branch(0x100225be4), 0x10022b1cc)
+        self.assertEqual(self.word(0x100225bec), 0xf9400aa8)  # delegate witness+0x10
+        self.assertEqual(self.word(0x100225c04), 0xd63f0100)
+        self.assertEqual(self.branch(0x10007596c), 0x1001b9698)
+        self.assertEqual(self.branch(0x1000759fc), 0x1003821e8)
+        self.assertEqual(self.branch(0x100075a2c), 0x10006e998)
+
+    def test_original_selected_numeric_order_is_consumed_before_writer_creation(self):
+        producer = self.native('0x100075718')
+        self.assertIn('puVar8 = (undefined8 *)(param_1 + 0x20)', producer)
+        self.assertIn('uVar20 = *puVar8', producer)
+        self.assertIn('FUN_1001b9698(&local_a8,uVar20', producer)
+        self.assertIn('puVar8 = puVar8 + 1', producer)
+        self.assertLess(producer.index('FUN_1001b9698'), producer.index('FUN_1003821e8'))
+        dispatch = self.native('0x100225b80')
+        self.assertLess(dispatch.index('FUN_10022b1cc'), dispatch.index('(lVar7 + 0x10)'))
+        self.assertLess(dispatch.index('(lVar7 + 0x10)'), dispatch.index('FUN_10022756c'))
+
+    def test_drag_gate_reads_selection_manager_without_future_provider_query(self):
+        native = self.native('0x1002283d8')
+        self.assertIn('3.0 < dVar5', native)
+        self.assertLess(native.index('FUN_10022b1cc'), native.index('FUN_100225b80'))
+        source = body(self.host, 'override func mouseDragged(with event: NSEvent)')
+        self.assertIn('> 3', source)
+        self.assertIn('!state.orderedSelectionIDs.isEmpty', source)
+        self.assertNotIn('state.selectedItems', source)
+        self.assertNotIn('state.visibleItems', source)
+        self.assertLess(source.index('dragWaitTimer?.invalidate()'), source.index('beginNativeDrag'))
+
+    def test_begin_drag_never_mutates_or_drains_the_applied_collection(self):
+        source = body(self.host, 'private func beginNativeDrag(_ event: NSEvent, state: ReplicaUIState)')
+        self.assertIn('guard let applied = appliedItems(for: state) else { return }', source)
+        for forbidden in ['items =', 'state.visibleItems', 'state.selectedItems', 'tileCells()',
+                          'drainCollectionSnapshots()', 'update(state:', 'pendingSnapshot =']:
+            self.assertNotIn(forbidden, source)
+
+    def test_selected_values_and_preview_positions_come_from_same_ordered_applied_snapshot(self):
+        source = body(self.host, 'private func beginNativeDrag(_ event: NSEvent, state: ReplicaUIState)')
+        order = ['let positions = Dictionary(uniqueKeysWithValues: applied.enumerated()',
+                 'let indexes = state.orderedSelectionIDs.filter { state.selection.contains($0) }.compactMap { positions[$0] }',
+                 'let selected = indexes.map { renderedItem(at: $0) }',
+                 'dragPasteboardGroups(for: selected', 'selected.map { ReplicaNativeDragItemReference($0) }',
+                 'zip(indexes, draggingWriters)']
+        self.assertEqual([source.index(s) for s in order], sorted(source.index(s) for s in order))
+        self.assertNotIn('.sorted', source)
+        self.assertNotIn('Set(', source)
+        self.assertIn('$0.itemID == items[index].id', source)
+
+    def test_existing_plain_option_marker_and_formation_consumers_are_retained(self):
+        source = body(self.host, 'private func beginNativeDrag(_ event: NSEvent, state: ReplicaUIState)')
+        self.assertIn('NSEvent.modifierFlags.isSuperset(of: plain)', source)
+        self.assertIn('ids: selected.map(\.id)', source)
+        self.assertIn('event.modifierFlags.contains(.control) ? .stack : .pile', source)
+        native = self.native('0x100075718')
+        self.assertIn('NSEvent::modifierFlags', native)
+        self.assertIn('setDraggingFormation_', self.native('0x100225b80'))
+
+    def test_finite_pending_reorder_and_empty_projection_cases_remain_explicit(self):
+        reorder, empty = self.proof['counterexamples']
+        self.assertEqual(reorder['original_indexes'], [reorder['applied'].index(i) for i in reorder['selected_order']])
+        self.assertEqual(reorder['before_indexes'], [reorder['projected'].index(i) for i in reorder['selected_order']])
+        self.assertNotEqual(reorder['original_indexes'], reorder['before_indexes'])
+        self.assertEqual(reorder['after_indexes'], reorder['original_indexes'])
+        self.assertEqual(empty['projected'], [])
+        self.assertFalse(empty['before_drag_gate'])
+        self.assertTrue(empty['after_drag_gate'])
+        self.assertEqual(empty['after_writer_ids'], empty['selected_order'])
+        self.assertFalse(self.proof['full_function_migration_verified'])
+
+
+if __name__ == '__main__':
+    unittest.main()

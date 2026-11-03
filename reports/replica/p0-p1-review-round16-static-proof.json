@@ -1,0 +1,94 @@
+{
+  "round": 16,
+  "binary_path": ".local/paste-arm64-static.bin",
+  "binary_sha256": "871f00354fbb1c165d858a98e6d19d6f43cb9d3f9f958b3e07c7f07eb5c19afb",
+  "segments": [
+    {
+      "vmaddr": 0,
+      "filesize": 0,
+      "fileoff": 0
+    },
+    {
+      "vmaddr": 4294967296,
+      "filesize": 15351808,
+      "fileoff": 0
+    },
+    {
+      "vmaddr": 4310319104,
+      "filesize": 671744,
+      "fileoff": 15351808
+    },
+    {
+      "vmaddr": 4310990848,
+      "filesize": 1064960,
+      "fileoff": 16023552
+    },
+    {
+      "vmaddr": 4312727552,
+      "filesize": 1956752,
+      "fileoff": 17088512
+    }
+  ],
+  "indexing_state": {
+    "nominal": "0x100cab74c",
+    "name": "IndexingState",
+    "field_descriptor": "0x100d47330",
+    "field_record_size": 12,
+    "fields": [
+      {
+        "record": "0x100d47340",
+        "name": "schemaVersion"
+      },
+      {
+        "record": "0x100d4734c",
+        "name": "totalItems"
+      },
+      {
+        "record": "0x100d47358",
+        "name": "indexedItems"
+      },
+      {
+        "record": "0x100d47364",
+        "name": "oldestTimestamp"
+      },
+      {
+        "record": "0x100d47370",
+        "name": "invalidItems"
+      }
+    ]
+  },
+  "health_probe": {
+    "address": "0x100da14a0",
+    "file_offset": 14292128,
+    "length": 58,
+    "value": "contentModificationDate >= $time.iso(1970-01-01T00:00:00Z)"
+  },
+  "localization": {
+    "original_binary": {
+      "path": "/Applications/Paste.app/Contents/MacOS/Paste",
+      "sha256": "7255357661f83d0d10ae8eaedefa64442cb3b1c300d8963ac50cb8547251d9af",
+      "arm64_sha256": "871f00354fbb1c165d858a98e6d19d6f43cb9d3f9f958b3e07c7f07eb5c19afb"
+    },
+    "resources": [
+      {
+        "path": "/Applications/Paste.app/Contents/Resources/PastePackages_PasteLocalization.bundle/Contents/Resources/en.lproj/Localizable.strings",
+        "sha256": "ec63a90119f09631608b17966e5f5574170d11e38627957bfaba4555e9334d33",
+        "locale": "en",
+        "key": "general.search",
+        "value": "Search"
+      },
+      {
+        "path": "/Applications/Paste.app/Contents/Resources/PastePackages_PasteLocalization.bundle/Contents/Resources/zh-Hans.lproj/Localizable.strings",
+        "sha256": "90eb31a3ba9ed1ebff61ff8600a61f2bce4e176ab2eefa12c4b3ddc15b64b85b",
+        "locale": "zh-Hans",
+        "key": "general.search",
+        "value": "搜索"
+      }
+    ],
+    "limits": [
+      "only_canonical_en_and_zh_Hans",
+      "no_all_locale_fallback_equivalence"
+    ]
+  },
+  "scope": "只读Mach-O、SDK和原资源；不执行应用，不宣称全函数迁移。"
+}

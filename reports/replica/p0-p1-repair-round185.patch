@@ -1,0 +1,129 @@
+--- a/replica/Sources/PastoCore/ClipboardPersistence.swift
++++ b/replica/Sources/PastoCore/ClipboardPersistence.swift
+@@ -1,3 +1,4 @@
++import AppKit
+ import CoreData
+ import Combine
+ import Foundation
+@@ -322,6 +323,14 @@
+ 
+     func searchDeviceNames(matching query: String) throws -> [String] {
+         try context.performAndWait { try sources.deviceNames(matching: query) }
++    }
++
++    func searchApplicationImage(named name: String) -> NSImage? {
++        context.performAndWait { sources.applicationImage(named: name) }
++    }
++
++    func searchDeviceType(named name: String) -> UInt8? {
++        context.performAndWait { sources.deviceType(named: name) }
+     }
+ 
+     // 0x10036d140: fetch IDs only, newest history timestamp first, no request limit.
+--- a/replica/Sources/PastoCore/ClipboardStore.swift
++++ b/replica/Sources/PastoCore/ClipboardStore.swift
+@@ -96,6 +96,14 @@
+ 
+     public func searchDeviceNames(matching query: String) throws -> [String] {
+         try persistence.searchDeviceNames(matching: query)
++    }
++
++    public func searchApplicationImage(named name: String) -> NSImage? {
++        persistence.searchApplicationImage(named: name)
++    }
++
++    public func searchDeviceType(named name: String) -> UInt8? {
++        persistence.searchDeviceType(named: name)
+     }
+ 
+     public func searchItems(identifiers: [String]?) throws -> [ClipboardItem] {
+--- a/replica/Sources/PastoCore/ClipboardSourcePersistence.swift
++++ b/replica/Sources/PastoCore/ClipboardSourcePersistence.swift
+@@ -1,3 +1,4 @@
++import AppKit
+ import CoreData
+ import CoreFoundation
+ import Darwin
+@@ -152,6 +153,27 @@
+             rawColor: UInt64(bitPattern: color.int64Value))
+     }
+ 
++    // 35fa18/35fe08: the icon readers use exact case-insensitive names, not the suggestion regex.
++    private func firstNamed<Entity: PastoManagedObject>(_ entity: Entity.Type, name: String) -> Entity? {
++        let request = OriginalManagedFetchRequest.make(for: entity)
++        request.predicate = NSPredicate(format: "name ==[c] %@", name)
++        request.fetchLimit = 1
++        request.fetchOffset = 0
++        return (try? context.fetch(request))?.first
++    }
++
++    func applicationImage(named name: String) -> NSImage? {
++        guard let application = firstNamed(PastoApplicationEntity.self, name: name) else { return nil }
++        return (application.value(forKey: "rawIcon") as? Data).flatMap(NSImage.init(data:)) ?? NSImage()
++    }
++
++    func deviceType(named name: String) -> UInt8? {
++        guard let device = firstNamed(PastoDeviceEntity.self, name: name) else { return nil }
++        let rawType = (device.value(forKey: "rawType") as? NSNumber)?.int64Value ?? 0
++        precondition(rawType >= 0 && rawType < 3)
++        return UInt8(rawType)
++    }
++
+     // 0x10030e070 / 0x10030ed6c share this dictionary/name query shape.
+     private func names(in entity: String, matching query: String) throws -> [String] {
+         let request = NSFetchRequest<NSDictionary>(entityName: entity)
+--- a/replica/Sources/Pasto/UI/FilterBrowser.swift
++++ b/replica/Sources/Pasto/UI/FilterBrowser.swift
+@@ -45,28 +45,34 @@
+             guard case let .filter(_, canonicalValue) = selection.queryNode else { preconditionFailure() }
+             value = canonicalValue
+         }
+-        var image: NSImage?
+-        switch selection {
+-        case let .source(source):
+-            if let application = store.sourceApplications.first(where: {
+-                $0.name.caseInsensitiveCompare(source) == .orderedSame
+-            }) {
+-                image = application.rawIcon.flatMap(NSImage.init(data:)) ?? NSImage()
+-            } else if let item = zip(store.items, ReplicaSearchSuggestionSource.applicationNames(for: store.items, store: store))
+-                .first(where: { $0.1?.caseInsensitiveCompare(source) == .orderedSame })?.0 {
+-                image = item.sourceBundleID.flatMap { NSWorkspace.shared.urlForApplication(withBundleIdentifier: $0) }
+-                    .map { NSWorkspace.shared.icon(forFile: $0.path) }
+-            }
+-        case .kind, .device, .date, .pinboard: break
+-        }
+-        if image == nil {
+-            image = OriginalSearchFilterSymbols.f_100054b2c(kind: selection.group, value: value)
+-                .flatMap { OriginalSystemImageFunctions.f_1000f653c($0) }
+-        }
++        let image = f_1000546e0(kind: selection.group, value: value, store: store)
+         let title = OriginalSearchSuggestions.f_1002ddc10(kind: selection.group, value: value) {
+             store.tabListTarget(identifier: $0)?.name
+         }
+         return ReplicaSearchFilterChip(selection: selection, title: title, image: image)
++    }
++
++    private static func f_1000546e0(kind: UInt8, value: String, store: ClipboardStore) -> NSImage? {
++        if kind == 5, let colorCode = store.tabListTarget(identifier: value)?.colorCode {
++            // This offline application has local, unshared groups; CKShare metadata is excluded.
++            return OriginalPinboardHeaderIcon.image(height: 12, shared: false,
++                color: OriginalPinboardColor(canonicalColorCode: colorCode).color())
++        }
++        if kind == 4, let type = store.searchDeviceType(named: value) {
++            let symbol = type == 0 ? "iphone" : type == 1 ? "ipad" : "macbook"
++            return systemImage(symbol)
++        }
++        if kind == 0, let image = store.searchApplicationImage(named: value) { return image }
++        guard let symbol = OriginalSearchFilterSymbols.f_100054b2c(kind: kind, value: value) else { return nil }
++        return systemImage(symbol)
++    }
++
++    private static func systemImage(_ name: String) -> NSImage {
++        // 0546e0 probes availability, then creates the image again; the required fallback traps if absent.
++        if OriginalSystemImageFunctions.f_1000f653c(name) != nil {
++            return OriginalSystemImageFunctions.f_1000f653c(name)!
++        }
++        return OriginalSystemImageFunctions.f_1000f653c("questionmark.square")!
+     }
+ }
+ 

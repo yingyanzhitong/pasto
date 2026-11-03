@@ -212,12 +212,12 @@ struct ReplicaStackView: View {
                         .accessibilityLabel("反转 Stack 顺序")
                 }.buttonStyle(.plain).padding(.horizontal, 8)
             }.frame(height: 32)
-            if state.stackItems.isEmpty {
+            if state.stackItemIDs.isEmpty {
                 Text("Empty").font(.system(size: 12)).foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity).frame(height: 44)
             } else {
                 ReplicaStackTable(state: state)
-                    .frame(height: CGFloat(min(10, max(1, state.stackItems.count)) * 44))
+                    .frame(height: CGFloat(min(10, max(1, state.stackItemIDs.count)) * 44))
             }
         }
         .frame(width: 264)
@@ -240,34 +240,35 @@ struct ReplicaStackTable: NSViewRepresentable {
         controller.removeActionTitle = OriginalShortcutRecorder.removeTitle
         controller.removeSnippet = { expectedIDs, row in
             let visibleOffsets = state.stackIDs.indices.filter { index in
-                state.store.items.contains { $0.id == state.stackIDs[index] && !$0.isDeleted }
+                state.hasStackItem(state.stackIDs[index])
             }
             guard visibleOffsets.indices.contains(row),
                   visibleOffsets.map({ state.stackIDs[$0] }) == expectedIDs else { return false }
             state.stackIDs.remove(at: visibleOffsets[row])
             return true
         }
-        controller.makeCell = { item in
-            NSHostingView(rootView:
-                OriginalStackSnippetCellView(item: item, imageProvider: { item in
-                    if let application = state.store.sourceApplication(for: item) {
-                        return application.rawIcon.flatMap(NSImage.init(data:)) ?? NSImage()
+        controller.makeNativeCell = { [weak controller] input, row in
+            let expectedIDs = controller?.snippetIDs ?? []
+            return NSHostingView(rootView:
+                OriginalStackSnippetCellView(input: input, imageProvider: { current in
+                    if let rawType = current.previewRawType() {
+                        return OriginalStackCategoryIcons.image(for: OriginalPasteboardContentKind(rawValue: UInt8(rawType)) ?? .unknown)
                     }
-                    return NSImage(systemSymbolName: "doc.on.clipboard.fill", accessibilityDescription: nil)
+                    return OriginalStackCategoryIcons.image(for: state.store.originalContentKind(of: current.resolvedItem()))
                 }).frame(maxWidth: .infinity).frame(height: 44)
                 .contextMenu {
-                    Button("复制") { state.controller?.copy(item: item, plainTextOnly: false) }
+                    Button("复制") { state.controller?.copy(input: input, plainTextOnly: false) }
                     Button("粘贴") {
-                        if state.controller?.paste(item: item, plainTextOnly: false) == true {
-                            state.stackIDs.removeAll { $0 == item.id }
-                            if state.stackItems.isEmpty { state.controller?.hideStack() }
+                        if state.controller?.pasteStackItem(id: input.id, plainTextOnly: false) == true {
+                            controller?.removeRow(at: row, expectedIDs: expectedIDs)
+                            if state.stackItemIDs.isEmpty { state.controller?.hideStack() }
                         }
                     }
-                    Button("预览") { state.controller?.showPreview(item: item) }
-                    Button("移除") { state.stackIDs.removeAll { $0 == item.id } }
+                    Button("预览") { state.controller?.showPreview(item: input.resolvedItem(), input: input) }
+                    Button("移除") { controller?.removeRow(at: row, expectedIDs: expectedIDs) }
                 })
         }
-        controller.updateSnippets(state.stackItems)
+        controller.updateNativeSnippets(state.stackSnippetInputs)
     }
 }
 

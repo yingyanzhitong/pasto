@@ -4,6 +4,7 @@ import UniformTypeIdentifiers
 
 /// The original item stores an ordered type list separately from its data map.
 /// In particular, repeated writes append a type even when replacing its data.
+@objc(_TtC9PasteCore14PasteboardItem)
 public final class OriginalPasteboardItem: NSObject, Codable, NSSecureCoding {
     private var orderedTypes: [String] = []
     private var dataByType: [String: Data] = [:]
@@ -21,16 +22,26 @@ public final class OriginalPasteboardItem: NSObject, Codable, NSSecureCoding {
 
     public required init?(coder: NSCoder) {
         super.init()
-        guard let types = coder.decodeArrayOfObjects(ofClass: NSString.self, forKey: "types") as? [String],
-              let values = coder.decodeDictionary(withKeyClass: NSString.self, objectClass: NSData.self,
-                                                 forKey: "dataByType") as? [String: Data] else { return nil }
+        guard let types = coder.decodeArrayOfObjects(ofClass: NSString.self, forKey: "types") as? [String] else {
+            return nil
+        }
+        let values: [String: Data]
+        if coder.containsValue(forKey: "data") {
+            guard let decoded = coder.decodeDictionary(withKeyClass: NSString.self, objectClass: NSData.self,
+                                                       forKey: "data") as? [String: Data] else { return nil }
+            values = decoded
+        } else {
+            guard let legacy = coder.decodeDictionary(withKeyClass: NSString.self, objectClass: NSData.self,
+                                                      forKey: "dataByType") as? [String: Data] else { return nil }
+            values = legacy
+        }
         orderedTypes = types
         dataByType = values
     }
 
     public func f_10037f520(with coder: NSCoder) {
         coder.encode(orderedTypes as NSArray, forKey: "types")
-        coder.encode(dataByType as NSDictionary, forKey: "dataByType")
+        coder.encode(dataByType as NSDictionary, forKey: "data")
     }
 
     public func encode(with coder: NSCoder) {
@@ -199,27 +210,16 @@ public final class OriginalPasteboardItem: NSObject, Codable, NSSecureCoding {
 @MainActor
 public final class OriginalPasteboardWriter {
     public let pasteboard: NSPasteboard
-    public private(set) var lastChangeCount: Int
-    public private(set) var lastWriteSucceeded = false
+    private let state: OriginalPasteboardCaptureState
+    public var lastChangeCount: Int { state.lastChangeCount }
+    public var lastWriteSucceeded: Bool { state.lastWriteSucceeded }
 
     public init(pasteboard: NSPasteboard) {
         self.pasteboard = pasteboard
-        self.lastChangeCount = pasteboard.changeCount
+        self.state = OriginalPasteboardCaptureState.f_100378664(changeCount: 0, pasteboard: pasteboard)
     }
 
     public func f_10037875c(_ items: [OriginalPasteboardItem]) {
-        let objects = items.map { item -> NSPasteboardItem in
-            let object = NSPasteboardItem()
-            for type in item.f_10037da6c() {
-                if let data = item.f_10037e5e0(forType: type) {
-                    object.setData(data as Data, forType: NSPasteboard.PasteboardType(type))
-                }
-            }
-            return object
-        }
-        pasteboard.clearContents()
-        lastWriteSucceeded = pasteboard.writeObjects(objects)
-        lastChangeCount = pasteboard.changeCount
-        OriginalPasteboardCaptureState.current(for: pasteboard)?.lastChangeCount = lastChangeCount
+        state.f_10037875c(items)
     }
 }

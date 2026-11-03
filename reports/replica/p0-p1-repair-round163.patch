@@ -1,0 +1,35 @@
+--- a/replica/Sources/PastoCore/ClipboardListPersistence.swift
++++ b/replica/Sources/PastoCore/ClipboardListPersistence.swift
+@@ -289,7 +289,7 @@
+ 
+     func project(_ pinboards: [Pinboard]) throws -> [Pinboard] {
+         let lists = try allLists()
+-        return pinboards.map { board in
++        var values = pinboards.map { board in
+             guard let list = lists[board.id.uuidString] else { return board }
+             var value = board
+             value.name = list.value(forKey: "name") as? String ?? board.name
+@@ -302,5 +302,23 @@
+                let index = metadata.value(forKey: "index") as? NSNumber { value.sortOrder = index.intValue }
+             return value
+         }
++        // A native List does not require a separate compatibility Pinboard row to exist.
++        var represented = Set(values.map(\.id))
++        for list in lists.values {
++            guard !list.isDeleted,
++                  (list.value(forKey: "rawType") as? NSNumber)?.int64Value == 2,
++                  let identifier = list.value(forKey: "identifier") as? String,
++                  let id = UUID(uuidString: identifier), represented.insert(id).inserted else { continue }
++            let attributes = list.value(forKey: "rawAttributes") as? Data
++            let colorHex = OriginalPinboardAttributes.colorCode(from: attributes)
++                .map { String(format: "#%06llX", $0) } ?? "#FF9500"
++            let metadata = list.value(forKey: "metadata") as? NSManagedObject
++            let index = (metadata?.value(forKey: "index") as? NSNumber)?.intValue ?? 0
++            values.append(Pinboard(id: id, name: list.value(forKey: "name") as? String ?? "",
++                colorHex: colorHex, sortOrder: index, rawType: 2, rawAttributes: attributes))
++        }
++        return values.sorted {
++            $0.sortOrder == $1.sortOrder ? $0.id.uuidString < $1.id.uuidString : $0.sortOrder < $1.sortOrder
++        }
+     }
+ }

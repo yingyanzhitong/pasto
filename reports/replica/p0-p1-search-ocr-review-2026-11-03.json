@@ -1,0 +1,207 @@
+{
+  "kind": "fixed_p0_p1_local_search_ocr_batch_repair",
+  "date": "2026-11-03",
+  "previous_report": "reports/replica/p0-p1-stack-selection-review-2026-11-03.json",
+  "scope": {
+    "path": "reports/replica/p0-p1-review-scope-v6.json",
+    "denominator": 959,
+    "P0": 353,
+    "P1": 606,
+    "expanded": false
+  },
+  "current_round_repaired_existing_function_ids": [
+    "Paste:0x100371998"
+  ],
+  "current_round_repaired_branch_count": 1,
+  "new_repaired_function_ids": [],
+  "new_repaired_function_count": 0,
+  "difference": "Search record constructor narrowed NSNumber.rawType using uint8Value before enum validation. Values257/-255 became image1 instead of Unknown, unlike full-width native323594.",
+  "source_repair": "Read int64Value and use UInt8(exactly:) before enum initialization; invalid values become unknown. No model/payload or persistence schema changes.",
+  "native_path": {
+    "raw_type_selector_call": "0x100371cd8",
+    "validator_call": "0x100371cdc",
+    "validator": "0x100323594",
+    "logic": "Unsigned64 input<6 returns input; else sentinel6, then constructor chooses Unknown/type0."
+  },
+  "native_valid_types": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5
+  ],
+  "reviewed_existing_function_ids": [
+    "Paste:0x1002f3d94",
+    "Paste:0x1002f45b0",
+    "Paste:0x1002ddcf0",
+    "Paste:0x1002df190",
+    "Paste:0x1002e00a0",
+    "Paste:0x1002dfb18",
+    "Paste:0x1002dfc64",
+    "Paste:0x1002dfd4c",
+    "Paste:0x1002dfe58",
+    "Paste:0x1002e19c8",
+    "Paste:0x1003600a0",
+    "Paste:0x1003602fc",
+    "Paste:0x100371998",
+    "Paste:0x1003753f8",
+    "Paste:0x100372440",
+    "Paste:0x1003724f0",
+    "Paste:0x1002d4ba0",
+    "Paste:0x1002e20b8",
+    "Paste:0x1002e3ce8",
+    "Paste:0x1002ec26c",
+    "Paste:0x1002ec520",
+    "Paste:0x1002ec72c",
+    "Paste:0x1002ee16c",
+    "Paste:0x1002e8de0",
+    "Paste:0x1002e9d54",
+    "Paste:0x1002ea78c",
+    "Paste:0x1002eaa10",
+    "Paste:0x1002eaea4",
+    "Paste:0x1002f2d18",
+    "Paste:0x1002f1c30",
+    "Paste:0x1002f1ca0",
+    "Paste:0x1002f2648",
+    "Paste:0x1002d4738",
+    "Paste:0x1002d4830",
+    "Paste:0x1002d576c",
+    "Paste:0x1002faafc"
+  ],
+  "support_not_added_to_denominator": [
+    "Paste:0x100323594",
+    "Paste:0x100375458",
+    "Paste:0x100371f2c",
+    "Paste:0x1002ec660",
+    "Paste:0x1002ec6ac",
+    "Paste:0x1002ec6f4",
+    "Paste:0x1002ec7d8",
+    "Paste:0x1002ec9d8",
+    "Paste:0x1002ed360",
+    "Paste:0x1002eda2c",
+    "Paste:0x1002edab0",
+    "Paste:0x1002edc9c",
+    "Paste:0x1002ee528",
+    "Paste:0x1002ee4bc",
+    "Paste:0x1002ee560",
+    "Paste:0x1002ee68c",
+    "Paste:0x1002ee748",
+    "Paste:0x1002e96ac",
+    "Paste:0x1002f2d00",
+    "Paste:0x1002f2e30",
+    "Paste:0x1002d36e8",
+    "Paste:0x1002d2bb0",
+    "Paste:0x1003752a8"
+  ],
+  "evidence_summary": {
+    "native_functions": 59,
+    "complete_machine_ranges": 59,
+    "direct_branches": 2080,
+    "selectors": 67,
+    "import_calls": 1215
+  },
+  "reused_contracts": [
+    "Query preserves original whitespace trimming/escaping and same-tag OR / cross-tag AND; macOS26.4 adds contentDescription.",
+    "Optional suggestion source is read per group; errors suppress only that group; selected filters excluded before per-group30 limit.",
+    "Native search record snapshots metadata/type but defers content/image; captured coordinator+objectID+kind, not full materialized content.",
+    "Content callback creates private context and reads current raw data/typed fallback; existing error and empty-data diagnostics retained.",
+    "OCR queue filters prior pending set before union, preserving batch duplicates; pop removes queued ID before fresh record read.",
+    "Cancellation before image evaluation; missing record/image skips; words-only recognition joins ASCII spaces and appends newline to existing content.",
+    "Successful/empty recognition sleeps2s, errors/missing inputs skip cooldown; stop cancels and awaits OCR before nil handle without clearing pending IDs.",
+    "SDK content callback runs once before5000 character cap; OCR update preserves metadata and removes image callback; weak index service optional nil is not SDK error."
+  ],
+  "counts": {
+    "finite_contract_consistent": 691,
+    "source_repaired": 258,
+    "user_adaptation": 9,
+    "evidence_insufficient": 1
+  },
+  "by_priority": {
+    "P0": {
+      "finite_contract_consistent": 267,
+      "source_repaired": 82,
+      "user_adaptation": 4
+    },
+    "P1": {
+      "finite_contract_consistent": 424,
+      "source_repaired": 176,
+      "user_adaptation": 5,
+      "evidence_insufficient": 1
+    }
+  },
+  "finite_comparison_progress": {
+    "numerator": 958,
+    "denominator": 959,
+    "percent": 99.9
+  },
+  "confirmed_unfixed_finite_differences": 0,
+  "evidence_insufficient_count": 1,
+  "unknown_function_ids": [
+    "Paste:0x1000f733c"
+  ],
+  "exact_total_outstanding": null,
+  "full_function_migration_verified": false,
+  "migration_completion_percent": null,
+  "tests": {
+    "current_source_checks": 39,
+    "new_checks": 22,
+    "adjacent_OCR_checks": 17,
+    "failures": 0,
+    "errors": 0,
+    "source_substitution": false,
+    "omitted_historical_checks": {
+      "test_p1_repair_index_ocr_queue.IndexOCRQueueContracts.test_raw_fragments_engine_and_prior_lifecycle_inputs_are_hash_bound": "Historical before-source view of phase52/fixed-review is not a current behavior check. New test validates full native ranges and all14 current source bindings instead."
+    },
+    "integer_regression": {
+      "exhaustive_signed16_values": 65536,
+      "old_wrong_nonunknown_aliases": 1275,
+      "additional_signed64_extremes": true,
+      "note": "Integer model plus native64-bit instructions and exact current-source guard. Not Foundation/CoreData execution."
+    },
+    "other_trace_models": "Two queue witnesses cover same-batch duplicates and missing-image/cooldown branches; not Vision/Spotlight execution."
+  },
+  "remaining_boundaries": [
+    "Finite local contracts only; no Vision/CoreSpotlight/CoreData execution, or end-to-end system search validation.",
+    "No whole private async ABI/DI/executor/fault/reentry or every typed fallback branch semantic equivalence claim from byte ranges alone.",
+    "Original0f733c actual declaration/consumer remains unresolved and is not guessed or wired here.",
+    "Optional legacy DTO/store-less fallbacks are Pasto adapters; primary index writer uses fresh native records.",
+    "Full native byte ranges bind evidence only; all semantic/private async ABI and framework exceptional inputs are not proven equivalent."
+  ],
+  "production_changes": {
+    "replica/Sources/PastoCore/ClipboardSnapshotReader.swift": {
+      "before_sha256": "4e36a42f107bbeeab6ad2a2407a82185df00cf9f05bd8b0606f1c5c1e3417628",
+      "after_sha256": "853b835aee118b8fd7994083fa407cd6d7d4ed2967c6bc35f3e5b3b54eef49b5",
+      "diff": "--- replica/Sources/PastoCore/ClipboardSnapshotReader.swift\n+++ replica/Sources/PastoCore/ClipboardSnapshotReader.swift\n@@ -57,8 +57,8 @@\n                       let contentVersion = object.value(forKey: \"updatedAt\") as? Date else {\n                     throw CocoaError(.fileReadCorruptFile)\n                 }\n-                let rawType = (object.value(forKey: \"rawType\") as? NSNumber)?.uint8Value ?? 0\n-                let kind = OriginalPasteboardContentKind(rawValue: rawType) ?? .unknown\n+                let rawType = (object.value(forKey: \"rawType\") as? NSNumber)?.int64Value ?? 0\n+                let kind = UInt8(exactly: rawType).flatMap { OriginalPasteboardContentKind(rawValue: $0) } ?? .unknown\n                 let reader = ClipboardSearchRecordReader(coordinator: coordinator, objectID: object.objectID, kind: kind)\n                 let application = object.value(forKey: \"sourceApplication\") as? NSManagedObject\n                 let device = object.value(forKey: \"device\") as? NSManagedObject\n"
+    }
+  },
+  "existing_production_unchanged": 247,
+  "production_added": 0,
+  "old_test_files_modified": 0,
+  "patch": "reports/replica/p0-p1-search-ocr-review-2026-11-03.patch",
+  "source_inputs": {
+    "reports/replica/p0-p1-stack-selection-review-2026-11-03.json": "12e38663a4a8d6aff3e77f00f2f0d55e347ce83df6e79c328d0d236188bcf124",
+    ".local/p0-p1-parent-review/2026-11-03-search-ocr/baseline.json": "bceab12ef9d15752b1e4084fab0de5ab012a03b265557d29c564e2d5ee82c87c",
+    ".local/p0-p1-parent-review/2026-11-03-search-ocr/contract.json": "9a5f33b603d74e34082d3afc7826d6c826460d2bbd6673576ed1754273a72ea3",
+    ".local/p0-p1-parent-review/2026-11-03-search-ocr/source-delta.json": "83309fefd84ac244abf4b84967ba633642780da2e1984f614db5a75f4a2717c9",
+    ".local/p0-p1-parent-review/2026-11-03-search-ocr/test-summary.json": "0d033f2b896e82984bf7c1c50f025d44d661f1ac3229122d239a1d8e7b94b34c",
+    ".local/p0-p1-parent-review/2026-11-03-search-ocr/proof.py": "f1c0416ebbc4de147dfd2f9c3856bc808befbadf55723f10d94d7ded275761c1",
+    ".local/p0-p1-parent-review/2026-11-03-search-ocr/run-tests.py": "8229c976eb58d1e209793d880b74ee639543181a5eba024f81f8bab83b935e64",
+    "scripts/tests/test_p1_search_ocr_batch.py": "70e7f46e04b0f3150405b41b70882c42b43aaefcfb182374cf82017066cac622"
+  },
+  "head_unchanged": "050e6878a5a52f96fe33aa40f48bb8a056cd0f05",
+  "version_unchanged": "1.0.2",
+  "function_map_unchanged": "ea781c82f93e580a940f0804fa120e01e9030357d10aee157fe4a135143b8985",
+  "compiled": false,
+  "built": false,
+  "installed": false,
+  "application_executed": false,
+  "framework_executed": false,
+  "network_used": false,
+  "committed": false,
+  "pushed": false,
+  "published": false,
+  "user_data_modified": false,
+  "goal_should_remain_active": true,
+  "next_action": "Reconcile remaining actual P0/P1 contracts and the0f733c declaration/consumer evidence; avoid repeating already fresh module checks."
+}

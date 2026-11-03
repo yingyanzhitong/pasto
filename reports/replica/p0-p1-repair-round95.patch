@@ -1,0 +1,410 @@
+--- phase-95-before/replica/Sources/Pasto/UI/AuxiliaryViews.swift
++++ replica/Sources/Pasto/UI/AuxiliaryViews.swift
+@@ -265,7 +265,7 @@
+                             if state.stackItemIDs.isEmpty { state.controller?.hideStack() }
+                         }
+                     }
+-                    Button("预览") { state.controller?.showPreview(item: item) }
++                    Button("预览") { state.controller?.showPreview(item: item, input: state.stackRestoreItem(for: item.id)) }
+                     Button("移除") { controller?.removeRow(at: row, expectedIDs: expectedIDs) }
+                 })
+         }
+--- phase-95-before/replica/Sources/Pasto/UI/PanelViews.swift
++++ replica/Sources/Pasto/UI/PanelViews.swift
+@@ -624,7 +624,7 @@
+             Button("以纯文本粘贴") { state.controller?.pasteSelection(plainTextOnly: true) }
+                 .disabled(!canRestoreSelectionAsPlainText)
+             Divider()
+-            Button("预览") { state.controller?.showPreview(item: item) }
++            Button("预览") { state.controller?.showPreview(item: item, input: titleInput) }
+             if item.plainText != nil { Button("编辑…") { state.controller?.showEditor(item: item) } }
+             Button("重命名…") { state.controller?.renameItem(item) }
+             Button("副本") { state.perform { _ = try state.store.duplicateItem(id: item.id) } }
+--- phase-95-before/replica/Sources/Pasto/UI/ReplicaUIController.swift
++++ replica/Sources/Pasto/UI/ReplicaUIController.swift
+@@ -1401,11 +1401,13 @@
+         return pasteHandler(id, plainTextOnly)
+     }
+ 
+-    func showPreview(item: ClipboardItem) {
++    func showPreview(item: ClipboardItem, input: ClipboardRestoreItem? = nil) {
+         if let existing = previewRegistry.f_10008747c(itemIdentity: AnyHashable(item.id)) {
+             show(existing)
+             return
+         }
++        let input = input ?? appliedRestoreItems(orderedIDs: [item.id]).first
++            ?? state.stackRestoreItem(for: item.id) ?? ClipboardRestoreItem(item: item)
+         let anchor: NSView?
+         if isPanelOrderedVisible, !isPanelClosing, state.visibleItems.contains(where: { $0.id == item.id }),
+            let replicaPanel = panel as? ReplicaPanel,
+@@ -1423,13 +1425,13 @@
+                 popover.close()
+                 return
+             }
+-            popover.show(itemIdentity: AnyHashable(item.id), itemIdentifier: item.id.uuidString,
+-                contentView: makePreviewContent(for: item), relativeTo: anchor)
++            popover.show(itemIdentity: AnyHashable(item.id), itemIdentifier: item.id.uuidString, input: input,
++                contentView: makePreviewContent(for: input), relativeTo: anchor)
+             return
+         }
+         let window = OriginalPreviewWindow()
+         window.title = item.title.isEmpty ? item.kind.displayName : item.title
+-        let content = makePreviewContent(for: item)
++        let content = makePreviewContent(for: input)
+         if let preview = content as? OriginalItemPreviewView {
+             preview.onEditingStateChanged = { [weak self] editing in
+                 self?.previewRegistry.f_10008727c(isEditing: editing, itemIdentifier: item.id.uuidString)
+@@ -1539,6 +1541,7 @@
+     // f075e3c resolves the requested index after completion, not the revealed endpoint.
+     private func selectionDidReveal(requestedIndex: Int, collection: ReplicaNativeCollectionHost) {
+         guard let items = collection.appliedItems(for: state), items.indices.contains(requestedIndex),
++              let input = items[requestedIndex].restoreItem(),
+               let anchor = collection.visibleSelectionAnchor(at: requestedIndex,
+                   itemID: items[requestedIndex].id) else {
+             NSSound.beep()
+@@ -1546,8 +1549,8 @@
+         }
+         let item = items[requestedIndex]
+         if let popover = previewPopover, popover.isDisplayed {
+-            popover.show(itemIdentity: AnyHashable(item.id), itemIdentifier: item.id.uuidString,
+-                contentView: makePreviewContent(for: item), relativeTo: anchor)
++            popover.show(itemIdentity: AnyHashable(item.id), itemIdentifier: item.id.uuidString, input: input,
++                contentView: makePreviewContent(for: input), relativeTo: anchor)
+         }
+     }
+ 
+@@ -1559,8 +1562,8 @@
+         if previewAnchors[itemID]?.view === view { previewAnchors.removeValue(forKey: itemID) }
+     }
+ 
+-    private func makePreviewContent(for item: ClipboardItem) -> NSView {
+-        makeOriginalReplicaPreview(state: state, item: item)
++    private func makePreviewContent(for input: ClipboardRestoreItem) -> NSView {
++        makeOriginalReplicaPreview(state: state, item: input.resolvedItem(), input: input)
+     }
+ 
+     private func makePreviewPopover() -> OriginalPreviewPopover {
+@@ -1573,9 +1576,9 @@
+             visibilityChanges: changes)
+         // 0x10007654c -> 0x10006be90: closing clears the owner's optional popover.
+         popover.onWillClose = { [weak self] in self?.previewPopover = nil }
+-        popover.makeContentView = { [weak self] _, identifier in
+-            guard let self, let item = self.store.items.first(where: { $0.id.uuidString == identifier }) else { return nil }
+-            return makeOriginalReplicaPreview(state: self.state, item: item)
++        popover.makeContentView = { [weak self] input in
++            guard let self else { return nil }
++            return makeOriginalReplicaPreview(state: self.state, item: input.resolvedItem(), input: input)
+         }
+         return popover
+     }
+@@ -2053,7 +2056,7 @@
+             }
+         }
+         if event.keyCode == 49, !isEditing {
+-            if let item = appliedSelectionItems().last { showPreview(item: item) }
++            if let input = appliedRestoreItems().last { showPreview(item: input.resolvedItem(), input: input) }
+             return true
+         }
+         if !isEditing, let specialKey = event.specialKey {
+--- phase-95-before/replica/Sources/PastoCore/OriginalPreviewPopover.swift
++++ replica/Sources/PastoCore/OriginalPreviewPopover.swift
+@@ -11,8 +11,8 @@
+     public private(set) var itemIdentity: AnyHashable?
+     public private(set) var itemIdentifier: String?
+     public var onWillClose: (() -> Void)?
+-    public var makeContentView: ((_ itemIdentity: AnyHashable,
+-                                  _ itemIdentifier: String) -> OriginalItemPreviewView?)?
++    public var makeContentView: ((_ input: ClipboardRestoreItem) -> OriginalItemPreviewView?)?
++    private var item: ClipboardRestoreItem?
+     private let registry: OriginalPreviewWindowRegistry
+     private let isScreenSharingContentVisible: () -> Bool
+     private var visibilityObservation: AnyCancellable?
+@@ -39,10 +39,11 @@
+     }
+ 
+     /// The recovered display mechanics in 0x10002964c, after the item-view factory returns.
+-    public func show(itemIdentity: AnyHashable, itemIdentifier: String,
++    public func show(itemIdentity: AnyHashable, itemIdentifier: String, input: ClipboardRestoreItem,
+                      contentView: NSView, relativeTo anchor: NSView) {
+         self.itemIdentity = itemIdentity
+         self.itemIdentifier = itemIdentifier
++        item = input
+         registry.f_10008747c(itemIdentity: itemIdentity)?.close()
+         if let preview = contentView as? OriginalItemPreviewView {
+             preview.onBeginEditing = { [weak self] in
+@@ -108,9 +109,9 @@
+ 
+     /// Paste 0x100029a80 after the local item-view adapter resolves the content dependency.
+     public func f_100029a80(beginEditing: Bool, keepOpenAfterEditing: Bool) -> OriginalPreviewWindow? {
+-        guard let itemIdentity, let itemIdentifier else { return nil }
++        guard let itemIdentity, let itemIdentifier, let item else { return nil }
+         let window = OriginalPreviewWindow()
+-        guard let preview = makeContentView?(itemIdentity, itemIdentifier) else { return nil }
++        guard let preview = makeContentView?(item) else { return nil }
+         preview.onEndEditing = {
+             if !keepOpenAfterEditing { window.close() }
+         }
+--- phase-95-before/scripts/tests/preview_entity_changes_scope_contract.py
++++ scripts/tests/preview_entity_changes_scope_contract.py
+@@ -1,5 +1,6 @@
+ """Exact header entity-observation deltas for historical frozen contracts only."""
+ from pathlib import Path
++from popover_entity_input_scope_contract import pre_popover_entity_input
+ CHANGES = [['replica/Sources/PastoCore/ClipboardRestoreItem.swift',
+   'import CoreData\n'
+   'import Foundation\n'
+@@ -146,6 +147,7 @@
+   '        }\n']]
+ 
+ def pre_preview_entity_changes(source):
++    source = pre_popover_entity_input(source)
+     for path, before, after in reversed(CHANGES):
+         if after in source:
+             assert source.count(after) == 1, path
+--- phase-95-before/scripts/tests/test_p0_repair_preview_copy_keys.py
++++ scripts/tests/test_p0_repair_preview_copy_keys.py
+@@ -10,12 +10,13 @@
+ from function_ledger import source_fragments
+ from macho_imports import parse_macho
+ from test_offline_p0_contracts import body
++from popover_entity_input_scope_contract import pre_popover_entity_input
+ UI=ROOT/'replica/Sources/Pasto/UI/ReplicaUIController.swift'
+ 
+ class PreviewCopyKeys(unittest.TestCase):
+     @classmethod
+     def setUpClass(cls):
+-        cls.ui=UI.read_text()
++        cls.ui=pre_popover_entity_input(UI.read_text())
+         cls.handle=body(cls.ui,'private func handleKey(_ event: NSEvent) -> Bool')
+         cls.copy=body(cls.handle,'if !isEditing, let options = OriginalCollectionShortcutActions.copyOptions(')
+ 
+--- phase-95-before/scripts/tests/test_p1_repair_preview_entity_changes.py
++++ scripts/tests/test_p1_repair_preview_entity_changes.py
+@@ -7,6 +7,7 @@
+ from test_offline_p0_contracts import body
+ from test_p0_repair_checksum_routing import original_fragment
+ from preview_entity_changes_scope_contract import CHANGES,pre_preview_entity_changes
++from popover_entity_input_scope_contract import pre_popover_entity_input_bytes
+ 
+ class PreviewEntityChangeContracts(unittest.TestCase):
+     @classmethod
+@@ -106,7 +107,7 @@
+             s=body((ROOT/r['path']).read_text(),r['symbol']);self.assertEqual(hashlib.sha256(s.encode()).hexdigest(),r['sha256']);self.assertEqual(s,body((self.phase/'before'/r['path']).read_text(),r['symbol']))
+ 
+     def test_six_exact_hunks_only_two_files_and_no_package_or_shared_storage_changes(self):
+-        self.assertEqual(len(CHANGES),6);sha=lambda p:hashlib.sha256((ROOT/p).read_bytes()).hexdigest()
++        self.assertEqual(len(CHANGES),6);sha=lambda p:hashlib.sha256(pre_popover_entity_input_bytes(ROOT/p)).hexdigest()
+         current={str(p.relative_to(ROOT))for p in(ROOT/'replica/Sources').rglob('*')if p.is_file()};self.assertEqual(current,set(self.base['production']));self.assertEqual({p for p,h in self.base['production'].items()if sha(p)!=h},set(self.paths.values()))
+         for key,p in self.paths.items():self.assertEqual(pre_preview_entity_changes(self.src[key]),(self.phase/'before'/p).read_text())
+         for group in ['current_sources','shared_sources']:
+--- /dev/null
++++ scripts/tests/test_p1_repair_popover_entity_input.py
+@@ -0,0 +1,104 @@
++"""Ordinary preview/detach captured entity: source and immutable ARM checks only."""
++from pathlib import Path
++import hashlib,json,sys,unittest
++ROOT=Path(__file__).resolve().parents[2]
++sys.path[:0]=[str(ROOT/'scripts'),str(ROOT/'scripts/tests')]
++from function_ledger import source_fragments
++from test_offline_p0_contracts import body
++from test_p0_repair_checksum_routing import original_fragment
++from popover_entity_input_scope_contract import CHANGES,pre_popover_entity_input
++
++class PopoverEntityInputContracts(unittest.TestCase):
++    @classmethod
++    def setUpClass(cls):
++        cls.phase=ROOT/'.local/p0-repair/phase-95';cls.proof=json.loads((cls.phase/'popover-entity-input-contract.json').read_text());cls.base=json.loads((cls.phase/'baseline.json').read_text())
++        cls.paths=dict(ui='replica/Sources/Pasto/UI/ReplicaUIController.swift',popover='replica/Sources/PastoCore/OriginalPreviewPopover.swift',panel='replica/Sources/Pasto/UI/PanelViews.swift',stack='replica/Sources/Pasto/UI/AuxiliaryViews.swift')
++        cls.src={k:(ROOT/p).read_text()for k,p in cls.paths.items()}
++        ns={};exec((ROOT/cls.proof['decoder']['path']).read_text().split("idx={r['address']",1)[0],ns);cls.ns=ns
++    def original(self,a):
++        r=next(r for r in self.proof['original_fragments']if r['address']==a);return original_fragment((ROOT/r['path']).read_text(),a[2:])
++    def order(self,s,tokens):
++        pos=[s.index(t)for t in tokens];self.assertEqual(pos,sorted(pos))
++
++    def test_original_fragments_machine_image_and_prior_header_proof_are_bound(self):
++        self.assertEqual(len(self.proof['original_fragments']),11)
++        for r in self.proof['original_fragments']:self.assertEqual(source_fragments(ROOT/r['path'])[r['address']]['sha256'],r['sha256'])
++        for r in [self.proof['binary'],self.proof['decoder']]+self.proof['reused_evidence']:self.assertEqual(hashlib.sha256((ROOT/r['path']).read_bytes()).hexdigest(),r['sha256'])
++
++    def test_twelve_actual_machine_calls_bind_selection_show_and_same_entity_detach(self):
++        self.assertEqual(len(self.proof['ARM_calls']),12)
++        for r in self.proof['ARM_calls']:
++            pc=int(r['address'],16);b=self.ns['read'](pc,4);self.assertEqual(b.hex(),r['bytes']);w=int.from_bytes(b,'little');self.assertEqual(w&0x7c000000,0x14000000);d=w&0x3ffffff
++            if d&0x2000000:d-=0x4000000
++            self.assertEqual(pc+4*d,int(r['target'],16))
++
++    def test_real_popover_item_field_receives_input_and_detach_reads_same_offset(self):
++        words={r['address']:r['bytes']for r in self.proof['ARM_words']}
++        for a,b in words.items():self.assertEqual(self.ns['read'](int(a,16),4).hex(),b)
++        self.assertEqual(words['0x100029670'],'f60300aa');self.assertEqual(words['0x100029680'],'966a28f8');self.assertEqual(words['0x100029aa8'],'956a68f8')
++        field=self.proof['item_ivar'];self.assertEqual(self.ns['read'](int(field['address'],16),8).hex(),field['bytes']);self.assertEqual(int.from_bytes(bytes.fromhex(field['bytes']),'little'),field['offset']);self.assertEqual(field['offset'],0x48)
++        self.assertEqual(words['0x100029678'],words['0x100029aa4'])
++
++    def test_original_factory_stores_and_passes_same_entity_without_identifier_fetch(self):
++        show=self.original('0x10002964c');self.order(show,['PreviewPopover::item) = param_5','FUN_10008747c()','FUN_1003c25dc(param_5','FUN_10007c994()'])
++        detach=self.original('0x100029a80');self.order(detach,['PreviewPopover::item)','if (lVar7 == 0)','FUN_1003c25dc(lVar7','FUN_10007c994()','FUN_100086c10(IVar2,lVar7'])
++        for s in [show,detach]:
++            for token in ['identifier','fetch','UUID','cache']:self.assertNotIn(token,s)
++
++    def test_space_passes_last_applied_entity_while_legacy_preview_has_explicit_fallback(self):
++        key=body(self.src['ui'],'private func handleKey(');s=body(key,'if event.keyCode == 49, !isEditing')
++        self.assertIn('if let input = appliedRestoreItems().last { showPreview(item: input.resolvedItem(), input: input) }',s)
++        for token in ['store.items','appliedSelectionItems','DispatchQueue','Task']:self.assertNotIn(token,s)
++        show=body(self.src['ui'],'func showPreview(item: ClipboardItem, input:')
++        self.order(show,['previewRegistry.f_10008747c','let input = input ?? appliedRestoreItems(orderedIDs: [item.id]).first','?? state.stackRestoreItem(for: item.id) ?? ClipboardRestoreItem(item: item)','let anchor: NSView?','if popover.isDisplayed','popover.close()','popover.show('])
++
++    def test_card_and_Stack_context_actions_supply_current_captured_handle(self):
++        self.assertIn('Button("预览") { state.controller?.showPreview(item: item, input: titleInput) }',self.src['panel'])
++        self.assertIn('Button("预览") { state.controller?.showPreview(item: item, input: state.stackRestoreItem(for: item.id)) }',self.src['stack'])
++        self.assertEqual(self.src['panel'].count('showPreview('),1);self.assertEqual(self.src['stack'].count('showPreview('),1)
++
++    def test_selection_completion_optionally_resolves_entity_before_anchor_and_beeps_on_failure(self):
++        s=body(self.src['ui'],'private func selectionDidReveal(')
++        self.order(s,['collection.appliedItems(for: state)','items.indices.contains(requestedIndex)','let input = items[requestedIndex].restoreItem()','collection.visibleSelectionAnchor(at: requestedIndex','NSSound.beep()','let item = items[requestedIndex]','input: input','makePreviewContent(for: input)'])
++        self.assertNotIn('makePreviewContent(for: item)',s)
++        original=self.original('0x100075e3c');self.order(original,['FUN_1001b9698(','CollectionView::visibleCells','FUN_10002964c('])
++
++    def test_content_factory_type_and_all_production_calls_agree_on_entity_handle(self):
++        factory=body(self.src['ui'],'private func makePreviewContent(for input: ClipboardRestoreItem)')
++        self.assertIn('makeOriginalReplicaPreview(state: state, item: input.resolvedItem(), input: input)',factory)
++        self.assertEqual(self.src['ui'].count('makePreviewContent(for: input)'),3)
++        self.assertNotIn('makePreviewContent(for: item)',self.src['ui'])
++        self.assertEqual(self.src['ui'].count('itemIdentifier: item.id.uuidString, input: input,'),2)
++
++    def test_popover_retains_entity_before_close_of_existing_preview_and_does_not_clear_on_close(self):
++        self.assertIn('private var item: ClipboardRestoreItem?',self.src['popover'])
++        s=body(self.src['popover'],'public func show(itemIdentity:')
++        self.order(s,['self.itemIdentifier = itemIdentifier','item = input','registry.f_10008747c(itemIdentity: itemIdentity)?.close()','preview.onBeginEditing','contentViewController = controller','show(relativeTo:'])
++        self.assertNotIn('weak var item',self.src['popover']);self.assertNotIn('item = nil',body(self.src['popover'],'public func f_100029da8()'))
++
++    def test_detach_factory_takes_stored_handle_without_cache_relookup(self):
++        self.assertIn('public var makeContentView: ((_ input: ClipboardRestoreItem) -> OriginalItemPreviewView?)?',self.src['popover'])
++        s=body(self.src['popover'],'public func f_100029a80(')
++        self.order(s,['guard let itemIdentity, let itemIdentifier, let item','let window = OriginalPreviewWindow()','makeContentView?(item)','preview.onEndEditing','if beginEditing','manager.f_100086c10('])
++        factory=body(self.src['ui'],'private func makePreviewPopover()')
++        self.assertIn('popover.makeContentView = { [weak self] input in',factory);self.assertIn('makeOriginalReplicaPreview(state: self.state, item: input.resolvedItem(), input: input)',factory)
++        for token in ['store.items','uuidString == identifier','appliedRestoreItems','itemIdentity, itemIdentifier']:self.assertNotIn(token,s+factory)
++
++    def test_lifecycle_callbacks_window_registry_and_editing_entry_are_unchanged(self):
++        self.assertEqual(len(self.proof['unchanged_methods']),7)
++        for r in self.proof['unchanged_methods']:
++            now=body((ROOT/r['path']).read_text(),r['symbol']);self.assertEqual(hashlib.sha256(now.encode()).hexdigest(),r['sha256']);self.assertEqual(now,body((self.phase/'before'/r['path']).read_text(),r['symbol']))
++
++    def test_fifteen_reviewed_hunks_four_files_no_shared_writer_or_version_edits(self):
++        self.assertEqual(len(CHANGES),15);sha=lambda p:hashlib.sha256((ROOT/p).read_bytes()).hexdigest()
++        files={str(p.relative_to(ROOT))for p in(ROOT/'replica/Sources').rglob('*')if p.is_file()};self.assertEqual(files,set(self.base['production']));self.assertEqual({p for p,h in self.base['production'].items()if sha(p)!=h},set(self.paths.values()))
++        for key,p in self.paths.items():self.assertEqual(pre_popover_entity_input(self.src[key]),(self.phase/'before'/p).read_text())
++        for group in ['current_sources','shared_sources']:
++            for p,h in self.proof[group].items():self.assertEqual(sha(p),h)
++        for p,h in self.proof['shared_sources'].items():self.assertEqual(h,self.base['production'][p])
++        for p in ['replica/Package.swift','package.json']:self.assertEqual(sha(p),self.base['other'][p])
++
++    def test_original_missing_anchor_retry_is_not_mistaken_for_closed_presenting_contract(self):
++        self.assertIn('FUN_10022c9c4(param_1,1,FUN_100076544',self.original('0x10006bb3c'))
++        self.assertFalse(self.proof['full_function_migration_verified']);self.assertFalse(self.proof['runtime_executed']);self.assertEqual(self.proof['new_difference_records'],0)
++        for token in ['asynchronous index-retry','registry identity','legacy DTO','3544dc']:self.assertTrue(any(token in r for r in self.proof['remaining']),token)
+--- /dev/null
++++ scripts/tests/popover_entity_input_scope_contract.py
+@@ -0,0 +1,101 @@
++"""Exact native popover input deltas for historical frozen source contracts only."""
++from pathlib import Path
++CHANGES = [['replica/Sources/Pasto/UI/ReplicaUIController.swift',
++  '    func showPreview(item: ClipboardItem) {',
++  '    func showPreview(item: ClipboardItem, input: ClipboardRestoreItem? = nil) {'],
++ ['replica/Sources/Pasto/UI/ReplicaUIController.swift',
++  '            show(existing)\n            return\n        }\n        let anchor: NSView?\n',
++  '            show(existing)\n'
++  '            return\n'
++  '        }\n'
++  '        let input = input ?? appliedRestoreItems(orderedIDs: [item.id]).first\n'
++  '            ?? state.stackRestoreItem(for: item.id) ?? ClipboardRestoreItem(item: item)\n'
++  '        let anchor: NSView?\n'],
++ ['replica/Sources/Pasto/UI/ReplicaUIController.swift',
++  '            popover.show(itemIdentity: AnyHashable(item.id), itemIdentifier: item.id.uuidString,\n'
++  '                contentView: makePreviewContent(for: item), relativeTo: anchor)\n'
++  '            return\n',
++  '            popover.show(itemIdentity: AnyHashable(item.id), itemIdentifier: item.id.uuidString, input: '
++  'input,\n'
++  '                contentView: makePreviewContent(for: input), relativeTo: anchor)\n'
++  '            return\n'],
++ ['replica/Sources/Pasto/UI/ReplicaUIController.swift',
++  '        let content = makePreviewContent(for: item)\n',
++  '        let content = makePreviewContent(for: input)\n'],
++ ['replica/Sources/Pasto/UI/ReplicaUIController.swift',
++  '        guard let items = collection.appliedItems(for: state), items.indices.contains(requestedIndex),\n'
++  '              let anchor = collection.visibleSelectionAnchor',
++  '        guard let items = collection.appliedItems(for: state), items.indices.contains(requestedIndex),\n'
++  '              let input = items[requestedIndex].restoreItem(),\n'
++  '              let anchor = collection.visibleSelectionAnchor'],
++ ['replica/Sources/Pasto/UI/ReplicaUIController.swift',
++  '            popover.show(itemIdentity: AnyHashable(item.id), itemIdentifier: item.id.uuidString,\n'
++  '                contentView: makePreviewContent(for: item), relativeTo: anchor)\n'
++  '        }\n',
++  '            popover.show(itemIdentity: AnyHashable(item.id), itemIdentifier: item.id.uuidString, input: '
++  'input,\n'
++  '                contentView: makePreviewContent(for: input), relativeTo: anchor)\n'
++  '        }\n'],
++ ['replica/Sources/Pasto/UI/ReplicaUIController.swift',
++  '    private func makePreviewContent(for item: ClipboardItem) -> NSView {\n'
++  '        makeOriginalReplicaPreview(state: state, item: item)\n'
++  '    }\n',
++  '    private func makePreviewContent(for input: ClipboardRestoreItem) -> NSView {\n'
++  '        makeOriginalReplicaPreview(state: state, item: input.resolvedItem(), input: input)\n'
++  '    }\n'],
++ ['replica/Sources/Pasto/UI/ReplicaUIController.swift',
++  '        popover.makeContentView = { [weak self] _, identifier in\n'
++  '            guard let self, let item = self.store.items.first(where: { $0.id.uuidString == identifier }) '
++  'else { return nil }\n'
++  '            return makeOriginalReplicaPreview(state: self.state, item: item)\n'
++  '        }\n',
++  '        popover.makeContentView = { [weak self] input in\n'
++  '            guard let self else { return nil }\n'
++  '            return makeOriginalReplicaPreview(state: self.state, item: input.resolvedItem(), input: '
++  'input)\n'
++  '        }\n'],
++ ['replica/Sources/Pasto/UI/ReplicaUIController.swift',
++  '            if let item = appliedSelectionItems().last { showPreview(item: item) }',
++  '            if let input = appliedRestoreItems().last { showPreview(item: input.resolvedItem(), input: '
++  'input) }'],
++ ['replica/Sources/PastoCore/OriginalPreviewPopover.swift',
++  '    public var makeContentView: ((_ itemIdentity: AnyHashable,\n'
++  '                                  _ itemIdentifier: String) -> OriginalItemPreviewView?)?\n',
++  '    public var makeContentView: ((_ input: ClipboardRestoreItem) -> OriginalItemPreviewView?)?\n'
++  '    private var item: ClipboardRestoreItem?\n'],
++ ['replica/Sources/PastoCore/OriginalPreviewPopover.swift',
++  '    public func show(itemIdentity: AnyHashable, itemIdentifier: String,\n'
++  '                     contentView: NSView, relativeTo anchor: NSView) {\n'
++  '        self.itemIdentity = itemIdentity\n'
++  '        self.itemIdentifier = itemIdentifier\n',
++  '    public func show(itemIdentity: AnyHashable, itemIdentifier: String, input: ClipboardRestoreItem,\n'
++  '                     contentView: NSView, relativeTo anchor: NSView) {\n'
++  '        self.itemIdentity = itemIdentity\n'
++  '        self.itemIdentifier = itemIdentifier\n'
++  '        item = input\n'],
++ ['replica/Sources/PastoCore/OriginalPreviewPopover.swift',
++  '        guard let itemIdentity, let itemIdentifier else { return nil }\n',
++  '        guard let itemIdentity, let itemIdentifier, let item else { return nil }\n'],
++ ['replica/Sources/PastoCore/OriginalPreviewPopover.swift',
++  '        guard let preview = makeContentView?(itemIdentity, itemIdentifier) else { return nil }\n',
++  '        guard let preview = makeContentView?(item) else { return nil }\n'],
++ ['replica/Sources/Pasto/UI/PanelViews.swift',
++  '            Button("预览") { state.controller?.showPreview(item: item) }',
++  '            Button("预览") { state.controller?.showPreview(item: item, input: titleInput) }'],
++ ['replica/Sources/Pasto/UI/AuxiliaryViews.swift',
++  '                    Button("预览") { state.controller?.showPreview(item: item) }',
++  '                    Button("预览") { state.controller?.showPreview(item: item, input: '
++  'state.stackRestoreItem(for: item.id)) }']]
++
++def pre_popover_entity_input(source):
++    for path, before, after in reversed(CHANGES):
++        if after in source:
++            assert source.count(after) == 1, path
++            source = source.replace(after, before, 1)
++    return source
++
++def pre_popover_entity_input_bytes(path):
++    data = Path(path).read_bytes()
++    if str(path).endswith(".swift"):
++        return pre_popover_entity_input(data.decode()).encode()
++    return data

@@ -8,9 +8,8 @@ public enum OriginalPreviewTextTraits {
     public static func f_100207db8(_ attributes: [NSAttributedString.Key: Any]) -> Set<Trait> {
         var result: Set<Trait> = []
         if let font = attributes[.font] as? NSFont {
-            let traits = font.fontDescriptor.symbolicTraits
-            if traits.contains(.bold) { result.insert(.bold) }
-            if traits.contains(.italic) { result.insert(.italic) }
+            if font.fontDescriptor.symbolicTraits.contains(.bold) { result.insert(.bold) }
+            if font.fontDescriptor.symbolicTraits.contains(.italic) { result.insert(.italic) }
         }
         if let underline = attributes[.underlineStyle] as? Int, underline == 1 { result.insert(.underline) }
         if let strike = attributes[.strikethroughStyle] as? Int, strike == 1 { result.insert(.strikethrough) }
@@ -64,12 +63,14 @@ public enum OriginalPreviewTextTraits {
             else { result[key] = 1 }
         case .bold, .italic:
             guard let font = attributes[.font] as? NSFont else { return result }
-            let descriptor = font.fontDescriptor
-            let mask: NSFontDescriptor.SymbolicTraits = trait == .bold ? .bold : .italic
-            let traits = remove ? descriptor.symbolicTraits.subtracting(mask) : descriptor.symbolicTraits.union(mask)
-            let cleared = OriginalPreviewAttributedText.descriptorWithTraits(descriptor, traits: [])
-            let changed = cleared.flatMap { OriginalPreviewAttributedText.descriptorWithTraits($0, traits: traits) }
-            if let changedFont = NSFont(descriptor: changed ?? descriptor, size: font.pointSize) {
+            let originalTraits = font.fontDescriptor.symbolicTraits
+            let cleared = OriginalPreviewAttributedText.descriptorWithTraits(font.fontDescriptor, traits: [])
+            let changed = cleared.flatMap { descriptor in
+                let mask: NSFontDescriptor.SymbolicTraits = trait == .bold ? .bold : .italic
+                let traits = remove ? originalTraits.subtracting(mask) : originalTraits.union(mask)
+                return OriginalPreviewAttributedText.descriptorWithTraits(descriptor, traits: traits)
+            }
+            if let changedFont = NSFont(descriptor: changed ?? font.fontDescriptor, size: font.pointSize) {
                 result[.font] = changedFont
             } else { result.removeValue(forKey: .font) }
         }
@@ -112,7 +113,7 @@ public enum OriginalPreviewTextTraits {
 public final class OriginalPreviewTextStorageBridge: NSObject, NSTextStorageDelegate {
     public var onTraitsChange: ((Set<OriginalPreviewTextTraits.Trait>) -> Void)?
     public var onAttributedTextChange: ((NSAttributedString) -> Void)?
-    private weak var editor: NSTextView?
+    private let editor: NSTextView
     private var typingAttributesObserver: NSKeyValueObservation?
 
     public init(editor: NSTextView) {
@@ -121,7 +122,9 @@ public final class OriginalPreviewTextStorageBridge: NSObject, NSTextStorageDele
         f_100213780(editor: editor)
         // Original 0x100213cb0 passes options=1 (.new), without .initial.
         typingAttributesObserver = editor.observe(\.typingAttributes, options: [.new]) { [weak self] _, _ in
-            Task { @MainActor [weak self] in self?.f_100213fe8() }
+            Task { @MainActor [weak self] in
+                _ = Self.deliverTraits(from: { [weak self] in self })
+            }
         }
     }
 
@@ -140,19 +143,37 @@ public final class OriginalPreviewTextStorageBridge: NSObject, NSTextStorageDele
 
     @discardableResult
     public func f_100213fe8() -> Bool {
-        guard let editor else { return true }
-        onTraitsChange?(OriginalPreviewTextTraits.f_100207b54(editor: editor))
+        let traits = OriginalPreviewTextTraits.f_100207b54(editor: editor)
+        onTraitsChange?(traits)
         return false
     }
 
     public func f_100214704() {
-        if let editor { onTraitsChange?(OriginalPreviewTextTraits.f_100207b54(editor: editor)) }
-        // The original reloads its weak owner before invoking the content callback.
-        if let editor { onAttributedTextChange?(OriginalPreviewAttributedText.f_1000f6ef8(editor: editor)) }
+        Self.deliverStorageChange(from: { [weak self] in self })
+    }
+
+    private static func deliverStorageChange(from loadOwner: () -> OriginalPreviewTextStorageBridge?) {
+        _ = deliverTraits(from: loadOwner)
+        deliverContent(from: loadOwner)
+    }
+
+    // Separate calls end the first strong-owner scope before the second weak load (214998/2149a4).
+    @inline(never)
+    private static func deliverTraits(from loadOwner: () -> OriginalPreviewTextStorageBridge?) -> Bool {
+        guard let owner = loadOwner() else { return true }
+        return owner.f_100213fe8()
+    }
+
+    @inline(never)
+    private static func deliverContent(from loadOwner: () -> OriginalPreviewTextStorageBridge?) {
+        guard let owner = loadOwner(), let callback = owner.onAttributedTextChange else { return }
+        callback(OriginalPreviewAttributedText.f_1000f6ef8(editor: owner.editor))
     }
 
     public func f_10021453c() {
-        Task { @MainActor [weak self] in self?.f_100214704() }
+        Task { @MainActor [weak self] in
+            Self.deliverStorageChange(from: { [weak self] in self })
+        }
     }
 
     nonisolated public func textStorage(_ textStorage: NSTextStorage, didProcessEditing editedMask: NSTextStorageEditActions,

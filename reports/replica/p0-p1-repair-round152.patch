@@ -1,0 +1,141 @@
+--- before/replica/Sources/PastoCore/ClipboardPersistence.swift
++++ after/replica/Sources/PastoCore/ClipboardPersistence.swift
+@@ -99,7 +99,8 @@
+                                   includeTypedItem: Bool = true,
+                                   includeItemOrder: Bool = true,
+                                   includeNativeTitle: Bool = true,
+-                                  includeTypedLists: Bool = true) -> NSManagedObjectModel {
++                                  includeTypedLists: Bool = true,
++                                  includeTypedSources: Bool = true) -> NSManagedObjectModel {
+         let model = NSManagedObjectModel()
+         func attribute(_ name: String, _ type: NSAttributeType, optional: Bool = false) -> NSAttributeDescription {
+             let value = NSAttributeDescription()
+@@ -157,6 +158,10 @@
+         }
+         if includeNativeItemData { ClipboardItemDataPersistence.addEntity(to: model, item: model.entitiesByName["Item"]!) }
+         if includeNativeSources { ClipboardSourcePersistence.addEntities(to: model, item: model.entitiesByName["Item"]!) }
++        if includeNativeSources && includeTypedSources {
++            model.entitiesByName["ApplicationEntity"]!.managedObjectClassName = NSStringFromClass(PastoApplicationEntity.self)
++            model.entitiesByName["DeviceEntity"]!.managedObjectClassName = NSStringFromClass(PastoDeviceEntity.self)
++        }
+         return model
+     }
+ 
+@@ -168,16 +173,17 @@
+         guard !destinationModel.isConfiguration(nil, compatibleWithStoreMetadata: metadata) else { return }
+ 
+         let legacyCandidates = [
+-            makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeTypedLists: false),
+-            makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeNativeTitle: false, includeTypedLists: false),
+-            makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeItemOrder: false, includeNativeTitle: false, includeTypedLists: false),
+-            makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeTypedItem: false, includeItemOrder: false, includeNativeTitle: false, includeTypedLists: false),
+-            makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeNativeSources: false, includeTypedItem: false, includeItemOrder: false, includeNativeTitle: false, includeTypedLists: false),
+-            makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeNativeItemData: false, includeNativeSources: false, includeTypedItem: false, includeItemOrder: false, includeNativeTitle: false, includeTypedLists: false),
+-            makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeLists: true, includeOptionalTimestamp: false, includeNativeItemData: false, includeNativeSources: false, includeTypedItem: false, includeItemOrder: false, includeNativeTitle: false, includeTypedLists: false),
+-            makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeLists: false, includeOptionalTimestamp: false, includeNativeItemData: false, includeNativeSources: false, includeTypedItem: false, includeItemOrder: false, includeNativeTitle: false, includeTypedLists: false),
+-            makeModel(includeNativeIdentity: false, preserveItemKeyInHistory: true, includeLists: false, includeOptionalTimestamp: false, includeNativeItemData: false, includeNativeSources: false, includeTypedItem: false, includeItemOrder: false, includeNativeTitle: false, includeTypedLists: false),
+-            makeModel(includeNativeIdentity: false, preserveItemKeyInHistory: false, includeLists: false, includeOptionalTimestamp: false, includeNativeItemData: false, includeNativeSources: false, includeTypedItem: false, includeItemOrder: false, includeNativeTitle: false, includeTypedLists: false)
++            makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeTypedSources: false),
++            makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeTypedLists: false, includeTypedSources: false),
++            makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeNativeTitle: false, includeTypedLists: false, includeTypedSources: false),
++            makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeItemOrder: false, includeNativeTitle: false, includeTypedLists: false, includeTypedSources: false),
++            makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeTypedItem: false, includeItemOrder: false, includeNativeTitle: false, includeTypedLists: false, includeTypedSources: false),
++            makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeNativeSources: false, includeTypedItem: false, includeItemOrder: false, includeNativeTitle: false, includeTypedLists: false, includeTypedSources: false),
++            makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeNativeItemData: false, includeNativeSources: false, includeTypedItem: false, includeItemOrder: false, includeNativeTitle: false, includeTypedLists: false, includeTypedSources: false),
++            makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeLists: true, includeOptionalTimestamp: false, includeNativeItemData: false, includeNativeSources: false, includeTypedItem: false, includeItemOrder: false, includeNativeTitle: false, includeTypedLists: false, includeTypedSources: false),
++            makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeLists: false, includeOptionalTimestamp: false, includeNativeItemData: false, includeNativeSources: false, includeTypedItem: false, includeItemOrder: false, includeNativeTitle: false, includeTypedLists: false, includeTypedSources: false),
++            makeModel(includeNativeIdentity: false, preserveItemKeyInHistory: true, includeLists: false, includeOptionalTimestamp: false, includeNativeItemData: false, includeNativeSources: false, includeTypedItem: false, includeItemOrder: false, includeNativeTitle: false, includeTypedLists: false, includeTypedSources: false),
++            makeModel(includeNativeIdentity: false, preserveItemKeyInHistory: false, includeLists: false, includeOptionalTimestamp: false, includeNativeItemData: false, includeNativeSources: false, includeTypedItem: false, includeItemOrder: false, includeNativeTitle: false, includeTypedLists: false, includeTypedSources: false)
+         ]
+         // The older history-retention variants can share a version hash.
+         let sourceModel = legacyCandidates.first {
+--- before/replica/Sources/PastoCore/OriginalManagedItem.swift
++++ after/replica/Sources/PastoCore/OriginalManagedItem.swift
+@@ -105,6 +105,27 @@
+     }
+ }
+ 
++// Source entities share the native local save callback and initialize their own creation date.
++@objc(PastoApplicationEntity)
++class PastoApplicationEntity: PastoManagedObject {
++    override class var entityName: String { "ApplicationEntity" }
++
++    override func awakeFromInsert() {
++        super.awakeFromInsert()
++        setPrimitiveValue(Date(), forKey: "createdAt")
++    }
++}
++
++@objc(PastoDeviceEntity)
++class PastoDeviceEntity: PastoManagedObject {
++    override class var entityName: String { "DeviceEntity" }
++
++    override func awakeFromInsert() {
++        super.awakeFromInsert()
++        setPrimitiveValue(Date(), forKey: "createdAt")
++    }
++}
++
+ enum OriginalManagedFetchRequest {
+     // 0x1003298a0: entity name, class sort/predicate defaults, then batch size.
+     static func make<Entity: PastoManagedObject>(for entity: Entity.Type) -> NSFetchRequest<Entity> {
+--- before/replica/Sources/PastoCore/ClipboardSourcePersistence.swift
++++ after/replica/Sources/PastoCore/ClipboardSourcePersistence.swift
+@@ -58,22 +58,22 @@
+         model.entitiesByName["State"]!.properties.append(attribute(versionKey, .integer64AttributeType, defaultValue: 0))
+     }
+ 
+-    private func first(_ entity: String, key: String, value: String) throws -> NSManagedObject? {
+-        let request = NSFetchRequest<NSManagedObject>(entityName: entity)
++    private func first<Entity: PastoManagedObject>(_ entity: Entity.Type, key: String, value: String) throws -> Entity? {
++        let request = OriginalManagedFetchRequest.make(for: entity)
+         request.predicate = NSPredicate(format: "%K == %@", key, value)
+         request.fetchLimit = 1
++        request.fetchOffset = 0
+         return try context.fetch(request).first
+     }
+ 
+     @discardableResult
+     func application(_ value: SourceApplicationRecord) throws -> NSManagedObject {
+         let object: NSManagedObject
+-        if let existing = try first("ApplicationEntity", key: "bundleIdentifier", value: value.bundleIdentifier) {
++        if let existing = try first(PastoApplicationEntity.self, key: "bundleIdentifier", value: value.bundleIdentifier) {
+             object = existing
+         } else {
+             object = NSEntityDescription.insertNewObject(forEntityName: "ApplicationEntity", into: context)
+             object.setValue(value.bundleIdentifier, forKey: "bundleIdentifier")
+-            object.setValue(Date(), forKey: "createdAt")
+         }
+         if (object.value(forKey: "name") as? String) != value.name { object.setValue(value.name, forKey: "name") }
+         if (object.value(forKey: "rawIcon") as? Data) != value.rawIcon { object.setValue(value.rawIcon, forKey: "rawIcon") }
+@@ -87,9 +87,8 @@
+     // 312150: current hardware identity is distinct from legacy archive display names.
+     func currentDevice() -> NSManagedObject {
+         let identifier = OriginalLocalDevice.f_1000f35e0()
+-        let request = NSFetchRequest<NSManagedObject>(entityName: "DeviceEntity")
++        let request = OriginalManagedFetchRequest.make(for: PastoDeviceEntity.self)
+         request.predicate = NSPredicate(format: "identifier == %@", identifier)
+-        request.fetchBatchSize = 20
+         request.fetchLimit = 1
+         request.fetchOffset = 0
+         if let existing = (try? context.fetch(request))?.first { return existing }
+@@ -98,18 +97,15 @@
+         object.setValue(Int64(2), forKey: "rawType")
+         object.setValue(identifier, forKey: "identifier")
+         object.setValue(name, forKey: "name")
+-        // The existing local model requires this creation column.
+-        object.setValue(Date(), forKey: "createdAt")
+         return object
+     }
+ 
+     private func device(named name: String) throws -> NSManagedObject {
+-        if let existing = try first("DeviceEntity", key: "name", value: name) { return existing }
++        if let existing = try first(PastoDeviceEntity.self, key: "name", value: name) { return existing }
+         // Old Pasto records have a device name, but no vendor/device UUID.
+         let object = NSEntityDescription.insertNewObject(forEntityName: "DeviceEntity", into: context)
+         object.setValue(UUID().uuidString, forKey: "identifier")
+         object.setValue(name, forKey: "name")
+-        object.setValue(Date(), forKey: "createdAt")
+         return object
+     }
+ 

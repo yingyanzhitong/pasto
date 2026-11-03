@@ -1,0 +1,206 @@
+--- phase-11-before/replica/Sources/PastoCore/OriginalItemPreviewView.swift
++++ replica/Sources/PastoCore/OriginalItemPreviewView.swift
+@@ -1,6 +1,6 @@
+ import AppKit
+ 
+-/// The recovered PasteUI.Editable requirements used by ItemPreviewView.
++/// The recovered PasteCoreUI.ItemContent.Editable requirements used by ItemPreviewView.
+ /// Names of cancel/commit are established by the original EditorHeader callbacks.
+ @MainActor
+ public protocol OriginalPreviewEditableContent: AnyObject {
+@@ -9,6 +9,12 @@
+     func beginPreviewEditing()
+     func cancelPreviewEditing()
+     func commitPreviewEditing()
++    func focusPreviewEditing()
++}
++
++public extension OriginalPreviewEditableContent {
++    /// Paste 0x100004520: the color, image and link witnesses do no additional work.
++    func focusPreviewEditing() {}
+ }
+ 
+ /// Recovered preview mode transitions. Concrete headers and item renderers are adapters.
+--- phase-11-before/replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift
++++ replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift
+@@ -294,6 +294,11 @@
+         window?.makeFirstResponder(text)
+     }
+ 
++    // 0x1003ec13c → 0x100214474 runs after the editing window is presented.
++    func focusPreviewEditing() {
++        window?.makeFirstResponder(text)
++    }
++
+     func cancelPreviewEditing() {
+         text.isEditable = false
+         reloadStoredContent()
+--- phase-11-before/replica/Sources/Pasto/UI/ReplicaUIController.swift
++++ replica/Sources/Pasto/UI/ReplicaUIController.swift
+@@ -700,6 +700,7 @@
+     private var stackCaptureObserver: NSObjectProtocol?
+     private var itemWindows: [UUID: NSWindow] = [:]
+     private let previewRegistry = OriginalPreviewWindowRegistry()
++    private var editorWindowTransitions: [ObjectIdentifier: OriginalPreviewWindowTransition] = [:]
+     private var previewAnchors: [UUID: WeakReplicaPreviewAnchor] = [:]
+     private var previewPopover: OriginalPreviewPopover?
+     var filterBrowserPopover: OriginalFilterBrowserPopover?
+@@ -1185,6 +1186,73 @@
+         previewRegistry.f_100086c10(window: window, itemIdentity: AnyHashable(item.id),
+             itemIdentifier: item.id.uuidString, isEditing: false)
+         show(window)
++    }
++
++    // 0x1000655cc filters the complete input before invoking each item's router.
++    private func editItems(_ items: [ClipboardItem]) {
++        let editable = items.filter(Self.allowsContentEditing)
++        guard !editable.isEmpty else { NSSound.beep(); return }
++        for item in editable { presentEditingPreview(item: item) }
++    }
++
++    // 0x10031c2ec: offline lists have no CKShare permission branch.
++    private static func allowsContentEditing(_ item: ClipboardItem) -> Bool {
++        switch item.kind {
++        case .image, .color, .link, .text, .richText: return true
++        case .files, .unknown: return false
++        }
++    }
++
++    // 0x10006bed8: capability and text selection gates precede routing and the task.
++    private func writeAppliedSelection() -> Bool {
++        guard OriginalWritingTools.isAvailable() else { return false }
++        let items = appliedSelectionItems().filter {
++            Self.allowsContentEditing($0) && ($0.kind == .text || $0.kind == .richText)
++        }
++        guard !items.isEmpty else { return false }
++        editItems(items)
++        OriginalWritingTools.showAfterDelay()
++        return true
++    }
++
++    // 0x1003bb280 → Router witness → 0x100003da0, with beginEditing=true.
++    private func presentEditingPreview(item: ClipboardItem) {
++        let window = OriginalPreviewWindow()
++        window.animationBehavior = .documentWindow
++        sharingPolicy.apply(to: window)
++        let registry = previewRegistry
++        let itemIdentifier = item.id.uuidString
++        registry.f_100086c10(window: window, itemIdentity: AnyHashable(item.id),
++                           itemIdentifier: itemIdentifier, isEditing: true)
++        let transition = OriginalPreviewWindowTransition(window: window)
++        let windowIdentity = ObjectIdentifier(window)
++        editorWindowTransitions[windowIdentity] = transition
++        transition.onPresented = { [weak self] window in self?.positionEditingPreview(window) }
++        transition.onDismissed = { [weak self] _ in
++            _ = self?.editorWindowTransitions.removeValue(forKey: windowIdentity)
++        }
++        let preview = makeOriginalReplicaPreview(state: state, item: item)
++        preview.onEndEditing = { window.close() }
++        preview.onEditingStateChanged = { editing in
++            registry.f_10008727c(isEditing: editing, itemIdentifier: itemIdentifier)
++        }
++        preview.f_10007be8c()
++        let controller = NSViewController()
++        controller.view = preview
++        transition.present(controller)
++        (preview.itemContentView as? OriginalPreviewEditableContent)?.focusPreviewEditing()
++    }
++
++    // 0x1000042b4: the registry already includes the newly presented window.
++    private func positionEditingPreview(_ window: NSWindow) {
++        window.center()
++        guard let screen = window.screen else { return }
++        let frame = screen.frame
++        let offset = CGFloat(previewRegistry.windows.count * 30)
++        var origin = NSPoint(x: window.frame.minX + offset, y: window.frame.minY - offset)
++        if frame.maxX < origin.x + window.frame.width { origin.x = frame.maxX - window.frame.width }
++        if origin.y < frame.minY { origin.y = frame.minY }
++        window.setFrameOrigin(origin)
+     }
+ 
+     // f06c338: capture the visible cell offset before invoking onSelectList.
+@@ -1660,6 +1728,15 @@
+             copySelection(plainTextOnly: options.contains(.plainTextAndLinks))
+             return true
+         }
++        if !isEditing, signature.keyCode == OriginalShortcutFunctions.f_1001e94d4("e"),
++           signature.modifierRawValue == NSEvent.ModifierFlags.command.rawValue {
++            editItems(appliedSelectionItems())
++            return true
++        }
++        if !isEditing, signature.keyCode == OriginalShortcutFunctions.f_1001e94d4("e"),
++           signature.modifierRawValue == NSEvent.ModifierFlags.command.union(.shift).rawValue {
++            return writeAppliedSelection()
++        }
+         if !isEditing, signature.keyCode == OriginalShortcutFunctions.f_1001e94d4("v"),
+            signature.modifierRawValue == NSEvent.ModifierFlags.command.rawValue {
+             let appliedIDs = Set((appliedCollectionItems() ?? []).map(\.id))
+--- /dev/null
++++ replica/Sources/PastoCore/OriginalWritingTools.swift
+@@ -0,0 +1,30 @@
++import AppKit
++#if canImport(FoundationModels)
++import FoundationModels
++#endif
++
++@MainActor
++public enum OriginalWritingTools {
++    /// Paste 0x1002171cc: model availability on 26+, selector support on 15.2–25.
++    public static func isAvailable() -> Bool {
++        if #available(macOS 26, *) {
++            #if canImport(FoundationModels)
++            return SystemLanguageModel.default.availability == .available
++            #else
++            return false
++            #endif
++        }
++        guard #available(macOS 15.2, *) else { return false }
++        return NSText.instancesRespond(to: NSSelectorFromString("showWritingTools:"))
++    }
++
++    /// The nil-sender callers of 0x1002160fc. Both sleep continuations send the action.
++    public static func showAfterDelay() {
++        Task { @MainActor in
++            try? await ContinuousClock().sleep(for: .milliseconds(500))
++            if #available(macOS 15.2, *) {
++                NSApp.sendAction(NSSelectorFromString("showWritingTools:"), to: nil, from: nil)
++            }
++        }
++    }
++}
+--- /dev/null
++++ replica/Sources/PastoCore/OriginalPreviewWindowTransition.swift
+@@ -0,0 +1,33 @@
++import AppKit
++
++/// The explicit-window branch of the recovered WindowTransition.
++/// The application's owner retains this adapter for the presented window's lifetime.
++@MainActor
++public final class OriginalPreviewWindowTransition: NSObject, NSWindowDelegate {
++    public let window: NSWindow
++    public var onPresented: ((NSWindow) -> Void)?
++    public var onDismissed: ((Bool) -> Void)?
++
++    public init(window: NSWindow) {
++        self.window = window
++        super.init()
++        window.isReleasedWhenClosed = false
++    }
++
++    /// Paste 0x1001ae4f0: presentation and its callback are synchronous.
++    public func present(_ controller: NSViewController) {
++        window.delegate = self
++        let view = controller.view
++        view.setFrameSize(controller.view.fittingSize)
++        window.contentViewController = controller
++        window.makeKeyAndOrderFront(nil)
++        window.orderFrontRegardless()
++        onPresented?(window)
++    }
++
++    /// Paste 0x1001ae360: release content before reporting a window close.
++    public func windowWillClose(_ notification: Notification) {
++        window.contentViewController = nil
++        onDismissed?(true)
++    }
++}

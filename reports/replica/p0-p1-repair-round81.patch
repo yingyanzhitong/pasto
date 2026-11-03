@@ -1,0 +1,504 @@
+--- phase-81-before/replica/Sources/Pasto/UI/AuxiliaryViews.swift
++++ replica/Sources/Pasto/UI/AuxiliaryViews.swift
+@@ -247,8 +247,9 @@
+             state.stackIDs.remove(at: visibleOffsets[row])
+             return true
+         }
+-        controller.makeCell = { item in
+-            NSHostingView(rootView:
++        controller.makeCell = { [weak controller] item, row in
++            let expectedIDs = controller?.snippets.map(\.id) ?? []
++            return NSHostingView(rootView:
+                 OriginalStackSnippetCellView(item: item, imageProvider: { item in
+                     OriginalStackCategoryIcons.image(for: state.store.originalContentKind(of: item))
+                 }).frame(maxWidth: .infinity).frame(height: 44)
+@@ -256,12 +257,12 @@
+                     Button("复制") { state.controller?.copy(item: item, plainTextOnly: false) }
+                     Button("粘贴") {
+                         if state.controller?.paste(item: item, plainTextOnly: false) == true {
+-                            state.stackIDs.removeAll { $0 == item.id }
++                            controller?.removeRow(at: row, expectedIDs: expectedIDs)
+                             if state.stackItems.isEmpty { state.controller?.hideStack() }
+                         }
+                     }
+                     Button("预览") { state.controller?.showPreview(item: item) }
+-                    Button("移除") { state.stackIDs.removeAll { $0 == item.id } }
++                    Button("移除") { controller?.removeRow(at: row, expectedIDs: expectedIDs) }
+                 })
+         }
+         controller.updateSnippets(state.stackItems)
+--- phase-81-before/replica/Sources/Pasto/UI/ReplicaUIController.swift
++++ replica/Sources/Pasto/UI/ReplicaUIController.swift
+@@ -693,7 +693,6 @@
+     }
+ 
+     func addToStack(_ item: ClipboardItem) {
+-        guard !stackIDs.contains(item.id) else { return }
+         let previousIDs = stackItems.map(\.id)
+         let append = store.preferences.stackReversed
+         let insertionIndex = append ? previousIDs.count : 0
+--- phase-81-before/replica/Sources/PastoCore/OriginalStackTableController.swift
++++ replica/Sources/PastoCore/OriginalStackTableController.swift
+@@ -7,7 +7,7 @@
+     public var snippets: [ClipboardItem] = [] { didSet { snippetsRevision &+= 1 } }
+     private var snippetsRevision: UInt = 0
+     private var animatedSnippetsAwaitingRefresh: [ClipboardItem]?
+-    public var makeCell: ((ClipboardItem) -> NSView)?
++    public var makeCell: ((ClipboardItem, Int) -> NSView)?
+     public var removeSnippet: (([UUID], Int) -> Bool)?
+     public var removeActionTitle = ""
+     private var heightConstraint: NSLayoutConstraint?
+@@ -109,19 +109,25 @@
+                           edge: NSTableView.RowActionEdge) -> [NSTableViewRowAction] {
+         guard edge == .trailing else { return [] }
+         return [NSTableViewRowAction(style: .destructive, title: removeActionTitle) { [weak self] _, row in
+-            guard let self, self.snippets.indices.contains(row), let removeSnippet = self.removeSnippet else { return }
+-            let revision = self.snippetsRevision
+-            guard removeSnippet(self.snippets.map(\.id), row), self.snippetsRevision == revision else { return }
+-            self.snippets.remove(at: row)
+-            self.tableView.removeRows(at: IndexSet(integer: row), withAnimation: .slideUp)
+-            self.f_100083a20()
++            guard let self else { return }
++            self.removeRow(at: row, expectedIDs: self.snippets.map(\.id))
+         }]
++    }
++
++    public func removeRow(at row: Int, expectedIDs: [UUID]) {
++        guard snippets.map(\.id) == expectedIDs, snippets.indices.contains(row),
++              let removeSnippet else { return }
++        let revision = snippetsRevision
++        guard removeSnippet(expectedIDs, row), snippetsRevision == revision else { return }
++        snippets.remove(at: row)
++        tableView.removeRows(at: IndexSet(integer: row), withAnimation: .slideUp)
++        f_100083a20()
+     }
+ 
+     public func numberOfRows(in tableView: NSTableView) -> Int { f_100085230() }
+     public func tableView(_ tableView: NSTableView, shouldSelectRow row: Int) -> Bool { f_100085670(row: row) }
+     public func tableView(_ tableView: NSTableView, viewFor tableColumn: NSTableColumn?, row: Int) -> NSView? {
+         guard snippets.indices.contains(row) else { return nil }
+-        return makeCell?(snippets[row])
++        return makeCell?(snippets[row], row)
+     }
+ }
+--- phase-81-before/scripts/tests/supplied_input_scope_contract.py
++++ scripts/tests/supplied_input_scope_contract.py
+@@ -3,6 +3,7 @@
+ Current input preservation and actual consumers are checked in test_p1_repair_supplied_input_adapters.
+ """
+ from pathlib import Path
++from stack_occurrence_scope_contract import pre_stack_occurrences
+ 
+ CHANGES = [('replica/Sources/Pasto/UI/ReplicaUIController.swift',
+   '{\n        copy(ids: [item.id], plainTextOnly: plainTextOnly)\n    }',
+@@ -55,6 +56,7 @@
+   '    }')]
+ 
+ def pre_supplied_input_adapters(source):
++    source = pre_stack_occurrences(source)
+     for path, previous, current in CHANGES:
+         if current in source:
+             assert source.count(current) == 1, path
+--- phase-81-before/scripts/tests/test_p1_repair_stack_category_icons.py
++++ scripts/tests/test_p1_repair_stack_category_icons.py
+@@ -13,6 +13,7 @@
+ sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'scripts/tests')]
+ from function_ledger import source_fragments
+ from test_offline_p0_contracts import body
++from stack_occurrence_scope_contract import pre_stack_occurrences_bytes
+ from extract_stack_icon_catalog import Catalog, extract, NAMES
+ 
+ 
+@@ -52,7 +53,7 @@
+             elif path == self.paths['store']:
+                 assert_factory_addition_only(self, (ROOT / path).read_text(), frozen.decode(), public=True)
+             else:
+-                self.assertEqual((ROOT / path).read_bytes(), frozen)
++                self.assertEqual(pre_stack_occurrences_bytes(ROOT / path), frozen)
+         self.assertEqual({r['decoded'] for r in self.proof['native_small_strings']}, set(NAMES))
+         for row in self.proof['native_selectors']:
+             self.assertTrue(row['chain']['declared_chain_reachable'])
+--- phase-81-before/scripts/tests/test_p1_repair_supplied_input_adapters.py
++++ scripts/tests/test_p1_repair_supplied_input_adapters.py
+@@ -10,6 +10,7 @@
+ sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'scripts/tests')]
+ from function_ledger import source_fragments
+ from test_offline_p0_contracts import body
++from stack_occurrence_scope_contract import pre_stack_occurrences, pre_stack_occurrences_bytes
+ from supplied_input_scope_contract import CHANGES, pre_supplied_input_adapters
+ 
+ 
+@@ -20,7 +21,7 @@
+         cls.proof = json.loads((cls.phase / 'supplied-input-contract.json').read_text())
+         cls.base = json.loads((cls.phase / 'baseline.json').read_text())
+         cls.paths = dict(ui='replica/Sources/Pasto/UI/ReplicaUIController.swift', store='replica/Sources/PastoCore/ClipboardStore.swift')
+-        cls.source = {k: (ROOT / p).read_text() for k, p in cls.paths.items()}
++        cls.source = {k: pre_stack_occurrences((ROOT / p).read_text()) for k, p in cls.paths.items()}
+         cls.ui = cls.source['ui'];cls.store = cls.source['store']
+         cls.prepare = body(cls.store, 'func prepareHistoryRestore(_ selected:')
+ 
+@@ -92,7 +93,7 @@
+     def test_two_actual_source_files_and_after_snapshots_are_bound(self):
+         self.assertEqual(set(self.proof['current_sources']), set(self.paths.values()))
+         for p, h in self.proof['current_sources'].items():
+-            raw = (ROOT / p).read_bytes()
++            raw = pre_stack_occurrences_bytes(ROOT / p)
+             self.assertEqual(hashlib.sha256(raw).hexdigest(), h)
+             self.assertEqual(raw, (self.phase / 'after' / p).read_bytes())
+ 
+@@ -106,13 +107,13 @@
+         self.assertEqual(body(self.ui, 'func copySelection('), body(self.before('ui'), 'func copySelection('))
+ 
+     def test_real_stack_single_copy_callback_uses_shared_supplied_item_route(self):
+-        path = 'replica/Sources/Pasto/UI/AuxiliaryViews.swift';s = (ROOT / path).read_text()
++        path = 'replica/Sources/Pasto/UI/AuxiliaryViews.swift';s = pre_stack_occurrences((ROOT / path).read_text())
+         self.assertEqual(hashlib.sha256(s.encode()).hexdigest(), self.base['production'][path])
+         stack = s[s.index('struct ReplicaStackTable:'):]
+         self.assertIn('Button("复制") { state.controller?.copy(item: item, plainTextOnly: false) }', stack)
+         self.assertIn('state.controller?.copy(item: item, plainTextOnly: false)', s)
+         # Changing the shared P0/P1 writer does not edit the preview UI.
+-        self.assertEqual((ROOT / path).read_bytes(), (self.phase / 'before' / path).read_bytes())
++        self.assertEqual(pre_stack_occurrences_bytes(ROOT / path), (self.phase / 'before' / path).read_bytes())
+ 
+     def test_set_adapter_preserves_cached_order_and_appends_all_unseen_requested_ids(self):
+         f = body(self.store, 'public func assign(ids:')
+@@ -126,7 +127,7 @@
+             self.assertNotIn(token, f)
+ 
+     def test_actual_set_callers_supply_item_ids_to_transactional_ordered_assign(self):
+-        path = 'replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift';s = (ROOT / path).read_text()
++        path = 'replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift';s = pre_stack_occurrences((ROOT / path).read_text())
+         self.assertEqual(hashlib.sha256(s.encode()).hexdigest(), self.base['production'][path])
+         for token in ['store.assign(ids: [self.itemID], to: board.id)', 'store.assign(ids: [itemID], to: board.id)']:
+             self.assertIn(token, s)
+@@ -207,7 +208,7 @@
+         self.assertEqual(len(CHANGES), 3)
+         for key in self.paths:
+             self.assertEqual(pre_supplied_input_adapters(self.source[key]), self.before(key))
+-        sha = lambda p: hashlib.sha256((ROOT / p).read_bytes()).hexdigest()
++        sha = lambda p: hashlib.sha256(pre_stack_occurrences_bytes(ROOT / p)).hexdigest()
+         self.assertEqual({p for p, h in self.base['production'].items() if sha(p) != h}, set(self.paths.values()))
+         files = {str(p.relative_to(ROOT)) for p in (ROOT / 'replica/Sources').rglob('*') if p.is_file()}
+         self.assertEqual(files, set(self.base['production']))
+--- /dev/null
++++ scripts/tests/test_p1_repair_stack_occurrences.py
+@@ -0,0 +1,195 @@
++"""Stack is an ordered occurrence queue, with source/binary evidence and no native execution."""
++import hashlib
++import json
++from pathlib import Path
++import re
++import sys
++import unittest
++
++ROOT = Path(__file__).resolve().parents[2]
++sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'scripts/tests')]
++from function_ledger import source_fragments
++from test_offline_p0_contracts import body
++from test_p0_repair_checksum_routing import original_fragment
++from stack_occurrence_scope_contract import CHANGES, pre_stack_occurrences
++
++
++class StackOccurrenceContracts(unittest.TestCase):
++    @classmethod
++    def setUpClass(cls):
++        cls.phase = ROOT / '.local/p0-repair/phase-81'
++        cls.proof = json.loads((cls.phase / 'stack-occurrence-contract.json').read_text())
++        cls.base = json.loads((cls.phase / 'baseline.json').read_text())
++        cls.paths = dict(ui='replica/Sources/Pasto/UI/ReplicaUIController.swift',
++            table='replica/Sources/PastoCore/OriginalStackTableController.swift',
++            view='replica/Sources/Pasto/UI/AuxiliaryViews.swift')
++        cls.source = {k: (ROOT / p).read_text() for k, p in cls.paths.items()}
++        cls.ui=cls.source['ui'];cls.table=cls.source['table'];cls.view=cls.source['view']
++
++    def before(self, key): return (self.phase / 'before' / self.paths[key]).read_text()
++    def original(self, address):
++        r=next(r for r in self.proof['original_fragments'] if r['address']==address)
++        return original_fragment((ROOT / r['path']).read_text(), address[2:])
++
++    def test_eight_original_fragments_and_array_mutation_bytes_are_bound(self):
++        self.assertEqual(len(self.proof['original_fragments']),8)
++        for r in self.proof['original_fragments']:
++            self.assertEqual(source_fragments(ROOT / r['path'])[r['address']]['sha256'],r['sha256'])
++        r=self.proof['binary'];raw=(ROOT/r['path']).read_bytes()
++        self.assertEqual(hashlib.sha256(raw).hexdigest(),r['sha256'])
++        self.assertEqual(len(self.proof['ARM_words']),8)
++        for r in self.proof['ARM_words']:
++            a=int(r['address'],16)-0x100000000;self.assertEqual(raw[a:a+4].hex(),r['bytes'])
++        for r in self.proof['arm_disassemblies']:
++            self.assertEqual(hashlib.sha256((ROOT/r['path']).read_bytes()).hexdigest(),r['sha256'])
++
++    def test_original_capture_inserts_exactly_one_occurrence_without_identity_filter(self):
++        capture=self.original('0x10008339c');insert=self.original('0x100089a18');replace=self.original('0x1000898fc')
++        self.assertIn('FUN_1001b8054(&local_58,0,',capture)
++        self.assertIn('if (local_58 == 0)',capture)
++        self.assertIn('FUN_100089a18(_Var12,_Var12,local_58)',capture)
++        self.assertIn('lVar3 = 1 - (param_2 - param_1)',insert)
++        self.assertIn('FUN_1000898fc(param_1,param_2,1,param_3)',insert)
++        self.assertIn('*(long *)(puVar10 + 0x10) = lVar9 + lVar5',replace)
++        self.assertIn('*puVar1 = param_4',replace)
++        for f in [capture,insert,replace]: self.assertNotIn('isEqual_',f)
++        words={int(r['address'],16):int.from_bytes(bytes.fromhex(r['bytes']),'little') for r in self.proof['ARM_words']}
++        for pc,target in [(0x10008361c,0x100089a18),(0x100089ac4,0x1000898fc)]:
++            d=words[pc]&0x3ffffff
++            if d&0x2000000:d-=0x4000000
++            self.assertEqual(pc+d*4,target)
++        self.assertEqual(words[0x100089aa8],0x52800022)  # replace one object
++
++    def test_original_head_and_arbitrary_row_remove_one_index_not_all_equal_entities(self):
++        head=self.original('0x10008413c');row=self.original('0x10008499c');remove=self.original('0x100084bc4')
++        self.assertIn('FUN_100089bec(0,1)',head)
++        self.assertIn('FUN_100084bc4(param_1)',row)
++        self.assertIn('lVar7 = *(ulong *)(uVar6 + 0x10) - 1',remove)
++        self.assertIn('*(long *)(uVar6 + 0x10) = lVar7',remove)
++        self.assertIn('_memmove',remove)
++        self.assertNotIn('isEqual_',remove)
++
++    def test_three_current_sources_and_frozen_after_snapshots_are_bound(self):
++        self.assertEqual(set(self.proof['current_sources']),set(self.paths.values()))
++        for p,h in self.proof['current_sources'].items():
++            raw=(ROOT/p).read_bytes();self.assertEqual(hashlib.sha256(raw).hexdigest(),h)
++            self.assertEqual(raw,(self.phase/'after'/p).read_bytes())
++
++    def test_add_to_stack_only_removes_old_dedup_guard_and_preserves_direction_and_animation(self):
++        old=body(self.before('ui'),'func addToStack(');current=body(self.ui,'func addToStack(')
++        guard='        guard !stackIDs.contains(item.id) else { return }\n'
++        self.assertEqual(old.count(guard),1);self.assertEqual(current,old.replace(guard,'',1))
++        self.assertIn('stackIDs.insert(item.id, at: append ? stackIDs.count : 0)',current)
++        self.assertIn('updated: stackItems, at: insertionIndex',current)
++        for token in ['Set(', '.contains(item.id)', '.removeAll']:
++            self.assertNotIn(token,current)
++
++    def test_value_stack_projection_and_preference_array_preserve_repeated_ids(self):
++        stack=body(self.ui,'var stackItems:')
++        self.assertIn('stackIDs.compactMap',stack)
++        self.assertNotIn('Set(',stack)
++        self.assertEqual(stack,body(self.before('ui'),'var stackItems:'))
++        declaration=body(self.ui,'@Published var stackIDs:')
++        self.assertIn('store.preferences.stackItemIDs = stackIDs',declaration)
++        self.assertNotIn('Set(',declaration)
++        models=(ROOT/'replica/Sources/PastoCore/Models.swift').read_text()
++        self.assertIn('public var stackItemIDs: [UUID]',models)
++
++    def test_actual_table_cell_factory_passes_numeric_row_alongside_item(self):
++        self.assertIn('public var makeCell: ((ClipboardItem, Int) -> NSView)?',self.table)
++        f=body(self.table,'public func tableView(_ tableView: NSTableView, viewFor')
++        self.assertIn('snippets.indices.contains(row)',f)
++        self.assertIn('return makeCell?(snippets[row], row)',f)
++        self.assertIn('controller.makeCell = { [weak controller] item, row in',self.view)
++        self.assertIn('let expectedIDs = controller?.snippets.map(\\.id) ?? []',self.view)
++
++    def test_current_context_remove_and_paste_remove_captured_row_occurrence(self):
++        stack=body(self.view,'struct ReplicaStackTable:')
++        self.assertEqual(stack.count('controller?.removeRow(at: row, expectedIDs: expectedIDs)'),2)
++        self.assertNotIn('stackIDs.removeAll',stack)
++        self.assertIn('if state.controller?.paste(item: item, plainTextOnly: false) == true',stack)
++        self.assertIn('Button("移除") { controller?.removeRow(at: row, expectedIDs: expectedIDs) }',stack)
++        # Required declaration and all call labels match, including the indexed factory's two arguments.
++        self.assertEqual(self.table.count('public func removeRow(at row: Int, expectedIDs: [UUID])'),1)
++        self.assertNotIn('public func removeSnippet(at',self.table)
++
++    def test_shared_remove_row_guards_snapshot_and_callback_revision_before_one_removal(self):
++        f=body(self.table,'public func removeRow(at row:')
++        order=['snippets.map(\\.id) == expectedIDs','snippets.indices.contains(row)',
++               'let revision = snippetsRevision','removeSnippet(expectedIDs, row)',
++               'snippetsRevision == revision','snippets.remove(at: row)',
++               'tableView.removeRows(at: IndexSet(integer: row), withAnimation: .slideUp)','f_100083a20()']
++        self.assertEqual([f.index(t) for t in order],sorted(f.index(t) for t in order))
++        self.assertEqual(f.count('snippets.remove(at: row)'),1)
++        self.assertNotIn('removeAll',f)
++        self.assertNotIn('firstIndex',f)
++
++    def test_native_trailing_action_delegates_same_row_helper_and_keeps_edge_gate(self):
++        f=body(self.table,'public func tableView(_ tableView: NSTableView, rowActionsForRow')
++        self.assertIn('guard edge == .trailing else { return [] }',f)
++        self.assertIn('[weak self]',f)
++        self.assertIn('self.removeRow(at: row, expectedIDs: self.snippets.map(\\.id))',f)
++        self.assertNotIn('snippets.remove(at:',f)
++
++    def test_existing_visible_offset_callback_removes_only_target_stack_index(self):
++        # updateNSView is scoped to the actual Stack table, not other representables in this file.
++        stack=body(self.view,'struct ReplicaStackTable:')
++        callback=body(stack,'controller.removeSnippet =')
++        self.assertIn('visibleOffsets.map({ state.stackIDs[$0] }) == expectedIDs',callback)
++        self.assertIn('state.stackIDs.remove(at: visibleOffsets[row])',callback)
++        self.assertNotIn('Set(',callback);self.assertNotIn('removeAll',callback)
++        old=body(body(self.before('view'),'struct ReplicaStackTable:'),'controller.removeSnippet =')
++        self.assertEqual(callback,old)
++
++    def test_head_consumption_reverse_and_insert_remove_animations_are_unchanged(self):
++        for marker in ['func consumeStackHead()', 'func reverseStack()', 'func captureIntoStack(', 'private func captureLatestItemIntoStack()']:
++            self.assertEqual(body(self.ui,marker),body(self.before('ui'),marker))
++        for marker in ['public func didConsumeHead(', 'public func didInsertSnippet(', 'public func updateSnippets(', 'public func f_100083a20()']:
++            self.assertEqual(body(self.table,marker),body(self.before('table'),marker))
++        head=body(self.ui,'func consumeStackHead()')
++        self.assertIn('state.stackIDs.remove(at: index)',head)
++        self.assertNotIn('removeAll',head)
++
++    def test_OCR_expected_image_guards_are_reused_without_OCR_or_writer_edits(self):
++        for p,h in self.proof['ocr_current_boundary']['source_hashes'].items():
++            self.assertEqual(hashlib.sha256((ROOT/p).read_bytes()).hexdigest(),h)
++        ocr=(ROOT/'replica/Sources/PastoCore/OCR.swift').read_text()
++        f=body(ocr,'public func recognizeImageDocument(')
++        self.assertLess(f.index('try await ImageTextRecognizer.recognizeDocument(imageData: data)'),f.index('saveRecognizedDocument(id: id, document: document, expectedImageData: data)'))
++        store=(ROOT/'replica/Sources/PastoCore/ClipboardStore.swift').read_text()
++        save=body(store,'func saveRecognizedDocument(')
++        self.assertIn('state.items[i].imageData == expectedImageData else { return }',save)
++        writer=(ROOT/'replica/Sources/PastoCore/Pasteboard.swift').read_text()
++        f=body(writer,'private func writeToPasteboard(ids:')
++        self.assertIn('item.imageData == recognizedImageData else { throw RecognizedImageTextCopyError.imageChanged }',f)
++
++    def test_new_backlog_preserves_all_old_records_and_adds_one_repaired_P1_finite_case(self):
++        old=json.loads((ROOT/'reports/replica/p0-p1-difference-backlog-v16.json').read_text())
++        new=json.loads((ROOT/'reports/replica/p0-p1-difference-backlog-v17.json').read_text())
++        self.assertEqual(new['groups'][:-1],old['groups'])
++        self.assertEqual(new['counts']['difference_records'],164)
++        self.assertEqual(new['counts']['p0_records'],69)
++        self.assertEqual(new['counts']['p1_additional_records'],95)
++        group=new['groups'][-1];self.assertEqual(group['function_ids'],['Paste:0x10008339c'])
++        self.assertTrue(group['records'][0]['repair']['verified_finite_contract'])
++        self.assertEqual(self.proof['repaired_finite_contracts'],['Paste:0x10008339c'])
++        self.assertEqual(self.proof['remaining_confirmed_differences'],['Paste:0x1003544dc'])
++        self.assertFalse(new['full_function_migration_verified'])
++
++    def test_only_six_reviewed_hunks_change_three_files_without_schema_or_package(self):
++        self.assertEqual(len(CHANGES),6)
++        for key in self.paths:self.assertEqual(pre_stack_occurrences(self.source[key]),self.before(key))
++        sha=lambda p:hashlib.sha256((ROOT/p).read_bytes()).hexdigest()
++        self.assertEqual({p for p,h in self.base['production'].items() if sha(p)!=h},set(self.paths.values()))
++        self.assertEqual({str(p.relative_to(ROOT)) for p in (ROOT/'replica/Sources').rglob('*') if p.is_file()},set(self.base['production']))
++        for p in ['replica/Package.swift','package.json']:
++            self.assertEqual(sha(p),self.base['other'][p])
++
++    def test_finite_duplicate_contract_does_not_claim_complete_Stack_or_live_provider(self):
++        self.assertFalse(self.proof['full_function_migration_verified'])
++        self.assertTrue(any('lifetime' in r for r in self.proof['remaining_work']))
++        self.assertTrue(any('Unknown04430c/0f733c' in r for r in self.proof['remaining_work']))
++        self.assertTrue(any('in-memory' in r for r in self.proof['adaptations']))
++
++
++if __name__=='__main__':unittest.main()
+--- /dev/null
++++ scripts/tests/stack_occurrence_scope_contract.py
+@@ -0,0 +1,121 @@
++"""Explicit Stack occurrence deltas for earlier frozen source contracts.
++
++Current duplicate insertion and row/consumer behavior is checked in test_p1_repair_stack_occurrences.
++"""
++from pathlib import Path
++
++CHANGES = [('replica/Sources/PastoCore/OriginalStackTableController.swift',
++  '    private var snippetsRevision: UInt = 0\n'
++  '    private var animatedSnippetsAwaitingRefresh: [ClipboardItem]?\n'
++  '    public var makeCell: ((ClipboardItem) -> NSView)?\n'
++  '    public var removeSnippet: (([UUID], Int) -> Bool)?\n'
++  '    public var removeActionTitle = ""\n',
++  '    private var snippetsRevision: UInt = 0\n'
++  '    private var animatedSnippetsAwaitingRefresh: [ClipboardItem]?\n'
++  '    public var makeCell: ((ClipboardItem, Int) -> NSView)?\n'
++  '    public var removeSnippet: (([UUID], Int) -> Bool)?\n'
++  '    public var removeActionTitle = ""\n'),
++ ('replica/Sources/PastoCore/OriginalStackTableController.swift',
++  '        guard edge == .trailing else { return [] }\n'
++  '        return [NSTableViewRowAction(style: .destructive, title: removeActionTitle) { [weak self] _, row '
++  'in\n'
++  '            guard let self, self.snippets.indices.contains(row), let removeSnippet = self.removeSnippet '
++  'else { return }\n'
++  '            let revision = self.snippetsRevision\n'
++  '            guard removeSnippet(self.snippets.map(\\.id), row), self.snippetsRevision == revision else { '
++  'return }\n'
++  '            self.snippets.remove(at: row)\n'
++  '            self.tableView.removeRows(at: IndexSet(integer: row), withAnimation: .slideUp)\n'
++  '            self.f_100083a20()\n'
++  '        }]\n'
++  '    }\n'
++  '\n',
++  '        guard edge == .trailing else { return [] }\n'
++  '        return [NSTableViewRowAction(style: .destructive, title: removeActionTitle) { [weak self] _, row '
++  'in\n'
++  '            guard let self else { return }\n'
++  '            self.removeRow(at: row, expectedIDs: self.snippets.map(\\.id))\n'
++  '        }]\n'
++  '    }\n'
++  '\n'
++  '    public func removeRow(at row: Int, expectedIDs: [UUID]) {\n'
++  '        guard snippets.map(\\.id) == expectedIDs, snippets.indices.contains(row),\n'
++  '              let removeSnippet else { return }\n'
++  '        let revision = snippetsRevision\n'
++  '        guard removeSnippet(expectedIDs, row), snippetsRevision == revision else { return }\n'
++  '        snippets.remove(at: row)\n'
++  '        tableView.removeRows(at: IndexSet(integer: row), withAnimation: .slideUp)\n'
++  '        f_100083a20()\n'
++  '    }\n'
++  '\n'),
++ ('replica/Sources/PastoCore/OriginalStackTableController.swift',
++  '    public func tableView(_ tableView: NSTableView, viewFor tableColumn: NSTableColumn?, row: Int) -> '
++  'NSView? {\n'
++  '        guard snippets.indices.contains(row) else { return nil }\n'
++  '        return makeCell?(snippets[row])\n'
++  '    }\n'
++  '}\n',
++  '    public func tableView(_ tableView: NSTableView, viewFor tableColumn: NSTableColumn?, row: Int) -> '
++  'NSView? {\n'
++  '        guard snippets.indices.contains(row) else { return nil }\n'
++  '        return makeCell?(snippets[row], row)\n'
++  '    }\n'
++  '}\n'),
++ ('replica/Sources/Pasto/UI/AuxiliaryViews.swift',
++  '            return true\n'
++  '        }\n'
++  '        controller.makeCell = { item in\n'
++  '            NSHostingView(rootView:\n'
++  '                OriginalStackSnippetCellView(item: item, imageProvider: { item in\n'
++  '                    OriginalStackCategoryIcons.image(for: state.store.originalContentKind(of: item))\n',
++  '            return true\n'
++  '        }\n'
++  '        controller.makeCell = { [weak controller] item, row in\n'
++  '            let expectedIDs = controller?.snippets.map(\\.id) ?? []\n'
++  '            return NSHostingView(rootView:\n'
++  '                OriginalStackSnippetCellView(item: item, imageProvider: { item in\n'
++  '                    OriginalStackCategoryIcons.image(for: state.store.originalContentKind(of: item))\n'),
++ ('replica/Sources/Pasto/UI/AuxiliaryViews.swift',
++  '                    Button("粘贴") {\n'
++  '                        if state.controller?.paste(item: item, plainTextOnly: false) == true {\n'
++  '                            state.stackIDs.removeAll { $0 == item.id }\n'
++  '                            if state.stackItems.isEmpty { state.controller?.hideStack() }\n'
++  '                        }\n'
++  '                    }\n'
++  '                    Button("预览") { state.controller?.showPreview(item: item) }\n'
++  '                    Button("移除") { state.stackIDs.removeAll { $0 == item.id } }\n'
++  '                })\n'
++  '        }\n',
++  '                    Button("粘贴") {\n'
++  '                        if state.controller?.paste(item: item, plainTextOnly: false) == true {\n'
++  '                            controller?.removeRow(at: row, expectedIDs: expectedIDs)\n'
++  '                            if state.stackItems.isEmpty { state.controller?.hideStack() }\n'
++  '                        }\n'
++  '                    }\n'
++  '                    Button("预览") { state.controller?.showPreview(item: item) }\n'
++  '                    Button("移除") { controller?.removeRow(at: row, expectedIDs: expectedIDs) }\n'
++  '                })\n'
++  '        }\n'),
++ ('replica/Sources/Pasto/UI/ReplicaUIController.swift',
++  '\n'
++  '    func addToStack(_ item: ClipboardItem) {\n'
++  '        guard !stackIDs.contains(item.id) else { return }\n'
++  '        let previousIDs = stackItems.map(\\.id)\n'
++  '        let append = store.preferences.stackReversed\n',
++  '\n'
++  '    func addToStack(_ item: ClipboardItem) {\n'
++  '        let previousIDs = stackItems.map(\\.id)\n'
++  '        let append = store.preferences.stackReversed\n')]
++
++def pre_stack_occurrences(source):
++    for path, previous, current in CHANGES:
++        if current in source:
++            assert source.count(current) == 1, path
++            source = source.replace(current, previous, 1)
++    return source
++
++
++def pre_stack_occurrences_bytes(path):
++    path = Path(path)
++    value = path.read_bytes()
++    return pre_stack_occurrences(value.decode()).encode() if path.suffix == '.swift' else value

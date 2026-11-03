@@ -1,0 +1,185 @@
+{
+  "kind": "fixed_p0_p1_group_operation_batch_reuse",
+  "date": "2026-11-03",
+  "previous_report": "reports/replica/p0-p1-text-display-parent-review-2026-11-03.json",
+  "scope": {
+    "path": "reports/replica/p0-p1-review-scope-v6.json",
+    "denominator": 959,
+    "P0": 353,
+    "P1": 606,
+    "expanded": false
+  },
+  "operations": [
+    {
+      "operation": "create",
+      "current": "ClipboardStore.insertPinboard -> ClipboardListPersistence.insertPinboard",
+      "native": [
+        "367c5c",
+        "368560"
+      ],
+      "result": "reuse",
+      "boundary": "Unused-color preference remains user adaptation; original permanent-ID and encoding error continuation preserved."
+    },
+    {
+      "operation": "rename",
+      "current": "PanelViews -> ClipboardStore.renameList -> ClipboardListPersistence.updateName",
+      "native": [
+        "3c4b2c",
+        "36c448"
+      ],
+      "result": "reuse",
+      "boundary": "Empty string uses original localized title; whitespace is preserved on native tab path."
+    },
+    {
+      "operation": "color",
+      "current": "PanelViews.localListMenu -> ClipboardStore.updateListColor -> ClipboardListPersistence.updateColor",
+      "native": [
+        "36c614",
+        "3245fc"
+      ],
+      "result": "reuse",
+      "boundary": "Only decoded pinboard attributes invoke edit; unchanged code skips write; encoding failure writes optional nil."
+    },
+    {
+      "operation": "reorder",
+      "current": "OriginalPanelTabBar.moveList -> ClipboardStore.moveList -> ClipboardListPersistence.moveList",
+      "native": [
+        "368a30",
+        "369500",
+        "3695b4",
+        "36964c",
+        "35ca9c",
+        "35e4d8"
+      ],
+      "result": "reuse",
+      "boundary": "Displayed positions drive local move; native list equality/order drive persistence; two weak callback phases preserved."
+    },
+    {
+      "operation": "delete_local_type2_group",
+      "current": "ReplicaUIController.removePinboard/confirmPinboardRemoval -> ClipboardStore.removeList -> ClipboardListPersistence.removePinboard",
+      "native": [
+        "3c4f00",
+        "368818",
+        "363004"
+      ],
+      "result": "reuse",
+      "boundary": "Type2 unshared branch only. Panel confirmation is user adaptation; group orphan without history/owner is deleted, history content survives."
+    }
+  ],
+  "reviewed_existing_function_ids": [
+    "Paste:0x100367c5c",
+    "Paste:0x100368560",
+    "Paste:0x100368818",
+    "Paste:0x100363004",
+    "Paste:0x1003c4b2c",
+    "Paste:0x1003c4f00",
+    "Paste:0x100324a80",
+    "Paste:0x1003245fc"
+  ],
+  "support_not_added_to_denominator": [
+    "Paste:0x10036c448",
+    "Paste:0x10036c614",
+    "Paste:0x100368a30",
+    "Paste:0x100369500",
+    "Paste:0x10036c25c",
+    "Paste:0x1003695b4",
+    "Paste:0x10036c290",
+    "Paste:0x10036cbd4",
+    "Paste:0x10036964c",
+    "Paste:0x10035ca9c",
+    "Paste:0x10035e4d8",
+    "Paste:0x10035f4b8"
+  ],
+  "evidence_summary": {
+    "native_functions": 20,
+    "complete_machine_ranges": 20,
+    "direct_branches": 394,
+    "selectors": 42,
+    "import_calls": 224,
+    "installed_callback_pointers": 4,
+    "canonical_palette_values": 8
+  },
+  "current_round_repaired_function_ids": [],
+  "current_round_repaired_count": 0,
+  "new_confirmed_differences": [],
+  "counts": {
+    "finite_contract_consistent": 691,
+    "source_repaired": 258,
+    "user_adaptation": 9,
+    "evidence_insufficient": 1
+  },
+  "by_priority": {
+    "P0": {
+      "finite_contract_consistent": 267,
+      "source_repaired": 82,
+      "user_adaptation": 4
+    },
+    "P1": {
+      "finite_contract_consistent": 424,
+      "source_repaired": 176,
+      "user_adaptation": 5,
+      "evidence_insufficient": 1
+    }
+  },
+  "finite_comparison_progress": {
+    "numerator": 958,
+    "denominator": 959,
+    "percent": 99.9
+  },
+  "confirmed_unfixed_finite_differences": 0,
+  "evidence_insufficient_count": 1,
+  "unknown_function_ids": [
+    "Paste:0x1000f733c"
+  ],
+  "exact_total_outstanding": null,
+  "full_function_migration_verified": false,
+  "migration_completion_percent": null,
+  "tests": {
+    "current_source_checks": 22,
+    "new_checks": 22,
+    "failures": 0,
+    "errors": 0,
+    "source_substitution": false,
+    "trace_models": "Four Python finite witnesses cover fresh-name comparison, group orphan deletion, two weak-owner gates and unused palette exhaustion; not Swift/CoreData execution.",
+    "first_failure": "Initial no-modal-call assertion matched an explanatory source comment mentioning NSAlert.runModal; check now ignores comments only. Production source was not edited, and first failure log remains."
+  },
+  "user_adaptations_preserved": [
+    "Prefer previously unused canonical colors as explicitly requested; original creation palette selection is random.",
+    "Keep nonempty delete confirmation/errors inside panel as explicitly requested, rather than original modal alert."
+  ],
+  "remaining_boundaries": [
+    "Finite local type2/unshared group contract only; type1 history deletion and remote sharing are not inferred from these checks.",
+    "No CoreData or UI execution; private ABI, all framework faults/reentrancy and layout are not fully verified.",
+    "Paste-to-Pasto import is an independent user extension, not a function originally implemented by Paste; not counted as a migrated original function.",
+    "0f733c original declaration/actual consumer remains evidence-insufficient; not changed.",
+    "Native full-range byte evidence does not prove full semantic migration of every instruction; each operation covers the listed finite contracts only."
+  ],
+  "production_modified": false,
+  "existing_production_unchanged": 248,
+  "production_added": 0,
+  "old_test_files_modified": 0,
+  "source_inputs": {
+    "reports/replica/p0-p1-text-display-parent-review-2026-11-03.json": "c09dedcd78d78c4ee33efe39764bfbff8ade9eddcc94604558021d72184d1dfd",
+    ".local/p0-p1-parent-review/2026-11-03-groups/baseline.json": "004c8303ed1aa6f90ef8c9bfbcf0f52edcf2a0da7d7ab50cd008f93b59de72e1",
+    ".local/p0-p1-parent-review/2026-11-03-groups/contract.json": "fb9c7cd338c0e3700e9d09e4b09073d31a72539e99cc2fa632dded8dabcfb097",
+    ".local/p0-p1-parent-review/2026-11-03-groups/test-summary.json": "f289ff55f47e4e6ca31af4529f625f3f769aefa6657e76dd16907ae8f9450def",
+    ".local/p0-p1-parent-review/2026-11-03-groups/first-test-summary.json": "f1e578de84c501d05d2b78bb5c393603cbc502cf3b2cb92639c091f0ff46ea24",
+    ".local/p0-p1-parent-review/2026-11-03-groups/proof.py": "9072929768de0f62c2b486633488b88901d647fa97f3a75ee4dc551f1e1b2e42",
+    "scripts/tests/test_p1_group_operation_batch.py": "f59325daf1e7a2aae5872ceda0d97db174f6ea17f563f7a67676e1cab5b92fc1"
+  },
+  "head_unchanged": "050e6878a5a52f96fe33aa40f48bb8a056cd0f05",
+  "version_unchanged": "1.0.2",
+  "function_map_unchanged": "ea781c82f93e580a940f0804fa120e01e9030357d10aee157fe4a135143b8985",
+  "compiled": false,
+  "built": false,
+  "installed": false,
+  "application_executed": false,
+  "framework_executed": false,
+  "network_used": false,
+  "committed": false,
+  "pushed": false,
+  "published": false,
+  "user_data_modified": false,
+  "goal_should_remain_active": true,
+  "next_action": "Review actual P1 multi-selection / Stack consumers, retaining the existing scope and counting only confirmed finite differences."
+}

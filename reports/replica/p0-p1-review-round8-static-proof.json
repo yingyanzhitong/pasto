@@ -1,0 +1,65 @@
+{
+  "kind": "p0_p1_round8_root_static_proof",
+  "binary_path": ".local/paste-arm64-static.bin",
+  "binary_sha256": "871f00354fbb1c165d858a98e6d19d6f43cb9d3f9f958b3e07c7f07eb5c19afb",
+  "miss_branch": [
+    {
+      "address": "0x1003611dc",
+      "slice_file_offset": 3543516,
+      "bytes": "810a40f9e00316aab900ff97f70300aa000100b4e00317aae10316aa80ffff97e00317aaff0200f1e8179f1a18000014010080d2e20316aaf50313aae1feff97f30315aa"
+    }
+  ],
+  "identifier_from_checksum": [
+    {
+      "address": "0x100360dd8",
+      "slice_file_offset": 3542488,
+      "bytes": "f70301aa210100b5e00316aaf26d2294110aff97e10300aae00316aa3202ff97610c00b4f70301aafa0300aa"
+    },
+    {
+      "address": "0x100360ed4",
+      "slice_file_offset": 3542740,
+      "bytes": "e0031aaae10317aa395b2294fa0300aae00317aaab6d2294e00318aae2031aaa7bac2294"
+    }
+  ],
+  "hex_format": {
+    "address": "0x100323158",
+    "slice_file_offset": 3289432,
+    "bytes": "a00486524006af720180fcd2a9522394"
+  },
+  "target_work": {
+    "inner_descriptor": {
+      "address": "0x100c3ec00",
+      "slice_file_offset": 12839936,
+      "bytes": "8c506bff20000000"
+    },
+    "completion_descriptor": {
+      "address": "0x100c3ec08",
+      "slice_file_offset": 12839944,
+      "bytes": "4ccb6aff20000000"
+    },
+    "install": {
+      "address": "0x1002f2930",
+      "slice_file_offset": 3090736,
+      "bytes": "e80740f9dc2202a9684a009009013091e80b40f9c92204a9"
+    },
+    "force_branch": {
+      "address": "0x1002f2ce4",
+      "slice_file_offset": 3091684,
+      "bytes": "e00314aa21008052f40313aafd7b41a9f30742f8bdfb43929ddeff17"
+    }
+  },
+  "static_counterexample": {
+    "input": "pasto-p0-fresh-item",
+    "initial_store": "empty",
+    "representations": [
+      "public.utf8-plain-text"
+    ],
+    "original_identifier": "d84e1a0775d13912d49cd129e7e579ba",
+    "current_identifier_rule": "UUID().uuidString",
+    "derivation": "source_and_arm_only",
+    "original_app_executed": false,
+    "swift_executed": false
+  },
+  "compiled": false,
+  "application_executed": false
+}

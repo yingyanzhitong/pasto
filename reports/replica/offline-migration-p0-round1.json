@@ -1,0 +1,514 @@
+{
+  "kind": "offline_source_contract_review",
+  "generated_at": "2026-10-29T12:40:43.182550+00:00",
+  "release_baseline": "050e6878a5a52f96fe33aa40f48bb8a056cd0f05",
+  "priority": "P0",
+  "module": "shortcuts_selection",
+  "records": [
+    {
+      "function_id": "Paste:0x1001e7d18",
+      "status": "source_contract_aligned",
+      "contract": "修复为 modifierFlags → keyCode，保留 UInt32 键码及 0xff5f0000 掩码；真实录制、菜单与集合入口复用。",
+      "original": {
+        "path": "decompiled/Paste/part-0156.c",
+        "sha256": "a3c48b7bb116dc95159425adcace14d3beac96e589ad31e2b0c5d5f60ea51860"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutFunctions.swift",
+          "symbol": "f_1001e7d18"
+        },
+        {
+          "path": "replica/Sources/PastoCore/KeyboardShortcut.swift",
+          "symbol": "matches"
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutRecorder.swift",
+          "symbol": "f_1001f132c"
+        }
+      ],
+      "source_sha256": {
+        "replica/Sources/PastoCore/OriginalShortcutFunctions.swift": "c9f72e489f3345339beef2b79493c8c06bbae52251d9f29876bde3fd4c884174",
+        "replica/Sources/PastoCore/KeyboardShortcut.swift": "eba51741928fc95619585980567b617d39f3c749564cddb5dff4bbd04bf189d6",
+        "replica/Sources/PastoCore/OriginalShortcutRecorder.swift": "ba907c942f91fe336506e9a47576051f285bfce47ccd43315cb111aedbd237f2"
+      }
+    },
+    {
+      "function_id": "Paste:0x1001ebce4",
+      "status": "partial_after_fix",
+      "contract": "修复系统冲突后才惰性读取菜单；保留 CopySymbolicHotKeys 失败/nil/不匹配回退。原本体 typed Error/本地化与现 String 加服务包装的模型差异仍保留。",
+      "original": {
+        "path": "decompiled/Paste/part-0158.c",
+        "sha256": "92b3127cab244cbc3720bf29f76539149b09464ac56e212c4f25cbaa2e5de60e"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutValidation.swift",
+          "symbol": "f_1001ebce4"
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutValidation.swift",
+          "symbol": "f_1001ec200"
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutFunctions.swift",
+          "symbol": "f_1001ebf04"
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutMessages.swift",
+          "symbol": "shortcut-recorder.error.used-in-system"
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutRecorder.swift",
+          "symbol": "f_1001f132c"
+        }
+      ],
+      "source_sha256": {
+        "replica/Sources/PastoCore/OriginalShortcutValidation.swift": "2147445b328e2425eace8816f6d9a05954c41446ab93c6807c541f92822a2d8a",
+        "replica/Sources/PastoCore/OriginalShortcutFunctions.swift": "c9f72e489f3345339beef2b79493c8c06bbae52251d9f29876bde3fd4c884174",
+        "replica/Sources/PastoCore/OriginalShortcutMessages.swift": "a359a587810f77d3306db57a0f8b17150dc6d075f1e698be9a1772b9eafa027a",
+        "replica/Sources/PastoCore/OriginalShortcutRecorder.swift": "ba907c942f91fe336506e9a47576051f285bfce47ccd43315cb111aedbd237f2"
+      }
+    },
+    {
+      "function_id": "Paste:0x1001ec200",
+      "status": "partial_after_fix",
+      "contract": "修复子菜单递归后先读修饰键，再读键名/解析；初次匹配后重新读取键名并再次解析，再比较隐含 Shift。原返回 Error 对象及完整本地化边界仍未闭合。",
+      "original": {
+        "path": "decompiled/Paste/part-0158.c",
+        "sha256": "19cd1064cc2d319fefe38dbee4425bf0d59501b1809d519aa27c383fa587454e"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutValidation.swift",
+          "symbol": "f_1001ec200"
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutMessages.swift",
+          "symbol": "shortcut-recorder.error.used-in-menu"
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutRecorder.swift",
+          "symbol": "f_1001f132c"
+        }
+      ],
+      "source_sha256": {
+        "replica/Sources/PastoCore/OriginalShortcutValidation.swift": "2147445b328e2425eace8816f6d9a05954c41446ab93c6807c541f92822a2d8a",
+        "replica/Sources/PastoCore/OriginalShortcutMessages.swift": "a359a587810f77d3306db57a0f8b17150dc6d075f1e698be9a1772b9eafa027a",
+        "replica/Sources/PastoCore/OriginalShortcutRecorder.swift": "ba907c942f91fe336506e9a47576051f285bfce47ccd43315cb111aedbd237f2"
+      }
+    },
+    {
+      "function_id": "Paste:0x1001e95fc",
+      "status": "source_contract_aligned",
+      "contract": "直接返回 53，与原 0x35 一致；录制取消和预览取消消费者存在。",
+      "original": {
+        "path": "decompiled/Paste/part-0157.c",
+        "sha256": "aa07d472a1e4ac069a823de5a27b1e1508a10c3270e8a1ca1b46b26b1941b02e"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutFunctions.swift",
+          "symbol": "public static func f_1001e95fc() -> Int"
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutRecorder.swift",
+          "symbol": "OriginalShortcutFunctions.f_1001e95fc()"
+        }
+      ],
+      "source_sha256": {
+        "replica/Sources/PastoCore/OriginalShortcutFunctions.swift": "c9f72e489f3345339beef2b79493c8c06bbae52251d9f29876bde3fd4c884174",
+        "replica/Sources/PastoCore/OriginalShortcutRecorder.swift": "ba907c942f91fe336506e9a47576051f285bfce47ccd43315cb111aedbd237f2"
+      }
+    },
+    {
+      "function_id": "Paste:0x1001e9610",
+      "status": "source_contract_aligned",
+      "contract": "直接返回 51，与原 0x33 一致；录制删除快捷键的真实消费者存在。",
+      "original": {
+        "path": "decompiled/Paste/part-0157.c",
+        "sha256": "b89344d33ed696e75f0e87ff4cee2a6815bf7fa47f65df46d13d4ff21b56f24a"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutFunctions.swift",
+          "symbol": "public static func f_1001e9610() -> Int"
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutRecorder.swift",
+          "symbol": "OriginalShortcutFunctions.f_1001e9610()"
+        }
+      ],
+      "source_sha256": {
+        "replica/Sources/PastoCore/OriginalShortcutFunctions.swift": "c9f72e489f3345339beef2b79493c8c06bbae52251d9f29876bde3fd4c884174",
+        "replica/Sources/PastoCore/OriginalShortcutRecorder.swift": "ba907c942f91fe336506e9a47576051f285bfce47ccd43315cb111aedbd237f2"
+      }
+    },
+    {
+      "function_id": "Paste:0x1001e9624",
+      "status": "source_contract_aligned",
+      "contract": "直接返回 117，与原 0x75 一致；录制向前删除快捷键的真实消费者存在。",
+      "original": {
+        "path": "decompiled/Paste/part-0157.c",
+        "sha256": "e4b34abf3573318b7c2b660f9b4b4ce3a1f3fdf8a18fef644e731747a24413fa"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutFunctions.swift",
+          "symbol": "public static func f_1001e9624() -> Int"
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutRecorder.swift",
+          "symbol": "OriginalShortcutFunctions.f_1001e9624()"
+        }
+      ],
+      "source_sha256": {
+        "replica/Sources/PastoCore/OriginalShortcutFunctions.swift": "c9f72e489f3345339beef2b79493c8c06bbae52251d9f29876bde3fd4c884174",
+        "replica/Sources/PastoCore/OriginalShortcutRecorder.swift": "ba907c942f91fe336506e9a47576051f285bfce47ccd43315cb111aedbd237f2"
+      }
+    },
+    {
+      "function_id": "Paste:0x1001e9638",
+      "status": "source_contract_aligned",
+      "contract": "直接返回 123，与原 0x7b 一致；前一分组默认快捷键消费。",
+      "original": {
+        "path": "decompiled/Paste/part-0157.c",
+        "sha256": "6e5bb3b2a5ce377cd9eca5cb5eab7d665ff67ff2c656de1a151ece987c2704eb"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutFunctions.swift",
+          "symbol": "public static func f_1001e9638() -> Int"
+        },
+        {
+          "path": "replica/Sources/PastoCore/KeyboardShortcut.swift",
+          "symbol": "UInt32(OriginalShortcutFunctions.f_1001e9638())"
+        }
+      ],
+      "source_sha256": {
+        "replica/Sources/PastoCore/OriginalShortcutFunctions.swift": "c9f72e489f3345339beef2b79493c8c06bbae52251d9f29876bde3fd4c884174",
+        "replica/Sources/PastoCore/KeyboardShortcut.swift": "eba51741928fc95619585980567b617d39f3c749564cddb5dff4bbd04bf189d6"
+      }
+    },
+    {
+      "function_id": "Paste:0x1001e964c",
+      "status": "source_contract_aligned",
+      "contract": "直接返回 124，与原 0x7c 一致；后一分组默认快捷键消费。",
+      "original": {
+        "path": "decompiled/Paste/part-0157.c",
+        "sha256": "df32308cf5a2e4e6463bfe2f4be5a84838f5e54a3c87d0aa1210b8fe3f4e1f84"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutFunctions.swift",
+          "symbol": "public static func f_1001e964c() -> Int"
+        },
+        {
+          "path": "replica/Sources/PastoCore/KeyboardShortcut.swift",
+          "symbol": "UInt32(OriginalShortcutFunctions.f_1001e964c())"
+        }
+      ],
+      "source_sha256": {
+        "replica/Sources/PastoCore/OriginalShortcutFunctions.swift": "c9f72e489f3345339beef2b79493c8c06bbae52251d9f29876bde3fd4c884174",
+        "replica/Sources/PastoCore/KeyboardShortcut.swift": "eba51741928fc95619585980567b617d39f3c749564cddb5dff4bbd04bf189d6"
+      }
+    },
+    {
+      "function_id": "Paste:0x1001e7d58",
+      "status": "source_contract_aligned",
+      "contract": "重新读取同一原二进制固定四项表；AppKit 位子集判定后 OR Carbon 值，忽略其他位；无需重写。",
+      "original": {
+        "path": "decompiled/Paste/part-0156.c",
+        "sha256": "8db97b0fc6a2f9a0b4dc3a080dece99d40bee1d08317121d3a1ae4c398449a0b"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutFunctions.swift",
+          "symbol": "f_1001e7d58"
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalGlobalShortcutMonitor.swift",
+          "symbol": "class OriginalShortcutRegistration"
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalGlobalShortcutMonitor.swift",
+          "symbol": "public init(keyCode: Int, modifierRawValue: UInt, action:",
+          "qualified_symbol": "OriginalShortcutRegistration.init"
+        }
+      ],
+      "source_sha256": {
+        "replica/Sources/PastoCore/OriginalShortcutFunctions.swift": "c9f72e489f3345339beef2b79493c8c06bbae52251d9f29876bde3fd4c884174",
+        "replica/Sources/PastoCore/OriginalGlobalShortcutMonitor.swift": "277dc405a3e660b36ec808e301ccfa3fa48568c8291295e02dafe84e595325b4"
+      }
+    },
+    {
+      "function_id": "Paste:0x1001ebc2c",
+      "status": "source_contract_aligned",
+      "contract": "重新读取原 20 项功能键表，与 19 项源数组加 90 对应；普通键的 Command/Control/Option 规则保留，未增加 Shift 单独通过。",
+      "original": {
+        "path": "decompiled/Paste/part-0158.c",
+        "sha256": "1ef8045e3c97385a0e57c2a2e4826aa4a0f5cac4fe8496f9812aa4188de1bddf"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutFunctions.swift",
+          "symbol": "f_1001ebc2c"
+        },
+        {
+          "path": "replica/Sources/PastoCore/KeyboardShortcut.swift",
+          "symbol": "isValidGlobal"
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutRecorder.swift",
+          "symbol": "f_1001f132c"
+        }
+      ],
+      "source_sha256": {
+        "replica/Sources/PastoCore/OriginalShortcutFunctions.swift": "c9f72e489f3345339beef2b79493c8c06bbae52251d9f29876bde3fd4c884174",
+        "replica/Sources/PastoCore/KeyboardShortcut.swift": "eba51741928fc95619585980567b617d39f3c749564cddb5dff4bbd04bf189d6",
+        "replica/Sources/PastoCore/OriginalShortcutRecorder.swift": "ba907c942f91fe336506e9a47576051f285bfce47ccd43315cb111aedbd237f2"
+      }
+    },
+    {
+      "function_id": "Paste:0x1001e9774",
+      "status": "source_contract_aligned",
+      "contract": "原四个独立位按 Control/Option/Shift/Command 追加；复用既有正常/verbose 字符合同。C 返回空串的反编译误差沿用第45轮绑定原 arm64 的静态解释，不把它当真值重写。",
+      "original": {
+        "path": "decompiled/Paste/part-0157.c",
+        "sha256": "28392f2df0aa32d95e9942d4ae2d63e5ed3d41586f3b5cb1b50f256078e1d825"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutFunctions.swift",
+          "symbol": "f_1001e9774"
+        },
+        {
+          "path": "replica/Sources/PastoCore/KeyboardShortcut.swift",
+          "symbol": "displayName"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ShortcutRecorder.swift",
+          "symbol": ".accessibilityValue(shortcut.map"
+        }
+      ],
+      "source_sha256": {
+        "replica/Sources/PastoCore/OriginalShortcutFunctions.swift": "c9f72e489f3345339beef2b79493c8c06bbae52251d9f29876bde3fd4c884174",
+        "replica/Sources/PastoCore/KeyboardShortcut.swift": "eba51741928fc95619585980567b617d39f3c749564cddb5dff4bbd04bf189d6",
+        "replica/Sources/Pasto/UI/ShortcutRecorder.swift": "2aa3eccd3955064dc00e2d252b282f268f4c01bee026d846bcdb70a8c463ad90"
+      }
+    },
+    {
+      "function_id": "Paste:0x1001ebf04",
+      "status": "source_contract_aligned",
+      "contract": "三个 NSNumber 字段的可选值、类型、整数/无符号读取、Carbon 比较和 enabled.boolValue 结果复核一致；原 Swift 值字典提前取字段与 guard 短路均无业务写入。",
+      "original": {
+        "path": "decompiled/Paste/part-0158.c",
+        "sha256": "f2e90f08f1709e81dcb86b44214632e5c0d7215674d2cd6b6fcd505753e920c6"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutFunctions.swift",
+          "symbol": "f_1001ebf04"
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutValidation.swift",
+          "symbol": "f_1001ebce4"
+        }
+      ],
+      "source_sha256": {
+        "replica/Sources/PastoCore/OriginalShortcutFunctions.swift": "c9f72e489f3345339beef2b79493c8c06bbae52251d9f29876bde3fd4c884174",
+        "replica/Sources/PastoCore/OriginalShortcutValidation.swift": "2147445b328e2425eace8816f6d9a05954c41446ab93c6807c541f92822a2d8a"
+      }
+    }
+  ],
+  "reviewed_count": 12,
+  "source_contract_aligned_count": 10,
+  "partial_count": 2,
+  "batch_source_contract_aligned_percent": 83.3333,
+  "new_fully_migrated_function_count": 0,
+  "historical_ledger": {
+    "numerator": 1648,
+    "denominator": 81123,
+    "percent": 2.0315,
+    "current_global_equivalence_claim": false
+  },
+  "source_reference_repairs": [
+    {
+      "function_id": "Paste:0x100228c78",
+      "old": {
+        "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+        "symbol": "private func selectIndex(_ index: Int, mode: UInt8, items: [ClipboardItem])"
+      },
+      "current": {
+        "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+        "symbol": "private func selectIndex(_ index: Int, mode: UInt8, items: [ClipboardItem], animated: Bool = true)"
+      },
+      "state_unchanged": "partial"
+    },
+    {
+      "function_id": "Paste:0x100051ec8",
+      "old": {
+        "path": "replica/Sources/Pasto/UI/AuxiliaryViews.swift",
+        "symbol": "OriginalStackSnippetText.f_100051ec8"
+      },
+      "current": {
+        "path": "replica/Sources/Pasto/UI/OriginalStackSnippetCell.swift",
+        "symbol": "OriginalStackSnippetText.f_100051ec8"
+      },
+      "state_unchanged": "migrated"
+    },
+    {
+      "function_id": "Paste:0x1003c05d4",
+      "old": {
+        "path": "replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift",
+        "symbol": "private func replaceModelAndDisplay("
+      },
+      "current": {
+        "path": "replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift",
+        "symbol": "private func replaceStoredModel("
+      },
+      "state_unchanged": "migrated"
+    },
+    {
+      "function_id": "Paste:0x1001e9990",
+      "old": {
+        "path": "replica/Sources/PastoCore/OriginalShortcutCoding.swift",
+        "symbol": "enum OriginalShortcutCodingKey"
+      },
+      "current": {
+        "path": "replica/Sources/PastoCore/OriginalShortcutCoding.swift",
+        "symbol": "public typealias OriginalShortcutCodingKey = OriginalShortcutValue.CodingKeys"
+      },
+      "state_unchanged": "migrated"
+    },
+    {
+      "function_id": "Paste:0x1001e99d0",
+      "old": {
+        "path": "replica/Sources/PastoCore/OriginalShortcutCoding.swift",
+        "symbol": "enum OriginalShortcutCodingKey"
+      },
+      "current": {
+        "path": "replica/Sources/PastoCore/OriginalShortcutCoding.swift",
+        "symbol": "public typealias OriginalShortcutCodingKey = OriginalShortcutValue.CodingKeys"
+      },
+      "state_unchanged": "migrated"
+    },
+    {
+      "function_id": "Paste:0x10037ade4",
+      "old": {
+        "path": "replica/Sources/PastoCore/ClipboardStore.swift",
+        "symbol": "recordRestoredItems(ids:"
+      },
+      "current": {
+        "path": "replica/Sources/PastoCore/ClipboardStore.swift",
+        "symbol": "func recordRestoredItems(_ ids: [UUID]) throws"
+      },
+      "state_unchanged": "partial"
+    },
+    {
+      "function_id": "Paste:0x100361ec0",
+      "old": {
+        "path": "replica/Sources/PastoCore/ClipboardStore.swift",
+        "symbol": "recordRestoredItems(ids:"
+      },
+      "current": {
+        "path": "replica/Sources/PastoCore/ClipboardStore.swift",
+        "symbol": "func recordRestoredItems(_ ids: [UUID]) throws"
+      },
+      "state_unchanged": "partial"
+    },
+    {
+      "function_id": "Paste:0x10037ade4",
+      "old": {
+        "path": "replica/Sources/PastoCore/Pasteboard.swift",
+        "symbol": "try recordRestoredItems(ids:"
+      },
+      "current": {
+        "path": "replica/Sources/PastoCore/Pasteboard.swift",
+        "symbol": "try recordRestoredItems(ids)"
+      },
+      "state_unchanged": "partial"
+    },
+    {
+      "function_id": "Paste:0x1000496ac",
+      "old": {
+        "path": "replica/Sources/Pasto/UI/ReplicaSearchSuggestionsMenu.swift",
+        "symbol": "private func hover(direction:"
+      },
+      "current": {
+        "path": "replica/Sources/Pasto/UI/ReplicaSearchSuggestionsMenu.swift",
+        "symbol": "up.onScroll ="
+      },
+      "state_unchanged": "partial"
+    }
+  ],
+  "original_static_constants": {
+    "binary_sha256": "871f00354fbb1c165d858a98e6d19d6f43cb9d3f9f958b3e07c7f07eb5c19afb",
+    "modifier_table_offset": "0xfb4fe0",
+    "modifier_pairs": [
+      [
+        1048576,
+        256
+      ],
+      [
+        524288,
+        2048
+      ],
+      [
+        262144,
+        4096
+      ],
+      [
+        131072,
+        512
+      ]
+    ],
+    "function_key_table_offset": "0xfb5788",
+    "function_key_codes": [
+      122,
+      120,
+      99,
+      118,
+      96,
+      97,
+      98,
+      100,
+      101,
+      109,
+      103,
+      111,
+      105,
+      107,
+      113,
+      106,
+      64,
+      79,
+      80,
+      90
+    ]
+  },
+  "tests": {
+    "kind": "Python source contracts and ledger tool tests; no Swift execution",
+    "p0_test_count": 11,
+    "ledger_tool_test_count": 14,
+    "passed": true,
+    "total_count": 25,
+    "test_source_sha256": "3967093c23c86eac3f6cf1e9b1bfb0dbe5a16a80390b0a79f2f5073693e2f192"
+  },
+  "compiled": false,
+  "application_executed": false,
+  "ui_or_mcp_tests_executed": false,
+  "network_tests_executed": false,
+  "committed": false,
+  "pushed": false,
+  "module_complete": false,
+  "next_work": [
+    "P0: typed shortcut error and recorder/registration consumers",
+    "P0: restore representation → persistence → Undo/notification → activation chain"
+  ],
+  "limitations": [
+    "方法源码合同对齐不等于实际运行或全模块验收",
+    "原完整台账中仍有过期摘要；不为修复引用或读取一批函数增加完整计数",
+    "P0 标记已迁移的未知字面键失败诊断仍有历史差异；用户命名与本地适配需单独保留"
+  ]
+}

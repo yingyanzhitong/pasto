@@ -1,0 +1,142 @@
+--- a/replica/Sources/PastoCore/ClipboardStore.swift
++++ b/replica/Sources/PastoCore/ClipboardStore.swift
+@@ -1636,6 +1636,15 @@
+         }
+     }
+ 
++    public func moveList(_ target: ClipboardListTarget, toOffset offset: Int) throws {
++        try mutateInTransaction { state, transaction in
++            let ordered = transaction.repository.lists.moveList(target.nativeObject, toOffset: offset)
++            for object in ordered {
++                projectNativeList(ClipboardListTarget(object: object), into: &state)
++            }
++        }
++    }
++
+     public func reorderPinboards(ids: [UUID]) throws {
+         try mutate { state in
+             guard Set(ids).count == ids.count, Set(ids) == Set(state.pinboards.map(\.id)) else { throw ClipboardStoreError.pinboardNotFound }
+--- a/replica/Sources/PastoCore/ClipboardListPersistence.swift
++++ b/replica/Sources/PastoCore/ClipboardListPersistence.swift
+@@ -1,5 +1,6 @@
+ import CoreData
+ import Foundation
++import SwiftUI
+ 
+ /// A group menu retains its target entity until the captured action is invoked.
+ @MainActor
+@@ -47,6 +48,7 @@
+ 
+ /// Access on the supplied context queue. Existing Pasto IDs and legacy memberships stay compatible.
+ final class ClipboardListPersistence {
++    private static let reorderDiagnostics = OriginalNamedDiagnostic.f_1000d4624(name: "NSManagedObjectContext")
+     static let historyIdentifier = "sharedPasteboardHistory"
+     private let context: NSManagedObjectContext
+     var refreshHistoryAfterOperation = false
+@@ -262,6 +264,49 @@
+         nativeLists[identifier] = list
+     }
+ 
++    // 368a30: index changes belong to this context; a separate context touches each changed List's metadata.
++    func moveList(_ target: NSManagedObject, toOffset offset: Int) -> [PastoListEntity] {
++        let request = PastoListEntity.listFetchRequest()
++        request.sortDescriptors = [NSSortDescriptor(key: "metadata.index", ascending: true)]
++        var ordered: [PastoListEntity] = []
++        context.performAndWait { ordered = (try? context.fetch(request)) ?? [] }
++        guard let source = ordered.firstIndex(where: { $0.isEqual(target) }) else { return [] }
++        ordered.move(fromOffsets: IndexSet(integer: source), toOffset: offset)
++        let background = NSManagedObjectContext(concurrencyType: .privateQueueConcurrencyType)
++        background.persistentStoreCoordinator = context.persistentStoreCoordinator
++        background.mergePolicy = NSMergeByPropertyStoreTrumpMergePolicy
++        for (index, object) in ordered.enumerated() {
++            retainNativeList(object)
++            let current = ((object.value(forKey: "metadata") as? NSManagedObject)?.value(forKey: "index") as? NSNumber)?.int64Value ?? 0
++            if current != Int64(index) {
++                (object.value(forKey: "metadata") as? NSManagedObject)?.setValue(Int64(index), forKey: "index")
++                background.performAndWait {
++                    let list = background.object(with: object.objectID)
++                    list.willChangeValue(forKey: "metadata")
++                    list.didChangeValue(forKey: "metadata")
++                }
++            }
++        }
++        let observer = NotificationCenter.default.addObserver(forName: .NSManagedObjectContextDidSave,
++            object: background, queue: nil) { [weak self] notification in
++                guard let context = self?.context else { return }
++                context.performAndWait { [weak self] in
++                    self?.context.mergeChanges(fromContextDidSave: notification)
++                }
++            }
++        background.performAndWait {
++            guard background.hasChanges else { return }
++            do {
++                try OriginalObjCExceptionBridge.f_1002ff9c8 { try background.save() }
++            } catch {
++                background.rollback()
++                Self.reorderDiagnostics.f_1000d468c().f_1000d4e0c("Error saving managed object context: \(error)")
++            }
++        }
++        NotificationCenter.default.removeObserver(observer)
++        return ordered
++    }
++
+     // 368818/363004, local pinboard branch: fetch errors use an empty sequence, then delete the same List.
+     func removePinboard(_ list: NSManagedObject) -> [PastoItemEntity] {
+         let items: [PastoItemEntity]
+--- a/replica/Sources/Pasto/UI/ReplicaUIController.swift
++++ b/replica/Sources/Pasto/UI/ReplicaUIController.swift
+@@ -857,14 +857,15 @@
+         }
+     }
+ 
+-    func movePinboard(id: UUID, before target: UUID) {
+-        guard id != target else { return }
+-        var ids = store.pinboards.sorted { $0.sortOrder < $1.sortOrder }.map(\.id)
+-        guard ids.contains(id), ids.contains(target) else { return }
+-        ids.removeAll { $0 == id }
+-        ids.insert(id, at: ids.firstIndex(of: target)!)
+-        perform { try store.reorderPinboards(ids: ids) }
+-    }
++    // 097828 converts the final destination index to SwiftUI's pre-removal offset.
++    func moveList(identifier: String, to target: ClipboardListTarget) -> Bool {
++        guard let source = store.tabListTarget(identifier: identifier), let snapshot = tabListSnapshot,
++              let sourceIndex = snapshot.index(of: source), let destinationIndex = snapshot.index(of: target) else { return false }
++        let offset = sourceIndex < destinationIndex ? destinationIndex + 1 : destinationIndex
++        try? store.moveList(source, toOffset: offset)
++        return true
++    }
++
+ }
+ 
+ @MainActor
+--- a/replica/Sources/Pasto/UI/PanelViews.swift
++++ b/replica/Sources/Pasto/UI/PanelViews.swift
+@@ -150,13 +150,10 @@
+             let board = target.pinboardValue
+             var tab = boardButton(target.name, board: board, target: target)
+             tab.menuProvider = { localListMenu(for: target) }
+-            if let board {
+-                tab.dragString = "paste-pinboard:" + board.id.uuidString
+-                tab.onDropString = { value in
+-                    guard value.hasPrefix("paste-pinboard:"), let id = UUID(uuidString: String(value.dropFirst(15))) else { return false }
+-                    state.movePinboard(id: id, before: board.id)
+-                    return true
+-                }
++            tab.dragString = "paste-pinboard:" + target.identifier
++            tab.onDropString = { value in
++                guard value.hasPrefix("paste-pinboard:") else { return false }
++                return state.moveList(identifier: String(value.dropFirst(15)), to: target)
+             }
+             return tab
+         }
+--- a/replica/Sources/Pasto/UI/OriginalPinboardTabTitle.swift
++++ b/replica/Sources/Pasto/UI/OriginalPinboardTabTitle.swift
+@@ -214,7 +214,7 @@
+ 
+     private func draggedGroup(_ sender: NSDraggingInfo) -> String? {
+         guard onDropString != nil, let value = sender.draggingPasteboard.string(forType: .string),
+-              value.hasPrefix("paste-pinboard:"), UUID(uuidString: String(value.dropFirst(15))) != nil else { return nil }
++              value.hasPrefix("paste-pinboard:") else { return nil }
+         return value
+     }
+ 

@@ -1,0 +1,410 @@
+--- phase-58-before/replica/Sources/Pasto/UI/PanelViews.swift
++++ replica/Sources/Pasto/UI/PanelViews.swift
+@@ -147,43 +147,11 @@
+ 
+     private var boardTabs: [OriginalPinboardTab] {
+         var history = boardButton(state.store.preferences.historyTitle, board: nil)
+-        history.menuProvider = {
+-            let menu = NSMenu()
+-            menu.autoenablesItems = false
+-            menu.addItem(OriginalPanelTabMenuItem(title: "重命名") { requestTabRename(nil) })
+-            menu.addItem(OriginalPanelTabMenuItem(title: "删除历史…") { state.controller?.clearHistory() })
+-            return menu
+-        }
++        history.menuProvider = { localListMenu(for: nil) }
+         var tabs = [history]
+         for board in state.store.pinboards.sorted(by: { $0.sortOrder < $1.sortOrder }) {
+             var tab = boardButton(board.name, board: board)
+-            tab.menuProvider = {
+-                let menu = NSMenu()
+-                menu.autoenablesItems = false
+-                menu.addItem(OriginalPanelTabMenuItem(title: "重命名") { requestTabRename(board.id) })
+-                let colors = NSMenu()
+-                colors.autoenablesItems = false
+-                for color in OriginalPinboardColor.allCases {
+-                    let item = OriginalPanelTabMenuItem(title: colorName(color)) {
+-                        state.perform {
+-                            try state.store.updatePinboard(id: board.id,
+-                                colorHex: String(format: "%06llX", color.canonicalColorCode))
+-                        }
+-                    }
+-                    item.image = colorMenuImage(color)
+-                    colors.addItem(item)
+-                }
+-                let colorMenu = NSMenuItem(title: "颜色", action: nil, keyEquivalent: "")
+-                colorMenu.submenu = colors
+-                menu.addItem(colorMenu)
+-                menu.addItem(OriginalPanelTabMenuItem(title: "向左移动") { state.movePinboard(board, by: -1) })
+-                menu.addItem(OriginalPanelTabMenuItem(title: "向右移动") { state.movePinboard(board, by: 1) })
+-                menu.addItem(OriginalPanelTabMenuItem(title:
+-                    state.store.items.contains(where: { $0.pinboardIDs.contains(board.id) }) ? "删除…" : "删除") {
+-                    state.controller?.removePinboard(board)
+-                })
+-                return menu
+-            }
++            tab.menuProvider = { localListMenu(for: board) }
+             tab.dragString = "paste-pinboard:" + board.id.uuidString
+             tab.onDropString = { value in
+                 guard value.hasPrefix("paste-pinboard:"), let id = UUID(uuidString: String(value.dropFirst(15))) else { return false }
+@@ -193,6 +161,45 @@
+             tabs.append(tab)
+         }
+         return tabs
++    }
++
++    // 0x100021f00: offline rename, typed deletion, then color choices.
++    private func localListMenu(for board: Pinboard?) -> NSMenu {
++        let menu = NSMenu()
++        menu.autoenablesItems = false
++        menu.addItem(OriginalPanelTabMenuItem(title: "重命名") { requestTabRename(board?.id) })
++        // Resolve and count only when the native context menu is requested.
++        let list = state.store.localListMenuState(pinboardID: board?.id)
++        if list.rawType == 1 {
++            if !list.isEmpty {
++                menu.addItem(OriginalPanelTabMenuItem(title: "删除历史…") { state.controller?.clearHistory() })
++            }
++        } else if list.rawType == 2, let board {
++            menu.addItem(OriginalPanelTabMenuItem(title: list.isEmpty ? "删除" : "删除…") {
++                state.controller?.removePinboard(board)
++            })
++            menu.addItem(.separator())
++            // Keep the requested named color rows and colored dots as the local presentation adapter.
++            let colors = NSMenu()
++            colors.autoenablesItems = false
++            let selectedColor = OriginalPinboardAttributes.colorCode(from: board.rawAttributes)
++                .map { OriginalPinboardColor(canonicalColorCode: $0) }
++            for color in OriginalPinboardColor.allCases {
++                let item = OriginalPanelTabMenuItem(title: colorName(color)) {
++                    state.perform {
++                        try state.store.updatePinboard(id: board.id,
++                            colorHex: String(format: "%06llX", color.canonicalColorCode))
++                    }
++                }
++                item.image = colorMenuImage(color)
++                item.state = selectedColor == color ? .on : .off
++                colors.addItem(item)
++            }
++            let colorMenu = NSMenuItem(title: "颜色", action: nil, keyEquivalent: "")
++            colorMenu.submenu = colors
++            menu.addItem(colorMenu)
++        }
++        return menu
+     }
+ 
+     private var createPinboardButton: some View {
+--- phase-58-before/replica/Sources/Pasto/UI/ReplicaUIController.swift
++++ replica/Sources/Pasto/UI/ReplicaUIController.swift
+@@ -621,13 +621,6 @@
+             ReplicaCopiedOSD.showResumed()
+             monitoringPauseChanged?()
+         }
+-    }
+-
+-    func movePinboard(_ board: Pinboard, by offset: Int) {
+-        var ids = store.pinboards.sorted { $0.sortOrder < $1.sortOrder }.map(\.id)
+-        guard let index = ids.firstIndex(of: board.id), ids.indices.contains(index + offset) else { return }
+-        ids.swapAt(index, index + offset)
+-        perform { try store.reorderPinboards(ids: ids) }
+     }
+ 
+     func movePinboard(id: UUID, before target: UUID) {
+@@ -1139,7 +1132,7 @@
+     }
+ 
+     func clearHistory() {
+-        guard store.items.contains(where: { $0.isInHistory && !$0.isDeleted }) else {
++        guard !store.localListMenuState(pinboardID: nil).isEmpty else {
+             state.perform { try store.eraseHistory() }
+             return
+         }
+@@ -1433,7 +1426,7 @@
+         // 0x1003c4f00: an empty local group is deleted without confirmation.
+         // Nonempty confirmation stays inside the panel by user request, instead
+         // of the original 0x100022ad0 → 0x1003b6cfc NSAlert.runModal presenter.
+-        if !store.items.contains(where: { $0.pinboardIDs.contains(board.id) }) {
++        if store.localListMenuState(pinboardID: board.id).isEmpty {
+             confirmPinboardRemoval()
+         } else {
+             panel.makeFirstResponder(nil)
+--- phase-58-before/replica/Sources/PastoCore/ClipboardListPersistence.swift
++++ replica/Sources/PastoCore/ClipboardListPersistence.swift
+@@ -94,6 +94,21 @@
+         try firstList(predicate: NSPredicate(format: "identifier == %@", identifier))
+     }
+ 
++    // 0x100325130/329088: count managed history/group members; count errors mean empty.
++    func menuState(identifier: String) -> (rawType: Int64?, isEmpty: Bool) {
++        guard let list = try? list(identifier: identifier) else { return (nil, true) }
++        let rawType = (list.value(forKey: "rawType") as? NSNumber)?.int64Value ?? 0
++        guard let context = list.managedObjectContext else { return (rawType, true) }
++        let request = NSFetchRequest<NSFetchRequestResult>(entityName: "Item")
++        switch rawType {
++        case 1: request.predicate = NSPredicate(format: "timestamp != nil")
++        case 2: request.predicate = NSPredicate(format: "list == %@", list)
++        default: return (rawType, true)
++        }
++        let count = (try? context.count(for: request)) ?? 0
++        return (rawType, count == 0)
++    }
++
+     func historyCapacity() throws -> Int? {
+         guard let history = try historyList() else { return nil }
+         return historyCapacity(of: history)
+--- phase-58-before/replica/Sources/PastoCore/ClipboardPersistence.swift
++++ replica/Sources/PastoCore/ClipboardPersistence.swift
+@@ -300,6 +300,10 @@
+         }
+     }
+ 
++    func localListMenuState(identifier: String) -> (rawType: Int64?, isEmpty: Bool) {
++        context.performAndWait { lists.menuState(identifier: identifier) }
++    }
++
+     private func fetch(_ entity: String, keys: [String]? = nil) throws -> [NSManagedObject] {
+         let request = NSFetchRequest<NSManagedObject>(entityName: entity)
+         if let keys { request.predicate = NSPredicate(format: "key IN %@", keys) }
+--- phase-58-before/replica/Sources/PastoCore/ClipboardStore.swift
++++ replica/Sources/PastoCore/ClipboardStore.swift
+@@ -82,6 +82,10 @@
+ 
+     public func searchIndexIdentifiers(before timestamp: Date?) throws -> [String] {
+         try persistence.searchIndexIdentifiers(before: timestamp)
++    }
++
++    public func localListMenuState(pinboardID: UUID?) -> (rawType: Int64?, isEmpty: Bool) {
++        persistence.localListMenuState(identifier: pinboardID?.uuidString ?? ClipboardListPersistence.historyIdentifier)
+     }
+     private var baseline = StoreState()
+     private var diskRevision: UUID?
+--- phase-58-before/scripts/tests/test_p0_repair_native_tabs.py
++++ scripts/tests/test_p0_repair_native_tabs.py
+@@ -149,10 +149,13 @@
+ 
+     def test_native_menus_and_drag_do_not_remove_existing_local_group_operations(self):
+         config = body(self.panel, 'private var boardTabs:')
+-        for token in ['history.menuProvider', 'tab.menuProvider', 'colorMenu.submenu = colors',
+-                      'item.image = colorMenuImage(color)', 'state.controller?.clearHistory()',
+-                      'state.controller?.removePinboard(board)', 'state.movePinboard(id: id, before: board.id)']:
++        for token in ['history.menuProvider = { localListMenu(for: nil) }',
++                      'tab.menuProvider = { localListMenu(for: board) }', 'state.movePinboard(id: id, before: board.id)']:
+             self.assertIn(token, config)
++        menu = body(self.panel, 'private func localListMenu(')
++        for token in ['colorMenu.submenu = colors', 'item.image = colorMenuImage(color)',
++                      'state.controller?.clearHistory()', 'state.controller?.removePinboard(board)']:
++            self.assertIn(token, menu)
+         self.assertIn('tab.dragString = "paste-pinboard:" + board.id.uuidString', config)
+         self.assertIn('override func menu(for event: NSEvent)', self.cell)
+         self.assertIn('override func prepareForDragOperation', self.cell)
+--- phase-58-before/scripts/tests/test_p0_repair_toolbar_transition.py
++++ scripts/tests/test_p0_repair_toolbar_transition.py
+@@ -196,11 +196,14 @@
+         for signature in ['private func colorName(', 'private func colorMenuImage(', 'private func requestTabRename(']:
+             self.assertEqual(body(self.panel, signature), body(before, signature))
+         new_tabs = body(self.panel, 'private var boardTabs:')
+-        for token in ['state.controller?.clearHistory()', 'requestTabRename(board.id)',
+-                      'state.store.updatePinboard(id: board.id,', 'state.movePinboard(board, by: -1)',
+-                      'state.movePinboard(board, by: 1)', 'state.controller?.removePinboard(board)',
+-                      'state.movePinboard(id: id, before: board.id)']:
+-            self.assertIn(token, new_tabs)
++        self.assertIn('history.menuProvider = { localListMenu(for: nil) }', new_tabs)
++        self.assertIn('tab.menuProvider = { localListMenu(for: board) }', new_tabs)
++        self.assertIn('state.movePinboard(id: id, before: board.id)', new_tabs)
++        menu = body(self.panel, 'private func localListMenu(')
++        for token in ['state.controller?.clearHistory()', 'requestTabRename(board?.id)',
++                      'state.store.updatePinboard(id: board.id,', 'state.controller?.removePinboard(board)']:
++            self.assertIn(token, menu)
++        self.assertNotIn('state.movePinboard(board, by:', menu)
+ 
+     def test_tab_cell_and_query_reset_contracts_are_not_falsely_marked_complete(self):
+         self.assertIn('not claim the complete original toolbar', self.native)
+--- phase-58-before/scripts/tests/test_p1_repair_managed_group_creation.py
++++ scripts/tests/test_p1_repair_managed_group_creation.py
+@@ -44,8 +44,13 @@
+         for row in self.proof['prior_contracts'] + [self.proof['arm_disassembly'], self.proof['sdk_pending_changes']]:
+             self.assertEqual(hashlib.sha256(Path(row['path'] if Path(row['path']).is_absolute() else ROOT / row['path']).read_bytes()).hexdigest(), row['sha256'])
+         for path, digest in self.proof['current_sources'].items():
+-            self.assertEqual(hashlib.sha256((ROOT / path).read_bytes()).hexdigest(), digest)
++            frozen = (self.phase / 'after' / path).read_text()
+             self.assertEqual(hashlib.sha256((self.phase / 'after' / path).read_bytes()).hexdigest(), digest)
++            markers = {self.list_path: ['func insertPinboard(', 'func project(', 'func synchronize('],
++                       self.store_path: ['private func insertPinboard(', 'private func normalize(', 'public func pinboardOwner('],
++                       self.ui_path: ['func selectedItemTargetLists()', 'func createPinboard(']}[path]
++            for marker in markers:
++                self.assertEqual(body((ROOT / path).read_text(), marker), body(frozen, marker))
+ 
+     def test_native_operation_uses_actual_insert_identifier_name_and_permanent_ID_selectors(self):
+         names = {r['selector'] for r in self.proof['selector_bindings']}
+--- phase-58-before/scripts/tests/test_p1_repair_native_search_identifiers.py
++++ scripts/tests/test_p1_repair_native_search_identifiers.py
+@@ -71,6 +71,10 @@
+                                'private func deleteIdentifiers(', 'nonisolated private func rebuild(',
+                                'private func clearIndex()', 'init(directoryURL:']:
+                     self.assertEqual(body(self.source, marker), body(frozen, marker))
++            elif path == 'replica/Sources/PastoCore/ClipboardPersistence.swift':
++                frozen = (self.phase / 'after' / path).read_text()
++                for marker in ['func searchIndexRecords(', 'func searchNativeItems(', 'func searchIndexIdentifiers(']:
++                    self.assertEqual(body((ROOT / path).read_text(), marker), body(frozen, marker))
+             else:
+                 self.assertEqual(hashlib.sha256((ROOT / path).read_bytes()).hexdigest(), digest)
+ 
+--- /dev/null
++++ scripts/tests/test_p1_repair_local_list_menu.py
+@@ -0,0 +1,158 @@
++"""Native private-list menu/count contracts; source checks only, no CoreData execution."""
++import hashlib
++import json
++import struct
++import sys
++import unittest
++from pathlib import Path
++
++ROOT = Path(__file__).resolve().parents[2]
++sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'scripts/tests')]
++from function_ledger import source_fragments
++from test_offline_p0_contracts import body
++from test_p0_repair_checksum_routing import original_fragment
++
++
++class LocalListMenuContracts(unittest.TestCase):
++    @classmethod
++    def setUpClass(cls):
++        cls.phase = ROOT / '.local/p0-repair/phase-58'
++        cls.proof = json.loads((cls.phase / 'local-list-menu-contract.json').read_text())
++        cls.lists = (ROOT / 'replica/Sources/PastoCore/ClipboardListPersistence.swift').read_text()
++        cls.store = (ROOT / 'replica/Sources/PastoCore/ClipboardStore.swift').read_text()
++        cls.persistence = (ROOT / 'replica/Sources/PastoCore/ClipboardPersistence.swift').read_text()
++        cls.panel = (ROOT / 'replica/Sources/Pasto/UI/PanelViews.swift').read_text()
++        cls.ui = (ROOT / 'replica/Sources/Pasto/UI/ReplicaUIController.swift').read_text()
++        cls.count = body(cls.lists, 'func menuState(')
++        cls.menu = body(cls.panel, 'private func localListMenu(')
++        cls.original = {r['address']: original_fragment((ROOT / r['path']).read_text(), r['address'][2:])
++                        for r in cls.proof['original_fragments']}
++
++    def assertOrder(self, source, tokens):
++        positions = [source.index(t) for t in tokens]
++        self.assertEqual(positions, sorted(positions))
++
++    def test_native_inputs_and_changed_sources_are_bound(self):
++        self.assertEqual(len(self.proof['original_fragments']), 14)
++        for row in self.proof['original_fragments']:
++            self.assertEqual(source_fragments(ROOT / row['path'])[row['address']]['sha256'], row['sha256'])
++        for row in [self.proof['binary']] + self.proof['arm_disassemblies']:
++            self.assertEqual(hashlib.sha256((ROOT / row['path']).read_bytes()).hexdigest(), row['sha256'])
++        for path, digest in self.proof['current_sources'].items():
++            self.assertEqual(hashlib.sha256((ROOT / path).read_bytes()).hexdigest(), digest)
++            self.assertEqual((ROOT / path).read_bytes(), (self.phase / 'after' / path).read_bytes())
++
++    def test_native_predicate_constants_decode_to_history_and_owner_not_cached_flags(self):
++        for row in self.proof['predicate_constants']:
++            def decode(first, second):
++                second = int(second, 16)
++                return (struct.pack('<Q', int(first, 16)) + struct.pack('<Q', second))[:(second >> 56) & 15].decode()
++            self.assertEqual(decode(row['first_word'], row['second_word']), row['key'])
++            self.assertEqual(decode(row['format_first_word'], row['format_second_word']), row['format'])
++        self.assertEqual([(r['key'], r['format']) for r in self.proof['predicate_constants']],
++                         [('timestamp', '%K != nil'), ('list', '%K == %@')])
++        self.assertIn('FUN_100329088()', self.original['0x100325130'])
++        self.assertIn('FUN_1003298a0(0,FUN_1003214a8)', self.original['0x100329088'])
++
++    def test_empty_decision_keeps_native_context_and_error_fallback(self):
++        self.assertOrder(self.count, ['guard let list = try? list(identifier: identifier)',
++                         'list.value(forKey: "rawType")', 'guard let context = list.managedObjectContext',
++                         'let request =', 'context.count(for: request)', 'return (rawType, count == 0)'])
++        self.assertIn('else { return (nil, true) }', self.count)
++        self.assertIn('else { return (rawType, true) }', self.count)
++        self.assertIn('(try? context.count(for: request)) ?? 0', self.count)
++        self.assertNotIn('count <= 0', self.count)
++        words = {r['address']: int.from_bytes(bytes.fromhex(r['bytes']), 'little') for r in self.proof['count_error_ARM']}
++        self.assertEqual(words['0x10032519c'], 0x52800020)  # mov w0,1
++        self.assertEqual(words['0x1003251b8'], 0xf100029f)  # cmp x20,0
++        self.assertEqual(words['0x1003251bc'], 0x1a9f17e0)  # cset w0,eq
++
++    def test_count_uses_native_history_timestamp_and_owner_relationship(self):
++        self.assertIn('NSFetchRequest<NSFetchRequestResult>(entityName: "Item")', self.count)
++        self.assertIn('case 1: request.predicate = NSPredicate(format: "timestamp != nil")', self.count)
++        self.assertIn('case 2: request.predicate = NSPredicate(format: "list == %@", list)', self.count)
++        self.assertIn('default: return (rawType, true)', self.count)
++        for extra in ['isDeleted', 'pinboardID', 'items.', 'fetchLimit', 'context.save', 'context.reset', 'context.rollback']:
++            self.assertNotIn(extra, self.count)
++
++    def test_actual_store_facade_serializes_count_without_transaction_or_context_reset(self):
++        facade = body(self.store, 'public func localListMenuState(')
++        self.assertIn('pinboardID?.uuidString ?? ClipboardListPersistence.historyIdentifier', facade)
++        persist = body(self.persistence, 'func localListMenuState(')
++        self.assertIn('context.performAndWait { lists.menuState(identifier: identifier) }', persist)
++        for extra in ['perform {', 'commit(', 'save(', 'reset(', 'rollback(']:
++            self.assertNotIn(extra, persist)
++
++    def test_both_context_menu_providers_resolve_count_lazily(self):
++        tabs = body(self.panel, 'private var boardTabs:')
++        self.assertIn('history.menuProvider = { localListMenu(for: nil) }', tabs)
++        self.assertIn('tab.menuProvider = { localListMenu(for: board) }', tabs)
++        self.assertNotIn('localListMenuState(', tabs)
++        self.assertIn('state.store.localListMenuState(pinboardID: board?.id)', self.menu)
++        self.assertIn('menu.autoenablesItems = false', self.menu)
++
++    def test_local_history_and_group_menu_gates_and_original_action_order(self):
++        self.assertOrder(self.menu, ['title: "重命名"', 'let list =', 'if list.rawType == 1',
++                         'if !list.isEmpty', 'title: "删除历史…"', 'else if list.rawType == 2, let board',
++                         'title: list.isEmpty ? "删除" : "删除…"', 'menu.addItem(.separator())', 'title: "颜色"'])
++        for callback in ['requestTabRename(board?.id)', 'state.controller?.clearHistory()',
++                         'state.controller?.removePinboard(board)', 'state.store.updatePinboard(id: board.id,']:
++            self.assertIn(callback, self.menu)
++        self.assertOrder(self.original['0x100021f00'], ['FUN_1000243ec', 'FUN_100024274', 'FUN_1000242c8', 'FUN_100024350'])
++
++    def test_color_choices_preserve_actual_attribute_mapping_and_requested_named_dots(self):
++        self.assertOrder(self.menu, ['OriginalPinboardAttributes.colorCode(from: board.rawAttributes)',
++                         '.map { OriginalPinboardColor(canonicalColorCode: $0) }',
++                         'for color in OriginalPinboardColor.allCases', 'title: colorName(color)',
++                         'item.image = colorMenuImage(color)', 'item.state = selectedColor == color ? .on : .off'])
++        self.assertIn('color.canonicalColorCode', self.menu)
++        self.assertEqual(body(self.panel, 'private func colorMenuImage('),
++                         body((self.phase / 'before/replica/Sources/Pasto/UI/PanelViews.swift').read_text(), 'private func colorMenuImage('))
++        for name in ['红色', '橙色', '黄色', '绿色', '蓝色', '紫色', '粉色', '灰色']:
++            self.assertIn(name, body(self.panel, 'private func colorName('))
++
++    def test_delete_invocation_rechecks_managed_count_and_keeps_real_actions(self):
++        clear = body(self.ui, 'func clearHistory()')
++        self.assertOrder(clear, ['guard !store.localListMenuState(pinboardID: nil).isEmpty else',
++                         'state.perform { try store.eraseHistory() }', 'return', 'let alert = NSAlert()',
++                         'alert.runModal()'])
++        remove = body(self.ui, 'func removePinboard(')
++        self.assertOrder(remove, ['store.pinboards.contains', 'state.pendingPinboardDeletionID = board.id',
++                         'if store.localListMenuState(pinboardID: board.id).isEmpty',
++                         'confirmPinboardRemoval()', 'panel.makeFirstResponder(nil)'])
++        self.assertNotIn('store.items', clear + remove)
++        self.assertIn('try store.removePinboard(id: id)', body(self.ui, 'func confirmPinboardRemoval()'))
++
++    def test_original_error_branch_releases_then_directly_invokes_delete(self):
++        words = {r['address']: struct.unpack('<I', bytes.fromhex(r['bytes']))[0]
++                 for r in self.proof['count_error_ARM']}
++        def branch(address):
++            displacement = words[hex(address)] & ((1 << 26) - 1)
++            if displacement & (1 << 25):
++                displacement -= 1 << 26
++            return address + displacement * 4
++        for error, operation in [(0x1003c54c4, 0x1003c54e8), (0x1003c5130, 0x1003c5160)]:
++            self.assertEqual(branch(error), 0x100bfc708)  # swift_errorRelease
++            self.assertEqual(branch(operation), 0x1002ff310)
++        self.assertIn('FUN_1003c5408', self.original['0x100024274'])
++        self.assertIn('FUN_1003c4f00', self.original['0x1000242c8'])
++
++    def test_unmatched_move_menu_actions_removed_but_drag_reorder_kept(self):
++        self.assertNotIn('state.movePinboard(', self.menu)
++        self.assertNotIn('func movePinboard(_ board: Pinboard, by offset: Int)', self.ui)
++        self.assertIn('state.movePinboard(id: id, before: board.id)', body(self.panel, 'private var boardTabs:'))
++        self.assertIn('func movePinboard(id: UUID, before target: UUID)', self.ui)
++
++    def test_creation_and_selection_models_are_not_silently_rewritten(self):
++        for path, markers in {
++            'replica/Sources/PastoCore/ClipboardStore.swift': ['private func insertPinboard(', 'private func normalize(', 'public func pinboardOwner('],
++            'replica/Sources/PastoCore/ClipboardListPersistence.swift': ['func insertPinboard(', 'func project(', 'func synchronize('],
++            'replica/Sources/Pasto/UI/ReplicaUIController.swift': ['func chooseBoard('],
++        }.items():
++            current = (ROOT / path).read_text()
++            before = (self.phase / 'before' / path).read_text()
++            for marker in markers:
++                self.assertEqual(body(current, marker), body(before, marker))
++        self.assertFalse(self.proof['partial_unscored_repairs'][1]['implemented'])
++        self.assertFalse(self.proof['full_function_migration_verified'])
++        self.assertEqual([r['function_id'] for r in self.proof['contracts']], ['Paste:0x100021f00'])

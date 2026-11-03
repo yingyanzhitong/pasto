@@ -1,0 +1,604 @@
+{
+  "kind": "offline_source_contract_review",
+  "round": 11,
+  "status": "source-checks-passed-goal-active",
+  "generated_at": "2026-10-29T14:54:21.651061+00:00",
+  "previous_goal_turn": "progress",
+  "priority": "P1",
+  "module": "search_delivery_context_and_result_projection",
+  "functions": [
+    {
+      "function_id": "Paste:0x10007daa8",
+      "status": "fixed_collection_query_delivery_partial",
+      "contract": "原Published searchQuery在mainRunLoop防抖120ms，prepend空query后removeDuplicates，再map非空为共享searchVM。当前独立collection订阅保留同序，实际列表/删除/拖拽/Esc/关闭manager读已生效上下文；原对象/actor图仍partial。",
+      "original": {
+        "path": "decompiled/Paste/part-0041.c",
+        "sha256": "5a400eb989152270c0a0b21018b1a77cfd2f9e063802e9a9c2c474694c9c00e5"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "collectionQueryObservation = searchQueryChanges"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "var isCollectionSearchQueryEmpty: Bool"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x10007e194",
+      "status": "fixed_query_delivery_partial",
+      "contract": "原搜索订阅独立debounce120ms再removeDuplicates传SearchVM，不prepend；另一条query/context流与selectedList CombineLatest，search非nil优先。当前两条独立RunLoop订阅与indexed/collection投影接线；原完整Published/DI/模型替换仍partial。",
+      "original": {
+        "path": "decompiled/Paste/part-0041.c",
+        "sha256": "04b0d290fd101de0e666e5229e653b44723612c622edf0d56032de1f66a6b672"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "searchQueryObservation = searchQueryChanges"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "private func installSearchQueryDelivery()"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x10007df7c",
+      "status": "existing_effective_query_mapping_refined",
+      "contract": "原收到已防抖query后用2ddcf0判空，非空返回同一searchVM，空nil；当前不以原始编辑buffer直接切列表，collectionSearchQueryNodes判空并保留原始isSearchQueryEmpty给工具栏。",
+      "original": {
+        "path": "decompiled/Paste/part-0041.c",
+        "sha256": "095398ef072d76993a2d9400bb4e7be7d5097dafc50680ceb1fbca452aeb23d3"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "var isCollectionSearchQueryEmpty: Bool"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "var isSearchQueryEmpty: Bool"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x10007eac0",
+      "status": "existing_search_route_priority_reused",
+      "contract": "CombineLatest映射时可选searchVM非nil优先，否则selectedList VM。当前visibleItems在已生效query非空时按搜索IDs，空才进入选中board/history；对象/retain语义不全等。",
+      "original": {
+        "path": "decompiled/Paste/part-0041.c",
+        "sha256": "e972b09a57d0615b9cf7cc39b6cfe0a93e4eb9d80f4400bc8b76142cc6eff6ac"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "var visibleItems: [ClipboardItem]"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x10007e088",
+      "status": "list_context_factory_boundary_pending",
+      "contract": "原有选中List实体则先按rawType形成history/pinboard context后建collectionVM，无List返回nil；当前自有UUID路由不是同一工厂，保留待证。",
+      "original": {
+        "path": "decompiled/Paste/part-0041.c",
+        "sha256": "98b6d097c99c383608a851b29aa03f6d93deb55b8cd52fe228924bb0caace0f4"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "var visibleItems: [ClipboardItem]"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x100052734",
+      "status": "search_model_initialization_boundary_pending",
+      "contract": "原SearchVM依赖容器/父collection模型、publisher初始化；本轮仅追到真实搜索订阅输入，未把自有SearchIndex当同一模型ABI。",
+      "original": {
+        "path": "decompiled/Paste/part-0029.c",
+        "sha256": "d561222f03153c7bf94b5c4d1bdea02eb1785aa76a58cca3bada1878c6e0181b"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "private func installSearchQueryDelivery()"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1003bb7bc",
+      "status": "collection_context_initialization_boundary_pending",
+      "contract": "原parent保存ItemCollectionContext、创建observer/content dependency及list订阅；自有state/index分离仅有限适配，初始化/selection/observable完整合同未闭合。",
+      "original": {
+        "path": "decompiled/Paste/part-0295.c",
+        "sha256": "1aab9de73a3ee4c971b064130cbe8d1451b31d5402a05faf2bd7b3896e766f4f"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "final class ReplicaUIState: ObservableObject"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1003b8bfc",
+      "status": "item_provider_lazy_dependency_boundary_pending",
+      "contract": "原懒解析provider缓存其后直接复用，真实callback为3bb684→3bb540；当前value/filter消费不冒充相同原DI缓存。",
+      "original": {
+        "path": "decompiled/Paste/part-0294.c",
+        "sha256": "94c0f10fe9e056d95cd1a94f76835e8b73f2c059da40a8cea4f1cddae8d0a3a7"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "var visibleItems: [ClipboardItem]"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1003bb540",
+      "status": "existing_context_provider_projection_partial",
+      "contract": "search(tag0)构造3647d4搜索provider，history/pinboard清tag后经3594c0的list序列；当前visibleItems按已生效context同样区分搜索IDs和列表，原原生序列身份仍不同。",
+      "original": {
+        "path": "decompiled/Paste/part-0295.c",
+        "sha256": "2501c830c9fd7e7a9ef252f6b8b94cc4d8017c894980bde9c8d0e748526dbd84"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "var visibleItems: [ClipboardItem]"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1003b9264",
+      "status": "list_observation_boundary_pending",
+      "contract": "原仅非search context创建列表CurrentValueSubject及list观察器；自有store整体objectWillChange+异步refresh并非同一list对象观察，仍partial。",
+      "original": {
+        "path": "decompiled/Paste/part-0294.c",
+        "sha256": "a8f14e6a249ffcd3e5fbdc25a42a278295400ad404e3c07b57160fd511f69a0f"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "observation = store.objectWillChange.sink"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1003647d4",
+      "status": "search_provider_initialization_boundary_partial",
+      "contract": "原初始结果subject=nil，保存query publisher/服务dependency并安装35ff00；当前初始identifiers为空集合，开始新query保留上一结果，不宣称nil/provider模型全等。",
+      "original": {
+        "path": "decompiled/Paste/part-0275.c",
+        "sha256": "6904c7f62b2f8a501817a2ef0b4deb1d584d07d01258589bbab1b2a3c66c52c6"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "private(set) var identifiers: Set<UUID> = []"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x10035ff00",
+      "status": "existing_query_change_subscription_partial",
+      "contract": "原query publisher先removeDuplicates再弱sink，将cancellable持有；当前UI已加延迟后去重，SearchIndex request全值去重仍有独立entries维度，原容器/subject生命周期不等价。",
+      "original": {
+        "path": "decompiled/Paste/part-0274.c",
+        "sha256": "b3fad63fc8b3ccc4325835463ff2884ba293c19224aea0138c71bdd0b32c9bc6"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "private func installSearchQueryDelivery()"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "guard requested != request else { return }"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x100364960",
+      "status": "existing_query_sink_thunk_adapter",
+      "contract": "原35ff00的真实sink闭包入口静态指向364960，再转3646a8；当前闭包直接调用refresh/index update，不复制ABI空壳。",
+      "original": {
+        "path": "decompiled/Paste/part-0275.c",
+        "sha256": "6db3be11dc7cbb9b5dc9c9d71afb20cc687ea921cf69526d58afb3a8b4754946"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "self.refreshSearch()"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1003646a8",
+      "status": "existing_weak_query_callback_adapter",
+      "contract": "原弱provider存在才转3600a0开始query；当前weak UI owner与请求更新真实生产消费，原weak-box/closure ABI待证。",
+      "original": {
+        "path": "decompiled/Paste/part-0275.c",
+        "sha256": "dfb41ffbb92598a8739478a4eedbd1766475dc5207c48d10c4663232517a9c92"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": ".sink { [weak self] nodes in"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1003600a0",
+      "status": "fixed_preserve_previous_results_partial",
+      "contract": "原取消旧Task并安排新Task，不向结果subject发nil/空。当前update取消activeQuery后保留identifiers，避免新query完成前闪空；仍是串行journal/worker适配，不声称Task与CSSearchQuery取消父合同相同。",
+      "original": {
+        "path": "decompiled/Paste/part-0274.c",
+        "sha256": "b88edc04759b11e82ce122a0a54cccb2520afbcc527173482c485fdbb98a6593"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "func update(items:"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1003601e0",
+      "status": "existing_cancellation_error_type_boundary",
+      "contract": "原为查询任务取CancellationError metadata及帧后切360240；当前catch明确识别CancellationError，原async帧/actor边界未迁全。",
+      "original": {
+        "path": "decompiled/Paste/part-0274.c",
+        "sha256": "67a8bb24b024e16c7c274f87c73f8e55f5702b98f88cd7c5a7b5bc8b99da1df2"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "if pending == nil, !(error is CancellationError)"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x100360240",
+      "status": "query_task_precancel_boundary_pending",
+      "contract": "原任务弱provider存在且Task未取消才取服务执行query；当前worker/activeQuery/request guard是自有生命周期，尚未恢复同一每query Task入口。",
+      "original": {
+        "path": "decompiled/Paste/part-0274.c",
+        "sha256": "b48cd33949a43922abb16298ab862bac1fd1f255568694dccbf7473506d3859b"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "private func startWorker()"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1003602fc",
+      "status": "fixed_query_cancellation_and_result_retention_partial",
+      "contract": "原CancellationError直接退出保留结果；其它error记录并转空结果。成功在处理前及切MainActor前检查取消。当前只对无新pending的非CancellationError发布error/清IDs，取消不清；完整logger/后台投影/Task调度仍partial。",
+      "original": {
+        "path": "decompiled/Paste/part-0274.c",
+        "sha256": "c856babba95ea737b087d792385cac3263cf54f2d242a4cf2ee97d4b4bca1d5d"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "if pending == nil, !(error is CancellationError)"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "guard pending == nil, requested == request else { continue }"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x100360774",
+      "status": "existing_main_actor_result_publication_adapter",
+      "contract": "原回到MainActor后调用360808发布provider，后切回清理；当前drain由MainActor隔离，在guard后发布IDs；原跨executor帧/时序未声称等价。",
+      "original": {
+        "path": "decompiled/Paste/part-0274.c",
+        "sha256": "267d01066e8afbd54817acf3a4993e589fe861b152707176c17b5b913103e1cc"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "identifiers = found"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1003607c4",
+      "status": "async_result_cleanup_boundary_pending",
+      "contract": "原释放provider/中间IDs并销毁任务帧；当前Swift ARC与worker清理并非原ABI，保留待证。",
+      "original": {
+        "path": "decompiled/Paste/part-0274.c",
+        "sha256": "36fd11a4bf508e9e4a462df97881ddbc44e35fdded7a11d4113de3f7ee4f2def"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "private func drain() async"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x100360808",
+      "status": "fixed_result_sort_adapter_partial",
+      "contract": "原空IDs发nil；非空按identifier IN %@建ItemEntity fetch，继承默认timestamp倒序，创建序列并发subject，缺实体会诊断。当前匹配IDs后按isInHistory/createdAt投影timestamp排序，不再按updatedAt；原FRC/缺项日志/NSNull及模型关系仍partial。",
+      "original": {
+        "path": "decompiled/Paste/part-0274.c",
+        "sha256": "a15bc971a71616b4c348c15d3b33ab15409217bafa0cc534fb6fab68791a8a32"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "var visibleItems: [ClipboardItem]"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "identifiers = found"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x100329754",
+      "status": "existing_item_fetch_factory_boundary",
+      "contract": "原通用fetch构造选择ItemEntity metadata；当前UUID实体值过滤保留独立模型，不以字段相似计完整。",
+      "original": {
+        "path": "decompiled/Paste/part-0261.c",
+        "sha256": "01d6ef09b9b3f9cb751c690b546d933e42da9a62008e6a0abb6e7011a00c9f48"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "searchIndex.identifiers.contains(item.id)"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1003298a0",
+      "status": "existing_default_sort_factory_projection_partial",
+      "contract": "原NSFetchRequest由实体typeName创建，读class defaultSortDescriptors/defaultPredicate，再设batchSize20。当前仅默认timestamp排序投影对齐，不恢复该NSFetchRequest/FRC对象。",
+      "original": {
+        "path": "decompiled/Paste/part-0262.c",
+        "sha256": "b517571880bf2495d04b6aa90d5f36f28cddfec271b711a75c1ec2676f5cdf12"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "return $0.createdAt > $1.createdAt"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1003214a8",
+      "status": "entity_metadata_boundary_pending",
+      "contract": "原返回ItemEntity ObjC元类，用于fetch工厂；自有ClipboardItem模型不复制厂商对象布局。",
+      "original": {
+        "path": "decompiled/Paste/part-0258.c",
+        "sha256": "11a4583a98e1e784faec02f79dfacce8e629483043fadf214a83cff9b6b1726d"
+      },
+      "source_references": []
+    },
+    {
+      "function_id": "Paste:0x10031f2a4",
+      "status": "fixed_timestamp_sort_projection_partial",
+      "contract": "原默认单NSSortDescriptor key为timestamp、ascending=false，已用原机器码小串确认；当前有历史时间先于无时间，历史按createdAt倒序，等键不臆造tie-breaker。自有非可选时间+isInHistory投影仍partial。",
+      "original": {
+        "path": "decompiled/Paste/part-0257.c",
+        "sha256": "a2baac792ca59088db0aa72275ef71166c3996bacfb0129416d478a7363b1220"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "if $0.isInHistory != $1.isInHistory { return $0.isInHistory }"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "return $0.createdAt > $1.createdAt"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x10007d9c8",
+      "status": "confirmed_list_selection_action_difference_pending",
+      "contract": "原此选择入口先清SearchQuery再传identifier到TabBar选择。当前chooseBoard还混合闭窗create/restore路由，不能直接统一清query；本轮记录差异，待分清用户点击与程序路由消费者后迁移。",
+      "original": {
+        "path": "decompiled/Paste/part-0041.c",
+        "sha256": "dcaf32275fc5d0403dc6aef1169c722a2a691dd11ba32f40f43672d5d5bee73a"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "func chooseBoard(_ id: UUID?)"
+        }
+      ]
+    }
+  ],
+  "reviewed_count": 26,
+  "current_review_unique_count": 342,
+  "current_review_inventory_percent": 0.4216,
+  "static_bindings": {
+    "original_binary_sha256": "871f00354fbb1c165d858a98e6d19d6f43cb9d3f9f958b3e07c7f07eb5c19afb",
+    "debounce_milliseconds": [
+      {
+        "address": "0x10007dcb8",
+        "bytes": "000f805228ed2d94"
+      },
+      {
+        "address": "0x10007e5f0",
+        "bytes": "000f8052daea2d94"
+      }
+    ],
+    "milliseconds_stub": {
+      "address": "0x100bf915c",
+      "file_offset": 12554588,
+      "container_file_offset": 12554588,
+      "section": "__TEXT,__stubs",
+      "body_size": 12,
+      "body_hex": "701500d0105245f900021fd6",
+      "instruction_words": [
+        "0xd0001570",
+        "0xf9455210",
+        "0xd61f0200"
+      ],
+      "instructions": [
+        "adrp x16, PAGE(symbol_pointer)",
+        "ldr x16, [x16, PAGEOFF(symbol_pointer)]",
+        "br x16"
+      ],
+      "pointer_address": "0x100ea7aa0",
+      "pointer_section": "__DATA_CONST,__got",
+      "pointer_file_offset": 15366816,
+      "pointer_container_file_offset": 15366816,
+      "pointer_raw_value": "0x8010000000000269",
+      "dyld_binding": {
+        "import_index": 617,
+        "import_table_slice_file_offset": 17091292,
+        "symbol": "_$sSo9NSRunLoopC10FoundationE17SchedulerTimeTypeV6StrideV12millisecondsyAGSiFZ",
+        "dylib_ordinal": 3,
+        "dylib": {
+          "install_name": "/System/Library/Frameworks/Foundation.framework/Versions/C/Foundation",
+          "load_command": "0xc",
+          "current_version": 329385220,
+          "current_version_string": "5026.5.4",
+          "compatibility_version": 19660800,
+          "compatibility_version_string": "300.0.0"
+        },
+        "weak_import": false,
+        "import_addend": 0,
+        "mechanism": "LC_DYLD_CHAINED_FIXUPS",
+        "fixups_header_slice_file_offset": 17088512,
+        "pointer_format": 6,
+        "imports_format": 1,
+        "segment_index": 2,
+        "page_index": 0,
+        "page_start": 0,
+        "pointer_slice_file_offset": 15366816,
+        "pointer_raw_value": "0x8010000000000269",
+        "pointer_addend": 0,
+        "effective_addend": 0
+      },
+      "indirect_symbol_index": 3231,
+      "pointer_indirect_symbol_index": 3231,
+      "symbol": "_$sSo9NSRunLoopC10FoundationE17SchedulerTimeTypeV6StrideV12millisecondsyAGSiFZ",
+      "dylib_ordinal": 3,
+      "n_type": 1,
+      "n_sect": 0,
+      "n_desc": 768,
+      "weak_import": false,
+      "dylib": {
+        "install_name": "/System/Library/Frameworks/Foundation.framework/Versions/C/Foundation",
+        "load_command": "0xc",
+        "current_version": 329385220,
+        "current_version_string": "5026.5.4",
+        "compatibility_version": 19660800,
+        "compatibility_version_string": "300.0.0"
+      },
+      "cpu_type": "0x100000c",
+      "cpu_subtype": "0x0"
+    },
+    "sort_key": {
+      "address": "0x10031f2f8",
+      "bytes": "802e8dd2a0adacf2608ecef220acedf2010e80d20120fdf2",
+      "decoded": "timestamp"
+    },
+    "sort_descending": {
+      "address": "0x10031f320",
+      "bytes": "03008052",
+      "meaning": "mov w3,#0 (ascending false)"
+    },
+    "sort_selector": {
+      "objc_stub": "0x100c00de0",
+      "stub_bytes": "211c00d021c047f95015009010d640f900021fd6",
+      "slot": "0x100f86f80",
+      "slot_raw": "0x10000000dea350",
+      "target": "0x100dea350",
+      "selector": "defaultSortDescriptors",
+      "derivation": "stub ADRP/LDR to selector slot; raw format6 rebase target bits, no original function execution"
+    },
+    "query_sink_callback": {
+      "address": "0x10036000c",
+      "bytes": "2000009000802591",
+      "target": "0x100364960",
+      "chain": [
+        "0x100364960",
+        "0x1003646a8",
+        "0x1003600a0"
+      ]
+    }
+  },
+  "source_sha256": {
+    "replica/Sources/Pasto/UI/ReplicaUIController.swift": "d37aa22d10f3dd0d2c9143595e4c3b0a983b4afe8826bf4df145b0357a6182af",
+    "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift": "45124d12591f69d50051c08df017d439ad0ba3af9987407ed0580cd6b88189d1",
+    "replica/Sources/Pasto/UI/PanelViews.swift": "0975229b7a643f3476e4463b2c46988a6fc832017a3a2cca99db44a646e9b9c4",
+    "replica/Sources/Pasto/UI/ReplicaNativeCardCollection.swift": "b68b91bf5b7076d6d0dc9d03a98c4aa460dc875148bc93ad81ecb3da6fd2264a",
+    "scripts/tests/test_search_delivery_contracts.py": "1f52e8a198ae195262d6764e0270ee9f92ca8dc04e5e16feaa295299bb68aceb",
+    "scripts/tests/test_panel_lifecycle_contracts.py": "f6aacdb34d1a7e3bac608371772f87eb7926e0e7e429da4692b79e8eda2dcf84",
+    "scripts/tests/test_offline_p0_contracts.py": "79a2eaab64bf09c26e4833057c700a50a91cc243126cddf56bfdd82f600db08e"
+  },
+  "new_partial_bindings": [
+    "Paste:0x10007daa8",
+    "Paste:0x10007e194",
+    "Paste:0x1003600a0",
+    "Paste:0x100360808",
+    "Paste:0x10031f2a4"
+  ],
+  "confirmed_differences_fixed": [
+    "原查询与列表上下文两条独立RunLoop120ms防抖，延迟后去重且只有上下文prepend空值",
+    "列表/删除/拖拽/Esc和闭窗manager读取已生效context；原编辑buffer仅用于输入显示，列表切换取消旧确认",
+    "开始新query保留已有结果，CancellationError不清结果或显示普通错误",
+    "搜索结果按原timestamp默认倒序投影，不再按编辑updatedAt重排"
+  ],
+  "tests": {
+    "passed": true,
+    "total": 117,
+    "scope": "Python source/ledger/provenance and static instruction/import checks; no Combine/Spotlight/Swift execution",
+    "added_in_round": 13
+  },
+  "new_fully_migrated_function_count": 0,
+  "historical_ledger": {
+    "numerator": 1648,
+    "denominator": 81123,
+    "percent": 2.0315,
+    "stale_evidence": true
+  },
+  "current_partial_count": 439,
+  "compiled": false,
+  "application_executed": false,
+  "original_binary_executed": false,
+  "user_data_modified": false,
+  "network_used": false,
+  "committed": false,
+  "pushed": false,
+  "module_complete": false,
+  "remaining_differences": [
+    "按原用户选择入口清query与closed create/restore程序路由须区分，当前chooseBoard混合，两类不能机械统一",
+    "完整每query Task取消/actor/结果provider观察及FRC缺项错误和日志仍partial",
+    "索引timestamp属性来源尚待完整witness确认，当前indexed modified=updatedAt未在本轮无证据修改",
+    "自有UUID/多board/可选timestamp及nil结果对象投影与原模型不同；未验收真实防抖时长或焦点/排序交互"
+  ],
+  "next_module": "P1 search_and_filter",
+  "next_work": [
+    "区分用户分组选择与闭窗程序路由的clear query语义",
+    "继续索引日期字段真实witness、查询结果实体消费和建议/FilterBrowser，优先复用已有合同"
+  ],
+  "inventory_checked": {
+    "mapped_reference_records_checked": 2096,
+    "mapping_states": {
+      "partial": 439,
+      "migrated": 1648,
+      "excluded_by_scope": 9
+    },
+    "reference_issue_counts": {
+      "missing_address_in_evidence": 12
+    },
+    "unchanged_source_review_count": 328
+  }
+}

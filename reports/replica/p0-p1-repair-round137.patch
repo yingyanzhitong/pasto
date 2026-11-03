@@ -1,0 +1,137 @@
+--- before/replica/Sources/PastoCore/ClipboardRestoreItem.swift
++++ after/replica/Sources/PastoCore/ClipboardRestoreItem.swift
+@@ -37,6 +37,14 @@
+     public var previewIdentity: AnyHashable {
+         if let nativeObject { return AnyHashable(nativeObject.objectID.uriRepresentation()) }
+         return AnyHashable(id)
++    }
++
++    // Registration/publication callbacks read the current native identifier, independent of URI identity.
++    public var previewIdentifier: String {
++        if let nativeObject, let identifier = nativeObject.value(forKey: "nativeIdentifier") as? String {
++            return identifier
++        }
++        return id.uuidString
+     }
+ 
+     public var isDeleted: Bool { nativeObject?.isDeleted ?? false }
+--- before/replica/Sources/PastoCore/OriginalPreviewPopover.swift
++++ after/replica/Sources/PastoCore/OriginalPreviewPopover.swift
+@@ -47,7 +47,7 @@
+         registry.f_10008747c(itemIdentity: itemIdentity)?.close()
+         if let preview = contentView as? OriginalItemPreviewView {
+             preview.onBeginEditing = { [weak self] in
+-                self?.f_1000298b0(itemIdentity: itemIdentity)
++                self?.f_1000298b0(itemIdentity: input.previewIdentity)
+             }
+         }
+         let controller = NSViewController()
+@@ -70,9 +70,13 @@
+     public func f_100029e6c() -> Int {
+         isDisplayed = true
+         f_100029f60()
+-        if let itemIdentifier, registry.popoverItemIdentifier != itemIdentifier {
+-            registry.popoverItemIdentifier = itemIdentifier
+-            registry.f_100087864()
++        if let item {
++            let itemIdentifier = item.previewIdentifier
++            self.itemIdentifier = itemIdentifier
++            if registry.popoverItemIdentifier != itemIdentifier {
++                registry.popoverItemIdentifier = itemIdentifier
++                registry.f_100087864()
++            }
+         }
+         return 0
+     }
+@@ -109,7 +113,7 @@
+ 
+     /// Paste 0x100029a80 after the local item-view adapter resolves the content dependency.
+     public func f_100029a80(beginEditing: Bool, keepOpenAfterEditing: Bool) -> OriginalPreviewWindow? {
+-        guard let itemIdentity, let itemIdentifier, let item else { return nil }
++        guard let item else { return nil }
+         let window = OriginalPreviewWindow()
+         guard let preview = makeContentView?(item) else { return nil }
+         preview.onEndEditing = {
+@@ -117,14 +121,14 @@
+         }
+         let manager = registry
+         preview.onEditingStateChanged = { editing in
+-            manager.f_10008727c(isEditing: editing, itemIdentifier: itemIdentifier)
++            manager.f_10008727c(isEditing: editing, itemIdentifier: item.previewIdentifier)
+         }
+         if beginEditing { preview.f_10007be8c() }
+         let controller = NSViewController()
+         controller.view = preview
+         window.contentViewController = controller
+-        manager.f_100086c10(window: window, itemIdentity: itemIdentity,
+-                           itemIdentifier: itemIdentifier, isEditing: beginEditing)
++        manager.f_100086c10(window: window, itemIdentity: item.previewIdentity,
++                           itemIdentifier: item.previewIdentifier, isEditing: beginEditing)
+         return window
+     }
+ 
+--- before/replica/Sources/Pasto/UI/ReplicaUIController.swift
++++ after/replica/Sources/Pasto/UI/ReplicaUIController.swift
+@@ -1463,7 +1463,7 @@
+                 popover.close()
+                 return
+             }
+-            popover.show(itemIdentity: input.previewIdentity, itemIdentifier: input.id.uuidString, input: input,
++            popover.show(itemIdentity: input.previewIdentity, itemIdentifier: input.previewIdentifier, input: input,
+                 contentView: self.makePreviewContent(for: input), relativeTo: anchor)
+         }
+         return true
+@@ -1494,7 +1494,7 @@
+                 popover.close()
+                 return
+             }
+-            popover.show(itemIdentity: input.previewIdentity, itemIdentifier: item.id.uuidString, input: input,
++            popover.show(itemIdentity: input.previewIdentity, itemIdentifier: input.previewIdentifier, input: input,
+                 contentView: makePreviewContent(for: input), relativeTo: anchor)
+             return
+         }
+@@ -1503,7 +1503,7 @@
+         let content = makePreviewContent(for: input)
+         if let preview = content as? OriginalItemPreviewView {
+             preview.onEditingStateChanged = { [weak self] editing in
+-                self?.previewRegistry.f_10008727c(isEditing: editing, itemIdentifier: item.id.uuidString)
++                self?.previewRegistry.f_10008727c(isEditing: editing, itemIdentifier: input.previewIdentifier)
+             }
+         }
+         window.contentView = content
+@@ -1511,7 +1511,7 @@
+         sharingPolicy.apply(to: window)
+         window.center()
+         previewRegistry.f_100086c10(window: window, itemIdentity: input.previewIdentity,
+-            itemIdentifier: item.id.uuidString, isEditing: false)
++            itemIdentifier: input.previewIdentifier, isEditing: false)
+         show(window)
+     }
+ 
+@@ -1558,7 +1558,7 @@
+         window.animationBehavior = .documentWindow
+         sharingPolicy.apply(to: window)
+         let registry = previewRegistry
+-        let itemIdentifier = input.id.uuidString
++        let itemIdentifier = input.previewIdentifier
+         registry.f_100086c10(window: window, itemIdentity: input.previewIdentity,
+                            itemIdentifier: itemIdentifier, isEditing: true)
+         let transition = OriginalPreviewWindowTransition(window: window)
+@@ -1571,7 +1571,7 @@
+         let preview = makeOriginalReplicaNativePreview(state: state, input: input)
+         preview.onEndEditing = { window.close() }
+         preview.onEditingStateChanged = { editing in
+-            registry.f_10008727c(isEditing: editing, itemIdentifier: itemIdentifier)
++            registry.f_10008727c(isEditing: editing, itemIdentifier: input.previewIdentifier)
+         }
+         preview.f_10007be8c()
+         let controller = NSViewController()
+@@ -1626,7 +1626,7 @@
+         }
+         let item = items[requestedIndex]
+         if let popover = previewPopover, popover.isDisplayed {
+-            popover.show(itemIdentity: input.previewIdentity, itemIdentifier: item.id.uuidString, input: input,
++            popover.show(itemIdentity: input.previewIdentity, itemIdentifier: input.previewIdentifier, input: input,
+                 contentView: makePreviewContent(for: input), relativeTo: anchor)
+         }
+     }

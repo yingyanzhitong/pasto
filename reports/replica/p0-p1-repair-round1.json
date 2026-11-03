@@ -1,0 +1,589 @@
+{
+  "kind": "authorized_offline_p0_p1_source_repair",
+  "phase": 1,
+  "generated_at": "2026-10-30T10:42:59.737246+08:00",
+  "metric_note": "进度只计算本阶段145条已证有限差异的修复；不是全产品、全函数迁移或运行验收。多个地址可共享一个修复原因。",
+  "progress": {
+    "total": {
+      "repaired": 18,
+      "denominator": 145,
+      "percent": 12.41
+    },
+    "P0": {
+      "repaired": 18,
+      "denominator": 64,
+      "percent": 28.12
+    },
+    "P1": {
+      "repaired": 0,
+      "denominator": 81,
+      "percent": 0
+    }
+  },
+  "frozen_comparison": {
+    "closed": 654,
+    "denominator": 656,
+    "percent": 99.7,
+    "role": "历史比较覆盖率，包含有差异的结论，不能当作已修比例"
+  },
+  "repair_units": 9,
+  "records": [
+    {
+      "function_id": "Paste:0x10037a144",
+      "priority": "P0",
+      "repair_unit": "restore",
+      "original": {
+        "path": "decompiled/Paste/part-0281.c",
+        "sha256": "5724312d1aea18384eac7e73d7de2ee7a35f06ebf4ecb263ac685b66802884c3"
+      },
+      "prior_difference": "非空选择写板后，原恢复事务2ff310若返回Swift error，在37a5b4/b8释放错误，仍继续Undo清理和DidRestore通知；当前try recordRestoredItems抛错则退出，跳过removeAllActions/didRestoreItem.send。",
+      "repaired_finite_contract": "保存失败后仍清Undo并发DidRestore",
+      "status": "finite_source_difference_repaired",
+      "full_function_migration_verified": false,
+      "current_sources": {
+        "replica/Sources/PastoCore/Pasteboard.swift": "c049da346756984b428953dedd43f741f3689c3af4fd2100826daad9f68ace11"
+      }
+    },
+    {
+      "function_id": "Paste:0x100364ab4",
+      "priority": "P0",
+      "repair_unit": "title",
+      "original": {
+        "path": "decompiled/Paste/part-0276.c",
+        "sha256": "41f190a526d848d28485edfe6bf9017af7344b16c00cb2521ba2c9125de6c6e6"
+      },
+      "prior_difference": "原可变字段callback支持把已有title清为nil；真实重命名链将空白输入归一为nil后交给该setter。当前renameItem的prompt把空白当取消，updateItem的nil参数也代表不修改，缺少这条清标题路径。",
+      "repaired_finite_contract": "重命名确认空白清除原标题，取消仍不修改",
+      "status": "finite_source_difference_repaired",
+      "full_function_migration_verified": false,
+      "current_sources": {
+        "replica/Sources/Pasto/UI/ReplicaUIController.swift": "a3b8833bb887be0e7dc6a1831898091807cf1a62d8b098d4ce014abd446340c4",
+        "replica/Sources/PastoCore/ClipboardStore.swift": "12162bc31dea7ee8e6d1e521c76889920d97a22aa8ea83a9fb8eb0f1bf86b6aa"
+      }
+    },
+    {
+      "function_id": "Paste:0x1003bae08",
+      "priority": "P0",
+      "repair_unit": "title",
+      "original": {
+        "path": "decompiled/Paste/part-0294.c",
+        "sha256": "a0adacc90837796e27a8f5cd0eb3bd18502babdd5c2118272af31f60a50fa356"
+      },
+      "prior_difference": "原更新 helper 先比较现有标题；有效的不同输入会 trim whitespaces/newlines，若结果为空则把 title 变 nil 并通过事务写回。当前 renameItem 的 prompt 把 trim 后空字符串当作取消，updateItem(title:nil) 又表示不更新字段，不能清除已有 title。",
+      "repaired_finite_contract": "重命名确认空白清除原标题，取消仍不修改",
+      "status": "finite_source_difference_repaired",
+      "full_function_migration_verified": false,
+      "current_sources": {
+        "replica/Sources/Pasto/UI/ReplicaUIController.swift": "a3b8833bb887be0e7dc6a1831898091807cf1a62d8b098d4ce014abd446340c4",
+        "replica/Sources/PastoCore/ClipboardStore.swift": "12162bc31dea7ee8e6d1e521c76889920d97a22aa8ea83a9fb8eb0f1bf86b6aa"
+      }
+    },
+    {
+      "function_id": "Paste:0x10006e0dc",
+      "priority": "P0",
+      "repair_unit": "title",
+      "original": {
+        "path": "decompiled/Paste/part-0036.c",
+        "sha256": "187ef85b76a99a54fc95654fb2d64c29dff87a240728df83415595965f2c81e7"
+      },
+      "prior_difference": "在owner存活且给已有非空title输入全空白String的重命名路径，原06e0dc把String与目标实体原样交3bae08，后者trim为空后通过事务清title。当前renameItem的prompt对trim后空值返回nil并提前退出，因此此父入口仍无法清除已有title。只沿已证3bae08的具体差异，不借weak owner失效构造反例。",
+      "repaired_finite_contract": "重命名确认空白清除原标题，取消仍不修改",
+      "status": "finite_source_difference_repaired",
+      "full_function_migration_verified": false,
+      "current_sources": {
+        "replica/Sources/Pasto/UI/ReplicaUIController.swift": "a3b8833bb887be0e7dc6a1831898091807cf1a62d8b098d4ce014abd446340c4",
+        "replica/Sources/PastoCore/ClipboardStore.swift": "12162bc31dea7ee8e6d1e521c76889920d97a22aa8ea83a9fb8eb0f1bf86b6aa"
+      }
+    },
+    {
+      "function_id": "Paste:0x10037f520",
+      "priority": "P0",
+      "repair_unit": "archive",
+      "original": {
+        "path": "decompiled/Paste/part-0282.c",
+        "sha256": "a2099494e58e369e46e0b33c6e9fc60fbd4ee87a6d1f8b8bbb6887ae80ef6787"
+      },
+      "prior_difference": "NSCoding先以 types 键编码类型数组，再以 data 键编码数据字典。",
+      "repaired_finite_contract": "NSCoding写types/data，缺data时才兼容旧dataByType",
+      "status": "finite_source_difference_repaired",
+      "full_function_migration_verified": false,
+      "current_sources": {
+        "replica/Sources/PastoCore/OriginalPasteboard.swift": "b4291a3f554f75abbd4c1c0627f054cada3d202f2cab75440b9dbf74e805d4ca"
+      }
+    },
+    {
+      "function_id": "Paste:0x1000b098c",
+      "priority": "P0",
+      "repair_unit": "focus",
+      "original": {
+        "path": "decompiled/Paste/part-0058.c",
+        "sha256": "fb5f8e88ffb06fd35ecc47648d2bd2fd0b86c2e0d4e36ad1d836b97da189b506"
+      },
+      "prior_difference": "同为frontmost=self、savedPrevious=nil且旧targetApplication非nil时，原b098c保留nil；当前rememberPanelApplication额外回退旧targetApplication。确认fallback分支不同，不因分布式callback或不同ABI本身判差异。",
+      "repaired_finite_contract": "按原前台应用分支记录与尝试激活，不额外回退旧目标",
+      "status": "finite_source_difference_repaired",
+      "full_function_migration_verified": false,
+      "current_sources": {
+        "replica/Sources/Pasto/AppMain.swift": "288736e34fa5e3484bb15641598a5a7c9e1a496364e8da017597f1c24431e223"
+      }
+    },
+    {
+      "function_id": "Paste:0x1000b11ac",
+      "priority": "P0",
+      "repair_unit": "focus",
+      "original": {
+        "path": "decompiled/Paste/part-0058.c",
+        "sha256": "ee1dc707a97c9910ba3716d32c991b574094bfa24a5a0431091114fdb325b129"
+      },
+      "prior_difference": "同为无detached preview、savedPrevious非nil但该外部应用在面板打开期间终止时，原b11ac仍调用activateWithOptions:2后清值；当前先以isTerminated守卫跳过激活尝试并清值。仅确认调用门控不同，未声称实际可见焦点结果不同；网络Handoff分支排除。",
+      "repaired_finite_contract": "按原前台应用分支记录与尝试激活，不额外回退旧目标",
+      "status": "finite_source_difference_repaired",
+      "full_function_migration_verified": false,
+      "current_sources": {
+        "replica/Sources/Pasto/AppMain.swift": "288736e34fa5e3484bb15641598a5a7c9e1a496364e8da017597f1c24431e223"
+      }
+    },
+    {
+      "function_id": "Paste:0x100383d90",
+      "priority": "P0",
+      "repair_unit": "images",
+      "original": {
+        "function_id": "Paste:0x100383d90",
+        "path": "decompiled/Paste/part-0283.c",
+        "sha256": "e04c47bf348c0b5a0508289c7919eaf18bdeb603a59a51a366ef2eea299cb942",
+        "normalization": "full address-header function fragment through next address header; rstrip + LF"
+      },
+      "prior_difference": "有限阶段合同差异：可达普通非plain图片恢复（原rawType=1，当前本地capture分类kind=image）中，原383d90尾调383df4，先384824处理images目录，再取实体data经31b218/2ffc68读取rawPasteboardItems并31aeec解码；当前先ordinaryRestoreRepresentations正常返回表示数组（含空数组）才调用imageRestore.prepare/383df4/384824处理目录。原dir-before-decode与当前decode-before-dir的调用阶段相反。当前持久化读取已有ObjCExceptionBridge，且reload可快速返回，不称每次完整加载；未据此推断相同CoreData fault结果或普通PNG内容不同。",
+      "repaired_finite_contract": "图片目录先于解码；单文件属性读取失败继续下一项",
+      "status": "finite_source_difference_repaired",
+      "full_function_migration_verified": false,
+      "current_sources": {
+        "replica/Sources/PastoCore/OriginalPasteboardImageRestore.swift": "c8e51b540536723aedce92ae123cbf281e049fecbf9c21384159f15b1969a646",
+        "replica/Sources/PastoCore/Pasteboard.swift": "c049da346756984b428953dedd43f741f3689c3af4fd2100826daad9f68ace11"
+      }
+    },
+    {
+      "function_id": "Paste:0x100384e6c",
+      "priority": "P0",
+      "repair_unit": "images",
+      "original": {
+        "path": "decompiled/Paste/part-0284.c",
+        "sha256": "a0bd76eba9825276994593c43f4ccc57f8b95abb484717945b3879a4f49e3e96"
+      },
+      "prior_difference": "以当前时间减86400秒为cutoff，枚举目录，逐文件读取creationDate；单文件属性读取失败忽略并继续下一文件，仅严格早于cutoff才删除。目录枚举或删除失败时退出并按弱owner记录日志。",
+      "repaired_finite_contract": "图片目录先于解码；单文件属性读取失败继续下一项",
+      "status": "finite_source_difference_repaired",
+      "full_function_migration_verified": false,
+      "current_sources": {
+        "replica/Sources/PastoCore/OriginalPasteboardImageRestore.swift": "c8e51b540536723aedce92ae123cbf281e049fecbf9c21384159f15b1969a646",
+        "replica/Sources/PastoCore/Pasteboard.swift": "c049da346756984b428953dedd43f741f3689c3af4fd2100826daad9f68ace11"
+      }
+    },
+    {
+      "function_id": "Paste:0x100065ed8",
+      "priority": "P0",
+      "repair_unit": "empty-copy",
+      "original": {
+        "path": "decompiled/Paste/part-0035.c",
+        "sha256": "2ca24cf38d051444bcd9849f65cbd27a5b06d3ffe3df7fd0be9aea85b8162200"
+      },
+      "prior_difference": "原 0x10031c4c4 是 Sequence.allSatisfy；在 0x1003b936c 中，allSatisfy=true（空选区是此分支）对应返回 false，0x100065ed8 随后 beep 并返回，不执行成功 OSD/停用应用；allSatisfy=false 则返回 true 并进入成功链。当前 copySelection 对空选区直接静默返回，构成可确认的空选区副作用差异。对非空项目，当前 writeToPasteboard 调用 writer 后继续 recordRestoredItems 并返回；该证据不把 NSPasteboard.writeObjects 的 Bool 当作原 allSatisfy 条件，也不推断它等同原分支。",
+      "repaired_finite_contract": "空选区复制beep，非空复制原路径保留",
+      "status": "finite_source_difference_repaired",
+      "full_function_migration_verified": false,
+      "current_sources": {
+        "replica/Sources/Pasto/UI/ReplicaUIController.swift": "a3b8833bb887be0e7dc6a1831898091807cf1a62d8b098d4ce014abd446340c4"
+      }
+    },
+    {
+      "function_id": "Paste:0x100069778",
+      "priority": "P0",
+      "repair_unit": "delete-key",
+      "original": {
+        "path": "decompiled/Paste/part-0035.c",
+        "sha256": "375453e9618c4e48d22ec34b6de3405c526b98dc3d4e64df69c647aee79b7a3f"
+      },
+      "prior_difference": "原方法作为 ItemCollectionView.keyDown 路径处理 backspace/delete/deleteForward，并对不识别的键调用 super.keyDown；删除动作随后进入 0x100068db8。当前 ReplicaPanel.sendEvent 在 super.sendEvent 前调用 keyHandler；handleKey 仅以 firstResponder is NSTextView 作为 editing gate，非 NSTextView responder 收到删除键时仍调用 state.deleteSelection() 并消费事件。因而当 panel 的焦点位于非文本 responder（例如确认按钮）时，当前面板级拦截可先于原本的 responder/keyDown 路由删除选区，原方法本身没有该面板级抢先拦截合同，构成明确焦点路由差异。",
+      "repaired_finite_contract": "删除键由焦点集合视图处理，其余事件交回响应链",
+      "status": "finite_source_difference_repaired",
+      "full_function_migration_verified": false,
+      "current_sources": {
+        "replica/Sources/Pasto/UI/ReplicaNativeCardCollection.swift": "51fed9d4fbecddb223a2893dd1b71c55fc9ffa284663e5cc915da78e56eadc61",
+        "replica/Sources/Pasto/UI/ReplicaUIController.swift": "a3b8833bb887be0e7dc6a1831898091807cf1a62d8b098d4ce014abd446340c4"
+      }
+    },
+    {
+      "function_id": "Paste:0x10035fbcc",
+      "priority": "P0",
+      "repair_unit": "source",
+      "original": {
+        "path": "decompiled/Paste/part-0274.c",
+        "sha256": "a46d7392de33b84487119e48f77904a091063f2612ea8624f6976d90392d7634"
+      },
+      "prior_difference": "原 helper 在 repository 可变字段 callback 中读取当时的 NSWorkspace.frontmostApplication，并调用 0x100311e3c 取应用字段；当前 f_10037b034 在 captureWithInsertionResult 之前先采样 app，再传 sourceApplication snapshot。",
+      "repaired_finite_contract": "内容创建或更新后采样来源应用，显式快照API不变",
+      "status": "finite_source_difference_repaired",
+      "full_function_migration_verified": false,
+      "current_sources": {
+        "replica/Sources/PastoCore/ClipboardStore.swift": "12162bc31dea7ee8e6d1e521c76889920d97a22aa8ea83a9fb8eb0f1bf86b6aa",
+        "replica/Sources/PastoCore/Pasteboard.swift": "c049da346756984b428953dedd43f741f3689c3af4fd2100826daad9f68ace11"
+      }
+    },
+    {
+      "function_id": "Paste:0x10037b034",
+      "priority": "P0",
+      "repair_unit": "source",
+      "original": {
+        "path": "decompiled/Paste/part-0281.c",
+        "sha256": "472bd2bc3fbc094ebeb47207e9491cd0d15c33c599a6043b074552125a0a26cf"
+      },
+      "prior_difference": "原内容创建/更新后，在仓库可变字段callback中读取当前前台应用并设置source；当前在调用Store内容处理前完成来源snapshot。来源采样相对内容处理的先后不同。",
+      "repaired_finite_contract": "内容创建或更新后采样来源应用，显式快照API不变",
+      "status": "finite_source_difference_repaired",
+      "full_function_migration_verified": false,
+      "current_sources": {
+        "replica/Sources/PastoCore/ClipboardStore.swift": "12162bc31dea7ee8e6d1e521c76889920d97a22aa8ea83a9fb8eb0f1bf86b6aa",
+        "replica/Sources/PastoCore/Pasteboard.swift": "c049da346756984b428953dedd43f741f3689c3af4fd2100826daad9f68ace11"
+      }
+    },
+    {
+      "function_id": "Paste:0x10037b204",
+      "priority": "P0",
+      "repair_unit": "source",
+      "original": {
+        "path": "decompiled/Paste/part-0281.c",
+        "sha256": "0636ea17d63475345db6c47ac043dd9fbf5828a65c1e4afb5fdf817e9b2a9b10"
+      },
+      "prior_difference": "原内容创建/更新后，在仓库可变字段callback中读取当前前台应用并设置source；当前在调用Store内容处理前完成来源snapshot。来源采样相对内容处理的先后不同。",
+      "repaired_finite_contract": "内容创建或更新后采样来源应用，显式快照API不变",
+      "status": "finite_source_difference_repaired",
+      "full_function_migration_verified": false,
+      "current_sources": {
+        "replica/Sources/PastoCore/ClipboardStore.swift": "12162bc31dea7ee8e6d1e521c76889920d97a22aa8ea83a9fb8eb0f1bf86b6aa",
+        "replica/Sources/PastoCore/Pasteboard.swift": "c049da346756984b428953dedd43f741f3689c3af4fd2100826daad9f68ace11"
+      }
+    },
+    {
+      "function_id": "Paste:0x10037c47c",
+      "priority": "P0",
+      "repair_unit": "source",
+      "original": {
+        "path": "decompiled/Paste/part-0282.c",
+        "sha256": "b8f348bd25063bf7f2ae9d57cd8ff909735dc811a2a7876a08d8d66259acf70c"
+      },
+      "prior_difference": "原内容创建/更新后，在仓库可变字段callback中读取当前前台应用并设置source；当前在调用Store内容处理前完成来源snapshot。来源采样相对内容处理的先后不同。",
+      "repaired_finite_contract": "内容创建或更新后采样来源应用，显式快照API不变",
+      "status": "finite_source_difference_repaired",
+      "full_function_migration_verified": false,
+      "current_sources": {
+        "replica/Sources/PastoCore/ClipboardStore.swift": "12162bc31dea7ee8e6d1e521c76889920d97a22aa8ea83a9fb8eb0f1bf86b6aa",
+        "replica/Sources/PastoCore/Pasteboard.swift": "c049da346756984b428953dedd43f741f3689c3af4fd2100826daad9f68ace11"
+      }
+    },
+    {
+      "function_id": "Paste:0x10037c494",
+      "priority": "P0",
+      "repair_unit": "source",
+      "original": {
+        "path": "decompiled/Paste/part-0282.c",
+        "sha256": "3e14c2d8da9365f1e8f0e2a22cd8e609389c21d90bb9ce4795e10d041df6e8ec"
+      },
+      "prior_difference": "原内容创建/更新后，在仓库可变字段callback中读取当前前台应用并设置source；当前在调用Store内容处理前完成来源snapshot。来源采样相对内容处理的先后不同。",
+      "repaired_finite_contract": "内容创建或更新后采样来源应用，显式快照API不变",
+      "status": "finite_source_difference_repaired",
+      "full_function_migration_verified": false,
+      "current_sources": {
+        "replica/Sources/PastoCore/ClipboardStore.swift": "12162bc31dea7ee8e6d1e521c76889920d97a22aa8ea83a9fb8eb0f1bf86b6aa",
+        "replica/Sources/PastoCore/Pasteboard.swift": "c049da346756984b428953dedd43f741f3689c3af4fd2100826daad9f68ace11"
+      }
+    },
+    {
+      "function_id": "Paste:0x1000684f8",
+      "priority": "P0",
+      "repair_unit": "neighbor",
+      "original": {
+        "path": "decompiled/Paste/part-0035.c",
+        "sha256": "5c8db3b87c1ecebb0a9fb910e7b522acf2642423621843acfb25df1a8492f2f2"
+      },
+      "prior_difference": "原applier完成更新后一次性清pendingNeighborSelectionID并按新index选择；当前确认成功后同步UUID选择仍有时序差异。",
+      "repaired_finite_contract": "删除后在集合更新边界交付邻项选择，先清pending再查新索引",
+      "status": "finite_source_difference_repaired",
+      "full_function_migration_verified": false,
+      "current_sources": {
+        "replica/Sources/Pasto/UI/ReplicaNativeCardCollection.swift": "51fed9d4fbecddb223a2893dd1b71c55fc9ffa284663e5cc915da78e56eadc61",
+        "replica/Sources/Pasto/UI/ReplicaUIController.swift": "a3b8833bb887be0e7dc6a1831898091807cf1a62d8b098d4ce014abd446340c4"
+      }
+    },
+    {
+      "function_id": "Paste:0x100069158",
+      "priority": "P0",
+      "repair_unit": "neighbor",
+      "original": {
+        "path": "decompiled/Paste/part-0035.c",
+        "sha256": "fdc00aca0fe94afaedd020da717c642465d9731deef6de237986e930fcdb71f3"
+      },
+      "prior_difference": "事务回调写pendingNeighborSelectionID；当前成功后按捕获UUID选邻项，未冒称原applier异步回填等价。",
+      "repaired_finite_contract": "删除后在集合更新边界交付邻项选择，先清pending再查新索引",
+      "status": "finite_source_difference_repaired",
+      "full_function_migration_verified": false,
+      "current_sources": {
+        "replica/Sources/Pasto/UI/ReplicaNativeCardCollection.swift": "51fed9d4fbecddb223a2893dd1b71c55fc9ffa284663e5cc915da78e56eadc61",
+        "replica/Sources/Pasto/UI/ReplicaUIController.swift": "a3b8833bb887be0e7dc6a1831898091807cf1a62d8b098d4ce014abd446340c4"
+      }
+    }
+  ],
+  "partial_repairs": [
+    {
+      "function_ids": [
+        "Paste:0x1003214c8",
+        "Paste:0x1003216bc",
+        "Paste:0x100322ae4"
+      ],
+      "change": "移除unknown/无路径文件的checksum提前nil，恢复原归档MD5路由；保留现有nil表示回退。",
+      "status": "partial_source_repair_not_counted_as_closed",
+      "remaining": "归档类身份、字节等价、持久层查找和完整错误合同仍待闭合。"
+    }
+  ],
+  "remaining_confirmed_differences": {
+    "P0": [
+      "Paste:0x10000e0ec",
+      "Paste:0x10000e74c",
+      "Paste:0x100018c84",
+      "Paste:0x1000192b0",
+      "Paste:0x100019790",
+      "Paste:0x100019a84",
+      "Paste:0x100021518",
+      "Paste:0x100021b04",
+      "Paste:0x100067c84",
+      "Paste:0x100068db8",
+      "Paste:0x100069fe0",
+      "Paste:0x10006e95c",
+      "Paste:0x1000765a4",
+      "Paste:0x1000765b8",
+      "Paste:0x1000a56f4",
+      "Paste:0x1000b07f0",
+      "Paste:0x1001b9b78",
+      "Paste:0x1001eaa64",
+      "Paste:0x1001ebce4",
+      "Paste:0x1001ec200",
+      "Paste:0x100228ee8",
+      "Paste:0x1002ff310",
+      "Paste:0x1003088e0",
+      "Paste:0x1003214c8",
+      "Paste:0x1003216bc",
+      "Paste:0x100322ae4",
+      "Paste:0x100328bb4",
+      "Paste:0x100328bc8",
+      "Paste:0x1003293c4",
+      "Paste:0x100357cf0",
+      "Paste:0x100360d9c",
+      "Paste:0x100360ff8",
+      "Paste:0x1003611b0",
+      "Paste:0x1003614c0",
+      "Paste:0x100361ec0",
+      "Paste:0x100364014",
+      "Paste:0x100364074",
+      "Paste:0x1003646ec",
+      "Paste:0x100378df4",
+      "Paste:0x10037ade4",
+      "Paste:0x100384824",
+      "Paste:0x1003baac8",
+      "Paste:0x1003bab24",
+      "Paste:0x1003bba9c",
+      "Paste:0x1003bbbb0",
+      "Paste:0x100ae6678"
+    ],
+    "P1": [
+      "Paste:0x100005e1c",
+      "Paste:0x100006184",
+      "Paste:0x100021f00",
+      "Paste:0x100031978",
+      "Paste:0x100039c50",
+      "Paste:0x100040054",
+      "Paste:0x100042edc",
+      "Paste:0x100042fc8",
+      "Paste:0x1000519f8",
+      "Paste:0x10007d0e0",
+      "Paste:0x100223430",
+      "Paste:0x1002234e0",
+      "Paste:0x10022be98",
+      "Paste:0x1002dfb18",
+      "Paste:0x1002dfd4c",
+      "Paste:0x1002dfe58",
+      "Paste:0x1002e00a0",
+      "Paste:0x1002e1bac",
+      "Paste:0x1002e20b8",
+      "Paste:0x1002e267c",
+      "Paste:0x1002e2930",
+      "Paste:0x1002e3ce8",
+      "Paste:0x1002e467c",
+      "Paste:0x1002e46fc",
+      "Paste:0x1002e477c",
+      "Paste:0x1002e48a0",
+      "Paste:0x1002e4928",
+      "Paste:0x1002ea770",
+      "Paste:0x1002ea78c",
+      "Paste:0x1002eaa10",
+      "Paste:0x1002eaea4",
+      "Paste:0x1002efba0",
+      "Paste:0x1002efccc",
+      "Paste:0x1002f00dc",
+      "Paste:0x1002f1c30",
+      "Paste:0x1002f1ca0",
+      "Paste:0x1002f201c",
+      "Paste:0x1002f20a0",
+      "Paste:0x1002f2214",
+      "Paste:0x1002f2280",
+      "Paste:0x1002f2468",
+      "Paste:0x1002f2648",
+      "Paste:0x1002f26a8",
+      "Paste:0x1002f2a30",
+      "Paste:0x1002f2ca8",
+      "Paste:0x1002f3c8c",
+      "Paste:0x1002f3cdc",
+      "Paste:0x1002f60fc",
+      "Paste:0x1002f65e0",
+      "Paste:0x1002f6f0c",
+      "Paste:0x1002f7370",
+      "Paste:0x1002f7744",
+      "Paste:0x1002f7c14",
+      "Paste:0x1002f7d60",
+      "Paste:0x1002faafc",
+      "Paste:0x1002fc0ec",
+      "Paste:0x10030e070",
+      "Paste:0x10030e6bc",
+      "Paste:0x10030ed6c",
+      "Paste:0x10030f380",
+      "Paste:0x10030f3a0",
+      "Paste:0x10030f3c0",
+      "Paste:0x10031bc94",
+      "Paste:0x1003214a8",
+      "Paste:0x1003250f0",
+      "Paste:0x100329754",
+      "Paste:0x1003298a0",
+      "Paste:0x100365e18",
+      "Paste:0x100368560",
+      "Paste:0x10036dc00",
+      "Paste:0x10036e4f4",
+      "Paste:0x10036fa2c",
+      "Paste:0x10037063c",
+      "Paste:0x100371998",
+      "Paste:0x100371e9c",
+      "Paste:0x1003724f0",
+      "Paste:0x100375210",
+      "Paste:0x100375244",
+      "Paste:0x100375274",
+      "Paste:0x1003b9264",
+      "Paste:0x1003bb7bc"
+    ]
+  },
+  "unknown_function_ids": [
+    "Paste:0x10004430c",
+    "Paste:0x1000f733c"
+  ],
+  "scope_provisional": true,
+  "baseline_production_files": 218,
+  "changed_production_files": {
+    "replica/Sources/Pasto/AppMain.swift": {
+      "before_sha256": "29f2b78c137382f4b9b2d6ca40b4c126d2a2e141cdd8ae047b4d62dd69937322",
+      "after_sha256": "288736e34fa5e3484bb15641598a5a7c9e1a496364e8da017597f1c24431e223"
+    },
+    "replica/Sources/Pasto/UI/ReplicaNativeCardCollection.swift": {
+      "before_sha256": "47363989466213a14b631c8f130ce25a313b88ebe059b0c6149ab5df9483ebfe",
+      "after_sha256": "51fed9d4fbecddb223a2893dd1b71c55fc9ffa284663e5cc915da78e56eadc61"
+    },
+    "replica/Sources/Pasto/UI/ReplicaUIController.swift": {
+      "before_sha256": "5862c3cce9784782f4ed388e44eb7e83ec664044227f5b9deb4b0f9b87427f1c",
+      "after_sha256": "a3b8833bb887be0e7dc6a1831898091807cf1a62d8b098d4ce014abd446340c4"
+    },
+    "replica/Sources/PastoCore/ClipboardStore.swift": {
+      "before_sha256": "502169c424efaa77e81b5786054fd3a9278f293f62e3d55cf1706540fd82a36d",
+      "after_sha256": "12162bc31dea7ee8e6d1e521c76889920d97a22aa8ea83a9fb8eb0f1bf86b6aa"
+    },
+    "replica/Sources/PastoCore/OriginalPasteboard.swift": {
+      "before_sha256": "bda6fc26104af712cbf89c0e974c5d84a17b99b89f15def8b2b8c422fc0b3674",
+      "after_sha256": "b4291a3f554f75abbd4c1c0627f054cada3d202f2cab75440b9dbf74e805d4ca"
+    },
+    "replica/Sources/PastoCore/OriginalPasteboardImageRestore.swift": {
+      "before_sha256": "e4479106e009de1955018b1c0ef63433a4577b80078592b05f032af71bc8cbb3",
+      "after_sha256": "c8e51b540536723aedce92ae123cbf281e049fecbf9c21384159f15b1969a646"
+    },
+    "replica/Sources/PastoCore/Pasteboard.swift": {
+      "before_sha256": "dc14692c74b2aab4edde230c659f58ba3c39a2d8f531b1e3638c2fe5c3c601aa",
+      "after_sha256": "c049da346756984b428953dedd43f741f3689c3af4fd2100826daad9f68ace11"
+    }
+  },
+  "unchanged_production_files": 211,
+  "tests": {
+    "passed": 100,
+    "failed": 0,
+    "errors": 0,
+    "kind": "Python源码合同与原二进制静态检查，无Swift执行",
+    "log": ".local/p0-repair/phase-1/tests.log",
+    "omitted_historical_check": {
+      "name": "test_item_source_delta_is_only_the_verified_order_preserving_initializer",
+      "reason": "该检查要求NSCoding源文件仅含更早initializer改动；已被当前归档修复检查和phase差分替代，不撤销修复来满足旧摘要。"
+    }
+  },
+  "source_inputs": {
+    "decompiled/Paste/part-0281.c": "263a428cb02dba29c110b47f38c55cbeee7d754ea9d39cf45e86c5657d53aad5",
+    ".local/p0-repair/phase-1/title-result.json": "0e9e915b1b0cc187150edd8de0c74b76d98c40251417e7d37142da3a07f285c6",
+    "decompiled/Paste/part-0276.c": "201d0a0259d8e4567830cbc8c807b7c51b1a4f089c95f003c38ee744bfaf1d9b",
+    "decompiled/Paste/part-0294.c": "668a90c0122ac98edf792efdd45a7d5512b380d8fdeb30151693e72bbb94905c",
+    "decompiled/Paste/part-0036.c": "8544f94cac07a1d84e814cc1d617fabfbb9b4f65a8c77bea9db31c66dd44307e",
+    ".local/p0-repair/phase-1/archive-result.json": "cb7f904a2d808da92d0cabb14e2d83de4351df6e12e640dad2e90ddbc0402d76",
+    "decompiled/Paste/part-0282.c": "5edd69f4ad7ce6ee9698a53a018cfc6f9ee5d321564e8ea6f1f1ca6b0d7ae1fe",
+    ".local/p0-repair/phase-1/focus-result.json": "ed2d1e1e51e21ec6975d408eff6d905d6c1593118f589d6d847d992047c96a66",
+    "decompiled/Paste/part-0058.c": "722b200cf2f794ba875ba5e0d2247758f65a6536c95cc3fdc03d8050d107df47",
+    ".local/p0-repair/phase-1/images-result.json": "e26f8dc9589418b744299882cd0180371b37d8fdeedc4a4f5d88f8c96fe4bcee",
+    "decompiled/Paste/part-0283.c": "d0eca56a55d76c922a380fa95f464bc02a501a2298487d547ca53df2a74746d7",
+    "decompiled/Paste/part-0284.c": "e3472ec689e8ba02a6d9acb121c1470d74c95270a124bd08cbc5d824e08a77fb",
+    ".local/p0-repair/phase-1/empty-copy-result.json": "7ae32c80f7ba9f83adbb8a12e176c9542986e6429df09b0f63f08e7e47fa89e3",
+    "decompiled/Paste/part-0035.c": "7f8ae6e21b92fc77d7b6ea1f6ccb91c645ef08635c5ca78fa624ff9df7ec3ee4",
+    ".local/p0-repair/phase-1/delete-key-result.json": "b0162d66e30f0079aa896242acf368b6b720fcbfb965e461c200065884578212",
+    ".local/p0-repair/phase-1/source-result.json": "028f4688e0a04571538abfe9e8fb8c9b675d270b8d423367048d581cbf2eb910",
+    "decompiled/Paste/part-0274.c": "91faea9592ee79ae209fd230c3c3fa55f22a52a3e1c287a032eea104bc85a666",
+    ".local/p0-repair/phase-1/neighbor-result.json": "e51377c402143e35874864b537e54d56d592ce8d1cf09dab57b4a175edf8170c",
+    "reports/replica/p0-p1-review-round28.json": "d871e5fcbef89b6b5269a093896ee3955472b4c58ecaf4d0cd37a2cb81cf31f7",
+    "reports/replica/p0-p1-difference-backlog-v3.json": "95b992a10776dd2e015169feef9e9f508c6d432dcc3449fb0cc1123a74d8712f",
+    ".local/p0-repair/phase-1/baseline.json": "6fb74700ad49bf89cd984b10cdb59b04261b68bab071d511fe91d64bf57d2c65",
+    ".local/p0-repair/phase-1/check-and-report.py": "c7ac13a6d7c67bf7a769a102fccb9a2cc5577a42dafbbebb05f8526ab8cd324a",
+    ".local/p0-repair/phase-1/tests.log": "671a588254dbf7c368a8079fae27de62d21779b11aba55926055c34cb1f0950b",
+    "scripts/tests/test_p0_repair_archive_keys.py": "0b2282eb811a344287de14f6fc397e2e4999d86fdab8e905bc50bc9e0ba7b39a",
+    "scripts/tests/test_p0_repair_images.py": "8d5181a80e1abd1c0dbfa9a6356c2d16f37d7f2be555e5d9108495505af6f6f8",
+    "scripts/tests/test_p0_repair_empty_copy.py": "2d9b8e902930748b7408df1e4d133ab32c3c9ea384c2e991c344e2d0b1033931",
+    "scripts/tests/test_p0_repair_checksum_routing.py": "3de55159184ebfab7623a660947e23eb3a8d26d4f3d24a17ad5b94e2304fc7d5",
+    "scripts/tests/test_p0_repair_restore.py": "9278810031e4735ad5f87c427cd4351defffcabf19912048840f0ead88b5c336",
+    "scripts/tests/test_p0_repair_neighbor.py": "a91b779d950399d8dd9e1d3fd9c4350128360a4463b1a71f6c530a558d31ac8d",
+    "scripts/tests/test_p0_repair_title.py": "10a9c1d2b384f16e330cee343548d43c8c059998fdb1a6864ca54a0a897f9e40",
+    "scripts/tests/test_p0_repair_focus.py": "85a8e99ff5d881c975e492d73be0e1d0c9d94a723434474c40acfe42dfa118d0",
+    "scripts/tests/test_p0_repair_delete_key.py": "793ead70b950e61ef300f650627c3797ea87ef0255607c6ab790f3ef63bf505b",
+    "scripts/tests/test_p0_repair_source_sampling.py": "be66c8aa39a8662d5203a07976b1db15db59ccc97802dc144d6dfe9d07b4d44f",
+    "scripts/tests/test_offline_p0_contracts.py": "79a2eaab64bf09c26e4833057c700a50a91cc243126cddf56bfdd82f600db08e",
+    "scripts/tests/test_capture_repository_contracts.py": "fa9ce6d2b5e0cd7294f0af0e94f840af6d76738b889d7ae0b1493d1a4fce2d1d",
+    "scripts/macho_imports.py": "92abd5616f5f7962e0a7b51bc8330ea624ebe1db07d483a3b9ba8c5f3949574b",
+    ".local/paste-arm64-static.bin": "871f00354fbb1c165d858a98e6d19d6f43cb9d3f9f958b3e07c7f07eb5c19afb",
+    ".local/p0-repair/phase-1/checksum-result.json": "95be01d0096524107d500917e618a07745f851a957483e857db7337e77e23fff",
+    "replica/Sources/PastoCore/OriginalPasteboardChecksums.swift": "91b10577b3103f2b5e4ad0879dce27b6ed53648531a0265d93d7d9f636fc611f"
+  },
+  "head_revision": "050e6878a5a52f96fe33aa40f48bb8a056cd0f05",
+  "function_map_sha256": "ea781c82f93e580a940f0804fa120e01e9030357d10aee157fe4a135143b8985",
+  "version_changed": false,
+  "compiled": false,
+  "built": false,
+  "installed": false,
+  "application_executed": false,
+  "network_used": false,
+  "committed": false,
+  "pushed": false,
+  "published": false,
+  "full_function_migration_verified": false,
+  "full_priority_completion_percent": null,
+  "limitations": [
+    "归档键修复不等于原NSKeyedArchiver类身份及MD5逐字节一致。",
+    "焦点只核调用分支，未验证macOS实际激活效果。",
+    "原实体/事务/观察器/完整SnapshotApplier及错误回调仍有差异。",
+    "两项未知搜索入口、原版全库存P0/P1分类边界仍待证。",
+    "子结果为各修复时点记录；本报告current_sources才是汇总时的当前绑定。"
+  ]
+}

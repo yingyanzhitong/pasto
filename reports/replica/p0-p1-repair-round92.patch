@@ -1,0 +1,402 @@
+--- phase-92-before/replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift
++++ replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift
+@@ -56,7 +56,7 @@
+                                             contentView: content, footer: footer,
+                                             contentSize: contentSize)
+     view.applyContentAppearance()
+-    connectReplicaPreviewHeader(header, view: view, state: state, item: item)
++    connectReplicaPreviewHeader(header, view: view, state: state, item: item, input: input)
+     editorHeader.onCancel = { [weak view] in view?.f_10007c1fc() }
+     editorHeader.onSave = { [weak view] in view?.f_10007c080() }
+     view.setCanCommitEditing = { [weak editorHeader] enabled in editorHeader?.setCanCommit(enabled) }
+@@ -78,7 +78,7 @@
+                                             contentView: content, footer: footer,
+                                             contentSize: content.preferredPreviewSize)
+     view.applyContentAppearance()
+-    connectReplicaPreviewHeader(header, view: view, state: state, item: item)
++    connectReplicaPreviewHeader(header, view: view, state: state, item: item, input: input)
+     editorHeader.onCancel = { [weak view] in view?.f_10007c1fc() }
+     editorHeader.onSave = { [weak view] in view?.f_10007c080() }
+     view.setCanCommitEditing = { [weak editorHeader] enabled in editorHeader?.setCanCommit(enabled) }
+@@ -93,7 +93,8 @@
+ @MainActor
+ private func connectReplicaPreviewHeader(_ header: ReplicaInlinePreviewHeader,
+                                          view: OriginalItemPreviewView,
+-                                         state: ReplicaUIState, item: ClipboardItem) {
++                                         state: ReplicaUIState, item: ClipboardItem,
++                                         input: ClipboardRestoreItem?) {
+     header.onEdit = { [weak view] in view?.f_10007be8c() }
+     header.onClose = { [weak view] in
+         guard let view else { return }
+@@ -103,7 +104,11 @@
+     header.titleLabel.onCommitEditing = { [weak view, weak state] title in
+         guard let view, let state else { return }
+         withExtendedLifetime(view) {
+-            state.perform { try state.store.updateItem(id: item.id, title: title, text: nil) }
++            if let input {
++                state.perform { try state.store.updateItem(input, title: title) }
++            } else {
++                state.perform { try state.store.updateItem(id: item.id, title: title, text: nil) }
++            }
+         }
+     }
+ }
+--- phase-92-before/replica/Sources/PastoCore/ClipboardStore.swift
++++ replica/Sources/PastoCore/ClipboardStore.swift
+@@ -949,19 +949,39 @@
+         }
+     }
+ 
++    public func updateItem(_ input: ClipboardRestoreItem, title: String) throws {
++        guard let object = input.nativeObject else {
++            try updateItem(id: input.id, title: title, text: nil)
++            return
++        }
++        try OriginalPreviewTitles.f_1003bae08(title,
++            originalTitle: object.value(forKey: "title") as? String,
++            defaultTitle: OriginalPreviewTitles.f_100309008(
++                rawType: Int((object.value(forKey: "rawType") as? NSNumber)?.int64Value ?? 0),
++                fileCount: OriginalImagePreviewMetadataCodec.decodeFiles(object.value(forKey: "rawPreview") as? Data)?.paths.count)) { replacement in
++            try mutateInTransaction { state, _ in
++                var item = input.resolvedItem()
++                item.title = replacement ?? ""
++                item.hasExplicitTitle = replacement != nil
++                ClipboardItemTitlePersistence.update(item, on: object)
++                if let index = state.items.firstIndex(where: { $0.id == input.id }) {
++                    state.items[index] = item
++                } else { state.items.append(item) }
++            }
++        }
++    }
++
+     public func updateItem(id: UUID, title: String? = nil, text: String? = nil) throws {
+         try mutate { state in
+             guard let i = state.items.firstIndex(where: { $0.id == id }) else { throw ClipboardStoreError.itemNotFound }
+             if let title {
+-                let previousTitle = state.items[i].originalTitle
+-                let displayedTitle = OriginalPreviewTitles.f_100308f88(previousTitle,
++                let item = state.items[i]
++                OriginalPreviewTitles.f_1003bae08(title, originalTitle: item.originalTitle,
+                     defaultTitle: OriginalPreviewTitles.f_100309008(
+-                        rawType: Int(originalContentKind(of: state.items[i]).rawValue),
+-                        fileCount: state.items[i].decodedFilePreviewMetadata?.paths.count))
+-                if title != displayedTitle {
+-                    let normalized = title.trimmingCharacters(in: .whitespacesAndNewlines)
+-                    state.items[i].title = normalized
+-                    state.items[i].hasExplicitTitle = !normalized.isEmpty || previousTitle == nil
++                        rawType: Int(originalContentKind(of: item).rawValue),
++                        fileCount: item.decodedFilePreviewMetadata?.paths.count)) { replacement in
++                    state.items[i].title = replacement ?? ""
++                    state.items[i].hasExplicitTitle = replacement != nil
+                 }
+             }
+             if let text {
+--- phase-92-before/replica/Sources/PastoCore/OriginalPreviewTitles.swift
++++ replica/Sources/PastoCore/OriginalPreviewTitles.swift
+@@ -14,6 +14,16 @@
+         return String(localized: resource)
+     }
+ 
++    // Compare the displayed title first; re-read the optional field only for an empty trimmed input.
++    public static func f_1003bae08(_ title: String, originalTitle: @autoclosure () -> String?,
++                                  defaultTitle: @autoclosure () -> String,
++                                  update: (String?) throws -> Void) rethrows {
++        let displayedTitle = f_100308f88(originalTitle(), defaultTitle: defaultTitle())
++        guard title != displayedTitle else { return }
++        let normalized = title.trimmingCharacters(in: .whitespacesAndNewlines)
++        try update(normalized.isEmpty && originalTitle() != nil ? nil : normalized)
++    }
++
+     public static func f_100308f88(_ title: String?, defaultTitle: @autoclosure () -> String) -> String {
+         if let title, !title.isEmpty { return title }
+         return defaultTitle()
+--- phase-92-before/scripts/tests/native_edit_write_scope_contract.py
++++ scripts/tests/native_edit_write_scope_contract.py
+@@ -1,5 +1,6 @@
+ """Exact captured-entity text-write deltas for earlier frozen source contracts only."""
+ from pathlib import Path
++from native_title_write_scope_contract import pre_native_title_write
+ CHANGES = [['replica/Sources/PastoCore/ClipboardRestoreItem.swift',
+   '    public let id: UUID\n',
+   '    public let id: UUID\n    let nativeObject: PastoItemEntity?\n'],
+@@ -183,6 +184,7 @@
+   '            if nativeObject == nil { item.updatedAt = Date() }\n')]
+ 
+ def pre_native_edit_write(source):
++    source = pre_native_title_write(source)
+     for path, previous, current in reversed(CHANGES):
+         if current in source:
+             assert source.count(current) == 1, path
+--- phase-92-before/scripts/tests/test_p1_repair_native_edit_write.py
++++ scripts/tests/test_p1_repair_native_edit_write.py
+@@ -7,13 +7,14 @@
+ from test_offline_p0_contracts import body
+ from test_p0_repair_checksum_routing import original_fragment
+ from native_edit_write_scope_contract import CHANGES,pre_native_edit_write
++from native_title_write_scope_contract import pre_native_title_write,pre_native_title_write_bytes
+ 
+ class NativeEditWriteContracts(unittest.TestCase):
+     @classmethod
+     def setUpClass(cls):
+         cls.phase=ROOT/'.local/p0-repair/phase-91';cls.proof=json.loads((cls.phase/'native-edit-write-contract.json').read_text());cls.base=json.loads((cls.phase/'baseline.json').read_text())
+         cls.paths=dict(handle='replica/Sources/PastoCore/ClipboardRestoreItem.swift',store='replica/Sources/PastoCore/ClipboardStore.swift',adapter='replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift')
+-        cls.src={k:(ROOT/p).read_text()for k,p in cls.paths.items()};cls.worker=body(cls.src['store'],'private func updateTextPreviewItem(')
++        cls.src={k:pre_native_title_write((ROOT/p).read_text())for k,p in cls.paths.items()};cls.worker=body(cls.src['store'],'private func updateTextPreviewItem(')
+         ns={};exec((ROOT/cls.proof['decoder']['path']).read_text().split("idx={r['address']",1)[0],ns);cls.ns=ns
+     def original(self,a):
+         r=next(r for r in self.proof['original_fragments']if r['address']==a);return original_fragment((ROOT/r['path']).read_text(),a[2:])
+@@ -92,7 +93,7 @@
+         generic=body(self.src['store'],'private func mergedEntities<');self.assertIn('for value in local where old[value.id] != value',generic)
+         self.assertNotIn('updatedAt',generic)
+         for r in self.proof['unchanged_business_methods']:
+-            current=body((ROOT/r['path']).read_text(),r['symbol']);self.assertEqual(hashlib.sha256(current.encode()).hexdigest(),r['sha256']);self.assertEqual(current,body((self.phase/'before'/r['path']).read_text(),r['symbol']))
++            current=body(pre_native_title_write((ROOT/r['path']).read_text()),r['symbol']);self.assertEqual(hashlib.sha256(current.encode()).hexdigest(),r['sha256']);self.assertEqual(current,body((self.phase/'before'/r['path']).read_text(),r['symbol']))
+ 
+     def test_shared_native_primitive_and_commit_replacement_guard_unchanged(self):
+         source=(ROOT/'replica/Sources/PastoCore/ClipboardPersistence.swift').read_text();replace=body(source,'func replaceCapturedItemData(')
+@@ -102,7 +103,7 @@
+         self.assertNotIn('restoreHistoryItems',self.worker)
+ 
+     def test_eight_reviewed_hunks_only_three_existing_production_files(self):
+-        self.assertEqual(len(CHANGES),8);sha=lambda p:hashlib.sha256((ROOT/p).read_bytes()).hexdigest()
++        self.assertEqual(len(CHANGES),8);sha=lambda p:hashlib.sha256(pre_native_title_write_bytes(ROOT/p)).hexdigest()
+         files={str(p.relative_to(ROOT))for p in(ROOT/'replica/Sources').rglob('*')if p.is_file()};self.assertEqual(files,set(self.base['production']))
+         self.assertEqual({p for p,h in self.base['production'].items()if sha(p)!=h},set(self.paths.values()))
+         for key in self.paths:self.assertEqual(pre_native_edit_write(self.src[key]),self.before(key))
+--- /dev/null
++++ scripts/tests/test_p1_repair_native_title_write.py
+@@ -0,0 +1,110 @@
++"""Title VM and same-entity rename source contracts; no Swift/CoreData execution."""
++from pathlib import Path
++import hashlib,json,sys,unittest
++ROOT=Path(__file__).resolve().parents[2]
++sys.path[:0]=[str(ROOT/'scripts'),str(ROOT/'scripts/tests')]
++from function_ledger import source_fragments
++from test_offline_p0_contracts import body
++from test_p0_repair_checksum_routing import original_fragment
++from native_title_write_scope_contract import CHANGES,pre_native_title_write
++
++class NativeTitleWriteContracts(unittest.TestCase):
++    @classmethod
++    def setUpClass(cls):
++        cls.phase=ROOT/'.local/p0-repair/phase-92';cls.proof=json.loads((cls.phase/'native-title-write-contract.json').read_text());cls.base=json.loads((cls.phase/'baseline.json').read_text())
++        cls.paths=dict(titles='replica/Sources/PastoCore/OriginalPreviewTitles.swift',store='replica/Sources/PastoCore/ClipboardStore.swift',adapter='replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift')
++        cls.src={k:(ROOT/p).read_text()for k,p in cls.paths.items()};cls.vm=body(cls.src['titles'],'public static func f_1003bae08(');cls.native=body(cls.src['store'],'public func updateItem(_ input:')
++        ns={};exec((ROOT/cls.proof['decoder']['path']).read_text().split("idx={r['address']",1)[0],ns);cls.ns=ns
++    def before(self,k):return(self.phase/'before'/self.paths[k]).read_text()
++    def original(self,a):
++        r=next(r for r in self.proof['original_fragments']if r['address']==a);return original_fragment((ROOT/r['path']).read_text(),a[2:])
++    def order(self,s,tokens):
++        p=[s.index(t)for t in tokens];self.assertEqual(p,sorted(p))
++
++    def test_nine_original_fragments_and_frozen_title_setter_evidence_bound(self):
++        self.assertEqual(len(self.proof['original_fragments']),9)
++        for r in self.proof['original_fragments']:self.assertEqual(source_fragments(ROOT/r['path'])[r['address']]['sha256'],r['sha256'])
++        for r in [self.proof['binary'],self.proof['decoder'],self.proof['reused_title_evidence']]:self.assertEqual(hashlib.sha256((ROOT/r['path']).read_bytes()).hexdigest(),r['sha256'])
++
++    def test_two_actual_title_reads_decode_to_same_native_selector(self):
++        rows=self.proof['title_getter_calls'];self.assertEqual(len(rows),2);self.assertLess(int(rows[0]['address'],16),int(rows[1]['address'],16))
++        for r in rows:
++            pc=int(r['address'],16);b=self.ns['read'](pc,4);self.assertEqual(b.hex(),r['bytes']);w=int.from_bytes(b,'little');self.assertEqual(w&0x7c000000,0x14000000);d=w&0x3ffffff
++            if d&0x2000000:d-=0x4000000
++            self.assertEqual(pc+4*d,int(r['stub'],16));self.assertEqual(self.ns['read'](int(r['stub'],16),20).hex(),r['stub_bytes']);v,ch=self.ns['reachable_pointer'](int(r['pointer'],16));self.assertEqual(ch,r['chain']);self.assertEqual(self.ns['read'](int(r['pointer'],16),8).hex(),r['pointer_bytes']);target=self.ns['base']+(v&((1<<36)-1));self.assertEqual(hex(target),r['selector_address']);self.assertEqual(self.ns['read'](target,80).split(b'\0')[0],b'title')
++
++    def test_actual_title_writer_slot_and_optional_setter_are_bound(self):
++        r=self.proof['writing_title_slot'];v,ch=self.ns['reachable_pointer'](int(r['address'],16));self.assertEqual(ch,r['chain']);self.assertEqual(self.ns['read'](int(r['address'],16),8).hex(),r['bytes']);self.assertEqual(hex(self.ns['base']+(v&((1<<36)-1))),r['target']);self.assertEqual(r['target'],'0x100364010')
++        self.assertIn('FUN_100364ab4()',self.original('0x100364010'));self.assertIn('objc_stub::setTitle_',self.original('0x100364ab4'))
++        for token in ['Date::','timestamp','setTimestamp_']:self.assertNotIn(token,self.original('0x100364ab4'))
++
++    def test_original_display_compare_trim_reread_precede_transaction_callback(self):
++        s=self.original('0x1003bae08');self.order(s,['objc_stub::title(param_3)','FUN_100309008()','if (SVar10 != SVar11)','StringProtocol::trimmingCharacters','if ((uVar1 == 0) && (IVar4 = objc_stub::title(param_3), IVar4 != 0))','SVar11 = (String)ZEXT816(0)','FUN_1002ff310(FUN_1003bbb10'])
++        self.assertEqual(s.count('objc_stub::title(param_3)'),2)
++
++    def test_shared_vm_equal_display_stops_before_trim_or_throwing_callback(self):
++        self.order(self.vm,['let displayedTitle = f_100308f88(originalTitle(), defaultTitle: defaultTitle())','guard title != displayedTitle else { return }','let normalized = title.trimmingCharacters(in: .whitespacesAndNewlines)','try update('])
++        for token in ['Date()','state.','mutate','UUID','context.']:self.assertNotIn(token,self.vm)
++        declaration=self.src['titles'][self.src['titles'].index('public static func f_1003bae08('):self.src['titles'].index(self.vm)]
++        self.assertIn('originalTitle: @autoclosure () -> String?',declaration);self.assertIn('defaultTitle: @autoclosure () -> String',declaration);self.assertIn('update: (String?) throws -> Void) rethrows',declaration)
++
++    def test_shared_vm_second_optional_read_only_occurs_for_empty_trimmed_text(self):
++        self.assertEqual(self.vm.count('originalTitle()'),2)
++        self.assertIn('try update(normalized.isEmpty && originalTitle() != nil ? nil : normalized)',self.vm)
++        self.assertNotIn('?? ""',self.vm);self.assertNotIn('!normalized.isEmpty',self.vm)
++        fallback=body(self.src['titles'],'public static func f_100308f88(');self.assertIn('if let title, !title.isEmpty { return title }',fallback);self.assertIn('return defaultTitle()',fallback)
++
++    def test_native_default_uses_same_entity_title_type_and_preview_not_uuid_or_cache(self):
++        self.order(self.native,['guard let object = input.nativeObject else','try OriginalPreviewTitles.f_1003bae08(title,','originalTitle: object.value(forKey: "title") as? String','rawType: Int((object.value(forKey: "rawType") as? NSNumber)?.int64Value ?? 0)','OriginalImagePreviewMetadataCodec.decodeFiles(object.value(forKey: "rawPreview") as? Data)?.paths.count','try mutateInTransaction'])
++        for token in ['originalContentKind(','prepareHistoryItems','fetch(','existingObject(','nativeIdentifier','Date()']:self.assertNotIn(token,self.native)
++
++    def test_native_preflight_is_outside_transaction_and_errors_propagate(self):
++        self.assertEqual(self.native.count('try OriginalPreviewTitles.f_1003bae08'),1);self.assertEqual(self.native.count('try mutateInTransaction'),1)
++        self.assertLess(self.native.index('try OriginalPreviewTitles.f_1003bae08'),self.native.index('try mutateInTransaction'))
++        self.assertNotIn('try?',self.native);self.assertNotIn('catch',self.native)
++        self.assertIn('try update(',self.vm)
++
++    def test_native_callback_sets_same_entity_optional_title_from_current_projection(self):
++        operation=body(self.native,'try mutateInTransaction')
++        self.order(operation,['var item = input.resolvedItem()','item.title = replacement ?? ""','item.hasExplicitTitle = replacement != nil','ClipboardItemTitlePersistence.update(item, on: object)','state.items.firstIndex(where: { $0.id == input.id })','state.items[index] = item','state.items.append(item)'])
++        for token in ['itemNotFound','Date()','item.payloads =','item.rawPreview =','item.createdAt =','item.updatedAt =','item.source','prepareHistoryItems','context.fetch']:self.assertNotIn(token,operation)
++
++    def test_explicit_legacy_input_retains_id_title_adapter(self):
++        gate=body(self.native,'guard let object = input.nativeObject else')
++        self.assertIn('try updateItem(id: input.id, title: title, text: nil)',gate);self.assertIn('return',gate)
++        legacy=body(self.src['store'],'public func updateItem(id: UUID');self.assertLess(legacy.index('try mutate { state in'),legacy.index('OriginalPreviewTitles.f_1003bae08'))
++        self.assertIn('guard let i = state.items.firstIndex',legacy)
++
++    def test_legacy_title_consumer_reuses_shared_vm_but_text_path_is_unchanged(self):
++        legacy=body(self.src['store'],'public func updateItem(id: UUID');title=body(legacy,'if let title')
++        self.assertIn('let item = state.items[i]',title);self.assertIn('OriginalPreviewTitles.f_1003bae08(title, originalTitle: item.originalTitle,',title)
++        self.assertIn('state.items[i].title = replacement ?? ""',title);self.assertIn('state.items[i].hasExplicitTitle = replacement != nil',title)
++        self.assertNotIn('trimmingCharacters',title)
++        self.assertEqual(body(legacy,'if let text'),body(body(self.before('store'),'public func updateItem(id: UUID'),'if let text'))
++        self.assertEqual(legacy.count('Date()'),1);self.assertIn('Date()',body(legacy,'if let text'))
++
++    def test_two_preview_factories_pass_input_to_real_header_callback(self):
++        source=self.src['adapter'];self.assertEqual(source.count('connectReplicaPreviewHeader(header, view: view, state: state, item: item, input: input)'),2)
++        connect=body(source,'private func connectReplicaPreviewHeader(')
++        self.assertIn('header.titleLabel.onCommitEditing = { [weak view, weak state] title in',connect)
++        self.order(connect,['guard let view, let state else { return }','withExtendedLifetime(view)','if let input','state.store.updateItem(input, title: title)','} else {','state.store.updateItem(id: item.id, title: title, text: nil)'])
++        self.assertNotIn('state.store.items',connect);self.assertNotIn('observeItem(',connect)
++
++    def test_title_setter_and_no_content_archive_comparison_remain_unchanged(self):
++        setter=(ROOT/'replica/Sources/PastoCore/ClipboardItemTitlePersistence.swift').read_text();self.assertIn('if (object.value(forKey: "title") as? String) != title',setter);self.assertIn('object.setValue(title, forKey: "title")',setter);self.assertNotIn('Date()',setter)
++        persistence=(ROOT/'replica/Sources/PastoCore/ClipboardPersistence.swift').read_text();self.assertIn('if old.map(contentForComparison) != contentForComparison(item)',persistence);self.assertIn('value.title = ""',body(persistence,'private func contentForComparison('))
++        for r in self.proof['unchanged_methods']:
++            s=body((ROOT/r['path']).read_text(),r['symbol']);self.assertEqual(hashlib.sha256(s.encode()).hexdigest(),r['sha256']);self.assertEqual(s,body((self.phase/'before'/r['path']).read_text(),r['symbol']))
++
++    def test_seven_exact_deltas_only_three_files_and_244_others_unchanged(self):
++        self.assertEqual(len(CHANGES),7);sha=lambda p:hashlib.sha256((ROOT/p).read_bytes()).hexdigest()
++        files={str(p.relative_to(ROOT))for p in(ROOT/'replica/Sources').rglob('*')if p.is_file()};self.assertEqual(files,set(self.base['production']));self.assertEqual({p for p,h in self.base['production'].items()if sha(p)!=h},set(self.paths.values()))
++        for key in self.paths:self.assertEqual(pre_native_title_write(self.src[key]),self.before(key))
++        for group in ['current_sources','shared_sources']:
++            for p,h in self.proof[group].items():self.assertEqual(sha(p),h)
++        for p,h in self.proof['shared_sources'].items():self.assertEqual(h,self.base['production'][p])
++        for p in ['replica/Package.swift','package.json']:self.assertEqual(sha(p),self.base['other'][p])
++
++    def test_id_transaction_card_observation_and_generic_metadata_boundaries_remain_open(self):
++        self.assertFalse(self.proof['runtime_executed']);self.assertFalse(self.proof['full_function_migration_verified']);self.assertEqual(self.proof['new_difference_records'],0)
++        for token in ['card','ID/value path','Generic Store','Header display observation','3544dc']:self.assertTrue(any(token in r for r in self.proof['remaining']),token)
+--- /dev/null
++++ scripts/tests/native_title_write_scope_contract.py
+@@ -0,0 +1,121 @@
++"""Exact title preflight/native target deltas for prior frozen source checks only."""
++from pathlib import Path
++CHANGES = [['replica/Sources/PastoCore/OriginalPreviewTitles.swift',
++  '    public static func f_100308f88(_ title: String?, defaultTitle: @autoclosure () -> String) '
++  '-> String {\n',
++  '    // Compare the displayed title first; re-read the optional field only for an empty trimmed '
++  'input.\n'
++  '    public static func f_1003bae08(_ title: String, originalTitle: @autoclosure () -> String?,\n'
++  '                                  defaultTitle: @autoclosure () -> String,\n'
++  '                                  update: (String?) throws -> Void) rethrows {\n'
++  '        let displayedTitle = f_100308f88(originalTitle(), defaultTitle: defaultTitle())\n'
++  '        guard title != displayedTitle else { return }\n'
++  '        let normalized = title.trimmingCharacters(in: .whitespacesAndNewlines)\n'
++  '        try update(normalized.isEmpty && originalTitle() != nil ? nil : normalized)\n'
++  '    }\n'
++  '\n'
++  '    public static func f_100308f88(_ title: String?, defaultTitle: @autoclosure () -> String) '
++  '-> String {\n'],
++ ['replica/Sources/PastoCore/ClipboardStore.swift',
++  '    public func updateItem(id: UUID, title: String? = nil, text: String? = nil) throws {\n',
++  '    public func updateItem(_ input: ClipboardRestoreItem, title: String) throws {\n'
++  '        guard let object = input.nativeObject else {\n'
++  '            try updateItem(id: input.id, title: title, text: nil)\n'
++  '            return\n'
++  '        }\n'
++  '        try OriginalPreviewTitles.f_1003bae08(title,\n'
++  '            originalTitle: object.value(forKey: "title") as? String,\n'
++  '            defaultTitle: OriginalPreviewTitles.f_100309008(\n'
++  '                rawType: Int((object.value(forKey: "rawType") as? NSNumber)?.int64Value ?? 0),\n'
++  '                fileCount: OriginalImagePreviewMetadataCodec.decodeFiles(object.value(forKey: '
++  '"rawPreview") as? Data)?.paths.count)) { replacement in\n'
++  '            try mutateInTransaction { state, _ in\n'
++  '                var item = input.resolvedItem()\n'
++  '                item.title = replacement ?? ""\n'
++  '                item.hasExplicitTitle = replacement != nil\n'
++  '                ClipboardItemTitlePersistence.update(item, on: object)\n'
++  '                if let index = state.items.firstIndex(where: { $0.id == input.id }) {\n'
++  '                    state.items[index] = item\n'
++  '                } else { state.items.append(item) }\n'
++  '            }\n'
++  '        }\n'
++  '    }\n'
++  '\n'
++  '    public func updateItem(id: UUID, title: String? = nil, text: String? = nil) throws {\n'],
++ ['replica/Sources/PastoCore/ClipboardStore.swift',
++  '            if let title {\n'
++  '                let previousTitle = state.items[i].originalTitle\n'
++  '                let displayedTitle = OriginalPreviewTitles.f_100308f88(previousTitle,\n'
++  '                    defaultTitle: OriginalPreviewTitles.f_100309008(\n'
++  '                        rawType: Int(originalContentKind(of: state.items[i]).rawValue),\n'
++  '                        fileCount: state.items[i].decodedFilePreviewMetadata?.paths.count))\n'
++  '                if title != displayedTitle {\n'
++  '                    let normalized = title.trimmingCharacters(in: .whitespacesAndNewlines)\n'
++  '                    state.items[i].title = normalized\n'
++  '                    state.items[i].hasExplicitTitle = !normalized.isEmpty || previousTitle == '
++  'nil\n'
++  '                }\n'
++  '            }\n',
++  '            if let title {\n'
++  '                let item = state.items[i]\n'
++  '                OriginalPreviewTitles.f_1003bae08(title, originalTitle: item.originalTitle,\n'
++  '                    defaultTitle: OriginalPreviewTitles.f_100309008(\n'
++  '                        rawType: Int(originalContentKind(of: item).rawValue),\n'
++  '                        fileCount: item.decodedFilePreviewMetadata?.paths.count)) { replacement '
++  'in\n'
++  '                    state.items[i].title = replacement ?? ""\n'
++  '                    state.items[i].hasExplicitTitle = replacement != nil\n'
++  '                }\n'
++  '            }\n'],
++ ['replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift',
++  '    connectReplicaPreviewHeader(header, view: view, state: state, item: item)\n'
++  '    editorHeader.onCancel = { [weak view] in view?.f_10007c1fc() }\n'
++  '    editorHeader.onSave = { [weak view] in view?.f_10007c080() }\n'
++  '    view.setCanCommitEditing = { [weak editorHeader] enabled in '
++  'editorHeader?.setCanCommit(enabled) }\n'
++  '    if let image = content as? ReplicaImagePreviewContent { '
++  'editorHeader.setCanCommit(image.canCommit) }\n',
++  '    connectReplicaPreviewHeader(header, view: view, state: state, item: item, input: input)\n'
++  '    editorHeader.onCancel = { [weak view] in view?.f_10007c1fc() }\n'
++  '    editorHeader.onSave = { [weak view] in view?.f_10007c080() }\n'
++  '    view.setCanCommitEditing = { [weak editorHeader] enabled in '
++  'editorHeader?.setCanCommit(enabled) }\n'
++  '    if let image = content as? ReplicaImagePreviewContent { '
++  'editorHeader.setCanCommit(image.canCommit) }\n'],
++ ['replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift',
++  '    connectReplicaPreviewHeader(header, view: view, state: state, item: item)\n'
++  '    editorHeader.onCancel = { [weak view] in view?.f_10007c1fc() }\n'
++  '    editorHeader.onSave = { [weak view] in view?.f_10007c080() }\n'
++  '    view.setCanCommitEditing = { [weak editorHeader] enabled in '
++  'editorHeader?.setCanCommit(enabled) }\n'
++  '    content.onCancel = { [weak view] in view?.f_10007c1fc() }\n',
++  '    connectReplicaPreviewHeader(header, view: view, state: state, item: item, input: input)\n'
++  '    editorHeader.onCancel = { [weak view] in view?.f_10007c1fc() }\n'
++  '    editorHeader.onSave = { [weak view] in view?.f_10007c080() }\n'
++  '    view.setCanCommitEditing = { [weak editorHeader] enabled in '
++  'editorHeader?.setCanCommit(enabled) }\n'
++  '    content.onCancel = { [weak view] in view?.f_10007c1fc() }\n'],
++ ['replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift',
++  '                                         state: ReplicaUIState, item: ClipboardItem) {\n',
++  '                                         state: ReplicaUIState, item: ClipboardItem,\n'
++  '                                         input: ClipboardRestoreItem?) {\n'],
++ ['replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift',
++  '            state.perform { try state.store.updateItem(id: item.id, title: title, text: nil) '
++  '}\n',
++  '            if let input {\n'
++  '                state.perform { try state.store.updateItem(input, title: title) }\n'
++  '            } else {\n'
++  '                state.perform { try state.store.updateItem(id: item.id, title: title, text: '
++  'nil) }\n'
++  '            }\n']]
++
++def pre_native_title_write(source):
++    for path, previous, current in reversed(CHANGES):
++        if current in source:
++            assert source.count(current) == 1, path
++            source = source.replace(current, previous, 1)
++    return source
++
++def pre_native_title_write_bytes(path):
++    path=Path(path);raw=path.read_bytes()
++    return pre_native_title_write(raw.decode()).encode() if path.suffix == '.swift' else raw

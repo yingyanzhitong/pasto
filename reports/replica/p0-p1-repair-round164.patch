@@ -1,0 +1,345 @@
+--- a/replica/Sources/PastoCore/ClipboardPersistence.swift
++++ b/replica/Sources/PastoCore/ClipboardPersistence.swift
+@@ -355,6 +355,18 @@
+ 
+     func localListMenuState(identifier: String) -> (rawType: Int64?, isEmpty: Bool) {
+         context.performAndWait { lists.menuState(identifier: identifier) }
++    }
++
++    func tabListTarget(identifier: String) -> ClipboardListTarget? {
++        context.performAndWait {
++            lists.tabList(identifier: identifier).map { ClipboardListTarget(object: $0) }
++        }
++    }
++
++    func makeTabListCollection() -> ClipboardPinboardCollection {
++        context.performAndWait {
++            ClipboardPinboardCollection(context: context, request: lists.tabListRequest())
++        }
+     }
+ 
+     func makePinboardCollection() -> ClipboardPinboardCollection {
+--- a/replica/Sources/PastoCore/ClipboardStore.swift
++++ b/replica/Sources/PastoCore/ClipboardStore.swift
+@@ -54,6 +54,11 @@
+     public let directoryURL: URL
+     public var searchSourceIdentifier: String? { persistence.searchSourceIdentifier }
+     public var collectionItemUpdates: AnyPublisher<Set<UUID>, Never> { persistence.collectionItemUpdates }
++    public func makeTabListCollection() -> ClipboardPinboardCollection { persistence.makeTabListCollection() }
++    public func tabListTarget(identifier: String) -> ClipboardListTarget? { persistence.tabListTarget(identifier: identifier) }
++    public func makeListCollection(identifier: String) -> ClipboardSearchCollection? {
++        persistence.makeListCollection(identifier: identifier)
++    }
+     public func makePinboardCollection() -> ClipboardPinboardCollection {
+         persistence.makePinboardCollection()
+     }
+--- a/replica/Sources/PastoCore/ClipboardListPersistence.swift
++++ b/replica/Sources/PastoCore/ClipboardListPersistence.swift
+@@ -15,6 +15,30 @@
+         self.id = id
+         nativeObject = object
+     }
++}
++
++/// A tab retains its List itself; history and groups share the native ordered collection.
++@MainActor
++public struct ClipboardListTarget {
++    let nativeObject: NSManagedObject
++    public var identifier: String {
++        String._unconditionallyBridgeFromObjectiveC(nativeObject.value(forKey: "identifier") as? NSString)
++    }
++    public var name: String {
++        String._unconditionallyBridgeFromObjectiveC(nativeObject.value(forKey: "name") as? NSString)
++    }
++    public var rawType: Int64 { (nativeObject.value(forKey: "rawType") as? NSNumber)?.int64Value ?? 0 }
++    public var pinboardValue: Pinboard? {
++        guard rawType == 2, let id = UUID(uuidString: identifier) else { return nil }
++        let attributes = nativeObject.value(forKey: "rawAttributes") as? Data
++        let color = OriginalPinboardAttributes.colorCode(from: attributes)
++            .map { String(format: "#%06llX", $0) } ?? "#FF9500"
++        let metadata = nativeObject.value(forKey: "metadata") as? NSManagedObject
++        let index = (metadata?.value(forKey: "index") as? NSNumber)?.intValue ?? 0
++        return Pinboard(id: id, name: name, colorHex: color, sortOrder: index, rawType: 2, rawAttributes: attributes)
++    }
++
++    init(object: NSManagedObject) { nativeObject = object }
+ }
+ 
+ /// Access on the supplied context queue. Existing Pasto IDs and legacy memberships stay compatible.
+@@ -98,6 +122,16 @@
+         return request
+     }
+ 
++    // 367f78 does not apply the menu's type2 predicate.
++    func tabListRequest() -> NSFetchRequest<PastoListEntity> { PastoListEntity.listFetchRequest() }
++
++    // 368080/32a5b0 fetch the matching native List collection and return its first object.
++    func tabList(identifier: String) -> NSManagedObject? {
++        let request = PastoListEntity.listFetchRequest()
++        request.predicate = NSPredicate(format: "identifier == %@", identifier)
++        return (try? context.fetch(request))?.first
++    }
++
+     // 0x100328bb4 → 0x100328bc8, specialized to the actual local ListEntity consumers.
+     func firstList(predicate: NSPredicate?, sortDescriptors: [NSSortDescriptor]? = nil) throws -> NSManagedObject? {
+         let request = NSFetchRequest<NSManagedObject>(entityName: "ListEntity")
+--- a/replica/Sources/PastoCore/ClipboardSearchCollection.swift
++++ b/replica/Sources/PastoCore/ClipboardSearchCollection.swift
+@@ -143,7 +143,7 @@
+     }
+ }
+ 
+-/// The group menu's lazily owned live ListEntity collection (3b8c94/36c094).
++/// Live ListEntity collection: tabs use class defaults (367f78), the menu narrows to type2 (36c094).
+ @MainActor
+ public final class ClipboardPinboardCollection {
+     private struct Snapshot {
+@@ -181,6 +181,31 @@
+             .sink { [weak self] notification in
+                 MainActor.assumeIsolated { self?.objectsDidChange(notification) }
+             }
++    }
++
++    @MainActor public struct ListSnapshot {
++        private let identifiers: [NSManagedObjectID]
++        private let context: NSManagedObjectContext
++        fileprivate init(identifiers: [NSManagedObjectID], context: NSManagedObjectContext) {
++            self.identifiers = identifiers
++            self.context = context
++        }
++        public var count: Int { identifiers.count }
++        public var targets: [ClipboardListTarget] { identifiers.indices.compactMap { target(at: $0) } }
++        public func index(of target: ClipboardListTarget) -> Int? {
++            identifiers.firstIndex { $0.isEqual(target.nativeObject.objectID) }
++        }
++        public func target(at index: Int) -> ClipboardListTarget? {
++            guard identifiers.indices.contains(index),
++                  let object = (try? context.existingObject(with: identifiers[index])) as? PastoListEntity else { return nil }
++            return ClipboardListTarget(object: object)
++        }
++    }
++
++    public var listSnapshot: ListSnapshot { ListSnapshot(identifiers: subject.value.identifiers, context: context) }
++    public var listPublisher: AnyPublisher<ListSnapshot, Never> {
++        subject.map { [self] snapshot in ListSnapshot(identifiers: snapshot.identifiers, context: context) }
++            .eraseToAnyPublisher()
+     }
+ 
+     // 1b85f0 maps the current ordered IDs using the collection's optional native lookup.
+--- a/replica/Sources/Pasto/UI/ReplicaUIController.swift
++++ b/replica/Sources/Pasto/UI/ReplicaUIController.swift
+@@ -96,6 +96,14 @@
+     private var collectionSourceObservation: AnyCancellable?
+     private var listCollection: ClipboardSearchCollection?
+     private lazy var pinboardMenuCollection = store.makePinboardCollection()
++    private lazy var tabListCollection = store.makeTabListCollection()
++    private var tabListObservation: AnyCancellable?
++    private var tabListSnapshot: ClipboardPinboardCollection.ListSnapshot?
++    @Published private(set) var tabListTargets: [ClipboardListTarget] = []
++    private var selectedTabList: ClipboardListTarget?
++    private var selectedTabIndex: Int?
++    private var selectedCollectionIdentifier = ClipboardStore.historyListIdentifier
++    var selectedListIdentifier: String { selectedTabList?.identifier ?? ClipboardStore.historyListIdentifier }
+     private var listCollectionObservation: AnyCancellable?
+     private var pendingCollectionChangedIDs: Set<UUID> = []
+     private var indexedSearchQueryNodes: [OriginalSearchQueryNode] = []
+@@ -124,6 +132,7 @@
+             self.pendingCollectionChangedIDs.formUnion(identifiers)
+             self.objectWillChange.send()
+         }
++        installTabListDelivery()
+         installListSelectionDelivery()
+         installSearchQueryDelivery()
+         refreshSearch()
+@@ -248,7 +257,7 @@
+         listCollectionObservation = nil
+         listCollection = nil
+         guard isCollectionSearchQueryEmpty else { return }
+-        let source = store.makeListCollection(pinboardID: pinboardID)
++        let source = store.makeListCollection(identifier: selectedCollectionIdentifier)
+         listCollection = source
+         listCollectionObservation = source?.publisher.dropFirst().sink { [weak self] snapshot in
+             guard let self, self.isCollectionSearchQueryEmpty, !self.showDeleted else { return }
+@@ -431,9 +440,7 @@
+             pendingPinboardDeletionID = nil
+             pinboardDeletionError = nil
+         }
+-        if let pinboardID, !store.pinboards.contains(where: { $0.id == pinboardID }) {
+-            selectListIdentifier(ClipboardStore.historyListIdentifier, force: false)
+-        }
++        // Native List delivery owns removal and neighboring-list selection.
+         if let request = pendingItemDeletion,
+            !request.ids.isSubset(of: Set(visibleItems.map(\.id))) {
+             cancelItemDeletion()
+@@ -525,6 +532,39 @@
+         selectIndex(last ? items.count - 1 : 0, mode: extending ? 2 : 0, items: items, animated: false)
+     }
+ 
++    private func installTabListDelivery() {
++        let snapshot = tabListCollection.listSnapshot
++        tabListSnapshot = snapshot
++        tabListTargets = snapshot.targets
++        reconcileTabListSelection()
++        tabListObservation = tabListCollection.listPublisher.dropFirst().sink { [weak self] snapshot in
++            MainActor.assumeIsolated {
++                guard let self else { return }
++                self.tabListSnapshot = snapshot
++                self.tabListTargets = snapshot.targets
++                self.reconcileTabListSelection()
++            }
++        }
++    }
++
++    // 03a538: retain an existing object ID, otherwise clamp the old index into the raw native order.
++    private func reconcileTabListSelection() {
++        guard let selected = selectedTabList, let previousIndex = selectedTabIndex else {
++            selectListIdentifier(ClipboardStore.historyListIdentifier, force: false)
++            return
++        }
++        guard let snapshot = tabListSnapshot else { return }
++        if let index = snapshot.index(of: selected) {
++            selectedTabIndex = index
++            return
++        }
++        let index = min(previousIndex, snapshot.count - 1)
++        guard let target = snapshot.target(at: index) else { return }
++        selectListIdentifier(target.identifier, force: false)
++    }
++
++    func chooseList(identifier: String) { selectListIdentifier(identifier, force: true) }
++
+     func chooseBoard(_ id: UUID?) {
+         selectListIdentifier(id?.uuidString ?? ClipboardStore.historyListIdentifier, force: true)
+     }
+@@ -542,21 +582,22 @@
+     // A successful resolution still publishes the same list; no removeDuplicates.
+     private func installListSelectionDelivery() {
+         listIdentifierObservation = listIdentifierChanges.sink { [weak self] identifier in
+-            guard let self, let identifier else { return }
++            guard let self, let identifier,
++                  let target = self.store.tabListTarget(identifier: identifier) else { return }
++            let context = OriginalCollectionListContext.f_1003b80f0(identifier: target.identifier,
++                rawType: target.rawType, historyIdentifier: { ClipboardStore.historyListIdentifier })
+             let id: UUID?
+-            if identifier == ClipboardStore.historyListIdentifier {
++            switch context {
++            case .pinboard(let identifier):
++                self.selectedCollectionIdentifier = identifier
++                id = UUID(uuidString: identifier)
++            case .history(let identifier):
++                self.selectedCollectionIdentifier = identifier
+                 id = nil
+-            } else {
+-                guard let board = self.store.pinboards.first(where: { $0.id.uuidString == identifier }) else { return }
+-                // Published boards project the managed type; nil is the existing legacy-group adapter.
+-                let context = OriginalCollectionListContext.f_1003b80f0(identifier: identifier,
+-                    rawType: Int64(board.rawType ?? 2), historyIdentifier: { ClipboardStore.historyListIdentifier })
+-                switch context {
+-                case .pinboard: id = board.id
+-                case .history: id = nil
+-                }
+-            }
++            }
++            self.selectedTabList = target
+             self.applySelectedList(id)
++            self.selectedTabIndex = self.tabListSnapshot?.index(of: target)
+         }
+     }
+ 
+@@ -621,15 +662,16 @@
+     }
+ 
+     func switchBoard(_ offset: Int) {
+-        let ids: [UUID?] = [nil] + store.pinboards.sorted { $0.sortOrder < $1.sortOrder }.map { Optional($0.id) }
+-        guard let current = ids.firstIndex(where: { $0 == pinboardID }) else { return }
++        guard let snapshot = tabListSnapshot, let selected = selectedTabList,
++              let current = snapshot.index(of: selected) else { return }
+         let next: Int
+         switch offset {
+-        case -1: next = (current - 1 + ids.count) % ids.count
+-        case 1: next = (current + 1) % ids.count
++        case -1: next = (current - 1 + snapshot.count) % snapshot.count
++        case 1: next = (current + 1) % snapshot.count
+         default: return
+         }
+-        chooseBoard(ids[next])
++        guard let target = snapshot.target(at: next) else { return }
++        chooseList(identifier: target.identifier)
+     }
+ 
+     func perform(_ action: () throws -> Void) {
+@@ -1768,7 +1810,7 @@
+         do {
+             try store.removePinboard(id: id)
+             cancelPinboardRemoval()
+-            if state.pinboardID == id { state.chooseBoard(nil) }
++            // The native List snapshot chooses the adjacent surviving list.
+         } catch {
+             // Keep failures in the same confirmation rather than opening an alert.
+             state.pinboardDeletionError = error.localizedDescription
+--- a/replica/Sources/Pasto/UI/PanelViews.swift
++++ b/replica/Sources/Pasto/UI/PanelViews.swift
+@@ -146,21 +146,20 @@
+     }
+ 
+     private var boardTabs: [OriginalPinboardTab] {
+-        var history = boardButton(state.store.preferences.historyTitle, board: nil)
+-        history.menuProvider = { localListMenu(for: nil) }
+-        var tabs = [history]
+-        for board in state.store.pinboards.sorted(by: { $0.sortOrder < $1.sortOrder }) {
+-            var tab = boardButton(board.name, board: board)
++        state.tabListTargets.map { target in
++            let board = target.pinboardValue
++            var tab = boardButton(target.name, board: board, target: target)
+             tab.menuProvider = { localListMenu(for: board) }
+-            tab.dragString = "paste-pinboard:" + board.id.uuidString
+-            tab.onDropString = { value in
+-                guard value.hasPrefix("paste-pinboard:"), let id = UUID(uuidString: String(value.dropFirst(15))) else { return false }
+-                state.movePinboard(id: id, before: board.id)
+-                return true
+-            }
+-            tabs.append(tab)
+-        }
+-        return tabs
++            if let board {
++                tab.dragString = "paste-pinboard:" + board.id.uuidString
++                tab.onDropString = { value in
++                    guard value.hasPrefix("paste-pinboard:"), let id = UUID(uuidString: String(value.dropFirst(15))) else { return false }
++                    state.movePinboard(id: id, before: board.id)
++                    return true
++                }
++            }
++            return tab
++        }
+     }
+ 
+     // 0x100021f00: offline rename, typed deletion, then color choices.
+@@ -241,19 +240,19 @@
+     }
+ 
+     private func requestTabRename(_ id: UUID?) {
+-        state.tabRenameRequest = (key: id?.uuidString ?? "history", token: UUID())
+-    }
+-
+-    private func boardButton(_ name: String, board: Pinboard?) -> OriginalPinboardTab {
+-        let key = board?.id.uuidString ?? "history"
++        state.tabRenameRequest = (key: id?.uuidString ?? ClipboardStore.historyListIdentifier, token: UUID())
++    }
++
++    private func boardButton(_ name: String, board: Pinboard?, target: ClipboardListTarget) -> OriginalPinboardTab {
++        let key = target.identifier
+         return OriginalPinboardTab(key: key, title: name, iconColor: board.map { NSColor(boardColor($0)) },
+-                isSelected: state.pinboardID == board?.id && !state.showDeleted,
++                isSelected: state.selectedListIdentifier == target.identifier && !state.showDeleted,
+                 beginRequest: state.tabRenameRequest?.key == key ? state.tabRenameRequest?.token : nil,
+                 onSelect: {
+-                    if board?.id == nil, searching {
+-                        state.query = ""; state.chooseBoard(nil); state.searchVisible = false
++                    if target.rawType != 2, searching {
++                        state.query = ""; state.chooseList(identifier: target.identifier); state.searchVisible = false
+                         state.controller?.panel.makeFirstResponder(nil)
+-                    } else { state.chooseBoard(board?.id) }
++                    } else { state.chooseList(identifier: target.identifier) }
+                 },
+                 onEnd: { if state.tabRenameRequest?.key == key { state.tabRenameRequest = nil } },
+                 onCommit: { value in

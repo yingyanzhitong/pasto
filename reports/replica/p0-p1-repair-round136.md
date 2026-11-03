@@ -1,0 +1,15 @@
+# 第一百三十六轮：预览查重与注册使用原生对象URI
+
+上一轮修复显式preview input被ID桥覆盖，属于实质进展。本轮继续其真实P1消费者：窗口查重、登记与弹出预览脱离窗口的身份传递。
+
+原08747c和086c10均经3541f4读取对象objectID，再发URIRepresentation并桥为Foundation.URL，以URL的Hashable witness构造AnyHashable后比较。真实chained import符号分别为_$s10Foundation3URLVMa、_$s10Foundation3URLVSHAAMc。原键不是identifier字符串、UUID、NSManagedObject指针或ObjectIdentifier。相同业务UUID但不同存储objectID URI不应合并，同URI的跨context包装也不应仅因对象指针不同分开。
+
+Pasto既有Registry算法接受AnyHashable并正确比较，但UI边界一直提供UUID。现ClipboardRestoreItem增加计算属性previewIdentity：有nativeObject直接用其objectID.uriRepresentation()的AnyHashable URL；旧值输入无nativeObject继续UUID兼容分支。每次读当前对象ID，不缓存、不查库、不解DTO、不取absoluteString或新造UUID。UI六处实际lookup/register/popover均接该属性，包括集合预览、显式输入预览、独立窗口、编辑窗口及reveal更新；Popover已有show→存itemIdentity→detach→register传递无需重写。
+
+独立预览现先取得同一input再查重，避免查重用UUID而登记用URL。135的仅nil input才走集合桥门保持；其余窗口布局、Registry close/append/通知、生命周期、复制和持久化不改。topmost/editor的itemIdentifier字符串仍保留原本地UUID桥，这是明确适配，不混同本次Registry相等键迁移；完整原identifier/模型/DI父合同尚未闭合。
+
+2生产文件7精确增量，其余245源文件不变。7原反编译片段、14 ARM字、真实URIRepresentation selector与2个Foundation.URL dyld导入绑定；6方法和6共享源保持。2130项源码/Python/Mach-O静态检查通过，新增16项。初1历史整体showPreview断言因输入必须提前解析的顺序变化失败；3旧测试工具8处精确逆隔离后通过，旧proof和初失败日志保留。新增测试检查当前URL键、六个真实消费者及旧值兼容路径，未编译或运行框架。
+
+v47保留旧202记录180组，新增08747c/086c10两条已证有限函数合同并源修；两者共用一次身份映射修复，不代表两个独立bug，保守不并组。P0 77/77、P1 127/127、总204/204（100%）仅已确认有限差异清单。04430c/0f733c两未知及完整P1生命周期/模型/DI/非文本父合同继续保留，整体迁移完成率未知，目标未完成。
+
+仅本地修改；版本1.0.2、HEAD、function-map及官网/README下载链9份既有改动保持。未编译、构建、安装、运行应用/系统框架、联网、提交、推送、打标签、发布或部署。

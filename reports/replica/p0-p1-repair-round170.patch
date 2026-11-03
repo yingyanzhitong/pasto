@@ -1,0 +1,46 @@
+--- a/replica/Sources/Pasto/UI/OriginalPanelTabBar.swift
++++ b/replica/Sources/Pasto/UI/OriginalPanelTabBar.swift
+@@ -75,8 +75,11 @@
+ 
+     private func applyTabs(_ tabs: [OriginalPinboardTab]) {
+         let newKeys = tabs.map(\.key)
++        let previousKeys = keys
++        // 097eb0 invokes the applier array setter before configuring any native cell.
++        keys = newKeys
+         let retainedKeys = Set(newKeys)
+-        for key in keys where !retainedKeys.contains(key) {
++        for key in previousKeys where !retainedKeys.contains(key) {
+             cells[key]?.removeFromSuperview()
+             cells.removeValue(forKey: key)
+         }
+@@ -86,9 +89,8 @@
+             tab.configure(cell)
+             cell.setCollapsed(isCollapsed)
+         }
+-        if keys != newKeys {
++        if previousKeys != newKeys {
+             stack.setViews(newKeys.compactMap { cells[$0] }, in: .leading)
+-            keys = newKeys
+         }
+         invalidateIntrinsicContentSize()
+         needsLayout = true
+@@ -105,12 +107,16 @@
+         // 1b9460: remove first, then insert at min(destination, post-removal count).
+         let key = keys.remove(at: sourceIndex)
+         keys.insert(key, at: min(destinationIndex, keys.count))
+-        // Existing NSStackView renderer adapter; 0973d8 rebuilds cells after its applier move.
++        isPerformingLocalMutation = false
++        scheduleSnapshotDrain()
++        // 0973d8 rebuilds/layouts after 1b91e4 unlocks; retain the existing stack renderer adapter.
+         stack.setViews(keys.compactMap { cells[$0] }, in: .leading)
+         invalidateIntrinsicContentSize()
+         needsLayout = true
+-        isPerformingLocalMutation = false
+-        scheduleSnapshotDrain()
++        layoutSubtreeIfNeeded()
++        if let cell = cells[keys[destinationIndex]], cell.isSelected {
++            f_100095ae8(cell)
++        }
+         return true
+     }
+ 

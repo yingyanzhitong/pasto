@@ -1,0 +1,648 @@
+--- phase-34-before/replica/Sources/PastoCore/ClipboardPersistence.swift
++++ replica/Sources/PastoCore/ClipboardPersistence.swift
+@@ -74,7 +74,8 @@
+     private static func makeModel(includeNativeIdentity: Bool,
+                                   preserveItemKeyInHistory: Bool,
+                                   includeLists: Bool = true,
+-                                  includeOptionalTimestamp: Bool = true) -> NSManagedObjectModel {
++                                  includeOptionalTimestamp: Bool = true,
++                                  includeNativeItemData: Bool = true) -> NSManagedObjectModel {
+         let model = NSManagedObjectModel()
+         func attribute(_ name: String, _ type: NSAttributeType, optional: Bool = false) -> NSAttributeDescription {
+             let value = NSAttributeDescription()
+@@ -121,6 +122,7 @@
+                 attribute("cloudJournal", .binaryDataAttributeType, optional: true)])
+         ]
+         if includeLists { ClipboardListPersistence.addEntities(to: model, item: model.entitiesByName["Item"]!) }
++        if includeNativeItemData { ClipboardItemDataPersistence.addEntity(to: model, item: model.entitiesByName["Item"]!) }
+         return model
+     }
+ 
+@@ -132,10 +134,11 @@
+         guard !destinationModel.isConfiguration(nil, compatibleWithStoreMetadata: metadata) else { return }
+ 
+         let legacyCandidates = [
+-            makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeLists: true, includeOptionalTimestamp: false),
+-            makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeLists: false, includeOptionalTimestamp: false),
+-            makeModel(includeNativeIdentity: false, preserveItemKeyInHistory: true, includeLists: false, includeOptionalTimestamp: false),
+-            makeModel(includeNativeIdentity: false, preserveItemKeyInHistory: false, includeLists: false, includeOptionalTimestamp: false)
++            makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeNativeItemData: false),
++            makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeLists: true, includeOptionalTimestamp: false, includeNativeItemData: false),
++            makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeLists: false, includeOptionalTimestamp: false, includeNativeItemData: false),
++            makeModel(includeNativeIdentity: false, preserveItemKeyInHistory: true, includeLists: false, includeOptionalTimestamp: false, includeNativeItemData: false),
++            makeModel(includeNativeIdentity: false, preserveItemKeyInHistory: false, includeLists: false, includeOptionalTimestamp: false, includeNativeItemData: false)
+         ]
+         // The older history-retention variants can share a version hash.
+         let sourceModel = legacyCandidates.first {
+@@ -146,6 +149,11 @@
+         }
+         let mapping = try NSMappingModel.inferredMappingModel(
+             forSourceModel: sourceModel, destinationModel: destinationModel)
++        if sourceModel.entitiesByName["ItemDataEntity"] == nil {
++            for entity in mapping.entityMappings where entity.destinationEntityName == "Item" {
++                entity.entityMigrationPolicyClassName = NSStringFromClass(PastoItemDataMigrationPolicy.self)
++            }
++        }
+ 
+         let temporaryDirectory = storeURL.deletingLastPathComponent()
+             .appendingPathComponent(".pasto-store-migration-\(UUID().uuidString)", isDirectory: true)
+@@ -180,6 +188,13 @@
+         item.createdAt = createdAt; item.updatedAt = updatedAt; item.isInHistory = timestamp != nil
+         item.nativeIdentifier = object.value(forKey: "nativeIdentifier") as? String
+         item.nativeChecksum = object.value(forKey: "nativeChecksum") as? String
++        guard let data = object.value(forKey: "data") as? NSManagedObject,
++              let raw = data.value(forKey: "rawPasteboardItems") as? Data else {
++            throw CocoaError(.fileReadCorruptFile)
++        }
++        item.payloads = try ClipboardStore.projectNativePasteboardItems(raw, onto: item.payloads)
++        item.rawPreview = object.value(forKey: "rawPreview") as? Data
++        item.imagePreviewMetadata = OriginalImagePreviewMetadataCodec.decode(item.rawPreview)
+         if let list = object.value(forKey: "list") as? NSManagedObject,
+            let identifier = list.value(forKey: "identifier") as? String,
+            let owner = UUID(uuidString: identifier) {
+@@ -352,10 +367,12 @@
+     final class ManagedRepository {
+         private let context: NSManagedObjectContext
+         let lists: ClipboardListPersistence
++        let itemData: ClipboardItemDataPersistence
+ 
+         init(context: NSManagedObjectContext) {
+             self.context = context
+             lists = ClipboardListPersistence(context: context)
++            itemData = ClipboardItemDataPersistence(context: context)
+         }
+ 
+         private func fetchObjects(_ entity: String, keys: [String]) throws -> [NSManagedObject] {
+@@ -391,10 +408,12 @@
+ 
+         func update<T: Equatable>(_ values: [T], previous: [T], entity: String,
+                                          key: (T) -> String, deletingKeys: [String] = [],
++                                         updatingKeys: [String] = [],
+                                          apply: (T, T?, NSManagedObject) throws -> Void) throws {
+             let before = Dictionary(uniqueKeysWithValues: previous.map { (key($0), $0) })
+             let after = Dictionary(uniqueKeysWithValues: values.map { (key($0), $0) })
+-            let changed = values.filter { before[key($0)] != $0 }
++            let forced = Set(updatingKeys)
++            let changed = values.filter { before[key($0)] != $0 || forced.contains(key($0)) }
+             let removed = Set(before.keys).subtracting(after.keys)
+             // 0x1003646ec consumes the supplied object array in order, including repeated entries.
+             var orderedRemoved = deletingKeys.filter { removed.contains($0) }
+@@ -453,14 +472,28 @@
+     // 0x1002ff310 -> 0x100302b78: run the business operation inside performAndWait,
+     // then apply its mutations and save only after the operation has returned successfully.
+     func commit<T>(previous: StoreState?, deletingItemIDs: [UUID] = [],
++                   replacingItemDataIDs: ((T) -> [UUID])? = nil,
+                    operation: (Transaction) throws -> (state: StoreState, result: T)) throws -> (state: StoreState, result: T) {
+         let transaction = Transaction(context: context)
+         return try withExtendedLifetime(transaction) {
+             try context.performAndWait {
+                 let outcome = try operation(transaction)
+                 let state = outcome.state
++                let replacements = Set(replacingItemDataIDs?(outcome.result) ?? [])
+                 try transaction.repository.update(state.items, previous: previous?.items ?? [], entity: "Item", key: { $0.id.uuidString },
+-                           deletingKeys: deletingItemIDs.map(\.uuidString)) { item, old, object in
++                           deletingKeys: deletingItemIDs.map(\.uuidString),
++                           updatingKeys: replacements.map(\.uuidString)) { item, old, object in
++                    if replacements.contains(item.id) || old?.payloads != item.payloads || object.value(forKey: "data") == nil {
++                        let items = try ClipboardStore.originalPasteboardItems(from: item.payloads)
++                        let kind = OriginalPasteboardClassification.f_10032362c(items)
++                        if let checksum = OriginalPasteboardChecksums.f_1003216bc(items, kind: kind) {
++                            transaction.repository.itemData.replace(on: object, items: items, kind: kind, checksum: checksum,
++                                rawPreview: item.rawPreview, useBinaryPlist: state.preferences.useBinaryPlist)
++                        }
++                    }
++                    if (object.value(forKey: "rawPreview") as? Data) != item.rawPreview {
++                        object.setValue(item.rawPreview, forKey: "rawPreview")
++                    }
+                     if old.map(content) != content(item) {
+                         object.setValue(try encode(content(item)), forKey: "content")
+                     }
+--- phase-34-before/replica/Sources/PastoCore/ClipboardStore.swift
++++ replica/Sources/PastoCore/ClipboardStore.swift
+@@ -346,13 +346,15 @@
+     }
+ 
+     private func mutate<T>(historyAction: Bool = false, deletingItemIDs: [UUID] = [], restoringItemIDs: [UUID] = [],
++                           replacingItemDataIDs: ((T) -> [UUID])? = nil,
+                            refreshHistoryAfterChange: (() -> Bool)? = nil,
+                            _ change: (inout StoreState) throws -> T) throws -> T {
+         let local = current
+         try validate(local)
+         return try withLock {
+             let remote = try latestState()
+-            let (state, result) = try persistence.commit(previous: remote, deletingItemIDs: deletingItemIDs) { transaction in
++            let (state, result) = try persistence.commit(previous: remote, deletingItemIDs: deletingItemIDs,
++                                                       replacingItemDataIDs: replacingItemDataIDs) { transaction in
+                 var state = merge(local, onto: remote)
+                 let result = try change(&state)
+                 if !restoringItemIDs.isEmpty {
+@@ -598,7 +600,8 @@
+             if item.nativeIdentifier == nil { item.nativeIdentifier = item.id.uuidString }
+             item.nativeChecksum = checksum
+         }
+-        return try mutate(historyAction: recordCapture || item.isInHistory) { state in
++        return try mutate(historyAction: recordCapture || item.isInHistory,
++                          replacingItemDataIDs: { recordCapture ? [$0.id] : [] }) { state in
+             item = Self.withPreviewMetadata(item, binaryPropertyList: state.preferences.useBinaryPlist,
+                 preferQuickLookThumbnails: state.preferences.fileQuickLookThumbnailsEnabled,
+                 generateMissingContentPreview: true)
+--- phase-34-before/replica/Sources/PastoCore/Pasteboard.swift
++++ replica/Sources/PastoCore/Pasteboard.swift
+@@ -84,6 +84,37 @@
+         let items = try originalPasteboardItems(from: payloads)
+         let kind = OriginalPasteboardClassification.f_10032362c(items)
+         return OriginalPasteboardChecksums.f_1003216bc(items, kind: kind)
++    }
++
++    nonisolated static func projectNativePasteboardItems(_ raw: Data, onto previous: [String: Data]) throws -> [String: Data] {
++        let items = OriginalPasteboardDataCodec.f_10031aeec(raw)
++        var payloads = previous.filter { analysisPayloadKeys.contains($0.key) }
++        if let first = items.first {
++            for type in first.f_10037da6c() {
++                if let data = first.f_10037d810(forType: type) { payloads[type] = data }
++            }
++            if let order = previous[orderedTypesPayloadKey] {
++                payloads[orderedTypesPayloadKey] = (try? JSONDecoder().decode([String].self, from: order)) == first.f_10037da6c()
++                    ? order : try JSONEncoder().encode(first.f_10037da6c())
++            }
++        }
++        if previous[multiItemPayloadKey] != nil {
++            let before = try? originalPasteboardItems(from: previous)
++            if let before, before.count == items.count, zip(before, items).allSatisfy({ old, new in
++                let types = old.f_10037da6c()
++                return types == new.f_10037da6c() && types.allSatisfy {
++                    old.f_10037d810(forType: $0) == new.f_10037d810(forType: $0)
++                }
++            }) {
++                payloads[multiItemPayloadKey] = previous[multiItemPayloadKey]
++            } else {
++                let encoder = JSONEncoder(); encoder.outputFormatting = [.sortedKeys]
++                payloads[multiItemPayloadKey] = try encoder.encode(items)
++            }
++        } else if previous[originalItemDataPayloadKey] != nil || items.count > 1 {
++            payloads[originalItemDataPayloadKey] = raw
++        }
++        return payloads
+     }
+ 
+     public nonisolated static func pasteboardImage(from payloads: [String: Data]) -> NSImage? {
+--- /dev/null
++++ replica/Sources/PastoCore/ClipboardItemDataPersistence.swift
+@@ -0,0 +1,87 @@
++import CoreData
++import Foundation
++
++/// Called on the owning managed context's queue, including during store migration.
++final class ClipboardItemDataPersistence {
++    private let context: NSManagedObjectContext
++
++    init(context: NSManagedObjectContext) { self.context = context }
++
++    static func addEntity(to model: NSManagedObjectModel, item: NSEntityDescription) {
++        let data = NSEntityDescription()
++        data.name = "ItemDataEntity"; data.managedObjectClassName = "NSManagedObject"
++        let raw = NSAttributeDescription()
++        raw.name = "rawPasteboardItems"; raw.attributeType = .binaryDataAttributeType
++        raw.isOptional = false; raw.allowsExternalBinaryDataStorage = true
++        let owner = NSRelationshipDescription()
++        owner.name = "item"; owner.destinationEntity = item
++        owner.minCount = 0; owner.maxCount = 1; owner.isOptional = true; owner.deleteRule = .denyDeleteRule
++        let content = NSRelationshipDescription()
++        content.name = "data"; content.destinationEntity = data
++        content.minCount = 0; content.maxCount = 1; content.isOptional = false; content.deleteRule = .cascadeDeleteRule
++        content.inverseRelationship = owner; owner.inverseRelationship = content
++        data.properties = [raw, owner]
++        let kind = NSAttributeDescription()
++        kind.name = "rawType"; kind.attributeType = .integer64AttributeType; kind.defaultValue = 0
++        let preview = NSAttributeDescription()
++        preview.name = "rawPreview"; preview.attributeType = .binaryDataAttributeType; preview.isOptional = true
++        item.properties += [kind, preview, content]
++        model.entities.append(data)
++    }
++
++    // 0x100360ff8: type/checksum, delete old data, create/encode replacement,
++    // assign the inverse relation, then write the already prepared preview.
++    func replace(on object: NSManagedObject, items: [OriginalPasteboardItem], kind: OriginalPasteboardContentKind, checksum: String?,
++                 rawPreview: Data?, useBinaryPlist: Bool) {
++        object.setValue(Int64(kind.rawValue), forKey: "rawType")
++        object.setValue(checksum, forKey: "nativeChecksum")
++        if let old = object.value(forKey: "data") as? NSManagedObject {
++            context.delete(old)
++        }
++        let data = NSEntityDescription.insertNewObject(forEntityName: "ItemDataEntity", into: context)
++        data.setValue(OriginalPasteboardDataCodec.f_10031a8e8(items, useBinaryPlist: useBinaryPlist),
++                      forKey: "rawPasteboardItems")
++        object.setValue(data, forKey: "data")
++        object.setValue(rawPreview, forKey: "rawPreview")
++    }
++}
++
++/// Populate the required relationship before NSMigrationManager validates/saves
++/// its destination. The original store is replaced only after migration succeeds.
++@objc(PastoItemDataMigrationPolicy)
++final class PastoItemDataMigrationPolicy: NSEntityMigrationPolicy {
++    private var binaryPlist: Bool?
++
++    override func createRelationships(forDestination object: NSManagedObject,
++                                      in mapping: NSEntityMapping, manager: NSMigrationManager) throws {
++        try super.createRelationships(forDestination: object, in: mapping, manager: manager)
++        guard object.value(forKey: "data") == nil else { return }
++        guard let encoded = object.value(forKey: "content") as? Data else {
++            throw CocoaError(.fileReadCorruptFile)
++        }
++        let value = try PropertyListDecoder().decode(ClipboardItem.self, from: encoded)
++        if binaryPlist == nil {
++            let request = NSFetchRequest<NSManagedObject>(entityName: "State")
++            request.fetchLimit = 2
++            let roots = try manager.sourceContext.fetch(request)
++            guard roots.count <= 1 else { throw CocoaError(.fileReadCorruptFile) }
++            if let root = roots.first {
++                guard let bytes = root.value(forKey: "preferences") as? Data else {
++                    throw CocoaError(.fileReadCorruptFile)
++                }
++                binaryPlist = try PropertyListDecoder().decode(AppPreferences.self, from: bytes).useBinaryPlist
++            } else { binaryPlist = AppPreferences().useBinaryPlist }
++        }
++        let items = try ClipboardStore.originalPasteboardItems(from: value.payloads)
++        let kind = OriginalPasteboardClassification.f_10032362c(items)
++        let preview = value.rawPreview ?? OriginalImagePreviewMetadataCodec.encode(
++            value.imagePreviewMetadata, binaryPropertyList: binaryPlist!)
++        ClipboardItemDataPersistence(context: manager.destinationContext).replace(on: object, items: items, kind: kind,
++            checksum: object.value(forKey: "nativeChecksum") as? String,
++            rawPreview: preview, useBinaryPlist: binaryPlist!)
++        if let raw = value.payloads[originalItemDataPayloadKey],
++           let data = object.value(forKey: "data") as? NSManagedObject {
++            data.setValue(raw, forKey: "rawPasteboardItems")
++        }
++    }
++}
+--- phase-34-before/scripts/tests/test_capture_repository_contracts.py
++++ scripts/tests/test_capture_repository_contracts.py
+@@ -44,7 +44,7 @@
+                       "result = (state.items.count - 1, true)"]:
+             self.assertLess(add.index(token), add.rindex("if recordCapture"))
+         self.assertLess(add.rindex("if recordCapture"), add.index("return (state.items[result.index].id, result.isNew)"))
+-        self.assertIn("mutate(historyAction: recordCapture || item.isInHistory)", add)
++        self.assertIn("mutate(historyAction: recordCapture || item.isInHistory,", add)
+         capture = body(self.pasteboard, "func captureWithInsertionResult(")
+         self.assertIn("sourceApplication: sourceApplication, recordCapture: true", capture)
+ 
+--- phase-34-before/scripts/tests/test_offline_p0_contracts.py
++++ scripts/tests/test_offline_p0_contracts.py
+@@ -185,7 +185,7 @@
+         self.assertLess(native_restore.index('let timestamp = Date()'),
+                         native_restore.index('object.setValue(timestamp, forKey: "timestamp")'))
+         mutate = body(text, "private func mutate<T>(historyAction: Bool = false,")
+-        self.assertLess(mutate.index("try persistence.commit(previous: remote, deletingItemIDs: deletingItemIDs)"), mutate.index("publish(state)"))
++        self.assertLess(mutate.index("try persistence.commit(previous: remote, deletingItemIDs: deletingItemIDs,"), mutate.index("publish(state)"))
+ 
+     def test_copy_feedback_and_panel_close_follow_successful_write(self):
+         text = (ROOT / "replica/Sources/Pasto/UI/ReplicaUIController.swift").read_text()
+@@ -510,7 +510,7 @@
+         self.assertIn("try context.save()", body(commit, "if context.hasChanges"))
+         store = (CORE / "ClipboardStore.swift").read_text()
+         transaction = body(store, "private func mutate<T>(historyAction:")
+-        order = ["try persistence.commit(previous: remote, deletingItemIDs: deletingItemIDs)",
++        order = ["try persistence.commit(previous: remote, deletingItemIDs: deletingItemIDs,",
+                  "let result = try change(&state)", "try validate(state)",
+                  "return (state: state, result: result)", "diskRevision = try revision()", "publish(state)"]
+         positions = [transaction.index(token) for token in order]
+--- phase-34-before/scripts/tests/test_p0_repair_archive_runtime_name.py
++++ scripts/tests/test_p0_repair_archive_runtime_name.py
+@@ -122,7 +122,10 @@
+         self.assertIn('guard !paths.isEmpty else { return f_100322ae4(items) }',selector)
+         for p in self.proof['current_sources']:
+             if p.endswith('OriginalPasteboard.swift') or p.endswith('OriginalPasteboardArchive.swift'):continue
+-            self.assertEqual((ROOT/p).read_bytes(),(self.phase/'before'/p).read_bytes())
++            current = ROOT / p
++            if p.endswith('Pasteboard.swift'):
++                current = ROOT / '.local/p0-repair/phase-34/before' / p
++            self.assertEqual(current.read_bytes(),(self.phase/'before'/p).read_bytes())
+ 
+     def test_decode_compatibility_and_codable_brand_contracts_are_preserved(self):
+         archive=(ROOT/'replica/Sources/PastoCore/OriginalPasteboardArchive.swift').read_text()
+--- phase-34-before/scripts/tests/test_p0_repair_capture_checksum_lookup.py
++++ scripts/tests/test_p0_repair_capture_checksum_lookup.py
+@@ -67,14 +67,18 @@
+                     return previous.nativeChecksum == checksum
+                 }
+ '''
++        current=(ROOT/'.local/p0-repair/phase-34/before/replica/Sources/PastoCore/ClipboardStore.swift').read_text()
+         self.assertEqual(self.store.count(gate),1)
+-        self.assertEqual(self.store.replace(gate,'',1),checkpoint)
++        self.assertEqual(current.replace(gate,'',1),checkpoint)
+         remainder=self.lookup.replace('if recordCapture '+self.capture,'',1)
+         before=body(body(checkpoint,'func addWithInsertionResult('),'if let i = state.items.firstIndex(where:')
+         self.assertEqual(''.join(remainder.split()),''.join(before.split()))
+         for p in self.proof['current_sources']:
+             if not p.endswith('ClipboardStore.swift'):
+-                current=(ROOT/p).read_bytes()
++                current_path=ROOT/p
++                if p.endswith('ClipboardPersistence.swift') or p.endswith('Pasteboard.swift'):
++                    current_path=ROOT/'.local/p0-repair/phase-34/before'/p
++                current=current_path.read_bytes()
+                 if p.endswith('OriginalPasteboard.swift'):
+                     current=current.replace(b'@objc(_TtC9PasteCore14PasteboardItem)\n',b'',1)
+                 if p.endswith('OriginalPasteboardArchive.swift'):
+--- phase-34-before/scripts/tests/test_p0_repair_history_timestamp.py
++++ scripts/tests/test_p0_repair_history_timestamp.py
+@@ -51,6 +51,8 @@
+         old_shape = factory.replace('if includeOptionalTimestamp ' + block, '')
+         old_shape = old_shape.replace('attribute("timestamp", .dateAttributeType, optional: includeOptionalTimestamp)',
+                                       'attribute("timestamp", .dateAttributeType)')
++        native = body(old_shape, 'if includeNativeItemData')
++        old_shape = old_shape.replace('if includeNativeItemData ' + native, '')
+         compact = lambda s: re.sub(r'\s+', ' ', s).strip()
+         self.assertEqual(compact(old_shape), compact(before))
+ 
+@@ -59,7 +61,7 @@
+         for native, preserve, lists in [('true', 'true', 'true'), ('true', 'true', 'false'),
+                                        ('false', 'true', 'false'), ('false', 'false', 'false')]:
+             self.assertIn(f'makeModel(includeNativeIdentity: {native}, preserveItemKeyInHistory: {preserve}, '
+-                          f'includeLists: {lists}, includeOptionalTimestamp: false)', migration)
++                          f'includeLists: {lists}, includeOptionalTimestamp: false, includeNativeItemData: false)', migration)
+         self.assertEqual(migration.count('includeOptionalTimestamp: false'), 4)
+         self.assertLess(migration.index('try manager.migrateStore'), migration.index('try coordinator.replacePersistentStore'))
+         self.assertNotIn('destroyPersistentStore', migration)
+--- phase-34-before/scripts/tests/test_p0_repair_identity.py
++++ scripts/tests/test_p0_repair_identity.py
+@@ -139,7 +139,7 @@
+         migration = method_body(self.persistence, "private static func migrateLegacyStoreIfNeeded(at storeURL: URL,")
+         self.assertIn("metadataForPersistentStore", migration)
+         self.assertIn("destinationModel.isConfiguration(nil, compatibleWithStoreMetadata: metadata)", migration)
+-        self.assertIn("makeModel(includeNativeIdentity: false, preserveItemKeyInHistory: true, includeLists: false, includeOptionalTimestamp: false)", migration)
++        self.assertIn("makeModel(includeNativeIdentity: false, preserveItemKeyInHistory: true, includeLists: false, includeOptionalTimestamp: false, includeNativeItemData: false)", migration)
+         self.assertIn("$0.isConfiguration(nil, compatibleWithStoreMetadata: metadata)", migration)
+         self.assertIn("inferredMappingModel", migration)
+         self.assertIn("defer { try? FileManager.default.removeItem(at: temporaryDirectory) }", migration)
+@@ -157,10 +157,10 @@
+         self.assertIn("preserveItemKeyInHistory: Bool", self.persistence)
+         self.assertIn("if name == \"Item\", preserveItemKeyInHistory", factory)
+         migration = method_body(self.persistence, "private static func migrateLegacyStoreIfNeeded(at storeURL: URL,")
+-        self.assertIn("makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeLists: true, includeOptionalTimestamp: false)", migration)
+-        self.assertIn("makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeLists: false, includeOptionalTimestamp: false)", migration)
+-        self.assertIn("makeModel(includeNativeIdentity: false, preserveItemKeyInHistory: true, includeLists: false, includeOptionalTimestamp: false)", migration)
+-        self.assertIn("makeModel(includeNativeIdentity: false, preserveItemKeyInHistory: false, includeLists: false, includeOptionalTimestamp: false)", migration)
++        self.assertIn("makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeLists: true, includeOptionalTimestamp: false, includeNativeItemData: false)", migration)
++        self.assertIn("makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeLists: false, includeOptionalTimestamp: false, includeNativeItemData: false)", migration)
++        self.assertIn("makeModel(includeNativeIdentity: false, preserveItemKeyInHistory: true, includeLists: false, includeOptionalTimestamp: false, includeNativeItemData: false)", migration)
++        self.assertIn("makeModel(includeNativeIdentity: false, preserveItemKeyInHistory: false, includeLists: false, includeOptionalTimestamp: false, includeNativeItemData: false)", migration)
+         self.assertIn("let sourceModel = legacyCandidates.first", migration)
+         self.assertIn("guard let sourceModel else", migration)
+         self.assertNotIn("compatibleSourceModels.count == 1", migration)
+--- phase-34-before/scripts/tests/test_p0_repair_list_graph.py
++++ scripts/tests/test_p0_repair_list_graph.py
+@@ -100,8 +100,8 @@
+     def test_legacy_model_migration_recognizes_native_identity_and_both_earlier_variants(self):
+         migration = body(self.persistence, 'private static func migrateLegacyStoreIfNeeded(at storeURL: URL,')
+         for native, preserve in [('true', 'true'), ('false', 'true'), ('false', 'false')]:
+-            self.assertIn(f'makeModel(includeNativeIdentity: {native}, preserveItemKeyInHistory: {preserve}, includeLists: false, includeOptionalTimestamp: false)', migration)
+-        self.assertIn('makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeLists: true, includeOptionalTimestamp: false)', migration)
++            self.assertIn(f'makeModel(includeNativeIdentity: {native}, preserveItemKeyInHistory: {preserve}, includeLists: false, includeOptionalTimestamp: false, includeNativeItemData: false)', migration)
++        self.assertIn('makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeLists: true, includeOptionalTimestamp: false, includeNativeItemData: false)', migration)
+         self.assertIn('includeLists: Bool = true', self.persistence)
+         self.assertLess(migration.index('try manager.migrateStore'), migration.index('try coordinator.replacePersistentStore'))
+         self.assertNotIn('destroyPersistentStore', migration)
+--- phase-34-before/scripts/tests/test_p0_repair_native_history_restore.py
++++ scripts/tests/test_p0_repair_native_history_restore.py
+@@ -98,10 +98,12 @@
+         self.assertNotIn('Date()',setter)
+         old=body((self.phase/'before/replica/Sources/PastoCore/ClipboardPersistence.swift').read_text(),
+                  'func commit<T>(previous: StoreState?, deletingItemIDs: [UUID] = [],')
+-        reconstructed=self.commit.replace(',\n                       (object.value(forKey: "timestamp") as? Date) != timestamp','',1)
++        current_checkpoint=(ROOT/'.local/p0-repair/phase-34/before/replica/Sources/PastoCore/ClipboardPersistence.swift').read_text()
++        checkpoint_commit=body(current_checkpoint,'func commit<T>(previous: StoreState?, deletingItemIDs: [UUID] = [],')
++        reconstructed=checkpoint_commit.replace(',\n                       (object.value(forKey: "timestamp") as? Date) != timestamp','',1)
+         self.assertEqual(reconstructed,old)
+         checkpoint=(self.phase/'before/replica/Sources/PastoCore/ClipboardPersistence.swift').read_text()
+-        reconstructed=self.persistence
++        reconstructed=current_checkpoint
+         for signature in ['func prepareHistoryItems(', 'func restoreHistoryItems(']:
+             method=body(reconstructed,signature)
+             start=reconstructed.index('        '+signature)
+@@ -118,7 +120,9 @@
+         self.assertGreater(len(self.proof['retained_partial_contracts']),1)
+         before=self.phase/'before/replica/Sources/PastoCore'
+         for name in ['ClipboardListPersistence.swift','Pasteboard.swift']:
+-            self.assertEqual((ROOT/'replica/Sources/PastoCore'/name).read_bytes(),(before/name).read_bytes())
++            current=ROOT/'replica/Sources/PastoCore'/name
++            if name=='Pasteboard.swift':current=ROOT/'.local/p0-repair/phase-34/before/replica/Sources/PastoCore'/name
++            self.assertEqual(current.read_bytes(),(before/name).read_bytes())
+ 
+     def test_source_case_exposes_old_interleaving_difference(self):
+         case=self.proof['source_case'];self.assertEqual(case['kind'],'source_contract_case_not_runtime_reproduction')
+--- phase-34-before/scripts/tests/test_p0_repair_transaction_boundary.py
++++ scripts/tests/test_p0_repair_transaction_boundary.py
+@@ -35,7 +35,7 @@
+         self.assertIn('FUN_1002ff9c8',fragment)
+ 
+     def test_store_business_operation_is_produced_inside_commit_not_before_it(self):
+-        mutation=body(self.mutate,'try persistence.commit(previous: remote, deletingItemIDs: deletingItemIDs)')
++        mutation=body(self.mutate,'try persistence.commit(previous: remote, deletingItemIDs: deletingItemIDs,')
+         for token in ['merge(local, onto: remote)','try change(&state)','try validate(state)',
+                       'normalize(&state)','expireHistory(&state, capacity: capacity)','return (state: state, result: result)']:
+             self.assertIn(token,mutation)
+@@ -93,7 +93,7 @@
+     def test_all_existing_local_value_mutation_order_is_preserved(self):
+         before=(ROOT/'.local/p0-repair/phase-4/before/replica/Sources/PastoCore/ClipboardStore.swift').read_text()
+         old=body(before,'private func mutate<T>(historyAction: Bool = false,')
+-        new=body(self.mutate,'try persistence.commit(previous: remote, deletingItemIDs: deletingItemIDs)')
++        new=body(self.mutate,'try persistence.commit(previous: remote, deletingItemIDs: deletingItemIDs,')
+         order=['merge(local, onto: remote)','try change(&state)','try validate(state)',
+                'normalize(&state)','expireHistory(&state)','Self.captureCloudKit(&state, previous: remote)']
+         for source in [old,new.replace('expireHistory(&state, capacity: capacity)', 'expireHistory(&state)')]:
+--- /dev/null
++++ scripts/tests/test_p0_repair_item_data_graph.py
+@@ -0,0 +1,192 @@
++# coding: utf-8
++"""Native data graph/migration/source contracts only; no Core Data execution."""
++import hashlib,json,sys,unittest
++from pathlib import Path
++ROOT=Path(__file__).resolve().parents[2]
++sys.path[:0]=[str(ROOT/'scripts'),str(ROOT/'scripts/tests')]
++from function_ledger import source_fragments
++from test_offline_p0_contracts import body
++from test_p0_repair_checksum_routing import original_fragment
++
++class ItemDataGraphContracts(unittest.TestCase):
++    @classmethod
++    def setUpClass(cls):
++        cls.phase=ROOT/'.local/p0-repair/phase-34'
++        cls.proof=json.loads((cls.phase/'item-data-lifecycle-contract.json').read_text())
++        cls.schema=json.loads((ROOT/cls.proof['model']['schema_path']).read_text())
++        cls.graph=(ROOT/'replica/Sources/PastoCore/ClipboardItemDataPersistence.swift').read_text()
++        cls.persistence=(ROOT/'replica/Sources/PastoCore/ClipboardPersistence.swift').read_text()
++        cls.store=(ROOT/'replica/Sources/PastoCore/ClipboardStore.swift').read_text()
++        cls.pasteboard=(ROOT/'replica/Sources/PastoCore/Pasteboard.swift').read_text()
++        cls.commit=body(cls.persistence,'func commit<T>(previous: StoreState?, deletingItemIDs: [UUID] = [],')
++        cls.mutate=body(cls.store,'private func mutate<T>(historyAction: Bool = false,')
++
++    def test_original_fragments_model_resource_and_sdk_policy_declarations_are_bound(self):
++        for r in self.proof['original_fragments']:
++            self.assertEqual(source_fragments(ROOT/r['path'])[r['address']]['sha256'],r['sha256'])
++        resource=self.proof['model']
++        for p,h in [(resource['path'],resource['sha256']),(resource['schema_path'],resource['schema_sha256']),*self.proof['sdk_headers'].items()]:
++            path=Path(p)if Path(p).is_absolute()else ROOT/p
++            self.assertEqual(hashlib.sha256(path.read_bytes()).hexdigest(),h)
++
++    def test_real_model_is_required_data_with_inverse_cascade_and_deny(self):
++        props=self.schema['ItemDataEntity']['properties'];relation=self.schema['ItemEntity']['properties']['data']
++        self.assertEqual(props['rawPasteboardItems']['NSAttributeType'],1000)
++        self.assertFalse(props['rawPasteboardItems'].get('NSIsOptional',False))
++        self.assertEqual(props['rawPasteboardItems']['NSFlagsKey'],4)
++        self.assertEqual(props['item']['NSDeleteRule'],3)
++        self.assertTrue(props['item']['NSIsOptional']);self.assertEqual(props['item']['_NSInverseRelationshipName'],'data')
++        self.assertEqual(relation['NSDeleteRule'],2);self.assertFalse(relation.get('NSIsOptional',False))
++        self.assertEqual(relation['_NSDestinationEntityName'],'ItemDataEntity')
++        factory=body(self.graph,'static func addEntity(')
++        for token in ['data.name = "ItemDataEntity"','raw.isOptional = false; raw.allowsExternalBinaryDataStorage = true',
++                      'owner.isOptional = true; owner.deleteRule = .denyDeleteRule',
++                      'content.isOptional = false; content.deleteRule = .cascadeDeleteRule',
++                      'content.inverseRelationship = owner; owner.inverseRelationship = content',
++                      'item.properties += [kind, preview, content]','model.entities.append(data)']:
++            self.assertIn(token,factory)
++
++    def test_original_and_actual_replacement_share_delete_create_assign_order(self):
++        original=original_fragment((ROOT/'decompiled/Paste/part-0275.c').read_text(),'100360ff8')
++        order=['setRawType_','setChecksum_','objc_stub::data(param_1)','deleteObject_',
++               'FUN_10031b5e4()','initWithContext_','FUN_10031a8e8()','setData_','FUN_100322504(']
++        positions=[original.index(t)for t in order];self.assertEqual(positions,sorted(positions))
++        replacement=body(self.graph,'func replace(')
++        order=['forKey: "rawType"','forKey: "nativeChecksum"','object.value(forKey: "data")',
++               'context.delete(old)','insertNewObject(forEntityName: "ItemDataEntity", into: context)',
++               'OriginalPasteboardDataCodec.f_10031a8e8(','forKey: "rawPasteboardItems"',
++               'object.setValue(data, forKey: "data")','object.setValue(rawPreview, forKey: "rawPreview")']
++        positions=[replacement.index(t)for t in order];self.assertEqual(positions,sorted(positions))
++        for token in ['forKey: "title"','forKey: "device"','forKey: "list"','forKey: "nativeIdentifier"',
++                      'context.save','context.reset','context.rollback','Task','DispatchQueue']:
++            self.assertNotIn(token,replacement)
++
++    def test_capture_result_id_forces_replacement_even_for_equal_values(self):
++        add=body(self.store,'func addWithInsertionResult(')
++        self.assertIn('replacingItemDataIDs: { recordCapture ? [$0.id] : [] }',add)
++        self.assertIn('replacingItemDataIDs: replacingItemDataIDs',self.mutate)
++        self.assertIn('let replacements = Set(replacingItemDataIDs?(outcome.result) ?? [])',self.commit)
++        self.assertIn('updatingKeys: replacements.map(\\.uuidString)',self.commit)
++        update=body(self.persistence,'func update<T: Equatable>(')
++        self.assertIn('let forced = Set(updatingKeys)',update)
++        self.assertIn('let changed = values.filter { before[key($0)] != $0 || forced.contains(key($0)) }',update)
++        self.assertIn('if replacements.contains(item.id) || old?.payloads != item.payloads || object.value(forKey: "data") == nil',self.commit)
++
++    def test_native_update_is_guarded_by_checksum_and_uses_same_repository_context(self):
++        repo=body(self.persistence,'final class ManagedRepository')
++        self.assertIn('itemData = ClipboardItemDataPersistence(context: context)',repo)
++        delta=body(self.commit,'if replacements.contains(item.id)')
++        guarded=body(delta,'if let checksum = OriginalPasteboardChecksums.f_1003216bc(items, kind: kind)')
++        self.assertIn('transaction.repository.itemData.replace(on: object, items: items, kind: kind, checksum: checksum,',guarded)
++        self.assertIn('useBinaryPlist: state.preferences.useBinaryPlist',guarded)
++        self.assertNotIn('try?',delta)
++        self.assertEqual(self.commit.count('try context.performAndWait'),1)
++        self.assertLess(self.commit.index('let outcome = try operation(transaction)'),self.commit.index('itemData.replace'))
++        self.assertLess(self.commit.index('itemData.replace'),self.commit.index('try transaction.repository.lists.refreshHistoryIfNeeded()'))
++        self.assertLess(self.commit.index('try transaction.repository.lists.refreshHistoryIfNeeded()'),self.commit.index('try context.save()'))
++
++    def test_timestamp_only_restore_still_skips_payload_and_content_encoding(self):
++        restore=body(self.store,'func recordRestoredItems(')
++        self.assertNotIn('replacingItemDataIDs',restore)
++        self.assertIn('replacingItemDataIDs: ((T) -> [UUID])? = nil',self.persistence)
++        gate='replacements.contains(item.id) || old?.payloads != item.payloads || object.value(forKey: "data") == nil'
++        self.assertIn(gate,self.commit)
++        self.assertIn('if old.map(content) != content(item)',self.commit)
++        content=body(self.persistence,'private func content(')
++        self.assertIn('value.updatedAt = value.createdAt; value.isInHistory = false',content)
++
++    def test_read_consumes_native_data_and_preview_not_only_legacy_content(self):
++        read=body(self.persistence,'private func item(_ object: NSManagedObject)')
++        order=['try decode(ClipboardItem.self, object)','object.value(forKey: "data") as? NSManagedObject',
++               'data.value(forKey: "rawPasteboardItems") as? Data',
++               'ClipboardStore.projectNativePasteboardItems(raw, onto: item.payloads)',
++               'item.rawPreview = object.value(forKey: "rawPreview") as? Data',
++               'OriginalImagePreviewMetadataCodec.decode(item.rawPreview)','return item']
++        positions=[read.index(t)for t in order];self.assertEqual(positions,sorted(positions))
++        self.assertIn('throw CocoaError(.fileReadCorruptFile)',read)
++        project=body(self.pasteboard,'nonisolated static func projectNativePasteboardItems(')
++        self.assertIn('OriginalPasteboardDataCodec.f_10031aeec(raw)',project)
++        self.assertIn('first.f_10037da6c()',project)
++        self.assertIn('first.f_10037d810(forType: type)',project)
++
++    def test_projection_keeps_ordered_single_multi_raw_and_analysis_domains(self):
++        project=body(self.pasteboard,'nonisolated static func projectNativePasteboardItems(')
++        self.assertIn('previous.filter { analysisPayloadKeys.contains($0.key) }',project)
++        self.assertIn('if let order = previous[orderedTypesPayloadKey]',project)
++        self.assertIn('? order : try JSONEncoder().encode(first.f_10037da6c())',project)
++        self.assertIn('JSONEncoder().encode(first.f_10037da6c())',project)
++        self.assertIn('if previous[multiItemPayloadKey] != nil',project)
++        self.assertIn('payloads[multiItemPayloadKey] = try encoder.encode(items)',project)
++        self.assertIn('encoder.outputFormatting = [.sortedKeys]',project)
++        self.assertIn('payloads[multiItemPayloadKey] = previous[multiItemPayloadKey]',project)
++        self.assertIn('types == new.f_10037da6c() && types.allSatisfy',project)
++        self.assertIn('previous[originalItemDataPayloadKey] != nil || items.count > 1',project)
++        self.assertIn('payloads[originalItemDataPayloadKey] = raw',project)
++        for token in ['Set(','.sorted(','UserDefaults','NSPasteboard.general']:
++            self.assertNotIn(token,project)
++        # The projection helper is the only addition to the original capture file.
++        full='    nonisolated static func projectNativePasteboardItems'
++        start=self.pasteboard.index(full);content=body(self.pasteboard,'nonisolated static func projectNativePasteboardItems(')
++        end=self.pasteboard.index(content,start)+len(content)
++        self.assertEqual(self.pasteboard[:start]+self.pasteboard[end+2:],
++                         (self.phase/'before/replica/Sources/PastoCore/Pasteboard.swift').read_text())
++
++    def test_five_legacy_models_are_preserved_with_new_graph_disabled(self):
++        migration=body(self.persistence,'private static func migrateLegacyStoreIfNeeded(')
++        candidates=migration.split('let legacyCandidates = [',1)[1].split('\n        ]',1)[0]
++        self.assertEqual(candidates.count('makeModel('),5)
++        self.assertEqual(candidates.count('includeNativeItemData: false'),5)
++        self.assertEqual(candidates.count('includeOptionalTimestamp: false'),4)
++        self.assertIn('makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeNativeItemData: false)',candidates)
++        before=(self.phase/'before/replica/Sources/PastoCore/ClipboardPersistence.swift').read_text()
++        old=body(before,'private static func makeModel(');current=body(self.persistence,'private static func makeModel(')
++        addition='        if includeNativeItemData { ClipboardItemDataPersistence.addEntity(to: model, item: model.entitiesByName["Item"]!) }\n'
++        self.assertEqual(current.replace(addition,'',1),old)
++
++    def test_policy_fills_required_relation_before_migration_validates_and_replaces_source(self):
++        migration=body(self.persistence,'private static func migrateLegacyStoreIfNeeded(')
++        order=['NSMappingModel.inferredMappingModel(', 'if sourceModel.entitiesByName["ItemDataEntity"] == nil',
++               'entity.destinationEntityName == "Item"',
++               'entity.entityMigrationPolicyClassName = NSStringFromClass(PastoItemDataMigrationPolicy.self)',
++               'let manager = NSMigrationManager(', 'try manager.migrateStore(', 'try coordinator.replacePersistentStore(']
++        positions=[migration.index(t)for t in order];self.assertEqual(positions,sorted(positions))
++        self.assertNotIn('removeItem(at: storeURL)',migration);self.assertNotIn('destroyPersistentStore',migration)
++        policy=body(self.graph,'override func createRelationships(')
++        self.assertIn('try super.createRelationships(forDestination: object, in: mapping, manager: manager)',policy)
++        self.assertIn('guard object.value(forKey: "data") == nil else { return }',policy)
++        self.assertIn('ClipboardItemDataPersistence(context: manager.destinationContext).replace',policy)
++        for token in ['sourceContext.save','sourceContext.delete','replacePersistentStore','FileManager', 'context.reset']:
++            self.assertNotIn(token,policy)
++
++    def test_migration_keeps_legacy_bytes_preview_preferences_and_identity(self):
++        policy=body(self.graph,'override func createRelationships(')
++        self.assertIn('try manager.sourceContext.fetch(request)',policy)
++        self.assertIn('PropertyListDecoder().decode(AppPreferences.self, from: bytes).useBinaryPlist',policy)
++        self.assertIn('guard roots.count <= 1',policy)
++        self.assertIn('checksum: object.value(forKey: "nativeChecksum") as? String',policy)
++        self.assertIn('value.rawPreview ?? OriginalImagePreviewMetadataCodec.encode(',policy)
++        self.assertIn('if let raw = value.payloads[originalItemDataPayloadKey]',policy)
++        self.assertIn('data.setValue(raw, forKey: "rawPasteboardItems")',policy)
++        self.assertNotRegex(policy,r'setValue\([^)]*,\s*forKey: \"(?:content|key|nativeIdentifier|list)\"')
++        self.assertNotIn('.setValue(',policy.split('let value =',1)[0])
++
++    def test_parent_is_still_partial_and_network_functions_unchanged(self):
++        self.assertEqual(self.proof['newly_closed_records'],[])
++        self.assertEqual(self.proof['new_migration_markers'],0)
++        self.assertFalse(self.proof['full_function_migration_verified'])
++        self.assertIn('Preview generation still precedes native replacement',self.proof['retained_partial_contracts'][0])
++        before=(self.phase/'before/replica/Sources/PastoCore/ClipboardStore.swift').read_text()
++        reconstructed=self.store.replace('                           replacingItemDataIDs: ((T) -> [UUID])? = nil,\n','',1)
++        reconstructed=reconstructed.replace('try persistence.commit(previous: remote, deletingItemIDs: deletingItemIDs,\n'
++            '                                                       replacingItemDataIDs: replacingItemDataIDs)',
++            'try persistence.commit(previous: remote, deletingItemIDs: deletingItemIDs)',1)
++        reconstructed=reconstructed.replace('return try mutate(historyAction: recordCapture || item.isInHistory,\n'
++            '                          replacingItemDataIDs: { recordCapture ? [$0.id] : [] })',
++            'return try mutate(historyAction: recordCapture || item.isInHistory)',1)
++        self.assertEqual(reconstructed,before)
++        for signature in ['private static func cloudKitGraph(', 'private static func captureCloudKit(',
++                          'public func prepareCloudKit(', 'public func mergeCloudKit(']:
++            if signature not in before:continue
++            self.assertEqual(body(self.store,signature),body(before,signature))
++
++if __name__=='__main__':unittest.main()

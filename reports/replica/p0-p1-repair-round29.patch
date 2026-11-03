@@ -1,0 +1,492 @@
+--- phase-29-before/replica/Sources/Pasto/AppMain.swift
++++ replica/Sources/Pasto/AppMain.swift
+@@ -110,6 +110,7 @@
+             }
+             ui.panelDidShow = { [weak self] in self?.rememberPanelApplication() }
+             ui.panelWillClose = { [weak self] restore in self?.restorePanelApplication(restore: restore) }
++            ui.panelDidLoad = { [weak self] in self?.installPanelVisibilityObservation() }
+             ui.copiedItemsHandler = {
+                 ReplicaCopiedOSD.showCopied()
+                 NSApp.deactivate()
+@@ -150,7 +151,7 @@
+             hotKey.action = { [weak self] in self?.togglePanel(nil) }
+             stackHotKey.action = { [weak self] in
+                 guard let self else { return }
+-                if NSApp.isActive, self.ui.panel.isKeyWindow, self.store.preferences.stackShortcut == .stackDefault {
++                if NSApp.isActive, self.ui.isPanelKeyWindow, self.store.preferences.stackShortcut == .stackDefault {
+                     self.ui.copySelection(plainTextOnly: true)
+                 } else { self.ui.showStack() }
+             }
+@@ -171,9 +172,6 @@
+                 if self.ui.state.stackItems.isEmpty { self.ui.hideStack() }
+             }
+             configureGlobalHotKeys(force: true)
+-            panelVisibilityObservation = ui.$isPanelVisible.sink { [weak self] visible in
+-                self?.panelVisibilityChanged(visible)
+-            }
+             accessibilityObservation = accessibilityService.f_100ae5e90().sink { [weak self] _ in
+                 MainActor.assumeIsolated { self?.configureStackPasteShortcut() }
+             }
+@@ -277,6 +275,12 @@
+         updateStatus()
+     }
+ 
++    private func installPanelVisibilityObservation() {
++        panelVisibilityObservation = ui.$isPanelVisible.sink { [weak self] visible in
++            self?.panelVisibilityChanged(visible)
++        }
++    }
++
+     // 0x1000a8378 consumes _pasteStackShortcut, not the activation shortcut.
+     private func panelVisibilityChanged(_ visible: Bool) {
+         guard let shortcut = store.preferences.stackShortcut else { return }
+@@ -390,7 +394,7 @@
+     }
+ 
+     private func rememberPasteTargetBeforeOpeningPanel() {
+-        guard !ui.panel.isVisible else { return }
++        guard !ui.isPanelOrderedVisible else { return }
+         let app = NSWorkspace.shared.frontmostApplication
+         if app?.processIdentifier != ProcessInfo.processInfo.processIdentifier { targetApplication = app }
+     }
+--- phase-29-before/replica/Sources/Pasto/UI/ReplicaUIController.swift
++++ replica/Sources/Pasto/UI/ReplicaUIController.swift
+@@ -382,7 +382,7 @@
+ 
+     func select(_ item: ClipboardItem, modifiers: NSEvent.ModifierFlags = []) {
+         cancelPendingNeighborSelection()
+-        controller?.panel.makeFirstResponder(nil)
++        controller?.clearPanelFirstResponder()
+         let items = pointerSelectionItems
+         guard let index = items.firstIndex(where: { $0.id == item.id }) else { return }
+         selectIndex(index, mode: OriginalOrderedSelection.mode(modifierFlags: modifiers.rawValue), items: items)
+@@ -502,7 +502,7 @@
+         // 0x1003ba5c4: ordinary local single-item deletion skips confirmation;
+         // multiple items require it. Shared/network predicates are out of scope.
+         if ids.count < 2 { confirmItemDeletion() }
+-        else { controller?.panel.makeFirstResponder(nil) }
++        else { controller?.clearPanelFirstResponder() }
+     }
+ 
+     func cancelItemDeletion() {
+@@ -704,13 +704,16 @@
+ final class ReplicaUIController {
+     let store: ClipboardStore
+     let state: ReplicaUIState
+-    let panel: NSPanel
++    var panel: NSPanel { loadPanel() }
++    var isPanelOrderedVisible: Bool { loadedPanel?.isVisible == true }
++    var isPanelKeyWindow: Bool { loadedPanel?.isKeyWindow == true }
+     var pasteHandler: ((UUID, Bool) -> Bool)?
+     var pasteItemsHandler: (([UUID], Bool) -> Bool)?
+     var directPasteItemsHandler: (([UUID], Bool) -> Bool)?
+     var copiedItemsHandler: (() -> Void)?
+     var panelDidShow: (() -> Void)?
+     var panelWillClose: ((_ restorePreviousApplication: Bool) -> Void)?
++    var panelDidLoad: (() -> Void)?
+     @Published private(set) var isPanelVisible = false
+     var pasteboard: NSPasteboard = .general
+     var hotKeyConfigurationChanged: (() -> Void)?
+@@ -724,6 +727,8 @@
+     }
+     private let sharingPolicy: WindowSharingPolicy
+     private let panelFrameAutosaveName: String
++    private var loadedPanel: NSPanel?
++    private var mainWindowController: NSWindowController?
+     private var isPanelResizing = false
+     private var panelTransitionGeneration = 0
+     private var isPanelClosing = false
+@@ -755,10 +760,20 @@
+         panelFrameAutosaveName = "PasteReplicaMainWindow_NSWindowFrameAutosaveName.\(namespace)"
+         sharingPolicy = WindowSharingPolicy(store: store)
+         state = ReplicaUIState(store: store)
++        state.controller = self
++        preferenceObservation = store.$preferences.sink { [weak self] _ in
++            DispatchQueue.main.async { [weak self] in self?.applyAppearance() }
++        }
++        applyAppearance()
++    }
++
++    private func loadPanel() -> NSPanel {
++        if let loadedPanel { return loadedPanel }
+         let panel = ReplicaPanel(contentRect: .init(x: 0, y: 0, width: 1512, height: 332),
+                                  styleMask: [.borderless, .nonactivatingPanel],
+                                  backing: .buffered, defer: false)
+-        self.panel = panel
++        loadedPanel = panel
++        mainWindowController = NSWindowController(window: panel)
+         panel.identifier = NSUserInterfaceItemIdentifier("paste-replica-panel")
+         panel.title = "Pasto"
+         panel.isOpaque = false
+@@ -803,12 +818,10 @@
+         restorePanelFrame()
+         panel.layoutIfNeeded()
+         installPanelResizeHandle()
+-        state.controller = self
+         panel.keyHandler = { [weak self] event in self?.handleKey(event) ?? false }
+-        preferenceObservation = store.$preferences.sink { [weak self] _ in
+-            DispatchQueue.main.async { [weak self] in self?.applyAppearance() }
+-        }
+         applyAppearance()
++        panelDidLoad?()
++        return panel
+     }
+ 
+     deinit {
+@@ -824,6 +837,7 @@
+             NSApp.activate(ignoringOtherApps: true)
+             return
+         }
++        let panel = self.panel
+         guard let screen = NSScreen.main, let content = panel.contentView else { return }
+         panelTransitionGeneration += 1
+         let generation = panelTransitionGeneration
+@@ -834,7 +848,7 @@
+         cancelClosedState()
+         state.normalizeSelection()
+         installPanelDismissMonitors()
+-        panel.makeKeyAndOrderFront(nil)
++        mainWindowController?.showWindow(nil)
+         originalPanelScreen = screen
+         content.superview?.clipsToBounds = true
+         content.frame = NSRect(origin: NSPoint(x: 0, y: -panel.frame.height), size: panel.frame.size)
+@@ -874,7 +888,7 @@
+     }
+ 
+     private var canDismissPanelForInteraction: Bool {
+-        panel.isVisible && !isPanelClosing && menuTrackingDepth == 0
++        isPanelOrderedVisible && !isPanelClosing && menuTrackingDepth == 0
+             && panel.sheets.isEmpty && NSApp.modalWindow == nil
+     }
+ 
+@@ -962,6 +976,7 @@
+     }
+ 
+     func hidePanel() {
++        guard let panel = loadedPanel else { return }
+         guard panel.isVisible, let content = panel.contentView else { return }
+         guard !isPanelClosing else { return }
+         cancelPendingDeletion()
+@@ -985,7 +1000,7 @@
+         } completionHandler: { [weak self, weak content] in
+             MainActor.assumeIsolated {
+                 guard let self, let content, generation == self.panelTransitionGeneration else { return }
+-                self.panel.close()
++                self.mainWindowController?.close()
+                 self.originalPanelScreen = nil
+                 self.isPanelClosing = false
+                 self.isPanelVisible = false
+@@ -1032,9 +1047,9 @@
+         closedRestoreObservation?.cancel()
+         closedRestoreObservation = nil
+     }
+-    func togglePanel() { panel.isVisible && !isPanelClosing ? hidePanel() : showPanel() }
++    func togglePanel() { isPanelOrderedVisible && !isPanelClosing ? hidePanel() : showPanel() }
+     func focusSearch() {
+-        if !panel.isVisible || !panel.isKeyWindow || isPanelClosing { showPanel() }
++        if !isPanelOrderedVisible || !isPanelKeyWindow || isPanelClosing { showPanel() }
+         state.searchVisible = true
+         state.searchFocus = UUID()
+     }
+@@ -1199,7 +1214,7 @@
+             return
+         }
+         let anchor: NSView?
+-        if panel.isVisible, !isPanelClosing, state.visibleItems.contains(where: { $0.id == item.id }),
++        if isPanelOrderedVisible, !isPanelClosing, state.visibleItems.contains(where: { $0.id == item.id }),
+            let replicaPanel = panel as? ReplicaPanel,
+            let collection = replicaPanel.collectionFocusTarget as? ReplicaNativeCollectionHost,
+            collection.window === panel {
+@@ -1317,7 +1332,7 @@
+ 
+     // f228c78 -> f229130 / f228e1c: only a successful reveal calls the live delegate.
+     fileprivate func revealSelection(endpointID: UUID, requestedIndex: Int, animated: Bool) {
+-        guard let replicaPanel = panel as? ReplicaPanel,
++        guard let replicaPanel = loadedPanel as? ReplicaPanel,
+               let collection = replicaPanel.collectionFocusTarget as? ReplicaNativeCollectionHost,
+               collection.window === panel else { return }
+         collection.revealSelection(state: state, itemID: endpointID, animated: animated) { [weak self, weak collection] success in
+@@ -1641,12 +1656,12 @@
+         default: appearance = nil
+         }
+         NSApp.appearance = appearance
+-        panel.appearance = appearance
++        loadedPanel?.appearance = appearance
+         settingsWindow?.appearance = appearance
+         stackWindow?.appearance = appearance
+         itemWindows.values.forEach { $0.appearance = appearance }
+         previewRegistry.windows.forEach { $0.appearance = appearance }
+-        if panel.isVisible { positionPanel() }
++        if isPanelOrderedVisible { positionPanel() }
+     }
+ 
+     private func makeWindow<V: View>(title: String, size: NSSize, view: V) -> NSWindow {
+@@ -1668,9 +1683,14 @@
+     }
+ 
+     private func appliedCollectionItems() -> [ClipboardItem]? {
+-        guard let collection = (panel as? ReplicaPanel)?.collectionFocusTarget as? ReplicaNativeCollectionHost,
++        guard let panel = loadedPanel,
++              let collection = (panel as? ReplicaPanel)?.collectionFocusTarget as? ReplicaNativeCollectionHost,
+               collection.window === panel else { return nil }
+         return collection.appliedItems(for: state)
++    }
++
++    fileprivate func clearPanelFirstResponder() {
++        loadedPanel?.makeFirstResponder(nil)
+     }
+ 
+     private func appliedSelectionItems() -> [ClipboardItem] {
+--- phase-29-before/scripts/tests/test_p0_repair_delete_applied_snapshot.py
++++ scripts/tests/test_p0_repair_delete_applied_snapshot.py
+@@ -91,12 +91,15 @@
+             '// 0x100068db8 resolves selected indexes and their neighbor in the applied\n'
+             '        // collection, before a queued query result replaces that snapshot.')
+         current = body(self.ui, 'func deleteSelection()')
+-        self.assertEqual(expected, current)
++        lazy_before = (ROOT / '.local/p0-repair/phase-29/before' / UI).read_text()
++        self.assertEqual(expected, body(lazy_before, 'func deleteSelection()'))
++        self.assertEqual(expected.replace('controller?.panel.makeFirstResponder(nil)',
++                                          'controller?.clearPanelFirstResponder()'), current)
+         checkpoint = ROOT / '.local/p0-repair/phase-22/before' / UI
+         frozen_report = json.loads((ROOT / 'reports/replica/p0-p1-repair-round21.json').read_text())
+         self.assertEqual(hashlib.sha256(checkpoint.read_bytes()).hexdigest(),
+                          frozen_report['current_production_hashes'][UI])
+-        self.assertEqual(before.replace(old, current, 1), checkpoint.read_text())
++        self.assertEqual(before.replace(old, expected, 1), checkpoint.read_text())
+ 
+     def test_history_chain_reuses_existing_store_list_and_transaction_methods(self):
+         for p in self.proof['reused_current_sources']:
+--- phase-29-before/scripts/tests/test_p0_repair_navigation_classifier.py
++++ scripts/tests/test_p0_repair_navigation_classifier.py
+@@ -102,7 +102,13 @@
+         before = (self.phase / 'before/replica/Sources/Pasto/UI/ReplicaUIController.swift').read_text()
+         for signature in ['func selectAll()', 'func moveSelection(_ offset:', 'func moveSelectionToBoundary(last:',
+                           'func pasteSelection(plainTextOnly:', 'func showPreview(item:', 'private func openAppliedSelection()']:
+-            self.assertEqual(body(before, signature), body(self.ui, signature))
++            expected = body(before, signature)
++            if signature == 'func showPreview(item:':
++                lazy_before = (ROOT / '.local/p0-repair/phase-29/before/replica/Sources/Pasto/UI/ReplicaUIController.swift').read_text()
++                self.assertEqual(expected, body(lazy_before, signature))
++                expected = expected.replace('if panel.isVisible, !isPanelClosing',
++                                            'if isPanelOrderedVisible, !isPanelClosing')
++            self.assertEqual(expected, body(self.ui, signature))
+ 
+ 
+ if __name__ == '__main__':
+--- phase-29-before/scripts/tests/test_p0_repair_panel_visibility_shortcut.py
++++ scripts/tests/test_p0_repair_panel_visibility_shortcut.py
+@@ -90,7 +90,7 @@
+         close = body(self.ui, 'func hidePanel()')
+         before, completion = close.split('completionHandler:', 1)
+         self.assertNotIn('isPanelVisible = false', before)
+-        order = ['generation == self.panelTransitionGeneration', 'self.panel.close()', 'self.originalPanelScreen = nil',
++        order = ['generation == self.panelTransitionGeneration', 'self.mainWindowController?.close()', 'self.originalPanelScreen = nil',
+                  'self.isPanelClosing = false', 'self.isPanelVisible = false', 'content.superview?.clipsToBounds = true']
+         self.assertEqual([completion.index(s) for s in order], sorted(completion.index(s) for s in order))
+         original = self.native('0x100019e2c')
+@@ -112,9 +112,7 @@
+         self.assertNotIn('historyShortcut', consumer)
+ 
+     def test_real_sink_consumes_emitted_value_without_willset_storage_reread(self):
+-        start = self.app.index('panelVisibilityObservation = ui.$isPanelVisible.sink')
+-        end = self.app.index('accessibilityObservation =', start)
+-        sink = self.app[start:end]
++        sink = body(self.app, 'private func installPanelVisibilityObservation()')
+         self.assertIn('[weak self] visible in', sink)
+         self.assertIn('self?.panelVisibilityChanged(visible)', sink)
+         self.assertNotIn('ui.isPanelVisible', sink)
+@@ -124,7 +122,8 @@
+ 
+     def test_toggle_still_uses_native_visibility_and_closing_not_published_state(self):
+         toggle = body(self.ui, 'func togglePanel()')
+-        self.assertIn('panel.isVisible && !isPanelClosing ? hidePanel() : showPanel()', toggle)
++        self.assertIn('isPanelOrderedVisible && !isPanelClosing ? hidePanel() : showPanel()', toggle)
++        self.assertIn('loadedPanel?.isVisible == true', body(self.ui, 'var isPanelOrderedVisible: Bool'))
+         self.assertNotIn('isPanelVisible', toggle)
+         native = self.native('0x1000a5300')
+         self.assertIn('objc_stub::isVisible(IVar1)', native)
+--- phase-29-before/scripts/tests/test_p0_repair_selection_snapshot_consumers.py
++++ scripts/tests/test_p0_repair_selection_snapshot_consumers.py
+@@ -108,7 +108,12 @@
+         self.assertNotIn('async', space)
+         self.assertNotIn('state.selectedItems', space)
+         before = (self.phase / 'before/replica/Sources/Pasto/UI/ReplicaUIController.swift').read_text()
+-        self.assertEqual(body(before, 'func showPreview(item: ClipboardItem)'), body(self.ui, 'func showPreview(item: ClipboardItem)'))
++        expected = body(before, 'func showPreview(item: ClipboardItem)')
++        lazy_before = (ROOT / '.local/p0-repair/phase-29/before/replica/Sources/Pasto/UI/ReplicaUIController.swift').read_text()
++        self.assertEqual(expected, body(lazy_before, 'func showPreview(item: ClipboardItem)'))
++        expected = expected.replace('if panel.isVisible, !isPanelClosing',
++                                    'if isPanelOrderedVisible, !isPanelClosing')
++        self.assertEqual(expected, body(self.ui, 'func showPreview(item: ClipboardItem)'))
+ 
+     def test_hotkey_status_facade_is_consumed_and_unchanged(self):
+         for path in ['replica/Sources/PastoCore/OriginalGlobalShortcutMonitor.swift', 'replica/Sources/Pasto/GlobalHotKey.swift']:
+--- phase-29-before/scripts/tests/test_panel_lifecycle_contracts.py
++++ scripts/tests/test_panel_lifecycle_contracts.py
+@@ -72,7 +72,7 @@
+     def test_show_invalidates_close_completion_and_cancels_closed_state(self):
+         show = body(self.ui, "func showPanel()")
+         order = ["panelTransitionGeneration += 1", "let generation = panelTransitionGeneration",
+-                 "isPanelClosing = false", "cancelClosedState()", "panel.makeKeyAndOrderFront(nil)"]
++                 "isPanelClosing = false", "cancelClosedState()", "mainWindowController?.showWindow(nil)"]
+         self.assertEqual([show.index(t) for t in order], sorted(show.index(t) for t in order))
+         completion = show[show.index("completionHandler:"):]
+         self.assertLess(completion.index("generation == self.panelTransitionGeneration"),
+@@ -101,7 +101,7 @@
+     def test_stale_close_completion_cannot_close_reopened_panel(self):
+         close = body(self.ui, "func hidePanel()")
+         completion = close[close.index("completionHandler:"):]
+-        order = ["generation == self.panelTransitionGeneration", "self.panel.close()",
++        order = ["generation == self.panelTransitionGeneration", "self.mainWindowController?.close()",
+                  "self.originalPanelScreen = nil", "self.isPanelClosing = false",
+                  "content.superview?.clipsToBounds = true"]
+         self.assertEqual([completion.index(t) for t in order], sorted(completion.index(t) for t in order))
+--- /dev/null
++++ scripts/tests/test_p0_repair_lazy_panel_controller.py
+@@ -0,0 +1,145 @@
++"""First panel construction and observation: C/ARM/static production paths only."""
++import hashlib
++import json
++from pathlib import Path
++import struct
++import sys
++import unittest
++
++ROOT = Path(__file__).resolve().parents[2]
++sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'scripts/tests')]
++from function_ledger import source_fragments
++from macho_imports import _chained_bindings
++from test_offline_p0_contracts import body
++from test_p0_repair_checksum_routing import original_fragment
++
++
++class LazyPanelController(unittest.TestCase):
++    @classmethod
++    def setUpClass(cls):
++        cls.proof = json.loads((ROOT / '.local/p0-repair/phase-29/lazy-panel-contract.json').read_text())
++        cls.ui = (ROOT / 'replica/Sources/Pasto/UI/ReplicaUIController.swift').read_text()
++        cls.app = (ROOT / 'replica/Sources/Pasto/AppMain.swift').read_text()
++        cls.raw = (ROOT / cls.proof['binary']['path']).read_bytes()
++
++    def native(self, a):
++        r = next(r for r in self.proof['original_fragments'] if r['address'] == a)
++        return original_fragment((ROOT / r['path']).read_text(), a[2:])
++
++    def offset(self, a):
++        s = next(s for s in self.proof['file_backed_segments'] if s['vmaddr'] <= a < s['vmaddr'] + s['filesize'])
++        return s['fileoff'] + a - s['vmaddr']
++
++    def test_original_fragment_and_machine_data_hashes_are_bound(self):
++        self.assertEqual(hashlib.sha256(self.raw).hexdigest(), self.proof['binary']['sha256'])
++        for r in self.proof['original_fragments']:
++            self.assertEqual(source_fragments(ROOT / r['path'])[r['address']]['sha256'], r['sha256'])
++        for r in self.proof['machine_ranges']:
++            self.assertEqual(self.offset(int(r['start'], 16)), r['file_offset'])
++            raw = self.raw[r['file_offset']:r['file_offset'] + r['length']]
++            self.assertEqual(raw.hex(), r['hex'])
++            self.assertEqual(hashlib.sha256(raw).hexdigest(), r['sha256'])
++            if 'instruction_count' in r:
++                self.assertEqual(r['instruction_count'], r['length'] // 4)
++
++    def test_actual_main_controller_superclass_is_appkit_not_a_guessed_name(self):
++        ref = self.proof['superclass_proof']
++        self.assertEqual(hashlib.sha256((ROOT / ref['path']).read_bytes()).hexdigest(), ref['sha256'])
++        p = json.loads((ROOT / ref['path']).read_text())
++        bindings, _ = _chained_bindings(self.raw, p['chained_range'], p['segments'], p['dylibs'])
++        self.assertEqual(bindings[int(p['superclass_slot'], 16)], p['binding'])
++        self.assertEqual(p['binding']['symbol'], '_OBJC_CLASS_$_NSWindowController')
++        self.assertIn('AppKit.framework', p['binding']['dylib']['install_name'])
++        descriptor = 0x100000000 + (struct.unpack_from('<Q', self.raw, self.offset(int(p['class_metadata'], 16) + 64))[0] & ((1 << 36) - 1))
++        self.assertEqual(descriptor, int(p['class_descriptor'], 16))
++
++    def test_original_modal_gate_precedes_lazy_controller_and_subscription(self):
++        source = self.native('0x1000a56f4')
++        order = ['objc_stub::modalWindow(', 'objc_stub::activateIgnoringOtherApps_',
++                 'IVar6 = *(ID *)(unaff_x20 + 0xd0)', 'if (IVar6 == 0)',
++                 '::onDidShow', '::onWillClose', 'Combine::Published::_get_projectedValue',
++                 'Publisher::_sink()', 'FUN_1000192b0(']
++        self.assertEqual([source.index(s) for s in order], sorted(source.index(s) for s in order))
++
++    def test_ui_init_and_appearance_do_not_load_native_window(self):
++        init = body(self.ui[self.ui.index('final class ReplicaUIController'):], 'init(store: ClipboardStore)')
++        for forbidden in ['ReplicaPanel(', 'NSWindowController(', 'NSHostingView(', 'restorePanelFrame()', 'loadPanel()']:
++            self.assertNotIn(forbidden, init)
++        appearance = body(self.ui, 'private func applyAppearance()')
++        self.assertIn('loadedPanel?.appearance = appearance', appearance)
++        self.assertIn('if isPanelOrderedVisible { positionPanel() }', appearance)
++        self.assertNotIn('panel.appearance', appearance)
++
++    def test_first_load_caches_native_objects_before_reentrant_setup_or_hook(self):
++        load = body(self.ui, 'private func loadPanel() -> NSPanel')
++        order = ['if let loadedPanel { return loadedPanel }', 'let panel = ReplicaPanel(',
++                 'loadedPanel = panel', 'mainWindowController = NSWindowController(window: panel)',
++                 'let hosting = NSHostingView(', 'panel.keyHandler =', 'panelDidLoad?()', 'return panel']
++        self.assertEqual([load.index(s) for s in order], sorted(load.index(s) for s in order))
++        self.assertEqual(load.count('panelDidLoad?()'), 1)
++        self.assertEqual(self.ui.count('NSWindowController(window: panel)'), 1)
++
++    def test_actual_load_hook_installs_visibility_sink_without_startup_registration(self):
++        self.assertIn('ui.panelDidLoad = { [weak self] in self?.installPanelVisibilityObservation() }', self.app)
++        self.assertEqual(self.app.count('installPanelVisibilityObservation()'), 2)
++        sink = body(self.app, 'private func installPanelVisibilityObservation()')
++        self.assertIn('panelVisibilityObservation = ui.$isPanelVisible.sink', sink)
++        self.assertIn('self?.panelVisibilityChanged(visible)', sink)
++        self.assertEqual(self.app.count('panelVisibilityObservation = ui.$isPanelVisible.sink'), 1)
++
++    def test_modal_show_never_reaches_loading_and_parent_show_is_used(self):
++        show = body(self.ui, 'func showPanel()')
++        modal = body(show, 'guard NSApp.modalWindow == nil else')
++        self.assertIn('NSApp.activate(ignoringOtherApps: true)', modal)
++        self.assertIn('return', modal)
++        self.assertNotIn('self.panel', modal)
++        order = ['guard NSApp.modalWindow == nil', 'let panel = self.panel',
++                 'guard let screen', 'cancelClosedState()', 'mainWindowController?.showWindow(nil)']
++        self.assertEqual([show.index(s) for s in order], sorted(show.index(s) for s in order))
++        self.assertNotIn('panel.makeKeyAndOrderFront', show)
++        self.assertIn('"showWindow:"', self.native('0x1000192b0'))
++
++    def test_hide_before_load_is_noop_and_completion_uses_parent_close(self):
++        hide = body(self.ui, 'func hidePanel()')
++        self.assertLess(hide.index('guard let panel = loadedPanel'), hide.index('guard panel.isVisible'))
++        completion = hide.split('completionHandler:', 1)[1]
++        self.assertLess(completion.index('generation == self.panelTransitionGeneration'), completion.index('self.mainWindowController?.close()'))
++        self.assertLess(completion.index('self.mainWindowController?.close()'), completion.index('self.isPanelVisible = false'))
++        self.assertIn('"close"', self.native('0x100019e2c'))
++
++    def test_status_key_target_and_responder_queries_do_not_force_panel_loading(self):
++        for signature in ['var isPanelOrderedVisible: Bool', 'var isPanelKeyWindow: Bool',
++                          'fileprivate func clearPanelFirstResponder()', 'private func appliedCollectionItems()']:
++            source = body(self.ui, signature)
++            self.assertIn('loadedPanel', source)
++            self.assertNotIn('loadPanel()', source)
++        self.assertNotIn('ui.panel.isVisible', self.app)
++        self.assertNotIn('ui.panel.isKeyWindow', self.app)
++        self.assertIn('guard !ui.isPanelOrderedVisible else { return }', self.app)
++
++    def test_existing_native_factory_configuration_is_preserved_after_extraction(self):
++        load = body(self.ui, 'private func loadPanel() -> NSPanel')
++        for token in ['panel.isReleasedWhenClosed = false', 'panel.contentView = content',
++                      'panel.delegate = panel', 'panel.closeRequested =', 'restorePanelFrame()',
++                      'installPanelResizeHandle()', 'sharingPolicy.apply(to: panel)', 'applyAppearance()']:
++            self.assertIn(token, load)
++        self.assertIn('state.controller = self', self.ui)
++        self.assertIn('preferenceObservation = store.$preferences.sink', self.ui)
++
++    def test_startup_modal_first_show_and_reuse_cases_are_not_runtime_claims(self):
++        case = self.proof['counterexample']
++        self.assertEqual(case['original_controller_creation_counts'], [0, 0, 0, 1, 1])
++        self.assertEqual(case['original_visibility_subscription_counts'], [0, 0, 0, 1, 1])
++        self.assertEqual(case['after_controller_creation_counts'], case['original_controller_creation_counts'])
++        self.assertEqual(case['after_visibility_subscription_counts'], case['original_visibility_subscription_counts'])
++        self.assertNotEqual(case['before_controller_creation_counts'], case['original_controller_creation_counts'])
++
++    def test_original_full_state_model_and_abi_are_still_partial(self):
++        self.assertFalse(self.proof['full_function_migration_verified'])
++        self.assertTrue(any('ReplicaUIState' in s for s in self.proof['retained_partial_contracts']))
++        self.assertTrue(any('ABI' in s for s in self.proof['retained_partial_contracts']))
++        self.assertEqual(self.proof['contracts'][0]['function_id'], 'Paste:0x1000a56f4')
++
++
++if __name__ == '__main__':
++    unittest.main()

@@ -1,0 +1,1915 @@
+{
+  "kind": "current_source_reference_rebinding_only",
+  "date": "2026-11-02",
+  "records": [
+    {
+      "function_id": "Paste:0x100004478",
+      "status": "rebound_current_source",
+      "binding_kind": "current_method_or_property",
+      "reason": "原记录用斜杠描述代替symbol；当前回调现场读同input.previewIdentifier，再交registry，重绑属性及真实回调实参。",
+      "old_references": [
+        {
+          "path": "replica/Sources/PastoCore/ClipboardRestoreItem.swift",
+          "symbol": "previewIdentifier / event-time item projections",
+          "file_exists": true,
+          "literal_present": false,
+          "recorded_file_snapshot_matches": false
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalPreviewPopover.swift",
+          "symbol": "previewIdentifier / event-time item projections",
+          "file_exists": true,
+          "literal_present": false,
+          "recorded_file_snapshot_matches": true
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "previewIdentifier / event-time item projections",
+          "file_exists": true,
+          "literal_present": false,
+          "recorded_file_snapshot_matches": false
+        }
+      ],
+      "current_references": [
+        {
+          "path": "replica/Sources/PastoCore/ClipboardRestoreItem.swift",
+          "symbol": "public var previewIdentifier: String",
+          "class_or_method_scope": null,
+          "line": 43,
+          "file_sha256": "b896730653c49e72387fd53bc19e2aeea23e5cafabc94ce7fd8fe6b9cf1d7665",
+          "context_sha256": "c40b3493e15892e4b1211f096e6490ec4814ebe050b88d45d6203362f5c0d5c7",
+          "context": "\n    // Registration/publication callbacks read the current native identifier, independent of URI identity.\n    public var previewIdentifier: String {\n        if let nativeObject, let identifier = nativeObject.value(forKey: \"nativeIdentifier\") as? String {\n            return identifier\n        }\n        return id.uuidString\n    }\n\n    public var isDeleted: Bool { nativeObject?.isDeleted ?? false }\n    public var hasNativeEntity: Bool { nativeObject != nil }\n\n    public func makeDragIdentifierSource() -> any OriginalDragItemIdentifierSource {",
+          "literal_present": true
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "itemIdentifier: input.previewIdentifier",
+          "class_or_method_scope": "private func presentEditingPreview(",
+          "line": 1628,
+          "file_sha256": "f99aa58ecd391201df4bc79edcdb70e79dcb5c14b012e5dc2479e0f8757c6d0d",
+          "context_sha256": "7e3bb3a7fcdf556c2e880dbe525b6e591d31153a2845dcf5946ffedef12b22e0",
+          "context": "        preview.onEndEditing = { window.close() }\n        preview.onEditingStateChanged = { editing in\n            registry.f_10008727c(isEditing: editing, itemIdentifier: input.previewIdentifier)\n        }\n        preview.f_10007be8c()\n        let controller = NSViewController()\n        controller.view = preview\n        transition.present(controller)\n        (preview.itemContentView as? OriginalPreviewEditableContent)?.focusPreviewEditing()\n    }\n\n    // 0x1000042b4: the registry already includes the newly presented window.\n    private func positionEditingPreview(_ window: NSWindow) {",
+          "literal_present": true
+        }
+      ],
+      "implementation_complete": false,
+      "semantic_equivalence_reassessed": false,
+      "repair_needed": null
+    },
+    {
+      "function_id": "Paste:0x100006db8",
+      "status": "rebound_current_source",
+      "binding_kind": "current_method_or_property",
+      "reason": "筛选存在性已移动到ReplicaFilterBrowserModel，不再位于UIState。",
+      "old_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "func hasSearchFilter(",
+          "file_exists": true,
+          "literal_present": false,
+          "recorded_file_snapshot_matches": false
+        }
+      ],
+      "current_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/FilterBrowser.swift",
+          "symbol": "func hasSearchFilter(",
+          "class_or_method_scope": null,
+          "line": 94,
+          "file_sha256": "d912970a1adc294d0c039db34374de8497bf321bf4ce2d622634e53e2dd59b37",
+          "context_sha256": "44017da6524504d05f7fed976b942dc3f2a43981f4a51aa068d213bf0b1a040f",
+          "context": "    }\n\n    func hasSearchFilter(_ selection: ReplicaSearchFilterChip.Selection) -> Bool {\n        query.contains(selection.queryNode)\n    }\n\n    // 006e80 updates the model query before delivering it to the originating SearchBar.\n    func toggleSearchFilter(_ selection: ReplicaSearchFilterChip.Selection) {\n        let filter = selection.queryNode\n        var nodes = query\n        if nodes.contains(filter) {\n            nodes.removeAll { $0 == filter }\n        } else {",
+          "literal_present": true
+        }
+      ],
+      "implementation_complete": false,
+      "semantic_equivalence_reassessed": false,
+      "repair_needed": null
+    },
+    {
+      "function_id": "Paste:0x1000217a8",
+      "status": "rebound_current_source",
+      "binding_kind": "current_method_or_property",
+      "reason": "旧forName描述换成publisher(for:)真实DidCreate闭包；不将采集命中通知当create。",
+      "old_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "forName: ClipboardMonitor.didCreateItemNotification",
+          "file_exists": true,
+          "literal_present": false,
+          "recorded_file_snapshot_matches": false
+        }
+      ],
+      "current_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "private func beginClosedState()",
+          "class_or_method_scope": null,
+          "line": 1224,
+          "file_sha256": "f99aa58ecd391201df4bc79edcdb70e79dcb5c14b012e5dc2479e0f8757c6d0d",
+          "context_sha256": "201bb545fb1cdacb97e9cb79324b876daad24418edc3e2ebe36531e3444921ab",
+          "context": "    }\n\n    private func beginClosedState() {\n        cancelClosedState()\n        closedCreateObservation = NotificationCenter.default.publisher(\n            for: ClipboardMonitor.didCreateItemNotification, object: nil).sink { [weak self] _ in\n                MainActor.assumeIsolated {\n                    guard let self else { return }\n                    self.state.chooseBoard(nil)\n                    self.closedSearchTimer?.invalidate()\n                    self.closedSearchTimer = nil\n                }\n            }",
+          "literal_present": true
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "for: ClipboardMonitor.didCreateItemNotification",
+          "class_or_method_scope": null,
+          "line": 1227,
+          "file_sha256": "f99aa58ecd391201df4bc79edcdb70e79dcb5c14b012e5dc2479e0f8757c6d0d",
+          "context_sha256": "44f2d76b01f2caacbdb26d292eb83f71ae5e58cfc1b5571ad5a0d871688585c6",
+          "context": "        cancelClosedState()\n        closedCreateObservation = NotificationCenter.default.publisher(\n            for: ClipboardMonitor.didCreateItemNotification, object: nil).sink { [weak self] _ in\n                MainActor.assumeIsolated {\n                    guard let self else { return }\n                    self.state.chooseBoard(nil)\n                    self.closedSearchTimer?.invalidate()\n                    self.closedSearchTimer = nil\n                }\n            }\n        closedRestoreObservation = NotificationCenter.default.publisher(\n            for: ClipboardStore.didRestoreItemNotification, object: nil).sink { [weak self] _ in\n            MainActor.assumeIsolated {",
+          "literal_present": true
+        }
+      ],
+      "implementation_complete": false,
+      "semantic_equivalence_reassessed": false,
+      "repair_needed": null
+    },
+    {
+      "function_id": "Paste:0x100021a34",
+      "status": "rebound_current_source",
+      "binding_kind": "current_method_or_property",
+      "reason": "恢复通知现在是NotificationCenter.publisher(for:)闭包，保留原记录声明的局部合同。",
+      "old_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "closedRestoreObservation = store.didRestoreItem.sink",
+          "file_exists": true,
+          "literal_present": false,
+          "recorded_file_snapshot_matches": false
+        }
+      ],
+      "current_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "for: ClipboardStore.didRestoreItemNotification",
+          "class_or_method_scope": null,
+          "line": 1236,
+          "file_sha256": "f99aa58ecd391201df4bc79edcdb70e79dcb5c14b012e5dc2479e0f8757c6d0d",
+          "context_sha256": "72b707e8a8f06926683267993f0b8f3edbd4566420cdec5e69bd2f66488fb576",
+          "context": "            }\n        closedRestoreObservation = NotificationCenter.default.publisher(\n            for: ClipboardStore.didRestoreItemNotification, object: nil).sink { [weak self] _ in\n            MainActor.assumeIsolated {\n                guard let self, self.state.isCollectionSearchQueryEmpty, self.state.pinboardID == nil else { return }\n                self.state.chooseBoard(nil)\n                self.closedSearchTimer?.invalidate()\n                self.closedSearchTimer = nil\n            }\n        }\n        closedSearchTimer = Timer.scheduledTimer(withTimeInterval: 10, repeats: false) { [weak self] _ in\n            MainActor.assumeIsolated {\n                guard let self, !self.state.isCollectionSearchQueryEmpty else { return }",
+          "literal_present": true
+        }
+      ],
+      "implementation_complete": false,
+      "semantic_equivalence_reassessed": false,
+      "repair_needed": null
+    },
+    {
+      "function_id": "Paste:0x1000298b0",
+      "status": "rebound_current_source",
+      "binding_kind": "current_method_or_property",
+      "reason": "描述性多方法引用拆为同地址的当前方法，原输入scope不变。",
+      "old_references": [
+        {
+          "path": "replica/Sources/PastoCore/ClipboardRestoreItem.swift",
+          "symbol": "previewIdentifier / event-time item projections",
+          "file_exists": true,
+          "literal_present": false,
+          "recorded_file_snapshot_matches": false
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalPreviewPopover.swift",
+          "symbol": "previewIdentifier / event-time item projections",
+          "file_exists": true,
+          "literal_present": false,
+          "recorded_file_snapshot_matches": true
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "previewIdentifier / event-time item projections",
+          "file_exists": true,
+          "literal_present": false,
+          "recorded_file_snapshot_matches": false
+        }
+      ],
+      "current_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPreviewPopover.swift",
+          "symbol": "public func f_1000298b0(",
+          "class_or_method_scope": null,
+          "line": 109,
+          "file_sha256": "8617fae44630789d2aff97e65f2aa2c67adc2551c54d6d21d6021ea1c121994e",
+          "context_sha256": "7c9f4f4904cf184fc1ed4af71e074793b15eb317db8ff7a4f9c8fd4acd073eda",
+          "context": "\n    /// Paste 0x1000298b0: an existing detached preview prevents a second edit transition.\n    public func f_1000298b0(itemIdentity: AnyHashable) {\n        guard registry.f_10008747c(itemIdentity: itemIdentity) == nil else { return }\n        detachForEditing()\n    }\n\n    /// Paste 0x100029a80 after the local item-view adapter resolves the content dependency.\n    public func f_100029a80(beginEditing: Bool, keepOpenAfterEditing: Bool) -> OriginalPreviewWindow? {\n        guard let item else { return nil }\n        let window = OriginalPreviewWindow()\n        guard let preview = makeContentView?(item) else { return nil }\n        preview.onEndEditing = {",
+          "literal_present": true
+        }
+      ],
+      "implementation_complete": false,
+      "semantic_equivalence_reassessed": false,
+      "repair_needed": null
+    },
+    {
+      "function_id": "Paste:0x100029a80",
+      "status": "rebound_current_source",
+      "binding_kind": "current_method_or_property",
+      "reason": "描述性多方法引用拆为同地址的当前方法，原输入scope不变。",
+      "old_references": [
+        {
+          "path": "replica/Sources/PastoCore/ClipboardRestoreItem.swift",
+          "symbol": "previewIdentifier / event-time item projections",
+          "file_exists": true,
+          "literal_present": false,
+          "recorded_file_snapshot_matches": false
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalPreviewPopover.swift",
+          "symbol": "previewIdentifier / event-time item projections",
+          "file_exists": true,
+          "literal_present": false,
+          "recorded_file_snapshot_matches": true
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "previewIdentifier / event-time item projections",
+          "file_exists": true,
+          "literal_present": false,
+          "recorded_file_snapshot_matches": false
+        }
+      ],
+      "current_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPreviewPopover.swift",
+          "symbol": "public func f_100029a80(",
+          "class_or_method_scope": null,
+          "line": 115,
+          "file_sha256": "8617fae44630789d2aff97e65f2aa2c67adc2551c54d6d21d6021ea1c121994e",
+          "context_sha256": "185eccf3f65971bc875dd99be9fc0e76237f645428de6897159ba3f9175288f6",
+          "context": "\n    /// Paste 0x100029a80 after the local item-view adapter resolves the content dependency.\n    public func f_100029a80(beginEditing: Bool, keepOpenAfterEditing: Bool) -> OriginalPreviewWindow? {\n        guard let item else { return nil }\n        let window = OriginalPreviewWindow()\n        guard let preview = makeContentView?(item) else { return nil }\n        preview.onEndEditing = {\n            if !keepOpenAfterEditing { window.close() }\n        }\n        let manager = registry\n        preview.onEditingStateChanged = { editing in\n            manager.f_10008727c(isEditing: editing, itemIdentifier: item.previewIdentifier)\n        }",
+          "literal_present": true
+        }
+      ],
+      "implementation_complete": false,
+      "semantic_equivalence_reassessed": false,
+      "repair_needed": null
+    },
+    {
+      "function_id": "Paste:0x100029e6c",
+      "status": "rebound_current_source",
+      "binding_kind": "current_method_or_property",
+      "reason": "描述性多方法引用拆为同地址的当前方法，原输入scope不变。",
+      "old_references": [
+        {
+          "path": "replica/Sources/PastoCore/ClipboardRestoreItem.swift",
+          "symbol": "previewIdentifier / event-time item projections",
+          "file_exists": true,
+          "literal_present": false,
+          "recorded_file_snapshot_matches": false
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalPreviewPopover.swift",
+          "symbol": "previewIdentifier / event-time item projections",
+          "file_exists": true,
+          "literal_present": false,
+          "recorded_file_snapshot_matches": true
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "previewIdentifier / event-time item projections",
+          "file_exists": true,
+          "literal_present": false,
+          "recorded_file_snapshot_matches": false
+        }
+      ],
+      "current_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPreviewPopover.swift",
+          "symbol": "public func f_100029e6c(",
+          "class_or_method_scope": null,
+          "line": 70,
+          "file_sha256": "8617fae44630789d2aff97e65f2aa2c67adc2551c54d6d21d6021ea1c121994e",
+          "context_sha256": "6b43c329c8c218eb4dc0b8cc22e0924456a9b264175473bd52db4a8aa521f50f",
+          "context": "    /// Paste 0x100029e6c: mark displayed, apply sharing policy, publish changed item identity.\n    @discardableResult\n    public func f_100029e6c() -> Int {\n        isDisplayed = true\n        f_100029f60()\n        if let item {\n            let itemIdentifier = item.previewIdentifier\n            self.itemIdentifier = itemIdentifier\n            if registry.popoverItemIdentifier != itemIdentifier {\n                registry.popoverItemIdentifier = itemIdentifier\n                registry.f_100087864()\n            }\n        }",
+          "literal_present": true
+        }
+      ],
+      "implementation_complete": false,
+      "semantic_equivalence_reassessed": false,
+      "repair_needed": null
+    },
+    {
+      "function_id": "Paste:0x100075e3c",
+      "status": "rebound_current_source",
+      "binding_kind": "current_method_or_property",
+      "reason": "真实reveal完成回调从当前已应用集合取index对应cell，不是旧无symbol引用。",
+      "old_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaNativeCardCollection.swift",
+          "symbol": null,
+          "file_exists": true,
+          "literal_present": false,
+          "recorded_file_snapshot_matches": false
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": null,
+          "file_exists": true,
+          "literal_present": false,
+          "recorded_file_snapshot_matches": false
+        }
+      ],
+      "current_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "private func selectionDidReveal(",
+          "class_or_method_scope": null,
+          "line": 1673,
+          "file_sha256": "f99aa58ecd391201df4bc79edcdb70e79dcb5c14b012e5dc2479e0f8757c6d0d",
+          "context_sha256": "e3174063b2ab28f78cc1a4ac2e8d3ad975d559dea3073d724ef80fd50e75161e",
+          "context": "\n    // f075e3c resolves the requested index after completion, not the revealed endpoint.\n    private func selectionDidReveal(requestedIndex: Int, collection: ReplicaNativeCollectionHost) {\n        guard let items = collection.appliedItems(for: state), items.indices.contains(requestedIndex),\n              let input = items[requestedIndex].restoreItem(),\n              let anchor = collection.visibleSelectionAnchor(at: requestedIndex,\n                  itemID: items[requestedIndex].id) else {\n            NSSound.beep()\n            return\n        }\n        let item = items[requestedIndex]\n        if let popover = previewPopover, popover.isDisplayed {\n            popover.show(itemIdentity: input.previewIdentity, itemIdentifier: input.previewIdentifier, input: input,",
+          "literal_present": true
+        }
+      ],
+      "implementation_complete": false,
+      "semantic_equivalence_reassessed": false,
+      "repair_needed": null
+    },
+    {
+      "function_id": "Paste:0x10007eac0",
+      "status": "rebound_current_source",
+      "binding_kind": "current_native_projection_adapter",
+      "reason": "显示投影已从ClipboardItem数组改为原生collection entry；仅定位当前搜索/列表选择分支，不据此宣称Combine对象生命周期等价。",
+      "old_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "var visibleItems: [ClipboardItem]",
+          "file_exists": true,
+          "literal_present": false,
+          "recorded_file_snapshot_matches": false
+        }
+      ],
+      "current_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "var visibleItems: [ClipboardCollectionEntry]",
+          "class_or_method_scope": null,
+          "line": 267,
+          "file_sha256": "f99aa58ecd391201df4bc79edcdb70e79dcb5c14b012e5dc2479e0f8757c6d0d",
+          "context_sha256": "e120db95d9f22741e4fef8b0aa6b2c93450d102f26ee36fb22955982967435e5",
+          "context": "    }\n\n    var visibleItems: [ClipboardCollectionEntry] {\n        if isCollectionSearchQueryEmpty {\n            if showDeleted {\n                return store.search(query: \"\", pinboardID: pinboardID, includeDeleted: true)\n                    .filter(\\.isDeleted).map { ClipboardCollectionEntry(item: $0) }\n            }\n            let snapshot = listCollection?.value\n            let native = collectionEntries(identifiers: snapshot?.identifiers ?? [],\n                references: snapshot?.itemReferences ?? [:])\n            if let pinboardID {\n                // Preserve old local archives with secondary memberships outside the native single owner.",
+          "literal_present": true
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "var isCollectionSearchQueryEmpty: Bool",
+          "class_or_method_scope": null,
+          "line": 201,
+          "file_sha256": "f99aa58ecd391201df4bc79edcdb70e79dcb5c14b012e5dc2479e0f8757c6d0d",
+          "context_sha256": "85cceb01ac307c82172d5524efe84e33772d7fe4b7fbf010acf054871d907578",
+          "context": "    var isSearchQueryEmpty: Bool { OriginalSearchQuery.f_1002ddcf0(searchQueryNodes) }\n    var searchInputPublisher: AnyPublisher<[OriginalSearchQueryNode], Never> { searchQueryChanges.eraseToAnyPublisher() }\n    var isCollectionSearchQueryEmpty: Bool { OriginalSearchQuery.f_1002ddcf0(collectionSearchQueryNodes) }\n    var hasPendingDeletion: Bool { pendingPinboardDeletion != nil || pendingItemDeletion != nil }\n\n    private func searchInputChanged() {\n        searchQueryChanges.send(searchQueryNodes)\n    }\n\n    private func installSearchQueryDelivery() {\n        // 0x10007e194: query delivery and collection routing have separate subscriptions.\n        searchQueryObservation = searchQueryChanges\n            .debounce(for: .milliseconds(120), scheduler: RunLoop.main)",
+          "literal_present": true
+        }
+      ],
+      "implementation_complete": false,
+      "semantic_equivalence_reassessed": false,
+      "repair_needed": null
+    },
+    {
+      "function_id": "Paste:0x10009e510",
+      "status": "rebound_current_source",
+      "binding_kind": "current_method_or_property",
+      "reason": "分组菜单目标现在由原生List集合提供，不再由旧board UUID回查。",
+      "old_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/PanelViews.swift",
+          "symbol": "let target = state.store.pinboardAssignmentTarget(id: board.id)",
+          "file_exists": true,
+          "literal_present": false,
+          "recorded_file_snapshot_matches": false
+        }
+      ],
+      "current_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "func pinboardMenuTargets()",
+          "class_or_method_scope": null,
+          "line": 758,
+          "file_sha256": "f99aa58ecd391201df4bc79edcdb70e79dcb5c14b012e5dc2479e0f8757c6d0d",
+          "context_sha256": "43fe83b919bc6b0897c496e263bf02701f67b675427f58a9ac3b4130e56352e7",
+          "context": "\n    // 076318/09e510: read the cached native list collection when the menu is constructed.\n    func pinboardMenuTargets() -> [ClipboardPinboardTarget] {\n        pinboardMenuCollection.value\n    }\n\n    func dropItems(identifiers: [String], to target: ClipboardListTarget) {\n        // 03c3b0's local write error branch only consumes the error; no additional system alert.\n        try? store.dropItems(identifiers: identifiers, to: target)\n    }\n\n    func assignItems(_ items: [ClipboardRestoreItem], to target: ClipboardPinboardTarget) {\n        perform { try store.assign(items: items, to: target) }",
+          "literal_present": true
+        },
+        {
+          "path": "replica/Sources/PastoCore/ClipboardSearchCollection.swift",
+          "symbol": "public var value: [ClipboardPinboardTarget]",
+          "class_or_method_scope": null,
+          "line": 218,
+          "file_sha256": "7b19e56ece8ad6f03971a5d8c09058994a65c64d9cbab06a6aca2574e7f9e65c",
+          "context_sha256": "160a80c8e60a32a77cd1f3d8602723ad2e372888d299a32365aca519d5ca96cb",
+          "context": "\n    // 1b85f0 maps the current ordered IDs using the collection's optional native lookup.\n    public var value: [ClipboardPinboardTarget] {\n        subject.value.identifiers.compactMap { objectID in\n            guard let object = (try? context.existingObject(with: objectID)) as? PastoListEntity,\n                  let identifier = object.value(forKey: \"identifier\") as? String,\n                  let id = UUID(uuidString: identifier) else { return nil }\n            return ClipboardPinboardTarget(id: id, object: object)\n        }\n    }\n\n    // 366344: a clean context can use an ID-only fetch after checking FRC count and endpoints.\n    private func initialObjectIDs() -> [NSManagedObjectID] {",
+          "literal_present": true
+        }
+      ],
+      "implementation_complete": false,
+      "semantic_equivalence_reassessed": false,
+      "repair_needed": null
+    },
+    {
+      "function_id": "Paste:0x10009f240",
+      "status": "rebound_current_source",
+      "binding_kind": "current_method_or_property",
+      "reason": "菜单Binding和事件捕获强目标实体；定位当前原生目标输入交付。",
+      "old_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/PanelViews.swift",
+          "symbol": "Button(board.name) { state.assignItems(groupItems, to: board.id) }",
+          "file_exists": true,
+          "literal_present": false,
+          "recorded_file_snapshot_matches": false
+        }
+      ],
+      "current_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/PanelViews.swift",
+          "symbol": "private func pinboardMenuBindings(",
+          "class_or_method_scope": null,
+          "line": 607,
+          "file_sha256": "4d12898b461515d2cea5c173240eb1f1a9db287ff9b9158146f54aedc3928f50",
+          "context_sha256": "f7aaadc6f11228a0b998f3130169f9133ac2f360fb9c498df8ac0f12453365cb",
+          "context": "\n    // 09e8a8 snapshots off/on/mixed; the single writable source keeps each click one batch action.\n    private func pinboardMenuBindings(for target: ClipboardPinboardTarget,\n                                      items: [ClipboardRestoreItem]) -> [Binding<Bool>] {\n        let matched = items.filter { input in\n            input.isAssigned(to: target)\n                ?? (state.store.pinboardOwner(for: input.resolvedItem())?.id == target.id)\n        }.count\n        let assignment = Binding<Bool>(get: { matched == items.count },\n            set: { _ in state.assignItems(items, to: target) })\n        if matched > 0, matched < items.count { return [assignment, .constant(true)] }\n        return [assignment]\n    }",
+          "literal_present": true
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "func assignItems(_ items: [ClipboardRestoreItem], to target: ClipboardPinboardTarget)",
+          "class_or_method_scope": null,
+          "line": 767,
+          "file_sha256": "f99aa58ecd391201df4bc79edcdb70e79dcb5c14b012e5dc2479e0f8757c6d0d",
+          "context_sha256": "55dbba75ab4628e12f92eb65f46da9e3a55c77412f81005e8d172792ad969171",
+          "context": "    }\n\n    func assignItems(_ items: [ClipboardRestoreItem], to target: ClipboardPinboardTarget) {\n        perform { try store.assign(items: items, to: target) }\n    }\n\n    // 3ba2bc: history context, nonempty input, and at least one current type2 owner.\n    // Pasto's local unshared groups satisfy the original writable-owner predicate.\n    func canUnassignItems(_ items: [ClipboardRestoreItem]) -> Bool {\n        let hasPinboardOwner = items.contains { $0.hasNativePinboardOwner() ?? !$0.resolvedItem().pinboardIDs.isEmpty }\n        return pinboardID == nil && !showDeleted && !items.isEmpty && hasPinboardOwner\n    }\n",
+          "literal_present": true
+        }
+      ],
+      "implementation_complete": false,
+      "semantic_equivalence_reassessed": false,
+      "repair_needed": null
+    },
+    {
+      "function_id": "Paste:0x1000a0b2c",
+      "status": "rebound_current_source",
+      "binding_kind": "current_method_or_property",
+      "reason": "旧类名/属性斜杠描述改为专用Stack表视图真实override。",
+      "old_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalStackTableController.swift",
+          "symbol": "OriginalStackTableView.mouseDownCanMoveWindow / OriginalStackTableController.init()",
+          "file_exists": true,
+          "literal_present": false,
+          "recorded_file_snapshot_matches": true
+        }
+      ],
+      "current_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalStackTableController.swift",
+          "symbol": "override var mouseDownCanMoveWindow: Bool",
+          "class_or_method_scope": null,
+          "line": 6,
+          "file_sha256": "cf0da7926b589a254f17ecb40d513d25903aa3fe40aa64a112b03c04e33bd2f8",
+          "context_sha256": "3b50b4c0d672b487f616a3d57fc6bd56e114391667b9853d9aa73f22914e7aab",
+          "context": "private final class OriginalStackTableView: NSTableView {\n    // 0a0b2c: the Stack table permits window dragging independently of row selection.\n    override var mouseDownCanMoveWindow: Bool { true }\n}\n\n/// Recovered Stack table behavior. Presentation of an individual replica item is supplied by the UI.\n@MainActor public final class OriginalStackTableController: NSObject, NSTableViewDataSource, NSTableViewDelegate {\n    public let tableView: NSTableView\n    public let scrollView: NSScrollView\n    private var snippetInputs: [ClipboardRestoreItem] = [] { didSet { snippetsRevision &+= 1 } }\n    // Value-only clients retain their existing API; the production table uses native inputs.\n    public var snippets: [ClipboardItem] {\n        get { snippetInputs.map { $0.resolvedItem() } }",
+          "literal_present": true
+        }
+      ],
+      "implementation_complete": false,
+      "semantic_equivalence_reassessed": false,
+      "repair_needed": null
+    },
+    {
+      "function_id": "Paste:0x1000a8378",
+      "status": "rebound_current_source",
+      "binding_kind": "current_method_or_property",
+      "reason": "Stack快捷键注册逻辑在AppMain消费可见性Bool；原UIController无symbol字段已过时。",
+      "old_references": [
+        {
+          "path": "replica/Sources/Pasto/AppMain.swift",
+          "symbol": null,
+          "file_exists": true,
+          "literal_present": false,
+          "recorded_file_snapshot_matches": false
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": null,
+          "file_exists": true,
+          "literal_present": false,
+          "recorded_file_snapshot_matches": false
+        }
+      ],
+      "current_references": [
+        {
+          "path": "replica/Sources/Pasto/AppMain.swift",
+          "symbol": "private func panelVisibilityChanged(",
+          "class_or_method_scope": null,
+          "line": 289,
+          "file_sha256": "8c7e98930275a77cf912b96ef6814caa263eca2913f38c53e702116dce6402f2",
+          "context_sha256": "09e57447aaed5ec5e32079a6c2ea7d0dd7db043a257f8561824274cf510f08aa",
+          "context": "\n    // 0x1000a8378 consumes _pasteStackShortcut, not the activation shortcut.\n    private func panelVisibilityChanged(_ visible: Bool) {\n        guard let shortcut = store.preferences.stackShortcut else { return }\n        if visible {\n            stackHotKey.unregister()\n        } else if !isRecordingHotKey, !arguments.contains(\"--no-global-hotkey\") {\n            stackHotKeyStatus = shortcut.isValidGlobal\n                ? stackHotKey.register(keyCode: shortcut.keyCode, modifiers: shortcut.modifiers, identifier: 2)\n                : OSStatus(-50)\n        }\n        updateStatus()\n    }",
+          "literal_present": true
+        }
+      ],
+      "implementation_complete": false,
+      "semantic_equivalence_reassessed": false,
+      "repair_needed": null
+    },
+    {
+      "function_id": "Paste:0x1000a86c0",
+      "status": "rebound_current_source",
+      "binding_kind": "current_method_or_property",
+      "reason": "绑定实际关闭/清owner/清content/释放会话队列路径，不再使用多个属性拼接描述。",
+      "old_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "hideStack() / ReplicaUIState.stackIDs / init(store:)",
+          "file_exists": true,
+          "literal_present": false,
+          "recorded_file_snapshot_matches": false
+        }
+      ],
+      "current_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "func hideStack()",
+          "class_or_method_scope": null,
+          "line": 1311,
+          "file_sha256": "f99aa58ecd391201df4bc79edcdb70e79dcb5c14b012e5dc2479e0f8757c6d0d",
+          "context_sha256": "de46ef6c3746b4515c009b21598db54b789a71375b0cd46e8c04b6587b8fd2a5",
+          "context": "    }\n\n    func hideStack() {\n        guard let closingController = stackWindowController else { return }\n        let closingWindow = stackWindow\n        closingController.close()\n        // 0a86c0/2182a4: release the coordinator owner, then the presented content.\n        stackWindowController = nil\n        closingController.contentViewController = nil\n        closingWindow?.contentView = nil\n        stackWindow = nil\n        stackTableController = nil\n        if let stackCaptureObserver { NotificationCenter.default.removeObserver(stackCaptureObserver) }",
+          "literal_present": true
+        }
+      ],
+      "implementation_complete": false,
+      "semantic_equivalence_reassessed": false,
+      "repair_needed": null
+    },
+    {
+      "function_id": "Paste:0x100208b84",
+      "status": "rebound_current_source",
+      "binding_kind": "shared_adapter_for_native_wrapper",
+      "reason": "该原生上下文包装层在当前实现内联到通用animation group及其context配置方法；仅重新绑定原有限转发合同。",
+      "old_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "NSAnimationContext.runAnimationGroup",
+          "file_exists": true,
+          "literal_present": false,
+          "recorded_file_snapshot_matches": false
+        }
+      ],
+      "current_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalViewAnimation.swift",
+          "symbol": "public static func f_10021cadc(",
+          "class_or_method_scope": null,
+          "line": 24,
+          "file_sha256": "66c9ebb5f7187b0ad41aac5f1b61b2bce393ccdbac6a4111491cc15e7a50e56e",
+          "context_sha256": "d685fe5d82ff242d41f6def2d3865354dea903871b072d35aba31b472c191d85",
+          "context": "    public static func f_10021ce98(_ completion: (() -> Void)?) { completion?() }\n\n    public static func f_10021cadc(duration: TimeInterval?, timingFunction: CAMediaTimingFunction?,\n                                  animated: Bool, animations: () -> Void,\n                                  completion: (() -> Void)? = nil) {\n        if !animated {\n            animations()\n            completion?()\n            return\n        }\n        NSAnimationContext.runAnimationGroup { context in\n            f_10021cd10(context, duration: duration, timingFunction: timingFunction, animations: animations)\n        } completionHandler: {",
+          "literal_present": true
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalViewAnimation.swift",
+          "symbol": "public static func f_10021cd10(",
+          "class_or_method_scope": null,
+          "line": 14,
+          "file_sha256": "66c9ebb5f7187b0ad41aac5f1b61b2bce393ccdbac6a4111491cc15e7a50e56e",
+          "context_sha256": "25d18f3ffb9d2bc9eed289d69350f60c61c089b088dd0b9395e51f8c496782b1",
+          "context": "    }\n\n    public static func f_10021cd10(_ context: NSAnimationContext, duration: TimeInterval?,\n                                  timingFunction: CAMediaTimingFunction?, animations: () -> Void) {\n        if let duration { context.duration = duration }\n        context.timingFunction = timingFunction\n        context.allowsImplicitAnimation = true\n        animations()\n    }\n\n    public static func f_10021ce98(_ completion: (() -> Void)?) { completion?() }\n\n    public static func f_10021cadc(duration: TimeInterval?, timingFunction: CAMediaTimingFunction?,",
+          "literal_present": true
+        }
+      ],
+      "implementation_complete": false,
+      "semantic_equivalence_reassessed": false,
+      "repair_needed": null
+    },
+    {
+      "function_id": "Paste:0x10021cadc",
+      "status": "rebound_current_source",
+      "binding_kind": "current_method_or_property",
+      "reason": "原通用动画已提取到OriginalViewAnimation，旧UIController字面引用失效。",
+      "old_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "NSAnimationContext.runAnimationGroup",
+          "file_exists": true,
+          "literal_present": false,
+          "recorded_file_snapshot_matches": false
+        }
+      ],
+      "current_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalViewAnimation.swift",
+          "symbol": "public static func f_10021cadc(",
+          "class_or_method_scope": null,
+          "line": 24,
+          "file_sha256": "66c9ebb5f7187b0ad41aac5f1b61b2bce393ccdbac6a4111491cc15e7a50e56e",
+          "context_sha256": "d685fe5d82ff242d41f6def2d3865354dea903871b072d35aba31b472c191d85",
+          "context": "    public static func f_10021ce98(_ completion: (() -> Void)?) { completion?() }\n\n    public static func f_10021cadc(duration: TimeInterval?, timingFunction: CAMediaTimingFunction?,\n                                  animated: Bool, animations: () -> Void,\n                                  completion: (() -> Void)? = nil) {\n        if !animated {\n            animations()\n            completion?()\n            return\n        }\n        NSAnimationContext.runAnimationGroup { context in\n            f_10021cd10(context, duration: duration, timingFunction: timingFunction, animations: animations)\n        } completionHandler: {",
+          "literal_present": true
+        }
+      ],
+      "implementation_complete": false,
+      "semantic_equivalence_reassessed": false,
+      "repair_needed": null
+    },
+    {
+      "function_id": "Paste:0x10021cd10",
+      "status": "rebound_current_source",
+      "binding_kind": "current_method_or_property",
+      "reason": "原通用动画已提取到OriginalViewAnimation，旧UIController字面引用失效。",
+      "old_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "context.allowsImplicitAnimation = true",
+          "file_exists": true,
+          "literal_present": false,
+          "recorded_file_snapshot_matches": false
+        }
+      ],
+      "current_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalViewAnimation.swift",
+          "symbol": "public static func f_10021cd10(",
+          "class_or_method_scope": null,
+          "line": 14,
+          "file_sha256": "66c9ebb5f7187b0ad41aac5f1b61b2bce393ccdbac6a4111491cc15e7a50e56e",
+          "context_sha256": "25d18f3ffb9d2bc9eed289d69350f60c61c089b088dd0b9395e51f8c496782b1",
+          "context": "    }\n\n    public static func f_10021cd10(_ context: NSAnimationContext, duration: TimeInterval?,\n                                  timingFunction: CAMediaTimingFunction?, animations: () -> Void) {\n        if let duration { context.duration = duration }\n        context.timingFunction = timingFunction\n        context.allowsImplicitAnimation = true\n        animations()\n    }\n\n    public static func f_10021ce98(_ completion: (() -> Void)?) { completion?() }\n\n    public static func f_10021cadc(duration: TimeInterval?, timingFunction: CAMediaTimingFunction?,",
+          "literal_present": true
+        }
+      ],
+      "implementation_complete": false,
+      "semantic_equivalence_reassessed": false,
+      "repair_needed": null
+    },
+    {
+      "function_id": "Paste:0x10021cf38",
+      "status": "rebound_current_source",
+      "binding_kind": "current_method_or_property",
+      "reason": "原通用动画已提取到OriginalViewAnimation，旧UIController字面引用失效。",
+      "old_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "CAMediaTimingFunction(name: .easeInEaseOut)",
+          "file_exists": true,
+          "literal_present": false,
+          "recorded_file_snapshot_matches": false
+        }
+      ],
+      "current_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalViewAnimation.swift",
+          "symbol": "public static func f_10021cf38(",
+          "class_or_method_scope": null,
+          "line": 10,
+          "file_sha256": "66c9ebb5f7187b0ad41aac5f1b61b2bce393ccdbac6a4111491cc15e7a50e56e",
+          "context_sha256": "9fee4bfbb2f668019ad04f1f1ba3863b78d8f0ed7bda39b158c148d42e8ac6e3",
+          "context": "    }\n\n    public static func f_10021cf38() -> CAMediaTimingFunction {\n        CAMediaTimingFunction(name: .easeInEaseOut)\n    }\n\n    public static func f_10021cd10(_ context: NSAnimationContext, duration: TimeInterval?,\n                                  timingFunction: CAMediaTimingFunction?, animations: () -> Void) {\n        if let duration { context.duration = duration }\n        context.timingFunction = timingFunction\n        context.allowsImplicitAnimation = true\n        animations()\n    }",
+          "literal_present": true
+        }
+      ],
+      "implementation_complete": false,
+      "semantic_equivalence_reassessed": false,
+      "repair_needed": null
+    },
+    {
+      "function_id": "Paste:0x1002e1bac",
+      "status": "rebound_current_source",
+      "binding_kind": "current_method_or_property",
+      "reason": "SDK项构造已显式包含isUpdate参数；重绑当前构造方法，不沿用旧未设字段的状态说明。",
+      "old_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "let item = CSSearchableItem(uniqueIdentifier: domain + \":\" + entry.id.uuidString,",
+          "file_exists": true,
+          "literal_present": false,
+          "recorded_file_snapshot_matches": false
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "index.indexSearchableItems(changed)",
+          "file_exists": true,
+          "literal_present": false,
+          "recorded_file_snapshot_matches": false
+        }
+      ],
+      "current_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "private func searchableItem(",
+          "class_or_method_scope": null,
+          "line": 447,
+          "file_sha256": "2b58fa5bc9944789cb9bd959152450304e9229f295ab4b675ee04db0639ed870",
+          "context_sha256": "4b82c879dc30f504dfe1f5b439b2b92b0626cbacd0ff95ea1cf6a1c8d565ca85",
+          "context": "    }\n\n    private func searchableItem(_ entry: Entry, isUpdate: Bool) -> CSSearchableItem {\n        let attributes = CSSearchableItemAttributeSet(contentType: .content)\n        attributes.title = entry.title\n        // 0x1002e3ce8 invokes the optional content callback before limiting its result.\n        let content = entry.content?()\n        let text = content.map { String($0.prefix(5000)) }\n        attributes.textContent = text\n        if ProcessInfo.processInfo.isOperatingSystemAtLeast(.init(majorVersion: 26, minorVersion: 4, patchVersion: 0)) {\n            attributes.contentDescription = text\n        }\n        attributes.contentModificationDate = entry.modified",
+          "literal_present": true
+        }
+      ],
+      "implementation_complete": false,
+      "semantic_equivalence_reassessed": false,
+      "repair_needed": null
+    },
+    {
+      "function_id": "Paste:0x1002e39b4",
+      "status": "rebound_current_source",
+      "binding_kind": "current_method_or_property",
+      "reason": "当前NSError域/码谓词方法取代旧reindex调用描述。",
+      "old_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "if !forcedIdentifiers.isEmpty { try await reindexTargets(forcedIdentifiers) }",
+          "file_exists": true,
+          "literal_present": false,
+          "recorded_file_snapshot_matches": false
+        }
+      ],
+      "current_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "private static func isTransientIndexError(",
+          "class_or_method_scope": null,
+          "line": 287,
+          "file_sha256": "2b58fa5bc9944789cb9bd959152450304e9229f295ab4b675ee04db0639ed870",
+          "context_sha256": "968929ebb2b663c10fd9f5c068690a4eb9601e3ab69fec554cdfad0e38199c74",
+          "context": "\n    // 0x1002e39b4: local Spotlight availability/connection failures, not arbitrary NSError codes.\n    private static func isTransientIndexError(_ error: Error) -> Bool {\n        let error = error as NSError\n        return error.domain == CSIndexErrorDomain && (error.code == -1000 || error.code == -1003)\n    }\n\n    // 0x1002e7914/2e7a14/2e7e4c: three attempts of the whole operation, with 1s/2s delays.\n    private func retryTransientIndexErrors(_ operation: () async throws -> Void) async throws {\n        var failureCount = 0\n        while true {\n            do {\n                try await operation()",
+          "literal_present": true
+        }
+      ],
+      "implementation_complete": false,
+      "semantic_equivalence_reassessed": false,
+      "repair_needed": null
+    },
+    {
+      "function_id": "Paste:0x1002e3a8c",
+      "status": "rebound_current_source",
+      "binding_kind": "SDK_reuse_at_actual_consumer",
+      "reason": "原字符串prefix支持helper由真实消费者的Swift String.prefix复用，当前参数为5000；不是新增私有ABI函数。",
+      "old_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "text = String(indexedText.prefix(5000))",
+          "file_exists": true,
+          "literal_present": false,
+          "recorded_file_snapshot_matches": false
+        }
+      ],
+      "current_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "let text = content.map { String($0.prefix(5000)) }",
+          "class_or_method_scope": null,
+          "line": 452,
+          "file_sha256": "2b58fa5bc9944789cb9bd959152450304e9229f295ab4b675ee04db0639ed870",
+          "context_sha256": "77bf03201a9b5fcd035ce54c6ccf1afb87f3c06d838866e6bc5a80bf5373890a",
+          "context": "        // 0x1002e3ce8 invokes the optional content callback before limiting its result.\n        let content = entry.content?()\n        let text = content.map { String($0.prefix(5000)) }\n        attributes.textContent = text\n        if ProcessInfo.processInfo.isOperatingSystemAtLeast(.init(majorVersion: 26, minorVersion: 4, patchVersion: 0)) {\n            attributes.contentDescription = text\n        }\n        attributes.contentModificationDate = entry.modified\n        attributes.setValue(entry.app.map { $0 as NSString }, forCustomKey: appKey)\n        attributes.setValue(entry.type as NSString, forCustomKey: typeKey)\n        attributes.setValue(entry.device.map { $0 as NSString }, forCustomKey: deviceKey)\n        attributes.setValue((entry.pinboard ?? \"\") as NSString, forCustomKey: pinboardKey)\n        let item = CSSearchableItem(uniqueIdentifier: entry.searchIdentifier,",
+          "literal_present": true
+        }
+      ],
+      "implementation_complete": false,
+      "semantic_equivalence_reassessed": false,
+      "repair_needed": null
+    },
+    {
+      "function_id": "Paste:0x1002e7914",
+      "status": "rebound_current_source",
+      "binding_kind": "current_method_or_property",
+      "reason": "重试合同现在独立为retryTransientIndexErrors；旧forced-ID描述并非对应helper。",
+      "old_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "if !forcedIdentifiers.isEmpty { try await reindexTargets(forcedIdentifiers) }",
+          "file_exists": true,
+          "literal_present": false,
+          "recorded_file_snapshot_matches": false
+        }
+      ],
+      "current_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "private func retryTransientIndexErrors(",
+          "class_or_method_scope": null,
+          "line": 293,
+          "file_sha256": "2b58fa5bc9944789cb9bd959152450304e9229f295ab4b675ee04db0639ed870",
+          "context_sha256": "895a3202c7ccacd13dc72cf64a3319e1b6bb916ce68b4e7526569ff9cb52b2b0",
+          "context": "\n    // 0x1002e7914/2e7a14/2e7e4c: three attempts of the whole operation, with 1s/2s delays.\n    private func retryTransientIndexErrors(_ operation: () async throws -> Void) async throws {\n        var failureCount = 0\n        while true {\n            do {\n                try await operation()\n                consecutiveTransientFailures = 0\n                return\n            } catch {\n                guard Self.isTransientIndexError(error) else { throw error }\n                failureCount += 1\n                guard failureCount < 3 else {",
+          "literal_present": true
+        }
+      ],
+      "implementation_complete": false,
+      "semantic_equivalence_reassessed": false,
+      "repair_needed": null
+    },
+    {
+      "function_id": "Paste:0x1002f14cc",
+      "status": "rebound_current_source",
+      "binding_kind": "current_method_or_property",
+      "reason": "当前history观察创建及handle替换方法，不沿用旧active/old-task守卫。",
+      "old_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "guard isRunning, historyTask == nil, let store else { return }",
+          "file_exists": true,
+          "literal_present": false,
+          "recorded_file_snapshot_matches": false
+        }
+      ],
+      "current_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "private func startHistoryObservation()",
+          "class_or_method_scope": null,
+          "line": 215,
+          "file_sha256": "2b58fa5bc9944789cb9bd959152450304e9229f295ab4b675ee04db0639ed870",
+          "context_sha256": "44b6f343717a695e3f1035749de365418e0de054e0ac5f736c4aaebdcbe7b5bf",
+          "context": "    }\n\n    private func startHistoryObservation() {\n        // 0x1002f14cc/2f00dc installs a new observer handle without an active/old-handle gate.\n        guard let store else { return }\n        historyTask = Task { @MainActor [weak self] in\n            await store.observeSearchChanges { [weak self] changes in\n                guard let self else { throw CancellationError() }\n                try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in\n                    pendingHistory.append(HistoryWork(changes: changes) { error in\n                        if let error { continuation.resume(throwing: error) }\n                        else { continuation.resume() }\n                    })",
+          "literal_present": true
+        }
+      ],
+      "implementation_complete": false,
+      "semantic_equivalence_reassessed": false,
+      "repair_needed": null
+    },
+    {
+      "function_id": "Paste:0x1002f2ca8",
+      "status": "rebound_current_source",
+      "binding_kind": "current_method_or_property",
+      "reason": "绑定当前有序原标识定向重建入口。",
+      "old_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "reindexIdentifiers.append(contentsOf: identifiers.compactMap {",
+          "file_exists": true,
+          "literal_present": false,
+          "recorded_file_snapshot_matches": false
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "if !forcedIdentifiers.isEmpty { try await reindexTargets(forcedIdentifiers) }",
+          "file_exists": true,
+          "literal_present": false,
+          "recorded_file_snapshot_matches": false
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "private func searchableItem(_ entry: Entry) -> CSSearchableItem",
+          "file_exists": true,
+          "literal_present": false,
+          "recorded_file_snapshot_matches": false
+        }
+      ],
+      "current_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "private func reindexTargets(",
+          "class_or_method_scope": null,
+          "line": 323,
+          "file_sha256": "2b58fa5bc9944789cb9bd959152450304e9229f295ab4b675ee04db0639ed870",
+          "context_sha256": "33eb6dd15d386d630797d7923c644d5db17d3651e228edd73bcb269547db14f3",
+          "context": "\n    // 0x1002ea78c / 0x1002eaa10 / 0x1002eaea4: advance by input IDs, not fetched rows.\n    private func reindexTargets(_ identifiers: [String]) async throws {\n        // 0x1002ea78c filters empty identifiers before forming the 100-ID batches.\n        let input = identifiers.filter { !$0.isEmpty }\n        guard !input.isEmpty else { return }\n        var refreshed: [Entry] = []\n        for lowerBound in stride(from: 0, to: input.count, by: Self.indexingBatchSize) {\n            guard isRunning, !Task.isCancelled else { break }\n            let upperBound = min(lowerBound + Self.indexingBatchSize, input.count)\n            let live = try liveEntries(identifiers: Array(input[lowerBound..<upperBound]))\n            enqueueOCR(live)\n            if !live.isEmpty {",
+          "literal_present": true
+        }
+      ],
+      "implementation_complete": false,
+      "semantic_equivalence_reassessed": false,
+      "repair_needed": null
+    },
+    {
+      "function_id": "Paste:0x1002f3c8c",
+      "status": "rebound_current_source",
+      "binding_kind": "current_method_or_property",
+      "reason": "SDK委托入口与实际队列转发双端绑定，不能继续用旧domain过滤器作为实现引用。",
+      "old_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "guard let requested else { acknowledge(); return }",
+          "file_exists": true,
+          "literal_present": false,
+          "recorded_file_snapshot_matches": false
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "reindexIdentifiers.append(contentsOf: identifiers.compactMap {",
+          "file_exists": true,
+          "literal_present": false,
+          "recorded_file_snapshot_matches": false
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "guard identifier.hasPrefix(domain + \":\") else { return nil }",
+          "file_exists": true,
+          "literal_present": false,
+          "recorded_file_snapshot_matches": false
+        }
+      ],
+      "current_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "reindexSearchableItemsWithIdentifiers identifiers: [String]",
+          "class_or_method_scope": null,
+          "line": 675,
+          "file_sha256": "2b58fa5bc9944789cb9bd959152450304e9229f295ab4b675ee04db0639ed870",
+          "context_sha256": "92d6a6aa08422408fea970f288f5923888a14258a8a67647bdc0ffc5b3936db1",
+          "context": "\n    nonisolated func searchableIndex(_ searchableIndex: CSSearchableIndex,\n                                    reindexSearchableItemsWithIdentifiers identifiers: [String],\n                                    acknowledgementHandler: @escaping () -> Void) {\n        rebuild(identifiers: identifiers, acknowledgementHandler)\n    }\n\n    nonisolated private func rebuild(identifiers: [String]?, _ acknowledge: @escaping () -> Void) {\n        let target = ReplicaSearchIndexDelegateTarget(self)\n        Task {\n            await ReplicaSearchIndex.performDelegateRebuild(target, identifiers: identifiers)\n            acknowledge()\n        }",
+          "literal_present": true
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "private func enqueueDelegateRebuild(",
+          "class_or_method_scope": null,
+          "line": 695,
+          "file_sha256": "2b58fa5bc9944789cb9bd959152450304e9229f295ab4b675ee04db0639ed870",
+          "context_sha256": "a5a51c0d47c52f9ac3cdfa4a3305dc6648ca8a96f926820e7c906e43b8710511",
+          "context": "    }\n\n    private func enqueueDelegateRebuild(_ identifiers: [String]?) async {\n        // System reindexing does not require an earlier UI update.\n        let request = requested ?? Request(entries: entries, nodes: queryNodes ?? [],\n                                            sourceIdentifier: store?.searchSourceIdentifier)\n        if let identifiers {\n            reindexIdentifiers.append(contentsOf: identifiers)\n        } else {\n            needsReset = true\n            mayRestoreSavedState = false\n            if isRunning { await stopIndexing() }\n            pendingMayInitializeIndex = true",
+          "literal_present": true
+        }
+      ],
+      "implementation_complete": false,
+      "semantic_equivalence_reassessed": false,
+      "repair_needed": null
+    },
+    {
+      "function_id": "Paste:0x100302b78",
+      "status": "rebound_current_source",
+      "binding_kind": "current_method_or_property",
+      "reason": "旧Type.method名称描述替换为真实generic commit定义；这里只重绑，不重新断言完整异常合同。",
+      "old_references": [
+        {
+          "path": "replica/Sources/PastoCore/ClipboardPersistence.swift",
+          "symbol": "ClipboardPersistence.commit<T>",
+          "file_exists": true,
+          "literal_present": false,
+          "recorded_file_snapshot_matches": false
+        }
+      ],
+      "current_references": [
+        {
+          "path": "replica/Sources/PastoCore/ClipboardPersistence.swift",
+          "symbol": "func commit<T>(",
+          "class_or_method_scope": null,
+          "line": 858,
+          "file_sha256": "6542e724261f8829297e22b710dcfcad81af769c1d97f4798451d7cd822099e8",
+          "context_sha256": "fdcf164db51181b672876e7bca358ded4b8f370680f4e4ce1eaed2667d51335d",
+          "context": "    // 0x1002ff310 -> 0x100302b78: run the business operation inside performAndWait,\n    // then apply its mutations and save only after the operation has returned successfully.\n    func commit<T>(previous: StoreState?, deletingItemIDs: [UUID] = [], preparedTransaction: Transaction? = nil,\n                   operation: (Transaction) throws -> (state: StoreState, result: T)) throws -> (state: StoreState, result: T) {\n        let transaction = preparedTransaction ?? Transaction(context: context)\n        return try withExtendedLifetime(transaction) {\n            try context.performAndWait {\n                var outcome = try operation(transaction)\n                let state = outcome.state\n                let replacements = transaction.repository.replacedItemDataIDs\n                let sourced = transaction.repository.sourcedItemIDs\n                let previousItems = previous?.items ?? []\n                var restoredMetadataOnly: Set<UUID> = []",
+          "literal_present": true
+        }
+      ],
+      "implementation_complete": false,
+      "semantic_equivalence_reassessed": false,
+      "repair_needed": null
+    },
+    {
+      "function_id": "Paste:0x10031b1bc",
+      "status": "rebound_current_source",
+      "binding_kind": "current_method_or_property",
+      "reason": "共享raw getter/Foundation Data桥接读取现在在该定义内。",
+      "old_references": [
+        {
+          "path": "replica/Sources/PastoCore/ClipboardItemDataPersistence.swift",
+          "symbol": "ClipboardItemDataPersistence.readRepresentations",
+          "file_exists": true,
+          "literal_present": false,
+          "recorded_file_snapshot_matches": true
+        }
+      ],
+      "current_references": [
+        {
+          "path": "replica/Sources/PastoCore/ClipboardItemDataPersistence.swift",
+          "symbol": "static func readRepresentations(",
+          "class_or_method_scope": null,
+          "line": 60,
+          "file_sha256": "3abbd2239d3f077bc7fe8a26fab62c8cb34db85895ef2445e213df7e7182d34c",
+          "context_sha256": "4f546fce2c3b4e0d15088bf61561b724f6aaad2bd0f3cf071a844cdd063ccc75",
+          "context": "\n    // 31b218 is also called from a search reader's private context. Invoke on its owning queue.\n    static func readRepresentations(from data: NSManagedObject,\n                                    diagnostics: () -> OriginalNamedDiagnostic) -> [OriginalPasteboardItem]? {\n        let raw: Data\n        do {\n            raw = try OriginalObjCExceptionBridge.f_1002ffc68 {\n                let raw = data.value(forKey: \"rawPasteboardItems\") as? NSData\n                return Data._unconditionallyBridgeFromObjectiveC(raw)\n            }\n        } catch let error as OriginalObjCExceptionError {\n            diagnostics().f_1000d468c().f_1000d4e0c(\"Unreadable pasteboard items blob: \\(error)\")\n            return []",
+          "literal_present": true
+        }
+      ],
+      "implementation_complete": false,
+      "semantic_equivalence_reassessed": false,
+      "repair_needed": null
+    },
+    {
+      "function_id": "Paste:0x10031b494",
+      "status": "rebound_current_source",
+      "binding_kind": "current_method_or_property",
+      "reason": "绑定实际typed ItemData持有字段和legacy fallback读取方法，替换拼接式类描述。",
+      "old_references": [
+        {
+          "path": "replica/Sources/PastoCore/ClipboardItemDataPersistence.swift",
+          "symbol": "PastoItemDataEntity.diagnostics / ClipboardItemDataPersistence.diagnostics(for:)",
+          "file_exists": true,
+          "literal_present": false,
+          "recorded_file_snapshot_matches": false
+        },
+        {
+          "path": "replica/Sources/PastoCore/ClipboardSearchRecord.swift",
+          "symbol": "DeferredClipboardSearchContent.read",
+          "file_exists": true,
+          "literal_present": false,
+          "recorded_file_snapshot_matches": false
+        },
+        {
+          "path": "replica/Sources/PastoCore/ClipboardPersistence.swift",
+          "symbol": "ClipboardPersistence.makeModel",
+          "file_exists": true,
+          "literal_present": false,
+          "recorded_file_snapshot_matches": false
+        }
+      ],
+      "current_references": [
+        {
+          "path": "replica/Sources/PastoCore/ClipboardItemDataPersistence.swift",
+          "symbol": "let diagnostics = OriginalNamedDiagnostic.f_1000d4624(name: \"ItemDataEntity\")",
+          "class_or_method_scope": "final class PastoItemDataEntity:",
+          "line": 9,
+          "file_sha256": "3abbd2239d3f077bc7fe8a26fab62c8cb34db85895ef2445e213df7e7182d34c",
+          "context_sha256": "234aee381b37330c34527c017ec51d03da59a145672f532335a751628e5d70b9",
+          "context": "@objc(PastoItemDataEntity)\nfinal class PastoItemDataEntity: NSManagedObject {\n    let diagnostics = OriginalNamedDiagnostic.f_1000d4624(name: \"ItemDataEntity\")\n}\n\n/// Called on the owning managed context's queue, including during store migration.\nfinal class ClipboardItemDataPersistence {\n    private let context: NSManagedObjectContext\n\n    init(context: NSManagedObjectContext) { self.context = context }\n\n    static func addEntity(to model: NSManagedObjectModel, item: NSEntityDescription) {\n        let data = NSEntityDescription()",
+          "literal_present": true
+        },
+        {
+          "path": "replica/Sources/PastoCore/ClipboardItemDataPersistence.swift",
+          "symbol": "private static func diagnostics(for",
+          "class_or_method_scope": null,
+          "line": 43,
+          "file_sha256": "3abbd2239d3f077bc7fe8a26fab62c8cb34db85895ef2445e213df7e7182d34c",
+          "context_sha256": "8d6f73cab4fba8c1c70cb21b47745103199d5dc487cae7058045ae6705c569d8",
+          "context": "\n    // Current models own the wrapper on the actual entity; older plain objects keep their local adapter.\n    @MainActor private static func diagnostics(for data: NSManagedObject) -> OriginalNamedDiagnostic {\n        if let data = data as? PastoItemDataEntity { return data.diagnostics }\n        if let existing = objc_getAssociatedObject(data, &diagnosticsKey) as? OriginalNamedDiagnostic {\n            return existing\n        }\n        let diagnostics = OriginalNamedDiagnostic.f_1000d4624(name: \"ItemDataEntity\")\n        objc_setAssociatedObject(data, &diagnosticsKey, diagnostics, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)\n        return diagnostics\n    }\n\n    // 31b218: raw getter exceptions log locally and yield no representations; invalid local graphs stay optional.",
+          "literal_present": true
+        }
+      ],
+      "implementation_complete": false,
+      "semantic_equivalence_reassessed": false,
+      "repair_needed": null
+    },
+    {
+      "function_id": "Paste:0x10031c2ec",
+      "status": "rebound_current_source",
+      "binding_kind": "current_method_or_property",
+      "reason": "编辑许可类型筛选已先读native rawType，旧resolvedItem筛选字面不再适用。",
+      "old_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "Self.allowsContentEditing($0.resolvedItem())",
+          "file_exists": true,
+          "literal_present": false,
+          "recorded_file_snapshot_matches": false
+        }
+      ],
+      "current_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "private static func allowsEditingInput(",
+          "class_or_method_scope": null,
+          "line": 1579,
+          "file_sha256": "f99aa58ecd391201df4bc79edcdb70e79dcb5c14b012e5dc2479e0f8757c6d0d",
+          "context_sha256": "7257f2ea0cab6c198b43586500dae0ccaa9dd2bd790a6a0420d52692ace69e6d",
+          "context": "    }\n\n    private static func allowsEditingInput(_ input: ClipboardRestoreItem) -> Bool {\n        if let rawType = input.previewRawType() {\n            return [1, 2, 4, 5].contains(rawType)\n        }\n        return allowsContentEditing(input.resolvedItem())\n    }\n\n    // 0x10031c2ec: offline lists have no CKShare permission branch.\n    private static func allowsContentEditing(_ item: ClipboardItem) -> Bool {\n        switch item.kind {\n        case .image, .color, .link, .text, .richText: return true",
+          "literal_present": true
+        }
+      ],
+      "implementation_complete": false,
+      "semantic_equivalence_reassessed": false,
+      "repair_needed": null
+    },
+    {
+      "function_id": "Paste:0x10031f2a4",
+      "status": "rebound_current_source",
+      "binding_kind": "current_method_or_property",
+      "reason": "绑定当前Item实体timestamp降序类默认值，旧显示数组排序已被原生集合替代。",
+      "old_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "if $0.isInHistory != $1.isInHistory { return $0.isInHistory }",
+          "file_exists": true,
+          "literal_present": false,
+          "recorded_file_snapshot_matches": false
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "return $0.createdAt > $1.createdAt",
+          "file_exists": true,
+          "literal_present": false,
+          "recorded_file_snapshot_matches": false
+        }
+      ],
+      "current_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalManagedItem.swift",
+          "symbol": "override class var defaultSortDescriptors:",
+          "class_or_method_scope": "class PastoItemEntity:",
+          "line": 27,
+          "file_sha256": "b5388f95ca3f7b58a366f7b9d3a77075294df773d999627249f2aa510906cdca",
+          "context_sha256": "4bac4cedcf59ee2307912e0a78f31eb5695a3402e8b0a37da48f0a45dfee2630",
+          "context": "    // Keep the existing local store's physical entity name for persisted IDs and relationships.\n    override class var entityName: String { \"Item\" }\n    override class var defaultSortDescriptors: [NSSortDescriptor]? {\n        [NSSortDescriptor(key: \"timestamp\", ascending: false)]\n    }\n\n    // 3b4888: creation time is independent of the history timestamp and later recency changes.\n    override func awakeFromInsert() {\n        super.awakeFromInsert()\n        setPrimitiveValue(Date(), forKey: \"createdAt\")\n    }\n\n    // 0x100329754: Item-specific wrapper around the same generic request factory.",
+          "literal_present": true
+        }
+      ],
+      "implementation_complete": false,
+      "semantic_equivalence_reassessed": false,
+      "repair_needed": null
+    },
+    {
+      "function_id": "Paste:0x1003250f0",
+      "status": "rebound_current_source",
+      "binding_kind": "current_method_or_property",
+      "reason": "当前owner rawType严格2已在原生输入方法内，旧nil->2缓存策略不再作为引用。",
+      "old_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "owner.rawType == 2 || owner.rawType == nil",
+          "file_exists": true,
+          "literal_present": false,
+          "recorded_file_snapshot_matches": false
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchSuggestionSource.swift",
+          "symbol": "($0.rawType ?? 2) == 2",
+          "file_exists": true,
+          "literal_present": false,
+          "recorded_file_snapshot_matches": false
+        }
+      ],
+      "current_references": [
+        {
+          "path": "replica/Sources/PastoCore/ClipboardRestoreItem.swift",
+          "symbol": "public func hasNativePinboardOwner()",
+          "class_or_method_scope": null,
+          "line": 117,
+          "file_sha256": "b896730653c49e72387fd53bc19e2aeea23e5cafabc94ce7fd8fe6b9cf1d7665",
+          "context_sha256": "0076912a79a409c41c4a622fe65e4402830c33bd075dd916fc2ab8e5f82f4aa8",
+          "context": "\n    // 3ba390/3250f0: removal eligibility needs only the current native owner type.\n    public func hasNativePinboardOwner() -> Bool? {\n        guard let object = nativeObject else { return nil }\n        guard let owner = object.value(forKey: \"list\") as? NSManagedObject else { return false }\n        return (owner.value(forKey: \"rawType\") as? NSNumber)?.int64Value == 2\n    }\n\n    // 3b83c4 reads current timestamp and type2 owner without decoding the content archive.\n    public func listNavigationMembership() -> (isInHistory: Bool, pinboardID: UUID?)? {\n        guard let object = nativeObject else { return nil }\n        let isInHistory = object.value(forKey: \"timestamp\") != nil\n        guard let owner = object.value(forKey: \"list\") as? NSManagedObject,",
+          "literal_present": true
+        }
+      ],
+      "implementation_complete": false,
+      "semantic_equivalence_reassessed": false,
+      "repair_needed": null
+    },
+    {
+      "function_id": "Paste:0x100328f38",
+      "status": "rebound_current_source",
+      "binding_kind": "local_unshared_scope_adapter",
+      "reason": "原已纳合同仅为无CKShare的本地许可返回；当前本地可编辑及菜单为消费者。CKShare权限分支继续排除，不因未迁网络分支判缺失。",
+      "old_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/PanelViews.swift",
+          "symbol": "private var boardTabs: some View",
+          "file_exists": true,
+          "literal_present": false,
+          "recorded_file_snapshot_matches": false
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/PanelViews.swift",
+          "symbol": "Menu(\"颜色\")",
+          "file_exists": true,
+          "literal_present": false,
+          "recorded_file_snapshot_matches": false
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/PanelViews.swift",
+          "symbol": "private var boardTabs: some View",
+          "file_exists": true,
+          "literal_present": false,
+          "recorded_file_snapshot_matches": false
+        }
+      ],
+      "current_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaCardTitle.swift",
+          "symbol": "label.isEditable = true",
+          "class_or_method_scope": null,
+          "line": 54,
+          "file_sha256": "eb1dadb0a53e03e8ced8c70e35add3a4431aa4c77b668adaa3aa5098f3938ebf",
+          "context_sha256": "46ac275fb268c417f7659f5bd778c4b3e987369023b85a197fb0376a58ce371b",
+          "context": "        self.itemID = itemID\n        // Offline lists have no CKShare permission record (0x100328f38's nil path).\n        label.isEditable = true\n        let field = label.f_1003d1cc0()\n        field.f_10023adf0().font = font\n        field.f_10023af6c(textColor)\n        if lastModelTitle != title {\n            lastModelTitle = title\n            field.f_10023b214(title)\n        }\n        invalidateIntrinsicContentSize()\n        field.f_10023adf0().setAccessibilityLabel(\"重命名项目\")\n        label.onCommitEditing = { [weak state] title in",
+          "literal_present": true
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/PanelViews.swift",
+          "symbol": "private func localListMenu(",
+          "class_or_method_scope": null,
+          "line": 167,
+          "file_sha256": "4d12898b461515d2cea5c173240eb1f1a9db287ff9b9158146f54aedc3928f50",
+          "context_sha256": "068631627921819f88cc3edeee43e24c5083c1e96e16a2bc3af1d695b13088c4",
+          "context": "\n    // 0x100021f00: offline rename, typed deletion, then color choices.\n    private func localListMenu(for target: ClipboardListTarget) -> NSMenu {\n        let menu = NSMenu()\n        menu.autoenablesItems = false\n        menu.addItem(OriginalPanelTabMenuItem(title: \"重命名\") { requestTabRename(target) })\n        // Resolve and count only when the native context menu is requested.\n        let list = state.store.localListMenuState(target)\n        if list.rawType == 1 {\n            if !list.isEmpty {\n                menu.addItem(OriginalPanelTabMenuItem(title: \"删除历史…\") { state.controller?.clearHistory() })\n            }\n        } else if list.rawType == 2 {",
+          "literal_present": true
+        }
+      ],
+      "implementation_complete": false,
+      "semantic_equivalence_reassessed": false,
+      "repair_needed": null
+    },
+    {
+      "function_id": "Paste:0x100329980",
+      "status": "rebound_current_source",
+      "binding_kind": "current_method_or_property",
+      "reason": "绑定实际typed List插入校验；旧以多个类名拼接的symbol不具可检索性。",
+      "old_references": [
+        {
+          "path": "replica/Sources/PastoCore/ClipboardPersistence.swift",
+          "symbol": "PastoListEntity.validateForInsert / model typed classes / native FRC producer",
+          "file_exists": true,
+          "literal_present": false,
+          "recorded_file_snapshot_matches": false
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalManagedItem.swift",
+          "symbol": "PastoListEntity.validateForInsert / model typed classes / native FRC producer",
+          "file_exists": true,
+          "literal_present": false,
+          "recorded_file_snapshot_matches": false
+        },
+        {
+          "path": "replica/Sources/PastoCore/ClipboardListPersistence.swift",
+          "symbol": "PastoListEntity.validateForInsert / model typed classes / native FRC producer",
+          "file_exists": true,
+          "literal_present": false,
+          "recorded_file_snapshot_matches": false
+        },
+        {
+          "path": "replica/Sources/PastoCore/ClipboardSearchCollection.swift",
+          "symbol": "PastoListEntity.validateForInsert / model typed classes / native FRC producer",
+          "file_exists": true,
+          "literal_present": false,
+          "recorded_file_snapshot_matches": false
+        }
+      ],
+      "current_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalManagedItem.swift",
+          "symbol": "override func validateForInsert()",
+          "class_or_method_scope": "class PastoListEntity:",
+          "line": 61,
+          "file_sha256": "b5388f95ca3f7b58a366f7b9d3a77075294df773d999627249f2aa510906cdca",
+          "context_sha256": "dc16dde22ee721600209c72060aae1517f0eca7575953bdc4414c482096ceaba",
+          "context": "\n    // 329980/329ec0: repair a missing relationship, then propagate the superclass error.\n    override func validateForInsert() throws {\n        if !isDeleted, value(forKey: \"metadata\") == nil, let context = managedObjectContext {\n            let identifier = \"list:\" + String._unconditionallyBridgeFromObjectiveC(\n                value(forKey: \"identifier\") as? NSString)\n            let request = PastoListMetadataEntity.metadataFetchRequest()\n            request.predicate = NSPredicate(format: \"identifier == %@\", identifier)\n            request.fetchLimit = 1\n            request.fetchOffset = 0\n            var existing: PastoListMetadataEntity?\n            context.performAndWait { existing = (try? context.fetch(request))?.first }\n            if let existing {",
+          "literal_present": true
+        }
+      ],
+      "implementation_complete": false,
+      "semantic_equivalence_reassessed": false,
+      "repair_needed": null
+    },
+    {
+      "function_id": "Paste:0x100360808",
+      "status": "rebound_current_source",
+      "binding_kind": "optional_collection_and_empty_projection_adapter",
+      "reason": "有限空ID→空集合合同的当前factory及真实投影端，不外推原nil Subject表示/完整Combine ABI。",
+      "old_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "identifiers = found",
+          "file_exists": true,
+          "literal_present": false,
+          "recorded_file_snapshot_matches": false
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "searchIndex.identifiers.contains(item.id)",
+          "file_exists": true,
+          "literal_present": false,
+          "recorded_file_snapshot_matches": false
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaNativeCardCollection.swift",
+          "symbol": "items = state.visibleItems",
+          "file_exists": true,
+          "literal_present": false,
+          "recorded_file_snapshot_matches": false
+        }
+      ],
+      "current_references": [
+        {
+          "path": "replica/Sources/PastoCore/ClipboardPersistence.swift",
+          "symbol": "func makeSearchCollection(identifiers:",
+          "class_or_method_scope": null,
+          "line": 360,
+          "file_sha256": "6542e724261f8829297e22b710dcfcad81af769c1d97f4798451d7cd822099e8",
+          "context_sha256": "33292763c7cb663f4b610b884539fdc9884741362efc446410691e08c2ad3a30",
+          "context": "    }\n\n    func makeSearchCollection(identifiers: [String]) -> ClipboardSearchCollection? {\n        guard !identifiers.isEmpty else { return nil }\n        return ClipboardSearchCollection(context: context, identifiers: identifiers)\n    }\n\n    func searchNativeItems(identifiers: [String]?) throws -> [ClipboardItem] {\n        try snapshotReader.searchNativeItems(identifiers: identifiers)\n    }\n\n    func localListMenuState(_ target: ClipboardListTarget) -> (rawType: Int64?, isEmpty: Bool) {\n        context.performAndWait { lists.menuState(for: target.nativeObject) }",
+          "literal_present": true
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "var visibleItems: [ClipboardCollectionEntry]",
+          "class_or_method_scope": null,
+          "line": 267,
+          "file_sha256": "f99aa58ecd391201df4bc79edcdb70e79dcb5c14b012e5dc2479e0f8757c6d0d",
+          "context_sha256": "e120db95d9f22741e4fef8b0aa6b2c93450d102f26ee36fb22955982967435e5",
+          "context": "    }\n\n    var visibleItems: [ClipboardCollectionEntry] {\n        if isCollectionSearchQueryEmpty {\n            if showDeleted {\n                return store.search(query: \"\", pinboardID: pinboardID, includeDeleted: true)\n                    .filter(\\.isDeleted).map { ClipboardCollectionEntry(item: $0) }\n            }\n            let snapshot = listCollection?.value\n            let native = collectionEntries(identifiers: snapshot?.identifiers ?? [],\n                references: snapshot?.itemReferences ?? [:])\n            if let pinboardID {\n                // Preserve old local archives with secondary memberships outside the native single owner.",
+          "literal_present": true
+        }
+      ],
+      "implementation_complete": false,
+      "semantic_equivalence_reassessed": false,
+      "repair_needed": null
+    },
+    {
+      "function_id": "Paste:0x100364108",
+      "status": "rebound_current_source",
+      "binding_kind": "current_method_or_property",
+      "reason": "逆序逐项更新时间已进入同原生事务，旧ClipboardStore.ids.reversed引用不再准确。",
+      "old_references": [
+        {
+          "path": "replica/Sources/PastoCore/ClipboardStore.swift",
+          "symbol": "for id in ids.reversed()",
+          "file_exists": true,
+          "literal_present": false,
+          "recorded_file_snapshot_matches": false
+        }
+      ],
+      "current_references": [
+        {
+          "path": "replica/Sources/PastoCore/ClipboardPersistence.swift",
+          "symbol": "func restoreHistoryItems(",
+          "class_or_method_scope": null,
+          "line": 708,
+          "file_sha256": "6542e724261f8829297e22b710dcfcad81af769c1d97f4798451d7cd822099e8",
+          "context_sha256": "4cf0078abe2cfb0a0dcca2863ad2be0d62456aaae8aa24c8c4caeba328affb0b",
+          "context": "        }\n\n        func restoreHistoryItems(_ targets: [(id: UUID, object: NSManagedObject)]) -> [(id: UUID, timestamp: Date)] {\n            var updates: [(id: UUID, timestamp: Date)] = []\n            for (id, object) in targets.reversed() {\n                let timestamp = Date()\n                object.setValue(timestamp, forKey: \"timestamp\")\n                updates.append((id: id, timestamp: timestamp))\n            }\n            return updates\n        }\n\n        func replaceCapturedItemData(_ target: (id: UUID, object: NSManagedObject), items: [OriginalPasteboardItem],",
+          "literal_present": true
+        },
+        {
+          "path": "replica/Sources/PastoCore/ClipboardPersistence.swift",
+          "symbol": "func dropItems(identifiers:",
+          "class_or_method_scope": null,
+          "line": 629,
+          "file_sha256": "6542e724261f8829297e22b710dcfcad81af769c1d97f4798451d7cd822099e8",
+          "context_sha256": "ac68f156c3e93edcd20949e45f8c25b1bf0242bf3220da381cdbc32578179b96",
+          "context": "\n        // 364014/3614c0: local nil-share path; cloud clone/permission flows are outside this adapter.\n        func dropItems(identifiers: [String], to list: NSManagedObject) throws -> [ClipboardItem] {\n            let items = identifiers.compactMap { droppedItem(identifier: $0) }\n            guard !items.isEmpty else { return [] }\n            switch (list.value(forKey: \"rawType\") as? NSNumber)?.int64Value ?? 0 {\n            case 2:\n                return try assignItems(items, to: list)\n            case 1:\n                // 361ec0/364108 reverse the input before generating one Date per occurrence.\n                for item in items.reversed() { item.setValue(Date(), forKey: \"timestamp\") }\n                if let capacity = lists.historyCapacity(of: list), capacity > 0 {\n                    let interval = -capacity * 24 * 60 * 60",
+          "literal_present": true
+        }
+      ],
+      "implementation_complete": false,
+      "semantic_equivalence_reassessed": false,
+      "repair_needed": null
+    },
+    {
+      "function_id": "Paste:0x1003669fc",
+      "status": "rebound_current_source",
+      "binding_kind": "current_method_or_property",
+      "reason": "绑定搜索及List两集合各自的同步快照receive，不能保留描述性default scheduler语句。",
+      "old_references": [
+        {
+          "path": "replica/Sources/PastoCore/ClipboardSearchCollection.swift",
+          "symbol": "receive(ids:updated:) default inline snapshot delivery (search/list)",
+          "file_exists": true,
+          "literal_present": false,
+          "recorded_file_snapshot_matches": false
+        }
+      ],
+      "current_references": [
+        {
+          "path": "replica/Sources/PastoCore/ClipboardSearchCollection.swift",
+          "symbol": "private func receive(ids:",
+          "class_or_method_scope": "public final class ClipboardSearchCollection",
+          "line": 103,
+          "file_sha256": "7b19e56ece8ad6f03971a5d8c09058994a65c64d9cbab06a6aca2574e7f9e65c",
+          "context_sha256": "bac59d45d3f3cda351f8613fc5dac59e38ade2ccf00b18d7ff66e635e204a709",
+          "context": "\n    // 3669fc: replace pending order, union changed IDs and schedule only the first pending delivery.\n    private func receive(ids: [NSManagedObjectID], updated: Set<NSManagedObjectID>) {\n        let schedulesDelivery = pending == nil\n        pending = (ids, (pending?.updated ?? []).union(updated))\n        if schedulesDelivery {\n            // 3669fc's default ImmediateSnapshotScheduler executes its work inline.\n            flushPending()\n        }\n    }\n\n    // 366b38: clear before sending so subscriber reentry starts a new pending batch.\n    private func flushPending() {",
+          "literal_present": true
+        },
+        {
+          "path": "replica/Sources/PastoCore/ClipboardSearchCollection.swift",
+          "symbol": "private func receive(ids:",
+          "class_or_method_scope": "public final class ClipboardPinboardCollection",
+          "line": 255,
+          "file_sha256": "7b19e56ece8ad6f03971a5d8c09058994a65c64d9cbab06a6aca2574e7f9e65c",
+          "context_sha256": "f13c8ca703cd68f8ed99d719a7eb055adcd525b662b3bb97f831dc536b2b5d3a",
+          "context": "\n    // 3669fc: replace pending order, union changed IDs and schedule only the first pending delivery.\n    private func receive(ids: [NSManagedObjectID], updated: Set<NSManagedObjectID>) {\n        let schedulesDelivery = pending == nil\n        pending = (ids, (pending?.updated ?? []).union(updated))\n        if schedulesDelivery {\n            // 3669fc's default ImmediateSnapshotScheduler executes its work inline.\n            flushPending()\n        }\n    }\n\n    // 366b38: update the ID snapshot before publishing, allowing subscriber reentry.\n    private func flushPending() {",
+          "literal_present": true
+        }
+      ],
+      "implementation_complete": false,
+      "semantic_equivalence_reassessed": false,
+      "repair_needed": null
+    },
+    {
+      "function_id": "Paste:0x100366b38",
+      "status": "rebound_current_source",
+      "binding_kind": "current_method_or_property",
+      "reason": "成员缓存和pending合并由两实际集合的独立方法承载。",
+      "old_references": [
+        {
+          "path": "replica/Sources/PastoCore/ClipboardSearchCollection.swift",
+          "symbol": "objectIDMembership / flushPending / objectsDidChange (search and pinboard)",
+          "file_exists": true,
+          "literal_present": false,
+          "recorded_file_snapshot_matches": false
+        }
+      ],
+      "current_references": [
+        {
+          "path": "replica/Sources/PastoCore/ClipboardSearchCollection.swift",
+          "symbol": "private func flushPending()",
+          "class_or_method_scope": "public final class ClipboardSearchCollection",
+          "line": 113,
+          "file_sha256": "7b19e56ece8ad6f03971a5d8c09058994a65c64d9cbab06a6aca2574e7f9e65c",
+          "context_sha256": "73d194484825816b6348a9496edd894e163ae0d7a54165024d1e1d0d604e5e7c",
+          "context": "\n    // 366b38: clear before sending so subscriber reentry starts a new pending batch.\n    private func flushPending() {\n        guard let value = pending else { return }\n        pending = nil\n        if objectIDs != value.ids {\n            objectIDs = value.ids\n            objectIDMembership = Set(value.ids)\n        }\n        let keys = Dictionary(uniqueKeysWithValues: value.ids.compactMap { objectID -> (NSManagedObjectID, UUID)? in\n            guard let object = try? context.existingObject(with: objectID),\n                  let key = object.value(forKey: \"key\") as? String,\n                  let identifier = UUID(uuidString: key) else { return nil }",
+          "literal_present": true
+        },
+        {
+          "path": "replica/Sources/PastoCore/ClipboardSearchCollection.swift",
+          "symbol": "private func objectsDidChange(",
+          "class_or_method_scope": "public final class ClipboardSearchCollection",
+          "line": 136,
+          "file_sha256": "7b19e56ece8ad6f03971a5d8c09058994a65c64d9cbab06a6aca2574e7f9e65c",
+          "context_sha256": "2a131df611c7c23294118a99ff30f42f5ff7d3014bdc2598574da24188841f32",
+          "context": "    }\n\n    private func objectsDidChange(_ notification: Notification) {\n        let ids = pending?.ids ?? objectIDs\n        let membership = pending.map { Set($0.ids) } ?? objectIDMembership\n        let updated = notification.userInfo?[NSUpdatedObjectsKey] as? Set<NSManagedObject> ?? []\n        let refreshed = notification.userInfo?[NSRefreshedObjectsKey] as? Set<NSManagedObject> ?? []\n        let changed = Set(updated.union(refreshed).map(\\.objectID)).intersection(membership)\n        if !changed.isEmpty { receive(ids: ids, updated: changed) }\n    }\n}\n\n/// Live ListEntity collection: tabs use class defaults (367f78), the menu narrows to type2 (36c094).",
+          "literal_present": true
+        },
+        {
+          "path": "replica/Sources/PastoCore/ClipboardSearchCollection.swift",
+          "symbol": "private func flushPending()",
+          "class_or_method_scope": "public final class ClipboardPinboardCollection",
+          "line": 265,
+          "file_sha256": "7b19e56ece8ad6f03971a5d8c09058994a65c64d9cbab06a6aca2574e7f9e65c",
+          "context_sha256": "912f13307e99404a738bead8dcf6f708c3b72d9d2cdce210bfdd786f4705c4db",
+          "context": "\n    // 366b38: update the ID snapshot before publishing, allowing subscriber reentry.\n    private func flushPending() {\n        guard let value = pending else { return }\n        pending = nil\n        if objectIDs != value.ids {\n            objectIDs = value.ids\n            objectIDMembership = Set(value.ids)\n        }\n        subject.send(Snapshot(identifiers: value.ids, updatedIdentifiers: value.updated))\n    }\n\n    private func objectsDidChange(_ notification: Notification) {",
+          "literal_present": true
+        }
+      ],
+      "implementation_complete": false,
+      "semantic_equivalence_reassessed": false,
+      "repair_needed": null
+    },
+    {
+      "function_id": "Paste:0x100371fd4",
+      "status": "rebound_current_source",
+      "binding_kind": "current_method_or_property",
+      "reason": "绑定真实延迟图像入口及其私有context错误读取器，替换类型/成员拼接描述。",
+      "old_references": [
+        {
+          "path": "replica/Sources/PastoCore/ClipboardSearchRecord.swift",
+          "symbol": "ClipboardSearchRecordReader.read / imageData",
+          "file_exists": true,
+          "literal_present": false,
+          "recorded_file_snapshot_matches": true
+        }
+      ],
+      "current_references": [
+        {
+          "path": "replica/Sources/PastoCore/ClipboardSearchRecord.swift",
+          "symbol": "func imageData()",
+          "class_or_method_scope": null,
+          "line": 248,
+          "file_sha256": "f624524f6902d07084ccbee412c92ce933b3b5d7e397f024bd57ce1330cca459",
+          "context_sha256": "bf41a89af230d09fc23a484db992a189c494addec7606ed1200a32f68e3333ba",
+          "context": "    }\n\n    func imageData() -> Data? {\n        read(imageDiagnostics: contentDiagnostics) { _, items in items.compactMap { $0.f_10037d5c4() }.first }\n    }\n}",
+          "literal_present": true
+        },
+        {
+          "path": "replica/Sources/PastoCore/ClipboardSearchRecord.swift",
+          "symbol": "private func read<T>(",
+          "class_or_method_scope": null,
+          "line": 149,
+          "file_sha256": "f624524f6902d07084ccbee412c92ce933b3b5d7e397f024bd57ce1330cca459",
+          "context_sha256": "066e54e221e9287a8286f9bd2e09f33e6e0adf4a2e143d3f84f82c6bbcaa502f",
+          "context": "\n    // 0x100372440/371f2c: a new private context is created on each evaluation.\n    private func read<T>(contentDiagnostics: OriginalNamedDiagnostic? = nil,\n                         imageDiagnostics: OriginalNamedDiagnostic? = nil,\n                         _ project: (NSManagedObject, [OriginalPasteboardItem]) throws -> T?) -> T? {\n        let context = NSManagedObjectContext(concurrencyType: .privateQueueConcurrencyType)\n        context.persistentStoreCoordinator = coordinator\n        do {\n            return try context.performAndWait {\n                try OriginalObjCExceptionBridge.withResult {\n                    let object: NSManagedObject\n                    do { object = try context.existingObject(with: objectID) }\n                    catch {",
+          "literal_present": true
+        }
+      ],
+      "implementation_complete": false,
+      "semantic_equivalence_reassessed": false,
+      "repair_needed": null
+    },
+    {
+      "function_id": "Paste:0x100375210",
+      "status": "rebound_current_source",
+      "binding_kind": "current_method_or_property",
+      "reason": "当前Entry已委托同原生record的可选字段/闭包；旧非可选文本/数组引用过时。",
+      "old_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "let device: String",
+          "file_exists": true,
+          "literal_present": false,
+          "recorded_file_snapshot_matches": false
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "attributes.setValue(entry.device as NSString, forCustomKey: deviceKey)",
+          "file_exists": true,
+          "literal_present": false,
+          "recorded_file_snapshot_matches": false
+        }
+      ],
+      "current_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "var device: String? { record.device }",
+          "class_or_method_scope": null,
+          "line": 50,
+          "file_sha256": "2b58fa5bc9944789cb9bd959152450304e9229f295ab4b675ee04db0639ed870",
+          "context_sha256": "2c4e4121be7acb752db0af5f66631210499db46547d580e7cb5a612d620c5825",
+          "context": "        var app: String? { record.app }\n        var type: String { record.type }\n        var device: String? { record.device }\n        var pinboard: String? { record.pinboard }\n        var content: (() -> String?)? { record.content }\n        var imageData: (() -> Data?)? { record.imageData }\n\n        init(_ record: ClipboardSearchRecord) { self.record = record }\n        init(_ item: ClipboardItem, app: String?) { record = .snapshot(item, app: app) }\n    }\n\n    private struct Request: Equatable {\n        let entries: [Entry]",
+          "literal_present": true
+        }
+      ],
+      "implementation_complete": false,
+      "semantic_equivalence_reassessed": false,
+      "repair_needed": null
+    },
+    {
+      "function_id": "Paste:0x100375244",
+      "status": "rebound_current_source",
+      "binding_kind": "current_method_or_property",
+      "reason": "当前Entry已委托同原生record的可选字段/闭包；旧非可选文本/数组引用过时。",
+      "old_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "text = String(indexedText.prefix(5000))",
+          "file_exists": true,
+          "literal_present": false,
+          "recorded_file_snapshot_matches": false
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "attributes.textContent = entry.text",
+          "file_exists": true,
+          "literal_present": false,
+          "recorded_file_snapshot_matches": false
+        }
+      ],
+      "current_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "var content: (() -> String?)? { record.content }",
+          "class_or_method_scope": null,
+          "line": 52,
+          "file_sha256": "2b58fa5bc9944789cb9bd959152450304e9229f295ab4b675ee04db0639ed870",
+          "context_sha256": "d0e49e457963b5ec645d9d4579f3b7fef29e1b3519e8af36058dd23ec6607a56",
+          "context": "        var device: String? { record.device }\n        var pinboard: String? { record.pinboard }\n        var content: (() -> String?)? { record.content }\n        var imageData: (() -> Data?)? { record.imageData }\n\n        init(_ record: ClipboardSearchRecord) { self.record = record }\n        init(_ item: ClipboardItem, app: String?) { record = .snapshot(item, app: app) }\n    }\n\n    private struct Request: Equatable {\n        let entries: [Entry]\n        let nodes: [OriginalSearchQueryNode]\n        let sourceIdentifier: String?",
+          "literal_present": true
+        }
+      ],
+      "implementation_complete": false,
+      "semantic_equivalence_reassessed": false,
+      "repair_needed": null
+    },
+    {
+      "function_id": "Paste:0x100375274",
+      "status": "rebound_current_source",
+      "binding_kind": "current_method_or_property",
+      "reason": "当前Entry已委托同原生record的可选字段/闭包；旧非可选文本/数组引用过时。",
+      "old_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "let pinboards: [String]",
+          "file_exists": true,
+          "literal_present": false,
+          "recorded_file_snapshot_matches": false
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "pinboards = item.pinboardIDs.map(\\.uuidString).sorted()",
+          "file_exists": true,
+          "literal_present": false,
+          "recorded_file_snapshot_matches": false
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "attributes.setValue(entry.pinboards as NSArray, forCustomKey: pinboardKey)",
+          "file_exists": true,
+          "literal_present": false,
+          "recorded_file_snapshot_matches": false
+        }
+      ],
+      "current_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "var pinboard: String? { record.pinboard }",
+          "class_or_method_scope": null,
+          "line": 51,
+          "file_sha256": "2b58fa5bc9944789cb9bd959152450304e9229f295ab4b675ee04db0639ed870",
+          "context_sha256": "2a2f941efdccbd8226d01cc132a0d732f4cebdc6087465f428961c3fbbc3dfd4",
+          "context": "        var type: String { record.type }\n        var device: String? { record.device }\n        var pinboard: String? { record.pinboard }\n        var content: (() -> String?)? { record.content }\n        var imageData: (() -> Data?)? { record.imageData }\n\n        init(_ record: ClipboardSearchRecord) { self.record = record }\n        init(_ item: ClipboardItem, app: String?) { record = .snapshot(item, app: app) }\n    }\n\n    private struct Request: Equatable {\n        let entries: [Entry]\n        let nodes: [OriginalSearchQueryNode]",
+          "literal_present": true
+        }
+      ],
+      "implementation_complete": false,
+      "semantic_equivalence_reassessed": false,
+      "repair_needed": null
+    },
+    {
+      "function_id": "Paste:0x1003b4888",
+      "status": "rebound_current_source",
+      "binding_kind": "current_method_or_property",
+      "reason": "绑定Item专有创建日期回调，避免把其他实体同名awake误计。",
+      "old_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalManagedItem.swift",
+          "symbol": "PastoItemEntity.awakeFromInsert",
+          "file_exists": true,
+          "literal_present": false,
+          "recorded_file_snapshot_matches": true
+        },
+        {
+          "path": "replica/Sources/PastoCore/ClipboardPersistence.swift",
+          "symbol": "ClipboardPersistence.makeModel / migrateLegacyStoreIfNeeded",
+          "file_exists": true,
+          "literal_present": false,
+          "recorded_file_snapshot_matches": false
+        },
+        {
+          "path": "replica/Sources/PastoCore/ClipboardItemDataPersistence.swift",
+          "symbol": "PastoItemDataMigrationPolicy.createRelationships",
+          "file_exists": true,
+          "literal_present": false,
+          "recorded_file_snapshot_matches": false
+        }
+      ],
+      "current_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalManagedItem.swift",
+          "symbol": "override func awakeFromInsert()",
+          "class_or_method_scope": "class PastoItemEntity:",
+          "line": 32,
+          "file_sha256": "b5388f95ca3f7b58a366f7b9d3a77075294df773d999627249f2aa510906cdca",
+          "context_sha256": "637909b3bcad0c0f889a7a247717af8822ae6eb942616972c0a96b9591faf09a",
+          "context": "\n    // 3b4888: creation time is independent of the history timestamp and later recency changes.\n    override func awakeFromInsert() {\n        super.awakeFromInsert()\n        setPrimitiveValue(Date(), forKey: \"createdAt\")\n    }\n\n    // 0x100329754: Item-specific wrapper around the same generic request factory.\n    static func defaultFetchRequest() -> NSFetchRequest<PastoItemEntity> {\n        OriginalManagedFetchRequest.make(for: PastoItemEntity.self)\n    }\n}\n",
+          "literal_present": true
+        }
+      ],
+      "implementation_complete": false,
+      "semantic_equivalence_reassessed": false,
+      "repair_needed": null
+    },
+    {
+      "function_id": "Paste:0x1003b4984",
+      "status": "rebound_current_source",
+      "binding_kind": "current_method_or_property",
+      "reason": "List及Metadata已继承共享Syncable本地回调；实际实现位于父类，非两个新override。",
+      "old_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalManagedItem.swift",
+          "symbol": "PastoListEntity.willSave / PastoListMetadataEntity.willSave",
+          "file_exists": true,
+          "literal_present": false,
+          "recorded_file_snapshot_matches": false
+        }
+      ],
+      "current_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalManagedItem.swift",
+          "symbol": "override func willSave()",
+          "class_or_method_scope": "class PastoManagedObject:",
+          "line": 12,
+          "file_sha256": "b5388f95ca3f7b58a366f7b9d3a77075294df773d999627249f2aa510906cdca",
+          "context_sha256": "f9ebed2c6834c05fb62af6d0aedd23afa403a9f663fa695a80f43ed14053ef4a",
+          "context": "\n    // 3b4984: local edits advance updatedAt; inserted/syncApply/unchanged objects do not.\n    override func willSave() {\n        let isSyncApply = managedObjectContext?.transactionAuthor == \"syncApply\"\n        if !isInserted && !isSyncApply && !changedValues().isEmpty {\n            setPrimitiveValue(Date(), forKey: \"updatedAt\")\n        }\n        super.willSave()\n    }\n\n}\n\n// 0x1003214a8/31f2a4: a dedicated managed Item type with the original class defaults.",
+          "literal_present": true
+        }
+      ],
+      "implementation_complete": false,
+      "semantic_equivalence_reassessed": false,
+      "repair_needed": null
+    },
+    {
+      "function_id": "Paste:0x1003b83c4",
+      "status": "rebound_current_source",
+      "binding_kind": "current_method_or_property",
+      "reason": "原生关系读取和实际导航目标消费者双端绑定，替代多方法斜杠摘要。",
+      "old_references": [
+        {
+          "path": "replica/Sources/PastoCore/ClipboardRestoreItem.swift",
+          "symbol": "listNavigationMembership / selectedItemTargetLists / revealSelectedItemInList",
+          "file_exists": true,
+          "literal_present": false,
+          "recorded_file_snapshot_matches": true
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "listNavigationMembership / selectedItemTargetLists / revealSelectedItemInList",
+          "file_exists": true,
+          "literal_present": false,
+          "recorded_file_snapshot_matches": false
+        }
+      ],
+      "current_references": [
+        {
+          "path": "replica/Sources/PastoCore/ClipboardRestoreItem.swift",
+          "symbol": "public func listNavigationMembership()",
+          "class_or_method_scope": null,
+          "line": 124,
+          "file_sha256": "b896730653c49e72387fd53bc19e2aeea23e5cafabc94ce7fd8fe6b9cf1d7665",
+          "context_sha256": "da28de3516d547cd9c6f79b553d7c999e5d4cabff2b87bb79025aa9fca2c9c86",
+          "context": "\n    // 3b83c4 reads current timestamp and type2 owner without decoding the content archive.\n    public func listNavigationMembership() -> (isInHistory: Bool, pinboardID: UUID?)? {\n        guard let object = nativeObject else { return nil }\n        let isInHistory = object.value(forKey: \"timestamp\") != nil\n        guard let owner = object.value(forKey: \"list\") as? NSManagedObject,\n              (owner.value(forKey: \"rawType\") as? NSNumber)?.int64Value == 2 else {\n            return (isInHistory, nil)\n        }\n        let identifier = owner.value(forKey: \"identifier\") as? String\n        return (isInHistory, identifier.flatMap { UUID(uuidString: $0) })\n    }\n",
+          "literal_present": true
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "func selectedItemTargetLists()",
+          "class_or_method_scope": null,
+          "line": 598,
+          "file_sha256": "f99aa58ecd391201df4bc79edcdb70e79dcb5c14b012e5dc2479e0f8757c6d0d",
+          "context_sha256": "67fc5efe5dce4395ec923cf4d5dbb0068614ae6d61cb71f2cff8701821aa2320",
+          "context": "\n    // f3b83c4: one resolved item, history first, then its owning pinboard; omit the current list.\n    func selectedItemTargetLists() -> [UUID?] {\n        let ids = orderedSelectionIDs.filter { selection.contains($0) }\n        let inputs: [ClipboardRestoreItem]\n        if let collectionOwner {\n            inputs = collectionOwner.appliedRestoreItems(for: self, orderedIDs: ids) ?? []\n        } else {\n            let byID = Dictionary(uniqueKeysWithValues: visibleItems.map { ($0.id, $0) })\n            inputs = ids.compactMap { byID[$0]?.restoreItem() }\n        }\n        guard inputs.count == 1 else { return [] }\n        let input = inputs[0]",
+          "literal_present": true
+        }
+      ],
+      "implementation_complete": false,
+      "semantic_equivalence_reassessed": false,
+      "repair_needed": null
+    },
+    {
+      "function_id": "Paste:0x1003bd740",
+      "status": "rebound_current_source",
+      "binding_kind": "current_method_or_property",
+      "reason": "绑定实时rawPreview尺寸读值和当前首选尺寸输入；不将NSImage尺寸回退当原输入。",
+      "old_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaImagePreviewContent.swift",
+          "symbol": "let imageSize = imageMetadataSize",
+          "file_exists": true,
+          "literal_present": false,
+          "recorded_file_snapshot_matches": false
+        }
+      ],
+      "current_references": [
+        {
+          "path": "replica/Sources/PastoCore/ClipboardRestoreItem.swift",
+          "symbol": "public func previewImageSize()",
+          "class_or_method_scope": null,
+          "line": 176,
+          "file_sha256": "b896730653c49e72387fd53bc19e2aeea23e5cafabc94ce7fd8fe6b9cf1d7665",
+          "context_sha256": "38d131be2e3dace0830ce04b5546b5fbae07ca5f4f364a8eb67cc4f01ae8fc18",
+          "context": "\n    // 3bd740/3bd784: missing or nonimage metadata supplies zero size.\n    public func previewImageSize() -> NSSize? {\n        guard let object = nativeObject else { return nil }\n        return OriginalImagePreviewMetadataCodec.decode(object.value(forKey: \"rawPreview\") as? Data)?.size ?? .zero\n    }\n\n    public func resolvedItem() -> ClipboardItem { resolve() }\n    public func observeItem() -> ClipboardItemObservation? { makeObservation() }\n}\n\nprivate final class ClipboardDragIdentifierSource: OriginalDragItemIdentifierSource {\n    private let object: PastoItemEntity?",
+          "literal_present": true
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaImagePreviewContent.swift",
+          "symbol": "let imageSize = editInput?.previewImageSize() ?? imageMetadataSize",
+          "class_or_method_scope": null,
+          "line": 92,
+          "file_sha256": "f571de628dd9f10ae92e16c9a6f53ae386451f60f61c581958bf4d070f1dd027",
+          "context_sha256": "f98a7a28b5f0364bdc7b73ca2c958e94652d64642ed1eb3a5837ae08813c3b93",
+          "context": "\n    var preferredPreviewSize: NSSize {\n        let imageSize = editInput?.previewImageSize() ?? imageMetadataSize\n        let screen = NSScreen.main!.frame.size\n        let halfWidth = screen.width * 0.5\n        let halfHeight = screen.height * 0.5\n        // Original 0x1003e6afc returns the source dimensions when both comparisons\n        // are nonnegative or unordered; it does not impose a minimum canvas size.\n        if !(halfWidth < imageSize.width), !(halfHeight < imageSize.height) { return imageSize }\n        let widthScale = halfWidth / imageSize.width\n        let heightScale = halfHeight / imageSize.height\n        let scale = heightScale < widthScale ? heightScale : widthScale\n        return NSSize(width: imageSize.width * scale, height: imageSize.height * scale)",
+          "literal_present": true
+        }
+      ],
+      "implementation_complete": false,
+      "semantic_equivalence_reassessed": false,
+      "repair_needed": null
+    },
+    {
+      "function_id": "Paste:0x1003c3c90",
+      "status": "rebound_current_source",
+      "binding_kind": "current_method_or_property",
+      "reason": "工厂已先读native rawType并保同input，不再经旧resolvedItem全DTO前置解码。",
+      "old_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "makeOriginalReplicaPreview(state: state, item: input.resolvedItem(), input: input)",
+          "file_exists": true,
+          "literal_present": false,
+          "recorded_file_snapshot_matches": false
+        }
+      ],
+      "current_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift",
+          "symbol": "func makeOriginalReplicaNativePreview(",
+          "class_or_method_scope": null,
+          "line": 7,
+          "file_sha256": "f960f429ee4f3f95c57515dec8684397d86e25d4a0d8ef9984913473315ff68a",
+          "context_sha256": "ef9f3be0c987dc23d50f77804d5327bdd86f432f148d0696bef3d3ee417f4cb0",
+          "context": "// Native text/color/image/link creation reads its captured entity; other content keeps its adapter.\n@MainActor\nfunc makeOriginalReplicaNativePreview(state: ReplicaUIState, input: ClipboardRestoreItem) -> OriginalItemPreviewView {\n    let rawType = input.previewRawType()\n    if rawType == 5 {\n        return makeReplicaTextPreview(state: state, item: nil, input: input)\n    }\n    if rawType == 2 {\n        let content = ReplicaColorPreviewContent(state: state, item: nil, input: input)\n        return makeReplicaContentPreview(state: state, item: nil, input: input, content: content,\n            contentSize: content.preferredPreviewSize, metadata: content.previewMetadataView)\n    }\n    if rawType == 1 {",
+          "literal_present": true
+        }
+      ],
+      "implementation_complete": false,
+      "semantic_equivalence_reassessed": false,
+      "repair_needed": null
+    },
+    {
+      "function_id": "Paste:0x1003c4f00",
+      "status": "rebound_current_source",
+      "binding_kind": "current_method_or_property",
+      "reason": "同原生List删除请求及panel内确认，保留用户明确的panel内操作适配。",
+      "old_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "func removePinboard(_ board: Pinboard)",
+          "file_exists": true,
+          "literal_present": false,
+          "recorded_file_snapshot_matches": false
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "if !store.items.contains(where: { $0.pinboardIDs.contains(board.id) })",
+          "file_exists": true,
+          "literal_present": false,
+          "recorded_file_snapshot_matches": false
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/PanelViews.swift",
+          "symbol": "private func pinboardDeletionConfirmation(_ board: Pinboard)",
+          "file_exists": true,
+          "literal_present": false,
+          "recorded_file_snapshot_matches": false
+        }
+      ],
+      "current_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "func removePinboard(_ target: ClipboardListTarget)",
+          "class_or_method_scope": null,
+          "line": 1764,
+          "file_sha256": "f99aa58ecd391201df4bc79edcdb70e79dcb5c14b012e5dc2479e0f8757c6d0d",
+          "context_sha256": "c9e7e0dd7a0ba96b322c75864c52b3773920cc32560619a2b6b5fb9a7bdc1e21",
+          "context": "    }\n\n    func removePinboard(_ target: ClipboardListTarget) {\n        state.cancelItemDeletion()\n        state.pinboardDeletionError = nil\n        state.pendingPinboardDeletion = target\n        // 0x1003c4f00: an empty local group is deleted without confirmation.\n        // Nonempty confirmation stays inside the panel by user request, instead\n        // of the original 0x100022ad0 → 0x1003b6cfc NSAlert.runModal presenter.\n        if store.localListMenuState(target).isEmpty {\n            confirmPinboardRemoval()\n        } else {\n            panel.makeFirstResponder(nil)",
+          "literal_present": true
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/PanelViews.swift",
+          "symbol": "private func pinboardDeletionConfirmation(_ target: ClipboardListTarget)",
+          "class_or_method_scope": null,
+          "line": 62,
+          "file_sha256": "4d12898b461515d2cea5c173240eb1f1a9db287ff9b9158146f54aedc3928f50",
+          "context_sha256": "2d4b11e8ffbd886883ac02a45870c44f60d5d964ea54f93937c698098c20988f",
+          "context": "    }\n\n    private func pinboardDeletionConfirmation(_ target: ClipboardListTarget) -> some View {\n        deletionConfirmation(title: \"删除“\\(target.name)”？\",\n            message: \"保留历史和其他分组中的内容，仅属于此分组的内容将被删除。\",\n            error: state.pinboardDeletionError, confirmTitle: \"删除分组\", kind: \"group\",\n            cancel: { state.controller?.cancelPinboardRemoval() },\n            confirm: { state.controller?.confirmPinboardRemoval() })\n    }\n\n    private func itemDeletionConfirmation(_ request: ReplicaUIState.ItemDeletionRequest) -> some View {\n        let message: String\n        if request.permanently { message = \"将从剪贴板历史和所有分组中删除这 \\(request.ids.count) 个项目。\" }",
+          "literal_present": true
+        }
+      ],
+      "implementation_complete": false,
+      "semantic_equivalence_reassessed": false,
+      "repair_needed": null
+    },
+    {
+      "function_id": "Paste:0x1003ca374",
+      "status": "rebound_current_source",
+      "binding_kind": "current_method_or_property",
+      "reason": "特殊拖放标识已由ClipboardDragIdentifierSource按同entity现场读取，旧ReplicaNativeDragItemReference类已移除。",
+      "old_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaNativeCardCollection.swift",
+          "symbol": "private final class ReplicaNativeDragItemReference",
+          "file_exists": true,
+          "literal_present": false,
+          "recorded_file_snapshot_matches": false
+        }
+      ],
+      "current_references": [
+        {
+          "path": "replica/Sources/PastoCore/ClipboardRestoreItem.swift",
+          "symbol": "var pasteboardIdentifier: String",
+          "class_or_method_scope": null,
+          "line": 196,
+          "file_sha256": "b896730653c49e72387fd53bc19e2aeea23e5cafabc94ce7fd8fe6b9cf1d7665",
+          "context_sha256": "016d8f7e4b86146ce45b4848b226832d97a15f28614384972b6eaa845b4edd06",
+          "context": "    }\n\n    var pasteboardIdentifier: String {\n        guard let object else { return fallback }\n        let fallback = self.fallback\n        let read = { (object.value(forKey: \"nativeIdentifier\") as? String) ?? fallback }\n        if let context { return context.performAndWait(read) }\n        return read()\n    }\n}",
+          "literal_present": true
+        }
+      ],
+      "implementation_complete": false,
+      "semantic_equivalence_reassessed": false,
+      "repair_needed": null
+    },
+    {
+      "function_id": "Paste:0x1003e5dd4",
+      "status": "rebound_current_source",
+      "binding_kind": "current_method_or_property",
+      "reason": "图像提交后的状态清理已拆到finishEditing(false)，取消仍可显式重读，不沿用旧finishEditing()形态。",
+      "old_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaImagePreviewContent.swift",
+          "symbol": "finishEditing()",
+          "file_exists": true,
+          "literal_present": false,
+          "recorded_file_snapshot_matches": false
+        }
+      ],
+      "current_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaImagePreviewContent.swift",
+          "symbol": "private func finishEditing(reloadNativeImage:",
+          "class_or_method_scope": null,
+          "line": 131,
+          "file_sha256": "f571de628dd9f10ae92e16c9a6f53ae386451f60f61c581958bf4d070f1dd027",
+          "context_sha256": "85051edfec666178c39d1cc178e50de9c77fc93d8b326a59e42ed52cb145a49e",
+          "context": "    }\n\n    private func finishEditing(reloadNativeImage: Bool) {\n        isEditing = false\n        if editInput?.hasNativeEntity == true {\n            if reloadNativeImage { zoomView.f_100240a64(editInput?.previewImage()) }\n            zoomView.f_100240be8(false)\n            quarterTurns = 0\n            editingUndoManager.removeAllActions()\n            updateMetadataAndCommitState()\n            return\n        }\n        quarterTurns = 0",
+          "literal_present": true
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaImagePreviewContent.swift",
+          "symbol": "func commitPreviewEditing()",
+          "class_or_method_scope": null,
+          "line": 115,
+          "file_sha256": "f571de628dd9f10ae92e16c9a6f53ae386451f60f61c581958bf4d070f1dd027",
+          "context_sha256": "af3ab104523072e2bd18207a5255b57e95ee9336920729b6b8d37e18a57e626a",
+          "context": "    }\n\n    func commitPreviewEditing() {\n        if let image = zoomView.f_100240a18(), let state {\n            do {\n                if let editInput {\n                    try state.store.updateImagePreviewItem(editInput, payloads: Self.encodedPayloads(image))\n                } else {\n                    try state.store.updateImagePreviewItem(id: itemID, payloads: Self.encodedPayloads(image))\n                }\n                state.normalizeSelection()\n            } catch {\n                // 3bde74: consume the transaction error and continue the editing cleanup.",
+          "literal_present": true
+        }
+      ],
+      "implementation_complete": false,
+      "semantic_equivalence_reassessed": false,
+      "repair_needed": null
+    }
+  ],
+  "total": 49,
+  "rebound": 49,
+  "unresolved": 0,
+  "implementation_complete_inferred": false
+}

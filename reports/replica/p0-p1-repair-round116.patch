@@ -1,0 +1,61 @@
+--- a/replica/Sources/PastoCore/ClipboardPersistence.swift
++++ b/replica/Sources/PastoCore/ClipboardPersistence.swift
+@@ -595,9 +595,13 @@
+     @MainActor
+     final class Transaction {
+         let context: NSManagedObjectContext
++        let nativeHistoryRestoreTargets: [(id: UUID, object: NSManagedObject)]
+         private var cachedRepository: ManagedRepository?
+ 
+-        init(context: NSManagedObjectContext) { self.context = context }
++        init(context: NSManagedObjectContext, nativeHistoryRestoreTargets: [(id: UUID, object: NSManagedObject)] = []) {
++            self.context = context
++            self.nativeHistoryRestoreTargets = nativeHistoryRestoreTargets
++        }
+ 
+         // 0x100357cf0 -> 0x1003594e4: cache belongs to this transaction instance.
+         var repository: ManagedRepository {
+@@ -614,7 +618,7 @@
+     }
+ 
+     func prepareHistoryRestore(targets: [(id: UUID, object: NSManagedObject)]) throws -> HistoryRestoreSelection {
+-        let transaction = Transaction(context: context)
++        let transaction = Transaction(context: context, nativeHistoryRestoreTargets: targets)
+         return try context.performAndWait {
+             try OriginalObjCExceptionBridge.withResult {
+                 HistoryRestoreSelection(transaction: transaction, targets: targets)
+@@ -653,7 +657,33 @@
+                 let state = outcome.state
+                 let replacements = transaction.repository.replacedItemDataIDs
+                 let sourced = transaction.repository.sourcedItemIDs
+-                try transaction.repository.update(state.items, previous: previous?.items ?? [], entity: "Item", key: { $0.id.uuidString },
++                let previousItems = previous?.items ?? []
++                var restoredMetadataOnly: Set<UUID> = []
++                var nativeRestoreWithoutValue: Set<UUID> = []
++                if !transaction.nativeHistoryRestoreTargets.isEmpty {
++                    let targets = Dictionary(transaction.nativeHistoryRestoreTargets.map { ($0.id, $0.object) },
++                                             uniquingKeysWith: { _, last in last })
++                    nativeRestoreWithoutValue = Set(targets.keys).subtracting(state.items.map(\.id))
++                    let before = Dictionary(uniqueKeysWithValues: previousItems.map { ($0.id, $0) })
++                    for item in state.items {
++                        guard let object = targets[item.id], let old = before[item.id] else { continue }
++                        var restored = old
++                        restored.createdAt = item.createdAt
++                        restored.updatedAt = item.updatedAt
++                        restored.isInHistory = item.isInHistory
++                        guard restored == item else { continue }
++                        // The native restore already wrote timestamp. Keep Pasto's local metadata,
++                        // without replaying unchanged value payload/preview/order onto this entity.
++                        if old.createdAt != item.createdAt { object.setValue(item.createdAt, forKey: "localCreatedAt") }
++                        if old.updatedAt != item.updatedAt { object.setValue(item.updatedAt, forKey: "updatedAt") }
++                        if old.isInHistory != item.isInHistory { object.setValue(item.isInHistory, forKey: "inHistory") }
++                        restoredMetadataOnly.insert(item.id)
++                    }
++                }
++                let itemValues = restoredMetadataOnly.isEmpty ? state.items : state.items.filter { !restoredMetadataOnly.contains($0.id) }
++                let itemPrevious = restoredMetadataOnly.isEmpty && nativeRestoreWithoutValue.isEmpty ? previousItems
++                    : previousItems.filter { !restoredMetadataOnly.contains($0.id) && !nativeRestoreWithoutValue.contains($0.id) }
++                try transaction.repository.update(itemValues, previous: itemPrevious, entity: "Item", key: { $0.id.uuidString },
+                            deletingKeys: deletingItemIDs.map(\.uuidString),
+                            updatingKeys: replacements.map(\.uuidString),
+                            alreadyDeletedKeys: Set(transaction.repository.alreadyDeletedItemIDs.map(\.uuidString))) { item, old, object in

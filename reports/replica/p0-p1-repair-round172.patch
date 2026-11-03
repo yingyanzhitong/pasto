@@ -1,0 +1,201 @@
+--- a/replica/Sources/PastoCore/ClipboardPersistence.swift
++++ b/replica/Sources/PastoCore/ClipboardPersistence.swift
+@@ -599,6 +599,48 @@
+                 object.setValue(id.uuidString, forKey: "key")
+                 objects[id.uuidString] = object
+                 return (id: id, object: object)
++            }
++        }
++
++        // 03b634 → ItemsReading witness+20: resolve each String independently and retain duplicates/order.
++        func droppedItem(identifier: String) -> PastoItemEntity? {
++            let request = PastoItemEntity.defaultFetchRequest()
++            request.predicate = NSPredicate(
++                format: "nativeIdentifier == %@ OR (nativeIdentifier == nil AND key == %@)", identifier, identifier)
++            request.fetchLimit = 1
++            request.fetchOffset = 0
++            return (try? context.fetch(request))?.first
++        }
++
++        // 364014/3614c0: local nil-share path; cloud clone/permission flows are outside this adapter.
++        func dropItems(identifiers: [String], to list: NSManagedObject) throws -> [ClipboardItem] {
++            let items = identifiers.compactMap { droppedItem(identifier: $0) }
++            guard !items.isEmpty else { return [] }
++            switch (list.value(forKey: "rawType") as? NSNumber)?.int64Value ?? 0 {
++            case 2:
++                return try assignItems(items, to: list)
++            case 1:
++                // 361ec0/364108 reverse the input before generating one Date per occurrence.
++                for item in items.reversed() { item.setValue(Date(), forKey: "timestamp") }
++                if let capacity = lists.historyCapacity(of: list), capacity > 0 {
++                    let interval = -capacity * 24 * 60 * 60
++                    let request = PastoItemEntity.defaultFetchRequest()
++                    request.predicate = NSPredicate(format: "list == nil && timestamp < %@",
++                        Date(timeIntervalSinceNow: Double(interval)) as NSDate)
++                    let expired = (try? context.fetch(request)) ?? []
++                    for item in expired { context.delete(item) }
++                    // Compatibility bookkeeping follows native deletion, never filters its input.
++                    for item in expired {
++                        if let key = item.value(forKey: "key") as? String, let id = UUID(uuidString: key) {
++                            alreadyDeletedItemIDs.insert(id)
++                        }
++                    }
++                }
++                // Original static predicate is identifier == sharedPasteboardHistory, then refresh(merge:true).
++                if let history = try? lists.historyList() { context.refresh(history, mergeChanges: true) }
++                return try items.map { try ClipboardPersistence.item($0) }
++            default:
++                return []
+             }
+         }
+ 
+--- a/replica/Sources/PastoCore/ClipboardStore.swift
++++ b/replica/Sources/PastoCore/ClipboardStore.swift
+@@ -1501,6 +1501,21 @@
+         try assign(orderedIDs: ordered, to: pinboardID)
+     }
+ 
++    /// Native tab item-drop keeps the supplied List through String lookup and local repository dispatch.
++    public func dropItems(identifiers: [String], to target: ClipboardListTarget) throws {
++        try mutateInTransaction { state, transaction in
++            let values = try transaction.repository.dropItems(identifiers: identifiers, to: target.nativeObject)
++            state.items.removeAll { transaction.repository.alreadyDeletedItemIDs.contains($0.id) }
++            for item in values {
++                if let index = state.items.firstIndex(where: { $0.id == item.id }) {
++                    state.items[index] = item
++                } else {
++                    state.items.append(item)
++                }
++            }
++        }
++    }
++
+     /// The local group menu retains its supplied entities through the repository transaction.
+     public func assign(items: [ClipboardRestoreItem], to pinboardID: UUID?) throws {
+         try assign(items: items, pinboardID: pinboardID, nativePinboard: nil)
+--- a/replica/Sources/Pasto/UI/ReplicaUIController.swift
++++ b/replica/Sources/Pasto/UI/ReplicaUIController.swift
+@@ -775,6 +775,11 @@
+     // 076318/09e510: read the cached native list collection when the menu is constructed.
+     func pinboardMenuTargets() -> [ClipboardPinboardTarget] {
+         pinboardMenuCollection.value
++    }
++
++    func dropItems(identifiers: [String], to target: ClipboardListTarget) {
++        // 03c3b0's local write error branch only consumes the error; no additional system alert.
++        try? store.dropItems(identifiers: identifiers, to: target)
+     }
+ 
+     func assignItems(_ items: [ClipboardRestoreItem], to target: ClipboardPinboardTarget) {
+--- a/replica/Sources/Pasto/UI/PanelViews.swift
++++ b/replica/Sources/Pasto/UI/PanelViews.swift
+@@ -150,6 +150,11 @@
+         var tab = boardButton(target.name, board: board, target: target)
+         tab.menuProvider = { localListMenu(for: target) }
+         tab.dragString = "paste-pinboard:" + target.identifier
++        // 328f38's nil-share branch is writable for Pasto's local Lists, including history.
++        tab.canDropItems = { true }
++        tab.onDropItemIdentifiers = { [weak state = state] identifiers in
++            state?.dropItems(identifiers: identifiers, to: target)
++        }
+         tab.onDropString = { value in
+             guard value.hasPrefix("paste-pinboard:") else { return false }
+             return state.moveList(identifier: String(value.dropFirst(15)), to: target)
+--- a/replica/Sources/Pasto/UI/ReplicaNativeCardCollection.swift
++++ b/replica/Sources/Pasto/UI/ReplicaNativeCardCollection.swift
+@@ -644,7 +644,7 @@
+ 
+     func draggingSession(_ session: NSDraggingSession,
+                          sourceOperationMaskFor context: NSDraggingContext) -> NSDragOperation {
+-        context == .outsideApplication ? .copy : .move
++        context == .outsideApplication ? .copy : [.copy, .move]
+     }
+ 
+     func draggingSession(_ session: NSDraggingSession, willBeginAt screenPoint: NSPoint) {
+--- a/replica/Sources/Pasto/UI/OriginalPinboardTabTitle.swift
++++ b/replica/Sources/Pasto/UI/OriginalPinboardTabTitle.swift
+@@ -15,6 +15,8 @@
+     var menuProvider: (() -> NSMenu)?
+     var dragString: String?
+     var onDropString: ((String) -> Bool)?
++    var onDropItemIdentifiers: (([String]) -> Void)?
++    var canDropItems: (() -> Bool)?
+ 
+     func configure(_ view: OriginalPinboardTabView) {
+         view.configure(title: title, iconColor: iconColor, isSelected: isSelected, beginRequest: beginRequest,
+@@ -22,6 +24,8 @@
+         view.menuProvider = menuProvider
+         view.dragString = dragString
+         view.onDropString = onDropString
++        view.onDropItemIdentifiers = onDropItemIdentifiers
++        view.canDropItems = canDropItems
+         view.setAccessibilityElement(true)
+         view.setAccessibilityRole(.button)
+         view.setAccessibilityLabel(title)
+@@ -43,6 +47,8 @@
+     var menuProvider: (() -> NSMenu)?
+     var dragString: String?
+     var onDropString: ((String) -> Bool)?
++    var onDropItemIdentifiers: (([String]) -> Void)?
++    var canDropItems: (() -> Bool)?
+     private var isDragging = false
+     private var isDragDestination = false
+     private lazy var labelTrailingConstraint = titleView.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -8)
+@@ -74,7 +80,8 @@
+             titleView.leadingAnchor.constraint(equalTo: historyIconView.trailingAnchor, constant: 4),
+             labelTrailingConstraint
+         ])
+-        registerForDraggedTypes([.string])
++        // Native item IDs are distinct from the retained local group-reorder adapter.
++        registerForDraggedTypes([OriginalNativeDragPasteboardWriter.itemIdentifierType, .string])
+     }
+ 
+     required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
+@@ -223,20 +230,46 @@
+         return value
+     }
+ 
++    private func isItemDrag(_ sender: NSDraggingInfo) -> Bool {
++        sender.draggingPasteboard.types?.contains(OriginalNativeDragPasteboardWriter.itemIdentifierType) == true
++    }
++
+     override func draggingEntered(_ sender: NSDraggingInfo) -> NSDragOperation {
++        if isItemDrag(sender) {
++            // 0792a8/07a4f8 returns the predicate's Bool as operation raw value 0/1 (copy).
++            isDragDestination = canDropItems?() ?? false
++            needsDisplay = true
++            return isDragDestination ? .copy : []
++        }
+         isDragDestination = draggedGroup(sender) != nil
+         needsDisplay = true
+         return isDragDestination ? .move : []
+     }
+     override func draggingUpdated(_ sender: NSDraggingInfo) -> NSDragOperation { draggingEntered(sender) }
+-    override func prepareForDragOperation(_ sender: NSDraggingInfo) -> Bool { draggedGroup(sender) != nil }
++    override func prepareForDragOperation(_ sender: NSDraggingInfo) -> Bool {
++        if isItemDrag(sender) { return true }
++        return draggedGroup(sender) != nil
++    }
+     override func draggingExited(_ sender: NSDraggingInfo?) { isDragDestination = false; needsDisplay = true }
+     override func draggingEnded(_ sender: NSDraggingInfo) { isDragDestination = false; needsDisplay = true }
+     override func performDragOperation(_ sender: NSDraggingInfo) -> Bool {
++        if performItemDrop(sender) { return true }
++        if isItemDrag(sender) { return false }
+         isDragDestination = false
+         needsDisplay = true
+         guard let value = draggedGroup(sender) else { return false }
+         return onDropString?(value) ?? false
++    }
++
++    // 079430: preserve item order/duplicates, skip nil strings, report acceptance independently of the write.
++    private func performItemDrop(_ sender: NSDraggingInfo) -> Bool {
++        guard let onDropItemIdentifiers else { return false }
++        let identifiers = (sender.draggingPasteboard.pasteboardItems ?? []).compactMap {
++            $0.string(forType: OriginalNativeDragPasteboardWriter.itemIdentifierType)
++        }
++        guard !identifiers.isEmpty else { return false }
++        onDropItemIdentifiers(identifiers)
++        return true
+     }
+ }
+ 

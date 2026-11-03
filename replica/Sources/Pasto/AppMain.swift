@@ -43,9 +43,9 @@ final class ReplicaAppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValid
     private var hotKeyStatus: OSStatus = noErr
     private var stackHotKeyStatus: OSStatus = noErr
     private var hotKeyObservation: AnyCancellable?
+    private var panelVisibilityObservation: AnyCancellable?
     private var lastHotKeyConfiguration: [KeyboardShortcut?]?
     private var isRecordingHotKey = false
-    private var pasteGeneration = UUID()
     private let arguments = ProcessInfo.processInfo.arguments
     private var pasteboard: NSPasteboard = .general
 
@@ -105,8 +105,15 @@ final class ReplicaAppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValid
             ui.pasteboard = pasteboard
             ui.pasteHandler = { [weak self] id, plain in self?.paste(id: id, plain: plain) ?? false }
             ui.pasteItemsHandler = { [weak self] ids, plain in self?.paste(ids: ids, plain: plain) ?? false }
-            ui.panelWillShow = { [weak self] in self?.rememberPanelApplication() }
+            ui.directPasteItemsHandler = { [weak self] ids, plain in
+                self?.paste(ids: ids, plain: plain, forceDirect: true) ?? false
+            }
+            ui.pasteRestoreItemsHandler = { [weak self] items, plain, forceDirect in
+                self?.paste(ids: items.map(\.id), plain: plain, forceDirect: forceDirect, restoreItems: items) ?? false
+            }
+            ui.panelDidShow = { [weak self] in self?.rememberPanelApplication() }
             ui.panelWillClose = { [weak self] restore in self?.restorePanelApplication(restore: restore) }
+            ui.panelDidLoad = { [weak self] in self?.installPanelVisibilityObservation() }
             ui.copiedItemsHandler = {
                 ReplicaCopiedOSD.showCopied()
                 NSApp.deactivate()
@@ -131,7 +138,6 @@ final class ReplicaAppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValid
             }
             if !arguments.contains("--no-monitor") {
                 monitor = ClipboardMonitor(store: store, pasteboard: pasteboard)
-                monitor?.onCapture = { [weak self] id in self?.ui.captureIntoStack(id: id) }
             }
             soundEffects = OriginalSoundEffects(store: store, monitor: monitor)
             ReplicaCopiedOSD.pauseStatus = { [weak self] in
@@ -148,7 +154,7 @@ final class ReplicaAppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValid
             hotKey.action = { [weak self] in self?.togglePanel(nil) }
             stackHotKey.action = { [weak self] in
                 guard let self else { return }
-                if NSApp.isActive, self.ui.panel.isKeyWindow, self.store.preferences.stackShortcut == .stackDefault {
+                if NSApp.isActive, self.ui.isPanelKeyWindow, self.store.preferences.stackShortcut == .stackDefault {
                     self.ui.copySelection(plainTextOnly: true)
                 } else { self.ui.showStack() }
             }
@@ -162,11 +168,12 @@ final class ReplicaAppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValid
                     NSApp.sendAction(#selector(NSText.paste(_:)), to: nil, from: nil)
                     return
                 }
-                guard let first = self.ui.state.stackItems.first else { return }
+                guard let first = self.ui.state.stackItemIDs.first else { return }
+                let input = self.ui.state.stackRestoreItem(for: first)
                 self.targetApplication = NSWorkspace.shared.frontmostApplication
                 self.ui.consumeStackHead()
-                _ = self.paste(ids: [first.id], plain: false, forceDirect: true)
-                if self.ui.state.stackItems.isEmpty { self.ui.hideStack() }
+                _ = self.paste(ids: [first], plain: false, forceDirect: true, restoreItems: input.map { [$0] })
+                if self.ui.state.stackItemIDs.isEmpty { self.ui.hideStack() }
             }
             configureGlobalHotKeys(force: true)
             accessibilityObservation = accessibilityService.f_100ae5e90().sink { [weak self] _ in
@@ -272,10 +279,28 @@ final class ReplicaAppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValid
         updateStatus()
     }
 
+    private func installPanelVisibilityObservation() {
+        panelVisibilityObservation = ui.$isPanelVisible.sink { [weak self] visible in
+            self?.panelVisibilityChanged(visible)
+        }
+    }
+
+    // 0x1000a8378 consumes _pasteStackShortcut, not the activation shortcut.
+    private func panelVisibilityChanged(_ visible: Bool) {
+        guard let shortcut = store.preferences.stackShortcut else { return }
+        if visible {
+            stackHotKey.unregister()
+        } else if !isRecordingHotKey, !arguments.contains("--no-global-hotkey") {
+            stackHotKeyStatus = shortcut.isValidGlobal
+                ? stackHotKey.register(keyCode: shortcut.keyCode, modifiers: shortcut.modifiers, identifier: 2)
+                : OSStatus(-50)
+        }
+        updateStatus()
+    }
+
     private func configureStackPasteShortcut() {
-        let enabled = ui.isStackVisible && !ui.state.stackItems.isEmpty && !isRecordingHotKey
+        let enabled = ui.isStackVisible && !ui.state.stackItemIDs.isEmpty && !isRecordingHotKey
             && !arguments.contains("--no-global-hotkey") && pasteboard.name == NSPasteboard.general.name
-            && accessibilityService.f_100ae5e74()
         guard enabled != stackPasteRegistered else { return }
         stackPasteHotKey.unregister()
         stackPasteRegistered = false
@@ -355,27 +380,24 @@ final class ReplicaAppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValid
         ui.togglePanel()
     }
     private func rememberPanelApplication() {
-        // 0x1000b098c: snapshot the previous application before Pasto activates.
+        // 0x100019790 → 0x1000b098c: after showing, sample before activation.
         let app = NSWorkspace.shared.frontmostApplication
         if app?.processIdentifier != ProcessInfo.processInfo.processIdentifier {
             handoffPreviousApplication = app
-        } else if handoffPreviousApplication == nil {
-            // Menu-bar/reopen entry points may already have activated Pasto.
-            handoffPreviousApplication = targetApplication
         }
+        NSApp.activate()
     }
 
     private func restorePanelApplication(restore: Bool) {
         // 0x1000b11ac: restore onWillClose, then clear the saved application.
         defer { handoffPreviousApplication = nil }
-        guard restore, let previous = handoffPreviousApplication, !previous.isTerminated,
+        guard restore, let previous = handoffPreviousApplication,
               previous.processIdentifier != ProcessInfo.processInfo.processIdentifier else { return }
         previous.activate(options: .activateIgnoringOtherApps)
     }
 
     private func rememberPasteTargetBeforeOpeningPanel() {
-        guard !ui.panel.isVisible else { return }
-        pasteGeneration = UUID()
+        guard !ui.isPanelOrderedVisible else { return }
         let app = NSWorkspace.shared.frontmostApplication
         if app?.processIdentifier != ProcessInfo.processInfo.processIdentifier { targetApplication = app }
     }
@@ -441,9 +463,8 @@ final class ReplicaAppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValid
     }
 
     @discardableResult
-    private func paste(ids: [UUID], plain: Bool, forceDirect: Bool = false) -> Bool {
-        let generation = UUID()
-        pasteGeneration = generation
+    private func paste(ids: [UUID], plain: Bool, forceDirect: Bool = false,
+                       restoreItems: [ClipboardRestoreItem]? = nil) -> Bool {
         let requestedTarget = targetApplication
         let hasAccessibilityAccess = accessibilityService.f_100ae5e74()
         pasteLogger.notice("request ax=\(hasAccessibilityAccess, privacy: .public) post=\(CGPreflightPostEventAccess(), privacy: .public) target=\(requestedTarget?.processIdentifier ?? -1, privacy: .public) front=\(NSWorkspace.shared.frontmostApplication?.processIdentifier ?? -1, privacy: .public)")
@@ -468,7 +489,13 @@ final class ReplicaAppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValid
         }
         var restoreOptions: OriginalPasteboardRestore.Options = plain ? .plainText : []
         if store.preferences.alwaysPastePlainText { restoreOptions.insert(.plainTextAndLinks) }
-        do { try store.writeToPasteboard(ids: ids, pasteboard: pasteboard, options: restoreOptions) }
+        do {
+            if let restoreItems {
+                try store.writeToPasteboard(restoreItems: restoreItems, pasteboard: pasteboard, options: restoreOptions)
+            } else {
+                try store.writeToPasteboard(ids: ids, pasteboard: pasteboard, options: restoreOptions)
+            }
+        }
         catch {
             pasteLogger.error("restore_failed code=\((error as NSError).code, privacy: .public)")
             ui.presentError(error)
@@ -492,45 +519,18 @@ final class ReplicaAppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValid
             ui.hidePanel()
             return true
         }
-        ui.hidePanel()
-        guard let target = requestedTarget, !target.isTerminated,
-              target.processIdentifier != ProcessInfo.processInfo.processIdentifier else {
-            pasteLogger.error("target_unavailable")
-            return false
+        // 0x100066068 creates the MainActor task before deactivation. The
+        // existing panel onWillClose path restores the previous application.
+        Task { @MainActor [self] in
+            await self.f_100053988()
         }
-        let changeCount = pasteboard.changeCount
-        NSApp.yieldActivation(to: target)
         NSApp.deactivate()
-        let activationRequested = target.activate(from: .current, options: [])
-        pasteLogger.notice("activate target=\(target.processIdentifier, privacy: .public) accepted=\(activationRequested, privacy: .public)")
-        let deadline = Date().addingTimeInterval(1)
-        waitForTarget(target, deadline: deadline, generation: generation, changeCount: changeCount)
+        ui.hidePanel()
         return true
     }
 
-    private func waitForTarget(_ target: NSRunningApplication, deadline: Date, generation: UUID, changeCount: Int) {
-        guard generation == pasteGeneration else { pasteLogger.notice("cancelled newer_request"); return }
-        guard !target.isTerminated else { pasteLogger.notice("cancelled target_terminated"); return }
-        guard pasteboard.changeCount == changeCount else { pasteLogger.notice("cancelled clipboard_changed"); return }
-        if NSWorkspace.shared.frontmostApplication?.processIdentifier == target.processIdentifier {
-            guard let keyCode = OriginalPasteKeyTranslation.pasteKeyCode(),
-                  let source = CGEventSource(stateID: .combinedSessionState),
-                  let down = CGEvent(keyboardEventSource: source, virtualKey: keyCode, keyDown: true),
-                  let up = CGEvent(keyboardEventSource: source, virtualKey: keyCode, keyDown: false) else {
-                pasteLogger.error("event_creation_failed")
-                return
-            }
-            down.flags = .maskCommand
-            down.post(tap: .cgAnnotatedSessionEventTap)
-            up.post(tap: .cgAnnotatedSessionEventTap)
-            pasteLogger.notice("posted target=\(target.processIdentifier, privacy: .public) key=\(keyCode, privacy: .public)")
-        } else if Date() < deadline {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { [weak self] in
-                self?.waitForTarget(target, deadline: deadline, generation: generation, changeCount: changeCount)
-            }
-        } else {
-            pasteLogger.error("activation_timeout target=\(target.processIdentifier, privacy: .public) front=\(NSWorkspace.shared.frontmostApplication?.processIdentifier ?? -1, privacy: .public)")
-        }
+    private func f_100053988() async {
+        OriginalPasteKeyTranslation.f_100ae641c()
     }
 
     private func seedFixture() throws {
@@ -549,7 +549,6 @@ final class ReplicaAppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValid
 
     func applicationWillTerminate(_ notification: Notification) {
         if argument("--data-dir") == nil { BackgroundService.markRunning(false) }
-        pasteGeneration = UUID()
         hotKeyObservation?.cancel()
         diagnosticsObservation?.cancel()
         accessibilityObservation?.cancel()

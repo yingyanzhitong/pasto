@@ -1,0 +1,48 @@
+{
+  "kind": "p0_p1_round12_static_entrypoint_proof",
+  "binary_path": ".local/paste-arm64-static.bin",
+  "binary_sha256": "871f00354fbb1c165d858a98e6d19d6f43cb9d3f9f958b3e07c7f07eb5c19afb",
+  "target": "0x1000f733c",
+  "function_starts": {
+    "load_command": {
+      "command_offset": 10832,
+      "bytes": "260000001000000028661a01107b0100"
+    },
+    "file_offset": 18507304,
+    "size": 97040,
+    "sha256": "dcf9da3b044a3f124fe557705e1ae5774b85873f882032e7ed78d0a37b6a469c",
+    "count": 74585,
+    "target_index": 5379,
+    "previous": "0x1000f72a4",
+    "target": "0x1000f733c",
+    "following": "0x1000f7380",
+    "machine_body_size": 68
+  },
+  "exports": {
+    "load_command": {
+      "command_offset": 4568,
+      "bytes": "3300008010000000b8f70801706e1100"
+    },
+    "file_offset": 17364920,
+    "size": 1142384,
+    "sha256": "5e0f5ea869d20ba3aff6489c04cd4f7b1d1355a8a4367520173d8719f5d9c66f",
+    "entry_count": 127,
+    "visited_nodes": 203,
+    "target_matches": []
+  },
+  "nlist": {
+    "load_command": {
+      "command_offset": 4584,
+      "bytes": "020000001800000038e11b01d815000048cb1d0138ef0300"
+    },
+    "symbol_offset": 18604344,
+    "symbol_count": 5592,
+    "string_offset": 18729800,
+    "string_size": 257848,
+    "target_matches": []
+  },
+  "conclusion": "函数边界已确认，未找到命名导出或nlist入口；不能据此证明不可达或已完整迁移。",
+  "compiled": false,
+  "application_executed": false,
+  "full_function_migration_verified": false
+}

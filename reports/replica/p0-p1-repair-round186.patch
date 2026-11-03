@@ -1,0 +1,119 @@
+--- a/replica/Sources/PastoCore/ClipboardPersistence.swift
++++ b/replica/Sources/PastoCore/ClipboardPersistence.swift
+@@ -323,6 +323,10 @@
+ 
+     func searchDeviceNames(matching query: String) throws -> [String] {
+         try context.performAndWait { try sources.deviceNames(matching: query) }
++    }
++
++    func makeSearchListNameResolver() -> (String) -> String? {
++        lists.searchListNameResolver()
+     }
+ 
+     func searchApplicationImage(named name: String) -> NSImage? {
+--- a/replica/Sources/PastoCore/ClipboardStore.swift
++++ b/replica/Sources/PastoCore/ClipboardStore.swift
+@@ -78,6 +78,10 @@
+         await persistence.observeSearchChanges(consume)
+     }
+     // Local equivalent of the startup viewContext-backed suggestion-source registration.
++    public func makeSearchListNameResolver() -> (String) -> String? {
++        persistence.makeSearchListNameResolver()
++    }
++
+     public func makeSearchSuggestionProvider() -> OriginalSearchSuggestions.Provider {
+         let persistence = self.persistence
+         return OriginalSearchSuggestions.Provider(
+--- a/replica/Sources/PastoCore/ClipboardListPersistence.swift
++++ b/replica/Sources/PastoCore/ClipboardListPersistence.swift
+@@ -134,6 +134,16 @@
+     }
+ 
+     // 367f78 does not apply the menu's type2 predicate.
++    // 07d740/07d78c: same native List lookup and name bridge, inside its context queue.
++    func searchListNameResolver() -> (String) -> String? {
++        { identifier in
++            self.context.performAndWait {
++                guard let list = self.tabList(identifier: identifier) else { return nil }
++                return String._unconditionallyBridgeFromObjectiveC(list.value(forKey: "name") as? NSString)
++            }
++        }
++    }
++
+     func tabListRequest() -> NSFetchRequest<PastoListEntity> { PastoListEntity.listFetchRequest() }
+ 
+     // 368080/32a5b0 fetch the matching native List collection and return its first object.
+--- a/replica/Sources/PastoCore/OriginalSearchSuggestions.swift
++++ b/replica/Sources/PastoCore/OriginalSearchSuggestions.swift
+@@ -1,9 +1,12 @@
+ import Foundation
+ 
+ public enum OriginalSearchSuggestions {
+-    public enum Suggestion: Equatable, Sendable {
++    public enum Suggestion: Equatable, Sendable, CustomStringConvertible {
+         case query([OriginalSearchQueryNode])
+         case filter(UInt8, String)
++
++        // 0x1002dcc94: the registered CustomStringConvertible witness.
++        public var description: String { OriginalSearchSuggestions.f_1002dc9b8(self) }
+     }
+ 
+     /// Original 0x1002dcca4, before the caller normalizes the resulting query.
+@@ -27,9 +30,46 @@
+         }
+     }
+ 
++    private static var listNameResolver: ((String) -> String?)?
++
++    public static func setListNameResolver(_ resolver: ((String) -> String?)?) {
++        listNameResolver = resolver
++    }
++
++    public static func resolveListName(_ identifier: String) -> String? {
++        let resolver = listNameResolver
++        return resolver?(identifier)
++    }
++
++    // 2dc9b8: preserve node order, raw text and empty components when joining.
++    public static func f_1002dc9b8(_ suggestion: Suggestion,
++                                  listName: (String) -> String? = { resolveListName($0) }) -> String {
++        switch suggestion {
++        case let .filter(kind, value):
++            return f_1002ddc10(kind: kind, value: value, listName: listName)
++        case let .query(nodes):
++            return nodes.map { node in
++                switch node {
++                case let .text(text): return text
++                case let .filter(kind, value):
++                    let prefix: String
++                    switch kind {
++                    case 0: prefix = "app"
++                    case 1: prefix = "type"
++                    case 2: prefix = "title"
++                    case 3: prefix = "date"
++                    case 4: prefix = "device"
++                    default: prefix = "pinboard"
++                    }
++                    return prefix + ":" + f_1002ddc10(kind: kind, value: value, listName: listName)
++                }
++            }.joined(separator: " ")
++        }
++    }
++
+     // 2ddc10: only dates and list identifiers have a resolved caption.
+     public static func f_1002ddc10(kind: UInt8, value: String,
+-                                  listName: (String) -> String? = { _ in nil }) -> String {
++                                  listName: (String) -> String? = { resolveListName($0) }) -> String {
+         switch kind {
+         case 5: return listName(value) ?? value
+         case 3: return OriginalSearchDateEncoding.f_1002d8e9c(value) ?? value
+--- a/replica/Sources/Pasto/UI/ReplicaUIController.swift
++++ b/replica/Sources/Pasto/UI/ReplicaUIController.swift
+@@ -123,6 +123,7 @@
+         searchService = service
+         searchIndex = ReplicaSearchIndex(service: service, store: store)
+         searchIndex.setSuggestionDataSource(store.makeSearchSuggestionProvider())
++        OriginalSearchSuggestions.setListNameResolver(store.makeSearchListNameResolver())
+         searchIndex.onUpdate = { [weak self] in
+             self?.objectWillChange.send()
+             self?.normalizeSelection()

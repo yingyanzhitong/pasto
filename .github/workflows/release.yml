@@ -57,6 +57,7 @@ jobs:
     timeout-minutes: 40
     permissions:
       contents: write
+      actions: write
     concurrency:
       group: pasto-release-${{ needs.plan.outputs.tag }}
       cancel-in-progress: false
@@ -86,3 +87,6 @@ jobs:
         run: >-
           python3 replica/scripts/release-ci.py publish
           --version "$RELEASE_VERSION" --tag "$RELEASE_TAG" --commit "$RELEASE_COMMIT"
+      # GITHUB_TOKEN-created releases do not emit another workflow run automatically.
+      - name: Update public downloads and deploy the website
+        run: gh workflow run pages.yml --repo yingyanzhitong/pasto --ref main

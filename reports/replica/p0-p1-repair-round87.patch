@@ -1,0 +1,1070 @@
+--- phase-87-before/replica/Sources/PastoCore/ClipboardPersistence.swift
++++ replica/Sources/PastoCore/ClipboardPersistence.swift
+@@ -89,7 +89,8 @@
+                                   includeNativeItemData: Bool = true,
+                                   includeNativeSources: Bool = true,
+                                   includeTypedItem: Bool = true,
+-                                  includeItemOrder: Bool = true) -> NSManagedObjectModel {
++                                  includeItemOrder: Bool = true,
++                                  includeNativeTitle: Bool = true) -> NSManagedObjectModel {
+         let model = NSManagedObjectModel()
+         func attribute(_ name: String, _ type: NSAttributeType, optional: Bool = false) -> NSAttributeDescription {
+             let value = NSAttributeDescription()
+@@ -139,6 +140,7 @@
+             model.entitiesByName["Item"]!.managedObjectClassName = NSStringFromClass(PastoItemEntity.self)
+         }
+         if includeItemOrder { ClipboardItemOrderPersistence.addField(to: model) }
++        if includeNativeTitle { ClipboardItemTitlePersistence.addField(to: model) }
+         if includeLists { ClipboardListPersistence.addEntities(to: model, item: model.entitiesByName["Item"]!) }
+         if includeNativeItemData { ClipboardItemDataPersistence.addEntity(to: model, item: model.entitiesByName["Item"]!) }
+         if includeNativeSources { ClipboardSourcePersistence.addEntities(to: model, item: model.entitiesByName["Item"]!) }
+@@ -153,14 +155,15 @@
+         guard !destinationModel.isConfiguration(nil, compatibleWithStoreMetadata: metadata) else { return }
+ 
+         let legacyCandidates = [
+-            makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeItemOrder: false),
+-            makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeTypedItem: false, includeItemOrder: false),
+-            makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeNativeSources: false, includeTypedItem: false, includeItemOrder: false),
+-            makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeNativeItemData: false, includeNativeSources: false, includeTypedItem: false, includeItemOrder: false),
+-            makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeLists: true, includeOptionalTimestamp: false, includeNativeItemData: false, includeNativeSources: false, includeTypedItem: false, includeItemOrder: false),
+-            makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeLists: false, includeOptionalTimestamp: false, includeNativeItemData: false, includeNativeSources: false, includeTypedItem: false, includeItemOrder: false),
+-            makeModel(includeNativeIdentity: false, preserveItemKeyInHistory: true, includeLists: false, includeOptionalTimestamp: false, includeNativeItemData: false, includeNativeSources: false, includeTypedItem: false, includeItemOrder: false),
+-            makeModel(includeNativeIdentity: false, preserveItemKeyInHistory: false, includeLists: false, includeOptionalTimestamp: false, includeNativeItemData: false, includeNativeSources: false, includeTypedItem: false, includeItemOrder: false)
++            makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeNativeTitle: false),
++            makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeItemOrder: false, includeNativeTitle: false),
++            makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeTypedItem: false, includeItemOrder: false, includeNativeTitle: false),
++            makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeNativeSources: false, includeTypedItem: false, includeItemOrder: false, includeNativeTitle: false),
++            makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeNativeItemData: false, includeNativeSources: false, includeTypedItem: false, includeItemOrder: false, includeNativeTitle: false),
++            makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeLists: true, includeOptionalTimestamp: false, includeNativeItemData: false, includeNativeSources: false, includeTypedItem: false, includeItemOrder: false, includeNativeTitle: false),
++            makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeLists: false, includeOptionalTimestamp: false, includeNativeItemData: false, includeNativeSources: false, includeTypedItem: false, includeItemOrder: false, includeNativeTitle: false),
++            makeModel(includeNativeIdentity: false, preserveItemKeyInHistory: true, includeLists: false, includeOptionalTimestamp: false, includeNativeItemData: false, includeNativeSources: false, includeTypedItem: false, includeItemOrder: false, includeNativeTitle: false),
++            makeModel(includeNativeIdentity: false, preserveItemKeyInHistory: false, includeLists: false, includeOptionalTimestamp: false, includeNativeItemData: false, includeNativeSources: false, includeTypedItem: false, includeItemOrder: false, includeNativeTitle: false)
+         ]
+         // The older history-retention variants can share a version hash.
+         let sourceModel = legacyCandidates.first {
+@@ -202,6 +205,7 @@
+ 
+     nonisolated static func item(_ object: NSManagedObject) throws -> ClipboardItem {
+         var item = try Self.decode(ClipboardItem.self, object)
++        ClipboardItemTitlePersistence.project(&item, from: object)
+         let timestamp = object.value(forKey: "timestamp") as? Date
+         guard let createdAt = timestamp ?? object.value(forKey: "localCreatedAt") as? Date,
+               let updatedAt = object.value(forKey: "updatedAt") as? Date else {
+@@ -337,6 +341,7 @@
+             try bootstrapHistoryTimestamps()
+             try bootstrapSourcesIfNeeded(root)
+             try ClipboardItemOrderPersistence.bootstrap(in: context, root: root)
++            try ClipboardItemTitlePersistence.bootstrap(in: context, root: root)
+             if context.hasChanges {
+                 root.setValue(UUID(), forKey: "revision")
+                 try context.save()
+@@ -422,6 +427,13 @@
+         value.pinboardOrder = nil
+         value.sourceApplicationSnapshot = nil
+         value.hasSourceApplicationSnapshot = false
++        return value
++    }
++
++    private func contentForComparison(_ item: ClipboardItem) -> ClipboardItem {
++        var value = content(item)
++        value.title = ""
++        value.hasExplicitTitle = false
+         return value
+     }
+ 
+@@ -594,7 +606,10 @@
+                     if (object.value(forKey: "rawPreview") as? Data) != item.rawPreview {
+                         object.setValue(item.rawPreview, forKey: "rawPreview")
+                     }
+-                    if old.map(content) != content(item) {
++                    if object.isInserted || old?.originalTitle != item.originalTitle {
++                        ClipboardItemTitlePersistence.update(item, on: object)
++                    }
++                    if old.map(contentForComparison) != contentForComparison(item) {
+                         object.setValue(try encode(content(item)), forKey: "content")
+                     }
+                     let timestamp = item.isInHistory ? item.createdAt : nil
+@@ -644,6 +659,7 @@
+                     root.setValue("local", forKey: "key")
+                     root.setValue(1, forKey: "version")
+                     root.setValue(Int64(1), forKey: ClipboardItemOrderPersistence.versionKey)
++                    root.setValue(Int64(1), forKey: ClipboardItemTitlePersistence.versionKey)
+                 }
+                 if (root.value(forKey: ClipboardSourcePersistence.versionKey) as? NSNumber)?.intValue != 1 {
+                     root.setValue(1, forKey: ClipboardSourcePersistence.versionKey)
+--- phase-87-before/replica/Sources/PastoCore/ClipboardSnapshotReader.swift
++++ replica/Sources/PastoCore/ClipboardSnapshotReader.swift
+@@ -52,7 +52,8 @@
+                 return []
+             }
+             return try objects.map { object in
+-                let value = try ClipboardPersistence.decode(ClipboardItem.self, object)
++                var value = try ClipboardPersistence.decode(ClipboardItem.self, object)
++                ClipboardItemTitlePersistence.project(&value, from: object)
+                 let rawType = (object.value(forKey: "rawType") as? NSNumber)?.uint8Value ?? 0
+                 let kind = OriginalPasteboardContentKind(rawValue: rawType) ?? .unknown
+                 let reader = ClipboardSearchRecordReader(coordinator: coordinator, objectID: object.objectID, kind: kind)
+--- phase-87-before/replica/Sources/PastoCore/ClipboardStore.swift
++++ replica/Sources/PastoCore/ClipboardStore.swift
+@@ -950,8 +950,16 @@
+         try mutate { state in
+             guard let i = state.items.firstIndex(where: { $0.id == id }) else { throw ClipboardStoreError.itemNotFound }
+             if let title {
+-                state.items[i].title = title
+-                state.items[i].hasExplicitTitle = !title.isEmpty
++                let previousTitle = state.items[i].originalTitle
++                let displayedTitle = OriginalPreviewTitles.f_100308f88(previousTitle,
++                    defaultTitle: OriginalPreviewTitles.f_100309008(
++                        rawType: Int(originalContentKind(of: state.items[i]).rawValue),
++                        fileCount: state.items[i].decodedFilePreviewMetadata?.paths.count))
++                if title != displayedTitle {
++                    let normalized = title.trimmingCharacters(in: .whitespacesAndNewlines)
++                    state.items[i].title = normalized
++                    state.items[i].hasExplicitTitle = !normalized.isEmpty || previousTitle == nil
++                }
+             }
+             if let text {
+                 state.items[i].plainText = text
+@@ -981,8 +989,8 @@
+                         binaryPropertyList: state.preferences.useBinaryPlist)
+                 }
+                 Self.refreshNativeChecksum(&state.items[i])
+-            }
+-            state.items[i].updatedAt = Date()
++                state.items[i].updatedAt = Date()
++            }
+         }
+     }
+ 
+--- /dev/null
++++ replica/Sources/PastoCore/ClipboardItemTitlePersistence.swift
+@@ -0,0 +1,48 @@
++import CoreData
++import Foundation
++
++/// ItemEntity.title is optional metadata, independent of archived pasteboard content.
++final class ClipboardItemTitlePersistence {
++    static let versionKey = "nativeItemTitleVersion"
++
++    static func addField(to model: NSManagedObjectModel) {
++        let title = NSAttributeDescription()
++        title.name = "title"; title.attributeType = .stringAttributeType
++        title.isOptional = true
++        title.isIndexedBySpotlight = true
++        model.entitiesByName["Item"]!.properties.append(title)
++        let version = NSAttributeDescription()
++        version.name = versionKey; version.attributeType = .integer64AttributeType
++        version.isOptional = true
++        model.entitiesByName["State"]!.properties.append(version)
++    }
++
++    // Bootstrap once from the legacy value, then the managed field is authoritative, including nil.
++    static func bootstrap(in context: NSManagedObjectContext, root: NSManagedObject) throws {
++        guard (root.value(forKey: versionKey) as? NSNumber)?.int64Value != 1 else { return }
++        for object in try context.fetch(PastoItemEntity.defaultFetchRequest()) {
++            let item = try ClipboardPersistence.decode(ClipboardItem.self, object)
++            update(item, on: object)
++        }
++        root.setValue(Int64(1), forKey: versionKey)
++    }
++
++    static func project(_ item: inout ClipboardItem, from object: NSManagedObject) {
++        if let title = object.value(forKey: "title") as? String {
++            item.title = title
++            item.hasExplicitTitle = true
++        } else {
++            // Clear an old explicit title without discarding a legacy generated display label.
++            if item.originalTitle != nil { item.title = "" }
++            item.hasExplicitTitle = false
++        }
++    }
++
++    // 364ab4 compares the optional title before invoking the native setter.
++    static func update(_ item: ClipboardItem, on object: NSManagedObject) {
++        let title = item.originalTitle
++        if (object.value(forKey: "title") as? String) != title {
++            object.setValue(title, forKey: "title")
++        }
++    }
++}
+--- phase-87-before/scripts/tests/item_order_scope_contract.py
++++ scripts/tests/item_order_scope_contract.py
+@@ -1,4 +1,5 @@
+ """Explicit phase70 deltas for historical source contracts; actual new paths have separate tests."""
++from native_title_scope_contract import pre_native_title
+ from test_offline_p0_contracts import body
+ from native_application_scope_contract import pre_native_application
+ 
+@@ -11,6 +12,7 @@
+ 
+ 
+ def without_order_model(source):
++    source = pre_native_title(source)
+     return source.replace(ORDER_MODEL, '', 1)
+ 
+ 
+@@ -20,10 +22,12 @@
+ 
+ 
+ def without_order_commit(source):
++    source = pre_native_title(source)
+     return source.replace(ORDER_UPDATE, '', 1).replace(ORDER_ROOT, '', 1)
+ 
+ 
+ def assert_order_migration_only(test, current, previous):
++    current = pre_native_title(current)
+     marker = '        let legacyCandidates = ['
+     a, candidates = current.split(marker, 1); b, old_candidates = previous.split(marker, 1)
+     current_rows, tail = candidates.split('\n        ]', 1); old_rows, old_tail = old_candidates.split('\n        ]', 1)
+--- phase-87-before/scripts/tests/single_item_restore_scope_contract.py
++++ scripts/tests/single_item_restore_scope_contract.py
+@@ -1,5 +1,6 @@
+ """One reviewed native/legacy single-item method pair, for earlier frozen source checks."""
+ from pathlib import Path
++from native_title_scope_contract import pre_native_title
+ 
+ CHANGES = [['replica/Sources/Pasto/UI/ReplicaUIController.swift',
+   '    @discardableResult\n'
+@@ -32,6 +33,7 @@
+   '    }\n']]
+ 
+ def pre_single_item_restore(source):
++    source = pre_native_title(source)
+     for path, previous, current in reversed(CHANGES):
+         if current in source:
+             assert source.count(current) == 1, path
+--- phase-87-before/scripts/tests/snapshot_read_scope_contract.py
++++ scripts/tests/snapshot_read_scope_contract.py
+@@ -1,3 +1,4 @@
++from native_title_scope_contract import pre_native_title
+ from item_order_scope_contract import without_order_projection, without_order_commit
+ """Locate real queue-confined producers through verified forwarding wrappers.
+ No synthesized Swift or replacement implementation is used by source assertions.
+@@ -10,11 +11,12 @@
+ READ_NAMES = ['searchIndexIdentifiers', 'searchIndexRecords', 'searchItems', 'searchNativeItems', 'revision', 'read']
+ 
+ def body(source, marker):
++    source = pre_native_title(source)
+     # Static projection keeps the same actual body, now callable on a private queue.
+     if marker.startswith('private func item(') and marker not in source:
+         marker = marker.replace('private func item(', 'nonisolated static func item(', 1)
+     if marker.startswith('private func documents(') and marker not in source and 'private let snapshotReader:' in source:
+-        return source_body(READER.read_text(), marker)
++        return source_body(pre_native_title(READER.read_text()), marker)
+     result = source_body(source, marker)
+     if 'private let snapshotReader:' in source:
+         for name in READ_NAMES:
+@@ -22,10 +24,10 @@
+                 assert 'try snapshotReader.' + name + '(' in result
+                 if name != 'revision':
+                     assert re.fullmatch(r'\{\s*try snapshotReader\.' + name + r'\([^{}]*\)\s*\}', result)
+-                return source_body(READER.read_text(), 'func ' + name + '(')
++                return source_body(pre_native_title(READER.read_text()), 'func ' + name + '(')
+     if marker.startswith('private func transactions(') and 'try reader.transactions(after: token)' in result:
+         assert result.strip() == '{\n        try reader.transactions(after: token)\n    }'
+-        return source_body(READER.read_text(), 'func transactions(')
++        return source_body(pre_native_title(READER.read_text()), 'func transactions(')
+     return result
+ 
+ def projection_spelling(source):
+@@ -33,6 +35,7 @@
+     return without_order_projection(source).replace('ClipboardPersistence.decode(', 'decode(').replace('Self.decode(', 'decode(').replace('.map(ClipboardPersistence.item)', '.map(item)').replace('            defer { context.reset() }\n', '')
+ 
+ def commit_business_body(source):
++    source = pre_native_title(source)
+     result = source_body(source, 'func commit<T>(')
+     added = '''                    // Store callers hold their existing cross-process lock through this save/cursor update.
+                     viewHistoryToken = context.persistentStoreCoordinator?.currentPersistentHistoryToken(fromStores: nil)
+--- phase-87-before/scripts/tests/test_offline_p0_contracts.py
++++ scripts/tests/test_offline_p0_contracts.py
+@@ -1,4 +1,5 @@
+ """Source-contract guards only: no compiler, application, network or Swift execution."""
++from native_title_scope_contract import pre_native_title
+ from pathlib import Path
+ import json
+ import re
+@@ -251,7 +252,7 @@
+         self.assertNotIn("NSWorkspace", write)
+ 
+     def test_incremental_commit_does_not_encode_binary_content_for_timestamp_only_change(self):
+-        source = (CORE / "ClipboardPersistence.swift").read_text()
++        source = pre_native_title((CORE / "ClipboardPersistence.swift").read_text())
+         normalized = body(source, "private func content(_ item: ClipboardItem) -> ClipboardItem")
+         self.assertIn("value.createdAt = Date(timeIntervalSinceReferenceDate: 0)", normalized)
+         self.assertIn("value.updatedAt = value.createdAt; value.isInHistory = false", normalized)
+--- phase-87-before/scripts/tests/test_p0_repair_capture_native_flow.py
++++ scripts/tests/test_p0_repair_capture_native_flow.py
+@@ -1,3 +1,4 @@
++from native_title_scope_contract import pre_native_title
+ # coding: utf-8
+ """Capture C/native source ordering. No Swift, Core Data or application execution."""
+ import hashlib,json,sys,unittest
+@@ -13,7 +14,7 @@
+     def setUpClass(cls):
+         cls.phase=ROOT/'.local/p0-repair/phase-35'
+         cls.proof=json.loads((cls.phase/'capture-native-flow-contract.json').read_text())
+-        cls.store=(ROOT/'replica/Sources/PastoCore/ClipboardStore.swift').read_text()
++        cls.store=pre_native_title((ROOT/'replica/Sources/PastoCore/ClipboardStore.swift').read_text())
+         cls.persistence=(ROOT/'replica/Sources/PastoCore/ClipboardPersistence.swift').read_text()
+         cls.graph=(ROOT/'replica/Sources/PastoCore/ClipboardItemDataPersistence.swift').read_text()
+         cls.add=body(cls.store,'func addWithInsertionResult(')
+--- phase-87-before/scripts/tests/test_p0_repair_identity.py
++++ scripts/tests/test_p0_repair_identity.py
+@@ -1,3 +1,4 @@
++from native_title_scope_contract import pre_native_title
+ import hashlib
+ import re
+ from pathlib import Path
+@@ -52,7 +53,7 @@
+     def setUpClass(cls):
+         cls.models = MODELS.read_text()
+         cls.store = STORE.read_text()
+-        cls.persistence = PERSISTENCE.read_text()
++        cls.persistence = pre_native_title(PERSISTENCE.read_text())
+         cls.history = HISTORY.read_text()
+         cls.index = INDEX.read_text()
+         cls.migration = MIGRATION.read_text()
+--- phase-87-before/scripts/tests/test_p0_repair_single_item_restore.py
++++ scripts/tests/test_p0_repair_single_item_restore.py
+@@ -11,6 +11,7 @@
+ from test_offline_p0_contracts import body
+ from test_p0_repair_checksum_routing import original_fragment
+ from single_item_restore_scope_contract import CHANGES,pre_single_item_restore
++from native_title_scope_contract import pre_native_title, pre_native_title_bytes
+ 
+ class SingleItemRestoreContracts(unittest.TestCase):
+     @classmethod
+@@ -19,7 +20,7 @@
+         cls.proof=json.loads((cls.phase/'single-item-restore-contract.json').read_text())
+         cls.base=json.loads((cls.phase/'baseline.json').read_text())
+         cls.path='replica/Sources/Pasto/UI/ReplicaUIController.swift'
+-        cls.ui=(ROOT/cls.path).read_text();cls.before=(cls.phase/'before'/cls.path).read_text()
++        cls.ui=pre_native_title((ROOT/cls.path).read_text());cls.before=(cls.phase/'before'/cls.path).read_text()
+ 
+     def original(self,a):
+         r=next(r for r in self.proof['original_fragments']if r['address']==a)
+@@ -117,7 +118,7 @@
+ 
+     def test_one_reviewed_hunk_only_one_production_file_and_six_shared_files_unchanged(self):
+         self.assertEqual(len(CHANGES),1);self.assertEqual(pre_single_item_restore(self.ui),self.before)
+-        sha=lambda p:hashlib.sha256((ROOT/p).read_bytes()).hexdigest()
++        sha=lambda p:hashlib.sha256(pre_native_title_bytes(ROOT/p)).hexdigest()
+         self.assertEqual({p for p,h in self.base['production'].items()if sha(p)!=h},{self.path})
+         self.assertEqual(len(self.proof['shared_sources']),6)
+         for group in ['current_sources','shared_sources']:
+--- phase-87-before/scripts/tests/test_p0_repair_title.py
++++ scripts/tests/test_p0_repair_title.py
+@@ -1,4 +1,5 @@
+ """Static source checks for the P0 explicit-title clearing repair."""
++from native_title_scope_contract import pre_native_title
+ import hashlib
+ import json
+ import re
+@@ -49,7 +50,7 @@
+     def setUpClass(cls):
+         cls.baseline = json.loads(BASELINE.read_text())
+         cls.result = json.loads(RESULT.read_text())
+-        cls.store = (ROOT / STORE_PATH).read_text()
++        cls.store = pre_native_title((ROOT / STORE_PATH).read_text())
+         cls.ui = pre_resolved_copy((ROOT / UI_PATH).read_text())
+         cls.models = (ROOT / MODEL_PATH).read_text()
+ 
+--- phase-87-before/scripts/tests/test_p1_repair_FRC_result_source.py
++++ scripts/tests/test_p1_repair_FRC_result_source.py
+@@ -1,3 +1,4 @@
++from native_title_scope_contract import pre_native_title_bytes
+ from item_order_scope_contract import assert_common_FRC_ctor_only, without_order_persistence, without_list_factory, without_list_UI_insertions
+ """Real FRC source/consumer contracts and source-bound semantic fixtures; no native execution."""
+ import hashlib
+@@ -213,7 +214,7 @@
+         assert_factory_addition_only(self, self.sources['store'], self.before('store'), public=True)
+         assert_ui_frc_only(self, self.ui, self.before('ui'))
+         snapshot = 'replica/Sources/PastoCore/ClipboardSnapshotReader.swift'
+-        self.assertEqual(hashlib.sha256((ROOT / snapshot).read_bytes()).hexdigest(), self.base['production'][snapshot])
++        self.assertEqual(hashlib.sha256(pre_native_title_bytes(ROOT / snapshot)).hexdigest(), self.base['production'][snapshot])
+         self.assertIn('guard identifiers != nil else { throw error }', (ROOT / snapshot).read_text())
+         self.assertNotIn('fatalError', (ROOT / snapshot).read_text())
+         for marker in ['private func drain() async', 'private func liveEntries(', 'private func retryTransientIndexErrors(', 'private func stopIndexing()', 'private func searchableItem(', 'private static func writeSearchableItems(']:
+--- phase-87-before/scripts/tests/test_p1_repair_collection_initial_ids.py
++++ scripts/tests/test_p1_repair_collection_initial_ids.py
+@@ -1,4 +1,5 @@
+ """Initial FRC IDs: original branches, real constructor and source-only fixtures."""
++from native_title_scope_contract import NEW_PATH as NATIVE_TITLE_PATH
+ import hashlib
+ import json
+ from pathlib import Path
+@@ -167,7 +168,7 @@
+     def test_one_production_file_changed_without_schema_storage_or_UI_edits(self):
+         changed = [p for p, h in self.base['production'].items() if hashlib.sha256(pre_live_render_bytes(ROOT / p)).hexdigest() != h]
+         self.assertEqual(changed, [self.path])
+-        self.assertEqual({str(p.relative_to(ROOT)) for p in (ROOT / 'replica/Sources').rglob('*') if p.is_file()} - {REFERENCE_PATH, RESTORE_ITEM_PATH, ENTRY_PATH}, set(self.base['production']))
++        self.assertEqual({str(p.relative_to(ROOT)) for p in (ROOT / 'replica/Sources').rglob('*') if p.is_file()} - {NATIVE_TITLE_PATH} - {REFERENCE_PATH, RESTORE_ITEM_PATH, ENTRY_PATH}, set(self.base['production']))
+         for p in ['replica/Package.swift', 'package.json']:
+             self.assertEqual(hashlib.sha256((ROOT / p).read_bytes()).hexdigest(), self.base['other'][p])
+ 
+--- phase-87-before/scripts/tests/test_p1_repair_context_ownership.py
++++ scripts/tests/test_p1_repair_context_ownership.py
+@@ -1,3 +1,4 @@
++from native_title_scope_contract import pre_native_title_bytes
+ from item_order_scope_contract import without_list_request
+ from frc_result_scope_contract import assert_factory_addition_only
+ """Source/static contracts only; no Swift/CoreData/framework/database/app execution."""
+@@ -40,7 +41,7 @@
+             elif path == self.paths['ClipboardListPersistence']:
+                 self.assertEqual(without_list_request((ROOT / path).read_text()), frozen.decode())
+             else:
+-                self.assertEqual((ROOT / path).read_bytes(), frozen)
++                self.assertEqual(pre_native_title_bytes(ROOT / path), frozen)
+ 
+     def test_original_main_view_policy_and_private_history_context_have_real_bindings(self):
+         original = self.original['0x10035cc80']
+--- phase-87-before/scripts/tests/test_p1_repair_list_context_fallback.py
++++ scripts/tests/test_p1_repair_list_context_fallback.py
+@@ -1,3 +1,4 @@
++from native_title_scope_contract import pre_native_title_bytes
+ from item_order_scope_contract import without_list_request, without_list_factory, without_list_UI_insertions
+ """Original-bound list type/fallback and unknown ABI guards; no AppKit/Swift execution."""
+ import hashlib
+@@ -49,7 +50,7 @@
+             elif path == self.paths['store']:
+                 self.assertEqual(without_list_factory(current, public=True), frozen.decode())
+             else:
+-                self.assertEqual((ROOT / path).read_bytes(), frozen)
++                self.assertEqual(pre_native_title_bytes(ROOT / path), frozen)
+ 
+     def test_real_rawType_selector_and_64_bit_comparisons_select_same_identity_tags(self):
+         raw, setter = self.proof['selector_bindings']
+--- phase-87-before/scripts/tests/test_p1_repair_live_application_projection.py
++++ scripts/tests/test_p1_repair_live_application_projection.py
+@@ -1,4 +1,5 @@
+ """Live source-application relation reaches real consumers; source/Mach-O checks only."""
++from native_title_scope_contract import NEW_PATH as NATIVE_TITLE_PATH
+ import hashlib
+ import json
+ from pathlib import Path
+@@ -194,7 +195,7 @@
+         sha = lambda p: hashlib.sha256(pre_collection_membership_bytes(ROOT / p)).hexdigest()
+         self.assertEqual({p for p, h in self.base['production'].items() if sha(p) != h}, set(self.paths.values()))
+         files = {str(p.relative_to(ROOT)) for p in (ROOT / 'replica/Sources').rglob('*') if p.is_file()}
+-        self.assertEqual(files - {ENTRY_PATH}, set(self.base['production']))
++        self.assertEqual(files - {NATIVE_TITLE_PATH} - {ENTRY_PATH}, set(self.base['production']))
+         for p in ['replica/Package.swift', 'package.json']:
+             self.assertEqual(sha(p), self.base['other'][p])
+ 
+--- phase-87-before/scripts/tests/test_p1_repair_live_item_render.py
++++ scripts/tests/test_p1_repair_live_item_render.py
+@@ -1,4 +1,5 @@
+ """Actual visible-card live references; source/static checks only, actions remain open."""
++from native_title_scope_contract import NEW_PATH as NATIVE_TITLE_PATH
+ import hashlib
+ import json
+ from pathlib import Path
+@@ -147,7 +148,7 @@
+         changed = {p for p, digest in self.base['production'].items() if sha(p) != digest}
+         self.assertEqual(changed, {self.paths[k] for k in ['source', 'index', 'ui', 'host']})
+         current = {str(p.relative_to(ROOT)) for p in (ROOT / 'replica/Sources').rglob('*') if p.is_file()}
+-        self.assertEqual(current - set(self.base['production']), {REFERENCE_PATH, RESTORE_ITEM_PATH, ENTRY_PATH})
++        self.assertEqual(current - {NATIVE_TITLE_PATH} - set(self.base['production']), {REFERENCE_PATH, RESTORE_ITEM_PATH, ENTRY_PATH})
+         for p in ['replica/Package.swift', 'package.json']:
+             self.assertEqual(sha(p), self.base['other'][p])
+ 
+--- phase-87-before/scripts/tests/test_p1_repair_live_item_selection.py
++++ scripts/tests/test_p1_repair_live_item_selection.py
+@@ -1,4 +1,5 @@
+ """Selected live payloads use the applied epoch; source-only, not native execution."""
++from native_title_scope_contract import NEW_PATH as NATIVE_TITLE_PATH
+ import hashlib
+ import json
+ from pathlib import Path
+@@ -109,7 +110,7 @@
+     def test_only_two_existing_UI_files_change_without_provider_model_or_writer_edits(self):
+         sha = lambda p: hashlib.sha256(pre_resolved_copy_bytes(ROOT / p)).hexdigest()
+         self.assertEqual({p for p, h in self.base['production'].items() if sha(p) != h}, set(self.paths.values()))
+-        self.assertEqual({str(p.relative_to(ROOT)) for p in (ROOT / 'replica/Sources').rglob('*') if p.is_file()} - {RESTORE_ITEM_PATH, ENTRY_PATH}, set(self.base['production']))
++        self.assertEqual({str(p.relative_to(ROOT)) for p in (ROOT / 'replica/Sources').rglob('*') if p.is_file()} - {NATIVE_TITLE_PATH} - {RESTORE_ITEM_PATH, ENTRY_PATH}, set(self.base['production']))
+         for p in ['replica/Package.swift', 'package.json']:
+             self.assertEqual(sha(p), self.base['other'][p])
+ 
+--- phase-87-before/scripts/tests/test_p1_repair_modal_restore_input.py
++++ scripts/tests/test_p1_repair_modal_restore_input.py
+@@ -1,4 +1,5 @@
+ """Real modal restore routes and original binary evidence; source checks, no Swift execution."""
++from native_title_scope_contract import NEW_PATH as NATIVE_TITLE_PATH
+ import hashlib
+ import json
+ from pathlib import Path
+@@ -175,7 +176,7 @@
+         for key in ['reference', 'writer', 'ui', 'host', 'app']:
+             self.assertEqual(pre_modal_restore(self.source[key]), self.before(key))
+         files = {str(p.relative_to(ROOT)) for p in (ROOT / 'replica/Sources').rglob('*') if p.is_file()}
+-        self.assertEqual(files - set(self.base['production']), {RESTORE_ITEM_PATH, ENTRY_PATH})
++        self.assertEqual(files - {NATIVE_TITLE_PATH} - set(self.base['production']), {RESTORE_ITEM_PATH, ENTRY_PATH})
+         sha = lambda p: hashlib.sha256(pre_native_application_bytes(ROOT / p)).hexdigest()
+         changed = {p for p, h in self.base['production'].items() if sha(p) != h}
+         self.assertEqual(changed, set(self.paths.values()) - {RESTORE_ITEM_PATH})
+--- phase-87-before/scripts/tests/test_p1_repair_native_list_order.py
++++ scripts/tests/test_p1_repair_native_list_order.py
+@@ -1,4 +1,5 @@
+ """Actual managed ordering/list-source wiring; source/static fixtures only, no CoreData runtime."""
++from native_title_scope_contract import NEW_PATH as NATIVE_TITLE_PATH
+ import hashlib
+ import json
+ import plistlib
+@@ -264,7 +265,7 @@
+         actual = {str(p.relative_to(ROOT)) for p in (ROOT / 'replica/Sources').rglob('*') if p.is_file()}
+         changed = {p for p, digest in self.base['production'].items() if hashlib.sha256(pre_live_render_bytes(ROOT / p)).hexdigest() != digest}
+         self.assertEqual(changed, set(self.paths.values()) - {self.paths['order']})
+-        self.assertEqual(actual - set(self.base['production']) - {REFERENCE_PATH, RESTORE_ITEM_PATH, ENTRY_PATH}, {self.paths['order']})
++        self.assertEqual(actual - {NATIVE_TITLE_PATH} - set(self.base['production']) - {REFERENCE_PATH, RESTORE_ITEM_PATH, ENTRY_PATH}, {self.paths['order']})
+         self.assertEqual(without_order_persistence(self.source['persistence']), self.before('persistence'))
+         self.assertEqual(without_list_factory(self.source['store'], public=True), self.before('store'))
+         self.assertEqual(without_list_request(self.source['lists']), self.before('lists'))
+--- phase-87-before/scripts/tests/test_p1_repair_native_sources.py
++++ scripts/tests/test_p1_repair_native_sources.py
+@@ -1,3 +1,4 @@
++from native_title_scope_contract import pre_native_title
+ from item_order_scope_contract import without_order_model, without_order_projection
+ """Source/MOM/Mach-O contracts only; never opens Core Data or user history."""
+ import hashlib
+@@ -21,7 +22,7 @@
+         cls.phase = ROOT / '.local/p0-repair/phase-41'
+         cls.proof = json.loads((cls.phase / 'native-sources-contract.json').read_text())
+         cls.source = (ROOT / 'replica/Sources/PastoCore/ClipboardSourcePersistence.swift').read_text()
+-        cls.persistence = (ROOT / 'replica/Sources/PastoCore/ClipboardPersistence.swift').read_text()
++        cls.persistence = pre_native_title((ROOT / 'replica/Sources/PastoCore/ClipboardPersistence.swift').read_text())
+         cls.store = (ROOT / 'replica/Sources/PastoCore/ClipboardStore.swift').read_text()
+         cls.provider = (ROOT / 'replica/Sources/Pasto/UI/ReplicaSearchSuggestionSource.swift').read_text()
+         cls.commit = body(cls.persistence, 'func commit<T>(previous:')
+--- phase-87-before/scripts/tests/test_p1_repair_reference_membership.py
++++ scripts/tests/test_p1_repair_reference_membership.py
+@@ -1,4 +1,5 @@
+ """Reference-backed membership and actual consumers; no Swift/framework/runtime execution."""
++from native_title_scope_contract import NEW_PATH as NATIVE_TITLE_PATH
+ import hashlib
+ import json
+ from pathlib import Path
+@@ -210,7 +211,7 @@
+         sha = lambda p: hashlib.sha256(pre_supplied_input_adapters_bytes(ROOT / p)).hexdigest()
+         self.assertEqual({p for p, h in self.base['production'].items() if sha(p) != h}, {self.paths['ui'], self.paths['host']})
+         files = {str(p.relative_to(ROOT)) for p in (ROOT / 'replica/Sources').rglob('*') if p.is_file()}
+-        self.assertEqual(files - set(self.base['production']), {ENTRY_PATH})
++        self.assertEqual(files - {NATIVE_TITLE_PATH} - set(self.base['production']), {ENTRY_PATH})
+         for p in ['replica/Package.swift', 'package.json']:
+             self.assertEqual(sha(p), self.base['other'][p])
+         # No save/restore/model implementation is altered by changing collection metadata representation.
+--- phase-87-before/scripts/tests/test_p1_repair_resolved_copy_input.py
++++ scripts/tests/test_p1_repair_resolved_copy_input.py
+@@ -1,4 +1,5 @@
+ """Direct resolved selection reaches the real copy writer; static source checks only."""
++from native_title_scope_contract import NEW_PATH as NATIVE_TITLE_PATH
+ import hashlib
+ import json
+ from pathlib import Path
+@@ -102,7 +103,7 @@
+     def test_only_two_files_change_without_schema_or_package_changes(self):
+         sha = lambda p: hashlib.sha256(pre_modal_restore_bytes(ROOT / p)).hexdigest()
+         self.assertEqual({p for p, h in self.base['production'].items() if sha(p) != h}, set(self.paths.values()))
+-        self.assertEqual({str(p.relative_to(ROOT)) for p in (ROOT / 'replica/Sources').rglob('*') if p.is_file()} - {RESTORE_ITEM_PATH, ENTRY_PATH}, set(self.base['production']))
++        self.assertEqual({str(p.relative_to(ROOT)) for p in (ROOT / 'replica/Sources').rglob('*') if p.is_file()} - {NATIVE_TITLE_PATH} - {RESTORE_ITEM_PATH, ENTRY_PATH}, set(self.base['production']))
+         for p in ['replica/Package.swift', 'package.json']:
+             self.assertEqual(sha(p), self.base['other'][p])
+ 
+--- phase-87-before/scripts/tests/test_p1_repair_stack_native_input.py
++++ scripts/tests/test_p1_repair_stack_native_input.py
+@@ -1,4 +1,5 @@
+ """Stack captured entities and actual restore consumers, verified without native execution."""
++from native_title_scope_contract import NEW_PATH as NATIVE_TITLE_PATH
+ import hashlib
+ import json
+ from pathlib import Path
+@@ -158,7 +159,7 @@
+         for k in self.paths:self.assertEqual(pre_stack_native_inputs(self.source[k]),self.before(k))
+         sha=lambda p:hashlib.sha256(pre_group_menu_input_bytes(ROOT/p)).hexdigest()
+         self.assertEqual({p for p,h in self.base['production'].items()if sha(p)!=h},set(self.paths.values()))
+-        self.assertEqual({str(p.relative_to(ROOT))for p in (ROOT/'replica/Sources').rglob('*')if p.is_file()},set(self.base['production']))
++        self.assertEqual({str(p.relative_to(ROOT))for p in (ROOT/'replica/Sources').rglob('*')if p.is_file()} - {NATIVE_TITLE_PATH},set(self.base['production']))
+         for p in ['replica/Package.swift','package.json']:self.assertEqual(sha(p),self.base['other'][p])
+ 
+     def test_identity_only_checks_do_not_decode_native_stack_payloads(self):
+--- phase-87-before/scripts/tests/test_p1_repair_stack_occurrences.py
++++ scripts/tests/test_p1_repair_stack_occurrences.py
+@@ -1,4 +1,6 @@
+ """Stack is an ordered occurrence queue, with source/binary evidence and no native execution."""
++from native_title_scope_contract import NEW_PATH as NATIVE_TITLE_PATH
++from native_title_scope_contract import pre_native_title_bytes
+ import hashlib
+ import json
+ from pathlib import Path
+@@ -153,7 +155,7 @@
+ 
+     def test_OCR_expected_image_guards_are_reused_without_OCR_or_writer_edits(self):
+         for p,h in self.proof['ocr_current_boundary']['source_hashes'].items():
+-            self.assertEqual(hashlib.sha256((ROOT/p).read_bytes()).hexdigest(),h)
++            self.assertEqual(hashlib.sha256(pre_native_title_bytes(ROOT/p)).hexdigest(),h)
+         ocr=(ROOT/'replica/Sources/PastoCore/OCR.swift').read_text()
+         f=body(ocr,'public func recognizeImageDocument(')
+         self.assertLess(f.index('try await ImageTextRecognizer.recognizeDocument(imageData: data)'),f.index('saveRecognizedDocument(id: id, document: document, expectedImageData: data)'))
+@@ -187,7 +189,7 @@
+                 raw=pre_stack_registration(raw.decode()).encode()
+             return hashlib.sha256(raw).hexdigest()
+         self.assertEqual({p for p,h in self.base['production'].items() if sha(p)!=h},set(self.paths.values()))
+-        self.assertEqual({str(p.relative_to(ROOT)) for p in (ROOT/'replica/Sources').rglob('*') if p.is_file()},set(self.base['production']))
++        self.assertEqual({str(p.relative_to(ROOT)) for p in (ROOT/'replica/Sources').rglob('*') if p.is_file()} - {NATIVE_TITLE_PATH},set(self.base['production']))
+         for p in ['replica/Package.swift','package.json']:
+             self.assertEqual(sha(p),self.base['other'][p])
+ 
+--- phase-87-before/scripts/tests/test_p1_repair_supplied_input_adapters.py
++++ scripts/tests/test_p1_repair_supplied_input_adapters.py
+@@ -1,4 +1,5 @@
+ """Supplied copy/ID inputs and restore metadata epoch; source and Mach-O evidence only."""
++from native_title_scope_contract import NEW_PATH as NATIVE_TITLE_PATH
+ import hashlib
+ import json
+ from pathlib import Path
+@@ -212,7 +213,7 @@
+         sha = lambda p: hashlib.sha256(pre_stack_occurrences_bytes(ROOT / p)).hexdigest()
+         self.assertEqual({p for p, h in self.base['production'].items() if sha(p) != h}, set(self.paths.values()))
+         files = {str(p.relative_to(ROOT)) for p in (ROOT / 'replica/Sources').rglob('*') if p.is_file()}
+-        self.assertEqual(files, set(self.base['production']))
++        self.assertEqual(files - {NATIVE_TITLE_PATH}, set(self.base['production']))
+         for path in ['replica/Package.swift', 'package.json']:
+             self.assertEqual(sha(path), self.base['other'][path])
+ 
+--- /dev/null
++++ scripts/tests/test_p1_repair_native_title.py
+@@ -0,0 +1,116 @@
++"""Native title model/projections/rename VM: source and binary checks only."""
++import hashlib,json,plistlib,sys,unittest
++from pathlib import Path
++ROOT=Path(__file__).resolve().parents[2]
++sys.path[:0]=[str(ROOT/'scripts'),str(ROOT/'scripts/tests')]
++from function_ledger import source_fragments
++from test_offline_p0_contracts import body
++from test_p0_repair_checksum_routing import original_fragment
++from native_title_scope_contract import CHANGES,NEW_PATH,pre_native_title
++
++class NativeTitleContracts(unittest.TestCase):
++    @classmethod
++    def setUpClass(cls):
++        cls.phase=ROOT/'.local/p0-repair/phase-87'
++        cls.proof=json.loads((cls.phase/'native-title-contract.json').read_text())
++        cls.base=json.loads((cls.phase/'baseline.json').read_text())
++        cls.paths=dict(p='replica/Sources/PastoCore/ClipboardPersistence.swift',s='replica/Sources/PastoCore/ClipboardStore.swift',r='replica/Sources/PastoCore/ClipboardSnapshotReader.swift')
++        cls.src={k:(ROOT/p).read_text()for k,p in cls.paths.items()};cls.title=(ROOT/NEW_PATH).read_text()
++        ns={};exec((ROOT/cls.proof['decoder']['path']).read_text().split("idx={r['address']",1)[0],ns);cls.ns=ns
++    def before(self,k):return(self.phase/'before'/self.paths[k]).read_text()
++    def original(self,a):
++        r=next(r for r in self.proof['original_fragments']if r['address']==a)
++        return original_fragment((ROOT/r['path']).read_text(),a[2:])
++    def tokens(self,source,tokens):
++        for token in tokens:self.assertIn(token,source)
++
++    def test_ten_original_fragments_and_supporting_artifacts_bound(self):
++        self.assertEqual(len(self.proof['original_fragments']),10)
++        for r in self.proof['original_fragments']:self.assertEqual(source_fragments(ROOT/r['path'])[r['address']]['sha256'],r['sha256'])
++        for r in [self.proof[k]for k in ['binary','decoder','reference_model','reused_repository_protocol','sdk_property']]:
++            p=Path(r['path']);self.assertEqual(hashlib.sha256((p if p.is_absolute()else ROOT/p).read_bytes()).hexdigest(),r['sha256'])
++
++    def test_original_mom_title_is_optional_indexed_string(self):
++        r=self.proof['reference_model'];o=plistlib.loads((ROOT/r['path']).read_bytes())['$objects'];f=r['field'];t=o[f['property_object_index']];e=o[f['entity_object_index']]
++        self.assertEqual(o[e['NSEntityName'].data],'ItemEntity');self.assertEqual(o[t['NSPropertyName'].data],'title')
++        self.assertEqual(t['NSAttributeType'],700);self.assertTrue(t['NSIsOptional']);self.assertTrue(t['NSIndexedBySpotlight']);self.assertEqual(t['NSDefaultValue'].data,0)
++
++    def test_real_writer_slot_selector_and_five_machine_calls_bound(self):
++        p=self.proof['writing_title_slot'];v,ch=self.ns['reachable_pointer'](int(p['address'],16));self.assertEqual(ch,p['chain']);self.assertEqual(self.ns['read'](int(p['address'],16),8).hex(),p['bytes']);self.assertEqual(hex(self.ns['base']+(v&((1<<36)-1))),p['target'])
++        s=self.proof['setter'];self.assertEqual(self.ns['read'](int(s['stub'],16),20).hex(),s['stub_bytes']);v,ch=self.ns['reachable_pointer'](int(s['pointer'],16));self.assertEqual(ch,s['chain']);target=self.ns['base']+(v&((1<<36)-1));self.assertEqual(hex(target),s['selector_address']);self.assertEqual(self.ns['read'](target,30).split(b'\0')[0],b'setTitle:')
++        raw=(ROOT/self.proof['binary']['path']).read_bytes();self.assertEqual(len(self.proof['ARM_calls']),5)
++        for r in self.proof['ARM_calls']:
++            pc=int(r['address'],16);b=raw[pc-0x100000000:pc-0x100000000+4];self.assertEqual(b.hex(),r['bytes']);w=int.from_bytes(b,'little');self.assertEqual(w&0x7c000000,0x14000000);d=w&0x3ffffff
++            if d&0x2000000:d-=0x4000000
++            self.assertEqual(pc+d*4,int(r['target'],16))
++
++    def test_original_vm_normalizes_and_setter_does_not_change_dates(self):
++        self.tokens(self.original('0x1003bae08'),['FUN_100309008()','Swift::StringProtocol::trimmingCharacters','Foundation::CharacterSet::get_whitespacesAndNewlines','if ((uVar1 == 0) && (IVar4 = objc_stub::title(param_3), IVar4 != 0))','SVar11 = (String)ZEXT816(0)'])
++        setter=self.original('0x100364ab4');self.assertIn('objc_stub::setTitle_(param_1,pNVar7)',setter);self.assertNotIn('Date::',setter);self.assertNotIn('timestamp',setter)
++        self.assertIn('objc_stub::title(param_2)',self.original('0x100371998'))
++
++    def test_schema_fields_match_original_shape_and_public_sdk_property(self):
++        self.tokens(body(self.title,'static func addField(to model:'),['title.name = "title"','title.attributeType = .stringAttributeType','title.isOptional = true','title.isIndexedBySpotlight = true','model.entitiesByName["Item"]!.properties.append(title)','version.attributeType = .integer64AttributeType','version.isOptional = true','model.entitiesByName["State"]!.properties.append(version)'])
++        self.assertIn('(getter=isIndexedBySpotlight) BOOL indexedBySpotlight',Path(self.proof['sdk_property']['path']).read_text());self.assertIn('if includeNativeTitle { ClipboardItemTitlePersistence.addField(to: model) }',self.src['p'])
++
++    def test_legacy_model_recipes_preserve_eight_variants_and_prior_current(self):
++        def calls(s):
++            a=s.index('        let legacyCandidates = [\n');b=s.index('        // The older history-retention variants',a)
++            return[l.strip().rstrip(',')for l in s[a:b].splitlines()if l.strip().startswith('makeModel(')]
++        current=calls(self.src['p']);old=calls(self.before('p'));self.assertEqual(len(current),9);self.assertEqual(len(old),8)
++        self.assertEqual(current[0],'makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeNativeTitle: false)');self.assertTrue(all('includeNativeTitle: false'in v for v in current));self.assertEqual([v.replace(', includeNativeTitle: false','')for v in current[1:]],old)
++
++    def test_bootstrap_is_once_from_legacy_and_new_roots_skip_rebootstrap(self):
++        source=body(self.title,'static func bootstrap(in context:');self.tokens(source,['guard (root.value(forKey: versionKey) as? NSNumber)?.int64Value != 1 else { return }','context.fetch(PastoItemEntity.defaultFetchRequest())','ClipboardPersistence.decode(ClipboardItem.self, object)','update(item, on: object)','root.setValue(Int64(1), forKey: versionKey)'])
++        for token in ['object.setValue','reset()','delete(']:self.assertNotIn(token,source)
++        b=body(self.src['p'],'private func bootstrapListsIfNeeded()');self.assertLess(b.index('ClipboardItemTitlePersistence.bootstrap'),b.index('context.save()'))
++        c=body(self.src['p'],'func commit<T>(');self.assertIn('root.setValue(Int64(1), forKey: ClipboardItemTitlePersistence.versionKey)',body(c,'if root.isInserted'))
++
++    def test_nil_projection_is_authoritative_and_generated_legacy_label_is_kept(self):
++        self.tokens(body(self.title,'static func project(_ item:'),['if let title = object.value(forKey: "title") as? String','item.hasExplicitTitle = true','if item.originalTitle != nil { item.title = "" }','item.hasExplicitTitle = false'])
++        cases=[('old',True,'new',('new',True)),('old',True,None,('',False)),('generated',False,None,('generated',False)),('',True,'',('',True))]
++        for value,explicit,native,expected in cases:self.assertEqual((native,True)if native is not None else((''if explicit else value),False),expected)
++
++    def test_setter_only_writes_unequal_optional_title_and_respects_mutation_intent(self):
++        source=body(self.title,'static func update(_ item:');self.tokens(source,['let title = item.originalTitle','if (object.value(forKey: "title") as? String) != title','object.setValue(title, forKey: "title")']);self.assertNotIn('Date()',source)
++        commit=body(self.src['p'],'func commit<T>(');self.assertIn('ClipboardItemTitlePersistence.update(item, on: object)',body(commit,'if object.isInserted || old?.originalTitle != item.originalTitle'))
++        self.assertLess(commit.index('ClipboardItemTitlePersistence.update'),commit.index('old.map(contentForComparison)'))
++
++    def test_title_only_change_does_not_encode_unchanged_archived_content(self):
++        self.tokens(body(self.src['p'],'private func contentForComparison('),['var value = content(item)','value.title = ""','value.hasExplicitTitle = false'])
++        self.assertEqual(body(self.src['p'],'private func content(_ item:'),body(self.before('p'),'private func content(_ item:'))
++        c=body(self.src['p'],'func commit<T>(');self.tokens(c,['if old.map(contentForComparison) != contentForComparison(item)','object.setValue(try encode(content(item)), forKey: "content")']);self.assertNotIn('encode(contentForComparison(',c)
++
++    def test_item_and_index_read_native_title_without_forcing_index_payloads(self):
++        self.assertIn('ClipboardItemTitlePersistence.project(&item, from: object)',body(self.src['p'],'nonisolated static func item(_ object:'))
++        index=body(self.src['r'],'func searchIndexRecords(');self.assertIn('ClipboardItemTitlePersistence.project(&value, from: object)',index);self.assertLess(index.index('ClipboardItemTitlePersistence.project'),index.index('ClipboardSearchRecord.make(value'));self.assertNotIn('ClipboardPersistence.item(object)',index)
++        self.assertIn('lhs.title == rhs.title',(ROOT/'replica/Sources/PastoCore/ClipboardSearchRecord.swift').read_text())
++
++    def test_common_title_vm_covers_inline_inputs_and_only_text_changes_content_clock(self):
++        source=body(self.src['s'],'public func updateItem(id: UUID');title=body(source,'if let title')
++        self.tokens(title,['let previousTitle = state.items[i].originalTitle','OriginalPreviewTitles.f_100308f88','OriginalPreviewTitles.f_100309008','if title != displayedTitle','title.trimmingCharacters(in: .whitespacesAndNewlines)','hasExplicitTitle = !normalized.isEmpty || previousTitle == nil'])
++        self.assertEqual(source.count('Date()'),1);self.assertIn('Date()',body(source,'if let text'));self.assertNotIn('Date()',title)
++        for p in ['replica/Sources/Pasto/UI/ReplicaCardTitle.swift','replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift']:self.assertIn('updateItem(id: item',(ROOT/p).read_text())
++        for signature in ['public func assign(orderedIDs:','public func duplicateItem(id:','public func updateRichTextItem(id:']:self.assertEqual(body(self.src['s'],signature),body(self.before('s'),signature))
++
++    def test_original_optional_blank_branches_are_distinct_from_nil_and_equal_display(self):
++        cases=[(None,'Text','  name  ','name'),('old','old',' \n ',None),(None,'Text','',''),('','Text','',None),(None,'Text','Text',None),('old','old','old','old')]
++        for previous,displayed,submitted,expected in cases:
++            result=previous
++            if submitted!=displayed:
++                normalized=submitted.strip();result=None if not normalized and previous is not None else normalized
++            self.assertEqual(result,expected)
++
++    def test_reviewed_touched_files_schema_scope_and_shared_inputs_bound(self):
++        self.assertEqual(len(CHANGES),12)
++        for k in self.paths:self.assertEqual(pre_native_title(self.src[k]),self.before(k))
++        sha=lambda p:hashlib.sha256((ROOT/p).read_bytes()).hexdigest();current={str(p.relative_to(ROOT))for p in (ROOT/'replica/Sources').rglob('*')if p.is_file()}
++        self.assertEqual(current-set(self.base['production']),{NEW_PATH});self.assertEqual({p for p,h in self.base['production'].items()if sha(p)!=h},set(self.paths.values()))
++        for group in ['current_sources','shared_sources']:
++            for p,h in self.proof[group].items():self.assertEqual(sha(p),h)
++        for p,h in self.proof['shared_sources'].items():self.assertEqual(h,self.base['production'][p])
++        for p in ['replica/Package.swift','package.json']:self.assertEqual(sha(p),self.base['other'][p])
++
++    def test_no_native_database_execution_or_whole_entity_claim(self):
++        self.assertFalse(self.proof['runtime_executed']);self.assertFalse(self.proof['full_function_migration_verified']);self.assertEqual(self.proof['new_difference_records'],0)
++        self.assertTrue(any('CoreData migration/Swift compilation'in r for r in self.proof['remaining']));self.assertTrue(any('UUID Store facade'in r for r in self.proof['remaining']))
+--- /dev/null
++++ scripts/tests/native_title_scope_contract.py
+@@ -0,0 +1,316 @@
++"""Reviewed native-title schema/projection/metadata deltas for earlier frozen contracts."""
++from pathlib import Path
++
++NEW_PATH = 'replica/Sources/PastoCore/ClipboardItemTitlePersistence.swift'
++CHANGES = [['replica/Sources/PastoCore/ClipboardPersistence.swift',
++  '                                  includeItemOrder: Bool = true) -> NSManagedObjectModel {\n',
++  '                                  includeItemOrder: Bool = true,\n'
++  '                                  includeNativeTitle: Bool = true) -> NSManagedObjectModel {\n'],
++ ['replica/Sources/PastoCore/ClipboardPersistence.swift',
++  '        if includeItemOrder { ClipboardItemOrderPersistence.addField(to: model) }\n',
++  '        if includeItemOrder { ClipboardItemOrderPersistence.addField(to: model) }\n'
++  '        if includeNativeTitle { ClipboardItemTitlePersistence.addField(to: model) }\n'],
++ ['replica/Sources/PastoCore/ClipboardPersistence.swift',
++  '        let legacyCandidates = [\n'
++  '            makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, '
++  'includeItemOrder: false),\n'
++  '            makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, '
++  'includeTypedItem: false, includeItemOrder: false),\n'
++  '            makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, '
++  'includeNativeSources: false, includeTypedItem: false, includeItemOrder: false),\n'
++  '            makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, '
++  'includeNativeItemData: false, includeNativeSources: false, includeTypedItem: false, '
++  'includeItemOrder: false),\n'
++  '            makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, '
++  'includeLists: true, includeOptionalTimestamp: false, includeNativeItemData: false, '
++  'includeNativeSources: false, includeTypedItem: false, includeItemOrder: false),\n'
++  '            makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, '
++  'includeLists: false, includeOptionalTimestamp: false, includeNativeItemData: false, '
++  'includeNativeSources: false, includeTypedItem: false, includeItemOrder: false),\n'
++  '            makeModel(includeNativeIdentity: false, preserveItemKeyInHistory: true, '
++  'includeLists: false, includeOptionalTimestamp: false, includeNativeItemData: false, '
++  'includeNativeSources: false, includeTypedItem: false, includeItemOrder: false),\n'
++  '            makeModel(includeNativeIdentity: false, preserveItemKeyInHistory: false, '
++  'includeLists: false, includeOptionalTimestamp: false, includeNativeItemData: false, '
++  'includeNativeSources: false, includeTypedItem: false, includeItemOrder: false)\n'
++  '        ]\n',
++  '        let legacyCandidates = [\n'
++  '            makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, '
++  'includeNativeTitle: false),\n'
++  '            makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, '
++  'includeItemOrder: false, includeNativeTitle: false),\n'
++  '            makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, '
++  'includeTypedItem: false, includeItemOrder: false, includeNativeTitle: false),\n'
++  '            makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, '
++  'includeNativeSources: false, includeTypedItem: false, includeItemOrder: false, '
++  'includeNativeTitle: false),\n'
++  '            makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, '
++  'includeNativeItemData: false, includeNativeSources: false, includeTypedItem: false, '
++  'includeItemOrder: false, includeNativeTitle: false),\n'
++  '            makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, '
++  'includeLists: true, includeOptionalTimestamp: false, includeNativeItemData: false, '
++  'includeNativeSources: false, includeTypedItem: false, includeItemOrder: false, '
++  'includeNativeTitle: false),\n'
++  '            makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, '
++  'includeLists: false, includeOptionalTimestamp: false, includeNativeItemData: false, '
++  'includeNativeSources: false, includeTypedItem: false, includeItemOrder: false, '
++  'includeNativeTitle: false),\n'
++  '            makeModel(includeNativeIdentity: false, preserveItemKeyInHistory: true, '
++  'includeLists: false, includeOptionalTimestamp: false, includeNativeItemData: false, '
++  'includeNativeSources: false, includeTypedItem: false, includeItemOrder: false, '
++  'includeNativeTitle: false),\n'
++  '            makeModel(includeNativeIdentity: false, preserveItemKeyInHistory: false, '
++  'includeLists: false, includeOptionalTimestamp: false, includeNativeItemData: false, '
++  'includeNativeSources: false, includeTypedItem: false, includeItemOrder: false, '
++  'includeNativeTitle: false)\n'
++  '        ]\n'],
++ ['replica/Sources/PastoCore/ClipboardPersistence.swift',
++  '            try ClipboardItemOrderPersistence.bootstrap(in: context, root: root)\n',
++  '            try ClipboardItemOrderPersistence.bootstrap(in: context, root: root)\n'
++  '            try ClipboardItemTitlePersistence.bootstrap(in: context, root: root)\n'],
++ ['replica/Sources/PastoCore/ClipboardPersistence.swift',
++  '        var item = try Self.decode(ClipboardItem.self, object)\n',
++  '        var item = try Self.decode(ClipboardItem.self, object)\n'
++  '        ClipboardItemTitlePersistence.project(&item, from: object)\n'],
++ ['replica/Sources/PastoCore/ClipboardPersistence.swift',
++  '    @MainActor\n    final class ManagedRepository {\n',
++  '    private func contentForComparison(_ item: ClipboardItem) -> ClipboardItem {\n'
++  '        var value = content(item)\n'
++  '        value.title = ""\n'
++  '        value.hasExplicitTitle = false\n'
++  '        return value\n'
++  '    }\n'
++  '\n'
++  '    @MainActor\n'
++  '    final class ManagedRepository {\n'],
++ ['replica/Sources/PastoCore/ClipboardPersistence.swift',
++  '                    if old.map(content) != content(item) {\n',
++  '                    ClipboardItemTitlePersistence.update(item, on: object)\n'
++  '                    if old.map(contentForComparison) != contentForComparison(item) {\n'],
++ ['replica/Sources/PastoCore/ClipboardPersistence.swift',
++  '                    root.setValue(Int64(1), forKey: ClipboardItemOrderPersistence.versionKey)\n',
++  '                    root.setValue(Int64(1), forKey: ClipboardItemOrderPersistence.versionKey)\n'
++  '                    root.setValue(Int64(1), forKey: '
++  'ClipboardItemTitlePersistence.versionKey)\n'],
++ ['replica/Sources/PastoCore/ClipboardSnapshotReader.swift',
++  '                let value = try ClipboardPersistence.decode(ClipboardItem.self, object)\n',
++  '                var value = try ClipboardPersistence.decode(ClipboardItem.self, object)\n'
++  '                ClipboardItemTitlePersistence.project(&value, from: object)\n'],
++ ['replica/Sources/PastoCore/ClipboardStore.swift',
++  '    public func updateItem(id: UUID, title: String? = nil, text: String? = nil) throws {\n'
++  '        try mutate { state in\n'
++  '            guard let i = state.items.firstIndex(where: { $0.id == id }) else { throw '
++  'ClipboardStoreError.itemNotFound }\n'
++  '            if let title {\n'
++  '                state.items[i].title = title\n'
++  '                state.items[i].hasExplicitTitle = !title.isEmpty\n'
++  '            }\n'
++  '            if let text {\n'
++  '                state.items[i].plainText = text\n'
++  '                state.items[i].payloads = [NSPasteboard.PasteboardType.string.rawValue: '
++  'Data(text.utf8)]\n'
++  '                state.items[i].imagePreviewMetadata = nil\n'
++  '                state.items[i].rawPreview = nil\n'
++  '                state.items[i].kind = Self.isLink(text) ? .link : (Self.isColor(text) ? .color '
++  ': .text)\n'
++  '                if state.items[i].kind == .color {\n'
++  '                    state.items[i].rawPreview = OriginalImagePreviewMetadataCodec.encodeColor(\n'
++  '                        '
++  'OriginalColorPreviewMetadataGenerator.generate([OriginalPasteboardItem.f_10037c6d4(text)]),\n'
++  '                        binaryPropertyList: state.preferences.useBinaryPlist)\n'
++  '                } else if state.items[i].kind == .text {\n'
++  '                    state.items[i].rawPreview = OriginalImagePreviewMetadataCodec.encodeText(\n'
++  '                        '
++  'OriginalTextPreviewMetadataGenerator.generate([OriginalPasteboardItem.f_10037c6d4(text)]),\n'
++  '                        binaryPropertyList: state.preferences.useBinaryPlist)\n'
++  '                }\n'
++  '                if state.items[i].kind == .link,\n'
++  '                   let url = OriginalPasteboardItem.f_10037c6d4(text).f_10037ce0c() {\n'
++  '                    let representation = OriginalPasteboardItem.f_10037c7bc(url, title: '
++  'state.items[i].title)\n'
++  '                    for type in representation.f_10037da6c() {\n'
++  '                        state.items[i].payloads[type] = representation.f_10037d810(forType: '
++  'type)\n'
++  '                    }\n'
++  '                    state.items[i].payloads[Self.orderedPasteboardTypesPayloadKey] =\n'
++  '                        try JSONEncoder().encode(representation.f_10037da6c())\n'
++  '                    state.items[i].rawPreview = OriginalImagePreviewMetadataCodec.encodeLink(\n'
++  '                        OriginalLinkPreviewMetadataGenerator.generate([representation]),\n'
++  '                        binaryPropertyList: state.preferences.useBinaryPlist)\n'
++  '                }\n'
++  '                Self.refreshNativeChecksum(&state.items[i])\n'
++  '            }\n'
++  '            state.items[i].updatedAt = Date()\n'
++  '        }\n'
++  '    }\n'
++  '\n',
++  '    public func updateItem(id: UUID, title: String? = nil, text: String? = nil) throws {\n'
++  '        try mutate { state in\n'
++  '            guard let i = state.items.firstIndex(where: { $0.id == id }) else { throw '
++  'ClipboardStoreError.itemNotFound }\n'
++  '            if let title {\n'
++  '                state.items[i].title = title\n'
++  '                state.items[i].hasExplicitTitle = !title.isEmpty\n'
++  '            }\n'
++  '            if let text {\n'
++  '                state.items[i].plainText = text\n'
++  '                state.items[i].payloads = [NSPasteboard.PasteboardType.string.rawValue: '
++  'Data(text.utf8)]\n'
++  '                state.items[i].imagePreviewMetadata = nil\n'
++  '                state.items[i].rawPreview = nil\n'
++  '                state.items[i].kind = Self.isLink(text) ? .link : (Self.isColor(text) ? .color '
++  ': .text)\n'
++  '                if state.items[i].kind == .color {\n'
++  '                    state.items[i].rawPreview = OriginalImagePreviewMetadataCodec.encodeColor(\n'
++  '                        '
++  'OriginalColorPreviewMetadataGenerator.generate([OriginalPasteboardItem.f_10037c6d4(text)]),\n'
++  '                        binaryPropertyList: state.preferences.useBinaryPlist)\n'
++  '                } else if state.items[i].kind == .text {\n'
++  '                    state.items[i].rawPreview = OriginalImagePreviewMetadataCodec.encodeText(\n'
++  '                        '
++  'OriginalTextPreviewMetadataGenerator.generate([OriginalPasteboardItem.f_10037c6d4(text)]),\n'
++  '                        binaryPropertyList: state.preferences.useBinaryPlist)\n'
++  '                }\n'
++  '                if state.items[i].kind == .link,\n'
++  '                   let url = OriginalPasteboardItem.f_10037c6d4(text).f_10037ce0c() {\n'
++  '                    let representation = OriginalPasteboardItem.f_10037c7bc(url, title: '
++  'state.items[i].title)\n'
++  '                    for type in representation.f_10037da6c() {\n'
++  '                        state.items[i].payloads[type] = representation.f_10037d810(forType: '
++  'type)\n'
++  '                    }\n'
++  '                    state.items[i].payloads[Self.orderedPasteboardTypesPayloadKey] =\n'
++  '                        try JSONEncoder().encode(representation.f_10037da6c())\n'
++  '                    state.items[i].rawPreview = OriginalImagePreviewMetadataCodec.encodeLink(\n'
++  '                        OriginalLinkPreviewMetadataGenerator.generate([representation]),\n'
++  '                        binaryPropertyList: state.preferences.useBinaryPlist)\n'
++  '                }\n'
++  '                Self.refreshNativeChecksum(&state.items[i])\n'
++  '                state.items[i].updatedAt = Date()\n'
++  '            }\n'
++  '        }\n'
++  '    }\n'
++  '\n'],
++ ['replica/Sources/PastoCore/ClipboardPersistence.swift',
++  '                    ClipboardItemTitlePersistence.update(item, on: object)\n'
++  '                    if old.map(contentForComparison) != contentForComparison(item) {\n',
++  '                    if object.isInserted || old?.originalTitle != item.originalTitle {\n'
++  '                        ClipboardItemTitlePersistence.update(item, on: object)\n'
++  '                    }\n'
++  '                    if old.map(contentForComparison) != contentForComparison(item) {\n'],
++ ['replica/Sources/PastoCore/ClipboardStore.swift',
++  '    public func updateItem(id: UUID, title: String? = nil, text: String? = nil) throws {\n'
++  '        try mutate { state in\n'
++  '            guard let i = state.items.firstIndex(where: { $0.id == id }) else { throw '
++  'ClipboardStoreError.itemNotFound }\n'
++  '            if let title {\n'
++  '                state.items[i].title = title\n'
++  '                state.items[i].hasExplicitTitle = !title.isEmpty\n'
++  '            }\n'
++  '            if let text {\n'
++  '                state.items[i].plainText = text\n'
++  '                state.items[i].payloads = [NSPasteboard.PasteboardType.string.rawValue: '
++  'Data(text.utf8)]\n'
++  '                state.items[i].imagePreviewMetadata = nil\n'
++  '                state.items[i].rawPreview = nil\n'
++  '                state.items[i].kind = Self.isLink(text) ? .link : (Self.isColor(text) ? .color '
++  ': .text)\n'
++  '                if state.items[i].kind == .color {\n'
++  '                    state.items[i].rawPreview = OriginalImagePreviewMetadataCodec.encodeColor(\n'
++  '                        '
++  'OriginalColorPreviewMetadataGenerator.generate([OriginalPasteboardItem.f_10037c6d4(text)]),\n'
++  '                        binaryPropertyList: state.preferences.useBinaryPlist)\n'
++  '                } else if state.items[i].kind == .text {\n'
++  '                    state.items[i].rawPreview = OriginalImagePreviewMetadataCodec.encodeText(\n'
++  '                        '
++  'OriginalTextPreviewMetadataGenerator.generate([OriginalPasteboardItem.f_10037c6d4(text)]),\n'
++  '                        binaryPropertyList: state.preferences.useBinaryPlist)\n'
++  '                }\n'
++  '                if state.items[i].kind == .link,\n'
++  '                   let url = OriginalPasteboardItem.f_10037c6d4(text).f_10037ce0c() {\n'
++  '                    let representation = OriginalPasteboardItem.f_10037c7bc(url, title: '
++  'state.items[i].title)\n'
++  '                    for type in representation.f_10037da6c() {\n'
++  '                        state.items[i].payloads[type] = representation.f_10037d810(forType: '
++  'type)\n'
++  '                    }\n'
++  '                    state.items[i].payloads[Self.orderedPasteboardTypesPayloadKey] =\n'
++  '                        try JSONEncoder().encode(representation.f_10037da6c())\n'
++  '                    state.items[i].rawPreview = OriginalImagePreviewMetadataCodec.encodeLink(\n'
++  '                        OriginalLinkPreviewMetadataGenerator.generate([representation]),\n'
++  '                        binaryPropertyList: state.preferences.useBinaryPlist)\n'
++  '                }\n'
++  '                Self.refreshNativeChecksum(&state.items[i])\n'
++  '                state.items[i].updatedAt = Date()\n'
++  '            }\n'
++  '        }\n'
++  '    }\n'
++  '\n',
++  '    public func updateItem(id: UUID, title: String? = nil, text: String? = nil) throws {\n'
++  '        try mutate { state in\n'
++  '            guard let i = state.items.firstIndex(where: { $0.id == id }) else { throw '
++  'ClipboardStoreError.itemNotFound }\n'
++  '            if let title {\n'
++  '                let previousTitle = state.items[i].originalTitle\n'
++  '                let displayedTitle = OriginalPreviewTitles.f_100308f88(previousTitle,\n'
++  '                    defaultTitle: OriginalPreviewTitles.f_100309008(\n'
++  '                        rawType: Int(originalContentKind(of: state.items[i]).rawValue),\n'
++  '                        fileCount: state.items[i].decodedFilePreviewMetadata?.paths.count))\n'
++  '                if title != displayedTitle {\n'
++  '                    let normalized = title.trimmingCharacters(in: .whitespacesAndNewlines)\n'
++  '                    state.items[i].title = normalized\n'
++  '                    state.items[i].hasExplicitTitle = !normalized.isEmpty || previousTitle == '
++  'nil\n'
++  '                }\n'
++  '            }\n'
++  '            if let text {\n'
++  '                state.items[i].plainText = text\n'
++  '                state.items[i].payloads = [NSPasteboard.PasteboardType.string.rawValue: '
++  'Data(text.utf8)]\n'
++  '                state.items[i].imagePreviewMetadata = nil\n'
++  '                state.items[i].rawPreview = nil\n'
++  '                state.items[i].kind = Self.isLink(text) ? .link : (Self.isColor(text) ? .color '
++  ': .text)\n'
++  '                if state.items[i].kind == .color {\n'
++  '                    state.items[i].rawPreview = OriginalImagePreviewMetadataCodec.encodeColor(\n'
++  '                        '
++  'OriginalColorPreviewMetadataGenerator.generate([OriginalPasteboardItem.f_10037c6d4(text)]),\n'
++  '                        binaryPropertyList: state.preferences.useBinaryPlist)\n'
++  '                } else if state.items[i].kind == .text {\n'
++  '                    state.items[i].rawPreview = OriginalImagePreviewMetadataCodec.encodeText(\n'
++  '                        '
++  'OriginalTextPreviewMetadataGenerator.generate([OriginalPasteboardItem.f_10037c6d4(text)]),\n'
++  '                        binaryPropertyList: state.preferences.useBinaryPlist)\n'
++  '                }\n'
++  '                if state.items[i].kind == .link,\n'
++  '                   let url = OriginalPasteboardItem.f_10037c6d4(text).f_10037ce0c() {\n'
++  '                    let representation = OriginalPasteboardItem.f_10037c7bc(url, title: '
++  'state.items[i].title)\n'
++  '                    for type in representation.f_10037da6c() {\n'
++  '                        state.items[i].payloads[type] = representation.f_10037d810(forType: '
++  'type)\n'
++  '                    }\n'
++  '                    state.items[i].payloads[Self.orderedPasteboardTypesPayloadKey] =\n'
++  '                        try JSONEncoder().encode(representation.f_10037da6c())\n'
++  '                    state.items[i].rawPreview = OriginalImagePreviewMetadataCodec.encodeLink(\n'
++  '                        OriginalLinkPreviewMetadataGenerator.generate([representation]),\n'
++  '                        binaryPropertyList: state.preferences.useBinaryPlist)\n'
++  '                }\n'
++  '                Self.refreshNativeChecksum(&state.items[i])\n'
++  '                state.items[i].updatedAt = Date()\n'
++  '            }\n'
++  '        }\n'
++  '    }\n'
++  '\n']]
++
++def pre_native_title(source):
++    for path, previous, current in reversed(CHANGES):
++        if current in source:
++            assert source.count(current) == 1, path
++            source=source.replace(current,previous,1)
++    return source
++
++def pre_native_title_bytes(path):
++    path=Path(path)
++    raw=path.read_bytes()
++    return pre_native_title(raw.decode()).encode() if path.suffix == '.swift' else raw

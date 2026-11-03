@@ -1,0 +1,56 @@
+{
+  "kind": "p0_round2_static_binary_proof",
+  "binary_path": ".local/paste-arm64-static.bin",
+  "binary_sha256": "871f00354fbb1c165d858a98e6d19d6f43cb9d3f9f958b3e07c7f07eb5c19afb",
+  "save_selector": {
+    "stub": {
+      "address": "0x100c09980",
+      "slice_file_offset": 12622208,
+      "bytes": "011c0090213441f9f01400f010d640f900021fd6"
+    },
+    "selref": {
+      "address": "0x100f89268",
+      "slice_file_offset": 16290408,
+      "bytes": "ce74df0000001000"
+    },
+    "string": {
+      "address": "0x100df74ce",
+      "slice_file_offset": 14644430,
+      "bytes": "736176653a00"
+    },
+    "selector": "save:",
+    "note": "ADRP/LDR x1 from selref; thin binary chained relative target read as image-base+low36; no app execution."
+  },
+  "nscoding_keys": {
+    "types_load": {
+      "address": "0x10037f580",
+      "slice_file_offset": 3667328,
+      "bytes": "802e8fd200aeacf2600ec0f201a0fcd2"
+    },
+    "data_load": {
+      "address": "0x10037f604",
+      "slice_file_offset": 3667460,
+      "bytes": "802c8c52802eac720180fcd2"
+    },
+    "decoded_little_endian": {
+      "types": "types",
+      "data": "data"
+    },
+    "note": "原types、data小字符串字面值由MOV/MOVK立即数组装；当前NSCoding第二key是dataByType。"
+  },
+  "cleanup_error_continue": {
+    "branch": {
+      "address": "0x100385258",
+      "slice_file_offset": 3691096,
+      "bytes": "55bd2194b5f6ffb5"
+    },
+    "cleanup": {
+      "address": "0x100385130",
+      "slice_file_offset": 3690800,
+      "bytes": "e00315aa75dd2194e00313aa16dd2194480740f9e0031baae10319aa00013fd6a84300d1080150f8081d40f9e0031caa2100805222008052b80351f8e30318aa00013fd6150080d2e0031caac16100b021a01b91e24500d0424009919f01f297d6060091a86300d1"
+    },
+    "note": "resourceValues返回后CBNZ x21跳385130，释放错误后跳循环下一项385190；当前catch包围for故退出。"
+  },
+  "compiled": false,
+  "application_executed": false
+}

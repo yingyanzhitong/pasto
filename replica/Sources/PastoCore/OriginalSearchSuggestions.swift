@@ -1,9 +1,12 @@
 import Foundation
 
 public enum OriginalSearchSuggestions {
-    public enum Suggestion: Equatable, Sendable {
+    public enum Suggestion: Equatable, Sendable, CustomStringConvertible {
         case query([OriginalSearchQueryNode])
         case filter(UInt8, String)
+
+        // 0x1002dcc94: the registered CustomStringConvertible witness.
+        public var description: String { OriginalSearchSuggestions.f_1002dc9b8(self) }
     }
 
     /// Original 0x1002dcca4, before the caller normalizes the resulting query.
@@ -27,6 +30,53 @@ public enum OriginalSearchSuggestions {
         }
     }
 
+    private static var listNameResolver: ((String) -> String?)?
+
+    public static func setListNameResolver(_ resolver: ((String) -> String?)?) {
+        listNameResolver = resolver
+    }
+
+    public static func resolveListName(_ identifier: String) -> String? {
+        let resolver = listNameResolver
+        return resolver?(identifier)
+    }
+
+    // 2dc9b8: preserve node order, raw text and empty components when joining.
+    public static func f_1002dc9b8(_ suggestion: Suggestion,
+                                  listName: (String) -> String? = { resolveListName($0) }) -> String {
+        switch suggestion {
+        case let .filter(kind, value):
+            return f_1002ddc10(kind: kind, value: value, listName: listName)
+        case let .query(nodes):
+            return nodes.map { node in
+                switch node {
+                case let .text(text): return text
+                case let .filter(kind, value):
+                    let prefix: String
+                    switch kind {
+                    case 0: prefix = "app"
+                    case 1: prefix = "type"
+                    case 2: prefix = "title"
+                    case 3: prefix = "date"
+                    case 4: prefix = "device"
+                    default: prefix = "pinboard"
+                    }
+                    return prefix + ":" + f_1002ddc10(kind: kind, value: value, listName: listName)
+                }
+            }.joined(separator: " ")
+        }
+    }
+
+    // 2ddc10: only dates and list identifiers have a resolved caption.
+    public static func f_1002ddc10(kind: UInt8, value: String,
+                                  listName: (String) -> String? = { resolveListName($0) }) -> String {
+        switch kind {
+        case 5: return listName(value) ?? value
+        case 3: return OriginalSearchDateEncoding.f_1002d8e9c(value) ?? value
+        default: return value
+        }
+    }
+
     public struct Provider {
         public let app: (String) throws -> [String]
         public let type: (String) throws -> [String]
@@ -44,6 +94,27 @@ public enum OriginalSearchSuggestions {
             self.device = device
             self.pinboard = pinboard
         }
+    }
+
+    // 0x1002e00a0: optional provider, independently suppressed source errors, dates always.
+    public static func f_1002e00a0(provider: () -> Provider?,
+                                  dateFilters: [OriginalSearchDateFilter]? = nil) -> [UInt8: [OriginalSearchQueryNode]] {
+        var filters: [UInt8: [OriginalSearchQueryNode]] = [:]
+        let types = try? (provider()?.type("") ?? [])
+        filters[1] = types.map { $0.map { .filter(1, $0) } }
+        let apps = try? (provider()?.app("") ?? [])
+        filters[0] = apps.map { $0.map { .filter(0, $0) } }
+        let devices = try? (provider()?.device("") ?? [])
+        filters[4] = devices.map { $0.map { .filter(4, $0) } }
+        filters[3] = (dateFilters ?? OriginalSearchDateRanges.f_1002d8ce0()).map { date in
+            // The available-filters builder truncates both endpoints toward zero.
+            let start = Int(date.range.lowerBound.timeIntervalSince1970)
+            let end = Int(date.range.upperBound.timeIntervalSince1970)
+            return .filter(3, "\(start) \(end)")
+        }
+        let pinboards = try? (provider()?.pinboard("") ?? [])
+        filters[5] = pinboards.map { $0.map { .filter(5, $0.identifier) } }
+        return filters
     }
 
     public static func f_10030f3e0(_ query: String) -> [String] {

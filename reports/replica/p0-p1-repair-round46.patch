@@ -1,0 +1,358 @@
+--- phase-46-before/replica/Sources/Pasto/UI/ReplicaSearchIndex.swift
++++ replica/Sources/Pasto/UI/ReplicaSearchIndex.swift
+@@ -303,12 +303,16 @@
+         return item
+     }
+ 
++    private func savedStateForRestore(sourceIdentifier: String?) -> OriginalSearchIndexingState? {
++        guard let state = stateStore.savedState,
++              state.schemaVersion == OriginalSearchIndexingState.currentSchemaVersion else { return nil }
++        if let previous = stateStore.indexedStoreID, let current = sourceIdentifier, previous != current { return nil }
++        return state
++    }
++
+     // 0x1002f00dc/2f3248/2f32d4: a probe error does not prove that the index is empty.
+-    private func restoreCompletedStateIfHealthy(sourceIdentifier: String?) async -> Bool {
+-        guard let state = stateStore.savedState,
+-              state.schemaVersion == OriginalSearchIndexingState.currentSchemaVersion,
+-              state.indexedItems >= state.totalItems, state.totalItems > 0 else { return false }
+-        if let previous = stateStore.indexedStoreID, let current = sourceIdentifier, previous != current { return false }
++    private func restoreCompletedStateIfHealthy(_ state: OriginalSearchIndexingState) async -> Bool {
++        guard state.indexedItems >= state.totalItems, state.totalItems > 0 else { return false }
+         do {
+             let found = try await Self.matchingIdentifiers(
+                 predicate: "contentModificationDate >= $time.iso(1970-01-01T00:00:00Z)",
+@@ -320,12 +324,21 @@
+         }
+     }
+ 
+-    private func indexInitialSnapshot(_ fallback: [Entry]) async throws {
+-        let allIDs = try store?.searchIndexIdentifiers(before: nil) ?? fallback.map(\.searchIdentifier)
++    private func indexInitialSnapshot(_ fallback: [Entry], resuming saved: OriginalSearchIndexingState?) async throws {
++        let before = saved?.oldestTimestamp
++        let allIDs = try store?.searchIndexIdentifiers(before: before) ?? fallback.filter { entry in
++            guard let before else { return true }
++            guard let timestamp = entry.modified else { return false }
++            return timestamp < before
++        }.map(\.searchIdentifier)
+         guard !allIDs.isEmpty else { return }
+         let input = allIDs.filter { !$0.isEmpty }
++        let invalid = allIDs.count - input.count
++        let indexedBefore = saved?.indexedItems ?? 0
++        var total = saved?.totalItems ?? allIDs.count
++        if indexedBefore < 1 { total -= invalid }
+         var state = OriginalSearchIndexingState(schemaVersion: OriginalSearchIndexingState.currentSchemaVersion,
+-            totalItems: input.count, indexedItems: 0, oldestTimestamp: nil, invalidItems: allIDs.count - input.count)
++            totalItems: total, indexedItems: indexedBefore, oldestTimestamp: nil, invalidItems: invalid)
+         for lowerBound in stride(from: 0, to: input.count, by: Self.indexingBatchSize) {
+             try Task.checkCancellation()
+             let upperBound = min(lowerBound + Self.indexingBatchSize, input.count)
+@@ -373,11 +386,19 @@
+                 // 0x1002efccc: unavailable indexing must not start a snapshot/write/observer.
+                 if needsReset && !CSSearchableIndex.isIndexingAvailable() { throw IndexingError.unavailable }
+                 var restoredCompletedState = false
+-                if needsReset && mayRestoreSavedState {
+-                    let healthy = await restoreCompletedStateIfHealthy(sourceIdentifier: request.sourceIdentifier)
+-                    // A full delegate reset received during the probe must remain authoritative.
+-                    restoredCompletedState = healthy && mayRestoreSavedState
+-                    if restoredCompletedState { needsReset = false }
++                var resumeState: OriginalSearchIndexingState?
++                if needsReset && mayRestoreSavedState,
++                   let saved = savedStateForRestore(sourceIdentifier: request.sourceIdentifier) {
++                    if saved.indexedItems < saved.totalItems {
++                        // 0x1002f00dc: copy the old cursor and keep indexed/total counters.
++                        resumeState = saved
++                        needsReset = false
++                    } else {
++                        let healthy = await restoreCompletedStateIfHealthy(saved)
++                        // A full delegate reset received during the probe must remain authoritative.
++                        restoredCompletedState = healthy && mayRestoreSavedState
++                        if restoredCompletedState { needsReset = false }
++                    }
+                 }
+                 mayRestoreSavedState = false
+                 if let current = request.sourceIdentifier {
+@@ -385,7 +406,7 @@
+                     stateStore.indexedStoreID = current
+                 }
+                 let resettingIndex = needsReset
+-                let usesSnapshot = !restoredCompletedState && (resettingIndex || historyTask == nil)
++                let usesSnapshot = !restoredCompletedState && (resettingIndex || historyTask == nil || resumeState != nil)
+                 let currentEntries = request.entries
+                 if needsReset {
+                     try stateStore.save(nil)
+@@ -403,7 +424,7 @@
+                 if !deleted.isEmpty {
+                     try await deleteIdentifiers(deleted.compactMap { indexed[$0]?.searchIdentifier })
+                 }
+-                if usesSnapshot { try await indexInitialSnapshot(currentEntries) }
++                if usesSnapshot { try await indexInitialSnapshot(currentEntries, resuming: resumeState) }
+                 if usesSnapshot && store == nil { indexed = current }
+                 if !forcedIdentifiers.isEmpty { try await reindexTargets(forcedIdentifiers) }
+                 journalCompleted = true
+--- phase-46-before/scripts/tests/test_p1_repair_completed_index_state.py
++++ scripts/tests/test_p1_repair_completed_index_state.py
+@@ -65,10 +65,11 @@
+         self.assertNotIn('domain', self.state)
+ 
+     def test_completed_restore_requires_schema_completion_and_positive_total(self):
+-        for token in ['stateStore.savedState', 'state.schemaVersion == OriginalSearchIndexingState.currentSchemaVersion',
+-                      'state.indexedItems >= state.totalItems, state.totalItems > 0 else { return false }']:
+-            self.assertIn(token, self.restore)
+-        self.assertIn('if let previous = stateStore.indexedStoreID, let current = sourceIdentifier, previous != current', self.restore)
++        gate = body(self.index, 'private func savedStateForRestore(')
++        for token in ['stateStore.savedState', 'state.schemaVersion == OriginalSearchIndexingState.currentSchemaVersion']:
++            self.assertIn(token, gate)
++        self.assertIn('state.indexedItems >= state.totalItems, state.totalItems > 0 else { return false }', self.restore)
++        self.assertIn('if let previous = stateStore.indexedStoreID, let current = sourceIdentifier, previous != current', gate)
+         self.assertNotIn('invalidItems == 0', self.restore)
+ 
+     def test_health_query_literal_is_original_and_probe_error_reuses_state(self):
+@@ -102,8 +103,8 @@
+         check = self.drain.index('await restoreCompletedStateIfHealthy(')
+         self.assertLess(check, self.drain.index('index.deleteAllSearchableItems'))
+         self.assertIn('if restoredCompletedState { needsReset = false }', self.drain)
+-        self.assertIn('let usesSnapshot = !restoredCompletedState && (resettingIndex || historyTask == nil)', self.drain)
+-        self.assertIn('if usesSnapshot { try await indexInitialSnapshot(currentEntries) }', self.drain)
++        self.assertIn('let usesSnapshot = !restoredCompletedState && (resettingIndex || historyTask == nil || resumeState != nil)', self.drain)
++        self.assertIn('if usesSnapshot { try await indexInitialSnapshot(currentEntries, resuming: resumeState) }', self.drain)
+         self.assertIn('startHistoryObservation()', self.drain)
+ 
+     def test_explicit_reset_overrides_pending_health_probe_reuse(self):
+@@ -136,9 +137,10 @@
+     def test_actual_full_pass_uses_store_id_query_before_independent_100_id_batches(self):
+         facade = body(self.store, 'public func searchIndexIdentifiers(')
+         self.assertIn('try persistence.searchIndexIdentifiers(before: timestamp)', facade)
+-        self.assertIn('try store?.searchIndexIdentifiers(before: nil)', self.initial)
++        self.assertIn('try store?.searchIndexIdentifiers(before: before)', self.initial)
+         self.assertIn('let input = allIDs.filter { !$0.isEmpty }', self.initial)
+-        self.assertIn('totalItems: input.count, indexedItems: 0, oldestTimestamp: nil, invalidItems: allIDs.count - input.count', self.initial)
++        self.assertIn('totalItems: total, indexedItems: indexedBefore, oldestTimestamp: nil, invalidItems: invalid', self.initial)
++        self.assertIn('if indexedBefore < 1 { total -= invalid }', self.initial)
+         self.assertIn('stride(from: 0, to: input.count, by: Self.indexingBatchSize)', self.initial)
+         self.assertIn('try liveEntries(identifiers: Array(input[lowerBound..<upperBound]))', self.initial)
+         self.assertNotIn('changedEntries.count', self.initial)
+@@ -193,8 +195,9 @@
+         self.assertEqual(row['function_id'], 'Paste:0x1002f00dc')
+         self.assertFalse(self.proof['full_function_migration_verified'])
+         self.assertFalse(row['full_function_migration_verified'])
+-        self.assertIn('before: nil', self.initial)
+-        self.assertNotIn('before: state.oldestTimestamp', self.initial)
++        historical = (ROOT / '.local/p0-repair/phase-46/before/replica/Sources/Pasto/UI/ReplicaSearchIndex.swift').read_text()
++        self.assertIn('before: nil', body(historical, 'private func indexInitialSnapshot('))
++        self.assertIn('let before = saved?.oldestTimestamp', self.initial)
+         self.assertEqual(self.proof['function_map_markers_upgraded'], 0)
+ 
+ 
+--- phase-46-before/scripts/tests/test_p1_repair_lazy_search_records.py
++++ scripts/tests/test_p1_repair_lazy_search_records.py
+@@ -121,9 +121,9 @@
+     def test_all_actual_store_sdk_paths_use_native_records_including_snapshot_fallback(self):
+         store = body(self.store, 'public func searchIndexRecords(')
+         self.assertIn('try persistence.searchIndexRecords(identifiers: identifiers)', store)
+-        self.assertIn('if usesSnapshot { try await indexInitialSnapshot(currentEntries) }', self.index)
++        self.assertIn('if usesSnapshot { try await indexInitialSnapshot(currentEntries, resuming: resumeState) }', self.index)
+         initial = body(self.index, 'private func indexInitialSnapshot(')
+-        self.assertIn('try store?.searchIndexIdentifiers(before: nil)', initial)
++        self.assertIn('try store?.searchIndexIdentifiers(before: before)', initial)
+         self.assertIn('try liveEntries(identifiers: Array(input[lowerBound..<upperBound]))', initial)
+         self.assertIn('let live = try liveEntries(identifiers: identifiers)', self.index)
+         self.assertIn('try liveEntries(identifiers: Array(input[lowerBound..<upperBound]))', self.index)
+--- /dev/null
++++ scripts/tests/test_p1_repair_index_cursor_resume.py
+@@ -0,0 +1,195 @@
++"""Original-bound source/byte contracts; no Swift, preferences or native index execution."""
++import hashlib
++import json
++import struct
++import sys
++import unittest
++from pathlib import Path
++
++ROOT = Path(__file__).resolve().parents[2]
++sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'scripts/tests')]
++from function_ledger import source_fragments
++from test_offline_p0_contracts import body
++from test_p0_repair_identity import method_body
++from test_p0_repair_checksum_routing import original_fragment
++
++
++class IndexCursorResumeContracts(unittest.TestCase):
++    @classmethod
++    def setUpClass(cls):
++        cls.phase = ROOT / '.local/p0-repair/phase-46'
++        cls.proof = json.loads((cls.phase / 'cursor-resume-contract.json').read_text())
++        cls.source = (ROOT / 'replica/Sources/Pasto/UI/ReplicaSearchIndex.swift').read_text()
++        cls.drain = body(cls.source, 'private func drain() async')
++        cls.initial = body(cls.source, 'private func indexInitialSnapshot(')
++        cls.gate = body(cls.source, 'private func savedStateForRestore(')
++        cls.original = {r['address']: original_fragment((ROOT / r['path']).read_text(), r['address'][2:])
++                        for r in cls.proof['original_fragments']}
++
++    def test_original_fragments_and_prior_state_proof_are_hash_bound(self):
++        for row in self.proof['original_fragments']:
++            self.assertEqual(source_fragments(ROOT / row['path'])[row['address']]['sha256'], row['sha256'])
++        prior = self.proof['prior_state_and_batch_proof']
++        self.assertEqual(hashlib.sha256((ROOT / prior['path']).read_bytes()).hexdigest(), prior['sha256'])
++
++    def test_original_clear_descriptor_reaches_actual_delete_all_worker(self):
++        descriptor = self.proof['clear_operation_descriptor']
++        relative, frame_size = struct.unpack('<iI', bytes.fromhex(descriptor['bytes']))
++        self.assertEqual(hex(int(descriptor['address'], 16) + relative), descriptor['relative_target'])
++        self.assertEqual(frame_size, 32)
++        self.assertEqual(descriptor['relative_target'], '0x1002f3a60')
++        self.assertIn('FUN_1002e267c(', self.original['0x1002f3a60'])
++        reset = self.original['0x1002f00dc']
++        self.assertLess(reset.rindex('FUN_1002cb5a0('), reset.index('FUN_1002ef5d0(&DAT_100c3eb50'))
++
++    def test_original_resume_reads_optional_date_and_old_counters_before_full_work(self):
++        restore = self.original['0x1002f00dc']
++        self.assertIn('FUN_1002eb7dc(', restore)
++        self.assertIn('lVar21 = *(long *)(lVar14 + 8)', restore)
++        self.assertIn('lVar14 = *(long *)(lVar14 + 0x10)', restore)
++        self.assertIn('if (lVar14 < lVar21)', restore)
++        self.assertIn('plVar16[1] = (long)FUN_1002f177c', restore)
++        work = self.original['0x1002f177c']
++        self.assertIn('FUN_1002e87e4(param_1,uVar2,lVar9)', work)
++
++    def test_state_gate_reads_once_and_rejects_schema_or_two_non_nil_identity_mismatch(self):
++        self.assertEqual(self.gate.count('stateStore.savedState'), 1)
++        self.assertIn('state.schemaVersion == OriginalSearchIndexingState.currentSchemaVersion else { return nil }', self.gate)
++        self.assertIn('if let previous = stateStore.indexedStoreID, let current = sourceIdentifier, previous != current { return nil }', self.gate)
++        self.assertIn('return state', self.gate)
++        self.assertEqual(self.drain.count('savedStateForRestore('), 1)
++        self.assertNotIn('stateStore.savedState', self.drain)
++
++    def test_actual_partial_branch_keeps_index_without_health_probe(self):
++        partial = method_body(self.drain, 'if saved.indexedItems < saved.totalItems {')
++        self.assertIn('resumeState = saved', partial)
++        self.assertIn('needsReset = false', partial)
++        for forbidden in ['await', 'save(', 'deleteAll', 'restoreCompletedStateIfHealthy']:
++            self.assertNotIn(forbidden, partial)
++        self.assertLess(self.drain.index('resumeState = saved'), self.drain.index('let resettingIndex = needsReset'))
++        self.assertLess(self.drain.index('let resettingIndex = needsReset'), self.drain.index('if needsReset {'))
++
++    def test_completed_branch_keeps_previous_health_and_explicit_reset_protection(self):
++        completed = self.drain[self.drain.index('let healthy = await'):self.drain.index('mayRestoreSavedState = false')]
++        self.assertIn('restoreCompletedStateIfHealthy(saved)', completed)
++        self.assertIn('restoredCompletedState = healthy && mayRestoreSavedState', completed)
++        restore = body(self.source, 'private func restoreCompletedStateIfHealthy(')
++        self.assertIn('state.indexedItems >= state.totalItems, state.totalItems > 0', restore)
++        self.assertIn('return !found.isEmpty', restore)
++        self.assertIn('return true', body(restore, 'catch'))
++        rebuild = body(self.source, 'nonisolated private func rebuild(')
++        full = method_body(rebuild, '} else {')
++        self.assertIn('needsReset = true', full)
++        self.assertIn('mayRestoreSavedState = false', full)
++
++    def test_resume_is_passed_to_real_snapshot_call_and_not_just_saved_in_a_model(self):
++        self.assertIn('let usesSnapshot = !restoredCompletedState && (resettingIndex || historyTask == nil || resumeState != nil)', self.drain)
++        self.assertIn('if usesSnapshot { try await indexInitialSnapshot(currentEntries, resuming: resumeState) }', self.drain)
++        self.assertIn('let before = saved?.oldestTimestamp', self.initial)
++        self.assertIn('try store?.searchIndexIdentifiers(before: before)', self.initial)
++        self.assertNotIn('searchIndexIdentifiers(before: nil)', self.initial)
++
++    def test_native_cursor_is_strict_date_query_and_no_arbitrary_limit(self):
++        persistence = (ROOT / 'replica/Sources/PastoCore/ClipboardPersistence.swift').read_text()
++        fetch = body(persistence, 'func searchIndexIdentifiers(')
++        self.assertIn('if let timestamp { request.predicate = NSPredicate(format: "timestamp < %@", timestamp as NSDate) }', fetch)
++        self.assertIn('NSSortDescriptor(key: "timestamp", ascending: false)', fetch)
++        self.assertNotIn('fetchLimit', fetch)
++        self.assertNotIn('timestamp <=', fetch)
++        self.assertNotIn('timestamp ??', fetch)
++
++    def test_storeless_fallback_preserves_nil_cursor_and_strict_optional_date_semantics(self):
++        fallback = body(self.initial, 'fallback.filter')
++        self.assertIn('guard let before else { return true }', fallback)
++        self.assertIn('guard let timestamp = entry.modified else { return false }', fallback)
++        self.assertIn('return timestamp < before', fallback)
++        # A branch fixture tied to those three guards, not a native fetch execution.
++        dates = [None, 8, 7, 6]
++        for cursor, wanted in [(None, dates), (7, [6]), (0, [])]:
++            found = [date for date in dates if cursor is None or (date is not None and date < cursor)]
++            self.assertEqual(found, wanted)
++
++    def test_original_invalid_count_adjusts_total_only_for_zero_indexed_base(self):
++        original = self.original['0x1002e8934']
++        for token in ['lVar18 = *(long *)(unaff_x22 + 0x380)',
++                      'lVar25 = uVar24 - lVar28',
++                      'lVar15 = *(long *)(unaff_x22 + 0x388)',
++                      'if ((lVar18 < 1) && (bVar6 = SBORROW8(lVar15,lVar25), lVar15 = lVar15 - lVar25',
++                      'puVar19[1] = lVar15', 'puVar19[2] = uVar31']:
++            self.assertIn(token, original)
++        for token in ['let input = allIDs.filter { !$0.isEmpty }', 'let invalid = allIDs.count - input.count',
++                      'let indexedBefore = saved?.indexedItems ?? 0', 'var total = saved?.totalItems ?? allIDs.count',
++                      'if indexedBefore < 1 { total -= invalid }']:
++            self.assertIn(token, self.initial)
++
++    def test_resumed_pass_recomputes_invalid_and_resets_current_batch_date(self):
++        self.assertIn('totalItems: total, indexedItems: indexedBefore, oldestTimestamp: nil, invalidItems: invalid', self.initial)
++        self.assertNotIn('saved?.invalidItems', self.initial)
++        self.assertNotIn('oldestTimestamp: saved', self.initial)
++        # Saved counters are pass inputs; no subtraction on an already-progressed pass.
++        for indexed, total, ids, wanted in [(0, 4, ['a', '', 'b', ''], (0, 2, 2)),
++                                           (3, 8, ['a', '', 'b', ''], (3, 8, 2)),
++                                           (0, 8, ['', ''], (0, 6, 2))]:
++            invalid = len(ids) - sum(bool(value) for value in ids)
++            self.assertEqual((indexed, total - invalid if indexed < 1 else total, invalid), wanted)
++
++    def test_empty_ids_returns_before_constructing_or_saving_new_state(self):
++        empty = self.initial.index('guard !allIDs.isEmpty else { return }')
++        self.assertLess(empty, self.initial.index('var state = OriginalSearchIndexingState'))
++        self.assertLess(empty, self.initial.index('stateStore.save('))
++        original = self.original['0x1002f177c']
++        self.assertIn('lVar9 = *(long *)(param_1 + 0x10)', original)
++        self.assertIn('if (lVar9 != 0)', original)
++        # Original only invokes the new pass in that nonempty branch.
++        nonempty = method_body(original, 'if (lVar9 != 0) {')
++        self.assertIn('FUN_1002e87e4(', nonempty)
++        self.assertNotIn('FUN_1002e87e4(', original[original.index(nonempty) + len(nonempty):])
++
++    def test_batch_success_cancellation_and_finalization_are_unchanged_from_prior_proven_chain(self):
++        previous = (self.phase / 'before/replica/Sources/Pasto/UI/ReplicaSearchIndex.swift').read_text()
++        old = body(previous, 'private func indexInitialSnapshot(')
++        marker = 'for lowerBound in stride('
++        self.assertEqual(old[old.index(marker):], self.initial[self.initial.index(marker):])
++        self.assertIn('try Task.checkCancellation()', self.initial)
++        self.assertIn('state.indexedItems += live.count', self.initial)
++        self.assertIn('state.indexedItems = state.totalItems', self.initial)
++
++    def test_restore_decision_table_excludes_explicit_full_reset_and_mismatches(self):
++        # Original-bound state decision fixture. SDK probe errors retain valid complete state.
++        def decision(allowed, saved, previous, current, probe):
++            if not allowed or saved is None or saved[0] != 5:
++                return 'clear'
++            if previous is not None and current is not None and previous != current:
++                return 'clear'
++            _, indexed, total = saved
++            if indexed < total:
++                return 'resume'
++            return 'reuse' if total > 0 and (probe == 'error' or bool(probe)) else 'clear'
++        rows = [(True, None, None, 'B', [], 'clear'),
++                (True, (6, 1, 8), 'A', 'A', [], 'clear'),
++                (True, (5, 1, 8), 'A', 'B', [], 'clear'),
++                (False, (5, 1, 8), 'A', 'A', [], 'clear'),
++                (True, (5, 1, 8), 'A', None, [], 'resume'),
++                (True, (5, 0, 8), None, 'B', 'error', 'resume'),
++                (True, (5, 8, 8), 'A', 'A', [], 'clear'),
++                (True, (5, 8, 8), 'A', 'A', ['id'], 'reuse'),
++                (True, (5, 9, 8), 'A', 'A', 'error', 'reuse'),
++                (True, (5, 0, 0), 'A', 'A', 'error', 'clear')]
++        for *inputs, expected in rows:
++            self.assertEqual(decision(*inputs), expected)
++        self.assertIn('if needsReset && mayRestoreSavedState,', self.drain)
++
++    def test_only_two_shared_finite_recovery_records_close_and_lifecycle_stays_open(self):
++        self.assertEqual([r['function_id'] for r in self.proof['contracts']],
++                         ['Paste:0x1002efba0', 'Paste:0x1002f2280'])
++        self.assertTrue(all(not r['full_function_migration_verified'] for r in self.proof['contracts']))
++        self.assertEqual(self.proof['function_map_markers_upgraded'], 0)
++        self.assertFalse(self.proof['full_function_migration_verified'])
++        self.assertIn('if !journalCompleted { needsReset = true }', self.drain)
++        limitations = ' '.join(self.proof['retained_partial_contracts'])
++        for token in ['isRunning/stop/wait', 'weak-owner/ack', 'same-process interrupted']:
++            self.assertIn(token, limitations)
++
++
++if __name__ == '__main__':
++    unittest.main()

@@ -11,8 +11,27 @@ ROOT = Path(__file__).resolve().parents[1]
 SKIP = {'Paste:0x100ac35f8', 'Paste:0x100ac746c'}
 
 
+def unchanged_source_review(entry, evidence, references, original_sha256, binary_sha256, digest):
+    """Reuse a prior source review only when every bound input is unchanged.
+
+    This does not upgrade migration state, validate runtime consumers, or reuse
+    an old compiled product as evidence for the current application.
+    """
+    if (entry.get('state') != 'migrated' or not references
+            or not evidence.get('contract') or entry.get('contract') != evidence['contract']
+            or not (evidence.get('source_review') or evidence.get('review'))
+            or not original_sha256 or evidence.get('original_pseudocode_sha256') != original_sha256
+            or not binary_sha256 or evidence.get('original_binary_sha256') != binary_sha256):
+        return False
+    hashes = evidence.get('source_sha256', {})
+    return (all(ref['present'] and ref['path'] in hashes for ref in references)
+            and all(value and digest(path) == value for path, value in hashes.items()))
+
+
 def main():
     mapping = json.loads((ROOT / 'replica/function-map.json').read_text())['functions']
+    binaries = {row['name'].replace(' ', '-'): row['arm64_sha256']
+                for row in json.loads((ROOT / 'reports/target-manifest.json').read_text())['binaries']}
     ledger = {}
     for path in sorted((ROOT / 'reports/function-implementation').glob('*/*.jsonl')):
         for line in path.read_text().splitlines():
@@ -64,19 +83,23 @@ def main():
         if references and all(r['path'] in source_hashes for r in references):
             binding = 'current' if all(digest(r['path']) == source_hashes[r['path']] for r in references) else 'file_changed_needs_method_review'
         original_binding = 'not_recorded'
+        original_sha256 = None
         if saved.get('original_pseudocode_sha256') and key in ledger:
             original = ledger[key]['original']
             path = original['path']
             if path not in fragments:
                 fragments[path] = source_fragments(ROOT / path)
             fragment = fragments[path].get(key.split(':')[1], {})
-            original_binding = 'current' if saved['original_pseudocode_sha256'] == fragment.get('sha256') else 'changed'
+            original_sha256 = fragment.get('sha256')
+            original_binding = 'current' if saved['original_pseudocode_sha256'] == original_sha256 else 'changed'
         sdk_binding = None
         if entry.get('sdk_implementation'):
             sdk = entry['sdk_implementation']
             sdk_binding = 'current_report' if saved.get('sdk_reuse_report_sha256') == digest(sdk['report']) else 'report_changed_or_missing'
         rows.append({'function_id': key, 'state': entry['state'], 'source_references': references,
                      'source_binding': binding, 'original_binding': original_binding,
+                     'unchanged_source_review': key not in SKIP and unchanged_source_review(
+                         entry, saved, references, original_sha256, binaries.get(key.split(':')[0]), digest),
                      'sdk_binding': sdk_binding, 'issues': sorted(set(issues))})
     eligible = {k for k in ledger if k not in SKIP and mapping.get(k, {}).get('state') != 'excluded_by_scope'}
     unmapped = eligible - mapping.keys()
@@ -103,6 +126,7 @@ def main():
               'pending_thunk_target_groups': len(thunk_groups),
               'pending_thunks_to_migrated_targets': sum(g['count'] for g in reuse_candidates if g['target_state'] == 'migrated'),
               'source_binding_counts': dict(Counter(r['source_binding'] for r in rows if r['state'] == 'migrated')),
+              'unchanged_source_review_count': sum(r['unchanged_source_review'] for r in rows),
               'sdk_binding_counts': dict(Counter(r['sdk_binding'] for r in rows if r['sdk_binding'])),
               'reference_issue_counts': dict(Counter(i for r in rows for i in r['issues'])),
               'rows': rows}

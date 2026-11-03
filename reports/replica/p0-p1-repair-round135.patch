@@ -1,0 +1,11 @@
+--- before/replica/Sources/Pasto/UI/ReplicaUIController.swift
++++ after/replica/Sources/Pasto/UI/ReplicaUIController.swift
+@@ -1470,7 +1470,7 @@
+     }
+ 
+     func showPreview(item: ClipboardItem, input: ClipboardRestoreItem? = nil) {
+-        if showCollectionPreview(itemID: item.id) { return }
++        if case nil = input, showCollectionPreview(itemID: item.id) { return }
+         if let existing = previewRegistry.f_10008747c(itemIdentity: AnyHashable(item.id)) {
+             show(existing)
+             return

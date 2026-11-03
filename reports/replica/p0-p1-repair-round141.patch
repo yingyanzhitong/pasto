@@ -1,0 +1,67 @@
+--- before/replica/Sources/PastoCore/ClipboardRestoreItem.swift
++++ after/replica/Sources/PastoCore/ClipboardRestoreItem.swift
+@@ -120,6 +120,18 @@
+         return (owner.value(forKey: "rawType") as? NSNumber)?.int64Value == 2
+     }
+ 
++    // 3b83c4 reads current timestamp and type2 owner without decoding the content archive.
++    public func listNavigationMembership() -> (isInHistory: Bool, pinboardID: UUID?)? {
++        guard let object = nativeObject else { return nil }
++        let isInHistory = object.value(forKey: "timestamp") != nil
++        guard let owner = object.value(forKey: "list") as? NSManagedObject,
++              (owner.value(forKey: "rawType") as? NSNumber)?.int64Value == 2 else {
++            return (isInHistory, nil)
++        }
++        let identifier = owner.value(forKey: "identifier") as? String
++        return (isInHistory, identifier.flatMap { UUID(uuidString: $0) })
++    }
++
+     // 31ebc8: Stack cells read the current entity preview on row demand.
+     public func previewMetadataData() -> Data? {
+         nativeObject?.value(forKey: "rawPreview") as? Data
+--- before/replica/Sources/Pasto/UI/ReplicaUIController.swift
++++ after/replica/Sources/Pasto/UI/ReplicaUIController.swift
+@@ -578,11 +578,26 @@
+ 
+     // f3b83c4: one resolved item, history first, then its owning pinboard; omit the current list.
+     func selectedItemTargetLists() -> [UUID?] {
+-        let items = selectedItems
+-        guard items.count == 1 else { return [] }
+-        let item = items[0]
++        let ids = orderedSelectionIDs.filter { selection.contains($0) }
++        let inputs: [ClipboardRestoreItem]
++        if let collectionOwner {
++            inputs = collectionOwner.appliedRestoreItems(for: self, orderedIDs: ids) ?? []
++        } else {
++            let byID = Dictionary(uniqueKeysWithValues: visibleItems.map { ($0.id, $0) })
++            inputs = ids.compactMap { byID[$0]?.restoreItem() }
++        }
++        guard inputs.count == 1 else { return [] }
++        let input = inputs[0]
+         let isSearching = !isCollectionSearchQueryEmpty
+         var lists: [UUID?] = []
++        if let membership = input.listNavigationMembership() {
++            if membership.isInHistory, isSearching || pinboardID != nil { lists.append(nil) }
++            if let ownerID = membership.pinboardID, isSearching || ownerID != pinboardID {
++                lists.append(ownerID)
++            }
++            return lists
++        }
++        let item = input.resolvedItem()
+         if item.isInHistory, isSearching || pinboardID != nil { lists.append(nil) }
+         if let owner = store.pinboardOwner(for: item), owner.rawType == 2,
+            isSearching || owner.id != pinboardID {
+@@ -1595,10 +1610,10 @@
+     // f06c338: capture the visible cell offset before invoking onSelectList.
+     private func revealSelectedItemInList() -> Bool {
+         let lists = state.selectedItemTargetLists()
+-        guard !lists.isEmpty, let item = state.selectedItems.first else { return false }
++        guard !lists.isEmpty, let input = appliedRestoreItems().first else { return false }
+         let collection = (panel as? ReplicaPanel)?.collectionFocusTarget as? ReplicaNativeCollectionHost
+-        let offset = collection?.horizontalOffsetForVisibleItem(item.id)
+-        state.pendingListFocus = ReplicaUIState.PendingListFocus(itemID: item.id,
++        let offset = collection?.horizontalOffsetForVisibleItem(input.id)
++        state.pendingListFocus = ReplicaUIState.PendingListFocus(itemID: input.id,
+             pinboardID: lists[0], horizontalOffset: offset)
+         state.chooseListForItemReveal(lists[0])
+         return true

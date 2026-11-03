@@ -1,0 +1,42 @@
+--- a/replica/Sources/PastoCore/ClipboardItemDataPersistence.swift
++++ b/replica/Sources/PastoCore/ClipboardItemDataPersistence.swift
+@@ -46,6 +46,12 @@
+     // 31b218: raw getter exceptions log locally and yield no representations; invalid local graphs stay optional.
+     @MainActor static func readItems(from object: PastoItemEntity) -> [OriginalPasteboardItem]? {
+         guard let data = object.value(forKey: "data") as? NSManagedObject else { return nil }
++        return readRepresentations(from: data) { diagnostics(for: data) }
++    }
++
++    // 31b218 is also called from a search reader's private context. Invoke on its owning queue.
++    static func readRepresentations(from data: NSManagedObject,
++                                    diagnostics: () -> OriginalNamedDiagnostic) -> [OriginalPasteboardItem]? {
+         let raw: Data
+         do {
+             raw = try OriginalObjCExceptionBridge.f_1002ffc68 {
+@@ -55,7 +61,7 @@
+                 return raw
+             }
+         } catch let error as OriginalObjCExceptionError {
+-            diagnostics(for: data).f_1000d468c().f_1000d4e0c("Unreadable pasteboard items blob: \(error)")
++            diagnostics().f_1000d468c().f_1000d4e0c("Unreadable pasteboard items blob: \(error)")
+             return []
+         } catch { return nil }
+         return autoreleasepool { OriginalPasteboardDataCodec.f_10031aeec(raw) }
+--- a/replica/Sources/PastoCore/ClipboardSearchRecord.swift
++++ b/replica/Sources/PastoCore/ClipboardSearchRecord.swift
+@@ -146,9 +146,12 @@
+                 try OriginalObjCExceptionBridge.withResult {
+                     let object = try context.existingObject(with: objectID)
+                     guard object.entity.name == "Item", !object.isDeleted,
+-                          let data = object.value(forKey: "data") as? NSManagedObject,
+-                          let raw = data.value(forKey: "rawPasteboardItems") as? Data else { return nil }
+-                    return try project(object, OriginalPasteboardDataCodec.f_10031aeec(raw))
++                          let data = object.value(forKey: "data") as? NSManagedObject else { return nil }
++                    guard let items = ClipboardItemDataPersistence.readRepresentations(from: data, diagnostics: {
++                        // This private context/data object is created once for this deferred read.
++                        OriginalNamedDiagnostic.f_1000d4624(name: "ItemDataEntity")
++                    }) else { return nil }
++                    return try project(object, items)
+                 }
+             }
+         } catch {

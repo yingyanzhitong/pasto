@@ -1,0 +1,29 @@
+--- phase-14-before/replica/Sources/PastoCore/ClipboardPersistence.swift
++++ replica/Sources/PastoCore/ClipboardPersistence.swift
+@@ -416,7 +416,7 @@
+     }
+ 
+     /// Caller holds the process-shared flock across read / merge / transaction / publish.
+-    /// A thrown callback or save rolls back every entity and the sync checkpoint together.
++    /// The native transaction propagates callback/save errors without resetting or rolling back.
+     func commit(_ state: StoreState, previous: StoreState?, deletingItemIDs: [UUID] = []) throws {
+         _ = try commit(previous: previous, deletingItemIDs: deletingItemIDs) { transaction in
+             try transaction.repository.lists.synchronize(pinboards: state.pinboards,
+@@ -431,7 +431,7 @@
+                    operation: (Transaction) throws -> (state: StoreState, result: T)) throws -> (state: StoreState, result: T) {
+         let transaction = Transaction(context: context)
+         return try withExtendedLifetime(transaction) {
+-            try perform {
++            try context.performAndWait {
+                 let outcome = try operation(transaction)
+                 let state = outcome.state
+                 try transaction.repository.update(state.items, previous: previous?.items ?? [], entity: "Item", key: { $0.id.uuidString },
+@@ -493,7 +493,7 @@
+                 try transaction.repository.lists.refreshHistoryIfNeeded()
+                 if context.hasChanges {
+                     root.setValue(UUID(), forKey: "revision")
+-                    try context.save()
++                    try OriginalObjCExceptionBridge.f_1002ff9c8 { try context.save() }
+                 }
+                 return outcome
+             }

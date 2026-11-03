@@ -6,7 +6,12 @@ import SwiftUI
 /// Nontext editing and the original per-kind metadata remain separate dependencies.
 @MainActor
 func makeReplicaReadOnlyPreviewContent(store: ClipboardStore, item: ClipboardItem) -> NSView {
-    NSHostingView(rootView: ReplicaReadOnlyPreviewContent(store: store, itemID: item.id))
+    makeReplicaReadOnlyPreviewContent(store: store, itemID: item.id)
+}
+
+@MainActor
+func makeReplicaReadOnlyPreviewContent(store: ClipboardStore, itemID: UUID) -> NSView {
+    NSHostingView(rootView: ReplicaReadOnlyPreviewContent(store: store, itemID: itemID))
 }
 
 @MainActor

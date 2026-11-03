@@ -1,0 +1,336 @@
+--- phase-76-before/replica/Sources/Pasto/UI/ReplicaUIController.swift
++++ replica/Sources/Pasto/UI/ReplicaUIController.swift
+@@ -1248,7 +1248,9 @@
+     func copySelection(plainTextOnly: Bool) {
+         let items = appliedSelectionItems()
+         guard !items.isEmpty else { NSSound.beep(); return }
+-        copy(ids: items.map(\.id), plainTextOnly: plainTextOnly)
++        performCopy {
++            try store.writeToPasteboard(selectedItems: items, pasteboard: pasteboard, plainTextOnly: plainTextOnly)
++        }
+     }
+ 
+     func copy(item: ClipboardItem, plainTextOnly: Bool) {
+--- phase-76-before/replica/Sources/PastoCore/Pasteboard.swift
++++ replica/Sources/PastoCore/Pasteboard.swift
+@@ -340,6 +340,13 @@
+                              recognizedImageData: nil)
+     }
+ 
++    public func writeToPasteboard(selectedItems: [ClipboardItem], pasteboard: NSPasteboard,
++                                 plainTextOnly: Bool = false) throws {
++        try writeToPasteboard(ids: selectedItems.map(\.id), pasteboard: pasteboard,
++                             options: plainTextOnly ? .plainText : [], recognizedImageData: nil,
++                             resolvedSelection: selectedItems)
++    }
++
+     public func writeToPasteboard(ids: [UUID], pasteboard: NSPasteboard,
+                                   options: OriginalPasteboardRestore.Options) throws {
+         try writeToPasteboard(ids: ids, pasteboard: pasteboard, options: options, recognizedImageData: nil)
+@@ -373,13 +380,19 @@
+     }
+ 
+     private func writeToPasteboard(ids: [UUID], pasteboard: NSPasteboard,
+-                                   options: OriginalPasteboardRestore.Options, recognizedImageData: Data?) throws {
++                                   options: OriginalPasteboardRestore.Options, recognizedImageData: Data?,
++                                   resolvedSelection: [ClipboardItem]? = nil) throws {
+         guard !ids.isEmpty else { return }
+-        // Refresh selection inputs without an extra pre-writer save; the restore transaction saves once below.
+-        try reload()
+-        let selected = try ids.map { id -> ClipboardItem in
+-            guard let item = items.first(where: { $0.id == id && !$0.isDeleted }) else { throw ClipboardStoreError.itemNotFound }
+-            return item
++        let selected: [ClipboardItem]
++        if let resolvedSelection {
++            selected = resolvedSelection
++        } else {
++            // Identifier-only compatibility callers resolve their inputs before the shared writer.
++            try reload()
++            selected = try ids.map { id -> ClipboardItem in
++                guard let item = items.first(where: { $0.id == id && !$0.isDeleted }) else { throw ClipboardStoreError.itemNotFound }
++                return item
++            }
+         }
+         let selections = try selected.map { item -> OriginalPasteboardRestore.Selection in
+             let application = sourceApplication(for: item)
+--- phase-76-before/scripts/tests/live_item_selection_scope_contract.py
++++ scripts/tests/live_item_selection_scope_contract.py
+@@ -4,6 +4,8 @@
+ 
+ 
+ def pre_live_selection(source):
++    from resolved_copy_scope_contract import pre_resolved_copy
++    source = pre_resolved_copy(source)
+     declaration = '    func appliedSelectedItems(for state: ReplicaUIState, orderedIDs: [UUID])'
+     if declaration in source:
+         start = source.index(declaration)
+--- phase-76-before/scripts/tests/test_p0_repair_empty_copy.py
++++ scripts/tests/test_p0_repair_empty_copy.py
+@@ -54,7 +54,8 @@
+             self.fail("copySelection body is unclosed")
+         self.assertIn("let items = appliedSelectionItems()", body)
+         self.assertIn("guard !items.isEmpty else { NSSound.beep(); return }", body)
+-        self.assertIn("copy(ids: items.map(\\.id), plainTextOnly: plainTextOnly)", body)
++        self.assertIn("performCopy {", body)
++        self.assertIn("store.writeToPasteboard(selectedItems: items, pasteboard: pasteboard, plainTextOnly: plainTextOnly)", body)
+         self.assertEqual(body.count("NSSound.beep()"), 1)
+         self.assertIn("guard !ids.isEmpty else { return }", self.ui)
+ 
+--- phase-76-before/scripts/tests/test_p0_repair_prebuilt_restore.py
++++ scripts/tests/test_p0_repair_prebuilt_restore.py
+@@ -10,6 +10,7 @@
+ from function_ledger import source_fragments
+ from test_offline_p0_contracts import body
+ from test_p0_repair_checksum_routing import original_fragment
++from resolved_copy_scope_contract import pre_resolved_copy
+ 
+ 
+ class PrebuiltRestoreContracts(unittest.TestCase):
+@@ -19,7 +20,7 @@
+         cls.core = ROOT / 'replica/Sources/PastoCore'
+         cls.store = (cls.core / 'ClipboardStore.swift').read_text()
+         cls.persistence = (cls.core / 'ClipboardPersistence.swift').read_text()
+-        cls.pasteboard = (cls.core / 'Pasteboard.swift').read_text()
++        cls.pasteboard = pre_resolved_copy((cls.core / 'Pasteboard.swift').read_text())
+         cls.writer = body(cls.pasteboard, 'private func writeToPasteboard(ids: [UUID],')
+         cls.worker = body(cls.store, 'private func mutateInTransaction<T>(')
+ 
+--- phase-76-before/scripts/tests/test_p0_repair_restore.py
++++ scripts/tests/test_p0_repair_restore.py
+@@ -10,6 +10,7 @@
+ sys.path[:0] = [str(ROOT / "scripts"), str(ROOT / "scripts/tests")]
+ from test_offline_p0_contracts import body
+ from macho_imports import parse_macho
++from resolved_copy_scope_contract import pre_resolved_copy
+ 
+ SOURCE = "replica/Sources/PastoCore/Pasteboard.swift"
+ SIGNATURE = "private func writeToPasteboard(ids:"
+@@ -31,7 +32,7 @@
+ class RestoreRepair(unittest.TestCase):
+     @classmethod
+     def setUpClass(cls):
+-        cls.current = (ROOT / SOURCE).read_text()
++        cls.current = pre_resolved_copy((ROOT / SOURCE).read_text())
+         cls.method = body(cls.current, SIGNATURE)
+ 
+     def test_only_restore_failure_followup_tail_changed(self):
+--- phase-76-before/scripts/tests/test_p0_repair_title.py
++++ scripts/tests/test_p0_repair_title.py
+@@ -4,6 +4,7 @@
+ import re
+ import unittest
+ from pathlib import Path
++from resolved_copy_scope_contract import pre_resolved_copy
+ 
+ 
+ ROOT = Path(__file__).resolve().parents[2]
+@@ -49,7 +50,7 @@
+         cls.baseline = json.loads(BASELINE.read_text())
+         cls.result = json.loads(RESULT.read_text())
+         cls.store = (ROOT / STORE_PATH).read_text()
+-        cls.ui = (ROOT / UI_PATH).read_text()
++        cls.ui = pre_resolved_copy((ROOT / UI_PATH).read_text())
+         cls.models = (ROOT / MODEL_PATH).read_text()
+ 
+     def test_baseline_hashes_bind_the_two_owned_source_files(self):
+--- phase-76-before/scripts/tests/test_p1_repair_live_item_selection.py
++++ scripts/tests/test_p1_repair_live_item_selection.py
+@@ -9,6 +9,7 @@
+ sys.path[:0] = [str(ROOT / 'scripts/tests')]
+ from test_offline_p0_contracts import body
+ from live_item_selection_scope_contract import pre_live_selection
++from resolved_copy_scope_contract import pre_resolved_copy, pre_resolved_copy_bytes
+ 
+ 
+ class LiveItemSelectionContracts(unittest.TestCase):
+@@ -19,7 +20,7 @@
+         cls.base = json.loads((cls.phase / 'baseline.json').read_text())
+         cls.paths = dict(host='replica/Sources/Pasto/UI/ReplicaNativeCardCollection.swift',
+                          ui='replica/Sources/Pasto/UI/ReplicaUIController.swift')
+-        cls.source = {k: (ROOT / p).read_text() for k, p in cls.paths.items()}
++        cls.source = {k: pre_resolved_copy((ROOT / p).read_text()) for k, p in cls.paths.items()}
+ 
+     def before(self, key): return (self.phase / 'before' / self.paths[key]).read_text()
+ 
+@@ -27,8 +28,8 @@
+         old = self.proof['original_proof']
+         self.assertEqual(hashlib.sha256((ROOT / old['path']).read_bytes()).hexdigest(), old['sha256'])
+         for path, digest in self.proof['current_sources'].items():
+-            self.assertEqual(hashlib.sha256((ROOT / path).read_bytes()).hexdigest(), digest)
+-            self.assertEqual((ROOT / path).read_bytes(), (self.phase / 'after' / path).read_bytes())
++            self.assertEqual(hashlib.sha256(pre_resolved_copy_bytes(ROOT / path)).hexdigest(), digest)
++            self.assertEqual(pre_resolved_copy_bytes(ROOT / path), (self.phase / 'after' / path).read_bytes())
+ 
+     def test_host_owner_gate_precedes_applied_identity_lookup(self):
+         selected = body(self.source['host'], 'func appliedSelectedItems(for state:')
+@@ -104,7 +105,7 @@
+         self.assertEqual(body(self.source['ui'], 'var visibleItems:'), body(self.before('ui'), 'var visibleItems:'))
+ 
+     def test_only_two_existing_UI_files_change_without_provider_model_or_writer_edits(self):
+-        sha = lambda p: hashlib.sha256((ROOT / p).read_bytes()).hexdigest()
++        sha = lambda p: hashlib.sha256(pre_resolved_copy_bytes(ROOT / p)).hexdigest()
+         self.assertEqual({p for p, h in self.base['production'].items() if sha(p) != h}, set(self.paths.values()))
+         self.assertEqual({str(p.relative_to(ROOT)) for p in (ROOT / 'replica/Sources').rglob('*') if p.is_file()}, set(self.base['production']))
+         for p in ['replica/Package.swift', 'package.json']:
+--- /dev/null
++++ scripts/tests/test_p1_repair_resolved_copy_input.py
+@@ -0,0 +1,115 @@
++"""Direct resolved selection reaches the real copy writer; static source checks only."""
++import hashlib
++import json
++from pathlib import Path
++import struct
++import sys
++import unittest
++
++ROOT = Path(__file__).resolve().parents[2]
++sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'scripts/tests')]
++from function_ledger import source_fragments
++from test_offline_p0_contracts import body
++from resolved_copy_scope_contract import pre_resolved_copy
++
++
++class ResolvedCopyInputContracts(unittest.TestCase):
++    @classmethod
++    def setUpClass(cls):
++        cls.phase = ROOT / '.local/p0-repair/phase-76'
++        cls.proof = json.loads((cls.phase / 'resolved-copy-contract.json').read_text())
++        cls.base = json.loads((cls.phase / 'baseline.json').read_text())
++        cls.paths = dict(writer='replica/Sources/PastoCore/Pasteboard.swift', ui='replica/Sources/Pasto/UI/ReplicaUIController.swift')
++        cls.source = {k: (ROOT / p).read_text() for k, p in cls.paths.items()}
++
++    def before(self, key): return (self.phase / 'before' / self.paths[key]).read_text()
++
++    def test_seven_original_functions_and_incoming_entity_sequence_ARM_are_bound(self):
++        self.assertEqual(len(self.proof['original_fragments']), 7)
++        for row in self.proof['original_fragments']:
++            self.assertEqual(source_fragments(ROOT / row['path'])[row['address']]['sha256'], row['sha256'])
++        for row in [self.proof['binary'], self.proof['arm_disassembly']]:
++            self.assertEqual(hashlib.sha256((ROOT / row['path']).read_bytes()).hexdigest(), row['sha256'])
++        words = {int(r['address'], 16): struct.unpack('<I', bytes.fromhex(r['bytes']))[0] for r in self.proof['ARM_words']}
++        self.assertEqual(words[0x10037a1b8], 0xa90102b3)
++        self.assertEqual(0x10037a1d0 + (words[0x10037a1d0] & 0x3ffffff) * 4, 0x10038222c)
++
++    def test_actual_two_source_files_and_after_snapshots_are_bound(self):
++        for p, h in self.proof['current_sources'].items():
++            self.assertEqual(hashlib.sha256((ROOT / p).read_bytes()).hexdigest(), h)
++            self.assertEqual((ROOT / p).read_bytes(), (self.phase / 'after' / p).read_bytes())
++
++    def test_selected_overload_forwards_same_values_order_and_plain_option(self):
++        entry = body(self.source['writer'], 'public func writeToPasteboard(selectedItems:')
++        self.assertIn('ids: selectedItems.map(\\.id)', entry)
++        self.assertIn('options: plainTextOnly ? .plainText : []', entry)
++        self.assertIn('recognizedImageData: nil', entry)
++        self.assertIn('resolvedSelection: selectedItems', entry)
++        for token in ['reload()', 'Set(', '.sorted', '.filter', 'items.first', 'save(']:
++            self.assertNotIn(token, entry)
++
++    def test_resolved_branch_uses_input_without_reading_store(self):
++        worker = body(self.source['writer'], 'private func writeToPasteboard(ids:')
++        direct = body(worker, 'if let resolvedSelection')
++        self.assertEqual(direct.strip(), '{\n            selected = resolvedSelection\n        }')
++        self.assertLess(worker.index('guard !ids.isEmpty else { return }'), worker.index('if let resolvedSelection'))
++        self.assertIn('resolvedSelection: [ClipboardItem]? = nil', self.source['writer'])
++
++    def test_identifier_only_adapter_retains_reload_and_not_deleted_guard(self):
++        worker = body(self.source['writer'], 'private func writeToPasteboard(ids:')
++        fallback = worker.split('        } else {\n', 1)[1].split('        let selections =', 1)[0]
++        order = ['try reload()', 'selected = try ids.map', 'items.first(where: { $0.id == id && !$0.isDeleted })',
++                 'throw ClipboardStoreError.itemNotFound', 'return item']
++        self.assertEqual([fallback.index(t) for t in order], sorted(fallback.index(t) for t in order))
++        self.assertEqual(worker.count('try reload()'), 1)
++
++    def test_processor_writer_save_failure_undo_and_notification_tail_is_identical(self):
++        marker = '        let selections = try selected.map'
++        current = body(self.source['writer'], 'private func writeToPasteboard(ids:')
++        previous = body(self.before('writer'), 'private func writeToPasteboard(ids:')
++        self.assertEqual(current[current.index(marker):], previous[previous.index(marker):])
++        order = ['let restoration = try prepareHistoryRestore(selected)', 'writer.f_10037875c(objects)',
++                 'try recordRestoredSelection(restoration)', 'removeAllActions()', 'NotificationCenter.default.post', 'didRestoreItem.send()']
++        self.assertEqual([current.index(t) for t in order], sorted(current.index(t) for t in order))
++
++    def test_actual_copy_selection_keeps_empty_beep_then_direct_resolved_write(self):
++        copy = body(self.source['ui'], 'func copySelection(plainTextOnly:')
++        order = ['let items = appliedSelectionItems()', 'guard !items.isEmpty else { NSSound.beep(); return }',
++                 'performCopy {', 'store.writeToPasteboard(selectedItems: items,']
++        self.assertEqual([copy.index(t) for t in order], sorted(copy.index(t) for t in order))
++        self.assertNotIn('copy(ids:', copy)
++        self.assertNotIn('items.map', copy)
++        self.assertEqual(body(self.source['ui'], 'private func performCopy('), body(self.before('ui'), 'private func performCopy('))
++
++    def test_other_copy_OCR_and_paste_modal_interfaces_are_unchanged(self):
++        for signature in ['func copy(item:', 'func copy(ids:', 'func copyRecognizedImageText(',
++                          'func pasteSelection(', 'func paste(item:', 'func paste(ids:']:
++            self.assertEqual(body(self.source['ui'], signature), body(self.before('ui'), signature))
++        p = 'replica/Sources/Pasto/AppMain.swift'
++        self.assertEqual(hashlib.sha256((ROOT / p).read_bytes()).hexdigest(), self.base['production'][p])
++
++    def test_existing_history_preparation_and_native_transaction_are_unchanged(self):
++        for p in ['replica/Sources/PastoCore/ClipboardStore.swift', 'replica/Sources/PastoCore/ClipboardPersistence.swift']:
++            self.assertEqual(hashlib.sha256((ROOT / p).read_bytes()).hexdigest(), self.base['production'][p])
++        self.assertIn('try prepareHistoryRestore(selected)', self.source['writer'])
++
++    def test_only_approved_input_and_copy_blocks_differ_from_previous_code(self):
++        for key in self.paths:
++            self.assertEqual(pre_resolved_copy(self.source[key]), self.before(key))
++
++    def test_only_two_files_change_without_schema_or_package_changes(self):
++        sha = lambda p: hashlib.sha256((ROOT / p).read_bytes()).hexdigest()
++        self.assertEqual({p for p, h in self.base['production'].items() if sha(p) != h}, set(self.paths.values()))
++        self.assertEqual({str(p.relative_to(ROOT)) for p in (ROOT / 'replica/Sources').rglob('*') if p.is_file()}, set(self.base['production']))
++        for p in ['replica/Package.swift', 'package.json']:
++            self.assertEqual(sha(p), self.base['other'][p])
++
++    def test_direct_paste_and_full_entity_provider_gap_are_not_counted_complete(self):
++        self.assertFalse(self.proof['full_function_migration_verified'])
++        self.assertEqual(self.proof['remaining_confirmed_differences'], ['Paste:0x1003544dc'])
++        self.assertEqual(self.proof['repaired_finite_contracts'], [])
++        self.assertTrue(any('permission-modal' in s for s in self.proof['remaining_work']))
++
++
++if __name__ == '__main__':
++    unittest.main()
+--- /dev/null
++++ scripts/tests/resolved_copy_scope_contract.py
+@@ -0,0 +1,41 @@
++"""The explicit resolved-copy input delta, for earlier frozen writer/UI contracts."""
++from pathlib import Path
++from test_offline_p0_contracts import body
++
++
++def pre_resolved_copy(source):
++    declaration = '    public func writeToPasteboard(selectedItems:'
++    if declaration in source:
++        start = source.index(declaration);value = body(source, 'public func writeToPasteboard(selectedItems:')
++        end = source.index(value, start) + len(value) + 2
++        source = source[:start] + source[end:]
++        new = 'options: OriginalPasteboardRestore.Options, recognizedImageData: Data?,\n                                   resolvedSelection: [ClipboardItem]? = nil) throws'
++        assert source.count(new) == 1
++        source = source.replace(new, 'options: OriginalPasteboardRestore.Options, recognizedImageData: Data?) throws', 1)
++        start = source.index('        let selected: [ClipboardItem]\n')
++        end = source.index('        let selections = try selected.map', start)
++        actual = source[start:end]
++        assert 'if let resolvedSelection' in actual and 'selected = try ids.map' in actual
++        old = '''        // Refresh selection inputs without an extra pre-writer save; the restore transaction saves once below.
++        try reload()
++        let selected = try ids.map { id -> ClipboardItem in
++            guard let item = items.first(where: { $0.id == id && !$0.isDeleted }) else { throw ClipboardStoreError.itemNotFound }
++            return item
++        }
++'''
++        source = source[:start] + old + source[end:]
++    if 'store.writeToPasteboard(selectedItems: items,' in source:
++        value = body(source, 'func copySelection(plainTextOnly:')
++        assert 'guard !items.isEmpty else { NSSound.beep(); return }' in value and 'performCopy {' in value
++        old = '''{
++        let items = appliedSelectionItems()
++        guard !items.isEmpty else { NSSound.beep(); return }
++        copy(ids: items.map(\\.id), plainTextOnly: plainTextOnly)
++    }'''
++        source = source.replace(value, old, 1)
++    return source
++
++
++def pre_resolved_copy_bytes(path):
++    path = Path(path);value = path.read_bytes()
++    return pre_resolved_copy(value.decode()).encode() if path.suffix == '.swift' else value

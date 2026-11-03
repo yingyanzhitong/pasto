@@ -1,0 +1,433 @@
+--- phase-12-before/replica/Sources/PastoCore/ClipboardPersistence.swift
++++ replica/Sources/PastoCore/ClipboardPersistence.swift
+@@ -13,6 +13,7 @@
+     private let context: NSManagedObjectContext
+     private let databaseURL: URL
+     private let searchHistory: OriginalSearchHistory
++    private let lists: ClipboardListPersistence
+     private let itemUpdatesSubject = PassthroughSubject<Set<UUID>, Never>()
+     private var contextChangesObservation: AnyCancellable?
+ 
+@@ -29,6 +30,8 @@
+         managedContext.undoManager = nil
+         context = managedContext
+         searchHistory = OriginalSearchHistory(context: managedContext)
++        lists = ClipboardListPersistence(context: managedContext)
++        try bootstrapListsIfNeeded()
+         for suffix in ["", "-wal", "-shm"] {
+             let path = databaseURL.path + suffix
+             if FileManager.default.fileExists(atPath: path) {
+@@ -69,7 +72,8 @@
+     ]
+ 
+     private static func makeModel(includeNativeIdentity: Bool,
+-                                  preserveItemKeyInHistory: Bool) -> NSManagedObjectModel {
++                                  preserveItemKeyInHistory: Bool,
++                                  includeLists: Bool = true) -> NSManagedObjectModel {
+         let model = NSManagedObjectModel()
+         func attribute(_ name: String, _ type: NSAttributeType, optional: Bool = false) -> NSAttributeDescription {
+             let value = NSAttributeDescription()
+@@ -111,6 +115,7 @@
+                 attribute("cloudMetadata", .binaryDataAttributeType, optional: true),
+                 attribute("cloudJournal", .binaryDataAttributeType, optional: true)])
+         ]
++        if includeLists { ClipboardListPersistence.addEntities(to: model, item: model.entitiesByName["Item"]!) }
+         return model
+     }
+ 
+@@ -122,10 +127,11 @@
+         guard !destinationModel.isConfiguration(nil, compatibleWithStoreMetadata: metadata) else { return }
+ 
+         let legacyCandidates = [
+-            makeModel(includeNativeIdentity: false, preserveItemKeyInHistory: true),
+-            makeModel(includeNativeIdentity: false, preserveItemKeyInHistory: false)
++            makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeLists: false),
++            makeModel(includeNativeIdentity: false, preserveItemKeyInHistory: true, includeLists: false),
++            makeModel(includeNativeIdentity: false, preserveItemKeyInHistory: false, includeLists: false)
+         ]
+-        // Both candidates have the same stored attributes; history-retention policy can share a version hash.
++        // The older history-retention variants can share a version hash.
+         let sourceModel = legacyCandidates.first {
+             $0.isConfiguration(nil, compatibleWithStoreMetadata: metadata)
+         }
+@@ -168,6 +174,12 @@
+         item.createdAt = timestamp; item.updatedAt = updatedAt; item.isInHistory = inHistory
+         item.nativeIdentifier = object.value(forKey: "nativeIdentifier") as? String
+         item.nativeChecksum = object.value(forKey: "nativeChecksum") as? String
++        if let list = object.value(forKey: "list") as? NSManagedObject,
++           let identifier = list.value(forKey: "identifier") as? String,
++           let owner = UUID(uuidString: identifier) {
++            item.pinboardOwnerID = owner
++            item.pinboardIDs.insert(owner)
++        } else { item.pinboardOwnerID = nil }
+         return item
+     }
+ 
+@@ -210,6 +222,29 @@
+         try context.performAndWait {
+             do { return try OriginalObjCExceptionBridge.withResult(operation) }
+             catch { context.rollback(); throw error }
++        }
++    }
++
++    /// Backfill only the new graph; legacy encoded content and memberships remain intact.
++    private func bootstrapListsIfNeeded() throws {
++        try perform {
++            guard try lists.historyList() == nil, let root = try root() else { return }
++            let preferences = try decode(AppPreferences.self, root, key: "preferences")
++            let pinboards = try fetch("Pinboard").map { try decode(Pinboard.self, $0) }
++            try lists.synchronize(pinboards: pinboards, preferences: preferences, previous: nil)
++            for object in try fetch("Item") {
++                let value = try decode(ClipboardItem.self, object)
++                if let ownerID = value.pinboardOwnerID {
++                    guard let owner = try lists.list(identifier: ownerID.uuidString) else {
++                        throw CocoaError(.fileReadCorruptFile)
++                    }
++                    object.setValue(owner, forKey: "list")
++                }
++            }
++            if context.hasChanges {
++                root.setValue(UUID(), forKey: "revision")
++                try context.save()
++            }
+         }
+     }
+ 
+@@ -246,6 +281,9 @@
+             context.reset()
+             guard let root = try root() else { throw CocoaError(.fileReadCorruptFile) }
+             let items = try fetch("Item").map(item)
++            var preferences = try decode(AppPreferences.self, root, key: "preferences")
++            // 0x10035ab5c: a missing/non-clipboard projection displays the default capacity.
++            preferences.historyRetentionDays = try lists.historyCapacity() ?? 30
+             var journal = try (root.value(forKey: "cloudJournal") as? Data).map {
+                 try PropertyListDecoder().decode(OriginalCloudKitJournal.self, from: $0)
+             }
+@@ -254,8 +292,8 @@
+                 journal!.localBaseline = try documents("CloudBaseline")
+             }
+             return try StoreState(items: items,
+-                pinboards: fetch("Pinboard").map { try decode(Pinboard.self, $0) },
+-                preferences: decode(AppPreferences.self, root, key: "preferences"),
++                pinboards: lists.project(fetch("Pinboard").map { try decode(Pinboard.self, $0) }),
++                preferences: preferences,
+                 sourceApplications: fetch("Application").map { try decode(SourceApplicationRecord.self, $0) },
+                 cloudSyncMetadata: (root.value(forKey: "cloudMetadata") as? Data).map {
+                     try PropertyListDecoder().decode(ICloudSyncMetadata.self, from: $0)
+@@ -291,8 +329,12 @@
+     @MainActor
+     final class ManagedRepository {
+         private let context: NSManagedObjectContext
+-
+-        init(context: NSManagedObjectContext) { self.context = context }
++        let lists: ClipboardListPersistence
++
++        init(context: NSManagedObjectContext) {
++            self.context = context
++            lists = ClipboardListPersistence(context: context)
++        }
+ 
+         private func fetchObjects(_ entity: String, keys: [String]) throws -> [NSManagedObject] {
+             let request = NSFetchRequest<NSManagedObject>(entityName: entity)
+@@ -354,8 +396,10 @@
+     /// Caller holds the process-shared flock across read / merge / transaction / publish.
+     /// A thrown callback or save rolls back every entity and the sync checkpoint together.
+     func commit(_ state: StoreState, previous: StoreState?, deletingItemIDs: [UUID] = []) throws {
+-        _ = try commit(previous: previous, deletingItemIDs: deletingItemIDs) { _ in
+-            (state: state, result: ())
++        _ = try commit(previous: previous, deletingItemIDs: deletingItemIDs) { transaction in
++            try transaction.repository.lists.synchronize(pinboards: state.pinboards,
++                preferences: state.preferences, previous: previous)
++            return (state: state, result: ())
+         }
+     }
+ 
+@@ -383,6 +427,14 @@
+                     if old?.nativeChecksum != item.nativeChecksum {
+                         object.setValue(item.nativeChecksum, forKey: "nativeChecksum")
+                     }
++                    if object.isInserted || old?.pinboardOwnerID != item.pinboardOwnerID {
++                        if let ownerID = item.pinboardOwnerID {
++                            guard let owner = try transaction.repository.lists.list(identifier: ownerID.uuidString) else {
++                                throw CocoaError(.fileReadCorruptFile)
++                            }
++                            object.setValue(owner, forKey: "list")
++                        } else { object.setValue(nil, forKey: "list") }
++                    }
+                 }
+                 try transaction.repository.update(state.pinboards, previous: previous?.pinboards ?? [], entity: "Pinboard", key: { $0.id.uuidString }) { value, _, object in
+                     object.setValue(try encode(value), forKey: "content")
+@@ -413,6 +465,7 @@
+                 if journalHeader(previous?.cloudKitJournal) != journalHeader(state.cloudKitJournal) {
+                     root.setValue(try journalHeader(state.cloudKitJournal).map(encode), forKey: "cloudJournal")
+                 }
++                try transaction.repository.lists.refreshHistoryIfNeeded()
+                 if context.hasChanges {
+                     root.setValue(UUID(), forKey: "revision")
+                     try context.save()
+--- phase-12-before/replica/Sources/PastoCore/ClipboardStore.swift
++++ replica/Sources/PastoCore/ClipboardStore.swift
+@@ -337,26 +337,31 @@
+         return pinboards.first { $0.id == identifier }
+     }
+ 
+-    private func expireHistory(_ state: inout StoreState) {
+-        guard state.preferences.historyRetentionDays > 0 else { return }
+-        let cutoff = Date().addingTimeInterval(-Double(state.preferences.historyRetentionDays) * 86_400)
++    private func expireHistory(_ state: inout StoreState, capacity: Int) {
++        guard capacity > 0 else { return }
++        let interval = -capacity * 24 * 60 * 60
++        let cutoff = Date(timeIntervalSinceNow: Double(interval))
+         state.items.removeAll { $0.isInHistory && $0.pinboardIDs.isEmpty && $0.createdAt < cutoff }
+     }
+ 
+     private func mutate<T>(historyAction: Bool = false, deletingItemIDs: [UUID] = [],
++                           refreshHistoryAfterChange: (() -> Bool)? = nil,
+                            _ change: (inout StoreState) throws -> T) throws -> T {
+         let local = current
+         try validate(local)
+         return try withLock {
+             let remote = try latestState()
+-            let (state, result) = try persistence.commit(previous: remote, deletingItemIDs: deletingItemIDs) { _ in
++            let (state, result) = try persistence.commit(previous: remote, deletingItemIDs: deletingItemIDs) { transaction in
+                 var state = merge(local, onto: remote)
+                 let result = try change(&state)
+                 try validate(state)
+                 normalize(&state)
++                let lists = transaction.repository.lists
++                let history = try lists.synchronize(pinboards: state.pinboards, preferences: state.preferences, previous: remote)
+                 if historyAction || state.preferences.historyRetentionDays != remote.preferences.historyRetentionDays {
+-                    expireHistory(&state)
+-                }
++                    if let capacity = lists.historyCapacity(of: history) { expireHistory(&state, capacity: capacity) }
++                }
++                lists.refreshHistoryAfterOperation = historyAction || (refreshHistoryAfterChange?() ?? false)
+                 if state.cloudKitJournal != nil { try Self.captureCloudKit(&state, previous: remote) }
+                 return (state: state, result: result)
+             }
+@@ -368,6 +373,7 @@
+ 
+     /// Restore promotes the selected content in reverse order, as the original history repository does.
+     func recordRestoredItems(_ ids: [UUID]) throws {
++        guard !ids.isEmpty else { return }
+         try mutate(historyAction: true) { state in
+             for id in ids.reversed() {
+                 guard let index = state.items.firstIndex(where: { $0.id == id && !$0.isDeleted }) else {
+@@ -985,8 +991,10 @@
+     }
+     public func delete(orderedIDs: [UUID], currentPinboardID: () -> UUID?) throws {
+         let ids = Set(orderedIDs)
+-        try mutate(deletingItemIDs: orderedIDs) { state in
++        var refreshHistory = false
++        try mutate(deletingItemIDs: orderedIDs, refreshHistoryAfterChange: { refreshHistory }) { state in
+             let contextPinboardID = currentPinboardID()
++            refreshHistory = contextPinboardID == nil
+             for i in state.items.indices where ids.contains(state.items[i].id) {
+                 if let contextPinboardID {
+                     state.items[i].pinboardIDs.remove(contextPinboardID)
+--- phase-12-before/replica/Sources/PastoCore/OriginalPinboardAttributes.swift
++++ replica/Sources/PastoCore/OriginalPinboardAttributes.swift
+@@ -25,6 +25,17 @@
+         return colorCode
+     }
+ 
++    /// 0x1003293c4: absent/corrupt attributes remain nil, unlike a decoded missing capacity.
++    public static func clipboardCapacity(from data: Data?) -> Int? {
++        guard let data, let attributes = try? JSONDecoder().decode(Attributes.self, from: data) else { return nil }
++        guard case let .clipboard(capacity) = f_1003245fc(attributes) else { return nil }
++        return capacity
++    }
++
++    static func encodedClipboard(capacity: Int) throws -> Data {
++        try JSONEncoder().encode(Attributes(type: "clipboard", capacity: capacity, colorCode: nil))
++    }
++
+     static func encoded(colorCode: UInt64) throws -> Data {
+         try JSONEncoder().encode(Attributes(type: "pinboard", capacity: nil, colorCode: colorCode))
+     }
+--- /dev/null
++++ replica/Sources/PastoCore/ClipboardListPersistence.swift
+@@ -0,0 +1,183 @@
++import CoreData
++import Foundation
++
++/// Local managed list relationships. Existing Pasto IDs and legacy memberships stay compatible.
++@MainActor
++final class ClipboardListPersistence {
++    static let historyIdentifier = "sharedPasteboardHistory"
++    private let context: NSManagedObjectContext
++    var refreshHistoryAfterOperation = false
++
++    init(context: NSManagedObjectContext) { self.context = context }
++
++    static func addEntities(to model: NSManagedObjectModel, item: NSEntityDescription) {
++        func attribute(_ name: String, _ type: NSAttributeType, optional: Bool = false,
++                       defaultValue: Any? = nil) -> NSAttributeDescription {
++            let value = NSAttributeDescription()
++            value.name = name; value.attributeType = type; value.isOptional = optional
++            value.defaultValue = defaultValue
++            return value
++        }
++        func entity(_ name: String) -> NSEntityDescription {
++            let value = NSEntityDescription()
++            value.name = name; value.managedObjectClassName = "NSManagedObject"
++            return value
++        }
++        func relationship(_ name: String, destination: NSEntityDescription,
++                          maxCount: Int, optional: Bool, rule: NSDeleteRule) -> NSRelationshipDescription {
++            let value = NSRelationshipDescription()
++            value.name = name; value.destinationEntity = destination
++            value.minCount = 0; value.maxCount = maxCount; value.isOptional = optional
++            value.deleteRule = rule
++            return value
++        }
++        let list = entity("ListEntity")
++        let metadata = entity("ListMetadataEntity")
++        list.uniquenessConstraints = [["identifier"]]
++        list.properties = [attribute("identifier", .stringAttributeType), attribute("name", .stringAttributeType),
++            attribute("rawType", .integer64AttributeType, defaultValue: 0),
++            attribute("rawAttributes", .binaryDataAttributeType, optional: true),
++            attribute("createdAt", .dateAttributeType), attribute("updatedAt", .dateAttributeType, optional: true)]
++        metadata.properties = [attribute("identifier", .stringAttributeType),
++            attribute("index", .integer64AttributeType, defaultValue: 0),
++            attribute("createdAt", .dateAttributeType), attribute("updatedAt", .dateAttributeType, optional: true)]
++        let listMetadata = relationship("metadata", destination: metadata, maxCount: 1,
++                                        optional: false, rule: .cascadeDeleteRule)
++        let metadataList = relationship("list", destination: list, maxCount: 1,
++                                        optional: true, rule: .denyDeleteRule)
++        listMetadata.inverseRelationship = metadataList; metadataList.inverseRelationship = listMetadata
++        let items = relationship("items", destination: item, maxCount: 0,
++                                 optional: false, rule: .nullifyDeleteRule)
++        let owner = relationship("list", destination: list, maxCount: 1,
++                                 optional: true, rule: .nullifyDeleteRule)
++        items.inverseRelationship = owner; owner.inverseRelationship = items
++        list.properties += [listMetadata, items]
++        metadata.properties += [metadataList]
++        item.properties.append(owner)
++        model.entities += [list, metadata]
++    }
++
++    // 0x100328bb4 → 0x100328bc8, specialized to the actual local ListEntity consumers.
++    func firstList(predicate: NSPredicate?, sortDescriptors: [NSSortDescriptor]? = nil) throws -> NSManagedObject? {
++        let request = NSFetchRequest<NSManagedObject>(entityName: "ListEntity")
++        request.predicate = predicate
++        request.sortDescriptors = sortDescriptors ?? [NSSortDescriptor(key: "metadata.index", ascending: true)]
++        request.fetchLimit = 1
++        request.fetchOffset = 0
++        request.fetchBatchSize = 20
++        return try context.fetch(request).first
++    }
++
++    func historyList() throws -> NSManagedObject? {
++        try firstList(predicate: NSPredicate(format: "identifier == %@", Self.historyIdentifier))
++    }
++
++    func list(identifier: String) throws -> NSManagedObject? {
++        try firstList(predicate: NSPredicate(format: "identifier == %@", identifier))
++    }
++
++    func historyCapacity() throws -> Int? {
++        guard let history = try historyList() else { return nil }
++        return historyCapacity(of: history)
++    }
++
++    func historyCapacity(of history: NSManagedObject) -> Int? {
++        return OriginalPinboardAttributes.clipboardCapacity(from: history.value(forKey: "rawAttributes") as? Data)
++    }
++
++    func refreshHistoryIfNeeded() throws {
++        guard refreshHistoryAfterOperation else { return }
++        guard let history = try historyList() else { return }
++        context.refresh(history, mergeChanges: true)
++    }
++
++    private func set<T: Equatable>(_ value: T?, key: String, on object: NSManagedObject) {
++        guard (object.value(forKey: key) as? T) != value else { return }
++        object.setValue(value, forKey: key)
++    }
++
++    private func allLists() throws -> [String: NSManagedObject] {
++        let request = NSFetchRequest<NSManagedObject>(entityName: "ListEntity")
++        return try Dictionary(uniqueKeysWithValues: context.fetch(request).map { object in
++            guard let identifier = object.value(forKey: "identifier") as? String else {
++                throw CocoaError(.fileReadCorruptFile)
++            }
++            return (identifier, object)
++        })
++    }
++
++    private func makeList(identifier: String, name: String, rawType: Int64,
++                          attributes: Data?, index: Int64) throws -> NSManagedObject {
++        let list = NSEntityDescription.insertNewObject(forEntityName: "ListEntity", into: context)
++        let metadata = NSEntityDescription.insertNewObject(forEntityName: "ListMetadataEntity", into: context)
++        try context.obtainPermanentIDs(for: [list, metadata])
++        let now = Date()
++        list.setValue(identifier, forKey: "identifier")
++        list.setValue(name, forKey: "name")
++        list.setValue(rawType, forKey: "rawType")
++        list.setValue(attributes, forKey: "rawAttributes")
++        list.setValue(now, forKey: "createdAt")
++        metadata.setValue(identifier, forKey: "identifier")
++        metadata.setValue(index, forKey: "index")
++        metadata.setValue(now, forKey: "createdAt")
++        list.setValue(metadata, forKey: "metadata")
++        return list
++    }
++
++    @discardableResult
++    func synchronize(pinboards: [Pinboard], preferences: AppPreferences, previous: StoreState?) throws -> NSManagedObject {
++        var lists = try allLists()
++        let history: NSManagedObject
++        if let existing = lists[Self.historyIdentifier] {
++            history = existing
++            set(preferences.historyTitle, key: "name", on: history)
++            // Missing/invalid attributes are meaningful; unrelated saves must not replace them.
++            if previous?.preferences.historyRetentionDays != preferences.historyRetentionDays {
++                set(try OriginalPinboardAttributes.encodedClipboard(capacity: preferences.historyRetentionDays),
++                    key: "rawAttributes", on: history)
++            }
++        } else {
++            history = try makeList(identifier: Self.historyIdentifier,
++                name: preferences.historyTitle, rawType: 1,
++                attributes: OriginalPinboardAttributes.encodedClipboard(capacity: preferences.historyRetentionDays), index: 0)
++            lists[Self.historyIdentifier] = history
++        }
++        let retained = Set(pinboards.map { $0.id.uuidString })
++        for old in previous?.pinboards ?? [] where !retained.contains(old.id.uuidString) {
++            if let object = lists.removeValue(forKey: old.id.uuidString) { context.delete(object) }
++        }
++        for board in pinboards {
++            let identifier = board.id.uuidString
++            let list: NSManagedObject
++            if let existing = lists[identifier] { list = existing }
++            else {
++                list = try makeList(identifier: identifier, name: board.name,
++                    rawType: Int64(board.rawType ?? 2), attributes: board.rawAttributes, index: Int64(board.sortOrder))
++                lists[identifier] = list
++            }
++            set(board.name, key: "name", on: list)
++            set(Int64(board.rawType ?? 2), key: "rawType", on: list)
++            set(board.rawAttributes, key: "rawAttributes", on: list)
++            guard let metadata = list.value(forKey: "metadata") as? NSManagedObject else {
++                throw CocoaError(.fileReadCorruptFile)
++            }
++            set(Int64(board.sortOrder), key: "index", on: metadata)
++        }
++        return history
++    }
++
++    func project(_ pinboards: [Pinboard]) throws -> [Pinboard] {
++        let lists = try allLists()
++        return pinboards.map { board in
++            guard let list = lists[board.id.uuidString] else { return board }
++            var value = board
++            value.name = list.value(forKey: "name") as? String ?? board.name
++            value.rawAttributes = list.value(forKey: "rawAttributes") as? Data
++            // Preserve legacy nil=ordinary-group spelling while using rawType=2 in the graph.
++            if board.rawType != nil { value.rawType = (list.value(forKey: "rawType") as? NSNumber)?.int16Value }
++            if let metadata = list.value(forKey: "metadata") as? NSManagedObject,
++               let index = metadata.value(forKey: "index") as? NSNumber { value.sortOrder = index.intValue }
++            return value
++        }
++    }
++}

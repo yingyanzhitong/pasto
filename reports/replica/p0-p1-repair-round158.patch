@@ -1,0 +1,52 @@
+--- before/replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift
++++ after/replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift
+@@ -379,7 +379,9 @@
+                 try state.store.updateTextPreviewItem(id: itemID, attributedString: content)
+             }
+             state.normalizeSelection()
+-        } catch { state.controller?.presentError(error) }
++        } catch {
++            // 3c0e08: consume the transaction error and continue the editing cleanup.
++        }
+         reloadStoredContent()
+     }
+ 
+--- before/replica/Sources/Pasto/UI/ReplicaLinkPreviewContent.swift
++++ after/replica/Sources/Pasto/UI/ReplicaLinkPreviewContent.swift
+@@ -93,7 +93,9 @@
+             if let editInput { try state.store.updateLinkItem(editInput, url: url) }
+             else { try state.store.updateLinkItem(id: itemID, url: url) }
+             state.normalizeSelection()
+-        } catch { state.controller?.presentError(error) }
++        } catch {
++            // 3bf900: consume the transaction error and continue the editing cleanup.
++        }
+         showContent(readOnlyContent)
+         updateMetadata(currentURL())
+     }
+--- before/replica/Sources/Pasto/UI/ReplicaImagePreviewContent.swift
++++ after/replica/Sources/Pasto/UI/ReplicaImagePreviewContent.swift
+@@ -121,7 +121,9 @@
+                     try state.store.updateImagePreviewItem(id: itemID, payloads: Self.encodedPayloads(image))
+                 }
+                 state.normalizeSelection()
+-            } catch { state.controller?.presentError(error) }
++            } catch {
++                // 3bde74: consume the transaction error and continue the editing cleanup.
++            }
+         }
+         finishEditing(reloadNativeImage: false)
+     }
+--- before/replica/Sources/Pasto/UI/ReplicaColorPreviewContent.swift
++++ after/replica/Sources/Pasto/UI/ReplicaColorPreviewContent.swift
+@@ -123,7 +123,9 @@
+             if let editInput { try state.store.updateColorItem(editInput, text: text) }
+             else { try state.store.updateColorItem(id: itemID, text: text) }
+             state.normalizeSelection()
+-        } catch { state.controller?.presentError(error) }
++        } catch {
++            // 3bc01c: consume the transaction error and continue the editing cleanup.
++        }
+     }
+ 
+     @objc private func colorChanged() {

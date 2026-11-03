@@ -12,9 +12,9 @@ Pasto 面向 **macOS 14+，支持 Intel（x86_64）和 Apple 芯片（arm64）**
 
 [![构建与发布](https://github.com/yingyanzhitong/pasto/actions/workflows/release.yml/badge.svg)](https://github.com/yingyanzhitong/pasto/actions/workflows/release.yml)
 
-[官网](https://yingyanzhitong.github.io/pasto/) · [下载 1.0.0](https://github.com/yingyanzhitong/pasto/releases/tag/v1.0.0) · [功能对比](#paste-与-pasto-功能对比) · [源码构建](#源码构建) · [参与贡献](CONTRIBUTING.md) · [许可范围](NOTICE.md)
+[官网](https://yingyanzhitong.github.io/pasto/) · [下载最新版](https://github.com/yingyanzhitong/pasto/releases/latest) · [功能对比](#paste-与-pasto-功能对比) · [源码构建](#源码构建) · [参与贡献](CONTRIBUTING.md) · [许可范围](NOTICE.md)
 
-1.0.1 已提交构建：[查看 GitHub Actions](https://github.com/yingyanzhitong/pasto/actions/workflows/release.yml)。成功发布后可在 [Releases](https://github.com/yingyanzhitong/pasto/releases) 下载；以上官网链接保留已发布版本。
+官网与下方下载信息会在正式 Release 发布成功后由 GitHub Actions 自动更新。
 
 ## 界面
 
@@ -70,11 +70,13 @@ CloudKit 作为已配置签名构建的高级选项，与文件同步不能同�
 
 ## 下载与使用
 
-从 [1.0.0 Release](https://github.com/yingyanzhitong/pasto/releases/tag/v1.0.0) 下载，并阅读该版本的限制说明。安装包采用临时签名，尚未经过 Apple 公证。
+从 [最新正式 Release](https://github.com/yingyanzhitong/pasto/releases/latest) 下载，并阅读该版本的限制说明。安装包采用临时签名，尚未经过 Apple 公证。
 
-1.0.0 使用同一个安装包，兼容 Intel 与 Apple 芯片：
+<!-- pasto-download:start -->
+当前正式版 **1.0.2**，一个安装包兼容 Intel 与 Apple 芯片：
 
-[下载 Pasto-1.0.0-macos-universal.dmg](https://github.com/yingyanzhitong/pasto/releases/download/v1.0.0/Pasto-1.0.0-macos-universal.dmg)
+[下载 Pasto-1.0.2-macos-universal.dmg](https://github.com/yingyanzhitong/pasto/releases/download/v1.0.2/Pasto-1.0.2-macos-universal.dmg)
+<!-- pasto-download:end -->
 
 主程序、Helper 和 MCP 均包含两种架构，无需选择芯片版本。历史版本的格式与架构范围以该版本的发布说明为准。
 
@@ -126,6 +128,8 @@ swift build --package-path replica -c release
 工作流保留 Intel 原生构建检查，再校验 Universal 安装包的版本、三项可执行文件的双架构及签名，发布三个附件：`Pasto-<版本号>-macos-universal.dmg`、`SHA256SUMS.txt` 和 `release-manifest.json`。上传校验成功后才公开 Release；`-dev.N` 版本标记为预发布，正式版本标为最新版本。同一版本不覆盖其他提交的产物，失败不会发布正式 Release。
 
 Release 页面中的 `Source code (zip)` 和 `Source code (tar.gz)` 是 GitHub 自动提供的标签源码下载链接，不是安装包，也不是此发布流程额外上传的附件。
+
+正式 Release 发布成功后，Actions 读取最新已上传的 Universal DMG，同步中英文 README、官网按钮和版本文案，再部署 GitHub Pages。构建失败或预发布版本不会替换正式版下载地址。
 
 详见[发布工作流](.github/workflows/release.yml)。构建发布不代表功能回归通过。
 

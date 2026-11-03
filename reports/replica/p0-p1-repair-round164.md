@@ -1,0 +1,15 @@
+# 第一百六十四轮：原生全List标签流与选择
+
+本轮继续163已确认的同一P1差异。已把标签数据与选择从兼容Pinboard缓存接到原生全List集合，既有rawType2菜单集合独立保留。新makeTabListCollection使用List默认请求，无type2过滤，仍同一主context/既有FRC、初始严格fetch、默认即时快照调度；没有新建context、Task、计时器或数据库写入。UIState懒持有该源，先安装初始snapshot/default选择，再订阅原生流dropFirst，之后订阅identifier；source变化直接更新标签。
+
+ListSnapshot保留原始NSManagedObjectID数组及count，渲染成功lookup的targets，但选择不因nil lookup压缩位置。095040实际比较ObjectID，3541f4实际取objectID；03a538在当前ID仍存在时更新selectedIndex，移除时min(oldIndex,count-1)并通过1b8054式可选lookup选相邻对象，lookup失败不伪造history/索引。快照publisher绑定本次emission的IDs，不读可能重入后推进的subject.value。当前实现按这些证据保留ID空洞、同对象和原顺序。
+
+选择identifier现走原生List默认请求+predicate查询（368080/32a5b0），不以兼容行或UUID解析成功为前置门。按实际rawType交原Context分支，保同identifier force时nil→target，先更新选中对象/内容再记索引；内容集合使用native String identifier。Panel标签直接使用原生目标名称、顺序、标识和选择，history也来自同一集合。键盘前后切换使用raw snapshot位置/可选目标。去除normalizeSelection的缺兼容行→history门和删除成功后的手工history覆盖，让原集合驱动邻近选择。已有selectListIdentifier、applySelectedList、菜单value及FRC调度等15方法逐字保持。
+
+尚未完成同一功能链：localListMenu、boardButton改名、删除/排序等写入口仍调用兼容Pinboard/UUID路径，缺缓存或未保存对象的操作要继续改为持有同一List。UUID值API和非原生颜色默认保兼容，nil cell完整布局与多类型动作不冒验收。因此367f78仍pending，不把实时数据链已修等同全部分组操作完成。
+
+6生产文件17处精确增量，241文件保持；247生产逆恢复与11旧工具/测试24模式24替换重放通过。绑定20原函数片段、3真实协议槽、5原调用和4完整机器范围，selectedIndex写/比较/可选lookup机器字已绑。新增14项直接检查当前实现；完整2442项源码/Python/Mach-O静态检查通过。首11失败1错误是旧缓存门、synthetic history、输入形状/历史摘要；第二次余1个历史normalize对比，均保日志。旧语义检查改看真实native输入/stream，历史摘要仅逆精确164增量；163旧tab门改为读取冻结历史，不再把旧缺口断言成当前状态。未编译、执行CoreData/Combine/AppKit或UI，不称运行回归通过。
+
+v70保226记录201组/12额外完成合同，仅367f78追加partial跟进；有限P0 81/81（100%）、P1 144/145（99.31%）、总225/226（99.56%）。两个unknown04430c/0f733c和整体完成度继续开放。
+
+下一步沿021f00本地动作闭包核原生改名/颜色/删除/排序输入，保用户要求的panel内确认适配；也查新组inline编辑与未用颜色规则的native来源。计划和已定位闭包保存在本地phase-164/native-actions-next.json。版本1.0.2、HEAD、function-map及官网/下载九文件保持，仅本地修改，不编译构建安装运行、联网、提交推送发布。

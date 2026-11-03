@@ -16,6 +16,7 @@ final class ReplicaColorPreviewContent: OriginalLayerBackedView, OriginalPreview
 
     private weak var state: ReplicaUIState?
     private let itemID: UUID
+    private var editInput: ClipboardRestoreItem?
     private let codeLabel = NSTextField(labelWithString: "")
     private let metadataHost = NSView()
     private let metadata = NSStackView()
@@ -28,9 +29,11 @@ final class ReplicaColorPreviewContent: OriginalLayerBackedView, OriginalPreview
             dark: NSColor.white.withAlphaComponent(0.26), light: NSColor.black.withAlphaComponent(0.26))
     }
 
-    init(state: ReplicaUIState, item: ClipboardItem) {
+    init(state: ReplicaUIState, item: ClipboardItem?, input: ClipboardRestoreItem? = nil) {
         self.state = state
-        itemID = item.id
+        guard let itemID = input?.id ?? item?.id else { preconditionFailure("Missing color preview input") }
+        self.itemID = itemID
+        editInput = input
         super.init(frame: .zero)
         codeLabel.font = NSFont.userFixedPitchFont(ofSize: 22)
         codeLabel.alignment = .center
@@ -48,11 +51,18 @@ final class ReplicaColorPreviewContent: OriginalLayerBackedView, OriginalPreview
         NSLayoutConstraint.activate(f_1003e0820())
         NotificationCenter.default.addObserver(self, selector: #selector(colorChanged),
             name: NSColorPanel.colorDidChangeNotification, object: colorPanel)
-        itemObservation = state.store.$items.sink { [weak self] items in
-            MainActor.assumeIsolated {
-                guard let self, !self.editing,
-                      let current = items.first(where: { $0.id == self.itemID }) else { return }
-                self.display(Self.modelColor(current))
+        itemObservation = input?.observeChanges { [weak self] current in
+            self?.receiveNativeModel(current)
+        }
+        if itemObservation != nil, let input {
+            receiveNativeModel(input)
+        } else {
+            itemObservation = state.store.$items.sink { [weak self] items in
+                MainActor.assumeIsolated {
+                    guard let self, !self.editing,
+                          let current = items.first(where: { $0.id == self.itemID }) else { return }
+                    self.display(Self.modelColor(current))
+                }
             }
         }
     }
@@ -109,10 +119,13 @@ final class ReplicaColorPreviewContent: OriginalLayerBackedView, OriginalPreview
         colorPanel.orderOut(nil)
         guard let state else { return }
         do {
-            try state.store.updateColorItem(id: itemID,
-                text: OriginalPreviewColorFormatting.f_100206b5c(displayedColor).uppercased())
+            let text = OriginalPreviewColorFormatting.f_100206b5c(displayedColor).uppercased()
+            if let editInput { try state.store.updateColorItem(editInput, text: text) }
+            else { try state.store.updateColorItem(id: itemID, text: text) }
             state.normalizeSelection()
-        } catch { state.controller?.presentError(error) }
+        } catch {
+            // 3bc01c: consume the transaction error and continue the editing cleanup.
+        }
     }
 
     @objc private func colorChanged() {
@@ -125,8 +138,16 @@ final class ReplicaColorPreviewContent: OriginalLayerBackedView, OriginalPreview
         onCanCommitEditing(panelColor != modelColor)
     }
 
+    private func receiveNativeModel(_ input: ClipboardRestoreItem) {
+        // The model accepts the new entity even while its editor keeps the current color on screen.
+        editInput = input
+        guard !editing else { return }
+        display(currentModelColor())
+    }
+
     private func currentModelColor() -> NSColor {
-        state?.store.items.first(where: { $0.id == itemID }).map(Self.modelColor) ?? .black
+        if let color = editInput?.previewColor() { return color }
+        return state?.store.items.first(where: { $0.id == itemID }).map(Self.modelColor) ?? .black
     }
 
     private static func modelColor(_ item: ClipboardItem) -> NSColor {

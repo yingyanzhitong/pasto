@@ -1,0 +1,417 @@
+{
+  "kind": "offline_source_contract_review",
+  "round": 2,
+  "generated_at": "2026-10-29T12:50:59.162794+00:00",
+  "previous_goal_turn": "progress",
+  "priority": "P0",
+  "module": "shortcuts_selection",
+  "records": [
+    {
+      "function_id": "Paste:0x1001ebce4",
+      "status": "partial",
+      "contract": "冲突分支直接构造 OriginalShortcutRecorderError，无冲突惰性求菜单；原本地化资源/运行时错误身份尚未闭合。",
+      "original": {
+        "path": "decompiled/Paste/part-0158.c",
+        "sha256": "92b3127cab244cbc3720bf29f76539149b09464ac56e212c4f25cbaa2e5de60e"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutValidation.swift",
+          "symbol": "f_1001ebce4"
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutValidation.swift",
+          "symbol": "f_1001ec200"
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutFunctions.swift",
+          "symbol": "f_1001ebf04"
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutMessages.swift",
+          "symbol": "shortcut-recorder.error.used-in-system"
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutRecorder.swift",
+          "symbol": "f_1001f132c"
+        }
+      ],
+      "source_sha256": {
+        "replica/Sources/PastoCore/OriginalShortcutValidation.swift": "da33abb96f3ebe25afc85a5817c977df28f2a1791c98d776617a6697e4378c30",
+        "replica/Sources/PastoCore/OriginalShortcutFunctions.swift": "c9f72e489f3345339beef2b79493c8c06bbae52251d9f29876bde3fd4c884174",
+        "replica/Sources/PastoCore/OriginalShortcutMessages.swift": "a359a587810f77d3306db57a0f8b17150dc6d075f1e698be9a1772b9eafa027a",
+        "replica/Sources/PastoCore/OriginalShortcutRecorder.swift": "ba907c942f91fe336506e9a47576051f285bfce47ccd43315cb111aedbd237f2"
+      }
+    },
+    {
+      "function_id": "Paste:0x1001ec200",
+      "status": "partial",
+      "contract": "递归直接返回同一错误；当前分支构造含菜单标题的 typed error，外层不重复包装；完整本地化仍待证。",
+      "original": {
+        "path": "decompiled/Paste/part-0158.c",
+        "sha256": "19cd1064cc2d319fefe38dbee4425bf0d59501b1809d519aa27c383fa587454e"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutValidation.swift",
+          "symbol": "f_1001ec200"
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutMessages.swift",
+          "symbol": "shortcut-recorder.error.used-in-menu"
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutRecorder.swift",
+          "symbol": "f_1001f132c"
+        }
+      ],
+      "source_sha256": {
+        "replica/Sources/PastoCore/OriginalShortcutValidation.swift": "da33abb96f3ebe25afc85a5817c977df28f2a1791c98d776617a6697e4378c30",
+        "replica/Sources/PastoCore/OriginalShortcutMessages.swift": "a359a587810f77d3306db57a0f8b17150dc6d075f1e698be9a1772b9eafa027a",
+        "replica/Sources/PastoCore/OriginalShortcutRecorder.swift": "ba907c942f91fe336506e9a47576051f285bfce47ccd43315cb111aedbd237f2"
+      }
+    },
+    {
+      "function_id": "Paste:0x1001e75e4",
+      "status": "body_aligned",
+      "contract": "已有工厂每次新建校验服务；未替换为共享单例或新增状态。",
+      "original": {
+        "path": "decompiled/Paste/part-0156.c",
+        "sha256": "87ade1297270dc2a2c47ba813e1d91760529c8986dd3ed35e8b7ec5264d1a0ef"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutDependencies.swift",
+          "symbol": "public static func f_1001e75e4()"
+        }
+      ],
+      "source_sha256": {
+        "replica/Sources/PastoCore/OriginalShortcutDependencies.swift": "b61963d4976edbdce29db86588d7ed4725a2f27105e3eea814877663e7b1ce37"
+      }
+    },
+    {
+      "function_id": "Paste:0x1001f132c",
+      "status": "partial",
+      "contract": "删除/取消/Cmd-W/Q放行、无键名候选、非法修饰放行、失败恢复和成功回调顺序已对照；完整 Published/依赖/模型生命周期仍保留边界。",
+      "original": {
+        "path": "decompiled/Paste/part-0160.c",
+        "sha256": "1cc534a6532912c15daf105c57cafee53c6eb73744a51924aeb4447e3da5e08b"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutRecorder.swift",
+          "symbol": "f_1001f132c"
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutRecorder.swift",
+          "symbol": "let validate = validator.f_1000da768()"
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutRecorder.swift",
+          "symbol": "_ = validator.f_1000da768()"
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutDependencies.swift",
+          "symbol": "public func validate(_ shortcut: OriginalShortcutValue)"
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutRecorder.swift",
+          "symbol": "validationError = OriginalShortcutRecorderValidationError.optionKey"
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutValidation.swift",
+          "symbol": "public static func requiresOptionCompatibilityWarning"
+        }
+      ],
+      "source_sha256": {
+        "replica/Sources/PastoCore/OriginalShortcutRecorder.swift": "ba907c942f91fe336506e9a47576051f285bfce47ccd43315cb111aedbd237f2",
+        "replica/Sources/PastoCore/OriginalShortcutDependencies.swift": "b61963d4976edbdce29db86588d7ed4725a2f27105e3eea814877663e7b1ce37",
+        "replica/Sources/PastoCore/OriginalShortcutValidation.swift": "da33abb96f3ebe25afc85a5817c977df28f2a1791c98d776617a6697e4378c30"
+      }
+    },
+    {
+      "function_id": "Paste:0x1001eff84",
+      "status": "body_aligned",
+      "contract": "录制时恢复 previous 并停监视；未录制则进入 recording，移除旧监视后监听 keyDown/flagsChanged，弱 owner 不存在时消费 nil。",
+      "original": {
+        "path": "decompiled/Paste/part-0159.c",
+        "sha256": "dd88ddf8a1046871adb8adc6e7f2212a88ed2a1ce36422774f73f5304032109a"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutRecorder.swift",
+          "symbol": "f_1001eff84"
+        }
+      ],
+      "source_sha256": {
+        "replica/Sources/PastoCore/OriginalShortcutRecorder.swift": "ba907c942f91fe336506e9a47576051f285bfce47ccd43315cb111aedbd237f2"
+      }
+    },
+    {
+      "function_id": "Paste:0x1001f1150",
+      "status": "body_aligned",
+      "contract": "newState 可选：some 先写状态，nil 保持；监视存在则移除并清空，不无条件清错误。",
+      "original": {
+        "path": "decompiled/Paste/part-0160.c",
+        "sha256": "7990172b305606048c46719d736e84a298eb59dd4e3fc421edcb61419851fc04"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutRecorder.swift",
+          "symbol": "f_1001f1150"
+        }
+      ],
+      "source_sha256": {
+        "replica/Sources/PastoCore/OriginalShortcutRecorder.swift": "ba907c942f91fe336506e9a47576051f285bfce47ccd43315cb111aedbd237f2"
+      }
+    },
+    {
+      "function_id": "Paste:0x1001ef434",
+      "status": "body_aligned",
+      "contract": "先 onDetect(nil)，后 unassigned/停止监视；没有先改变状态再调用用户回调。",
+      "original": {
+        "path": "decompiled/Paste/part-0159.c",
+        "sha256": "6f5f766ca895d32ca3a8f152402fbb6634b3a2d36d5729d223198565984dc99e"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutRecorder.swift",
+          "symbol": "f_1001ef434"
+        }
+      ],
+      "source_sha256": {
+        "replica/Sources/PastoCore/OriginalShortcutRecorder.swift": "ba907c942f91fe336506e9a47576051f285bfce47ccd43315cb111aedbd237f2"
+      }
+    },
+    {
+      "function_id": "Paste:0x1001ee478",
+      "status": "body_aligned",
+      "contract": "仅清空 validationError，与原 Published nil 写入的业务值合同一致。",
+      "original": {
+        "path": "decompiled/Paste/part-0158.c",
+        "sha256": "2bfbd08c6e67a313b361779f5de6c443680ab3d2508c76fc8b62e1f42ce9c105"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalShortcutRecorder.swift",
+          "symbol": "f_1001ee478"
+        }
+      ],
+      "source_sha256": {
+        "replica/Sources/PastoCore/OriginalShortcutRecorder.swift": "ba907c942f91fe336506e9a47576051f285bfce47ccd43315cb111aedbd237f2"
+      }
+    },
+    {
+      "function_id": "Paste:0x1001eaa64",
+      "status": "partial",
+      "contract": "先注销同键，再创建注册；只有 noErr 锁内保存，失败不保存。OSStatus 返回及独立诊断适配未冒称原全部 void/日志对象合同。",
+      "original": {
+        "path": "decompiled/Paste/part-0157.c",
+        "sha256": "d9e7e812c80cb5dd0514ac29a1ed3da041de1e1cd2d49f9e0aad4b1d3afd371d"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalGlobalShortcutMonitor.swift",
+          "symbol": "f_1001eaa64"
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalGlobalShortcutMonitor.swift",
+          "symbol": "let write = self.diagnostic.f_1000da768()"
+        }
+      ],
+      "source_sha256": {
+        "replica/Sources/PastoCore/OriginalGlobalShortcutMonitor.swift": "277dc405a3e660b36ec808e301ccfa3fa48568c8291295e02dafe84e595325b4"
+      }
+    },
+    {
+      "function_id": "Paste:0x1001eae90",
+      "status": "body_aligned",
+      "contract": "锁内移除、锁外诊断，有值保留至诊断后释放，触发注册析构注销；无值不操作。",
+      "original": {
+        "path": "decompiled/Paste/part-0157.c",
+        "sha256": "7abff66e449666db6acfd2c2129818e24085222860f62d28f24ec0579c238182"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalGlobalShortcutMonitor.swift",
+          "symbol": "f_1001eae90"
+        }
+      ],
+      "source_sha256": {
+        "replica/Sources/PastoCore/OriginalGlobalShortcutMonitor.swift": "277dc405a3e660b36ec808e301ccfa3fa48568c8291295e02dafe84e595325b4"
+      }
+    },
+    {
+      "function_id": "Paste:0x1001eb110",
+      "status": "body_aligned",
+      "contract": "存在 EventHotKeyRef 才注销，闭包和其余属性由 Swift 对象析构释放；未引入额外事件注册。",
+      "original": {
+        "path": "decompiled/Paste/part-0157.c",
+        "sha256": "db15662e9ef412c476fccf9878c3303d16ba3359a4d5154f1b9d7ae7b4d4517e"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalGlobalShortcutMonitor.swift",
+          "symbol": "class OriginalShortcutRegistration"
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalGlobalShortcutMonitor.swift",
+          "symbol": "f_1001eb110",
+          "qualified_symbol": "OriginalShortcutRegistration.f_1001eb110"
+        }
+      ],
+      "source_sha256": {
+        "replica/Sources/PastoCore/OriginalGlobalShortcutMonitor.swift": "277dc405a3e660b36ec808e301ccfa3fa48568c8291295e02dafe84e595325b4"
+      }
+    },
+    {
+      "function_id": "Paste:0x1001eb160",
+      "status": "body_aligned",
+      "contract": "按完整 shortcut 值从注册字典移除并返回旧注册。",
+      "original": {
+        "path": "decompiled/Paste/part-0157.c",
+        "sha256": "8a346720bfb89fcdaaa2725dcc09970689f815f3116ca3a69d9dc0b594c317e4"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalGlobalShortcutMonitor.swift",
+          "symbol": "f_1001eb160"
+        }
+      ],
+      "source_sha256": {
+        "replica/Sources/PastoCore/OriginalGlobalShortcutMonitor.swift": "277dc405a3e660b36ec808e301ccfa3fa48568c8291295e02dafe84e595325b4"
+      }
+    },
+    {
+      "function_id": "Paste:0x1001eb1e4",
+      "status": "body_aligned",
+      "contract": "按完整 shortcut 值写字典；键值哈希与当前值模型复用 Swift 字典，不重写运行库容器实现。",
+      "original": {
+        "path": "decompiled/Paste/part-0157.c",
+        "sha256": "1ceae8eec07632d746668f61632d7d63f9eda0f9e064e9695bbd322533c5a278"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalGlobalShortcutMonitor.swift",
+          "symbol": "f_1001eb1e4"
+        }
+      ],
+      "source_sha256": {
+        "replica/Sources/PastoCore/OriginalGlobalShortcutMonitor.swift": "277dc405a3e660b36ec808e301ccfa3fa48568c8291295e02dafe84e595325b4"
+      }
+    },
+    {
+      "function_id": "Paste:0x1001ea338",
+      "status": "partial",
+      "contract": "只接 keyboard 类；GetEventParameter 忽略 status，仅比较 ID，锁内捕获 action，解锁后 main.async；独立诊断表示及整个运行时派发仍未全闭合。",
+      "original": {
+        "path": "decompiled/Paste/part-0157.c",
+        "sha256": "9a210a39219a388b8bcbf0668aba23b049f3e41b8c4d9b9f06696d6ceb869195"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalGlobalShortcutMonitor.swift",
+          "symbol": "f_1001ea338"
+        }
+      ],
+      "source_sha256": {
+        "replica/Sources/PastoCore/OriginalGlobalShortcutMonitor.swift": "277dc405a3e660b36ec808e301ccfa3fa48568c8291295e02dafe84e595325b4"
+      }
+    },
+    {
+      "function_id": "Paste:0x1001ea96c",
+      "status": "body_aligned",
+      "contract": "event/context 都存在才持有 monitor 并转发；所有分支返回 noErr。",
+      "original": {
+        "path": "decompiled/Paste/part-0157.c",
+        "sha256": "5623d0d5e3517da1fa44a4e7ca0376d946ce9c03d45fa2892a586fa412b2bbf8"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalGlobalShortcutMonitor.swift",
+          "symbol": "f_1001ea96c"
+        }
+      ],
+      "source_sha256": {
+        "replica/Sources/PastoCore/OriginalGlobalShortcutMonitor.swift": "277dc405a3e660b36ec808e301ccfa3fa48568c8291295e02dafe84e595325b4"
+      }
+    },
+    {
+      "function_id": "Paste:0x1001ea9b0",
+      "status": "body_aligned",
+      "contract": "移除可选 event handler，随后 Swift 析构释放注册及依赖；不先释放注册再移除 handler。",
+      "original": {
+        "path": "decompiled/Paste/part-0157.c",
+        "sha256": "5f842721685cc655dd6df804d1e0c7b8d638641f31a4a49bd0ec3c68c806ce40"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalGlobalShortcutMonitor.swift",
+          "symbol": "deinit { f_1001ea9b0() }"
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalGlobalShortcutMonitor.swift",
+          "symbol": "private func f_1001ea9b0()"
+        }
+      ],
+      "source_sha256": {
+        "replica/Sources/PastoCore/OriginalGlobalShortcutMonitor.swift": "277dc405a3e660b36ec808e301ccfa3fa48568c8291295e02dafe84e595325b4"
+      }
+    },
+    {
+      "function_id": "Paste:0x1001eb8d0",
+      "status": "body_aligned",
+      "contract": "先保存 action 和分配全局递增 UInt32 ID，再检查键码范围；signature=1、dispatcher target、options=0 注册，保留 status/ref。",
+      "original": {
+        "path": "decompiled/Paste/part-0158.c",
+        "sha256": "b4e45269cfbd01bce76fb01a396e9650d7c0415d7f62840879ee19736989cb2d"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalGlobalShortcutMonitor.swift",
+          "symbol": "class OriginalShortcutRegistration"
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalGlobalShortcutMonitor.swift",
+          "symbol": "public init(keyCode: Int, modifierRawValue: UInt, action:",
+          "qualified_symbol": "OriginalShortcutRegistration.init"
+        }
+      ],
+      "source_sha256": {
+        "replica/Sources/PastoCore/OriginalGlobalShortcutMonitor.swift": "277dc405a3e660b36ec808e301ccfa3fa48568c8291295e02dafe84e595325b4"
+      }
+    }
+  ],
+  "reviewed_count": 17,
+  "body_aligned_count": 12,
+  "partial_count": 5,
+  "current_review_unique_count": 27,
+  "current_review_inventory_percent": 0.0333,
+  "source_sha256": {
+    "replica/Sources/PastoCore/OriginalShortcutValidation.swift": "da33abb96f3ebe25afc85a5817c977df28f2a1791c98d776617a6697e4378c30",
+    "replica/Sources/PastoCore/OriginalShortcutDependencies.swift": "b61963d4976edbdce29db86588d7ed4725a2f27105e3eea814877663e7b1ce37",
+    "replica/Sources/PastoCore/OriginalShortcutRecorder.swift": "ba907c942f91fe336506e9a47576051f285bfce47ccd43315cb111aedbd237f2",
+    "replica/Sources/PastoCore/OriginalGlobalShortcutMonitor.swift": "277dc405a3e660b36ec808e301ccfa3fa48568c8291295e02dafe84e595325b4",
+    "scripts/tests/test_offline_p0_contracts.py": "e2f00cb1a801620dea7448eb2925d3fc3d157cf12e0c466405404ef4271a4ca2"
+  },
+  "tests": {
+    "passed": true,
+    "total": 30,
+    "scope": "Python source-contract and ledger-tool tests, not Swift execution"
+  },
+  "new_fully_migrated_function_count": 0,
+  "historical_ledger": {
+    "numerator": 1648,
+    "denominator": 81123,
+    "percent": 2.0315,
+    "stale_evidence": true
+  },
+  "compiled": false,
+  "application_executed": false,
+  "ui_or_mcp_tests_executed": false,
+  "network_used": false,
+  "committed": false,
+  "pushed": false,
+  "module_complete": false,
+  "next_module": "P0 copy_restore"
+}

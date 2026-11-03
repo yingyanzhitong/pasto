@@ -1,0 +1,158 @@
+--- replica/Sources/PastoCore/OCR.swift
++++ replica/Sources/PastoCore/OCR.swift
+@@ -63,10 +63,18 @@
+         }.value
+     }
+ 
++    public static func recognizeWords(imageData: Data, maximumDimension: Int = 1024) async throws -> [RecognizedWord] {
++        try await Task.detached(priority: .utility) {
++            try f_1002d4738(imageData: imageData, maximumDimension: maximumDimension, includeFullText: false).words
++        }.value
++    }
++
+     /// REA 0x1002d4738: reject empty Data, execute recognition inside an autorelease pool.
+-    public static func f_1002d4738(imageData: Data, maximumDimension: Int) throws -> RecognizedTextDocument {
++    public static func f_1002d4738(imageData: Data, maximumDimension: Int, includeFullText: Bool = true) throws -> RecognizedTextDocument {
+         guard !imageData.isEmpty else { throw OCRError.invalidImageData }
+-        return try autoreleasepool { try f_1002d4830(imageData: imageData, maximumDimension: maximumDimension) }
++        return try autoreleasepool {
++            try f_1002d4830(imageData: imageData, maximumDimension: maximumDimension, includeFullText: includeFullText)
++        }
+     }
+ 
+     /// REA 0x1002d4ba0: reject missing/tiny dimensions; retain bytes below the supplied
+@@ -93,7 +101,7 @@
+     }
+ 
+     /// REA 0x1002d4830: invalid prepared image returns an empty result; Vision errors throw.
+-    public static func f_1002d4830(imageData: Data, maximumDimension: Int) throws -> RecognizedTextDocument {
++    public static func f_1002d4830(imageData: Data, maximumDimension: Int, includeFullText: Bool = true) throws -> RecognizedTextDocument {
+         guard let prepared = f_1002d4ba0(imageData: imageData, maximumDimension: maximumDimension) else {
+             return RecognizedTextDocument(text: "", words: [])
+         }
+@@ -104,19 +112,25 @@
+         let handler = VNImageRequestHandler(data: prepared, options: [:])
+         try handler.perform([request])
+         let observations = request.results ?? []
+-        return RecognizedTextDocument(text: observations.compactMap { $0.topCandidates(1).first?.string }.joined(separator: "\n"),
+-                                      words: f_1002d576c(observations: observations))
++        if includeFullText {
++            var lines: [String] = []
++            let words = f_1002d576c(observations: observations, recognizedText: { lines.append($0) })
++            return RecognizedTextDocument(text: lines.joined(separator: "\n"), words: words)
++        }
++        return RecognizedTextDocument(text: "", words: f_1002d576c(observations: observations))
+     }
+ 
+     /// REA 0x1002d576c: first candidate, split on whitespace/newlines plus punctuation,
+     /// omit empty components, retain per-token confidence and optional Vision rectangle.
+     /// Forward ranges are also compared with the original machine code on synthetic observations.
+-    public static func f_1002d576c(observations: [VNRecognizedTextObservation]) -> [RecognizedWord] {
++    public static func f_1002d576c(observations: [VNRecognizedTextObservation],
++                                  recognizedText: ((String) -> Void)? = nil) -> [RecognizedWord] {
+         let separators = CharacterSet.whitespacesAndNewlines.union(.punctuationCharacters)
+         var words: [RecognizedWord] = []
+         for observation in observations {
+             guard let candidate = observation.topCandidates(1).first else { continue }
+             let text = candidate.string
++            recognizedText?(text)
+             var cursor = text.startIndex
+             for word in text.components(separatedBy: separators).filter({ !$0.isEmpty }) {
+                 guard let range = text.range(of: word, options: [], range: cursor..<text.endIndex, locale: nil) else { break }
+--- replica/Sources/Pasto/UI/OriginalCollectionNavigation.swift
++++ replica/Sources/Pasto/UI/OriginalCollectionNavigation.swift
+@@ -6,15 +6,16 @@
+     /// 0x1002348a8: Control letters and the collection's supported arrow aliases.
+     @MainActor
+     static func f_1002348a8(_ event: NSEvent) -> Self {
++        let commandModifiers = event.modifierFlags
+         let modifiers = event.modifierFlags
+         let key = event.charactersIgnoringModifiers?.lowercased()
+         let specialKey = event.specialKey
+         if (modifiers.contains(.control) && key == "f") || specialKey == .rightArrow { return .forward }
+         if (modifiers.contains(.control) && key == "b") || specialKey == .leftArrow { return .backward }
+         if (modifiers.contains(.control) && key == "e") ||
+-            (modifiers.contains(.command) && specialKey == .downArrow) { return .last }
++            (commandModifiers.contains(.command) && specialKey == .downArrow) { return .last }
+         if (modifiers.contains(.control) && key == "a") ||
+-            (modifiers.contains(.command) && specialKey == .upArrow) { return .first }
++            (commandModifiers.contains(.command) && specialKey == .upArrow) { return .first }
+         return .unhandled
+     }
+ }
+--- replica/Sources/Pasto/UI/ReplicaSearchIndex.swift
++++ replica/Sources/Pasto/UI/ReplicaSearchIndex.swift
+@@ -267,8 +267,8 @@
+                 try Task.checkCancellation()
+                 guard let readImage = entry.imageData, let data = readImage() else { continue }
+                 // The original indexer is an actor; use the existing background recognizer from this MainActor adapter.
+-                let document = try await ImageTextRecognizer.recognizeDocument(imageData: data, maximumDimension: 1024)
+-                let text = document.words.map(\.text).joined(separator: " ")
++                let words = try await ImageTextRecognizer.recognizeWords(imageData: data, maximumDimension: 1024)
++                let text = words.map(\.text).joined(separator: " ")
+                 if !text.isEmpty {
+                     let enriched = Entry(entry.record.appendingRecognizedText(text))
+                     let item = searchableItem(enriched, isUpdate: true)
+--- replica/Sources/Pasto/UI/OriginalPanelToolbar.swift
++++ replica/Sources/Pasto/UI/OriginalPanelToolbar.swift
+@@ -74,6 +74,7 @@
+             view.translatesAutoresizingMaskIntoConstraints = false
+             addSubview(view)
+         }
++        searchBar.onActivate = { [weak self] in self?.f_10000df98() }
+         searchBar.onDismiss = { [weak self] in self?.f_10000e0ec() }
+         // 00d884: centering is low priority, create-leading is 750. There is
+         // no recovered "tabs width >= 250" constraint (250 is the priority).
+@@ -200,6 +201,7 @@
+     private var queryObservation: AnyCancellable?
+     private(set) var isActive = false
+     var isFilterPopoverDisplayed: (() -> Bool)?
++    var onActivate: (() -> Void)?
+     var onDismiss: (() -> Void)?
+ 
+     override init(frame frameRect: NSRect) {
+@@ -252,12 +254,11 @@
+     }
+ 
+     private func f_10003e350() {
+-        let active = isActive
+-        button.alphaValue = active ? 0 : 1
+-        fieldHost.alphaValue = active ? 1 : 0
++        button.alphaValue = isActive ? 0 : 1
++        fieldHost.alphaValue = isActive ? 1 : 0
+         let (field, _) = inputPair()
+-        field.canAcceptFocus = active
+-        field.f_100045c2c().f_100041f9c().canAcceptFocus = active
++        field.canAcceptFocus = isActive
++        field.f_100045c2c().f_100041f9c().canAcceptFocus = field.canAcceptFocus
+         OriginalViewAnimation.f_10021cadc(duration: nil,
+             timingFunction: OriginalViewAnimation.f_10021ccd4(), animated: true,
+             animations: { self.f_100040054() })
+@@ -333,7 +334,7 @@
+     }
+ 
+     private func f_10003e658() {
+-        guard isActive else { return }
++        guard isActive else { onActivate?(); return }
+         let (_, coordinator) = inputPair()
+         if coordinator.isQueryEmpty { onDismiss?() }
+         else { requestFocus() }
+@@ -344,6 +345,7 @@
+         queryObservation = nil
+         if let field, let coordinator { ReplicaSearchEditor.dismantleField(field, coordinator: coordinator) }
+         isFilterPopoverDisplayed = nil
++        onActivate = nil
+         onDismiss = nil
+     }
+ }
+--- replica/Sources/Pasto/UI/OriginalPinboardTabTitle.swift
++++ replica/Sources/Pasto/UI/OriginalPinboardTabTitle.swift
+@@ -189,7 +189,7 @@
+ 
+     // Paste 0x100079e98: select on release inside the whole cell, not on mouse-down.
+     override func mouseUp(with event: NSEvent) {
+-        guard !titleView.isEditing, !isDragging, !event.modifierFlags.contains(.control) else { return }
++        guard !titleView.isEditing else { return }
+         isPressed = false
+         needsDisplay = true
+         if bounds.contains(convert(event.locationInWindow, from: nil)) { onSelect?() }

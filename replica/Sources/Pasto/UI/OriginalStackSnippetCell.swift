@@ -4,25 +4,39 @@ import SwiftUI
 
 @MainActor
 struct OriginalStackSnippetCellView: NSViewRepresentable {
-    let item: ClipboardItem
-    let imageProvider: (ClipboardItem) -> NSImage?
+    let input: ClipboardRestoreItem
+    let imageProvider: (ClipboardRestoreItem) -> NSImage?
+
+    init(input: ClipboardRestoreItem, imageProvider: @escaping (ClipboardRestoreItem) -> NSImage?) {
+        self.input = input
+        self.imageProvider = imageProvider
+    }
+
+    init(item: ClipboardItem, imageProvider: @escaping (ClipboardItem) -> NSImage?) {
+        input = ClipboardRestoreItem(item: item)
+        self.imageProvider = { imageProvider($0.resolvedItem()) }
+    }
 
     func makeNSView(context: Context) -> OriginalStackSnippetCell {
-        OriginalStackSnippetCell(imageProvider: imageProvider)
+        OriginalStackSnippetCell(nativeImageProvider: imageProvider)
     }
 
     func updateNSView(_ view: OriginalStackSnippetCell, context: Context) {
-        view.imageProvider = imageProvider
-        view.f_1000519f8(item)
+        view.nativeImageProvider = imageProvider
+        view.updateNativeSnippet(input)
     }
 }
 
 @MainActor
 final class OriginalStackSnippetCell: NSTableCellView {
-    var imageProvider: (ClipboardItem) -> NSImage?
+    var nativeImageProvider: (ClipboardRestoreItem) -> NSImage?
 
-    init(imageProvider: @escaping (ClipboardItem) -> NSImage?) {
-        self.imageProvider = imageProvider
+    convenience init(imageProvider: @escaping (ClipboardItem) -> NSImage?) {
+        self.init(nativeImageProvider: { imageProvider($0.resolvedItem()) })
+    }
+
+    init(nativeImageProvider: @escaping (ClipboardRestoreItem) -> NSImage?) {
+        self.nativeImageProvider = nativeImageProvider
         super.init(frame: .zero)
         // Retain the replica's existing row dimensions; the original Nib layout is separate.
         let icon = NSImageView(frame: .zero)
@@ -51,12 +65,23 @@ final class OriginalStackSnippetCell: NSTableCellView {
         ])
     }
 
-    required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
+    required init?(coder: NSCoder) {
+        nativeImageProvider = { input in
+            let rawType = input.previewRawType() ?? 0
+            return OriginalStackCategoryIcons.image(for:
+                OriginalPasteboardContentKind(rawValue: UInt8(rawType)) ?? .unknown)
+        }
+        super.init(coder: coder)
+    }
 
     /// Paste 0x1000519f8: update only the outlets that exist, in the original order.
     func f_1000519f8(_ item: ClipboardItem) {
-        if let imageView { imageView.image = imageProvider(item) }
+        updateNativeSnippet(ClipboardRestoreItem(item: item))
+    }
+
+    func updateNativeSnippet(_ input: ClipboardRestoreItem) {
+        if let imageView { imageView.image = nativeImageProvider(input) }
         textField?.maximumNumberOfLines = 2
-        if let textField { textField.stringValue = OriginalStackSnippetText.f_100051ec8(item) }
+        if let textField { textField.stringValue = OriginalStackSnippetText.text(for: input) }
     }
 }

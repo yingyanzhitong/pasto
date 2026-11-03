@@ -1,0 +1,170 @@
+{
+  "kind": "p0_p1_round5_primary_static_proof",
+  "binary_path": ".local/paste-arm64-static.bin",
+  "binary_sha256": "871f00354fbb1c165d858a98e6d19d6f43cb9d3f9f958b3e07c7f07eb5c19afb",
+  "item_repository": {
+    "conformance": {
+      "address": "0x100c42e10",
+      "slice_file_offset": 12856848,
+      "bytes": "949f060028a00600389c280000000000"
+    },
+    "protocol_descriptor": {
+      "address": "0x100cacda4",
+      "slice_file_offset": 13290916,
+      "bytes": "4300010000edfffff45ff9ff"
+    },
+    "protocol_name": {
+      "address": "0x100c42da0",
+      "slice_file_offset": 12856736,
+      "bytes": "4974656d5265706f7369746f727957726974696e6700"
+    },
+    "type_descriptor": {
+      "address": "0x100cace3c",
+      "slice_file_offset": 13291068,
+      "bytes": "5000008068ecffffbc5ff9ff"
+    },
+    "type_name": {
+      "address": "0x100c42e00",
+      "slice_file_offset": 12856832,
+      "bytes": "4974656d5265706f7369746f727900"
+    },
+    "slots": [
+      {
+        "offset": 16,
+        "slot": {
+          "address": "0x100ecca60",
+          "slice_file_offset": 15518304,
+          "bytes": "cc3f360000001000"
+        },
+        "target": "0x100363fcc"
+      },
+      {
+        "offset": 32,
+        "slot": {
+          "address": "0x100ecca70",
+          "slice_file_offset": 15518320,
+          "bytes": "1040360000001000"
+        },
+        "target": "0x100364010"
+      },
+      {
+        "offset": 40,
+        "slot": {
+          "address": "0x100ecca78",
+          "slice_file_offset": 15518328,
+          "bytes": "1440360000001000"
+        },
+        "target": "0x100364014"
+      }
+    ]
+  },
+  "restore_failure": [
+    {
+      "address": "0x10037a5a8",
+      "slice_file_offset": 3646888,
+      "bytes": "150080d25913fe97750000b4e00315aa54082294944f40f9"
+    },
+    {
+      "address": "0x10037a5c0",
+      "slice_file_offset": 3646912,
+      "bytes": "e84301916980f597f42b40f9e00314aa2c3a2294e00314aa"
+    },
+    {
+      "address": "0x10037a610",
+      "slice_file_offset": 3646992,
+      "bytes": "e00314aae3031caa3a362294"
+    }
+  ],
+  "source_tuple": [
+    {
+      "address": "0x100364b1c",
+      "slice_file_offset": 3558172,
+      "bytes": "f6df00a9e00f00f9e0230091a0023fd6f4d740a9e00315aa"
+    },
+    {
+      "address": "0x100364bd4",
+      "slice_file_offset": 3558356,
+      "bytes": "f60f40f9e00313aae1a82294"
+    },
+    {
+      "address": "0x10037b218",
+      "slice_file_offset": 3650072,
+      "bytes": "f30300aae8230091"
+    },
+    {
+      "address": "0x10037b250",
+      "slice_file_offset": 3650128,
+      "bytes": "600a40f944032294740a00f9"
+    }
+  ],
+  "error_release_import": {
+    "address": "0x100bfc708",
+    "file_offset": 12568328,
+    "container_file_offset": 12568328,
+    "section": "__TEXT,__stubs",
+    "body_size": 12,
+    "body_hex": "901500d0100e41f900021fd6",
+    "instruction_words": [
+      "0xd0001590",
+      "0xf9410e10",
+      "0xd61f0200"
+    ],
+    "instructions": [
+      "adrp x16, PAGE(symbol_pointer)",
+      "ldr x16, [x16, PAGEOFF(symbol_pointer)]",
+      "br x16"
+    ],
+    "pointer_address": "0x100eae218",
+    "pointer_section": "__DATA_CONST,__got",
+    "pointer_file_offset": 15393304,
+    "pointer_container_file_offset": 15393304,
+    "pointer_raw_value": "0x8010000000000f57",
+    "dyld_binding": {
+      "import_index": 3927,
+      "import_table_slice_file_offset": 17104532,
+      "symbol": "_swift_errorRelease",
+      "dylib_ordinal": 45,
+      "dylib": {
+        "install_name": "/usr/lib/swift/libswiftCore.dylib",
+        "load_command": "0xc",
+        "current_version": 0,
+        "current_version_string": "0.0.0",
+        "compatibility_version": 0,
+        "compatibility_version_string": "0.0.0"
+      },
+      "weak_import": false,
+      "import_addend": 0,
+      "mechanism": "LC_DYLD_CHAINED_FIXUPS",
+      "fixups_header_slice_file_offset": 17088512,
+      "pointer_format": 6,
+      "imports_format": 1,
+      "segment_index": 2,
+      "page_index": 2,
+      "page_start": 0,
+      "pointer_slice_file_offset": 15393304,
+      "pointer_raw_value": "0x8010000000000f57",
+      "pointer_addend": 0,
+      "effective_addend": 0
+    },
+    "indirect_symbol_index": 5442,
+    "pointer_indirect_symbol_index": 5442,
+    "symbol": "_swift_errorRelease",
+    "dylib_ordinal": 45,
+    "n_type": 1,
+    "n_sect": 0,
+    "n_desc": 11520,
+    "weak_import": false,
+    "dylib": {
+      "install_name": "/usr/lib/swift/libswiftCore.dylib",
+      "load_command": "0xc",
+      "current_version": 0,
+      "current_version_string": "0.0.0",
+      "compatibility_version": 0,
+      "compatibility_version_string": "0.0.0"
+    },
+    "cpu_type": "0x100000c",
+    "cpu_subtype": "0x0"
+  },
+  "compiled": false,
+  "application_executed": false
+}

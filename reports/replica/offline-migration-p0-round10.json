@@ -1,0 +1,1356 @@
+{
+  "kind": "offline_source_contract_review",
+  "round": 10,
+  "status": "source-checks-passed-goal-active",
+  "generated_at": "2026-10-29T14:38:17.688155+00:00",
+  "previous_goal_turn": "progress",
+  "priority": "P1",
+  "module": "search_query_input_history_and_result_consumer",
+  "functions": [
+    {
+      "function_id": "Paste:0x1002da16c",
+      "status": "existing_normalization_contract_reused",
+      "contract": "按tag/raw值去重filter且trim仅判空；按原始最后filter将text分前后，flag1丢空text；filters+after+before；保留原值/顺序、不合并文本。已核对现真实UIState fallback和SearchEditor消费者。",
+      "original": {
+        "path": "decompiled/Paste/part-0236.c",
+        "sha256": "2d60c3b531024ec7109c46f8686e0dc8799befd6e33162d6a3f138287116f739"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchQueryNormalization.swift",
+          "symbol": "func f_1002da16c("
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "OriginalSearchQueryNormalization.f_1002da16c(nodes, flag: 0)"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/SearchEditor.swift",
+          "symbol": "OriginalSearchQueryNormalization.f_1002da16c(nodes, flag: 0)"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1002ddcf0",
+      "status": "existing_effective_empty_contract_reused",
+      "contract": "所有text/filter值whitespaces trim后为空则true，空nodes也true；不改成whitespacesAndNewlines。当前isSearchQueryEmpty及上下文边界消费。",
+      "original": {
+        "path": "decompiled/Paste/part-0237.c",
+        "sha256": "09bdce56a949683f34ac8f5253af866467f40c216d4e1bbf42c9590dc2779c65"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchQuery.swift",
+          "symbol": "func f_1002ddcf0("
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "var isSearchQueryEmpty: Bool"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1002f8760",
+      "status": "existing_tokenizer_contract_reused",
+      "contract": "非空buffer将FFFC换空格，按Character.isWhitespace切连续runs为text，保留原空白并最后removeAll(keepingCapacity:true)；当前真实属性run/外部query消费者复用。",
+      "original": {
+        "path": "decompiled/Paste/part-0245.c",
+        "sha256": "bb18adf154a3797071050ec78ea3e60aafd4b261a59d5c44c76404563fe34238"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchTextTokens.swift",
+          "symbol": "func f_1002f8760("
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/SearchEditor.swift",
+          "symbol": "OriginalSearchTextTokens.f_1002f8760(&buffer, into: &nodes)"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1002f3d94",
+      "status": "existing_filter_predicate_contract_reused",
+      "contract": "trim为空nil；tag0/1 app/type等值cd，2/4 title/device两侧通配，3恰好两个Double epoch经ISOformatter形成>=start/<end，其他tag pinboard。依序转义反斜杠/双引号/*/?。",
+      "original": {
+        "path": "decompiled/Paste/part-0244.c",
+        "sha256": "e582d5e315bd4afa2367b2d26405d9c8e0ba5a222a07c1e6aaba709601fa7c8c"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchQuery.swift",
+          "symbol": "func f_1002f3d94("
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchQuery.swift",
+          "symbol": "f_1002f3d94(tag: tag, value: value)"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1002f45b0",
+      "status": "existing_query_composition_contract_reused",
+      "contract": "text各自trim去空再单空格join/转义，title/textContent及26.4+description组成prefix cwdt OR组；filter按UInt8 tag分组，组内OR、组间AND，字典迭代不额外排序。",
+      "original": {
+        "path": "decompiled/Paste/part-0244.c",
+        "sha256": "6662101b87386d12ea14c895cebf59a7aea8c68aa57fd68083a2ef613af81774"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchQuery.swift",
+          "symbol": "func f_1002f45b0("
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "OriginalSearchQuery.f_1002f45b0(nodes)"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1002f5e18",
+      "status": "existing_history_record_contract_reused",
+      "contract": "nodes和selection全相等no-op；普通输入仅首次pending记旧current再更新并调timer；immediate先flush再push旧current，实际变化清redo。",
+      "original": {
+        "path": "decompiled/Paste/part-0244.c",
+        "sha256": "897abbc156ecdfcf8d2e177d0c3b34e728e536b1fe425613156b9b70af3b3892"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchInputHistory.swift",
+          "symbol": "func f_1002f5e18("
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/SearchEditor.swift",
+          "symbol": "history.f_1002f5e18("
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1002f5fe8",
+      "status": "existing_history_flush_contract_reused",
+      "contract": "invalidate并清timer，pending非nil推入undo再清pending，不改current/redo。",
+      "original": {
+        "path": "decompiled/Paste/part-0244.c",
+        "sha256": "2031522d01e3690a252559b5e495a14694d6829aef24f51d4125803a463d6571"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchInputHistory.swift",
+          "symbol": "func f_1002f5fe8()"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1002f60fc",
+      "status": "existing_history_schedule_contract_reused",
+      "contract": "invalidate原timer再按实例interval安排一次weak callback；当前真实editor interval0.4，timer转MainActor Task。",
+      "original": {
+        "path": "decompiled/Paste/part-0244.c",
+        "sha256": "1da563ab9e0cd3c3f1e85d49a468f0d385d2cdf7cd8a0d5b08d4073141c72881"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchInputHistory.swift",
+          "symbol": "func f_1002f60fc()"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/SearchEditor.swift",
+          "symbol": "OriginalSearchInputHistory(interval: 0.4)"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1002f61f0",
+      "status": "existing_undo_contract_reused",
+      "contract": "先flush pending再pop undo；有项push current到redo并替current，空nil，真实恢复nodes及NSRange选区。",
+      "original": {
+        "path": "decompiled/Paste/part-0244.c",
+        "sha256": "556b768b0c0bd101e4536457b8438d9c558f4c30b70cb602ba7b5a71d916d51a"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchInputHistory.swift",
+          "symbol": "func f_1002f61f0()"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/SearchEditor.swift",
+          "symbol": "self.history.f_1002f61f0()"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1002f633c",
+      "status": "existing_array_pop_contract_reused",
+      "contract": "原快照数组为空nil，否则cow后取尾项并count减1；当前undo.popLast的集合行为复用，不造原数组ABI空壳。",
+      "original": {
+        "path": "decompiled/Paste/part-0244.c",
+        "sha256": "2af0f7b65b92763134ed7d4028639126c0afe4a7870f0da9010645d2921b0c8b"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchInputHistory.swift",
+          "symbol": "guard let snapshot = undo.popLast()"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1002f63b8",
+      "status": "existing_redo_contract_reused",
+      "contract": "直接pop redo，有项push current到undo并替current；原不flush pending的不对称规则保留。",
+      "original": {
+        "path": "decompiled/Paste/part-0244.c",
+        "sha256": "0acb227abb98a7c27fb186fa5ff5cd3c145f0c906fcda086053213ae9ac86aa4"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchInputHistory.swift",
+          "symbol": "func f_1002f63b8()"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/SearchEditor.swift",
+          "symbol": "self.history.f_1002f63b8()"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1002f6550",
+      "status": "existing_history_reset_contract_reused",
+      "contract": "清undo/redo、invalidate并清timer/pending，不改current；实际clearInput按preserveHistory决定是否清。",
+      "original": {
+        "path": "decompiled/Paste/part-0244.c",
+        "sha256": "491e7d844384bfab1a9a1041ae7b052b1207831a201d62b483aaf3215d3ec511"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchInputHistory.swift",
+          "symbol": "func f_1002f6550()"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/SearchEditor.swift",
+          "symbol": "if !preserveHistory { history.f_1002f6550() }"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1002f65e0",
+      "status": "existing_timer_actor_adapter_partial",
+      "contract": "原timer构造MainActor Task再弱owner flush；当前同样timer→MainActor Task weakself。原async descriptor/任务优先级/actor桥不声称ABI等价。",
+      "original": {
+        "path": "decompiled/Paste/part-0244.c",
+        "sha256": "03255627c11995e696aae4204b37db40740217d549b2bef8b8aa797714ee8e49"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchInputHistory.swift",
+          "symbol": "Task { @MainActor [weak self] in self?.f_1002f5fe8() }"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1002f6f0c",
+      "status": "existing_timer_thunk_adapter_partial",
+      "contract": "原timer块转65e0；当前真实timer闭包生产消费，不额外复制ABI包装。",
+      "original": {
+        "path": "decompiled/Paste/part-0244.c",
+        "sha256": "6bf99f107c61a8b42a6afec6318bfa782d0eec3a5204d2e19615b20c88a33109"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchInputHistory.swift",
+          "symbol": "func f_1002f60fc()"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1002d6274",
+      "status": "fixed_production_limit_configuration_partial",
+      "contract": "原真实DI factory调用2e19c8传100，非按函数名猜默认值；当前SearchIndex生产maximumResultCount=100。原DI身份/实例配置仍partial。",
+      "original": {
+        "path": "decompiled/Paste/part-0235.c",
+        "sha256": "dabdde8cd9dc115fc443ce23ebb1c6be48bac19cf1c6871e622c11d7d2b45b72"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "private static let maximumResultCount = 100"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1002e19c8",
+      "status": "fixed_limit_storage_adapter_partial",
+      "contract": "原建立索引服务并把第三参数存self+0x20，供结果迭代上限读取；当前生产常量恢复100，独立索引namespace与单actor生命周期仍不同。",
+      "original": {
+        "path": "decompiled/Paste/part-0239.c",
+        "sha256": "497c0b6178b17c57683bb60b20331dc3e7a1c85f923554e189127b4f6137d9d9"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "private static let maximumResultCount = 100"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "init(directoryURL: URL, store: ClipboardStore? = nil)"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1002e2930",
+      "status": "existing_query_entry_parent_partial",
+      "contract": "空query直接空结果；非空fetchAttributes=[]、CSSearchQuery/.results。当前保留独立store filterQueries、UUID集合投影及自己的错误/worker状态，完整父仍partial。",
+      "original": {
+        "path": "decompiled/Paste/part-0239.c",
+        "sha256": "0666ca3631112aba1d4d5b429eb573ecd7c50c917288e9f3875492f97f917d23"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "private func drain() async"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1002e2b90",
+      "status": "existing_async_resume_adapter_partial",
+      "contract": "原迭代next返回后按error切success/throw续体；当前for try await及catch承担，原actor/continuation ABI不计全等。",
+      "original": {
+        "path": "decompiled/Paste/part-0239.c",
+        "sha256": "0b5aa3036c6d44958861fe96c7fd8148ca1a3171bb7cee6ab88a303ed7a1fc3f"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "for try await result in query.results"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1002e2bf8",
+      "status": "fixed_result_limit_and_cancellation_partial",
+      "contract": "每次取uniqueIdentifier加入原数组，累计等于实例上限即终止；迭代完成/达到上限均销毁iterator后checkCancellation。本轮现按原始返回条数计数，100条break并在publish前检查取消；UUID去重/命名空间及父生命周期仍partial。",
+      "original": {
+        "path": "decompiled/Paste/part-0239.c",
+        "sha256": "b9e91698ce5bc163ffb71e7a95511486f75fa89d90ee0e7ba350e897b257f8db"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "var resultCount = 0"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "if resultCount == Self.maximumResultCount { break }"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "try Task.checkCancellation()"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1002e2e3c",
+      "status": "existing_async_query_error_adapter_partial",
+      "contract": "原异步迭代错误销毁iterator/释放结果再抛回父；当前catch清activeQuery，只有无pending才发布error并清identifiers，独立消费状态不同。",
+      "original": {
+        "path": "decompiled/Paste/part-0239.c",
+        "sha256": "1d4c580866207aceba19e47281197fcac73f343fc07001f7760ade1a3205bd94"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "private func drain() async"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1002e3ce8",
+      "status": "existing_index_attributes_parent_partial",
+      "contract": "title、可选text Character前5000、26.4+description、timestamp及app/type/device/pinboard、自有identifier/domain、distantFuture；现主要投影复用，optional/多board/isUpdate原模型和callback仍有差异。",
+      "original": {
+        "path": "decompiled/Paste/part-0240.c",
+        "sha256": "c4ac909ae738fd02a0b0eff017120cc42d6369def95833bf5b6fe3ced56e12b2"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "private struct Entry: Equatable"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "private func searchableItem(_ entry: Entry)"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1002e3a8c",
+      "status": "existing_character_prefix_reused",
+      "contract": "非负count取String Character索引前缀，负数trap；索引父传5000。当前String(indexedText.prefix(5000))保Character而非字节/UTF16。",
+      "original": {
+        "path": "decompiled/Paste/part-0240.c",
+        "sha256": "0d391b9da926145927aa3542f1509659807c014ebf1ee0f7caa997bf61e17393"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "String(indexedText.prefix(5000))"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1000f733c",
+      "status": "unchanged_prior_source_contract_reused",
+      "contract": "Swift NSTextView.text setter：把输入Swift String桥接为NSString，以setString写入同一接收者并返回0，无额外清空/手动didChangeText/格式分支。",
+      "original": {
+        "path": "decompiled/Paste/part-0084.c",
+        "sha256": "65da2a5b3792d4b39f42164e1d3fe8e2d3726df75c7075269906f31ad57a0709"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchTextValue.swift",
+          "symbol": "f_1000f733c"
+        }
+      ],
+      "source_sha256": {
+        "replica/Sources/PastoCore/OriginalSearchTextValue.swift": "4edef55597ad4d0a131adee7674cb682ec8c34f422fdef61f8e83dc62e8a2d9b"
+      },
+      "prior_review": {
+        "path": "reports/function-migration/Paste-0x1000f733c.json",
+        "sha256": "2662d4f0dcd403c537fff92d74cb06885b9281ffc154cde324bdcda3d2f24984"
+      },
+      "prior_state_unchanged": true
+    },
+    {
+      "function_id": "Paste:0x100206e94",
+      "status": "unchanged_prior_source_contract_reused",
+      "contract": "动态色闭包适配：appearance 参数 + context 中 dark/light 两对象，原样调用 0x100206f30，返回同一选色结果。",
+      "original": {
+        "path": "decompiled/Paste/part-0170.c",
+        "sha256": "cf29521b093c533e94f2cc765c753632d332962f306c22ed68a49c217f6df48d"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchAppearance.swift",
+          "symbol": "f_1001ff49c"
+        }
+      ],
+      "source_sha256": {
+        "replica/Sources/PastoCore/OriginalSearchAppearance.swift": "0cfd7e194ce6f6b1f4118897810e35d0eafab317a68e6104e4bfbd11dbaeb5c4"
+      },
+      "prior_review": {
+        "path": "reports/function-migration/Paste-0x100206e94.json",
+        "sha256": "0d6ccaff53bb032a5f38c3efc523a8e28ab43fd1710114805ca71a75817123a1"
+      },
+      "prior_state_unchanged": true
+    },
+    {
+      "function_id": "Paste:0x1000457cc",
+      "status": "unchanged_prior_source_contract_reused",
+      "contract": "取得惰性filtersButton.layer，nil返回0；按(0.5-anchorPoint)*bounds计算中心偏移，对每个scale先translation再scale再反向translation生成transform序列[1,1.16,0.98,1]；keyTimes[0,0.35,0.7,1]、cubic、duration0.28、key filtersBounce，返回0。",
+      "original": {
+        "path": "decompiled/Paste/part-0025.c",
+        "sha256": "ce77ccf5dcb9ee54a5a40985681cd0bed2009a0b11ed1d180405657fb94403ce"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchFieldAnimation.swift",
+          "symbol": "f_1000457cc"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/FilterBrowser.swift",
+          "symbol": "field?.f_1000457cc()"
+        }
+      ],
+      "source_sha256": {
+        "replica/Sources/PastoCore/OriginalSearchFieldAnimation.swift": "5c415996232f8f009d56ca0e07976ac31bb502f2295b7401cda2c62b4f51cc49",
+        "replica/Sources/Pasto/UI/FilterBrowser.swift": "4149942f755922b56f1a43b90be826b87ed7063776dfc3b2026eb8bf91510c22"
+      },
+      "prior_review": {
+        "path": "reports/function-migration/Paste-0x1000457cc.json",
+        "sha256": "6b849ff49bfd6f2a8e9a758a3f5caed6100a962738397491eb9b3ade97740294"
+      },
+      "prior_state_unchanged": true
+    },
+    {
+      "function_id": "Paste:0x100046acc",
+      "status": "unchanged_prior_source_contract_reused",
+      "contract": "弱SearchField上下文读取为强引用后，存活时向同一field原样转发NSEvent到点击选择实现；不存活无动作；返回0。",
+      "original": {
+        "path": "decompiled/Paste/part-0026.c",
+        "sha256": "842a972ed410df2ad867d53e68038020fb76fbd66501eb35590da165984a18fb"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchField.swift",
+          "symbol": "f_100046acc"
+        }
+      ],
+      "source_sha256": {
+        "replica/Sources/PastoCore/OriginalSearchField.swift": "6a56456d5b45a28cacd291891380b97414e71c1eaf68bd1d9ee15c3ec1596600"
+      },
+      "prior_review": {
+        "path": "reports/function-migration/Paste-0x100046acc.json",
+        "sha256": "ae11f352ccf200a2f20cf09e6e9699cd7f2f4af150ffbba9c088399abf605d74"
+      },
+      "prior_state_unchanged": true
+    },
+    {
+      "function_id": "Paste:0x10020c714",
+      "status": "unchanged_prior_source_contract_reused",
+      "contract": "返回原版系统符号名 app.dashed 的稳定Swift String强引用存储槽地址，重复调用返回同一地址；与读取字符串值区分。",
+      "original": {
+        "path": "decompiled/Paste/part-0174.c",
+        "sha256": "92a7fe2334ccf2f559931703f2e7e961b37aac29d47df9b287ec0c667b210f08"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchFilterSymbols.swift",
+          "symbol": "f_10020c714"
+        }
+      ],
+      "source_sha256": {
+        "replica/Sources/PastoCore/OriginalSearchFilterSymbols.swift": "73a9ca9cb90529d7c46665ac1af0241f0310505e56704d441df4e94c816698ef"
+      },
+      "prior_review": {
+        "path": "reports/function-migration/Paste-0x10020c714.json",
+        "sha256": "9990457fb2fe0e2b2bb86f75b2d5e1bded10f256ddd1c4f4fcb96644eac9f843"
+      },
+      "prior_state_unchanged": true
+    },
+    {
+      "function_id": "Paste:0x10020c934",
+      "status": "unchanged_prior_source_contract_reused",
+      "contract": "返回原版系统符号名 calendar 的稳定Swift String强引用存储槽地址，重复调用返回同一地址；与读取字符串值区分。",
+      "original": {
+        "path": "decompiled/Paste/part-0174.c",
+        "sha256": "75d13f0d07b23a8e2b9b080f294cc2fe3b4505d24ca12ab8c12a02d50e41e09e"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchFilterSymbols.swift",
+          "symbol": "f_10020c934"
+        }
+      ],
+      "source_sha256": {
+        "replica/Sources/PastoCore/OriginalSearchFilterSymbols.swift": "73a9ca9cb90529d7c46665ac1af0241f0310505e56704d441df4e94c816698ef"
+      },
+      "prior_review": {
+        "path": "reports/function-migration/Paste-0x10020c934.json",
+        "sha256": "1f150dc5a6ce2cf8d2a969e014b931ca3d603166639ae7801d2aabdb4c58dc77"
+      },
+      "prior_state_unchanged": true
+    },
+    {
+      "function_id": "Paste:0x10020cc48",
+      "status": "unchanged_prior_source_contract_reused",
+      "contract": "返回原版系统符号名 circle.fill 的稳定Swift String强引用存储槽地址，重复调用返回同一地址；与读取字符串值区分。",
+      "original": {
+        "path": "decompiled/Paste/part-0175.c",
+        "sha256": "31a60d8037c825c367a63ea4cdad32211745ddb77b941e163626bdb691845e3c"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchFilterSymbols.swift",
+          "symbol": "f_10020cc48"
+        }
+      ],
+      "source_sha256": {
+        "replica/Sources/PastoCore/OriginalSearchFilterSymbols.swift": "73a9ca9cb90529d7c46665ac1af0241f0310505e56704d441df4e94c816698ef"
+      },
+      "prior_review": {
+        "path": "reports/function-migration/Paste-0x10020cc48.json",
+        "sha256": "e2643b0f275dc37dfcdab54d02f259e8f7ed4103e4bcd8382dfc79cca793e1b6"
+      },
+      "prior_state_unchanged": true
+    },
+    {
+      "function_id": "Paste:0x10020cdd0",
+      "status": "unchanged_prior_source_contract_reused",
+      "contract": "返回原版系统符号名 doc 的稳定Swift String强引用存储槽地址，重复调用返回同一地址；与读取字符串值区分。",
+      "original": {
+        "path": "decompiled/Paste/part-0175.c",
+        "sha256": "f25425245b9c6cbb8e1789a41f5ccfe190f97aa4ade15932f3cb961dd6c15343"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchFilterSymbols.swift",
+          "symbol": "f_10020cdd0"
+        }
+      ],
+      "source_sha256": {
+        "replica/Sources/PastoCore/OriginalSearchFilterSymbols.swift": "73a9ca9cb90529d7c46665ac1af0241f0310505e56704d441df4e94c816698ef"
+      },
+      "prior_review": {
+        "path": "reports/function-migration/Paste-0x10020cdd0.json",
+        "sha256": "79630d1d248a88f9fce97edca7cdf459e4d4e865c6b0ed3681f5e31796da466d"
+      },
+      "prior_state_unchanged": true
+    },
+    {
+      "function_id": "Paste:0x10020cf40",
+      "status": "unchanged_prior_source_contract_reused",
+      "contract": "返回原版系统符号名 exclamationmark.triangle.fill 的稳定Swift String强引用存储槽地址，重复调用返回同一地址；与读取字符串值区分。",
+      "original": {
+        "path": "decompiled/Paste/part-0176.c",
+        "sha256": "2b7bcc0350b9841ce4e3bc688454b4ed8635bd52b251db6075c0e4b8b904080e"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchFilterSymbols.swift",
+          "symbol": "f_10020cf40"
+        }
+      ],
+      "source_sha256": {
+        "replica/Sources/PastoCore/OriginalSearchFilterSymbols.swift": "73a9ca9cb90529d7c46665ac1af0241f0310505e56704d441df4e94c816698ef"
+      },
+      "prior_review": {
+        "path": "reports/function-migration/Paste-0x10020cf40.json",
+        "sha256": "45a3b87cecbb1e5f6fa6c19fa1dfbb7eb05f95f96b2827424ca05065829b742e"
+      },
+      "prior_state_unchanged": true
+    },
+    {
+      "function_id": "Paste:0x10020d3b0",
+      "status": "unchanged_prior_source_contract_reused",
+      "contract": "返回原版系统符号名 link 的稳定Swift String强引用存储槽地址，重复调用返回同一地址；与读取字符串值区分。",
+      "original": {
+        "path": "decompiled/Paste/part-0177.c",
+        "sha256": "850063432051b19a526e76104176d80f11dadc859ee0c8bc0bd346400798e92b"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchFilterSymbols.swift",
+          "symbol": "f_10020d3b0"
+        }
+      ],
+      "source_sha256": {
+        "replica/Sources/PastoCore/OriginalSearchFilterSymbols.swift": "73a9ca9cb90529d7c46665ac1af0241f0310505e56704d441df4e94c816698ef"
+      },
+      "prior_review": {
+        "path": "reports/function-migration/Paste-0x10020d3b0.json",
+        "sha256": "d231d81a68ace83eb8beca0cdc4b0d021bcc783e5fe9cfa4239afe66e2ce5480"
+      },
+      "prior_state_unchanged": true
+    },
+    {
+      "function_id": "Paste:0x10020d434",
+      "status": "unchanged_prior_source_contract_reused",
+      "contract": "返回原版系统符号名 macbook.and.iphone 的稳定Swift String强引用存储槽地址，重复调用返回同一地址；与读取字符串值区分。",
+      "original": {
+        "path": "decompiled/Paste/part-0177.c",
+        "sha256": "b457ed6a5debbdf8d2247043de36f64af18480dc0c380cc8a509eb8b16814fe8"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchFilterSymbols.swift",
+          "symbol": "f_10020d434"
+        }
+      ],
+      "source_sha256": {
+        "replica/Sources/PastoCore/OriginalSearchFilterSymbols.swift": "73a9ca9cb90529d7c46665ac1af0241f0310505e56704d441df4e94c816698ef"
+      },
+      "prior_review": {
+        "path": "reports/function-migration/Paste-0x10020d434.json",
+        "sha256": "e24262df9fda873aab4569180d1c9775259c51354a75a888b59046861ce95e42"
+      },
+      "prior_state_unchanged": true
+    },
+    {
+      "function_id": "Paste:0x10020d4f4",
+      "status": "unchanged_prior_source_contract_reused",
+      "contract": "返回原版系统符号名 paintpalette 的稳定Swift String强引用存储槽地址，重复调用返回同一地址；与读取字符串值区分。",
+      "original": {
+        "path": "decompiled/Paste/part-0177.c",
+        "sha256": "fbfd5f09a93f12682fa0e5b6f0ca026fb56945cf1bc4343f53309c3e36a84501"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchFilterSymbols.swift",
+          "symbol": "f_10020d4f4"
+        }
+      ],
+      "source_sha256": {
+        "replica/Sources/PastoCore/OriginalSearchFilterSymbols.swift": "73a9ca9cb90529d7c46665ac1af0241f0310505e56704d441df4e94c816698ef"
+      },
+      "prior_review": {
+        "path": "reports/function-migration/Paste-0x10020d4f4.json",
+        "sha256": "33a1ef3cdd8c7c76b2d80d275159bcaf5153de73fca5d0c7a6f77197bac44fbe"
+      },
+      "prior_state_unchanged": true
+    },
+    {
+      "function_id": "Paste:0x10020d6a4",
+      "status": "unchanged_prior_source_contract_reused",
+      "contract": "返回原版系统符号名 photo 的稳定Swift String强引用存储槽地址，重复调用返回同一地址；与读取字符串值区分。",
+      "original": {
+        "path": "decompiled/Paste/part-0177.c",
+        "sha256": "c9769f4c945db3593700d3482a59c7128efa55f6df4ca9815c2d59a3e7851b8a"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchFilterSymbols.swift",
+          "symbol": "f_10020d6a4"
+        }
+      ],
+      "source_sha256": {
+        "replica/Sources/PastoCore/OriginalSearchFilterSymbols.swift": "73a9ca9cb90529d7c46665ac1af0241f0310505e56704d441df4e94c816698ef"
+      },
+      "prior_review": {
+        "path": "reports/function-migration/Paste-0x10020d6a4.json",
+        "sha256": "aa83e3be783a417c5187c1db512c717d12d146f09a84549096d23957a6a1e081"
+      },
+      "prior_state_unchanged": true
+    },
+    {
+      "function_id": "Paste:0x10020d798",
+      "status": "unchanged_prior_source_contract_reused",
+      "contract": "返回原版系统符号名 questionmark.app 的稳定Swift String强引用存储槽地址，重复调用返回同一地址；与读取字符串值区分。",
+      "original": {
+        "path": "decompiled/Paste/part-0177.c",
+        "sha256": "9a85592cc2399dc31c18cf1f3e1117cb6c8f7662b6365168094f11c591d068ed"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchFilterSymbols.swift",
+          "symbol": "f_10020d798"
+        }
+      ],
+      "source_sha256": {
+        "replica/Sources/PastoCore/OriginalSearchFilterSymbols.swift": "73a9ca9cb90529d7c46665ac1af0241f0310505e56704d441df4e94c816698ef"
+      },
+      "prior_review": {
+        "path": "reports/function-migration/Paste-0x10020d798.json",
+        "sha256": "a553c7c056810a14ab60fc76b79fbccb65f0ea519173ac8e5d021658cb042a75"
+      },
+      "prior_state_unchanged": true
+    },
+    {
+      "function_id": "Paste:0x10020d9c8",
+      "status": "unchanged_prior_source_contract_reused",
+      "contract": "返回原版系统符号名 text.alignleft 的稳定Swift String强引用存储槽地址，重复调用返回同一地址；与读取字符串值区分。",
+      "original": {
+        "path": "decompiled/Paste/part-0178.c",
+        "sha256": "7e9689ef184595df9036a501813201f990d053794b2c37104980b2ab8ce182f6"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchFilterSymbols.swift",
+          "symbol": "f_10020d9c8"
+        }
+      ],
+      "source_sha256": {
+        "replica/Sources/PastoCore/OriginalSearchFilterSymbols.swift": "73a9ca9cb90529d7c46665ac1af0241f0310505e56704d441df4e94c816698ef"
+      },
+      "prior_review": {
+        "path": "reports/function-migration/Paste-0x10020d9c8.json",
+        "sha256": "d69fda35cb9d251c4877df5e5c802e172cad740bd28c944983f7bbd72b56b004"
+      },
+      "prior_state_unchanged": true
+    },
+    {
+      "function_id": "Paste:0x100054b2c",
+      "status": "unchanged_prior_source_contract_reused",
+      "contract": "按UInt8 filter tag返回可选系统符号名：0 app.dashed；1对value.lowercased精确匹配link/image/color/text/file/unknown，未知用exclamationmark.triangle.fill；2 nil；3 calendar；4 macbook.and.iphone；其他circle.fill。",
+      "original": {
+        "path": "decompiled/Paste/part-0030.c",
+        "sha256": "4ec4a670c3877a8c900cbfac3c7834d8d69750a7b0901799cbf4ac02c6bcb9c8"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchFilterSymbols.swift",
+          "symbol": "f_100054b2c"
+        }
+      ],
+      "source_sha256": {
+        "replica/Sources/PastoCore/OriginalSearchFilterSymbols.swift": "73a9ca9cb90529d7c46665ac1af0241f0310505e56704d441df4e94c816698ef"
+      },
+      "prior_review": {
+        "path": "reports/function-migration/Paste-0x100054b2c.json",
+        "sha256": "ff66ea3f3b612985a8bbe3b0553830623de0372ac9a5c486282aaf025ca854f0"
+      },
+      "prior_state_unchanged": true
+    },
+    {
+      "function_id": "Paste:0x1000f653c",
+      "status": "unchanged_prior_source_contract_reused",
+      "contract": "对传入NSImage metatype以系统符号名创建可选NSImage，accessibilityDescription=nil，保留nil失败返回；不自行增加fallback。",
+      "original": {
+        "path": "decompiled/Paste/part-0083.c",
+        "sha256": "f04351b8a1209a62de9277ea64373c65bb439dfa8bf86050b049c73d4f596fb7"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchFilterSymbols.swift",
+          "symbol": "f_1000f653c"
+        }
+      ],
+      "source_sha256": {
+        "replica/Sources/PastoCore/OriginalSearchFilterSymbols.swift": "73a9ca9cb90529d7c46665ac1af0241f0310505e56704d441df4e94c816698ef"
+      },
+      "prior_review": {
+        "path": "reports/function-migration/Paste-0x1000f653c.json",
+        "sha256": "3232ace03030fda1f2edb6e446c9f23dab45fd59086e11fc4d52ba18586aa4ab"
+      },
+      "prior_state_unchanged": true
+    },
+    {
+      "function_id": "Paste:0x1000087d4",
+      "status": "unchanged_prior_source_contract_reused",
+      "contract": "初始化onWillClose=nil、isDisplayed=false；super.init后设置transient、animates=true、delegate=self；默认通知中心订阅mainWindowWillClose，selector为close。",
+      "original": {
+        "path": "decompiled/Paste/part-0003.c",
+        "sha256": "7f638957a798c0fc6f85526acbfbcdd4832ca8f2bffa2c813cf20ffd8c401981"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalFilterBrowserPopover.swift",
+          "symbol": "public override init()"
+        }
+      ],
+      "source_sha256": {
+        "replica/Sources/PastoCore/OriginalFilterBrowserPopover.swift": "f0476a5457e4326cfa241adc063afb2e0031627cb49fe8bdf226634f9731ae7f"
+      },
+      "prior_review": {
+        "path": "reports/function-migration/Paste-0x1000087d4.json",
+        "sha256": "8c61d2f0b62d6e7bcb84507f0524a5dc7cd3ef99ed6d4333a3d244cf754b6812"
+      },
+      "prior_state_unchanged": true
+    },
+    {
+      "function_id": "Paste:0x100008bc0",
+      "status": "unchanged_prior_source_contract_reused",
+      "contract": "关闭生命周期按原顺序设置animates=true、isDisplayed=false、contentViewController=nil，之后调用可选onWillClose，nil不调用。",
+      "original": {
+        "path": "decompiled/Paste/part-0003.c",
+        "sha256": "92f30f3b170ccfb438b76a3fd0e327c72dcd78db6585fcbfe9a3ca219b5e057b"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalFilterBrowserPopover.swift",
+          "symbol": "f_100008bc0"
+        }
+      ],
+      "source_sha256": {
+        "replica/Sources/PastoCore/OriginalFilterBrowserPopover.swift": "f0476a5457e4326cfa241adc063afb2e0031627cb49fe8bdf226634f9731ae7f"
+      },
+      "prior_review": {
+        "path": "reports/function-migration/Paste-0x100008bc0.json",
+        "sha256": "c0fb7c13d103578c74958453960598e844e676b839bafac83ad4fadafa3ea840"
+      },
+      "prior_state_unchanged": true
+    },
+    {
+      "function_id": "Paste:0x100008c34",
+      "status": "unchanged_prior_source_contract_reused",
+      "contract": "AppKit主执行器popoverWillClose通知桥接入口，通知内容不用于业务，将同一接收者委托关闭生命周期f100008bc0。",
+      "original": {
+        "path": "decompiled/Paste/part-0003.c",
+        "sha256": "1df2b76c059406bd38bbe235987a2a7b9f0e2e804392c0717256d702c65ca853"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalFilterBrowserPopover.swift",
+          "symbol": "public func popoverWillClose"
+        }
+      ],
+      "source_sha256": {
+        "replica/Sources/PastoCore/OriginalFilterBrowserPopover.swift": "f0476a5457e4326cfa241adc063afb2e0031627cb49fe8bdf226634f9731ae7f"
+      },
+      "prior_review": {
+        "path": "reports/function-migration/Paste-0x100008c34.json",
+        "sha256": "9cbedaf15df37f30bc2604367a64473d49f360917b0e0c8835611b54153d49bc"
+      },
+      "prior_state_unchanged": true
+    },
+    {
+      "function_id": "Paste:0x100008d40",
+      "status": "unchanged_prior_source_contract_reused",
+      "contract": "AppKit主执行器popoverWillShow入口，通知内容不用于业务，只把该popover的isDisplayed置为true。",
+      "original": {
+        "path": "decompiled/Paste/part-0003.c",
+        "sha256": "58000fc637e352ba71e74ffd8759518aaa9c7a9430ed0165bdbbadfea3e816d1"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalFilterBrowserPopover.swift",
+          "symbol": "public func popoverWillShow"
+        }
+      ],
+      "source_sha256": {
+        "replica/Sources/PastoCore/OriginalFilterBrowserPopover.swift": "f0476a5457e4326cfa241adc063afb2e0031627cb49fe8bdf226634f9731ae7f"
+      },
+      "prior_review": {
+        "path": "reports/function-migration/Paste-0x100008d40.json",
+        "sha256": "4dafb31bb097d590a2f2ebe744455d98ec4ef5f66bc7529cbda0cbe8f0a3625f"
+      },
+      "prior_state_unchanged": true
+    },
+    {
+      "function_id": "Paste:0x1002d7694",
+      "status": "unchanged_prior_source_contract_reused",
+      "contract": "当前日历startOfDay(Date())为下界；当前日历加day1强解包为上界；下界严格小于上界，否则trap，返回半开日期范围。",
+      "original": {
+        "path": "decompiled/Paste/part-0236.c",
+        "sha256": "b56ff459036ea699200fdc01ebd311c315a71d25c7f0122ce827082184a90379"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchDateRanges.swift",
+          "symbol": "func f_1002d7694()"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/FilterBrowser.swift",
+          "symbol": "OriginalSearchDateRanges.f_1002d8ce0()"
+        }
+      ],
+      "source_sha256": {
+        "replica/Sources/PastoCore/OriginalSearchDateRanges.swift": "91f2f941e01c03dc575e29edb80144c4e268174528e551deb72642b4a7743451",
+        "replica/Sources/Pasto/UI/FilterBrowser.swift": "4149942f755922b56f1a43b90be826b87ed7063776dfc3b2026eb8bf91510c22"
+      },
+      "prior_review": {
+        "path": "reports/function-migration/Paste-0x1002d7694.json",
+        "sha256": "71e329d3ecad8c402c77a2924118f45187370d4e931c3cc73d7c84e7af3e6d42"
+      },
+      "prior_state_unchanged": true
+    },
+    {
+      "function_id": "Paste:0x1002d7a14",
+      "status": "unchanged_prior_source_contract_reused",
+      "contract": "当前日历startOfDay(Date())为上界；当前日历减day1强解包为下界；按严格递增检查返回半开范围。",
+      "original": {
+        "path": "decompiled/Paste/part-0236.c",
+        "sha256": "b963cfdac476a71b49a24592b40ad588bcf282359998b66821ae767a62ba922e"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchDateRanges.swift",
+          "symbol": "func f_1002d7a14()"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/FilterBrowser.swift",
+          "symbol": "OriginalSearchDateRanges.f_1002d8ce0()"
+        }
+      ],
+      "source_sha256": {
+        "replica/Sources/PastoCore/OriginalSearchDateRanges.swift": "91f2f941e01c03dc575e29edb80144c4e268174528e551deb72642b4a7743451",
+        "replica/Sources/Pasto/UI/FilterBrowser.swift": "4149942f755922b56f1a43b90be826b87ed7063776dfc3b2026eb8bf91510c22"
+      },
+      "prior_review": {
+        "path": "reports/function-migration/Paste-0x1002d7a14.json",
+        "sha256": "c614c4556c6183d090acb6c66c4aec57ae0dbcc3ebb5d9b6b6b916b6aca5ea2c"
+      },
+      "prior_state_unchanged": true
+    },
+    {
+      "function_id": "Paste:0x1002d7db8",
+      "status": "unchanged_prior_source_contract_reused",
+      "contract": "先Date()，当前日历提取calendar/yearForWeekOfYear/weekOfYear三components，components.date强解包为周起点；另当前日历加day7为上界，严格递增半开范围。",
+      "original": {
+        "path": "decompiled/Paste/part-0236.c",
+        "sha256": "a94f57330aa40c193d4bfac55c0f4721c22bc3e235d1327a239ca40c138ef597"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchDateRanges.swift",
+          "symbol": "func f_1002d7db8()"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/FilterBrowser.swift",
+          "symbol": "OriginalSearchDateRanges.f_1002d8ce0()"
+        }
+      ],
+      "source_sha256": {
+        "replica/Sources/PastoCore/OriginalSearchDateRanges.swift": "91f2f941e01c03dc575e29edb80144c4e268174528e551deb72642b4a7743451",
+        "replica/Sources/Pasto/UI/FilterBrowser.swift": "4149942f755922b56f1a43b90be826b87ed7063776dfc3b2026eb8bf91510c22"
+      },
+      "prior_review": {
+        "path": "reports/function-migration/Paste-0x1002d7db8.json",
+        "sha256": "05020715c63230b34d5d9287e976a25d0463099192564e7c384e6ffec91e31d0"
+      },
+      "prior_state_unchanged": true
+    },
+    {
+      "function_id": "Paste:0x1002d8300",
+      "status": "unchanged_prior_source_contract_reused",
+      "contract": "先Date()，当前日历同三components求本周起点为上界；另当前日历加weekOfYear -1为下界，严格递增半开范围。",
+      "original": {
+        "path": "decompiled/Paste/part-0236.c",
+        "sha256": "ebccca0246aada2f44ce88f54bfc34fecb2ac0a1d313dc0898006cb62a4e6223"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchDateRanges.swift",
+          "symbol": "func f_1002d8300()"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/FilterBrowser.swift",
+          "symbol": "OriginalSearchDateRanges.f_1002d8ce0()"
+        }
+      ],
+      "source_sha256": {
+        "replica/Sources/PastoCore/OriginalSearchDateRanges.swift": "91f2f941e01c03dc575e29edb80144c4e268174528e551deb72642b4a7743451",
+        "replica/Sources/Pasto/UI/FilterBrowser.swift": "4149942f755922b56f1a43b90be826b87ed7063776dfc3b2026eb8bf91510c22"
+      },
+      "prior_review": {
+        "path": "reports/function-migration/Paste-0x1002d8300.json",
+        "sha256": "d2375e89a1c82372456565545aeb50f8e8791db81a6005619f110ff335bd538c"
+      },
+      "prior_state_unchanged": true
+    },
+    {
+      "function_id": "Paste:0x1002d8860",
+      "status": "unchanged_prior_source_contract_reused",
+      "contract": "当前日历当天起点；当前日历day -30为下界，另当前日历对同一天起点day +1为上界，均强解包；严格递增半开范围。原语义包含今天及此前30日，不擅自改成-29。",
+      "original": {
+        "path": "decompiled/Paste/part-0236.c",
+        "sha256": "617a1a3e03e817adbddf7179794bbfc64b692b2012f7a0130eac812fc87c8da9"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchDateRanges.swift",
+          "symbol": "func f_1002d8860()"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/FilterBrowser.swift",
+          "symbol": "OriginalSearchDateRanges.f_1002d8ce0()"
+        }
+      ],
+      "source_sha256": {
+        "replica/Sources/PastoCore/OriginalSearchDateRanges.swift": "91f2f941e01c03dc575e29edb80144c4e268174528e551deb72642b4a7743451",
+        "replica/Sources/Pasto/UI/FilterBrowser.swift": "4149942f755922b56f1a43b90be826b87ed7063776dfc3b2026eb8bf91510c22"
+      },
+      "prior_review": {
+        "path": "reports/function-migration/Paste-0x1002d8860.json",
+        "sha256": "a07d701d77d2a36bd58ad3870ae7f74aef398bff6696aeb0cf2610bd9c50e476"
+      },
+      "prior_state_unchanged": true
+    },
+    {
+      "function_id": "Paste:0x1002d8ce0",
+      "status": "unchanged_prior_source_contract_reused",
+      "contract": "依序构造五个(title,range)值：Today、Yesterday、This week、Last week、Last 30 days，各调用对应原恢复范围函数；非滚动7天/30天近似。",
+      "original": {
+        "path": "decompiled/Paste/part-0236.c",
+        "sha256": "d5ec814dc05d3f79f1111f0b8bae97a93e3708ff321d33ed3f2c276afb95e507"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchDateRanges.swift",
+          "symbol": "func f_1002d8ce0()"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/FilterBrowser.swift",
+          "symbol": "OriginalSearchDateRanges.f_1002d8ce0()"
+        }
+      ],
+      "source_sha256": {
+        "replica/Sources/PastoCore/OriginalSearchDateRanges.swift": "91f2f941e01c03dc575e29edb80144c4e268174528e551deb72642b4a7743451",
+        "replica/Sources/Pasto/UI/FilterBrowser.swift": "4149942f755922b56f1a43b90be826b87ed7063776dfc3b2026eb8bf91510c22"
+      },
+      "prior_review": {
+        "path": "reports/function-migration/Paste-0x1002d8ce0.json",
+        "sha256": "24ce8ab576940c6514a5e84ba9fffc790e875104ff2528c88365353cb1af3bd8"
+      },
+      "prior_state_unchanged": true
+    },
+    {
+      "function_id": "Paste:0x1002d9d2c",
+      "status": "unchanged_prior_source_contract_reused",
+      "contract": "日期Range下界epoch秒rounded(.down)、上界rounded(.up)，再分别Int转换保留非有限/越界trap；Int十进制以单ASCII空格拼接，返回tag3日期filter。",
+      "original": {
+        "path": "decompiled/Paste/part-0236.c",
+        "sha256": "aa59acbd5147498c2a778a215d543ab6d2066bc5e1b55eb5065b5b9d6d238245"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchDateEncoding.swift",
+          "symbol": "func f_1002d9d2c("
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/FilterBrowser.swift",
+          "symbol": "return OriginalSearchDateEncoding.f_1002d9d2c(filter.range)"
+        }
+      ],
+      "source_sha256": {
+        "replica/Sources/PastoCore/OriginalSearchDateEncoding.swift": "b46fe7fca447d1089bfc7c36676ecaf13a2d77c6d665eb5f42cb37ab5d00c5c6",
+        "replica/Sources/Pasto/UI/FilterBrowser.swift": "4149942f755922b56f1a43b90be826b87ed7063776dfc3b2026eb8bf91510c22"
+      },
+      "prior_review": {
+        "path": "reports/function-migration/Paste-0x1002d9d2c.json",
+        "sha256": "f7c3df8a72a03e4569afd1ed9b11beb184e19b00ec6ed826170f976fc29ad2d6"
+      },
+      "prior_state_unchanged": true
+    },
+    {
+      "function_id": "Paste:0x1002d7368",
+      "status": "unchanged_prior_source_contract_reused",
+      "contract": "日期Range下界epoch秒rounded(.down)、上界rounded(.up)，再分别Int转换保留非有限/越界trap；Int十进制以单ASCII空格拼接，返回tag3日期filter。本地址为4字节无条件直接分支至0x1002d9d2c，复用同一实际执行实现。",
+      "original": {
+        "path": "decompiled/Paste/part-0236.c",
+        "sha256": "c5841e5881bb7265868a60f39ee64d4918314cd4e5eb434816b95424f9a65f72"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchDateEncoding.swift",
+          "symbol": "func f_1002d9d2c("
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/FilterBrowser.swift",
+          "symbol": "return OriginalSearchDateEncoding.f_1002d9d2c(filter.range)"
+        }
+      ],
+      "source_sha256": {
+        "replica/Sources/PastoCore/OriginalSearchDateEncoding.swift": "b46fe7fca447d1089bfc7c36676ecaf13a2d77c6d665eb5f42cb37ab5d00c5c6",
+        "replica/Sources/Pasto/UI/FilterBrowser.swift": "4149942f755922b56f1a43b90be826b87ed7063776dfc3b2026eb8bf91510c22"
+      },
+      "prior_review": {
+        "path": "reports/function-migration/Paste-0x1002d7368.json",
+        "sha256": "d96131b47b257cdfb099222c89fe001dabc54c18ef2d8015b53feac57756db12"
+      },
+      "prior_state_unchanged": true
+    },
+    {
+      "function_id": "Paste:0x1002d8e54",
+      "status": "unchanged_prior_source_contract_reused",
+      "contract": "惰性共享NSDateFormatter，init后dateStyle=2(.medium)、timeStyle=0(.none)，保持默认locale/timezone。",
+      "original": {
+        "path": "decompiled/Paste/part-0236.c",
+        "sha256": "cd1487234cc1a0760ef458573800668d73fe9ff91e7545a5108f8f162e13a5a1"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchDateEncoding.swift",
+          "symbol": "private static let dateFormatter"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/FilterBrowser.swift",
+          "symbol": "title = OriginalSearchDateEncoding.title(for: filter.range)"
+        }
+      ],
+      "source_sha256": {
+        "replica/Sources/PastoCore/OriginalSearchDateEncoding.swift": "b46fe7fca447d1089bfc7c36676ecaf13a2d77c6d665eb5f42cb37ab5d00c5c6",
+        "replica/Sources/Pasto/UI/FilterBrowser.swift": "4149942f755922b56f1a43b90be826b87ed7063776dfc3b2026eb8bf91510c22"
+      },
+      "prior_review": {
+        "path": "reports/function-migration/Paste-0x1002d8e54.json",
+        "sha256": "9598fcab4ff2a11a14007e61774db8c511a6f9302b8fb477438eed1ad817d757"
+      },
+      "prior_state_unchanged": true
+    },
+    {
+      "function_id": "Paste:0x1002d8e9c",
+      "status": "unchanged_prior_source_contract_reused",
+      "contract": "每次先生成原五个相对范围，以lower floor/upper ceil的Int编码精确比较；匹配返回原title。否则ASCII空格split省空必须两段，按有符号Int十进制解析，失败nil；分别构造Date，用惰性共享medium/no-time formatter输出start + 原英文空格to空格 + end。不新增start<end限制、不把排他上界减一天。",
+      "original": {
+        "path": "decompiled/Paste/part-0236.c",
+        "sha256": "58b02945f10ede94dd43f81f7ff7840e87b892311a0db9787b283b2a8565a994"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchDateEncoding.swift",
+          "symbol": "func f_1002d8e9c("
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/FilterBrowser.swift",
+          "symbol": "title = OriginalSearchDateEncoding.title(for: filter.range)"
+        }
+      ],
+      "source_sha256": {
+        "replica/Sources/PastoCore/OriginalSearchDateEncoding.swift": "b46fe7fca447d1089bfc7c36676ecaf13a2d77c6d665eb5f42cb37ab5d00c5c6",
+        "replica/Sources/Pasto/UI/FilterBrowser.swift": "4149942f755922b56f1a43b90be826b87ed7063776dfc3b2026eb8bf91510c22"
+      },
+      "prior_review": {
+        "path": "reports/function-migration/Paste-0x1002d8e9c.json",
+        "sha256": "027d83e5c69f7fe8c6deb2be7c51112221a96177ff55b597626de0083c6fc223"
+      },
+      "prior_state_unchanged": true
+    }
+  ],
+  "reviewed_count": 53,
+  "directly_compared_count": 22,
+  "strict_unchanged_prior_reviews_reused": 31,
+  "strict_reused_function_ids": [
+    "Paste:0x1000f733c",
+    "Paste:0x100206e94",
+    "Paste:0x1000457cc",
+    "Paste:0x100046acc",
+    "Paste:0x10020c714",
+    "Paste:0x10020c934",
+    "Paste:0x10020cc48",
+    "Paste:0x10020cdd0",
+    "Paste:0x10020cf40",
+    "Paste:0x10020d3b0",
+    "Paste:0x10020d434",
+    "Paste:0x10020d4f4",
+    "Paste:0x10020d6a4",
+    "Paste:0x10020d798",
+    "Paste:0x10020d9c8",
+    "Paste:0x100054b2c",
+    "Paste:0x1000f653c",
+    "Paste:0x1000087d4",
+    "Paste:0x100008bc0",
+    "Paste:0x100008c34",
+    "Paste:0x100008d40",
+    "Paste:0x1002d7694",
+    "Paste:0x1002d7a14",
+    "Paste:0x1002d7db8",
+    "Paste:0x1002d8300",
+    "Paste:0x1002d8860",
+    "Paste:0x1002d8ce0",
+    "Paste:0x1002d9d2c",
+    "Paste:0x1002d7368",
+    "Paste:0x1002d8e54",
+    "Paste:0x1002d8e9c"
+  ],
+  "current_review_unique_count": 317,
+  "current_review_inventory_percent": 0.3908,
+  "source_sha256": {
+    "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift": "b0e43f58c8d12b18292bd087bdbf12b1aeac6750141438e51e0e95ed77b06d62",
+    "replica/Sources/Pasto/UI/ReplicaUIController.swift": "8156e6d71cb70fd57634d86edea0710ca87541422cdbe494efea4f256290e6c4",
+    "replica/Sources/Pasto/UI/SearchEditor.swift": "fcd850213ccfaf2efc39294c8c5740e9f552bab607512a6552124a83d478f194",
+    "replica/Sources/PastoCore/OriginalSearchQuery.swift": "4c828b16c6342387d375e6b5a3f24d28b37bbffa1c377e4cdb064ad27b5d1b28",
+    "replica/Sources/PastoCore/OriginalSearchQueryNormalization.swift": "fc2414e1395bb916246c9ef38509730c394e3d0feebbf0ca6dc9438f86409eb9",
+    "replica/Sources/PastoCore/OriginalSearchInputHistory.swift": "7aa112d949aa2982759f8b3a164eb908a3259cccbcd889e19030773bd4bb88a8",
+    "replica/Sources/PastoCore/OriginalSearchTextTokens.swift": "ea0bef0b75186bf558f512cd15f5343e1251fb47a9e39791d320fd23248b143f",
+    "scripts/tests/test_search_pipeline_contracts.py": "c21f57e12b789c5259836464568035f25d3328a5d75b9167638306c497b9a016"
+  },
+  "static_bindings": {
+    "original_binary_sha256": "871f00354fbb1c165d858a98e6d19d6f43cb9d3f9f958b3e07c7f07eb5c19afb",
+    "factory_limit": {
+      "address": "0x1002d62b8",
+      "bytes": "820c8052c32d0094",
+      "meaning": "mov w2,#100; bl 0x1002e19c8"
+    },
+    "limit_comparison": {
+      "address": "0x1002e2cd0",
+      "bytes": "281340f9ff0208eba1060054",
+      "meaning": "ldr x8,[x25,#0x20]; cmp x23,x8; b.ne continue"
+    },
+    "cancellation_call": {
+      "address": "0x1002e2cf0",
+      "bytes": "f4552494",
+      "target": "0x100bf84c0"
+    },
+    "cancellation_stub": {
+      "address": "0x100bf84c0",
+      "file_offset": 12551360,
+      "container_file_offset": 12551360,
+      "section": "__TEXT,__stubs",
+      "body_size": 12,
+      "body_hex": "b01500d010aa46f900021fd6",
+      "instruction_words": [
+        "0xd00015b0",
+        "0xf946aa10",
+        "0xd61f0200"
+      ],
+      "instructions": [
+        "adrp x16, PAGE(symbol_pointer)",
+        "ldr x16, [x16, PAGEOFF(symbol_pointer)]",
+        "br x16"
+      ],
+      "pointer_address": "0x100eaed50",
+      "pointer_section": "__DATA_CONST,__got",
+      "pointer_file_offset": 15396176,
+      "pointer_container_file_offset": 15396176,
+      "pointer_raw_value": "0x80100000000010be",
+      "dyld_binding": {
+        "import_index": 4286,
+        "import_table_slice_file_offset": 17105968,
+        "symbol": "_$sScTss5NeverORszABRs_rlE17checkCancellationyyKFZ",
+        "dylib_ordinal": 67,
+        "dylib": {
+          "install_name": "/usr/lib/swift/libswift_Concurrency.dylib",
+          "load_command": "0xc",
+          "current_version": 0,
+          "current_version_string": "0.0.0",
+          "compatibility_version": 0,
+          "compatibility_version_string": "0.0.0"
+        },
+        "weak_import": false,
+        "import_addend": 0,
+        "mechanism": "LC_DYLD_CHAINED_FIXUPS",
+        "fixups_header_slice_file_offset": 17088512,
+        "pointer_format": 6,
+        "imports_format": 1,
+        "segment_index": 2,
+        "page_index": 2,
+        "page_start": 0,
+        "pointer_slice_file_offset": 15396176,
+        "pointer_raw_value": "0x80100000000010be",
+        "pointer_addend": 0,
+        "effective_addend": 0
+      },
+      "indirect_symbol_index": 2796,
+      "pointer_indirect_symbol_index": 2796,
+      "symbol": "_$sScTss5NeverORszABRs_rlE17checkCancellationyyKFZ",
+      "dylib_ordinal": 67,
+      "n_type": 1,
+      "n_sect": 0,
+      "n_desc": 17152,
+      "weak_import": false,
+      "dylib": {
+        "install_name": "/usr/lib/swift/libswift_Concurrency.dylib",
+        "load_command": "0xc",
+        "current_version": 0,
+        "current_version_string": "0.0.0",
+        "compatibility_version": 0,
+        "compatibility_version_string": "0.0.0"
+      },
+      "cpu_type": "0x100000c",
+      "cpu_subtype": "0x0"
+    }
+  },
+  "new_partial_bindings": [
+    "Paste:0x1002d6274",
+    "Paste:0x1002e2bf8"
+  ],
+  "confirmed_differences_fixed": [
+    "按原生产DI参数恢复最多100个原始查询结果，避免以有效/去重后的ID数替代原数组计数",
+    "与原完成路径一致，在结果publish前显式Task.checkCancellation"
+  ],
+  "tests": {
+    "passed": true,
+    "total": 104,
+    "scope": "Python source/ledger/provenance and static instruction/import checks only; no Swift/Spotlight/application execution",
+    "added_in_round": 15
+  },
+  "new_fully_migrated_function_count": 0,
+  "historical_ledger": {
+    "numerator": 1648,
+    "denominator": 81123,
+    "percent": 2.0315,
+    "stale_evidence": true
+  },
+  "current_partial_count": 434,
+  "compiled": false,
+  "application_executed": false,
+  "original_binary_executed": false,
+  "user_data_modified": false,
+  "network_used": false,
+  "committed": false,
+  "pushed": false,
+  "module_complete": false,
+  "remaining_differences": [
+    "原SearchViewModel120ms Combine/context生命周期、索引重建actor/DI与事件时序仍有差异",
+    "独立store namespace/filterQueries、UUID集合/多board投影及optional/isUpdate仍适配",
+    "query结果数组与原实体fetch消费者的完整排序/重复/缺项合同尚未闭合",
+    "错误传播、取消/重建竞争、候选提供者和完整FilterBrowser仍待后续核对；本轮未宣称真实查询回归"
+  ],
+  "next_module": "P1 search_and_filter",
+  "next_work": [
+    "继续查询结果到实体列表的映射、120ms投影和建议/过滤浏览器的真实消费者",
+    "优先以原证据修确认差异；保留全部输入不变的旧合同快速复用规则"
+  ],
+  "inventory_checked": {
+    "mapped_reference_records_checked": 2091,
+    "mapping_states": {
+      "partial": 434,
+      "migrated": 1648,
+      "excluded_by_scope": 9
+    },
+    "reference_issue_counts": {
+      "missing_address_in_evidence": 12
+    },
+    "unchanged_source_review_count": 328
+  }
+}

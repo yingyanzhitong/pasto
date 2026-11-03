@@ -1,0 +1,471 @@
+--- phase-91-before/replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift
++++ replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift
+@@ -193,6 +193,7 @@
+     private let text: ReplicaInlinePreviewTextView
+     private weak var state: ReplicaUIState?
+     private let itemID: UUID
++    private let editInput: ClipboardRestoreItem?
+     private var nativeItemObservation: ClipboardItemObservation?
+     private var itemObservation: AnyCancellable?
+     private var contentObservation: AnyCancellable?
+@@ -208,6 +209,7 @@
+     init(state: ReplicaUIState, item: ClipboardItem, input: ClipboardRestoreItem?) {
+         self.state = state
+         itemID = item.id
++        editInput = input
+         let nativeSource: ClipboardItemObservation?
+         if let input { nativeSource = input.observeItem() }
+         else { nativeSource = state.store.observeItem(id: item.id) }
+@@ -321,8 +323,12 @@
+         text.isEditable = false
+         guard let state else { return }
+         do {
+-            try state.store.updateTextPreviewItem(id: itemID,
+-                attributedString: OriginalPreviewAttributedText.f_100212ccc(editor: text))
++            let content = OriginalPreviewAttributedText.f_100212ccc(editor: text)
++            if let editInput {
++                try state.store.updateTextPreviewItem(editInput, attributedString: content)
++            } else {
++                try state.store.updateTextPreviewItem(id: itemID, attributedString: content)
++            }
+             state.normalizeSelection()
+         } catch { state.controller?.presentError(error) }
+         reloadStoredContent()
+--- phase-91-before/replica/Sources/PastoCore/ClipboardRestoreItem.swift
++++ replica/Sources/PastoCore/ClipboardRestoreItem.swift
+@@ -5,11 +5,13 @@
+ @MainActor
+ public struct ClipboardRestoreItem {
+     public let id: UUID
++    let nativeObject: PastoItemEntity?
+     private let resolve: () -> ClipboardItem
+     private let makeObservation: () -> ClipboardItemObservation?
+ 
+     init(id: UUID, object: PastoItemEntity) {
+         self.id = id
++        nativeObject = object
+         resolve = {
+             guard let item = try? ClipboardPersistence.item(object) else { fatalError("Missing restore item content") }
+             return item
+@@ -19,6 +21,7 @@
+ 
+     public init(item: ClipboardItem) {
+         id = item.id
++        nativeObject = nil
+         resolve = { item }
+         makeObservation = { nil }
+     }
+--- phase-91-before/replica/Sources/PastoCore/ClipboardStore.swift
++++ replica/Sources/PastoCore/ClipboardStore.swift
+@@ -998,8 +998,18 @@
+     }
+ 
+     public func updateTextPreviewItem(id: UUID, attributedString: NSAttributedString) throws {
++        try updateTextPreviewItem(id: id, input: nil, attributedString: attributedString)
++    }
++
++    public func updateTextPreviewItem(_ input: ClipboardRestoreItem, attributedString: NSAttributedString) throws {
++        try updateTextPreviewItem(id: input.id, input: input, attributedString: attributedString)
++    }
++
++    private func updateTextPreviewItem(id: UUID, input: ClipboardRestoreItem?, attributedString: NSAttributedString) throws {
+         try mutateInTransaction { state, transaction in
+-            guard let i = state.items.firstIndex(where: { $0.id == id }) else { throw ClipboardStoreError.itemNotFound }
++            let nativeObject = input?.nativeObject
++            var index = state.items.firstIndex(where: { $0.id == id })
++            guard nativeObject != nil || index != nil else { throw ClipboardStoreError.itemNotFound }
+             let representation = OriginalTextPreviewSubmission.makeItem(attributedString)
+             let items = [representation]
+             let nativeKind = OriginalPasteboardClassification.f_10032362c(items)
+@@ -1019,15 +1029,27 @@
+             case .link: kind = .link
+             case .text: kind = types.contains(NSPasteboard.PasteboardType.rtf.rawValue) ? .richText : .text
+             }
+-            let target = try transaction.repository.prepareHistoryItems([id]).first!
+-            var item = state.items[i]
++            let target: (id: UUID, object: NSManagedObject)
++            var item: ClipboardItem
++            if let nativeObject, let input {
++                target = (id: id, object: nativeObject)
++                item = input.resolvedItem()
++                if index == nil {
++                    index = state.items.count
++                    state.items.append(item)
++                }
++            } else {
++                target = try transaction.repository.prepareHistoryItems([id]).first!
++                item = state.items[index!]
++            }
++            let i = index!
+             item.payloads = payloads
+             item.plainText = attributedString.string
+             item.kind = kind
+             item.imagePreviewMetadata = nil
+             item.rawPreview = nil
+-            // Keep the local conflict clock; the native history timestamp is unchanged.
+-            item.updatedAt = Date()
++            // Native content replacement preserves recency; retain the old value-only adapter's clock.
++            if nativeObject == nil { item.updatedAt = Date() }
+             item.nativeChecksum = checksum
+             let preferences = state.preferences
+             // Editing shares 0x100360ff8 with capture: replace data before producing its preview.
+--- phase-91-before/scripts/tests/edit_entity_input_scope_contract.py
++++ scripts/tests/edit_entity_input_scope_contract.py
+@@ -1,5 +1,6 @@
+ """Exact editor entity-input deltas, solely for earlier frozen source contracts."""
+ from pathlib import Path
++from native_edit_write_scope_contract import pre_native_edit_write
+ CHANGES = [['replica/Sources/PastoCore/ClipboardRestoreItem.swift',
+   '/// Retains the selected entity across a permission modal; content is read at restoration time.',
+   '/// Retains the selected entity for restoration and editing; consumers read its current '
+@@ -139,6 +140,7 @@
+   '        else { nativeSource = state.store.observeItem(id: item.id) }\n']]
+ 
+ def pre_edit_entity_input(source):
++    source = pre_native_edit_write(source)
+     for path, previous, current in reversed(CHANGES):
+         if current in source:
+             assert source.count(current) == 1, path
+--- phase-91-before/scripts/tests/test_p1_repair_edit_entity_input.py
++++ scripts/tests/test_p1_repair_edit_entity_input.py
+@@ -7,13 +7,14 @@
+ from test_offline_p0_contracts import body
+ from test_p0_repair_checksum_routing import original_fragment
+ from edit_entity_input_scope_contract import CHANGES,pre_edit_entity_input
++from native_edit_write_scope_contract import pre_native_edit_write,pre_native_edit_write_bytes
+ 
+ class EditEntityInputContracts(unittest.TestCase):
+     @classmethod
+     def setUpClass(cls):
+         cls.phase=ROOT/'.local/p0-repair/phase-90';cls.proof=json.loads((cls.phase/'edit-entity-contract.json').read_text());cls.base=json.loads((cls.phase/'baseline.json').read_text())
+         cls.paths=dict(handle='replica/Sources/PastoCore/ClipboardRestoreItem.swift',ui='replica/Sources/Pasto/UI/ReplicaUIController.swift',adapter='replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift')
+-        cls.src={k:(ROOT/p).read_text()for k,p in cls.paths.items()}
++        cls.src={k:pre_native_edit_write((ROOT/p).read_text())for k,p in cls.paths.items()}
+         ns={};exec((ROOT/cls.proof['decoder']['path']).read_text().split("idx={r['address']",1)[0],ns);cls.ns=ns
+     def original(self,a):
+         r=next(r for r in self.proof['original_fragments']if r['address']==a);return original_fragment((ROOT/r['path']).read_text(),a[2:])
+@@ -104,7 +105,7 @@
+         self.assertIn('itemObservation = state.store.$items.sink',self.src['adapter'])
+ 
+     def test_fourteen_exact_hunks_only_three_files_and_244_others_unchanged(self):
+-        self.assertEqual(len(CHANGES),14);sha=lambda p:hashlib.sha256((ROOT/p).read_bytes()).hexdigest()
++        self.assertEqual(len(CHANGES),14);sha=lambda p:hashlib.sha256(pre_native_edit_write_bytes(ROOT/p)).hexdigest()
+         current={str(p.relative_to(ROOT))for p in(ROOT/'replica/Sources').rglob('*')if p.is_file()}
+         self.assertEqual(current,set(self.base['production']));self.assertEqual({p for p,h in self.base['production'].items()if sha(p)!=h},set(self.paths.values()))
+         for key in self.paths:self.assertEqual(pre_edit_entity_input(self.src[key]),self.before(key))
+--- /dev/null
++++ scripts/tests/test_p1_repair_native_edit_write.py
+@@ -0,0 +1,116 @@
++"""Same captured entity for text commits, source/static checks only."""
++from pathlib import Path
++import hashlib,json,sys,unittest
++ROOT=Path(__file__).resolve().parents[2]
++sys.path[:0]=[str(ROOT/'scripts'),str(ROOT/'scripts/tests')]
++from function_ledger import source_fragments
++from test_offline_p0_contracts import body
++from test_p0_repair_checksum_routing import original_fragment
++from native_edit_write_scope_contract import CHANGES,pre_native_edit_write
++
++class NativeEditWriteContracts(unittest.TestCase):
++    @classmethod
++    def setUpClass(cls):
++        cls.phase=ROOT/'.local/p0-repair/phase-91';cls.proof=json.loads((cls.phase/'native-edit-write-contract.json').read_text());cls.base=json.loads((cls.phase/'baseline.json').read_text())
++        cls.paths=dict(handle='replica/Sources/PastoCore/ClipboardRestoreItem.swift',store='replica/Sources/PastoCore/ClipboardStore.swift',adapter='replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift')
++        cls.src={k:(ROOT/p).read_text()for k,p in cls.paths.items()};cls.worker=body(cls.src['store'],'private func updateTextPreviewItem(')
++        ns={};exec((ROOT/cls.proof['decoder']['path']).read_text().split("idx={r['address']",1)[0],ns);cls.ns=ns
++    def original(self,a):
++        r=next(r for r in self.proof['original_fragments']if r['address']==a);return original_fragment((ROOT/r['path']).read_text(),a[2:])
++    def before(self,k):return(self.phase/'before'/self.paths[k]).read_text()
++    def order(self,s,tokens):
++        p=[s.index(t)for t in tokens];self.assertEqual(p,sorted(p))
++
++    def test_six_original_fragments_binary_and_existing_native_writer_evidence_bound(self):
++        self.assertEqual(len(self.proof['original_fragments']),6)
++        for r in self.proof['original_fragments']:self.assertEqual(source_fragments(ROOT/r['path'])[r['address']]['sha256'],r['sha256'])
++        for r in [self.proof['binary'],self.proof['decoder'],self.proof['reused_write_evidence']]:self.assertEqual(hashlib.sha256((ROOT/r['path']).read_bytes()).hexdigest(),r['sha256'])
++
++    def test_actual_target_loads_and_indirect_writer_handoff_are_bound(self):
++        self.assertEqual(len(self.proof['target_handoff_words']),6)
++        rows={r['address']:r['bytes']for r in self.proof['target_handoff_words']}
++        for r in self.proof['target_handoff_words']:self.assertEqual(self.ns['read'](int(r['address'],16),4).hex(),r['bytes'])
++        self.assertEqual(rows['0x1003c0fe4'],'541f40f9');self.assertEqual(rows['0x1003c1088'],'531f40f9')
++        for a in ['0x1003c105c','0x1003c1180']:self.assertEqual(rows[a],'00013fd6')
++        source=self.original('0x1003c0e50');self.assertEqual(source.count('*(undefined8 *)(param_4 + 0x38)'),2)
++
++    def test_real_writing_content_slot_targets_existing_entity_update_not_insertion_lookup(self):
++        r=self.proof['writing_content_slot'];v,ch=self.ns['reachable_pointer'](int(r['address'],16));self.assertEqual(ch,r['chain']);self.assertEqual(self.ns['read'](int(r['address'],16),8).hex(),r['bytes']);self.assertEqual(hex(self.ns['base']+(v&((1<<36)-1))),r['target']);self.assertEqual(r['target'],'0x100363ff0')
++        self.assertIn('FUN_100360ff8()',self.original('0x100363ff0'));self.assertNotIn('FUN_1003611b0',self.original('0x100363ff0'))
++
++    def test_original_nil_checksum_short_circuits_all_writes_and_no_dates_or_metadata(self):
++        source=self.original('0x100360ff8')
++        self.order(source,['FUN_1003216bc(param_2)','if (uVar5 != 0)','objc_stub::setRawType_','objc_stub::setChecksum_','objc_stub::deleteObject_','objc_stub::setData_','FUN_100322504('])
++        for token in ['Date::','setTimestamp_','setTitle_','setSourceApplication_','identifier','FUN_1003214c8']:self.assertNotIn(token,source)
++
++    def test_handle_preserves_native_object_explicitly_and_legacy_has_none(self):
++        self.assertIn('    let nativeObject: PastoItemEntity?',self.src['handle']);self.assertNotIn('public let nativeObject',self.src['handle'])
++        native=body(self.src['handle'],'init(id: UUID, object: PastoItemEntity)');self.assertIn('nativeObject = object',native)
++        legacy=body(self.src['handle'],'public init(item: ClipboardItem)');self.assertIn('nativeObject = nil',legacy)
++        for marker in ['public func resolvedItem()','public func observeItem()']:self.assertEqual(body(self.src['handle'],marker),body(self.before('handle'),marker))
++
++    def test_text_view_retains_edit_input_and_extracts_content_once_before_dispatch(self):
++        s=self.src['adapter'];self.assertIn('private let editInput: ClipboardRestoreItem?',s)
++        init=body(s,'init(state: ReplicaUIState, item: ClipboardItem, input: ClipboardRestoreItem?)');self.assertIn('editInput = input',init)
++        commit=body(s,'func commitPreviewEditing()');self.assertEqual(commit.count('f_100212ccc(editor: text)'),1)
++        self.order(commit,['text.isEditable = false','guard let state','let content = OriginalPreviewAttributedText.f_100212ccc(editor: text)','if let editInput','updateTextPreviewItem(editInput, attributedString: content)','} else {','updateTextPreviewItem(id: itemID, attributedString: content)','state.normalizeSelection()','catch { state.controller?.presentError(error) }','reloadStoredContent()'])
++        self.assertNotIn('observeItem(',commit);self.assertNotIn('appliedRestoreItems',commit)
++
++    def test_native_and_id_entrypoints_share_one_transaction_worker(self):
++        id_entry=body(self.src['store'],'public func updateTextPreviewItem(id: UUID, attributedString:')
++        native_entry=body(self.src['store'],'public func updateTextPreviewItem(_ input:')
++        self.assertEqual(id_entry,'{\n        try updateTextPreviewItem(id: id, input: nil, attributedString: attributedString)\n    }')
++        self.assertEqual(native_entry,'{\n        try updateTextPreviewItem(id: input.id, input: input, attributedString: attributedString)\n    }')
++        self.assertEqual(self.worker.count('try mutateInTransaction'),1)
++        for token in ['persistence.commit','save(','reset(','rollback(','Task','DispatchQueue']:self.assertNotIn(token,self.worker)
++
++    def test_native_cache_miss_is_not_a_target_failure_and_checksum_precedes_any_change(self):
++        self.order(self.worker,['let nativeObject = input?.nativeObject','var index = state.items.firstIndex','guard nativeObject != nil || index != nil else','OriginalTextPreviewSubmission.makeItem(attributedString)','guard let checksum = OriginalPasteboardChecksums.f_1003216bc(items, kind: nativeKind) else { return }','let target: (id: UUID, object: NSManagedObject)','input.resolvedItem()','state.items.append(item)','transaction.repository.replaceCapturedItemData('])
++        self.assertEqual(self.worker.count('state.items.append(item)'),1)
++
++    def test_native_target_uses_same_entity_current_metadata_and_no_id_lookup(self):
++        native=body(self.worker,'if let nativeObject, let input')
++        self.order(native,['target = (id: id, object: nativeObject)','item = input.resolvedItem()','if index == nil','index = state.items.count','state.items.append(item)'])
++        for token in ['prepareHistoryItems','fetch(','existingObject(','Date()','state.items[index!]']:self.assertNotIn(token,native)
++        self.assertIn('} else {\n                target = try transaction.repository.prepareHistoryItems([id]).first!\n                item = state.items[index!]\n            }',self.worker)
++
++    def test_content_tail_and_preview_writer_order_preserved_except_native_clock(self):
++        old=body(self.before('store'),'public func updateTextPreviewItem(');start='            item.payloads = payloads\n';end='            state.items[i] = item\n';a=old[old.index(start):old.index(end)+len(end)];b=self.worker[self.worker.index(start):self.worker.index(end)+len(end)]
++        b=b.replace('            // Native content replacement preserves recency; retain the old value-only adapter\'s clock.\n            if nativeObject == nil { item.updatedAt = Date() }\n','            // Keep the local conflict clock; the native history timestamp is unchanged.\n            item.updatedAt = Date()\n')
++        self.assertEqual(a,b)
++        self.order(self.worker,['item.nativeChecksum = checksum','transaction.repository.replaceCapturedItemData(target,','item = Self.withPreviewMetadata(item,','return item.rawPreview','state.items[i] = item'])
++
++    def test_native_edits_preserve_time_and_old_value_adapter_only_keeps_date(self):
++        self.assertEqual(self.worker.count('Date()'),1)
++        self.assertEqual(body(self.worker,'if nativeObject == nil'),'{ item.updatedAt = Date() }')
++        for token in ['item.createdAt =','item.isInHistory =','item.title =','item.sourceName =','item.nativeIdentifier =']:self.assertNotIn(token,self.worker)
++        self.assertIn('item = input.resolvedItem()',self.worker)
++
++    def test_unchanged_local_merge_uses_content_difference_without_timestamp_winner(self):
++        merge=body(self.src['store'],'private func merge(_ local:');payload=body(merge,'if local.payloads != base.payloads')
++        self.assertIn('value.payloads = local.payloads',payload);self.assertNotIn('updatedAt',payload)
++        generic=body(self.src['store'],'private func mergedEntities<');self.assertIn('for value in local where old[value.id] != value',generic)
++        self.assertNotIn('updatedAt',generic)
++        for r in self.proof['unchanged_business_methods']:
++            current=body((ROOT/r['path']).read_text(),r['symbol']);self.assertEqual(hashlib.sha256(current.encode()).hexdigest(),r['sha256']);self.assertEqual(current,body((self.phase/'before'/r['path']).read_text(),r['symbol']))
++
++    def test_shared_native_primitive_and_commit_replacement_guard_unchanged(self):
++        source=(ROOT/'replica/Sources/PastoCore/ClipboardPersistence.swift').read_text();replace=body(source,'func replaceCapturedItemData(')
++        self.order(replace,['itemData.replace(on: target.object','replacedItemDataIDs.insert(target.id)'])
++        commit=body(source,'func commit<T>(');self.assertIn('if !replacements.contains(item.id) && (old?.payloads != item.payloads',commit)
++        self.assertIn('updatingKeys: replacements.map(\\.uuidString)',commit)
++        self.assertNotIn('restoreHistoryItems',self.worker)
++
++    def test_eight_reviewed_hunks_only_three_existing_production_files(self):
++        self.assertEqual(len(CHANGES),8);sha=lambda p:hashlib.sha256((ROOT/p).read_bytes()).hexdigest()
++        files={str(p.relative_to(ROOT))for p in(ROOT/'replica/Sources').rglob('*')if p.is_file()};self.assertEqual(files,set(self.base['production']))
++        self.assertEqual({p for p,h in self.base['production'].items()if sha(p)!=h},set(self.paths.values()))
++        for key in self.paths:self.assertEqual(pre_native_edit_write(self.src[key]),self.before(key))
++        for group in ['current_sources','shared_sources']:
++            for p,h in self.proof[group].items():self.assertEqual(sha(p),h)
++        for p,h in self.proof['shared_sources'].items():self.assertEqual(h,self.base['production'][p])
++        for p in ['replica/Package.swift','package.json']:self.assertEqual(sha(p),self.base['other'][p])
++
++    def test_full_generic_metadata_entity_di_and_nontext_routes_remain_open(self):
++        self.assertFalse(self.proof['runtime_executed']);self.assertFalse(self.proof['full_function_migration_verified']);self.assertEqual(self.proof['new_difference_records'],0)
++        for token in ['Generic Store','Ordinary/popover','mixing across','network runtime','3544dc']:self.assertTrue(any(token in r for r in self.proof['remaining']),token)
+--- /dev/null
++++ scripts/tests/native_edit_write_scope_contract.py
+@@ -0,0 +1,194 @@
++"""Exact captured-entity text-write deltas for earlier frozen source contracts only."""
++from pathlib import Path
++CHANGES = [['replica/Sources/PastoCore/ClipboardRestoreItem.swift',
++  '    public let id: UUID\n',
++  '    public let id: UUID\n    let nativeObject: PastoItemEntity?\n'],
++ ['replica/Sources/PastoCore/ClipboardRestoreItem.swift',
++  '        self.id = id\n',
++  '        self.id = id\n        nativeObject = object\n'],
++ ['replica/Sources/PastoCore/ClipboardRestoreItem.swift',
++  '        id = item.id\n',
++  '        id = item.id\n        nativeObject = nil\n'],
++ ['replica/Sources/PastoCore/ClipboardStore.swift',
++  '    public func updateTextPreviewItem(id: UUID, attributedString: NSAttributedString) throws {\n'
++  '        try mutateInTransaction { state, transaction in\n'
++  '            guard let i = state.items.firstIndex(where: { $0.id == id }) else { throw '
++  'ClipboardStoreError.itemNotFound }\n'
++  '            let representation = OriginalTextPreviewSubmission.makeItem(attributedString)\n'
++  '            let items = [representation]\n'
++  '            let nativeKind = OriginalPasteboardClassification.f_10032362c(items)\n'
++  '            guard let checksum = OriginalPasteboardChecksums.f_1003216bc(items, kind: '
++  'nativeKind) else { return }\n'
++  '            let types = representation.f_10037da6c()\n'
++  '            var payloads: [String: Data] = [:]\n'
++  '            for type in types {\n'
++  '                if let data = representation.f_10037d810(forType: type) { payloads[type] = data '
++  '}\n'
++  '            }\n'
++  '            payloads[Self.orderedPasteboardTypesPayloadKey] = try JSONEncoder().encode(types)\n'
++  '            let kind: ClipboardKind\n'
++  '            switch nativeKind {\n'
++  '            case .unknown: kind = .unknown\n'
++  '            case .image: kind = .image\n'
++  '            case .color: kind = .color\n'
++  '            case .files: kind = .files\n'
++  '            case .link: kind = .link\n'
++  '            case .text: kind = types.contains(NSPasteboard.PasteboardType.rtf.rawValue) ? '
++  '.richText : .text\n'
++  '            }\n'
++  '            let target = try transaction.repository.prepareHistoryItems([id]).first!\n'
++  '            var item = state.items[i]\n'
++  '            item.payloads = payloads\n'
++  '            item.plainText = attributedString.string\n'
++  '            item.kind = kind\n'
++  '            item.imagePreviewMetadata = nil\n'
++  '            item.rawPreview = nil\n'
++  '            // Keep the local conflict clock; the native history timestamp is unchanged.\n'
++  '            item.updatedAt = Date()\n'
++  '            item.nativeChecksum = checksum\n'
++  '            let preferences = state.preferences\n'
++  '            // Editing shares 0x100360ff8 with capture: replace data before producing its '
++  'preview.\n'
++  '            transaction.repository.replaceCapturedItemData(target, items: items, kind: '
++  'nativeKind, checksum: checksum,\n'
++  '                useBinaryPlist: preferences.useBinaryPlist) {\n'
++  '                    item = Self.withPreviewMetadata(item, binaryPropertyList: '
++  'preferences.useBinaryPlist,\n'
++  '                        preferQuickLookThumbnails: preferences.fileQuickLookThumbnailsEnabled,\n'
++  '                        generateMissingContentPreview: true)\n'
++  '                    return item.rawPreview\n'
++  '                }\n'
++  '            state.items[i] = item\n'
++  '        }\n'
++  '    }\n'
++  '\n',
++  '    public func updateTextPreviewItem(id: UUID, attributedString: NSAttributedString) throws {\n'
++  '        try updateTextPreviewItem(id: id, input: nil, attributedString: attributedString)\n'
++  '    }\n'
++  '\n'
++  '    public func updateTextPreviewItem(_ input: ClipboardRestoreItem, attributedString: '
++  'NSAttributedString) throws {\n'
++  '        try updateTextPreviewItem(id: input.id, input: input, attributedString: '
++  'attributedString)\n'
++  '    }\n'
++  '\n'
++  '    private func updateTextPreviewItem(id: UUID, input: ClipboardRestoreItem?, '
++  'attributedString: NSAttributedString) throws {\n'
++  '        try mutateInTransaction { state, transaction in\n'
++  '            let nativeObject = input?.nativeObject\n'
++  '            var index = state.items.firstIndex(where: { $0.id == id })\n'
++  '            guard nativeObject != nil || index != nil else { throw '
++  'ClipboardStoreError.itemNotFound }\n'
++  '            let representation = OriginalTextPreviewSubmission.makeItem(attributedString)\n'
++  '            let items = [representation]\n'
++  '            let nativeKind = OriginalPasteboardClassification.f_10032362c(items)\n'
++  '            guard let checksum = OriginalPasteboardChecksums.f_1003216bc(items, kind: '
++  'nativeKind) else { return }\n'
++  '            let types = representation.f_10037da6c()\n'
++  '            var payloads: [String: Data] = [:]\n'
++  '            for type in types {\n'
++  '                if let data = representation.f_10037d810(forType: type) { payloads[type] = data '
++  '}\n'
++  '            }\n'
++  '            payloads[Self.orderedPasteboardTypesPayloadKey] = try JSONEncoder().encode(types)\n'
++  '            let kind: ClipboardKind\n'
++  '            switch nativeKind {\n'
++  '            case .unknown: kind = .unknown\n'
++  '            case .image: kind = .image\n'
++  '            case .color: kind = .color\n'
++  '            case .files: kind = .files\n'
++  '            case .link: kind = .link\n'
++  '            case .text: kind = types.contains(NSPasteboard.PasteboardType.rtf.rawValue) ? '
++  '.richText : .text\n'
++  '            }\n'
++  '            let target: (id: UUID, object: NSManagedObject)\n'
++  '            var item: ClipboardItem\n'
++  '            if let nativeObject, let input {\n'
++  '                target = (id: id, object: nativeObject)\n'
++  '                item = input.resolvedItem()\n'
++  '                if index == nil {\n'
++  '                    index = state.items.count\n'
++  '                    state.items.append(item)\n'
++  '                }\n'
++  '            } else {\n'
++  '                target = try transaction.repository.prepareHistoryItems([id]).first!\n'
++  '                item = state.items[index!]\n'
++  '            }\n'
++  '            let i = index!\n'
++  '            item.payloads = payloads\n'
++  '            item.plainText = attributedString.string\n'
++  '            item.kind = kind\n'
++  '            item.imagePreviewMetadata = nil\n'
++  '            item.rawPreview = nil\n'
++  '            // Keep the local conflict clock; the native history timestamp is unchanged.\n'
++  '            item.updatedAt = Date()\n'
++  '            item.nativeChecksum = checksum\n'
++  '            let preferences = state.preferences\n'
++  '            // Editing shares 0x100360ff8 with capture: replace data before producing its '
++  'preview.\n'
++  '            transaction.repository.replaceCapturedItemData(target, items: items, kind: '
++  'nativeKind, checksum: checksum,\n'
++  '                useBinaryPlist: preferences.useBinaryPlist) {\n'
++  '                    item = Self.withPreviewMetadata(item, binaryPropertyList: '
++  'preferences.useBinaryPlist,\n'
++  '                        preferQuickLookThumbnails: preferences.fileQuickLookThumbnailsEnabled,\n'
++  '                        generateMissingContentPreview: true)\n'
++  '                    return item.rawPreview\n'
++  '                }\n'
++  '            state.items[i] = item\n'
++  '        }\n'
++  '    }\n'
++  '\n'],
++ ['replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift',
++  '    private let itemID: UUID\n'
++  '    private var nativeItemObservation: ClipboardItemObservation?\n',
++  '    private let itemID: UUID\n'
++  '    private let editInput: ClipboardRestoreItem?\n'
++  '    private var nativeItemObservation: ClipboardItemObservation?\n'],
++ ['replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift',
++  '        itemID = item.id\n        let nativeSource: ClipboardItemObservation?\n',
++  '        itemID = item.id\n'
++  '        editInput = input\n'
++  '        let nativeSource: ClipboardItemObservation?\n'],
++ ['replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift',
++  '    func commitPreviewEditing() {\n'
++  '        text.isEditable = false\n'
++  '        guard let state else { return }\n'
++  '        do {\n'
++  '            try state.store.updateTextPreviewItem(id: itemID,\n'
++  '                attributedString: OriginalPreviewAttributedText.f_100212ccc(editor: text))\n'
++  '            state.normalizeSelection()\n'
++  '        } catch { state.controller?.presentError(error) }\n'
++  '        reloadStoredContent()\n'
++  '    }\n',
++  '    func commitPreviewEditing() {\n'
++  '        text.isEditable = false\n'
++  '        guard let state else { return }\n'
++  '        do {\n'
++  '            let content = OriginalPreviewAttributedText.f_100212ccc(editor: text)\n'
++  '            if let editInput {\n'
++  '                try state.store.updateTextPreviewItem(editInput, attributedString: content)\n'
++  '            } else {\n'
++  '                try state.store.updateTextPreviewItem(id: itemID, attributedString: content)\n'
++  '            }\n'
++  '            state.normalizeSelection()\n'
++  '        } catch { state.controller?.presentError(error) }\n'
++  '        reloadStoredContent()\n'
++  '    }\n'],
++ ('replica/Sources/PastoCore/ClipboardStore.swift',
++  '            // Keep the local conflict clock; the native history timestamp is unchanged.\n'
++  '            item.updatedAt = Date()\n',
++  '            // Native content replacement preserves recency; retain the old value-only '
++  "adapter's clock.\n"
++  '            if nativeObject == nil { item.updatedAt = Date() }\n')]
++
++def pre_native_edit_write(source):
++    for path, previous, current in reversed(CHANGES):
++        if current in source:
++            assert source.count(current) == 1, path
++            source = source.replace(current, previous, 1)
++    return source
++
++def pre_native_edit_write_bytes(path):
++    path=Path(path);raw=path.read_bytes()
++    return pre_native_edit_write(raw.decode()).encode() if path.suffix == '.swift' else raw

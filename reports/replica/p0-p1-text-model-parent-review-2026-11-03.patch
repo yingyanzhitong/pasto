@@ -1,0 +1,165 @@
+--- replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift
++++ replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift
+@@ -240,12 +240,15 @@
+     private weak var state: ReplicaUIState?
+     private let itemID: UUID
+     private let editInput: ClipboardRestoreItem?
++    private let nativeTextModel: OriginalTextPreviewModel?
+     private var nativeItemObservation: ClipboardItemObservation?
+     private var itemObservation: AnyCancellable?
+     private var contentObservation: AnyCancellable?
+     private var storageBridge: OriginalPreviewTextStorageBridge?
+-    private var originalText: NSAttributedString
+-    private var editingText: NSAttributedString
++    private var fallbackOriginalText: NSAttributedString
++    private var fallbackEditingText: NSAttributedString
++    private var originalText: NSAttributedString { nativeTextModel?.originalText ?? fallbackOriginalText }
++    private var editingText: NSAttributedString { nativeTextModel?.editingText ?? fallbackEditingText }
+     private(set) var canCommit = false
+     var onCanCommitEditing: ((Bool) -> Void)?
+     var onCancel: (() -> Void)?
+@@ -257,18 +260,23 @@
+         guard let itemID = input?.id ?? item?.id else { preconditionFailure("Missing preview input") }
+         self.itemID = itemID
+         editInput = input
++        let nativeModel = input.flatMap { OriginalTextPreviewModel(input: $0) }
++        nativeTextModel = nativeModel
+         let nativeSource: ClipboardItemObservation?
+-        if let input { nativeSource = input.observeItem() }
++        if nativeModel != nil { nativeSource = nil }
++        else if let input { nativeSource = input.observeItem() }
+         else { nativeSource = state.store.observeItem(id: itemID) }
+         nativeItemObservation = nativeSource
+         let initial: NSAttributedString
+-        if let nativeSource {
++        if let nativeModel {
++            initial = nativeModel.originalText
++        } else if let nativeSource {
+             initial = nativeSource.attributedText ?? NSAttributedString(string: "")
+         } else if let item = item ?? input?.resolvedItem() {
+             initial = Self.attributedContent(item)
+         } else { preconditionFailure("Missing preview content") }
+-        originalText = initial
+-        editingText = OriginalPreviewAttributedText.normalizedEditingText(initial)
++        fallbackOriginalText = initial
++        fallbackEditingText = nativeModel?.editingText ?? OriginalPreviewAttributedText.normalizedEditingText(initial)
+         document = ReplicaRichTextDocument(content: initial)
+         text = ReplicaInlinePreviewTextView(frame: .zero)
+         super.init(frame: .zero)
+@@ -309,7 +317,12 @@
+                 self.onCanCommitEditing?(self.canCommit)
+             }
+         }
+-        if let nativeSource {
++        if let nativeModel {
++            nativeModel.onChange = { [weak self] in
++                guard let self, !self.text.isEditable else { return }
++                self.displayStoredModel()
++            }
++        } else if let nativeSource {
+             nativeSource.onTextChange = { [weak self] current in
+                 self?.receiveStoredText(current)
+             }
+@@ -372,7 +385,7 @@
+         guard let state else { return }
+         do {
+             let content = OriginalPreviewAttributedText.f_100212ccc(editor: text)
+-            if let editInput {
++            if let editInput = nativeTextModel?.item ?? editInput {
+                 try state.store.updateTextPreviewItem(editInput, attributedString: content)
+             } else {
+                 try state.store.updateTextPreviewItem(id: itemID, attributedString: content)
+@@ -385,7 +398,9 @@
+     }
+ 
+     private func reloadStoredContent() {
+-        if let nativeItemObservation {
++        if let nativeTextModel {
++            nativeTextModel.reload()
++        } else if let nativeItemObservation {
+             guard let current = nativeItemObservation.attributedText else { return }
+             replaceStoredText(current)
+         } else {
+@@ -410,9 +425,9 @@
+     }
+ 
+     private func replaceStoredText(_ text: NSAttributedString) {
+-        // Paste f_1003c04f0 refreshes both model values even while the editor is active.
+-        originalText = text
+-        editingText = OriginalPreviewAttributedText.normalizedEditingText(originalText)
++        // Legacy value input keeps its existing two stored baselines.
++        fallbackOriginalText = text
++        fallbackEditingText = OriginalPreviewAttributedText.normalizedEditingText(fallbackOriginalText)
+     }
+ 
+     private func displayStoredModel() {
+--- /dev/null
++++ replica/Sources/PastoCore/OriginalTextPreviewModel.swift
+@@ -0,0 +1,67 @@
++import AppKit
++import Combine
++
++/// The text model owns its input and derived values independently of the preview view.
++@MainActor
++public final class OriginalTextPreviewModel {
++    public var onChange: (() -> Void)?
++    public private(set) var originalText = NSAttributedString(string: "")
++    public private(set) var editingText = NSAttributedString(string: "")
++    private var input: ClipboardRestoreItem
++    private var observation: AnyCancellable?
++    public var item: ClipboardRestoreItem { input }
++
++    public init?(input: ClipboardRestoreItem) {
++        guard input.hasNativeEntity else { return nil }
++        self.input = input
++        observation = input.observeChanges { [weak self] current in
++            Self.receive(current, from: { [weak self] in self })
++        }
++        reload()
++    }
++
++    // 3c05d4: read the held entity's first representation, then replace both model values.
++    public func reload() {
++        guard let object = input.nativeObject else { preconditionFailure("Text model requires a native item") }
++        let items = ClipboardItemDataPersistence.readItems(from: object) ?? []
++        originalText = items.first?.f_10037d33c() ?? NSAttributedString(string: "")
++        editingText = OriginalPreviewAttributedText.normalizedEditingText(originalText)
++    }
++
++    // 3c04f0: each phase has its own strong-owner scope; retain the callback, not the owner.
++    private static func receive(_ current: ClipboardRestoreItem,
++                                from loadOwner: () -> OriginalTextPreviewModel?) {
++        guard !current.isDeleted else { return }
++        replaceInputAndReleasePrevious(current, from: loadOwner)
++        reload(from: loadOwner)
++        let callback = changeCallback(from: loadOwner)
++        callback?()
++    }
++
++    @inline(never)
++    private static func replaceInputAndReleasePrevious(_ current: ClipboardRestoreItem,
++                                                       from loadOwner: () -> OriginalTextPreviewModel?) {
++        withExtendedLifetime(replaceInput(current, from: loadOwner)) {}
++    }
++
++    @inline(never)
++    private static func replaceInput(_ current: ClipboardRestoreItem,
++                                     from loadOwner: () -> OriginalTextPreviewModel?) -> ClipboardRestoreItem? {
++        guard let owner = loadOwner() else { return nil }
++        let previous = owner.input
++        owner.input = current
++        return previous
++    }
++
++    @inline(never)
++    private static func reload(from loadOwner: () -> OriginalTextPreviewModel?) {
++        guard let owner = loadOwner() else { return }
++        owner.reload()
++    }
++
++    @inline(never)
++    private static func changeCallback(from loadOwner: () -> OriginalTextPreviewModel?) -> (() -> Void)? {
++        guard let owner = loadOwner() else { return nil }
++        return owner.onChange
++    }
++}

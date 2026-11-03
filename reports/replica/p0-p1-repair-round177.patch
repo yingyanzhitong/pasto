@@ -1,0 +1,143 @@
+--- a/replica/Sources/Pasto/UI/ReplicaUIController.swift
++++ b/replica/Sources/Pasto/UI/ReplicaUIController.swift
+@@ -193,29 +193,6 @@
+         } else {
+             applySearchInput(nodes: nodes, text: text, filters: filters)
+         }
+-    }
+-
+-    func hasSearchFilter(_ selection: ReplicaSearchFilterChip.Selection) -> Bool {
+-        searchQueryNodes.contains(selection.queryNode)
+-    }
+-
+-    // f006e80 -> f041860 -> f2f7744: toggle exact filter nodes without rebuilding text order.
+-    func toggleSearchFilter(_ selection: ReplicaSearchFilterChip.Selection) {
+-        let filter = selection.queryNode
+-        var nodes = searchQueryNodes
+-        var filters = searchFilters.filter { $0.queryNode != filter }
+-        if nodes.contains(filter) {
+-            nodes.removeAll { $0 == filter }
+-        } else {
+-            nodes.append(filter)
+-            filters.append(selection)
+-        }
+-        nodes = OriginalSearchQueryNormalization.f_1002da16c(nodes, flag: 0)
+-        if let owner = toolbarOwner {
+-            owner.applySearchQuery(nodes)
+-            return
+-        }
+-        applySearchInput(nodes: nodes, text: query, filters: filters)
+     }
+ 
+     var isSearchQueryEmpty: Bool { OriginalSearchQuery.f_1002ddcf0(searchQueryNodes) }
+--- a/replica/Sources/Pasto/UI/FilterBrowser.swift
++++ b/replica/Sources/Pasto/UI/FilterBrowser.swift
+@@ -73,10 +73,32 @@
+ @MainActor
+ private final class ReplicaFilterBrowserModel: ObservableObject {
+     @Published private(set) var sections: [ReplicaFilterBrowser.Section] = []
+-
+-    init(load: @escaping @MainActor () -> [ReplicaFilterBrowser.Section]) {
++    @Published private(set) var query: [OriginalSearchQueryNode]
++    private let onQueryChanged: ([OriginalSearchQueryNode]) -> Void
++
++    init(query: [OriginalSearchQueryNode], load: @escaping @MainActor () -> [ReplicaFilterBrowser.Section],
++         onQueryChanged: @escaping ([OriginalSearchQueryNode]) -> Void) {
++        self.query = query
++        self.onQueryChanged = onQueryChanged
+         // The original task retains its view model until loading/publication finishes.
+         Task { @MainActor [self] in sections = load() }
++    }
++
++    func hasSearchFilter(_ selection: ReplicaSearchFilterChip.Selection) -> Bool {
++        query.contains(selection.queryNode)
++    }
++
++    // 006e80 updates the model query before delivering it to the originating SearchBar.
++    func toggleSearchFilter(_ selection: ReplicaSearchFilterChip.Selection) {
++        let filter = selection.queryNode
++        var nodes = query
++        if nodes.contains(filter) {
++            nodes.removeAll { $0 == filter }
++        } else {
++            nodes.append(filter)
++        }
++        query = nodes
++        onQueryChanged(query)
+     }
+ }
+ 
+@@ -105,7 +127,7 @@
+ 
+     private var visibleSections: [(section: Section, entries: [Entry])] {
+         sections.compactMap { section in
+-            let choices = section.choices.filter { !hideApplied || !state.hasSearchFilter($0) }
++            let choices = section.choices.filter { !hideApplied || !model.hasSearchFilter($0) }
+             guard !choices.isEmpty else { return nil }
+             var entries = (choices.count >= 11 && !expanded.contains(section.id) ? Array(choices.prefix(8)) : choices)
+                 .map { Entry(id: String(describing: $0), selection: $0, section: section.id) }
+@@ -154,7 +176,7 @@
+         Group {
+             if let selection = entry.selection {
+                 let chip = ReplicaFilterMatching.chip(selection, store: state.store)
+-                FilterView(chip: chip, applied: state.hasSearchFilter(selection)) { activate(entry) }
++                FilterView(chip: chip, applied: model.hasSearchFilter(selection)) { activate(entry) }
+             } else {
+                 Button { activate(entry) } label: {
+                     HStack(spacing: 8) {
+@@ -209,7 +231,7 @@
+             selectedIndex = nil
+             return
+         }
+-        state.toggleSearchFilter(selection)
++        model.toggleSearchFilter(selection)
+         if let modifierFlags {
+             if !modifierFlags.contains(.command) { close() }
+         } else if !NSEvent.modifierFlags.contains(.command) { close() }
+@@ -302,6 +324,9 @@
+ 
+     func showFilterBrowser(relativeTo button: NSButton) {
+         if let filterBrowserPopover, filterBrowserPopover.isDisplayed { filterBrowserPopover.close(); return }
++        var ancestor: NSView? = button
++        while let view = ancestor, !(view is OriginalPanelSearchBar) { ancestor = view.superview }
++        guard let searchBar = ancestor as? OriginalPanelSearchBar else { return }
+         let popover = OriginalFilterBrowserPopover()
+         let field = button.superview as? OriginalSearchField
+         popover.onWillClose = { [weak self, weak field] in
+@@ -312,8 +337,11 @@
+             field?.f_1000457cc()
+         }
+         let state = self.state
++        let initialQuery = searchBar.filterQuerySnapshot
+         let hideApplied = NSEvent.modifierFlags.contains(.option)
+-        let model = ReplicaFilterBrowserModel(load: { Self.filterBrowserSections(filters: state.availableSearchFilters()) })
++        let model = ReplicaFilterBrowserModel(query: initialQuery,
++            load: { Self.filterBrowserSections(filters: state.availableSearchFilters()) },
++            onQueryChanged: { [weak searchBar] query in searchBar?.applySearchQuery(query) })
+         let content = ReplicaFilterBrowser(state: state, model: model,
+             hideApplied: hideApplied, close: { [weak popover] in popover?.close() })
+         let controller = NSHostingController(rootView: content)
+--- a/replica/Sources/Pasto/UI/SearchEditor.swift
++++ b/replica/Sources/Pasto/UI/SearchEditor.swift
+@@ -376,6 +376,7 @@
+             parent.onInputChange(text, renderedFilters, currentNodes)
+         }
+ 
++        var querySnapshot: [OriginalSearchQueryNode] { currentNodes }
+         var isQueryEmpty: Bool { OriginalSearchQuery.f_1002ddcf0(currentNodes) }
+ 
+         func attach(_ field: SearchField, editor: SearchTextView) {
+--- a/replica/Sources/Pasto/UI/OriginalPanelToolbar.swift
++++ b/replica/Sources/Pasto/UI/OriginalPanelToolbar.swift
+@@ -286,6 +286,11 @@
+         if window != nil, isActive { requestFocus() }
+     }
+ 
++    var filterQuerySnapshot: [OriginalSearchQueryNode] {
++        guard let coordinator else { preconditionFailure("Search input coordinator is not installed") }
++        return coordinator.querySnapshot
++    }
++
+     func applySearchQuery(_ nodes: [OriginalSearchQueryNode]) {
+         let (field, coordinator) = inputPair()
+         let editor = field.f_100045c2c().f_100041f9c() as! ReplicaSearchEditor.SearchTextView

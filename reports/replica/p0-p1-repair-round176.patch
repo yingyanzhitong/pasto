@@ -1,0 +1,55 @@
+--- a/replica/Sources/Pasto/UI/FilterBrowser.swift
++++ b/replica/Sources/Pasto/UI/FilterBrowser.swift
+@@ -18,7 +18,7 @@
+         case let .source(source): value = source
+         case let .device(device): value = device
+         case let .date(filter): return OriginalSearchDateEncoding.f_1002d9d2c(filter.range)
+-        case let .pinboard(id): value = id.uuidString
++        case let .pinboard(id): value = id
+         }
+         return .filter(group, value)
+     }
+@@ -57,7 +57,9 @@
+             }
+         case let .device(device): title = device
+         case let .date(filter): title = OriginalSearchDateEncoding.title(for: filter.range)
+-        case let .pinboard(id): title = store.pinboards.first { $0.id == id }?.name ?? "Pasto"
++        case let .pinboard(id):
++            value = id
++            title = store.tabListTarget(identifier: id)?.name ?? id
+         }
+         if image == nil {
+             image = OriginalSearchFilterSymbols.f_100054b2c(kind: selection.group, value: value)
+@@ -332,8 +334,8 @@
+             return .source(value)
+         }
+         let pinboards = (filters[5] ?? []).compactMap { node -> ReplicaSearchFilterChip.Selection? in
+-            guard case let .filter(5, value) = node, let id = UUID(uuidString: value) else { return nil }
+-            return .pinboard(id)
++            guard case let .filter(5, value) = node else { return nil }
++            return .pinboard(value)
+         }
+         let dates = (filters[3] ?? []).compactMap { node -> ReplicaSearchFilterChip.Selection? in
+             guard case let .filter(3, value) = node else { return nil }
+--- a/replica/Sources/Pasto/UI/SearchEditor.swift
++++ b/replica/Sources/Pasto/UI/SearchEditor.swift
+@@ -3,7 +3,7 @@
+ 
+ struct ReplicaSearchFilterChip {
+     enum Selection: Hashable {
+-        case kind(ClipboardKind), source(String), device(String), date(OriginalSearchDateFilter), pinboard(UUID)
++        case kind(ClipboardKind), source(String), device(String), date(OriginalSearchDateFilter), pinboard(String)
+     }
+     let selection: Selection
+     let title: String
+@@ -153,9 +153,7 @@
+                 let range = Date(timeIntervalSince1970: Double(start))..<Date(timeIntervalSince1970: Double(end))
+                 selection = .date(.init(title: OriginalSearchDateEncoding.f_1002d8e9c(value) ?? value, range: range))
+             case 4: selection = .device(value)
+-            case 5:
+-                guard let id = UUID(uuidString: value) else { return nil }
+-                selection = .pinboard(id)
++            case 5: selection = .pinboard(value)
+             default: return nil
+             }
+             return ReplicaFilterMatching.chip(selection, store: parent.store)

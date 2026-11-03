@@ -1,5 +1,6 @@
 import Darwin
 import Foundation
+import PastoCore
 
 final class ValidationRecorder {
     static let shared = ValidationRecorder()
@@ -65,6 +66,21 @@ func requireValue<T>(_ value: @autoclosure () throws -> T?, file: StaticString =
 struct ValidationMain {
     static func main() async {
         let suite = ClipboardStoreTests()
+        if CommandLine.arguments.count == 3, CommandLine.arguments[1] == "--check-store" {
+            do {
+                let summary = try await MainActor.run {
+                    let store = try ClipboardStore(directoryURL: URL(fileURLWithPath: CommandLine.arguments[2]))
+                    try store.save()
+                    return ["items": store.items.count, "pinboards": store.pinboards.count]
+                }
+                let data = try JSONSerialization.data(withJSONObject: summary, options: [.sortedKeys])
+                FileHandle.standardOutput.write(data)
+            } catch {
+                fputs("store check failed: \(error) \((error as NSError).userInfo)\n", stderr)
+                exit(1)
+            }
+            return
+        }
         if CommandLine.arguments.count == 4, CommandLine.arguments[1] == "--worker" {
             do {
                 try await suite.runWorker(directory: URL(fileURLWithPath: CommandLine.arguments[2]), prefix: CommandLine.arguments[3])
@@ -100,12 +116,19 @@ struct ValidationMain {
             ,("address-stack-table-contracts", suite.testAddressStackTableContracts)
             ,("address-ocr-preparation-word-geometry", suite.testAddressOCRPreparationAndWordGeometry)
         ]
+        var selected: Set<String>?
+        if let index = CommandLine.arguments.firstIndex(of: "--only") {
+            guard index + 1 < CommandLine.arguments.count else { exit(2) }
+            let names = Set(CommandLine.arguments[index + 1].split(separator: ",").map(String.init))
+            guard !names.isEmpty, names.isSubset(of: Set(tests.map { $0.0 })) else { exit(2) }
+            selected = names
+        }
         var results: [[String: Any]] = []
-        for (name, run) in tests {
+        for (name, run) in tests where selected?.contains(name) ?? true {
             let start = Date()
             let previous = ValidationRecorder.shared.failures.count
             do { try await run() }
-            catch { ValidationRecorder.shared.fail(error.localizedDescription, file: #fileID, line: #line) }
+            catch { ValidationRecorder.shared.fail("\(error) \((error as NSError).userInfo)", file: #fileID, line: #line) }
             let failures = Array(ValidationRecorder.shared.failures.dropFirst(previous))
             results.append(["name": name, "passed": failures.isEmpty, "duration_seconds": Date().timeIntervalSince(start), "failures": failures])
         }

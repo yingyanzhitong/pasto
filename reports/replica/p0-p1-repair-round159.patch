@@ -1,0 +1,15 @@
+--- before/replica/Sources/PastoCore/ClipboardItemDataPersistence.swift
++++ after/replica/Sources/PastoCore/ClipboardItemDataPersistence.swift
+@@ -62,10 +62,8 @@
+         let raw: Data
+         do {
+             raw = try OriginalObjCExceptionBridge.f_1002ffc68 {
+-                guard let raw = data.value(forKey: "rawPasteboardItems") as? Data else {
+-                    throw CocoaError(.fileReadCorruptFile)
+-                }
+-                return raw
++                let raw = data.value(forKey: "rawPasteboardItems") as? NSData
++                return Data._unconditionallyBridgeFromObjectiveC(raw)
+             }
+         } catch let error as OriginalObjCExceptionError {
+             diagnostics().f_1000d468c().f_1000d4e0c("Unreadable pasteboard items blob: \(error)")

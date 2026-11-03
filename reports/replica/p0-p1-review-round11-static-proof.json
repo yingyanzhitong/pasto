@@ -1,0 +1,449 @@
+{
+  "kind": "p0_p1_round11_root_static_proof",
+  "binary_path": ".local/paste-arm64-static.bin",
+  "binary_sha256": "871f00354fbb1c165d858a98e6d19d6f43cb9d3f9f958b3e07c7f07eb5c19afb",
+  "file_backed_segments": [
+    {
+      "name": "__PAGEZERO",
+      "vmaddr": 0,
+      "vmsize": 4294967296,
+      "fileoff": 0,
+      "filesize": 0
+    },
+    {
+      "name": "__TEXT",
+      "vmaddr": 4294967296,
+      "vmsize": 15351808,
+      "fileoff": 0,
+      "filesize": 15351808
+    },
+    {
+      "name": "__DATA_CONST",
+      "vmaddr": 4310319104,
+      "vmsize": 671744,
+      "fileoff": 15351808,
+      "filesize": 671744
+    },
+    {
+      "name": "__DATA",
+      "vmaddr": 4310990848,
+      "vmsize": 1736704,
+      "fileoff": 16023552,
+      "filesize": 1064960
+    },
+    {
+      "name": "__LINKEDIT",
+      "vmaddr": 4312727552,
+      "vmsize": 1966080,
+      "fileoff": 17088512,
+      "filesize": 1956752
+    }
+  ],
+  "nominal_types": [
+    {
+      "metadata_slot": {
+        "address": "0x100fa8cf8",
+        "slice_file_offset": 16420088,
+        "bytes": "c811ca0000001000"
+      },
+      "descriptor": {
+        "address": "0x100ca11c8",
+        "slice_file_offset": 13242824,
+        "bytes": "500000c03ceeffffa048f8ffbc2d3bff1cec0900"
+      },
+      "name": {
+        "address": "0x100c25a70",
+        "slice_file_offset": 12737136,
+        "bytes": "4974656d436f6c6c656374696f6e566965774d6f64656c00"
+      },
+      "value": "ItemCollectionViewModel",
+      "field_descriptor": {
+        "address": "0x100d3fdf4",
+        "slice_file_offset": 13893108,
+        "bytes": "cc6ff9ffc26ff9ff01000c0006000000"
+      },
+      "fields": [
+        {
+          "record": {
+            "address": "0x100d3fe04",
+            "slice_file_offset": 13893124,
+            "bytes": "00000000be6ff9ffd4f5fdff"
+          },
+          "name": {
+            "address": "0x100d1f3e0",
+            "slice_file_offset": 13759456,
+            "bytes": "6163636573736962696c6974795365727669636500"
+          },
+          "value": "accessibilityService"
+        },
+        {
+          "record": {
+            "address": "0x100d3fe10",
+            "slice_file_offset": 13893136,
+            "bytes": "000000009417f9ffddf5fdff"
+          },
+          "name": {
+            "address": "0x100d1f3f5",
+            "slice_file_offset": 13759477,
+            "bytes": "6f73645365727669636500"
+          },
+          "value": "osdService"
+        },
+        {
+          "record": {
+            "address": "0x100d3fe1c",
+            "slice_file_offset": 13893148,
+            "bytes": "000000002640f9ffdcf5fdff"
+          },
+          "name": {
+            "address": "0x100d1f400",
+            "slice_file_offset": 13759488,
+            "bytes": "726f7574657200"
+          },
+          "value": "router"
+        },
+        {
+          "record": {
+            "address": "0x100d3fe28",
+            "slice_file_offset": 13893160,
+            "bytes": "00000000a219f9ffd7f5fdff"
+          },
+          "name": {
+            "address": "0x100d1f407",
+            "slice_file_offset": 13759495,
+            "bytes": "73796e634d616e6167657200"
+          },
+          "value": "syncManager"
+        },
+        {
+          "record": {
+            "address": "0x100d3fe34",
+            "slice_file_offset": 13893172,
+            "bytes": "020000002419f9ffe4f5fdff"
+          },
+          "name": {
+            "address": "0x100d1f420",
+            "slice_file_offset": 13759520,
+            "bytes": "5f697350617374654173506c61696e54657874456e61626c656400"
+          },
+          "value": "_isPasteAsPlainTextEnabled"
+        },
+        {
+          "record": {
+            "address": "0x100d3fe40",
+            "slice_file_offset": 13893184,
+            "bytes": "020000001819f9fff8f5fdff"
+          },
+          "name": {
+            "address": "0x100d1f440",
+            "slice_file_offset": 13759552,
+            "bytes": "5f69734469726563745061737465456e61626c656400"
+          },
+          "value": "_isDirectPasteEnabled"
+        }
+      ]
+    },
+    {
+      "metadata_slot": {
+        "address": "0x100fbd220",
+        "slice_file_offset": 16503328,
+        "bytes": "e0b5ca0000004000"
+      },
+      "descriptor": {
+        "address": "0x100cab5e0",
+        "slice_file_offset": 13284832,
+        "bytes": "500000804cfeffff142ff9fffc5b63ff84bc0900"
+      },
+      "name": {
+        "address": "0x100c3e4fc",
+        "slice_file_offset": 12838140,
+        "bytes": "5365617263685365727669636500"
+      },
+      "value": "SearchService",
+      "field_descriptor": {
+        "address": "0x100d47274",
+        "slice_file_offset": 13922932,
+        "bytes": "66ecfaff0000000001000c0002000000"
+      },
+      "fields": [
+        {
+          "record": {
+            "address": "0x100d47284",
+            "slice_file_offset": 13922948,
+            "bytes": "00000000ececfaff2cf4fdff"
+          },
+          "name": {
+            "address": "0x100d266b8",
+            "slice_file_offset": 13788856,
+            "bytes": "696e64657800"
+          },
+          "value": "index"
+        },
+        {
+          "record": {
+            "address": "0x100d47290",
+            "slice_file_offset": 13922960,
+            "bytes": "00000000e8ecfaff26f4fdff"
+          },
+          "name": {
+            "address": "0x100d266be",
+            "slice_file_offset": 13788862,
+            "bytes": "6c6f6767657200"
+          },
+          "value": "logger"
+        }
+      ]
+    },
+    {
+      "metadata_slot": {
+        "address": "0x100fbd398",
+        "slice_file_offset": 16503704,
+        "bytes": "10b7ca0000007000"
+      },
+      "descriptor": {
+        "address": "0x100cab710",
+        "slice_file_offset": 13285136,
+        "bytes": "500000801cfdffffa82ef9ff647863ffc4bb0900"
+      },
+      "name": {
+        "address": "0x100c3e5c0",
+        "slice_file_offset": 12838336,
+        "bytes": "53706f746c69676874496e64657800"
+      },
+      "value": "SpotlightIndex",
+      "field_descriptor": {
+        "address": "0x100d472e4",
+        "slice_file_offset": 13923044,
+        "bytes": "02edfaff0000000001000c0005000000"
+      },
+      "fields": [
+        {
+          "record": {
+            "address": "0x100d472f4",
+            "slice_file_offset": 13923060,
+            "bytes": "00000000f4ecfaffe7f3fdff"
+          },
+          "name": {
+            "address": "0x100d266e3",
+            "slice_file_offset": 13788899,
+            "bytes": "696e64657800"
+          },
+          "value": "index"
+        },
+        {
+          "record": {
+            "address": "0x100d47300",
+            "slice_file_offset": 13923072,
+            "bytes": "00000000aaecfaffe1f3fdff"
+          },
+          "name": {
+            "address": "0x100d266e9",
+            "slice_file_offset": 13788905,
+            "bytes": "73657269616c517565756500"
+          },
+          "value": "serialQueue"
+        },
+        {
+          "record": {
+            "address": "0x100d4730c",
+            "slice_file_offset": 13923084,
+            "bytes": "00000000e2e8faffe1f3fdff"
+          },
+          "name": {
+            "address": "0x100d266f5",
+            "slice_file_offset": 13788917,
+            "bytes": "726573756c744c696d697400"
+          },
+          "value": "resultLimit"
+        },
+        {
+          "record": {
+            "address": "0x100d47318",
+            "slice_file_offset": 13923096,
+            "bytes": "0200000088ecfafff0f3fdff"
+          },
+          "name": {
+            "address": "0x100d26710",
+            "slice_file_offset": 13788944,
+            "bytes": "73756767657374696f6e44617461536f7572636500"
+          },
+          "value": "suggestionDataSource"
+        },
+        {
+          "record": {
+            "address": "0x100d47324",
+            "slice_file_offset": 13923108,
+            "bytes": "0000000054ecfafff9f3fdff"
+          },
+          "name": {
+            "address": "0x100d26725",
+            "slice_file_offset": 13788965,
+            "bytes": "6c6f6767657200"
+          },
+          "value": "logger"
+        }
+      ]
+    },
+    {
+      "metadata_slot": {
+        "address": "0x100fbed30",
+        "slice_file_offset": 16510256,
+        "bytes": "88bfca0000003000"
+      },
+      "descriptor": {
+        "address": "0x100cabf88",
+        "slice_file_offset": 13287304,
+        "bytes": "500000801cfbffff204bf9ff143666ff50ba0900"
+      },
+      "name": {
+        "address": "0x100c40ab0",
+        "slice_file_offset": 12847792,
+        "bytes": "436f72654461746153756767657374696f6e44617461536f7572636500"
+      },
+      "value": "CoreDataSuggestionDataSource",
+      "field_descriptor": {
+        "address": "0x100d479e8",
+        "slice_file_offset": 13924840,
+        "bytes": "28f5faff0000000001000c0001000000"
+      },
+      "fields": [
+        {
+          "record": {
+            "address": "0x100d479f8",
+            "slice_file_offset": 13924856,
+            "bytes": "000000001af5faffe0f1fdff"
+          },
+          "name": {
+            "address": "0x100d26be0",
+            "slice_file_offset": 13790176,
+            "bytes": "6d616e616765644f626a656374436f6e7465787400"
+          },
+          "value": "managedObjectContext"
+        }
+      ]
+    }
+  ],
+  "selected_list_compact_map": {
+    "callback_install": {
+      "address": "0x10007e898",
+      "slice_file_offset": 518296,
+      "bytes": "0000009000200291b80352f8e80318aa010080d2b70354f8e20317aae30315aaf40319aa3ddb2d94"
+    },
+    "factory": {
+      "address": "0x10007e088",
+      "slice_file_offset": 516232,
+      "bytes": "f85fbca9f65701a9f44f02a9fd7b03a9fdc30091f30308aa160040f9000080d2bee82d94f70300aa98710090180b46f9f40300aab6e82d94f50300aa4079009000c02e9182710090420c46f9e10318aa4a16fe97e10300aaf40315aae00317aa72e82d94f40300aaf70301aa78fa2d94200100378068009000c03b912103805222008052a3038052e40314aae50317aa7bfa2d94b60200b4e00316aa93f72d94f60300aaf1e70c94f40300aa000080d29657ff9701298052e2008052f3f82d94e10300aae00314aaf40301aa7851ff97f40300aae00315aa18fa2d94e00316aa7ff72d9404000014e00315aa13fa2d94140080d2740200f9fd7b43a9f44f42a9f65741a9f85fc4a8c0035fd6"
+    },
+    "sdk_import": {
+      "address": "0x100bf55b0",
+      "body_hex": "b0150090107e44f900021fd6",
+      "symbol": "_$s7Combine9PublisherPAAE10compactMapyAA10PublishersO07CompactD0Vy_xqd__Gqd__Sg6OutputQzclF",
+      "pointer_address": "0x100ea98f8",
+      "pointer_raw_value": "0x8010000000000633",
+      "dyld_binding": {
+        "import_index": 1587,
+        "import_table_slice_file_offset": 17095172,
+        "symbol": "_$s7Combine9PublisherPAAE10compactMapyAA10PublishersO07CompactD0Vy_xqd__Gqd__Sg6OutputQzclF",
+        "dylib_ordinal": 13,
+        "dylib": {
+          "install_name": "/System/Library/Frameworks/Combine.framework/Versions/A/Combine",
+          "load_command": "0xc",
+          "current_version": 198115328,
+          "current_version_string": "3023.0.0",
+          "compatibility_version": 65536,
+          "compatibility_version_string": "1.0.0"
+        },
+        "weak_import": false,
+        "import_addend": 0,
+        "mechanism": "LC_DYLD_CHAINED_FIXUPS",
+        "fixups_header_slice_file_offset": 17088512,
+        "pointer_format": 6,
+        "imports_format": 1,
+        "segment_index": 2,
+        "page_index": 1,
+        "page_start": 0,
+        "pointer_slice_file_offset": 15374584,
+        "pointer_raw_value": "0x8010000000000633",
+        "pointer_addend": 0,
+        "effective_addend": 0
+      }
+    }
+  },
+  "default_preferences": {
+    "plain_keypath_getter": {
+      "address": "0x100c25c38",
+      "slice_file_offset": 12737592,
+      "bytes": "80e642ff"
+    },
+    "direct_keypath_getter": {
+      "address": "0x100c25c60",
+      "slice_file_offset": 12737632,
+      "bytes": "5ce642ff"
+    },
+    "plain_thunk": {
+      "address": "0x1000542b8",
+      "slice_file_offset": 344760,
+      "bytes": "00730014"
+    },
+    "direct_thunk": {
+      "address": "0x1000542bc",
+      "slice_file_offset": 344764,
+      "bytes": "e6f30014"
+    },
+    "plain_key": {
+      "address": "0x100d8ed10",
+      "slice_file_offset": 14216464,
+      "bytes": "697350617374654173506c61696e54657874456e61626c6564"
+    },
+    "direct_key": {
+      "address": "0x100d8f090",
+      "slice_file_offset": 14217360,
+      "bytes": "69734469726563745061737465456e61626c6564"
+    }
+  },
+  "suggestion_data_source": {
+    "keypath_getter": {
+      "address": "0x100c27138",
+      "slice_file_offset": 12742968,
+      "bytes": "046645ff"
+    },
+    "getter_thunk": {
+      "address": "0x10007d73c",
+      "slice_file_offset": 513852,
+      "bytes": "76000a14"
+    },
+    "concrete_witness": {
+      "address": "0x100eca2b8",
+      "slice_file_offset": 15508152,
+      "bytes": "900ac4000000100080f3300000001000a8e6300000001000a0f3300000001000c0f3300000001000"
+    },
+    "search_index_conformance": {
+      "address": "0x100c3e548",
+      "slice_file_offset": 12838216,
+      "bytes": "69a42800c4d10600a8a2280000000000"
+    },
+    "provider_setter": {
+      "address": "0x1002e1b54",
+      "slice_file_offset": 3021652,
+      "bytes": "ff4301d1fd7b04a9fd030191e1630091c952f69780a20091e103009122048052030080d2846a2494e266009042200991e34a00b063c01491e063009181a200912e18fb97e0030091d86a2494fd7b44a9ff430191c0035fd6"
+    },
+    "startup_binding": {
+      "address": "0x100c27138",
+      "slice_file_offset": 12742968,
+      "bytes": "046645ff"
+    }
+  },
+  "text_setter_extended_reference_scan": {
+    "target": "0x1000f733c",
+    "segment": "__TEXT",
+    "adr": true,
+    "adrp_add_window_instructions": 12,
+    "hits": [],
+    "limits": [
+      "does_not_cover_arbitrary_indirect_calls",
+      "does_not_prove_no_inlined_consumer"
+    ]
+  },
+  "compiled": false,
+  "application_executed": false
+}

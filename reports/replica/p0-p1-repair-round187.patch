@@ -1,0 +1,21 @@
+--- a/replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift
++++ b/replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift
+@@ -354,8 +354,7 @@
+ 
+     func beginPreviewEditing() {
+         text.isEditable = true
+-        reloadStoredContent()
+-        window?.makeFirstResponder(text)
++        displayStoredModel()
+     }
+ 
+     // 0x1003ec13c → 0x100214474 runs after the editing window is presented.
+@@ -365,7 +364,7 @@
+ 
+     func cancelPreviewEditing() {
+         text.isEditable = false
+-        reloadStoredContent()
++        displayStoredModel()
+     }
+ 
+     func commitPreviewEditing() {

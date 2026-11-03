@@ -1,0 +1,19 @@
+# 第一百二十五轮：真实混合选区与P0边界复查
+
+本轮按五个P0模块的实际入口复查，并修复已确认可达的混合输入问题。旧分组归档的secondary memberships会在visibleItems中与native快照合并；appliedRestoreItems和drag逐项取得句柄，因此同一批可同时有native与legacy值。此前typed API只要一项没有nativeObject，就把整批resolvedItem，原生项也被迫解码与内容恢复无关的旧DTO。
+
+现在仅纯legacy输入保留旧整体入口；有native时逐项选择后端。native仍从持有实体读取rawType/data、image lazy元数据、plain投影及当前source；legacy copy用ordinaryRestoreRepresentations，drag用旧originalPasteboardItems，保留原有差别。两路共用原per-item flags与整批聚合，文本/链接判断同时覆盖legacy kind；不会逐项独立聚合后拼接。原生分支仅移动变量声明，实际处理顺序及共同后缀已做原文等价比较。
+
+历史恢复也不再把nativeObject强制解包用于混合输入。native保同一对象；仅legacy检查旧的非deleted availability，并一次bulk准备legacy IDs。combined targets按输入重建，顺序和重复项保留；Transaction只把native子集登记为metadata-only，legacy仍按旧值写回。纯native明确委托原targets方法，旧targets/ids API及公共写入尾保持。
+
+五个P0模块记录了9条有限入口/边界判断：快捷键/已应用选区、本地关闭回焦点等方法复用；混合复制修复；native/legacy事务区分；采集122–124保持；source validation/revision/merge发生在write/count之后的catch域，不是内容复制前置；raw getter bridge异常返回empty数组已由31b218实际错误指令绑定，codec失败也交empty，shared writer仍写入并Undo/notify。完整诊断日志副作用和无效required关系未冒称全函数相同。兼容坏metadata严格拒绝、OCR专用链归P1、AX/NSApp运行限制各自单列，Handoff网络子链不扩展到本地焦点。
+
+继续处理的具体P0源码问题收敛为：原current-device身份provider与Pasto名称适配如何对齐，以及raw-data错误路径的本地诊断副作用。上述9行不是全P0函数库存或整体完成率，其他原合同只有出现具体源码证据才扩大行动清单。
+
+3生产文件8个精确增量，244生产文件不变；14原片段、5实际调用/尾跳、6错误分支ARM字、22不变方法及8共享源已绑定。既有低模型只读核真实producer、实际patch、tuple/throws/目标顺序；主审另按真实API声明纠正初稿loadItems:标签，并保住plain投影后再读source的原顺序。未调用编译器。
+
+22新增检查，合计1980项源码/Python/Mach-O静态检查通过。初3失败是历史raw文件摘要及整文件图片时间戳分支计数，4历史测试和1逆向工具共11处精确隔离后通过；旧proof与失败日志保留。新增检查读取当前源码，Python示例仅补充真实分支的源级输入模型，不冒充AppKit/CoreData运行。
+
+38222c/37a144/075718均在既有台账，本轮额外消费者修复不重复计数。v38保持P0 73/73、P1 124/124、总197/197（100%），只表示已确认有限差异，整体P0尚未验收。仍按P0修复→P1检查→P1修复执行。
+
+仅本地修改；未编译、构建、安装、运行应用/框架、联网、提交、推送、打标签或发布。官网9文件、版本1.0.2、HEAD和function-map保持。

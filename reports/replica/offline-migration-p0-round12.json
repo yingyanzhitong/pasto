@@ -1,0 +1,454 @@
+{
+  "kind": "offline_source_contract_review",
+  "round": 12,
+  "status": "source-checks-passed-goal-active",
+  "generated_at": "2026-10-29T15:05:48.030295+00:00",
+  "previous_goal_turn": "progress",
+  "priority": "P1",
+  "module": "index_timestamp_and_list_entry_identity",
+  "functions": [
+    {
+      "function_id": "Paste:0x100371998",
+      "status": "fixed_index_history_timestamp_partial",
+      "contract": "原构造SearchableItemEntity时KVC key确认为timestamp，可选Date动态转换后存第6字段；当前Entry.modified由updatedAt改isInHistory?createdAt:nil。原日志/内容与图片闭包、实体/关系/多组仍partial。",
+      "original": {
+        "path": "decompiled/Paste/part-0279.c",
+        "sha256": "748068390a42781cd8cbd9fb0475d69cf0d93116ee29ad7a58ba0c1e2e0e91ea"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "modified = item.isInHistory ? item.createdAt : nil"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "private struct Entry: Equatable"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x100375200",
+      "status": "fixed_optional_date_getter_adapter_partial",
+      "contract": "原真实witness表+0x18槽指375200；metadata字段偏移向量+0x28对应第6字段timestamp，经364a64复制Optional<Date>。当前Date?直接属性消费，原Swift泛型/布局ABI不复制。",
+      "original": {
+        "path": "decompiled/Paste/part-0279.c",
+        "sha256": "834617e1537abb1e25f6c0cb2accda9abb9ccacc7763106384de956fa198076f"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "let modified: Date?"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "attributes.contentModificationDate = entry.modified"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x100364a64",
+      "status": "existing_optional_date_copy_boundary",
+      "contract": "原按Optional<Date>值见证拷贝到输出，日期为空不造当前时间；当前Date?赋值保留nil，原value witness ABI未计全。",
+      "original": {
+        "path": "decompiled/Paste/part-0276.c",
+        "sha256": "48f129d14c2d985ead1d5fabacd762e42cc80d1d99e99bb5b391a8cad2185b17"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "attributes.contentModificationDate = entry.modified"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1002e3ce8",
+      "status": "index_attributes_parent_rechecked",
+      "contract": "实际CSSearchableItemAttributeSet通过witness+0x18读可选Date，非nil桥NSDate，nil传nil给contentModificationDate；本轮改正真实输入源。其它optional/多board/isUpdate/FRC仍partial。",
+      "original": {
+        "path": "decompiled/Paste/part-0240.c",
+        "sha256": "c4ac909ae738fd02a0b0eff017120cc42d6369def95833bf5b6fe3ced56e12b2"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "attributes.contentModificationDate = entry.modified"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1002faafc",
+      "status": "existential_packaging_boundary_partial",
+      "contract": "原将SearchableItemEntity数组打包为existential，明确携带100ecd440 witness表供索引builder消费；当前Entry直接投影，不把无原ABI打包的父计完整。",
+      "original": {
+        "path": "decompiled/Paste/part-0246.c",
+        "sha256": "519c997758cbe117f9ca92d2421d7340093c15718d450041fc18da74f011bfc1"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "private struct Entry: Equatable"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x100371e9c",
+      "status": "metadata_accessor_boundary_pending",
+      "contract": "原通过TargetStructDescriptor100cad06c取得SearchableItemEntity metadata；本轮字段元数据与witness静态闭合，自有类型不复刻厂商布局。",
+      "original": {
+        "path": "decompiled/Paste/part-0279.c",
+        "sha256": "ee7c01bf899334e8f96ab1cdf6411df073540e0fb9c9aac53e0ce2168e30e485"
+      },
+      "source_references": []
+    },
+    {
+      "function_id": "Paste:0x1003751d4",
+      "status": "existing_app_projection_partial",
+      "contract": "原witness+0x10取Optional app字段，对应sourceApplication.name快照；当前仍用source relation names及旧数据fallback，nil/兼容适配不全等。",
+      "original": {
+        "path": "decompiled/Paste/part-0279.c",
+        "sha256": "800e9eca0613db5bb386c0f9b437bd7eae533ee9bfbfd6c8ee84bcb77f1f8e29"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "self.app = app"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "attributes.setValue(entry.app.map { $0 as NSString }, forCustomKey: appKey)"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x100375210",
+      "status": "existing_device_projection_partial",
+      "contract": "原witness+0x20读设备Optional name；当前sourceDevice值字段仍非可选，未因日期修复宣称所有属性一致。",
+      "original": {
+        "path": "decompiled/Paste/part-0279.c",
+        "sha256": "64b6903eb3a7777438630d636d881daffad571e004f9cfc50bcdd2aea8bfdf58"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "device = item.sourceDevice"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x100375244",
+      "status": "existing_content_callback_projection_partial",
+      "contract": "原witness+0x38返回可选内容解析闭包；当前Entry立即投影payload/OCR文本不是同一闭包生命周期。保留待核对，不新增unused wrapper。",
+      "original": {
+        "path": "decompiled/Paste/part-0279.c",
+        "sha256": "5f86b0204512fed34223e8f30f55dd8b72f46eef45b6ef8c62a9f5e4811b442c"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "text = String(indexedText.prefix(5000))"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x100375274",
+      "status": "existing_pinboard_projection_partial",
+      "contract": "原witness+0x40读可选单一pinboard identifier，当前多board数组保留用户兼容适配；与日期slot分开记录。",
+      "original": {
+        "path": "decompiled/Paste/part-0279.c",
+        "sha256": "b1050a0798ef47cbe97e99259050765a063c5f87fbcfe348835813254abe6b64"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "pinboards = item.pinboardIDs.map(\\.uuidString).sorted()"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x100036860",
+      "status": "reveal_callback_identity_corrected",
+      "contract": "原弱MainViewModel存在才转7d9c8；来自ItemCollectionView.onSelectList，不是普通TabBarCell.onSelect。修正上轮未闭合入口归类，不为普通标签强加clear。",
+      "original": {
+        "path": "decompiled/Paste/part-0020.c",
+        "sha256": "aec45dee40c3227485909875a0482d6695cabe0dc8b5d40a56c279af1d89990b"
+      },
+      "source_references": []
+    },
+    {
+      "function_id": "Paste:0x100037ec0",
+      "status": "reveal_callback_thunk_boundary",
+      "contract": "MainView绑定onSelectList的闭包转36860→7d9c8；真实来源已由初始化赋值和原wrapper确认，Pasto对应pendingFocus消费者仍缺。",
+      "original": {
+        "path": "decompiled/Paste/part-0021.c",
+        "sha256": "58e01aa9fd6915a081af7cc6fe5488c3cf17dec83fd3841e3c04b5698e004f16"
+      },
+      "source_references": []
+    },
+    {
+      "function_id": "Paste:0x10007d9c8",
+      "status": "reveal_action_difference_precisely_scoped_pending",
+      "contract": "原卡片定位列表回调先写空query再选list identifier；不是全部用户标签点击。当前缺完整pendingFocus/定位消费者，继续待迁移；禁止把chooseBoard整体改清query。",
+      "original": {
+        "path": "decompiled/Paste/part-0041.c",
+        "sha256": "dcaf32275fc5d0403dc6aef1169c722a2a691dd11ba32f40f43672d5d5bee73a"
+      },
+      "source_references": []
+    },
+    {
+      "function_id": "Paste:0x100099adc",
+      "status": "existing_plain_tab_selection_reused",
+      "contract": "普通TabBarCell.onSelect弱回调直接identifier→39c50(force1)，没有7d9c8/query reset。现普通boardButton与辅助功能操作调用chooseBoard保留同一范围内语义。",
+      "original": {
+        "path": "decompiled/Paste/part-0050.c",
+        "sha256": "ce57296647dc121c068ca8305106b18ee023cccea86bd771afd0e679d977107e"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/PanelViews.swift",
+          "symbol": "onSelect: { state.chooseBoard(board?.id) }"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/PanelViews.swift",
+          "symbol": ".accessibilityAction { state.chooseBoard(board?.id) }"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "func chooseBoard(_ id: UUID?)"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x100039c50",
+      "status": "existing_forced_list_reselection_partial",
+      "contract": "原force1且同identifier时先置nil再赋identifier，保证重新选择；不同/原空直接赋。当前chooseBoard重置选区并重新normalize，但无同一Published identifier和原动画，不计完整。",
+      "original": {
+        "path": "decompiled/Paste/part-0022.c",
+        "sha256": "ae7d5639fcc0c3102020939cb946ba86329de8cd52af0618a9566718b5f8f7c2"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "func chooseBoard(_ id: UUID?)"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1000217a8",
+      "status": "existing_closed_create_route_reused",
+      "contract": "关闭后DidCreate仅设history identifier并取消清理任务，不清query；当前保持chooseBoard(nil)程序路由，查询依10秒任务另处理。",
+      "original": {
+        "path": "decompiled/Paste/part-0013.c",
+        "sha256": "efe34dd35b661a4d795d721088b11a371872e7fc5c4461f1f00f41efb778297d"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "forName: ClipboardMonitor.didCreateItemNotification"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x100021908",
+      "status": "existing_closed_restore_route_reused",
+      "contract": "DidRestore仅当前history context且允许时选history并取消timer，搜索/分组上下文保留。当前已生效collection guard继续复用，无query reset。",
+      "original": {
+        "path": "decompiled/Paste/part-0013.c",
+        "sha256": "e087167d0569426af3d4de90d27b1ffa6991431cc23fcf29323e2a05889d1b39"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "self.state.isCollectionSearchQueryEmpty, self.state.pinboardID == nil"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x10006c338",
+      "status": "confirmed_reveal_focus_missing_pending",
+      "contract": "原按输入index取项目/屏幕横偏移，保存pendingFocus(listID,itemID,offset/flag)，调用onSelectList后由新列表恢复位置；Pasto还无完整对应父，后续继续，不用普通选组代替。",
+      "original": {
+        "path": "decompiled/Paste/part-0035.c",
+        "sha256": "afbb80e3f805a3521d53509bbe270048f89d139be7370d319bc4d33dda8c3eae"
+      },
+      "source_references": []
+    }
+  ],
+  "reviewed_count": 18,
+  "current_review_unique_count": 356,
+  "current_review_inventory_percent": 0.4388,
+  "static_bindings": {
+    "original_binary_sha256": "871f00354fbb1c165d858a98e6d19d6f43cb9d3f9f958b3e07c7f07eb5c19afb",
+    "item_metadata": {
+      "descriptor": "0x100cad06c",
+      "name": "SearchableItemEntity",
+      "descriptor_bytes": "5100010038eaffffbc63f9ff244e6cff84b809000900000002000000",
+      "field_descriptor": "0x100d48900",
+      "kind": 0,
+      "record_size": 12,
+      "count": 9,
+      "fields": [
+        {
+          "name": "id",
+          "record_address": "0x100d48910",
+          "record_bytes": "00000000acdbfaff28ecfdff",
+          "type_ref": "0x100cf64c0",
+          "type_ref_bytes": "53530000247353590000ff07"
+        },
+        {
+          "name": "type",
+          "record_address": "0x100d4891c",
+          "record_bytes": "00000000a0dbfaff1fecfdff",
+          "type_ref": "0x100cf64c0",
+          "type_ref_bytes": "53530000247353590000ff07"
+        },
+        {
+          "name": "title",
+          "record_address": "0x100d48928",
+          "record_bytes": "0000000094dbfaff18ecfdff",
+          "type_ref": "0x100cf64c0",
+          "type_ref_bytes": "53530000247353590000ff07"
+        },
+        {
+          "name": "content",
+          "record_address": "0x100d48934",
+          "record_bytes": "00000000defafaff12ecfdff",
+          "type_ref": "0x100cf8416",
+          "type_ref_bytes": "535353677959626353670000"
+        },
+        {
+          "name": "app",
+          "record_address": "0x100d48940",
+          "record_bytes": "00000000d6e4faff0eecfdff",
+          "type_ref": "0x100cf6e1a",
+          "type_ref_bytes": "535353670000012750fbff00"
+        },
+        {
+          "name": "imageData",
+          "record_address": "0x100d4894c",
+          "record_bytes": "00000000d2fafaff06ecfdff",
+          "type_ref": "0x100cf8422",
+          "type_ref_bytes": "02d5ee1a0053677959626353"
+        },
+        {
+          "name": "timestamp",
+          "record_address": "0x100d48958",
+          "record_bytes": "000000003ae4faff04ecfdff",
+          "type_ref": "0x100cf6d96",
+          "type_ref_bytes": "02f1061b0053670079705367"
+        },
+        {
+          "name": "device",
+          "record_address": "0x100d48964",
+          "record_bytes": "00000000b2e4faff02ecfdff",
+          "type_ref": "0x100cf6e1a",
+          "type_ref_bytes": "535353670000012750fbff00"
+        },
+        {
+          "name": "pinboard",
+          "record_address": "0x100d48970",
+          "record_bytes": "00000000a6e4fafffdebfdff",
+          "type_ref": "0x100cf6e1a",
+          "type_ref_bytes": "535353670000012750fbff00"
+        }
+      ]
+    },
+    "conformance": {
+      "address": "0x100c43568",
+      "bytes": "c19f2800009b0600d09e280000000000",
+      "witness_table": "0x100ecd440"
+    },
+    "timestamp_witness": {
+      "slot": "0x100ecd458",
+      "raw": "0x10000000375200",
+      "bytes": "0052370000001000",
+      "target": "0x100375200",
+      "pointer_format": 6,
+      "declared_dyld_chain_reachable": true
+    },
+    "timestamp_key": {
+      "address": "0x100371ac4",
+      "bytes": "802e8dd2a0adacf2608ecef220acedf2010e80d20120fdf2",
+      "decoded": "timestamp"
+    },
+    "getter_instructions": {
+      "address": "0x100375200",
+      "bytes": "e10308aa082880b98002088b16beff17"
+    },
+    "attribute_witness_load": {
+      "address": "0x1002e3f74",
+      "bytes": "290f40f9e80318aae00317aae10319aa20013fd6"
+    },
+    "type_field_metadata_note": "The getter loads metadata field offset +0x28; field names and vector offset are recorded for independent decoding.",
+    "timestamp_type": {
+      "mangled_ref": "0x100cf6d96",
+      "mangled_ref_bytes": "02f1061b00536700",
+      "optional_suffix": "Sg",
+      "indirect_slot": "0x100ea7488",
+      "slot_bytes": "a601000000001080",
+      "import_index": 422,
+      "import_format": 1,
+      "symbol": "_$s10Foundation4DateVMn",
+      "derivation": "Swift symbolic indirect context reference + Optional suffix, resolved to actual dyld import table entry"
+    }
+  },
+  "source_sha256": {
+    "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift": "cd2150c0dff6bf72d1f548af751dc1deab8e2b3b74dbd75a8989e170d6b5d6db",
+    "replica/Sources/Pasto/UI/ReplicaUIController.swift": "d37aa22d10f3dd0d2c9143595e4c3b0a983b4afe8826bf4df145b0357a6182af",
+    "replica/Sources/Pasto/UI/PanelViews.swift": "0975229b7a643f3476e4463b2c46988a6fc832017a3a2cca99db44a646e9b9c4",
+    "replica/Sources/PastoCore/ClipboardStore.swift": "116f543df1dc8717e58edf3e0f99eebfe7fc208953e7d3d611cf59a7490b1445",
+    "scripts/tests/test_search_timestamp_contracts.py": "d1cd651be6b6fc87c0c4556c4f2521206122dff46c2a1736715def1e1854a6e1"
+  },
+  "new_partial_bindings": [
+    "Paste:0x100375200"
+  ],
+  "confirmed_differences_fixed": [
+    "Spotlight contentModificationDate由updatedAt改为可选历史时间：isInHistory?createdAt:nil，避免编辑改变日期筛选和分组独有项产生伪日期"
+  ],
+  "corrected_prior_inference": [
+    "0x10007d9c8属于ItemCollectionView.onSelectList定位入口；上一轮把其概括为用户选组过宽。普通标签99adc直接39c50，不执行query reset。"
+  ],
+  "tests": {
+    "passed": true,
+    "total": 127,
+    "scope": "Python source/ledger/provenance, static field metadata, imports and declared dyld-chain checks only; no Swift/Spotlight/app execution",
+    "added_in_round": 10
+  },
+  "new_fully_migrated_function_count": 0,
+  "historical_ledger": {
+    "numerator": 1648,
+    "denominator": 81123,
+    "percent": 2.0315,
+    "stale_evidence": true
+  },
+  "current_partial_count": 440,
+  "compiled": false,
+  "application_executed": false,
+  "original_binary_executed": false,
+  "user_data_modified": false,
+  "network_used": false,
+  "committed": false,
+  "pushed": false,
+  "module_complete": false,
+  "remaining_differences": [
+    "ItemCollectionView.onSelectList的完整pendingFocus/index/offset及新列表恢复消费者仍缺，不能由普通chooseBoard替代",
+    "原索引全量重建、optional app/device/pinboard、多board适配、内容/图片闭包及actor/DI/错误生命周期仍partial",
+    "自有历史flag/非可选createdAt与原timestamp关系是明确兼容投影，不声称原数据库模型或真实多状态查询已验收"
+  ],
+  "next_module": "P1 search_and_filter",
+  "next_work": [
+    "继续原卡片定位分组pendingFocus及真实触发动作，保持普通tab/闭窗路由不混用",
+    "批量核对已有建议与FilterBrowser消费者、索引重建，已完全一致合同直接复用"
+  ],
+  "inventory_checked": {
+    "mapped_reference_records_checked": 2097,
+    "mapping_states": {
+      "partial": 440,
+      "migrated": 1648,
+      "excluded_by_scope": 9
+    },
+    "reference_issue_counts": {
+      "missing_address_in_evidence": 12
+    },
+    "unchanged_source_review_count": 328
+  }
+}

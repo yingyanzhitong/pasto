@@ -1,0 +1,249 @@
+--- phase-24-before/replica/Sources/Pasto/UI/ReplicaNativeCardCollection.swift
++++ replica/Sources/Pasto/UI/ReplicaNativeCardCollection.swift
+@@ -94,6 +94,7 @@
+             collectionOwnerGeneration &+= 1
+             pendingSnapshot = nil
+             snapshotDrainScheduled = false
++            items = []
+         }
+         self.state = state
+         state.collectionOwner = self
+@@ -107,6 +108,18 @@
+                 changedIDs: (pendingSnapshot?.changedIDs ?? []).union(changedIDs))
+         }
+         scheduleSnapshotDrain()
++    }
++
++    // 0x100036ee0 -> 0x100067c84 installs a fresh applier even when the
++    // published search model is the same object. Data-only updates use update.
++    func replaceCollectionModel(state: ReplicaUIState) {
++        guard self.state === state, state.collectionOwner === self else { return }
++        collectionOwnerGeneration &+= 1
++        pendingSnapshot = nil
++        snapshotDrainScheduled = false
++        hasReceivedCollectionSnapshot = false
++        items = []
++        update(state: state, cardSide: cardSide)
+     }
+ 
+     func appliedItems(for state: ReplicaUIState) -> [ClipboardItem]? {
+--- phase-24-before/replica/Sources/Pasto/UI/ReplicaUIController.swift
++++ replica/Sources/Pasto/UI/ReplicaUIController.swift
+@@ -209,6 +209,7 @@
+                 self.objectWillChange.send()
+                 self.collectionSearchQueryNodes = nodes
+                 self.normalizeSelection()
++                self.collectionOwner?.replaceCollectionModel(state: self)
+             }
+     }
+ 
+@@ -323,6 +324,7 @@
+         }
+         if let pinboardID, !store.pinboards.contains(where: { $0.id == pinboardID }) {
+             self.pinboardID = nil
++            collectionOwner?.replaceCollectionModel(state: self)
+         }
+         if let request = pendingItemDeletion,
+            !request.ids.isSubset(of: Set(visibleItems.map(\.id))) {
+@@ -419,6 +421,7 @@
+         selection = []
+         primaryID = nil
+         normalizeProjectedSelection()
++        collectionOwner?.replaceCollectionModel(state: self)
+     }
+ 
+     // f3b83c4: one resolved item, history first, then its owning pinboard; omit the current list.
+--- phase-24-before/scripts/tests/test_p0_repair_incremental_selection_delivery.py
++++ scripts/tests/test_p0_repair_incremental_selection_delivery.py
+@@ -106,7 +106,11 @@
+         self.assertEqual('{\n' + old_core + '    }', current)
+         board = body(self.ui, 'func chooseBoard(_ id: UUID?)')
+         old_board = body((self.phase / 'before' / UI).read_text(), 'func chooseBoard(_ id: UUID?)')
+-        self.assertEqual(old_board.replace('normalizeSelection()', 'normalizeProjectedSelection()'), board)
++        expected = old_board.replace('normalizeSelection()', 'normalizeProjectedSelection()')
++        expected = expected.replace('        normalizeProjectedSelection()\n',
++                                    '        normalizeProjectedSelection()\n'
++                                    '        collectionOwner?.replaceCollectionModel(state: self)\n')
++        self.assertEqual(expected, board)
+ 
+     def test_unique_id_no_move_domain_matches_original_delete_insert_index_arithmetic(self):
+         # A pure Python model of 1b2a90 -> 1b2cc0, with no moves/reloads and
+@@ -146,7 +150,11 @@
+         before_host = (self.phase / 'before' / HOST).read_text()
+         for signature in ['func update(state: ReplicaUIState, cardSide: CGFloat)',
+                           'private func scheduleSnapshotDrain()', 'func detachObservers()']:
+-            self.assertEqual(body(before_host, signature), body(self.host, signature))
++            expected = body(before_host, signature)
++            if signature.startswith('func update('):
++                expected = expected.replace('            snapshotDrainScheduled = false\n',
++                                            '            snapshotDrainScheduled = false\n            items = []\n', 1)
++            self.assertEqual(expected, body(self.host, signature))
+         self.assertFalse(self.proof['full_function_migration_verified'])
+         self.assertEqual(self.proof['new_fixed_record_count'], 0)
+ 
+--- phase-24-before/scripts/tests/test_p0_repair_snapshot.py
++++ scripts/tests/test_p0_repair_snapshot.py
+@@ -112,7 +112,7 @@
+         self.assertIn("scrollView.contentView.bounds.origin = .zero", drain)
+         self.assertLess(drain.index("state.applyFullCollectionReload"), drain.index("state.consumePendingNeighborSelection"))
+ 
+-    def test_new_view_model_owner_restarts_first_snapshot_only_on_identity_change(self):
++    def test_new_view_model_and_explicit_model_install_restart_the_first_snapshot(self):
+         main_view_setter = original_fragment(ROOT / "decompiled/Paste/part-0020.c", "0x100036ee0")
+         self.assertIn("FUN_100036234()", main_view_setter)
+         self.assertIn("ItemCollectionView::viewModel) = uVar7", main_view_setter)
+@@ -132,6 +132,10 @@
+         self.assertIn("previousState.cancelPendingNeighborSelection()", reset_block)
+         self.assertIn("hasReceivedCollectionSnapshot = false", reset_block)
+         self.assertIn("collectionOwnerGeneration &+= 1", reset_block)
++        self.assertIn("items = []", reset_block)
++        replacement = swift_body(self.host, "func replaceCollectionModel(state: ReplicaUIState)")
++        self.assertIn("hasReceivedCollectionSnapshot = false", replacement)
++        self.assertIn("items = []", replacement)
+         self.assertIn("previousIDs != incomingIDs", swift_body(self.host, "private func drainCollectionSnapshots()"))
+ 
+     def test_full_reload_resets_selection_without_a_pending_selection_equality_gate(self):
+--- /dev/null
++++ scripts/tests/test_p0_repair_collection_model_replacement.py
+@@ -0,0 +1,141 @@
++"""Original C/ARM and real source-install paths; no Swift/AppKit execution."""
++import hashlib
++import json
++from pathlib import Path
++import sys
++import unittest
++
++ROOT = Path(__file__).resolve().parents[2]
++sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'scripts/tests')]
++from function_ledger import source_fragments
++from test_offline_p0_contracts import body
++from test_p0_repair_checksum_routing import original_fragment
++
++UI = 'replica/Sources/Pasto/UI/ReplicaUIController.swift'
++HOST = 'replica/Sources/Pasto/UI/ReplicaNativeCardCollection.swift'
++
++
++class CollectionModelReplacement(unittest.TestCase):
++    @classmethod
++    def setUpClass(cls):
++        cls.phase = ROOT / '.local/p0-repair/phase-24'
++        cls.proof = json.loads((cls.phase / 'replacement-root-contract.json').read_text())
++        cls.ui = (ROOT / UI).read_text()
++        cls.host = (ROOT / HOST).read_text()
++
++    def original(self, address):
++        r = next(r for r in self.proof['original_fragments'] if r['address'] == address)
++        return original_fragment((ROOT / r['path']).read_text(), address[2:])
++
++    def test_original_fragments_and_machine_data_are_bound(self):
++        for r in self.proof['original_fragments']:
++            self.assertEqual(source_fragments(ROOT / r['path'])[r['address']]['sha256'], r['sha256'])
++        raw = (ROOT / self.proof['binary']['path']).read_bytes()
++        self.assertEqual(hashlib.sha256(raw).hexdigest(), self.proof['binary']['sha256'])
++        for r in self.proof['machine_ranges']:
++            data = raw[r['file_offset']:r['file_offset'] + r['length']]
++            self.assertEqual(data.hex(), r['hex'])
++            self.assertEqual(hashlib.sha256(data).hexdigest(), r['sha256'])
++
++    def test_original_new_applier_is_empty_and_its_first_accepted_snapshot_is_full(self):
++        constructor = self.original('0x1001b8ddc')
++        self.assertIn('_allocateUninitialized(0,uVar5)', constructor)
++        self.assertIn('unaff_x20[2] = tVar7._0_8_', constructor)
++        self.assertIn('*(undefined4 *)(unaff_x20 + 0xb) = 0', constructor)
++        callback = self.original('0x1001b9b78')
++        self.assertIn("*(char *)((long)unaff_x20 + 0x5a) == '\\x01'", callback)
++        self.assertIn('(*pcVar4)(0,0,0,0', callback)
++        view = self.original('0x100223430')
++        self.assertIn('if (param_1 == 0)', view)
++        self.assertIn('FUN_10022be98()', view)
++
++    def test_original_weak_old_applier_and_weak_update_owner_are_distinct(self):
++        queued = self.original('0x1001ba02c')
++        self.assertIn('FUN_1001b9ab0(', queued)
++        weak = self.original('0x1001b9ab0')
++        self.assertIn('_swift_weakLoadStrong()', weak)
++        self.assertLess(weak.index('if (pMVar6 != (MainActor *)0x0)'), weak.index('FUN_1001b95bc()'))
++        install = self.original('0x100067c84')
++        self.assertLess(install.index('PTR___swiftEmptySetSingleton'), install.index('FUN_10022338c()'))
++        self.assertIn('*(code **)(lVar16 + 0x18) = FUN_1000765b8', install)
++        self.assertNotIn('pendingNeighborSelectionID', install)
++
++    def test_real_replacement_resets_source_data_and_epoch_without_selection_or_focus(self):
++        method = body(self.host, 'func replaceCollectionModel(state: ReplicaUIState)')
++        order = ['guard self.state === state, state.collectionOwner === self',
++                 'collectionOwnerGeneration &+= 1', 'pendingSnapshot = nil',
++                 'snapshotDrainScheduled = false', 'hasReceivedCollectionSnapshot = false',
++                 'items = []', 'update(state: state, cardSide: cardSide)']
++        self.assertEqual([method.index(t) for t in order], sorted(method.index(t) for t in order))
++        for text in ['makeFirstResponder', 'applyOrderedSelection', 'cancelPendingNeighborSelection',
++                     'consumePendingNeighborSelection', 'drainCollectionSnapshots()', 'scrollView', 'isDrainingSnapshots =']:
++            self.assertNotIn(text, method)
++
++    def test_query_and_board_consumers_install_models_instead_of_every_redraw(self):
++        installation = body(self.ui, 'private func installSearchQueryDelivery()')
++        query = installation[installation.index('collectionQueryObservation = searchQueryChanges'):]
++        order = ['.debounce(for: .milliseconds(120)', '.removeDuplicates()',
++                 'self.collectionSearchQueryNodes = nodes', 'self.normalizeSelection()',
++                 'self.collectionOwner?.replaceCollectionModel(state: self)']
++        self.assertEqual([query.index(t) for t in order], sorted(query.index(t) for t in order))
++        board = body(self.ui, 'func chooseBoard(_ id: UUID?)')
++        self.assertLess(board.index('normalizeProjectedSelection()'), board.index('replaceCollectionModel(state: self)'))
++        cleanup = body(self.ui, 'func normalizeSelection()')
++        invalid = body(cleanup, 'if let pinboardID, !store.pinboards.contains(where: { $0.id == pinboardID })')
++        self.assertLess(invalid.index('self.pinboardID = nil'), invalid.index('replaceCollectionModel(state: self)'))
++        self.assertEqual(self.ui.count('.replaceCollectionModel(state: self)'), 3)
++
++    def test_ordinary_data_and_selection_updates_do_not_reset_the_applier(self):
++        for signature in ['searchIndex.onUpdate =', 'observation = store.objectWillChange.sink',
++                          'private func refreshSearch()', 'private func applyOrderedSelection(']:
++            self.assertNotIn('replaceCollectionModel', body(self.ui, signature))
++        update = body(self.host, 'func update(state: ReplicaUIState, cardSide: CGFloat)')
++        reset = body(update, 'if self.state !== state')
++        self.assertIn('items = []', reset)
++        self.assertNotIn('hasReceivedCollectionSnapshot = false', update.replace(reset, ''))
++        self.assertNotIn('collectionOwnerGeneration &+= 1', update.replace(reset, ''))
++        self.assertNotIn('replaceCollectionModel', update)
++
++    def test_old_queued_epoch_cannot_consume_or_unschedule_the_new_source(self):
++        schedule = body(self.host, 'private func scheduleSnapshotDrain()')
++        self.assertIn('[weak self]', schedule)
++        self.assertLess(schedule.index('self.collectionOwnerGeneration == ownerGeneration'),
++                        schedule.index('self.snapshotDrainScheduled = false'))
++        drain = body(self.host, 'private func drainCollectionSnapshots()')
++        self.assertIn('while collectionOwnerGeneration == ownerGeneration', drain)
++        self.assertIn('defer {\n            isDrainingSnapshots = false\n            scheduleSnapshotDrain()', drain)
++        replacement = body(self.host, 'func replaceCollectionModel(state: ReplicaUIState)')
++        self.assertNotIn('isDrainingSnapshots = false', replacement)
++
++    def test_same_identity_source_counterexample_is_tied_to_before_reset_gate(self):
++        old_host = (self.phase / 'before' / HOST).read_text()
++        self.assertNotIn('func replaceCollectionModel(', old_host)
++        old_query = body((self.phase / 'before' / UI).read_text(), 'collectionQueryObservation = searchQueryChanges')
++        self.assertNotIn('replaceCollectionModel', old_query)
++        case = self.proof['source_gate_counterexample']
++        self.assertEqual(case['before_applied_ids'], case['next_source_ids'])
++        self.assertEqual(case['before_selected'], ['B'])
++        self.assertEqual(case['original_selected'], ['A'])
++        self.assertEqual(case['after_selected'], ['A'])
++        self.assertFalse(case['ui_state_identity_changes'])
++        self.assertEqual(case['classification'], 'source_contract_case_not_runtime_reproduction')
++
++    def test_existing_drain_and_weak_onupdate_delivery_are_reused(self):
++        before = (self.phase / 'before' / HOST).read_text()
++        for signature in ['private func scheduleSnapshotDrain()', 'private func drainCollectionSnapshots()', 'func detachObservers()']:
++            self.assertEqual(body(before, signature), body(self.host, signature))
++        old_ui = (self.phase / 'before' / UI).read_text()
++        for signature in ['func applyFullCollectionReload(items:', 'func applyIncrementalCollectionSnapshot(items:',
++                          'func consumePendingNeighborSelection(token:']:
++            self.assertEqual(body(old_ui, signature), body(self.ui, signature))
++
++    def test_conditional_boundaries_are_retained_instead_of_full_migration_claim(self):
++        self.assertFalse(self.proof['full_function_migration_verified'])
++        self.assertEqual(self.proof['contracts'][0]['function_id'], 'Paste:0x100067c84')
++        self.assertTrue(self.proof['retained_partial_contracts'])
++        self.assertTrue(self.proof['adaptations'])
++        self.assertIn('double_reset_on_stale_board_query', self.proof['retained_source_cases'])
++
++
++if __name__ == '__main__':
++    unittest.main()

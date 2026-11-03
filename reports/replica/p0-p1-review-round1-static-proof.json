@@ -1,0 +1,47 @@
+{
+  "kind": "p0_p1_primary_static_checks",
+  "binary_path": ".local/paste-arm64-static.bin",
+  "binary_sha256": "871f00354fbb1c165d858a98e6d19d6f43cb9d3f9f958b3e07c7f07eb5c19afb",
+  "date_encoding": [
+    {
+      "address": "0x1002d9d4c",
+      "slice_file_offset": 2989388,
+      "bytes": "0840651e",
+      "meaning": "FRINTM d8,d0: lower toward minus infinity"
+    },
+    {
+      "address": "0x1002d9da8",
+      "slice_file_offset": 2989480,
+      "bytes": "00c0641e",
+      "meaning": "FRINTP d0,d0: upper toward plus infinity"
+    },
+    {
+      "address": "0x1002d9de4",
+      "slice_file_offset": 2989540,
+      "bytes": "0801789e1600789e",
+      "meaning": "FCVTZS after directed rounding"
+    },
+    {
+      "address": "0x1002d7368",
+      "slice_file_offset": 2978664,
+      "bytes": "710a0014",
+      "meaning": "B to main encoder"
+    }
+  ],
+  "transaction_dispatch": [
+    {
+      "address": "0x1003bab58",
+      "slice_file_offset": 3910488,
+      "bytes": "f40300aa6574fe97",
+      "meaning": "transaction argument placed in Swift self then repo getter"
+    },
+    {
+      "address": "0x1003bab74",
+      "slice_file_offset": 3910516,
+      "bytes": "012340f9",
+      "meaning": "viewModel current list is read when action executes"
+    }
+  ],
+  "compiled": false,
+  "application_executed": false
+}

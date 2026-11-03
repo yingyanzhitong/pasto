@@ -1,0 +1,227 @@
+--- phase-37-before/replica/Sources/Pasto/GlobalHotKey.swift
++++ replica/Sources/Pasto/GlobalHotKey.swift
+@@ -17,7 +17,7 @@
+         let shortcut = PastoCore.KeyboardShortcut(keyCode: keyCode, modifierRawValue: modifiers.rawValue)
+         let monitor = OriginalGlobalShortcutMonitor.shared
+         self.monitor = monitor
+-        let status = monitor.f_1001eaa64(shortcut: shortcut) { [weak self] in self?.action?() }
++        let status = monitor.registerShortcut(shortcut: shortcut) { [weak self] in self?.action?() }
+         if status == noErr { registeredShortcut = shortcut }
+         return status
+     }
+--- phase-37-before/replica/Sources/PastoCore/OriginalGlobalShortcutMonitor.swift
++++ replica/Sources/PastoCore/OriginalGlobalShortcutMonitor.swift
+@@ -110,14 +110,22 @@
+         }
+     }
+ 
+-    @discardableResult
+-    public func f_1001eaa64(shortcut: KeyboardShortcut, action: @escaping () -> Void) -> OSStatus {
++    public func f_1001eaa64(shortcut: KeyboardShortcut, action: @escaping () -> Void) {
+         f_1001eaa64(shortcut: OriginalShortcutValue(keyCode: Int(shortcut.keyCode),
+             internalModifiers: shortcut.modifierRawValue), action: action)
+     }
+ 
+-    @discardableResult
+-    public func f_1001eaa64(shortcut: OriginalShortcutValue, action: @escaping () -> Void) -> OSStatus {
++    public func f_1001eaa64(shortcut: OriginalShortcutValue, action: @escaping () -> Void) {
++        _ = registerShortcut(shortcut: shortcut, action: action)
++    }
++
++    /// Pasto reports registration failures to its preferences UI; the original entry returns Void.
++    public func registerShortcut(shortcut: KeyboardShortcut, action: @escaping () -> Void) -> OSStatus {
++        registerShortcut(shortcut: OriginalShortcutValue(keyCode: Int(shortcut.keyCode),
++            internalModifiers: shortcut.modifierRawValue), action: action)
++    }
++
++    private func registerShortcut(shortcut: OriginalShortcutValue, action: @escaping () -> Void) -> OSStatus {
+         f_1001eae90(shortcut: shortcut)
+         let registration = OriginalShortcutRegistration(keyCode: shortcut.keyCode,
+             modifierRawValue: shortcut.internalModifiers, action: action)
+--- phase-37-before/replica/Sources/PastoCore/Pasteboard.swift
++++ replica/Sources/PastoCore/Pasteboard.swift
+@@ -288,7 +288,6 @@
+     fileprivate func allowsPasteboardCapture(types: Set<String>, sourceBundleID: String?) throws -> Bool {
+         guard !types.isEmpty, !types.contains(replicaGeneratedType.rawValue) else { return false }
+         // Check policy before reading promised data, including in the timer path.
+-        try reload()
+         if preferences.ignoreTransientContent && !types.isDisjoint(with: transientTypes) { return false }
+         if preferences.ignoreConcealedContent && !types.isDisjoint(with: concealedTypes) { return false }
+         if let sourceBundleID, preferences.excludedBundleIDs.contains(sourceBundleID) { return false }
+@@ -567,9 +566,7 @@
+     }
+ 
+     public func originalPasteboardShouldRead(_ types: [String]) throws -> Bool {
+-        // 0x10037ba14 only reads policy; refreshing other processes' preferences
+-        // must not commit history before a pasteboard change has been accepted.
+-        try store.reload()
++        // 0x10037ba14 reads the current policy without refreshing persistent history.
+         var ignoredTypes = Set(store.preferences.ignoredPasteboardTypes)
+         if store.preferences.ignoreTransientContent { ignoredTypes.formUnion(transientTypes) }
+         if store.preferences.ignoreConcealedContent { ignoredTypes.formUnion(concealedTypes) }
+--- phase-37-before/scripts/tests/test_offline_p0_contracts.py
++++ scripts/tests/test_offline_p0_contracts.py
+@@ -149,7 +149,7 @@
+ 
+     def test_hotkey_replacement_keeps_failed_registration_out_of_dictionary(self):
+         text = body((CORE / "OriginalGlobalShortcutMonitor.swift").read_text(),
+-                    "func f_1001eaa64(shortcut: OriginalShortcutValue, action: @escaping () -> Void) -> OSStatus")
++                    "func registerShortcut(shortcut: OriginalShortcutValue, action: @escaping () -> Void) -> OSStatus")
+         self.assertLess(text.index("f_1001eae90(shortcut:"), text.index("OriginalShortcutRegistration("))
+         success = body(text, "if registration.status == noErr")
+         self.assertLess(success.index("lock.lock()"), success.index("f_1001eb1e4("))
+@@ -520,12 +520,12 @@
+     def test_capture_policy_refresh_does_not_commit_before_accepting_content(self):
+         source = (CORE / "Pasteboard.swift").read_text()
+         delegate = body(source, "func originalPasteboardShouldRead(_ types:")
+-        self.assertIn("try store.reload()", delegate)
++        self.assertNotIn("reload()", delegate)
+         self.assertNotIn("store.save()", delegate)
+-        self.assertLess(delegate.index("try store.reload()"), delegate.index("f_10037ba14("))
++        self.assertIn("f_10037ba14(", delegate)
+         capture = body(source, "fileprivate func allowsPasteboardCapture(")
+-        self.assertIn("try reload()", capture)
+-        self.assertLess(capture.index("types.contains(replicaGeneratedType.rawValue)"), capture.index("try reload()"))
++        self.assertNotIn("reload()", capture)
++        self.assertLess(capture.index("types.contains(replicaGeneratedType.rawValue)"), capture.index("preferences.ignoreTransientContent"))
+         expiry = body(capture, "if let until = preferences.pauseUntil")
+         self.assertIn("if until > Date() { return false }", expiry)
+         self.assertIn("preferences.isMonitoringPaused = false", expiry)
+--- phase-37-before/scripts/tests/test_p0_repair_boundaries_history_reuse.py
++++ scripts/tests/test_p0_repair_boundaries_history_reuse.py
+@@ -112,7 +112,8 @@
+         old+='        temporaryRoot: FileManager.default.temporaryDirectory.appendingPathComponent("PasteReplica", isDirectory: true))'
+         new='    private static let imageRestore = OriginalPasteboardImageRestore()'
+         self.assertEqual(self.pasteboard.count(new),1)
+-        self.assertEqual(self.pasteboard.replace(new,old,1),before)
++        checkpoint=(ROOT/'.local/p0-repair/phase-37/before/replica/Sources/PastoCore/Pasteboard.swift').read_text()
++        self.assertEqual(checkpoint.replace(new,old,1),before)
+         init_calls=[]
+         for p in (ROOT/'replica/Sources').rglob('*.swift'):
+             if 'OriginalPasteboardImageRestore('in p.read_text():init_calls.append(str(p.relative_to(ROOT)))
+--- phase-37-before/scripts/tests/test_p0_repair_selection_snapshot_consumers.py
++++ scripts/tests/test_p0_repair_selection_snapshot_consumers.py
+@@ -117,9 +117,10 @@
+ 
+     def test_hotkey_status_facade_is_consumed_and_unchanged(self):
+         for path in ['replica/Sources/PastoCore/OriginalGlobalShortcutMonitor.swift', 'replica/Sources/Pasto/GlobalHotKey.swift']:
+-            self.assertEqual((ROOT / path).read_bytes(), (self.phase / 'before' / path).read_bytes())
++            checkpoint = ROOT / '.local/p0-repair/phase-37/before' / path
++            self.assertEqual(checkpoint.read_bytes(), (self.phase / 'before' / path).read_bytes())
+         facade = (ROOT / 'replica/Sources/Pasto/GlobalHotKey.swift').read_text()
+-        self.assertIn('let status = monitor.f_1001eaa64', facade)
++        self.assertIn('let status = monitor.registerShortcut', facade)
+         self.assertIn('if status == noErr { registeredShortcut = shortcut }', facade)
+         self.assertIn('return status', facade)
+ 
+--- /dev/null
++++ scripts/tests/test_p0_repair_policy_registration_boundary.py
+@@ -0,0 +1,108 @@
++"""Source contracts only: no Carbon, AppKit or persistent-store execution."""
++import hashlib
++import json
++import sys
++import unittest
++from pathlib import Path
++
++ROOT = Path(__file__).resolve().parents[2]
++sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'scripts/tests')]
++from function_ledger import source_fragments
++from test_offline_p0_contracts import body
++from test_p0_repair_checksum_routing import original_fragment
++
++
++class PolicyRegistrationBoundaryContracts(unittest.TestCase):
++    @classmethod
++    def setUpClass(cls):
++        cls.phase = ROOT / '.local/p0-repair/phase-37'
++        cls.core = ROOT / 'replica/Sources/PastoCore'
++        cls.monitor = (cls.core / 'OriginalGlobalShortcutMonitor.swift').read_text()
++        cls.pasteboard = (cls.core / 'Pasteboard.swift').read_text()
++        cls.facade = (ROOT / 'replica/Sources/Pasto/GlobalHotKey.swift').read_text()
++        cls.before = cls.phase / 'before'
++
++    def test_original_registration_is_void_and_side_effect_order_is_bound(self):
++        original = original_fragment((ROOT / 'decompiled/Paste/part-0157.c').read_text(), '1001eaa64')
++        self.assertIn('void FUN_1001eaa64(', original)
++        order = ['FUN_1001eae90();', 'FUN_1001eb8d0(', 'FUN_1001eb1e4(']
++        self.assertEqual([original.index(t) for t in order], sorted(original.index(t) for t in order))
++        self.assertIn('if (*(int *)(uVar3 + 0x24) == 0)', original)
++
++    def test_original_entry_exposes_void_and_shares_actual_registration_worker(self):
++        signature = 'public func f_1001eaa64(shortcut: OriginalShortcutValue, action: @escaping () -> Void)'
++        self.assertIn(signature + ' {', self.monitor)
++        self.assertEqual(body(self.monitor, signature).strip(), '{\n        _ = registerShortcut(shortcut: shortcut, action: action)\n    }')
++        self.assertNotIn('func f_1001eaa64(shortcut: OriginalShortcutValue, action: @escaping () -> Void) ->', self.monitor)
++
++    def test_keyboard_original_entry_also_returns_void(self):
++        signature = 'public func f_1001eaa64(shortcut: KeyboardShortcut, action: @escaping () -> Void)'
++        self.assertIn(signature + ' {', self.monitor)
++        self.assertIn('f_1001eaa64(shortcut: OriginalShortcutValue(', body(self.monitor, signature))
++
++    def test_registration_algorithm_is_unchanged_and_not_duplicated(self):
++        before = (self.before / 'replica/Sources/PastoCore/OriginalGlobalShortcutMonitor.swift').read_text()
++        old = body(before, 'public func f_1001eaa64(shortcut: OriginalShortcutValue, action: @escaping () -> Void) -> OSStatus')
++        new = body(self.monitor, 'private func registerShortcut(shortcut: OriginalShortcutValue, action: @escaping () -> Void) -> OSStatus')
++        self.assertEqual(old, new)
++        self.assertEqual(self.monitor.count('let registration = OriginalShortcutRegistration('), 1)
++
++    def test_status_adapter_preserves_exact_per_attempt_status_without_shared_slot(self):
++        adapter = body(self.monitor, 'public func registerShortcut(shortcut: KeyboardShortcut,')
++        self.assertIn('registerShortcut(shortcut: OriginalShortcutValue(', adapter)
++        worker = body(self.monitor, 'private func registerShortcut(shortcut: OriginalShortcutValue,')
++        self.assertIn('return registration.status', worker)
++        before = (self.before / 'replica/Sources/PastoCore/OriginalGlobalShortcutMonitor.swift').read_text()
++        self.assertEqual(body(self.monitor, 'public final class OriginalShortcutRegistration'), body(before, 'public final class OriginalShortcutRegistration'))
++        self.assertNotIn('lastStatus', self.monitor)
++
++    def test_real_ui_status_consumer_only_renames_the_adapter_call(self):
++        before = (self.before / 'replica/Sources/Pasto/GlobalHotKey.swift').read_text()
++        self.assertEqual(self.facade.replace('monitor.registerShortcut(', 'monitor.f_1001eaa64(', 1), before)
++        self.assertIn('if status == noErr { registeredShortcut = shortcut }', self.facade)
++
++    def test_policy_has_no_extra_persistent_read_before_data_acceptance(self):
++        for signature in ['fileprivate func allowsPasteboardCapture(', 'public func originalPasteboardShouldRead(']:
++            policy = body(self.pasteboard, signature)
++            self.assertNotIn('reload()', policy)
++            self.assertNotIn('latestState()', policy)
++            self.assertNotIn('persistence.', policy)
++        delegate = body(self.pasteboard, 'public func originalPasteboardShouldRead(')
++        self.assertIn('OriginalPasteboardPolicies.f_10037ba14(', delegate)
++        self.assertIn('return try store.allowsPasteboardCapture(', delegate)
++
++    def test_gates_and_pause_expiry_are_unchanged_except_extra_reload(self):
++        before = (self.before / 'replica/Sources/PastoCore/Pasteboard.swift').read_text()
++        signature = 'fileprivate func allowsPasteboardCapture('
++        self.assertEqual(body(self.pasteboard, signature), body(before, signature).replace('        try reload()\n', '', 1))
++        policy = body(self.pasteboard, signature)
++        self.assertEqual(policy.count('try save()'), 1)
++        expiry = body(policy, 'if let until = preferences.pauseUntil')
++        self.assertIn('if until > Date() { return false }', expiry)
++        self.assertIn('try save()', expiry)
++
++    def test_in_memory_preferences_and_existing_background_refresh_remain_live(self):
++        main = (ROOT / 'replica/Sources/Pasto/AppMain.swift').read_text()
++        refresh = body(main, 'refreshTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true)')
++        self.assertIn('try self.store.reload()', refresh)
++        self.assertEqual(main, (self.before / 'replica/Sources/Pasto/AppMain.swift').read_text())
++        store = (self.core / 'ClipboardStore.swift').read_text()
++        self.assertIn('@Published public var preferences = AppPreferences()', store)
++        self.assertEqual(store, (self.before / 'replica/Sources/PastoCore/ClipboardStore.swift').read_text())
++
++    def test_actual_read_pipeline_and_readonly_policy_implementation_are_retained(self):
++        before = (self.before / 'replica/Sources/PastoCore/Pasteboard.swift').read_text()
++        self.assertEqual(body(self.pasteboard, 'private func synchronizePasteboard()'), body(before, 'private func synchronizePasteboard()'))
++        path = 'replica/Sources/PastoCore/OriginalPasteboardPolicies.swift'
++        self.assertEqual((ROOT / path).read_bytes(), (self.before / path).read_bytes())
++
++    def test_original_capture_and_policy_fragments_remain_bound(self):
++        proof = json.loads((self.phase / 'policy-registration-contract.json').read_text())
++        for r in proof['original_fragments']:
++            self.assertEqual(source_fragments(ROOT / r['path'])[r['address']]['sha256'], r['sha256'])
++        raw = (ROOT / proof['binary']['path']).read_bytes()
++        self.assertEqual(hashlib.sha256(raw).hexdigest(), proof['binary']['sha256'])
++
++
++if __name__ == '__main__':
++    unittest.main()

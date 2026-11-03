@@ -1,0 +1,78 @@
+--- a/replica/Sources/PastoCore/OriginalSearchSuggestions.swift
++++ b/replica/Sources/PastoCore/OriginalSearchSuggestions.swift
+@@ -24,6 +24,16 @@
+             var result = nodes
+             result[index] = filter
+             return result
++        }
++    }
++
++    // 2ddc10: only dates and list identifiers have a resolved caption.
++    public static func f_1002ddc10(kind: UInt8, value: String,
++                                  listName: (String) -> String? = { _ in nil }) -> String {
++        switch kind {
++        case 5: return listName(value) ?? value
++        case 3: return OriginalSearchDateEncoding.f_1002d8e9c(value) ?? value
++        default: return value
+         }
+     }
+ 
+--- a/replica/Sources/Pasto/UI/FilterBrowser.swift
++++ b/replica/Sources/Pasto/UI/FilterBrowser.swift
+@@ -36,16 +36,18 @@
+ 
+ @MainActor
+ enum ReplicaFilterMatching {
+-    static func chip(_ selection: ReplicaSearchFilterChip.Selection, store: ClipboardStore) -> ReplicaSearchFilterChip {
+-        let title: String
++    static func chip(_ selection: ReplicaSearchFilterChip.Selection, store: ClipboardStore,
++                     rawValue: String? = nil) -> ReplicaSearchFilterChip {
++        let value: String
++        if let rawValue {
++            value = rawValue
++        } else {
++            guard case let .filter(_, canonicalValue) = selection.queryNode else { preconditionFailure() }
++            value = canonicalValue
++        }
+         var image: NSImage?
+-        var value = ""
+         switch selection {
+-        case let .kind(kind):
+-            title = kind.displayName
+-            value = kind == .files ? "file" : kind == .richText ? "text" : kind.rawValue
+         case let .source(source):
+-            title = source
+             if let application = store.sourceApplications.first(where: {
+                 $0.name.caseInsensitiveCompare(source) == .orderedSame
+             }) {
+@@ -55,15 +57,14 @@
+                 image = item.sourceBundleID.flatMap { NSWorkspace.shared.urlForApplication(withBundleIdentifier: $0) }
+                     .map { NSWorkspace.shared.icon(forFile: $0.path) }
+             }
+-        case let .device(device): title = device
+-        case let .date(filter): title = OriginalSearchDateEncoding.title(for: filter.range)
+-        case let .pinboard(id):
+-            value = id
+-            title = store.tabListTarget(identifier: id)?.name ?? id
++        case .kind, .device, .date, .pinboard: break
+         }
+         if image == nil {
+             image = OriginalSearchFilterSymbols.f_100054b2c(kind: selection.group, value: value)
+                 .flatMap { OriginalSystemImageFunctions.f_1000f653c($0) }
++        }
++        let title = OriginalSearchSuggestions.f_1002ddc10(kind: selection.group, value: value) {
++            store.tabListTarget(identifier: $0)?.name
+         }
+         return ReplicaSearchFilterChip(selection: selection, title: title, image: image)
+     }
+--- a/replica/Sources/Pasto/UI/SearchEditor.swift
++++ b/replica/Sources/Pasto/UI/SearchEditor.swift
+@@ -161,7 +161,7 @@
+             case 5: selection = .pinboard(value)
+             default: return nil
+             }
+-            return ReplicaFilterMatching.chip(selection, store: parent.store)
++            return ReplicaFilterMatching.chip(selection, store: parent.store, rawValue: value)
+         }
+ 
+         func dismissSuggestions() {

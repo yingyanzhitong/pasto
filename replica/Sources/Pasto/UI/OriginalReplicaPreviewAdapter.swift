@@ -2,27 +2,53 @@ import AppKit
 import Combine
 import PastoCore
 
+// Native text/color/image/link creation reads its captured entity; other content keeps its adapter.
+@MainActor
+func makeOriginalReplicaNativePreview(state: ReplicaUIState, input: ClipboardRestoreItem) -> OriginalItemPreviewView {
+    let rawType = input.previewRawType()
+    if rawType == 5 {
+        return makeReplicaTextPreview(state: state, item: nil, input: input)
+    }
+    if rawType == 2 {
+        let content = ReplicaColorPreviewContent(state: state, item: nil, input: input)
+        return makeReplicaContentPreview(state: state, item: nil, input: input, content: content,
+            contentSize: content.preferredPreviewSize, metadata: content.previewMetadataView)
+    }
+    if rawType == 1 {
+        let content = ReplicaImagePreviewContent(state: state, item: nil, input: input)
+        return makeReplicaContentPreview(state: state, item: nil, input: input, content: content,
+            contentSize: content.preferredPreviewSize, metadata: content.previewMetadataView)
+    }
+    if rawType == 4 {
+        let content = ReplicaLinkPreviewContent(state: state, item: nil, input: input)
+        return makeReplicaContentPreview(state: state, item: nil, input: input, content: content,
+            contentSize: content.preferredPreviewSize, metadata: content.previewMetadataView)
+    }
+    return makeOriginalReplicaPreview(state: state, item: input.resolvedItem(), input: input)
+}
+
 /// Shares preview chrome and editing transitions; per-kind content retains its own contract.
 @MainActor
-func makeOriginalReplicaPreview(state: ReplicaUIState, item: ClipboardItem) -> OriginalItemPreviewView {
-    if let textPreview = makeOriginalReplicaTextPreview(state: state, item: item) { return textPreview }
+func makeOriginalReplicaPreview(state: ReplicaUIState, item: ClipboardItem,
+                                input: ClipboardRestoreItem? = nil) -> OriginalItemPreviewView {
+    if let textPreview = makeOriginalReplicaTextPreview(state: state, item: item, input: input) { return textPreview }
     let content: NSView
     let contentSize: NSSize
     let metadata: NSView?
     let screenSize = NSScreen.main?.frame.size ?? .zero
     switch item.kind {
     case .image:
-        let image = ReplicaImagePreviewContent(state: state, item: item)
+        let image = ReplicaImagePreviewContent(state: state, item: item, input: input)
         content = image
         contentSize = image.preferredPreviewSize
         metadata = image.previewMetadataView
     case .color:
-        let color = ReplicaColorPreviewContent(state: state, item: item)
+        let color = ReplicaColorPreviewContent(state: state, item: item, input: input)
         content = color
         contentSize = color.preferredPreviewSize
         metadata = color.previewMetadataView
     case .link:
-        let link = ReplicaLinkPreviewContent(state: state, item: item)
+        let link = ReplicaLinkPreviewContent(state: state, item: item, input: input)
         content = link
         contentSize = link.preferredPreviewSize
         metadata = link.previewMetadataView
@@ -42,7 +68,14 @@ func makeOriginalReplicaPreview(state: ReplicaUIState, item: ClipboardItem) -> O
                             height: screenSize.height * 0.25)
         metadata = nil
     }
-    let header = ReplicaInlinePreviewHeader(state: state, item: item)
+    return makeReplicaContentPreview(state: state, item: item, input: input, content: content,
+        contentSize: contentSize, metadata: metadata)
+}
+
+@MainActor
+private func makeReplicaContentPreview(state: ReplicaUIState, item: ClipboardItem?, input: ClipboardRestoreItem?,
+                                       content: NSView, contentSize: NSSize, metadata: NSView?) -> OriginalItemPreviewView {
+    let header = ReplicaInlinePreviewHeader(state: state, item: item, input: input)
     let editorHeader = ReplicaInlinePreviewEditorHeader()
     let footer = OriginalPreviewFooterView()
     if let metadata { footer.f_1003df0b0(metadata) }
@@ -55,7 +88,7 @@ func makeOriginalReplicaPreview(state: ReplicaUIState, item: ClipboardItem) -> O
                                             contentView: content, footer: footer,
                                             contentSize: contentSize)
     view.applyContentAppearance()
-    connectReplicaPreviewHeader(header, view: view, state: state, item: item)
+    connectReplicaPreviewHeader(header, view: view, state: state, item: item, input: input)
     editorHeader.onCancel = { [weak view] in view?.f_10007c1fc() }
     editorHeader.onSave = { [weak view] in view?.f_10007c080() }
     view.setCanCommitEditing = { [weak editorHeader] enabled in editorHeader?.setCanCommit(enabled) }
@@ -66,17 +99,27 @@ func makeOriginalReplicaPreview(state: ReplicaUIState, item: ClipboardItem) -> O
 /// Connects recovered preview mode transitions to the replica's local text model.
 /// Other kinds use their own content adapters in the shared factory above.
 @MainActor
-func makeOriginalReplicaTextPreview(state: ReplicaUIState, item: ClipboardItem) -> OriginalItemPreviewView? {
-    guard item.kind == .text || item.kind == .richText else { return nil }
-    let content = ReplicaInlineTextPreviewContent(state: state, item: item)
-    let header = ReplicaInlinePreviewHeader(state: state, item: item)
+func makeOriginalReplicaTextPreview(state: ReplicaUIState, item: ClipboardItem,
+                                    input: ClipboardRestoreItem? = nil) -> OriginalItemPreviewView? {
+    let isText: Bool
+    if let rawType = input?.previewRawType() { isText = rawType == 5 }
+    else { isText = item.kind == .text || item.kind == .richText }
+    guard isText else { return nil }
+    return makeReplicaTextPreview(state: state, item: item, input: input)
+}
+
+@MainActor
+private func makeReplicaTextPreview(state: ReplicaUIState, item: ClipboardItem?,
+                                    input: ClipboardRestoreItem?) -> OriginalItemPreviewView {
+    let content = ReplicaInlineTextPreviewContent(state: state, item: item, input: input)
+    let header = ReplicaInlinePreviewHeader(state: state, item: item, input: input)
     let editorHeader = ReplicaInlinePreviewEditorHeader(document: content.document)
     let footer = ReplicaInlinePreviewFooter(document: content.document)
     let view = ReplicaInlinePreviewContainer(previewHeader: header, editorHeader: editorHeader,
                                             contentView: content, footer: footer,
                                             contentSize: content.preferredPreviewSize)
     view.applyContentAppearance()
-    connectReplicaPreviewHeader(header, view: view, state: state, item: item)
+    connectReplicaPreviewHeader(header, view: view, state: state, item: item, input: input)
     editorHeader.onCancel = { [weak view] in view?.f_10007c1fc() }
     editorHeader.onSave = { [weak view] in view?.f_10007c080() }
     view.setCanCommitEditing = { [weak editorHeader] enabled in editorHeader?.setCanCommit(enabled) }
@@ -91,7 +134,8 @@ func makeOriginalReplicaTextPreview(state: ReplicaUIState, item: ClipboardItem) 
 @MainActor
 private func connectReplicaPreviewHeader(_ header: ReplicaInlinePreviewHeader,
                                          view: OriginalItemPreviewView,
-                                         state: ReplicaUIState, item: ClipboardItem) {
+                                         state: ReplicaUIState, item: ClipboardItem?,
+                                         input: ClipboardRestoreItem?) {
     header.onEdit = { [weak view] in view?.f_10007be8c() }
     header.onClose = { [weak view] in
         guard let view else { return }
@@ -101,7 +145,11 @@ private func connectReplicaPreviewHeader(_ header: ReplicaInlinePreviewHeader,
     header.titleLabel.onCommitEditing = { [weak view, weak state] title in
         guard let view, let state else { return }
         withExtendedLifetime(view) {
-            state.perform { try state.store.updateItem(id: item.id, title: title, text: nil) }
+            if let input {
+                state.perform { try state.store.updateItem(input, title: title) }
+            } else if let item {
+                state.perform { try state.store.updateItem(id: item.id, title: title, text: nil) }
+            }
         }
     }
 }
@@ -155,6 +203,25 @@ private final class ReplicaInlinePreviewTextView: NSTextView {
     var onSave: (() -> Void)?
     var onCancel: (() -> Void)?
 
+    // Paste 0x10021540c → 0x100214e78: normalize rich text before one undoable replacement.
+    override func paste(_ sender: Any?) {
+        guard let source = NSPasteboard.general.readObjects(forClasses: [NSAttributedString.self],
+                                                           options: nil)?.first as? NSAttributedString else {
+            super.paste(sender)
+            return
+        }
+        undoManager?.beginUndoGrouping()
+        textStorage?.beginEditing()
+        if let storage = textStorage {
+            let range = selectedRange()
+            // 0x100215840 has the same font/underline/strike rules as 0x1003c1860.
+            let replacement = OriginalPreviewAttributedText.normalizedEditingText(source)
+            storage.replaceCharacters(in: range, with: replacement)
+        }
+        textStorage?.endEditing()
+        undoManager?.endUndoGrouping()
+    }
+
     override func validateUserInterfaceItem(_ item: NSValidatedUserInterfaceItem) -> Bool {
         if item.action == NSSelectorFromString("changeLayoutOrientation:") { return false }
         return super.validateUserInterfaceItem(item)
@@ -191,23 +258,44 @@ private final class ReplicaInlineTextPreviewContent: NSScrollView, OriginalPrevi
     private let text: ReplicaInlinePreviewTextView
     private weak var state: ReplicaUIState?
     private let itemID: UUID
+    private let editInput: ClipboardRestoreItem?
+    private let nativeTextModel: OriginalTextPreviewModel?
+    private var nativeItemObservation: ClipboardItemObservation?
     private var itemObservation: AnyCancellable?
     private var contentObservation: AnyCancellable?
     private var storageBridge: OriginalPreviewTextStorageBridge?
-    private var originalText: NSAttributedString
-    private var editingText: NSAttributedString
+    private var fallbackOriginalText: NSAttributedString
+    private var fallbackEditingText: NSAttributedString
+    private var originalText: NSAttributedString { nativeTextModel?.originalText ?? fallbackOriginalText }
+    private var editingText: NSAttributedString { nativeTextModel?.editingText ?? fallbackEditingText }
     private(set) var canCommit = false
     var onCanCommitEditing: ((Bool) -> Void)?
     var onCancel: (() -> Void)?
     var onSave: (() -> Void)?
     var previewEditingToolbar: NSView? { nil }
 
-    init(state: ReplicaUIState, item: ClipboardItem) {
+    init(state: ReplicaUIState, item: ClipboardItem?, input: ClipboardRestoreItem?) {
         self.state = state
-        itemID = item.id
-        let initial = Self.attributedContent(item)
-        originalText = initial
-        editingText = OriginalPreviewAttributedText.normalizedEditingText(initial)
+        guard let itemID = input?.id ?? item?.id else { preconditionFailure("Missing preview input") }
+        self.itemID = itemID
+        editInput = input
+        let nativeModel = input.flatMap { OriginalTextPreviewModel(input: $0) }
+        nativeTextModel = nativeModel
+        let nativeSource: ClipboardItemObservation?
+        if nativeModel != nil { nativeSource = nil }
+        else if let input { nativeSource = input.observeItem() }
+        else { nativeSource = state.store.observeItem(id: itemID) }
+        nativeItemObservation = nativeSource
+        let initial: NSAttributedString
+        if let nativeModel {
+            initial = nativeModel.originalText
+        } else if let nativeSource {
+            initial = nativeSource.attributedText ?? NSAttributedString(string: "")
+        } else if let item = item ?? input?.resolvedItem() {
+            initial = Self.attributedContent(item)
+        } else { preconditionFailure("Missing preview content") }
+        fallbackOriginalText = initial
+        fallbackEditingText = nativeModel?.editingText ?? OriginalPreviewAttributedText.normalizedEditingText(initial)
         document = ReplicaRichTextDocument(content: initial)
         text = ReplicaInlinePreviewTextView(frame: .zero)
         super.init(frame: .zero)
@@ -242,21 +330,29 @@ private final class ReplicaInlineTextPreviewContent: NSScrollView, OriginalPrevi
         documentView = text
         contentObservation = document.$content.sink { [weak self] content in
             MainActor.assumeIsolated {
-                guard let self else { return }
+                guard let self, let onCanCommitEditing = self.onCanCommitEditing else { return }
                 self.canCommit = OriginalPreviewAttributedText.f_1003c0be0(
                     candidate: content, original: self.originalText, editing: self.editingText)
-                self.onCanCommitEditing?(self.canCommit)
+                onCanCommitEditing(self.canCommit)
             }
         }
-        itemObservation = state.store.$items.sink { [weak self] items in
-            MainActor.assumeIsolated {
-                guard let self else { return }
-                guard let current = items.first(where: { $0.id == self.itemID }), !current.isDeleted else {
-                    self.window?.performClose(nil)
-                    return
+        if let nativeModel {
+            nativeModel.onChange = { [weak self] in
+                guard let self, !self.text.isEditable else { return }
+                self.displayStoredModel()
+            }
+        } else if let nativeSource {
+            nativeSource.onTextChange = { [weak self] current in
+                self?.receiveStoredText(current)
+            }
+        } else {
+            // No native source is available; retain the existing store adapter.
+            itemObservation = state.store.$items.sink { [weak self] items in
+                MainActor.assumeIsolated {
+                    guard let self,
+                          let current = items.first(where: { $0.id == self.itemID }), !current.isDeleted else { return }
+                    self.receiveStoredModel(current)
                 }
-                self.replaceStoredModel(current)
-                if !self.text.isEditable { self.displayStoredModel() }
             }
         }
     }
@@ -290,36 +386,67 @@ private final class ReplicaInlineTextPreviewContent: NSScrollView, OriginalPrevi
 
     func beginPreviewEditing() {
         text.isEditable = true
-        reloadStoredContent()
+        displayStoredModel()
+    }
+
+    // 0x1003ec13c → 0x100214474 runs after the editing window is presented.
+    func focusPreviewEditing() {
         window?.makeFirstResponder(text)
     }
 
     func cancelPreviewEditing() {
         text.isEditable = false
-        reloadStoredContent()
+        displayStoredModel()
     }
 
     func commitPreviewEditing() {
         text.isEditable = false
         guard let state else { return }
         do {
-            try state.store.updateTextPreviewItem(id: itemID,
-                attributedString: OriginalPreviewAttributedText.f_100212ccc(editor: text))
+            let content = OriginalPreviewAttributedText.f_100212ccc(editor: text)
+            if let editInput = nativeTextModel?.item ?? editInput {
+                try state.store.updateTextPreviewItem(editInput, attributedString: content)
+            } else {
+                try state.store.updateTextPreviewItem(id: itemID, attributedString: content)
+            }
             state.normalizeSelection()
-        } catch { state.controller?.presentError(error) }
+        } catch {
+            // 3c0e08: consume the transaction error and continue the editing cleanup.
+        }
         reloadStoredContent()
     }
 
     private func reloadStoredContent() {
-        guard let item = state?.store.items.first(where: { $0.id == itemID }) else { return }
-        replaceStoredModel(item)
+        if let nativeTextModel {
+            nativeTextModel.reload()
+        } else if let nativeItemObservation {
+            guard let current = nativeItemObservation.attributedText else { return }
+            replaceStoredText(current)
+        } else {
+            guard let item = state?.store.items.first(where: { $0.id == itemID }) else { return }
+            replaceStoredModel(item)
+        }
         displayStoredModel()
     }
 
+    private func receiveStoredText(_ text: NSAttributedString) {
+        replaceStoredText(text)
+        if !self.text.isEditable { displayStoredModel() }
+    }
+
+    private func receiveStoredModel(_ item: ClipboardItem) {
+        replaceStoredModel(item)
+        if !text.isEditable { displayStoredModel() }
+    }
+
     private func replaceStoredModel(_ item: ClipboardItem) {
-        // Paste f_1003c04f0 refreshes both model values even while the editor is active.
-        originalText = Self.attributedContent(item)
-        editingText = OriginalPreviewAttributedText.normalizedEditingText(originalText)
+        replaceStoredText(Self.attributedContent(item))
+    }
+
+    private func replaceStoredText(_ text: NSAttributedString) {
+        // Legacy value input keeps its existing two stored baselines.
+        fallbackOriginalText = text
+        fallbackEditingText = OriginalPreviewAttributedText.normalizedEditingText(fallbackOriginalText)
     }
 
     private func displayStoredModel() {
@@ -358,10 +485,13 @@ private final class ReplicaInlinePreviewHeader: NSView {
     private let itemID: UUID
     private var pinButton: OriginalToolbarButton?
     private var sharingPicker: NSSharingServicePicker?
+    private var input: ClipboardRestoreItem?
 
-    init(state: ReplicaUIState, item: ClipboardItem) {
+    init(state: ReplicaUIState, item: ClipboardItem?, input: ClipboardRestoreItem?) {
         self.state = state
-        itemID = item.id
+        guard let itemID = input?.id ?? item?.id else { preconditionFailure("Missing preview input") }
+        self.itemID = itemID
+        self.input = input
         super.init(frame: .zero)
         let close = NSButton()
         f_1000123d4(close)
@@ -390,36 +520,74 @@ private final class ReplicaInlinePreviewHeader: NSView {
             row.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -8),
             row.centerYAnchor.constraint(equalTo: centerYAnchor)
         ])
-        itemObservation = state.store.$items.sink { [weak self, weak share] items in
-            MainActor.assumeIsolated {
-                guard let self, let current = items.first(where: { $0.id == item.id }) else { return }
+        let update: (ClipboardItem) -> Void = { [weak self, weak share] current in
+            guard let self else { return }
+            let field = self.titleLabel.f_100013084()
+            let rawType: Int
+            switch current.kind {
+            case .unknown: rawType = 0
+            case .image: rawType = 1
+            case .color: rawType = 2
+            case .files: rawType = 3
+            case .link: rawType = 4
+            case .text, .richText: rawType = 5
+            }
+            let defaultTitle = OriginalPreviewTitles.f_100309008(rawType: rawType,
+                fileCount: current.kind == .files ? current.decodedFilePreviewMetadata?.paths.count : nil)
+            field.f_10023b600(defaultTitle)
+            field.f_10023b214(OriginalPreviewTitles.f_100308f88(current.originalTitle, defaultTitle: defaultTitle))
+            share?.isEnabled = (try? Self.sharingContent(current))
+                .map { OriginalPreviewSharing.f_100320cc0($0) } ?? false
+            self.refreshPinAppearance(current)
+        }
+        let receive: (ClipboardRestoreItem) -> Void = { [weak self, weak share] current in
+            guard let self else { return }
+            self.input = current
+            if current.isDeleted {
+                self.titleLabel.f_100011d28()
+                self.window?.performClose(nil)
+                return
+            }
+            if let title = current.previewTitle() {
                 let field = self.titleLabel.f_100013084()
-                let rawType: Int
-                switch current.kind {
-                case .unknown: rawType = 0
-                case .image: rawType = 1
-                case .color: rawType = 2
-                case .files: rawType = 3
-                case .link: rawType = 4
-                case .text, .richText: rawType = 5
+                field.f_10023b600(title.defaultTitle)
+                field.f_10023b214(title.title)
+                if let pin = current.previewPinboard() {
+                    self.refreshNativePinAppearance(isPinned: pin.isPinned, colorCode: pin.colorCode)
                 }
-                let defaultTitle = OriginalPreviewTitles.f_100309008(rawType: rawType,
-                    fileCount: current.kind == .files ? current.decodedFilePreviewMetadata?.paths.count : nil)
-                field.f_10023b600(defaultTitle)
-                field.f_10023b214(OriginalPreviewTitles.f_100308f88(current.originalTitle, defaultTitle: defaultTitle))
-                share?.isEnabled = (try? Self.sharingContent(current))
-                    .map { OriginalPreviewSharing.f_100320cc0($0) } ?? false
-                self.refreshPinAppearance(current)
+                share?.isEnabled = current.previewSharingContent().map(OriginalPreviewSharing.f_100320cc0) ?? false
+            } else {
+                update(current.resolvedItem())
+            }
+        }
+        itemObservation = input?.observeChanges(receive)
+        if itemObservation != nil, let input {
+            receive(input)
+        } else {
+            itemObservation = state.store.$items.sink { items in
+                MainActor.assumeIsolated {
+                    guard let current = items.first(where: { $0.id == itemID }) else { return }
+                    update(current)
+                }
             }
         }
         pinboardObservation = state.store.$pinboards.sink { [weak self] boards in
             MainActor.assumeIsolated {
-                guard let self, let item = self.state?.store.items.first(where: { $0.id == self.itemID }) else { return }
-                self.refreshPinAppearance(item, boards: boards)
+                guard let self, self.input?.isDeleted != true else { return }
+                if let pin = self.input?.previewPinboard() {
+                    self.refreshNativePinAppearance(isPinned: pin.isPinned, colorCode: pin.colorCode)
+                } else if let item = self.state?.store.items.first(where: { $0.id == self.itemID }) {
+                    self.refreshPinAppearance(item, boards: boards)
+                }
             }
         }
     }
     required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
+
+    private func refreshNativePinAppearance(isPinned: Bool, colorCode: UInt64?) {
+        pinButton?.symbol = isPinned ? "circle.fill" : "circle.dashed"
+        pinButton?.contentTintColor = colorCode.map { OriginalPinboardColor(canonicalColorCode: $0).color() }
+    }
 
     private func refreshPinAppearance(_ item: ClipboardItem, boards: [Pinboard]? = nil) {
         let owner: Pinboard?
@@ -444,7 +612,44 @@ private final class ReplicaInlinePreviewHeader: NSView {
                        blue: CGFloat(rgb & 255) / 255, alpha: 1)
     }
 
+    private func showNativePinMenu(from button: NSButton, input: ClipboardRestoreItem) {
+        guard let state else { return }
+        // 3c24a8/3c24b8 creates and reads a collection for each preview menu invocation.
+        let targets = state.store.makePinboardCollection().value
+        let menu = NSMenu()
+        for target in targets {
+            let entry = ReplicaPreviewActionMenuItem(title: target.name) { [weak self] in
+                guard let self, let state = self.state, let current = self.input else { return }
+                // 3c3590 reads the model's current item when the action runs.
+                state.perform { try state.store.assign(items: [current], to: target) }
+            }
+            entry.state = input.isAssigned(to: target) == true ? .on : .off
+            let color = target.colorCode.map { OriginalPinboardColor(canonicalColorCode: $0).color() } ?? .clear
+            entry.image = NSImage(size: NSSize(width: 12, height: 12), flipped: false) { bounds in
+                color.setFill()
+                NSBezierPath(ovalIn: bounds).fill()
+                return true
+            }
+            menu.addItem(entry)
+        }
+        menu.addItem(.separator())
+        menu.addItem(ReplicaPreviewActionMenuItem(title: OriginalSearchLocalization.text("pasto.action.create-group") + "...") { [weak self] in
+            self?.createPinboardForCurrentItem()
+        })
+        if input.previewPinboard()?.isPinned == true {
+            menu.addItem(ReplicaPreviewActionMenuItem(title: String(localized: OriginalPreviewLocalization.f_1001c4208())) { [weak self] in
+                guard let self, let state = self.state, let current = self.input else { return }
+                state.perform { try state.store.assign(items: [current], to: nil) }
+            })
+        }
+        menu.popUp(positioning: nil, at: NSPoint(x: -10, y: 0), in: button)
+    }
+
     private func showPinMenu(from button: NSButton) {
+        if let input, input.hasNativeEntity {
+            showNativePinMenu(from: button, input: input)
+            return
+        }
         guard let state, let item = state.store.items.first(where: { $0.id == itemID }) else { return }
         let menu = NSMenu()
         for board in state.store.pinboards {
@@ -477,6 +682,14 @@ private final class ReplicaInlinePreviewHeader: NSView {
 
     private func createPinboardForCurrentItem() {
         guard let state else { return }
+        if input?.hasNativeEntity == true {
+            state.perform {
+                let board = try state.store.createPinboardTarget(name: String(localized: OriginalPreviewLocalization.f_1001c6aa4()))
+                guard let current = self.input else { return }
+                try state.store.assign(items: [current], to: board)
+            }
+            return
+        }
         let alert = NSAlert()
         alert.messageText = OriginalSearchLocalization.text("pasto.action.create-group")
         let input = NSTextField(frame: NSRect(x: 0, y: 0, width: 260, height: 24))
@@ -508,6 +721,12 @@ private final class ReplicaInlinePreviewHeader: NSView {
     }
 
     private func showSharingPicker(from button: NSButton) {
+        if let content = input?.previewSharingContent() {
+            let picker = OriginalPreviewSharing.f_1000183e0([content])
+            sharingPicker = picker
+            picker.show(relativeTo: .zero, of: button, preferredEdge: .minY)
+            return
+        }
         guard let state, let item = state.store.items.first(where: { $0.id == itemID }) else { return }
         do {
             let picker = OriginalPreviewSharing.f_1000183e0([try Self.sharingContent(item)])

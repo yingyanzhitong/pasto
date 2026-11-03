@@ -7,6 +7,7 @@ import PastoCore
 final class ReplicaImagePreviewContent: NSView, OriginalPreviewEditableContent, NSUserInterfaceValidations {
     private weak var state: ReplicaUIState?
     private let itemID: UUID
+    private let editInput: ClipboardRestoreItem?
     private let checkerboardView = OriginalImageCheckerboardView(frame: .zero)
     private let zoomView = OriginalZoomableImageView()
     private let metadataHost = NSView()
@@ -38,27 +39,35 @@ final class ReplicaImagePreviewContent: NSView, OriginalPreviewEditableContent, 
 
     var previewEditingToolbar: NSView? { toolbar }
 
-    init(state: ReplicaUIState, item: ClipboardItem) {
+    init(state: ReplicaUIState, item: ClipboardItem?, input: ClipboardRestoreItem? = nil) {
         self.state = state
-        itemID = item.id
+        guard let itemID = input?.id ?? item?.id else { preconditionFailure("Missing image preview input") }
+        self.itemID = itemID
+        editInput = input
         super.init(frame: .zero)
         addSubview(checkerboardView)
         checkerboardView.translatesAutoresizingMaskIntoConstraints = false
         addSubview(zoomView)
         zoomView.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate(f_1003e57b8())
-        replaceDisplayedItem(item)
-        itemObservation = state.store.$items.sink { [weak self] items in
-            MainActor.assumeIsolated {
-                guard let self else { return }
-                guard let current = items.first(where: { $0.id == self.itemID }),
-                      !current.isDeleted, current.kind == .image else {
-                    self.window?.performClose(nil)
-                    return
+        if input?.hasNativeEntity == true {
+            zoomView.f_100240a64(input?.previewImage())
+            zoomView.f_100240be8(false)
+            updateMetadataAndCommitState()
+        } else if let item = item ?? input?.resolvedItem() {
+            replaceDisplayedItem(item)
+            itemObservation = state.store.$items.sink { [weak self] items in
+                MainActor.assumeIsolated {
+                    guard let self else { return }
+                    guard let current = items.first(where: { $0.id == self.itemID }),
+                          !current.isDeleted, current.kind == .image else {
+                        self.window?.performClose(nil)
+                        return
+                    }
+                    if !self.isEditing { self.replaceDisplayedItem(current) }
                 }
-                if !self.isEditing { self.replaceDisplayedItem(current) }
             }
-        }
+        } else { preconditionFailure("Missing image preview content") }
     }
 
     required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
@@ -80,7 +89,7 @@ final class ReplicaImagePreviewContent: NSView, OriginalPreviewEditableContent, 
     override var undoManager: UndoManager? { editingUndoManager }
 
     var preferredPreviewSize: NSSize {
-        let imageSize = imageMetadataSize
+        let imageSize = editInput?.previewImageSize() ?? imageMetadataSize
         let screen = NSScreen.main!.frame.size
         let halfWidth = screen.width * 0.5
         let halfHeight = screen.height * 0.5
@@ -100,21 +109,35 @@ final class ReplicaImagePreviewContent: NSView, OriginalPreviewEditableContent, 
     }
 
     func cancelPreviewEditing() {
-        finishEditing()
+        finishEditing(reloadNativeImage: true)
     }
 
     func commitPreviewEditing() {
         if let image = zoomView.f_100240a18(), let state {
             do {
-                try state.store.updateImagePreviewItem(id: itemID, payloads: Self.encodedPayloads(image))
+                if let editInput {
+                    try state.store.updateImagePreviewItem(editInput, payloads: Self.encodedPayloads(image))
+                } else {
+                    try state.store.updateImagePreviewItem(id: itemID, payloads: Self.encodedPayloads(image))
+                }
                 state.normalizeSelection()
-            } catch { state.controller?.presentError(error) }
+            } catch {
+                // 3bde74: consume the transaction error and continue the editing cleanup.
+            }
         }
-        finishEditing()
+        finishEditing(reloadNativeImage: false)
     }
 
-    private func finishEditing() {
+    private func finishEditing(reloadNativeImage: Bool) {
         isEditing = false
+        if editInput?.hasNativeEntity == true {
+            if reloadNativeImage { zoomView.f_100240a64(editInput?.previewImage()) }
+            zoomView.f_100240be8(false)
+            quarterTurns = 0
+            editingUndoManager.removeAllActions()
+            updateMetadataAndCommitState()
+            return
+        }
         quarterTurns = 0
         editingUndoManager.removeAllActions()
         if let current = state?.store.items.first(where: { $0.id == itemID }) {

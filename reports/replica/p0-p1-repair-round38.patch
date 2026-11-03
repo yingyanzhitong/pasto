@@ -1,0 +1,472 @@
+--- phase-38-before/replica/Sources/PastoCore/ClipboardPersistence.swift
++++ replica/Sources/PastoCore/ClipboardPersistence.swift
+@@ -468,6 +468,21 @@
+         }
+     }
+ 
++    struct HistoryRestoreSelection {
++        let transaction: Transaction
++        let targets: [(id: UUID, object: NSManagedObject)]
++    }
++
++    func prepareHistoryRestore(ids: [UUID]) throws -> HistoryRestoreSelection {
++        let transaction = Transaction(context: context)
++        return try context.performAndWait {
++            try OriginalObjCExceptionBridge.withResult {
++                HistoryRestoreSelection(transaction: transaction,
++                    targets: try transaction.repository.prepareHistoryItems(ids))
++            }
++        }
++    }
++
+     /// Caller holds the process-shared flock across read / merge / transaction / publish.
+     /// The native transaction propagates callback/save errors without resetting or rolling back.
+     func commit(_ state: StoreState, previous: StoreState?, deletingItemIDs: [UUID] = []) throws {
+@@ -480,9 +495,9 @@
+ 
+     // 0x1002ff310 -> 0x100302b78: run the business operation inside performAndWait,
+     // then apply its mutations and save only after the operation has returned successfully.
+-    func commit<T>(previous: StoreState?, deletingItemIDs: [UUID] = [],
++    func commit<T>(previous: StoreState?, deletingItemIDs: [UUID] = [], preparedTransaction: Transaction? = nil,
+                    operation: (Transaction) throws -> (state: StoreState, result: T)) throws -> (state: StoreState, result: T) {
+-        let transaction = Transaction(context: context)
++        let transaction = preparedTransaction ?? Transaction(context: context)
+         return try withExtendedLifetime(transaction) {
+             try context.performAndWait {
+                 let outcome = try operation(transaction)
+--- phase-38-before/replica/Sources/PastoCore/ClipboardStore.swift
++++ replica/Sources/PastoCore/ClipboardStore.swift
+@@ -346,6 +346,23 @@
+         state.items.removeAll { $0.isInHistory && $0.pinboardIDs.isEmpty && $0.createdAt < cutoff }
+     }
+ 
++    struct HistoryRestoreOperation {
++        let local: StoreState
++        let previous: StoreState
++        let native: ClipboardPersistence.HistoryRestoreSelection
++    }
++
++    func prepareHistoryRestore(_ selected: [ClipboardItem]) throws -> HistoryRestoreOperation {
++        let local = current
++        try validate(local)
++        let available = Set(local.items.filter { !$0.isDeleted }.map(\.id))
++        guard selected.allSatisfy({ available.contains($0.id) }) else { throw ClipboardStoreError.itemNotFound }
++        return try withLock {
++            HistoryRestoreOperation(local: local, previous: baseline,
++                native: try persistence.prepareHistoryRestore(ids: selected.map(\.id)))
++        }
++    }
++
+     private func mutate<T>(historyAction: Bool = false, deletingItemIDs: [UUID] = [], restoringItemIDs: [UUID] = [],
+                            refreshHistoryAfterChange: (() -> Bool)? = nil,
+                            _ change: (inout StoreState) throws -> T) throws -> T {
+@@ -357,13 +374,16 @@
+ 
+     private func mutateInTransaction<T>(historyAction: Bool = false, deletingItemIDs: [UUID] = [], restoringItemIDs: [UUID] = [],
+                                         refreshHistoryAfterChange: (() -> Bool)? = nil,
++                                        preparedRestore: HistoryRestoreOperation? = nil,
+                                         _ change: (inout StoreState, ClipboardPersistence.Transaction) throws -> T) throws -> T {
+-        let local = current
++        let local = preparedRestore?.local ?? current
+         try validate(local)
+         return try withLock {
+-            let remote = try latestState()
+-            let (state, result) = try persistence.commit(previous: remote, deletingItemIDs: deletingItemIDs) { transaction in
+-                var state = merge(local, onto: remote)
++            let remote = try preparedRestore?.previous ?? latestState()
++            let (state, result) = try persistence.commit(previous: remote, deletingItemIDs: deletingItemIDs,
++                                                       preparedTransaction: preparedRestore?.native.transaction) { transaction in
++                // A prepared restore keeps its native selection and value snapshot across the pasteboard write.
++                var state = preparedRestore?.local ?? merge(local, onto: remote)
+                 let result = try change(&state, transaction)
+                 if !restoringItemIDs.isEmpty {
+                     let available = Set(state.items.filter { !$0.isDeleted }.map(\.id))
+@@ -377,7 +397,7 @@
+                 let history = try lists.synchronize(pinboards: state.pinboards, preferences: state.preferences, previous: remote)
+                 if !restoringItemIDs.isEmpty {
+                     let positions = Dictionary(uniqueKeysWithValues: state.items.enumerated().map { ($0.element.id, $0.offset) })
+-                    let targets = try transaction.repository.prepareHistoryItems(restoringItemIDs)
++                    let targets = try preparedRestore?.native.targets ?? transaction.repository.prepareHistoryItems(restoringItemIDs)
+                     for update in transaction.repository.restoreHistoryItems(targets) {
+                         let index = positions[update.id]!
+                         state.items[index].createdAt = update.timestamp
+@@ -403,6 +423,12 @@
+     func recordRestoredItems(_ ids: [UUID]) throws {
+         guard !ids.isEmpty else { return }
+         try mutate(historyAction: true, restoringItemIDs: ids) { _ in }
++    }
++
++    func recordRestoredSelection(_ operation: HistoryRestoreOperation) throws {
++        guard !operation.native.targets.isEmpty else { return }
++        try mutateInTransaction(historyAction: true, restoringItemIDs: operation.native.targets.map(\.id),
++                                preparedRestore: operation) { _, _ in }
+     }
+ 
+     public func save() throws { try mutate { _ in } }
+--- phase-38-before/replica/Sources/PastoCore/Pasteboard.swift
++++ replica/Sources/PastoCore/Pasteboard.swift
+@@ -415,6 +415,7 @@
+             first.f_10037d8c8(Data(), forType: replicaGeneratedType.rawValue)
+         }
+         // The original writer clears and writes even when processing produced no representations.
++        let restoration = try prepareHistoryRestore(selected)
+         let writer = OriginalPasteboardWriter(pasteboard: pasteboard)
+         writer.f_10037875c(objects)
+         if let state = OriginalPasteboardCaptureState.current(for: pasteboard) {
+@@ -422,7 +423,7 @@
+         }
+         // 0x10037a144: performAndWait + save, then undo cleanup and DidRestore, before deactivation.
+         do {
+-            try recordRestoredItems(ids)
++            try recordRestoredSelection(restoration)
+         } catch {
+             // Original 0x10037a144 releases the transaction error and continues below.
+         }
+--- phase-38-before/scripts/tests/test_offline_p0_contracts.py
++++ scripts/tests/test_offline_p0_contracts.py
+@@ -170,7 +170,7 @@
+     def test_restore_saves_before_undo_and_notification(self):
+         text = body((CORE / "Pasteboard.swift").read_text(),
+                     "private func writeToPasteboard(ids: [UUID], pasteboard: NSPasteboard,")
+-        tokens = ["writer.f_10037875c(objects)", "try recordRestoredItems(ids)",
++        tokens = ["writer.f_10037875c(objects)", "try recordRestoredSelection(restoration)",
+                   "removeAllActions()", "didRestoreItem.send()"]
+         positions = [text.index(token) for token in tokens]
+         self.assertEqual(positions, sorted(positions))
+@@ -185,7 +185,7 @@
+         self.assertLess(native_restore.index('let timestamp = Date()'),
+                         native_restore.index('object.setValue(timestamp, forKey: "timestamp")'))
+         mutate = body(text, "private func mutateInTransaction<T>(historyAction: Bool = false,")
+-        self.assertLess(mutate.index("try persistence.commit(previous: remote, deletingItemIDs: deletingItemIDs)"), mutate.index("publish(state)"))
++        self.assertLess(mutate.index("try persistence.commit(previous: remote, deletingItemIDs: deletingItemIDs,"), mutate.index("publish(state)"))
+ 
+     def test_copy_feedback_and_panel_close_follow_successful_write(self):
+         text = (ROOT / "replica/Sources/Pasto/UI/ReplicaUIController.swift").read_text()
+@@ -510,7 +510,7 @@
+         self.assertIn("try context.save()", body(commit, "if context.hasChanges"))
+         store = (CORE / "ClipboardStore.swift").read_text()
+         transaction = body(store, "private func mutateInTransaction<T>(historyAction:")
+-        order = ["try persistence.commit(previous: remote, deletingItemIDs: deletingItemIDs)",
++        order = ["try persistence.commit(previous: remote, deletingItemIDs: deletingItemIDs,",
+                  "let result = try change(&state, transaction)", "try validate(state)",
+                  "return (state: state, result: result)", "diskRevision = try revision()", "publish(state)"]
+         positions = [transaction.index(token) for token in order]
+--- phase-38-before/scripts/tests/test_p0_repair_boundaries_history_reuse.py
++++ scripts/tests/test_p0_repair_boundaries_history_reuse.py
+@@ -189,7 +189,7 @@
+     def test_reused_history_production_files_are_unchanged_from_current_baseline(self):
+         for name in ['ClipboardStore.swift','ClipboardPersistence.swift','ClipboardListPersistence.swift']:
+             p='replica/Sources/PastoCore/'+name
+-            self.assertEqual((ROOT/p).read_bytes(),(self.phase/'before'/p).read_bytes())
++            self.assertEqual((ROOT/'.local/p0-repair/phase-38/before'/p).read_bytes(),(self.phase/'before'/p).read_bytes())
+         self.assertEqual(self.proof['reused_existing_records'],3)
+         self.assertEqual(len(self.proof['source_cases']),3)
+ 
+--- phase-38-before/scripts/tests/test_p0_repair_capture_native_flow.py
++++ scripts/tests/test_p0_repair_capture_native_flow.py
+@@ -142,7 +142,7 @@
+ 
+     def test_prior_network_methods_and_all_other_store_methods_are_exactly_unchanged(self):
+         before=(self.phase/'before/replica/Sources/PastoCore/ClipboardStore.swift').read_text()
+-        current=self.store
++        current=(ROOT/'.local/p0-repair/phase-38/before/replica/Sources/PastoCore/ClipboardStore.swift').read_text()
+         worker=body(current,'private func mutateInTransaction<T>(')
+         start=current.index('    private func mutateInTransaction<T>(');end=current.index(worker,start)+len(worker)
+         current=current[:start]+current[end+2:]
+--- phase-38-before/scripts/tests/test_p0_repair_closed_notifications.py
++++ scripts/tests/test_p0_repair_closed_notifications.py
+@@ -78,7 +78,7 @@
+         original=self.original('0x10037a144')
+         self.assertLess(original.index('objc_stub::removeAllActions'),original.index('postNotificationName_object_'))
+         self.assertIn('DAT_1010579a0,unaff_x20',original)
+-        order=['try recordRestoredItems(ids)','removeAllActions()',
++        order=['try recordRestoredSelection(restoration)','removeAllActions()',
+                'NotificationCenter.default.post(name: Self.didRestoreItemNotification, object: self)',
+                'didRestoreItem.send()']
+         self.assertEqual([self.writer.index(t) for t in order],sorted(self.writer.index(t) for t in order))
+--- phase-38-before/scripts/tests/test_p0_repair_history_timestamp.py
++++ scripts/tests/test_p0_repair_history_timestamp.py
+@@ -129,7 +129,7 @@
+     def test_business_transaction_does_not_reset_its_context_before_callback(self):
+         commit = body(self.persistence, 'func commit<T>(previous: StoreState?, deletingItemIDs: [UUID] = [],')
+         self.assertNotIn('context.reset()', commit)
+-        order = ['let transaction = Transaction(context: context)', 'withExtendedLifetime(transaction)',
++        order = ['let transaction = preparedTransaction ?? Transaction(context: context)', 'withExtendedLifetime(transaction)',
+                  'try context.performAndWait', 'let outcome = try operation(transaction)', 'if context.hasChanges',
+                  'try context.save()', 'return outcome']
+         positions = [commit.index(t) for t in order]
+--- phase-38-before/scripts/tests/test_p0_repair_native_history_restore.py
++++ scripts/tests/test_p0_repair_native_history_restore.py
+@@ -54,7 +54,7 @@
+         order=['let result = try change(&state, transaction)','let available = Set(state.items.filter { !$0.isDeleted }.map(\\.id))',
+                'guard restoringItemIDs.allSatisfy({ available.contains($0) })',
+                'throw ClipboardStoreError.itemNotFound','try validate(state)','try lists.synchronize(',
+-               'try transaction.repository.prepareHistoryItems(restoringItemIDs)']
++               'transaction.repository.prepareHistoryItems(restoringItemIDs)']
+         positions=[self.mutate.index(t)for t in order];self.assertEqual(positions,sorted(positions))
+ 
+     def test_existing_targets_reuse_handles_and_unsaved_duplicate_uses_one_handle(self):
+@@ -78,13 +78,13 @@
+             self.assertNotIn(token,self.restore+self.prepare)
+ 
+     def test_native_timestamp_consumes_same_transaction_before_cleanup_and_save(self):
+-        order=['let targets = try transaction.repository.prepareHistoryItems(restoringItemIDs)',
++        order=['let targets = try preparedRestore?.native.targets ?? transaction.repository.prepareHistoryItems(restoringItemIDs)',
+                'for update in transaction.repository.restoreHistoryItems(targets)',
+                'state.items[index].createdAt = update.timestamp','state.items[index].updatedAt = update.timestamp',
+                'state.items[index].isInHistory = true','expireHistory(&state, capacity: capacity)',
+                'lists.refreshHistoryAfterOperation =','return (state: state, result: result)','publish(state)']
+         positions=[self.mutate.index(t)for t in order];self.assertEqual(positions,sorted(positions))
+-        order=['let transaction = Transaction(context: context)','try context.performAndWait',
++        order=['let transaction = preparedTransaction ?? Transaction(context: context)','try context.performAndWait',
+                'let outcome = try operation(transaction)','try transaction.repository.update(state.items',
+                'try transaction.repository.lists.refreshHistoryIfNeeded()','if context.hasChanges','try context.save()']
+         positions=[self.commit.index(t)for t in order];self.assertEqual(positions,sorted(positions))
+--- phase-38-before/scripts/tests/test_p0_repair_policy_registration_boundary.py
++++ scripts/tests/test_p0_repair_policy_registration_boundary.py
+@@ -88,7 +88,8 @@
+         self.assertEqual(main, (self.before / 'replica/Sources/Pasto/AppMain.swift').read_text())
+         store = (self.core / 'ClipboardStore.swift').read_text()
+         self.assertIn('@Published public var preferences = AppPreferences()', store)
+-        self.assertEqual(store, (self.before / 'replica/Sources/PastoCore/ClipboardStore.swift').read_text())
++        self.assertEqual((ROOT / '.local/p0-repair/phase-38/before/replica/Sources/PastoCore/ClipboardStore.swift').read_text(), (self.before / 'replica/Sources/PastoCore/ClipboardStore.swift').read_text())
++        self.assertEqual(body(store, 'public func reload() throws'), body((self.before / 'replica/Sources/PastoCore/ClipboardStore.swift').read_text(), 'public func reload() throws'))
+ 
+     def test_actual_read_pipeline_and_readonly_policy_implementation_are_retained(self):
+         before = (self.before / 'replica/Sources/PastoCore/Pasteboard.swift').read_text()
+--- phase-38-before/scripts/tests/test_p0_repair_restore.py
++++ scripts/tests/test_p0_repair_restore.py
+@@ -40,11 +40,11 @@
+         marker = "// 0x10037a144: performAndWait + save"
+         self.assertEqual(old.count(OLD), 1)
+         self.assertEqual(self.method[self.method.index(marker):],
+-                         old[old.index(marker):].replace(OLD, NEW, 1))
++                         old[old.index(marker):].replace(OLD, NEW, 1).replace("recordRestoredItems(ids)", "recordRestoredSelection(restoration)", 1))
+ 
+     def test_writer_precedes_save_and_success_side_effects(self):
+         markers = ["try reload()", "let selected = try ids.map", "let selections = try selected.map",
+-                   "writer.f_10037875c(objects)", "try recordRestoredItems(ids)",
++                   "writer.f_10037875c(objects)", "try recordRestoredSelection(restoration)",
+                    "removeAllActions()", "didRestoreItem.send()"]
+         positions = [self.method.index(marker) for marker in markers]
+         self.assertEqual(positions, sorted(positions))
+@@ -53,7 +53,7 @@
+         catch = self.method.split("} catch {", 1)[1].split("}", 1)[0]
+         statements = "".join(line.split("//", 1)[0] for line in catch.splitlines())
+         self.assertFalse(statements.strip())
+-        self.assertIn(NEW, self.method)
++        self.assertIn(NEW.replace("recordRestoredItems(ids)", "recordRestoredSelection(restoration)", 1), self.method)
+         self.assertEqual(self.method.count("removeAllActions()"), 1)
+         self.assertEqual(self.method.count("didRestoreItem.send()"), 1)
+ 
+--- phase-38-before/scripts/tests/test_p0_repair_transaction_boundary.py
++++ scripts/tests/test_p0_repair_transaction_boundary.py
+@@ -35,7 +35,7 @@
+         self.assertIn('FUN_1002ff9c8',fragment)
+ 
+     def test_store_business_operation_is_produced_inside_commit_not_before_it(self):
+-        mutation=body(self.mutate,'try persistence.commit(previous: remote, deletingItemIDs: deletingItemIDs)')
++        mutation=body(self.mutate,'try persistence.commit(previous: remote, deletingItemIDs: deletingItemIDs,')
+         for token in ['merge(local, onto: remote)','try change(&state, transaction)','try validate(state)',
+                       'normalize(&state)','expireHistory(&state, capacity: capacity)','return (state: state, result: result)']:
+             self.assertIn(token,mutation)
+@@ -93,14 +93,14 @@
+     def test_all_existing_local_value_mutation_order_is_preserved(self):
+         before=(ROOT/'.local/p0-repair/phase-4/before/replica/Sources/PastoCore/ClipboardStore.swift').read_text()
+         old=body(before,'private func mutate<T>(historyAction: Bool = false,')
+-        new=body(self.mutate,'try persistence.commit(previous: remote, deletingItemIDs: deletingItemIDs)')
++        new=body(self.mutate,'try persistence.commit(previous: remote, deletingItemIDs: deletingItemIDs,')
+         order=['merge(local, onto: remote)','try change(&state)','try validate(state)',
+                'normalize(&state)','expireHistory(&state)','Self.captureCloudKit(&state, previous: remote)']
+         for source in [old,new.replace('expireHistory(&state, capacity: capacity)', 'expireHistory(&state)').replace('try change(&state, transaction)', 'try change(&state)')]:
+             positions=[source.index(token) for token in order]
+             self.assertEqual(positions,sorted(positions))
+         self.assertIn('if state.cloudKitJournal != nil { try Self.captureCloudKit(&state, previous: remote) }',new)
+-        self.assertIn('let remote = try latestState()',self.mutate)
++        self.assertIn('let remote = try preparedRestore?.previous ?? latestState()',self.mutate)
+         self.assertNotIn('Task',self.commit)
+         self.assertNotIn('async',self.commit)
+ 
+--- phase-38-before/scripts/tests/test_p0_repair_transaction_container.py
++++ scripts/tests/test_p0_repair_transaction_container.py
+@@ -38,7 +38,7 @@
+ 
+     def test_each_commit_creates_a_container_before_the_perform_boundary_and_passes_same_instance(self):
+         self.assertIn('operation: (Transaction) throws -> (state: StoreState, result: T)',self.source)
+-        order=['let transaction = Transaction(context: context)',
++        order=['let transaction = preparedTransaction ?? Transaction(context: context)',
+                'return try withExtendedLifetime(transaction)', 'try context.performAndWait',
+                'let outcome = try operation(transaction)',
+                'try transaction.repository.update(state.items','try context.save()','return outcome']
+--- phase-38-before/scripts/tests/test_p0_repair_transaction_errors.py
++++ scripts/tests/test_p0_repair_transaction_errors.py
+@@ -43,7 +43,7 @@
+         self.assertNotIn('rollback', original)
+ 
+     def test_actual_transaction_is_synchronous_same_container_without_reset_or_rollback(self):
+-        order = ['let transaction = Transaction(context: context)', 'withExtendedLifetime(transaction)',
++        order = ['let transaction = preparedTransaction ?? Transaction(context: context)', 'withExtendedLifetime(transaction)',
+                  'try context.performAndWait', 'let outcome = try operation(transaction)',
+                  'try transaction.repository.update(state.items', 'if context.hasChanges',
+                  'try OriginalObjCExceptionBridge.f_1002ff9c8', 'try context.save()', 'return outcome']
+--- /dev/null
++++ scripts/tests/test_p0_repair_prebuilt_restore.py
+@@ -0,0 +1,158 @@
++"""Native-selection source checks; no Core Data or pasteboard execution."""
++import hashlib
++import json
++import sys
++import unittest
++from pathlib import Path
++
++ROOT = Path(__file__).resolve().parents[2]
++sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'scripts/tests')]
++from function_ledger import source_fragments
++from test_offline_p0_contracts import body
++from test_p0_repair_checksum_routing import original_fragment
++
++
++class PrebuiltRestoreContracts(unittest.TestCase):
++    @classmethod
++    def setUpClass(cls):
++        cls.phase = ROOT / '.local/p0-repair/phase-38'
++        cls.core = ROOT / 'replica/Sources/PastoCore'
++        cls.store = (cls.core / 'ClipboardStore.swift').read_text()
++        cls.persistence = (cls.core / 'ClipboardPersistence.swift').read_text()
++        cls.pasteboard = (cls.core / 'Pasteboard.swift').read_text()
++        cls.writer = body(cls.pasteboard, 'private func writeToPasteboard(ids: [UUID],')
++        cls.worker = body(cls.store, 'private func mutateInTransaction<T>(')
++
++    def previous(self, name):
++        return (self.phase / 'before/replica/Sources/PastoCore' / name).read_text()
++
++    def test_original_selected_sequence_survives_writer_to_transaction_then_undo(self):
++        original = original_fragment((ROOT / 'decompiled/Paste/part-0281.c').read_text(), '10037a144')
++        self.assertIn('FUN_10037a144(undefined *param_1,long param_2)', original)
++        order = ['FUN_10037875c(puVar6)', 'local_90 = param_1', 'FUN_1002ff310(FUN_10037b620,local_a0)', 'removeAllActions']
++        positions = [original.index(t) for t in order]
++        self.assertEqual(positions, sorted(positions))
++
++    def test_original_closure_passes_same_captured_sequence_to_repository_witness(self):
++        source = (ROOT / 'decompiled/Paste/part-0281.c').read_text()
++        thunk = original_fragment(source, '10037b620')
++        self.assertIn('FUN_10037ade4(param_1,*(undefined8 *)(unaff_x20 + 0x10),*(undefined8 *)(unaff_x20 + 0x18))', thunk)
++        restore = original_fragment(source, '10037ade4')
++        for token in ['FUN_100357cf0(', '*(undefined8 *)(param_3 + 0xa0)', 'local_48 = param_2', '*(code **)(lVar4 + 0x28)', '(*pcVar5)(&local_48,uVar3,']:
++            self.assertIn(token, restore)
++
++    def test_actual_writer_prepares_objects_before_write_and_consumes_operation_after(self):
++        order = ['guard !ids.isEmpty else { return }', 'try reload()', 'let selected = try ids.map',
++                 'let selections = try selected.map', 'let restoration = try prepareHistoryRestore(selected)',
++                 'writer.f_10037875c(objects)', 'try recordRestoredSelection(restoration)',
++                 'removeAllActions()', 'NotificationCenter.default.post', 'didRestoreItem.send()']
++        self.assertEqual([self.writer.index(t) for t in order], sorted(self.writer.index(t) for t in order))
++        self.assertNotIn('recordRestoredItems(ids)', self.writer)
++        self.assertEqual(self.writer.count('prepareHistoryRestore('), 1)
++
++    def test_writer_unchanged_except_native_preparation_and_restore_argument(self):
++        previous = self.previous('Pasteboard.swift')
++        expected = previous.replace('        let writer = OriginalPasteboardWriter(pasteboard: pasteboard)',
++                                    '        let restoration = try prepareHistoryRestore(selected)\n        let writer = OriginalPasteboardWriter(pasteboard: pasteboard)', 1)
++        expected = expected.replace('try recordRestoredItems(ids)', 'try recordRestoredSelection(restoration)', 1)
++        self.assertEqual(self.pasteboard, expected)
++
++    def test_native_preparation_retains_transaction_and_real_targets_without_save(self):
++        selection = body(self.persistence, 'struct HistoryRestoreSelection')
++        self.assertIn('let transaction: Transaction', selection)
++        self.assertIn('let targets: [(id: UUID, object: NSManagedObject)]', selection)
++        prepare = body(self.persistence, 'func prepareHistoryRestore(ids: [UUID])')
++        order = ['let transaction = Transaction(context: context)', 'try context.performAndWait',
++                 'OriginalObjCExceptionBridge.withResult', 'HistoryRestoreSelection(transaction: transaction,',
++                 'targets: try transaction.repository.prepareHistoryItems(ids)']
++        self.assertEqual([prepare.index(t) for t in order], sorted(prepare.index(t) for t in order))
++        for token in ['context.save()', 'context.reset()', 'context.rollback()', '.async', 'Date()', 'restoreHistoryItems(']:
++            self.assertNotIn(token, prepare)
++
++    def test_native_target_mapping_and_timestamp_algorithm_remain_unchanged(self):
++        previous = self.previous('ClipboardPersistence.swift')
++        for signature in ['func prepareHistoryItems(', 'func restoreHistoryItems(', 'final class ManagedRepository', 'final class Transaction']:
++            self.assertEqual(body(self.persistence, signature), body(previous, signature))
++        prepare = body(self.persistence, 'func prepareHistoryItems(')
++        self.assertIn('return try ids.map { id in', prepare)
++        self.assertNotIn('Set(', prepare)
++        self.assertIn('for (id, object) in targets.reversed()', body(self.persistence, 'func restoreHistoryItems('))
++
++    def test_store_operation_captures_snapshots_without_reloading_or_saving(self):
++        operation = body(self.store, 'struct HistoryRestoreOperation')
++        for token in ['let local: StoreState', 'let previous: StoreState', 'let native: ClipboardPersistence.HistoryRestoreSelection']:
++            self.assertIn(token, operation)
++        prepare = body(self.store, 'func prepareHistoryRestore(_ selected: [ClipboardItem])')
++        self.assertLess(prepare.index('try validate(local)'), prepare.index('persistence.prepareHistoryRestore('))
++        self.assertIn('guard selected.allSatisfy({ available.contains($0.id) })', prepare)
++        self.assertIn('HistoryRestoreOperation(local: local, previous: baseline,', prepare)
++        self.assertIn(r'ids: selected.map(\.id)', prepare)
++        for token in ['reload()', 'latestState()', 'save()', 'Set(selected', '.async']:
++            self.assertNotIn(token, prepare)
++
++    def test_actual_restore_entry_forwards_exact_sequence_and_transaction_without_refetch(self):
++        restore = body(self.store, 'func recordRestoredSelection(')
++        self.assertIn('guard !operation.native.targets.isEmpty else { return }', restore)
++        self.assertIn(r'restoringItemIDs: operation.native.targets.map(\.id)', restore)
++        self.assertIn('preparedRestore: operation', restore)
++        for token in ['reload()', 'latestState()', 'prepareHistoryItems(', 'fetch(', 'Date()']:
++            self.assertNotIn(token, restore)
++
++    def test_prepared_path_short_circuits_store_reload_merge_and_entity_resolution(self):
++        for token in ['let local = preparedRestore?.local ?? current',
++                      'let remote = try preparedRestore?.previous ?? latestState()',
++                      'var state = preparedRestore?.local ?? merge(local, onto: remote)',
++                      'preparedTransaction: preparedRestore?.native.transaction',
++                      'let targets = try preparedRestore?.native.targets ?? transaction.repository.prepareHistoryItems(restoringItemIDs)']:
++            self.assertIn(token, self.worker)
++        # Swift ?? lazily evaluates its RHS; these fallbacks remain for ordinary mutations only.
++        self.assertEqual(self.worker.count('latestState()'), 1)
++        self.assertEqual(self.worker.count('prepareHistoryItems('), 1)
++
++    def test_prepared_commit_reuses_same_container_and_keeps_existing_save_error_boundary(self):
++        signature = 'func commit<T>(previous: StoreState?, deletingItemIDs: [UUID] = [],'
++        current = body(self.persistence, signature)
++        previous = body(self.previous('ClipboardPersistence.swift'), signature)
++        self.assertEqual(current.replace('preparedTransaction ?? Transaction(context: context)', 'Transaction(context: context)', 1), previous)
++        order = ['let transaction = preparedTransaction ?? Transaction(context: context)', 'withExtendedLifetime(transaction)',
++                 'try context.performAndWait', 'let outcome = try operation(transaction)', 'if context.hasChanges', 'try context.save()']
++        self.assertEqual([current.index(t) for t in order], sorted(current.index(t) for t in order))
++        for token in ['context.reset()', 'rollback', 'catch', 'try?']:
++            self.assertNotIn(token, current)
++
++    def test_legacy_id_restore_and_all_unrelated_store_methods_are_unchanged(self):
++        previous = self.previous('ClipboardStore.swift')
++        self.assertEqual(body(self.store, 'func recordRestoredItems(_ ids: [UUID])'), body(previous, 'func recordRestoredItems(_ ids: [UUID])'))
++        current = self.store
++        start = current.index('    struct HistoryRestoreOperation {')
++        end = current.index('    private func mutate<T>(', start)
++        current = current[:start] + current[end:]
++        start = current.index('    func recordRestoredSelection(')
++        end = current.index('    public func save()', start)
++        current = current[:start] + current[end:]
++        start = current.index('    private func mutateInTransaction<T>(')
++        end = current.index('    /// Restore promotes', start)
++        old_start = previous.index('    private func mutateInTransaction<T>(')
++        old_end = previous.index('    /// Restore promotes', old_start)
++        current = current[:start] + previous[old_start:old_end] + current[end:]
++        self.assertEqual(current, previous)
++
++    def test_saving_failure_still_joins_undo_and_notification(self):
++        tail = self.writer[self.writer.index('        do {'):]
++        self.assertIn('try recordRestoredSelection(restoration)', tail)
++        self.assertIn('} catch {', tail)
++        self.assertLess(tail.index('} catch {'), tail.index('removeAllActions()'))
++        self.assertNotIn('return', tail)
++        self.assertNotIn('throw', tail)
++
++    def test_original_evidence_and_current_source_snapshot_are_bound(self):
++        proof = json.loads((self.phase / 'prebuilt-restore-contract.json').read_text())
++        for r in proof['original_fragments']:
++            self.assertEqual(source_fragments(ROOT / r['path'])[r['address']]['sha256'], r['sha256'])
++        for p, digest in proof['current_sources'].items():
++            self.assertEqual(hashlib.sha256((ROOT / p).read_bytes()).hexdigest(), digest)
++        self.assertFalse(proof['full_function_migration_verified'])
++
++
++if __name__ == '__main__':
++    unittest.main()

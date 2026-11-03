@@ -1,0 +1,15 @@
+# 第一百二十三轮：捕获替换内容与创建设备
+
+继续P0。本轮修复上一轮留下的具体依赖：原生checksum查重命中但state缺项时，此前调用完整ClipboardPersistence.item，旧payload、日期、preview或sourceApplication损坏都可能在替换内容前中止捕获。现在使用专用capturedItemValue，从incoming取得本次内容，仅解码需要保留的五项兼容元数据：title、hasExplicitTitle、sourceIdentifier、sourceDevice标签、pinboardIDs；再叠加原生title/type2 owner/order。旧多组IDs完整保留，并加入原生owner；没有为了兼容而清空或过滤旧成员。
+
+原360ff8替换data并生成preview，不写title/device/list；360d9c仅在新建时设置创建device。此前Pasto虽保留DTO里的sourceDevice标签，后置sources.apply仍会重新按名称查设备并覆盖native关系，包括原关系nil。本轮source apply新增默认关闭的preserveDevice参数，只在native checksum命中时打开；来源应用仍正常更新/清空，然后跳过整个device分支。是否命中由capturedTarget决定，不用isInserted猜测。查询miss新建和其他generic调用保留旧行为。
+
+可读旧图片的OCR分析键仍以可选plist解析复用，incoming已有同键时优先；旧payload字典不可读时跳过这项兼容复用，不阻止捕获，也不把它写成原OCR完整合同。必需兼容元数据本身缺失、损坏或原生order异常仍按既有错误域处理，避免静默丢失旧分组。这只是去掉已被替换内容的完整解码门，并未取消整个旧content模型；全库初始化和读取仍需继续核证。
+
+8原片段、创建和更新两函数的完整65个BL及11个真实selector已绑定，明确新建setDevice与更新data替换的区别。3生产文件7个精确增量全部可逆回基线，244生产文件不变；7共享源与11方法保持。原生查重、同实体data→preview→source→历史timestamp顺序、普通读取与generic事务均未改。既有低模型只读复核实际补丁，未发现明确类型/可选/actor调用缺口，未编译或运行框架。
+
+新增23项源码/Python/Mach-O静态检查，合计1939项全部通过；Python示例是按源码字段及分支构造的补充模型，不冒充Swift/CoreData运行。首次1失败1错误为上一轮方法摘要与旧完整投影locator；1历史测试和1逆向工具共7处精确隔离后通过。旧proof和失败日志保留；新增检查读取真实当前代码。证据工具的device方法参数locator曾修正为实际声明，生产未回滚。一个新OCR示例测试名称也已更正，使名称不夸大其输入覆盖。
+
+360ff8/360d9c已有台账记录，本轮额外消费者修复不重复计数。v38保持P0 73/73、P1 124/124、总197/197（100%），只代表已确认有限差异，不是整个P0或Pasto完成度。继续P0后检查P1，再修P1。
+
+仅本地修改。未编译、构建、安装、运行应用/框架、联网、提交、推送、打标签或发布；官网9文件、版本1.0.2、HEAD与function-map保持。

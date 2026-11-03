@@ -1,0 +1,321 @@
+{
+  "kind": "P0_copy_delete_selection_after_primary_Undo_reuse_review",
+  "date": "2026-11-03",
+  "scope": {
+    "path": "reports/replica/p0-p1-review-scope-v9.json",
+    "sha256": "53db1ce56344ab2b58ad5f4b4446ca8a5094a6fb2154206149c0156fc2a3f593"
+  },
+  "previous_report": {
+    "path": "reports/replica/p0-p1-editor-paste-review-2026-11-03.json",
+    "sha256": "20a536d418f1c6bd61d72e563a6d545517d6bcd6b9460f45e651b22a33f7984c"
+  },
+  "finite_comparison_progress": {
+    "numerator": 972,
+    "denominator": 973,
+    "percent": 99.9
+  },
+  "counts": {
+    "finite_contract_consistent": 692,
+    "source_repaired": 271,
+    "user_adaptation": 9,
+    "evidence_insufficient": 1
+  },
+  "reviewed_existing_function_ids": [
+    "Paste:0x100068db8",
+    "Paste:0x1000691c8",
+    "Paste:0x1001b9698",
+    "Paste:0x1002ff310",
+    "Paste:0x100302b78",
+    "Paste:0x10031aeec",
+    "Paste:0x10031bcdc",
+    "Paste:0x100321f48",
+    "Paste:0x10032362c",
+    "Paste:0x100328bb4",
+    "Paste:0x1003293c4",
+    "Paste:0x100360ff8",
+    "Paste:0x1003614c0",
+    "Paste:0x100361690",
+    "Paste:0x100361ec0",
+    "Paste:0x100363004",
+    "Paste:0x1003636b4",
+    "Paste:0x100363810",
+    "Paste:0x100364014",
+    "Paste:0x100364074",
+    "Paste:0x100364108",
+    "Paste:0x1003646ec",
+    "Paste:0x100378664",
+    "Paste:0x10037875c",
+    "Paste:0x10037a144",
+    "Paste:0x10037ade4",
+    "Paste:0x10037b620",
+    "Paste:0x10037e5e0",
+    "Paste:0x100381fdc",
+    "Paste:0x10038222c",
+    "Paste:0x100383574",
+    "Paste:0x1003838bc",
+    "Paste:0x100383a0c",
+    "Paste:0x100383df4",
+    "Paste:0x100384824",
+    "Paste:0x100384aac",
+    "Paste:0x100384e6c",
+    "Paste:0x1003ba464",
+    "Paste:0x1003ba4d0",
+    "Paste:0x1003ba5c4"
+  ],
+  "reviewed_existing_count": 40,
+  "original_fragments": {
+    "Paste:0x10038222c": {
+      "path": "decompiled/Paste/part-0283.c",
+      "sha256": "0e533584b50666951b14314072d89c7453463abc73f7c989e4315fe4d29b162d"
+    },
+    "Paste:0x10031bcdc": {
+      "path": "decompiled/Paste/part-0257.c",
+      "sha256": "2370a678c913e025fd1893a08ac39cd3740ac9a96b4ec2a2d64191b6a2c7efd6"
+    },
+    "Paste:0x100383a0c": {
+      "path": "decompiled/Paste/part-0283.c",
+      "sha256": "2cd92feb8843e09a28a87625caa470b164a04510f7706687cf21cbd307464666"
+    },
+    "Paste:0x100381fdc": {
+      "path": "decompiled/Paste/part-0283.c",
+      "sha256": "b4c010ec7f4f3b56a66c78931a4a06874c902bc928ce8607d91eeb237e175fc0"
+    },
+    "Paste:0x100383574": {
+      "path": "decompiled/Paste/part-0283.c",
+      "sha256": "c5dd3d91d590e3e5b1fd4f7bea35a39606a2d55fab0cb45c4ee58f32b819c5de"
+    },
+    "Paste:0x1003838bc": {
+      "path": "decompiled/Paste/part-0283.c",
+      "sha256": "fa857e3ad22e80dd2b9b27b03a67222f8287b18971ac48c8d2134eaef55da8a7"
+    },
+    "Paste:0x10037875c": {
+      "path": "decompiled/Paste/part-0281.c",
+      "sha256": "871169f701273dd0bbd5c728079fb8722566e9c9de95e89f81c8ea3eb81bb12f"
+    },
+    "Paste:0x10037a144": {
+      "path": "decompiled/Paste/part-0281.c",
+      "sha256": "5724312d1aea18384eac7e73d7de2ee7a35f06ebf4ecb263ac685b66802884c3"
+    },
+    "Paste:0x10037aa3c": {
+      "path": "decompiled/Paste/part-0281.c",
+      "sha256": "30cd68e0d865cc9926fc4d58154027503a2f1f46e35c0e16dd643d141157a453"
+    },
+    "Paste:0x10037ade4": {
+      "path": "decompiled/Paste/part-0281.c",
+      "sha256": "6a3ccbe561d367be24b3e114ed02ba897b177a7877768659fafca8b97fdc5633"
+    },
+    "Paste:0x10037b620": {
+      "path": "decompiled/Paste/part-0281.c",
+      "sha256": "632f22110d7b246cbe155804529a03fe92bb1444e0eb42cb164199946989eae4"
+    },
+    "Paste:0x1002ff310": {
+      "path": "decompiled/Paste/part-0249.c",
+      "sha256": "383e5876b86d7239b636a53e7a5192784218106090660f89f0c134b3954812a6"
+    },
+    "Paste:0x100302b78": {
+      "path": "decompiled/Paste/part-0249.c",
+      "sha256": "a4e300e47e2a0d119114d9546387641e0471ec99ce0d839a45d96233e578e51e"
+    },
+    "Paste:0x10031b218": {
+      "path": "decompiled/Paste/part-0256.c",
+      "sha256": "6a39dc8198e7104b52f6804304a9159ef861d4dad2a9ff392462a8da2643c404"
+    },
+    "Paste:0x10031aeec": {
+      "path": "decompiled/Paste/part-0256.c",
+      "sha256": "07806e868f4eefbf4f73570998cdd39ced48b80b720ce044ca92456c0e440472"
+    },
+    "Paste:0x100323594": {
+      "path": "decompiled/Paste/part-0258.c",
+      "sha256": "ea1c6c00705bbb91d98a5ca2f908d1755392e290118bf6f900fc1cae8855dfde"
+    },
+    "Paste:0x100321f48": {
+      "path": "decompiled/Paste/part-0258.c",
+      "sha256": "1854acdf378e42a1fee1b80ca31b3404c966f18df88c788aec2a1ff7a339b6b9"
+    },
+    "Paste:0x10032362c": {
+      "path": "decompiled/Paste/part-0258.c",
+      "sha256": "86db7990ef7cc05cc10c8bdf3b33072f49e05ec15dcd2e8237006fa3b7a0f32f"
+    },
+    "Paste:0x100383df4": {
+      "path": "decompiled/Paste/part-0283.c",
+      "sha256": "78a0df1b56ff2f136c88fbeeaa0f028343bfb1ea68e811138bd932ff629ed7c7"
+    },
+    "Paste:0x100384824": {
+      "path": "decompiled/Paste/part-0283.c",
+      "sha256": "2ffb6ba7fb4c29d8ea4f239701d989cfdfd56c73e2403cfe2f8184b040f468b4"
+    },
+    "Paste:0x100384aac": {
+      "path": "decompiled/Paste/part-0284.c",
+      "sha256": "761c52284860fa9f4bd516cc7c1dfcb170d9e699383264f992c069e22b951d36"
+    },
+    "Paste:0x100384e6c": {
+      "path": "decompiled/Paste/part-0284.c",
+      "sha256": "a0bd76eba9825276994593c43f4ccc57f8b95abb484717945b3879a4f49e3e96"
+    },
+    "Paste:0x10037e5e0": {
+      "path": "decompiled/Paste/part-0282.c",
+      "sha256": "0a07d50d252feb23a284c6b299545b557ba42f43396f6ddd9619ac32d05e4100"
+    },
+    "Paste:0x100360ff8": {
+      "path": "decompiled/Paste/part-0275.c",
+      "sha256": "5c84dd4bad36c9890200c183ee36013cc85c38aa6f59caa81d424a40144bda6a"
+    },
+    "Paste:0x100378664": {
+      "path": "decompiled/Paste/part-0281.c",
+      "sha256": "646f123bfab602ee8da4001054f29dcfa3faf9c46a232a8ccbcce32ede8bde91"
+    },
+    "Paste:0x100361ec0": {
+      "path": "decompiled/Paste/part-0275.c",
+      "sha256": "5bfb083d3e5789a39c9852d061483c67f3c8e06de08a737359ae1b5e9eebb518"
+    },
+    "Paste:0x100364108": {
+      "path": "decompiled/Paste/part-0275.c",
+      "sha256": "c51412bee71457978b6dc8edd65d729afacd111224d5ab1b87c88313fcdc208d"
+    },
+    "Paste:0x1003614c0": {
+      "path": "decompiled/Paste/part-0275.c",
+      "sha256": "b0a338c54e6b7ecba2fc975209724a433a3f0a078f26ee8ee6db9ebac100a1ff"
+    },
+    "Paste:0x100363810": {
+      "path": "decompiled/Paste/part-0275.c",
+      "sha256": "20e33d83c224981fc11c99d5012bf21fd9ec2784fdae4a66795c7361ccbdda57"
+    },
+    "Paste:0x1003646ec": {
+      "path": "decompiled/Paste/part-0275.c",
+      "sha256": "6e2c2ddea2e00763d43bd1614935a0eafc96b10527c579e86f22d9e1b3988da0"
+    },
+    "Paste:0x100068db8": {
+      "path": "decompiled/Paste/part-0035.c",
+      "sha256": "f13bed6342ae19f3b0216b91f01e377f15dc7e9314326c04a6e1a7139e5a9623"
+    },
+    "Paste:0x1000691c8": {
+      "path": "decompiled/Paste/part-0035.c",
+      "sha256": "ece8bca0191e208db833b9f0b76b1b6ba3ba7797e9f7ea9d359bc74dafd0b031"
+    },
+    "Paste:0x10022b1cc": {
+      "path": "decompiled/Paste/part-0189.c",
+      "sha256": "e6b75fcecb0deacf32f85722298aa8538e86aedbb271b1e1acf01504e73050c1"
+    },
+    "Paste:0x1001b9698": {
+      "path": "decompiled/Paste/part-0146.c",
+      "sha256": "c8956ffa219bcd5ac2584b6a7614f6b909731d912c69f4c265b8fd7a69a2a2e8"
+    },
+    "Paste:0x1003ba464": {
+      "path": "decompiled/Paste/part-0294.c",
+      "sha256": "7a760014d4f6c36c1927eb2aa664a05b36214ccba432086832024905944821fc"
+    },
+    "Paste:0x1003ba4d0": {
+      "path": "decompiled/Paste/part-0294.c",
+      "sha256": "b0c4cf65f48ed6b8f39cfd519927e901db3cce8564a5b8ad607a3842e99723cc"
+    },
+    "Paste:0x1003ba5c4": {
+      "path": "decompiled/Paste/part-0294.c",
+      "sha256": "2eae0abdfad6c636ce757b417bb31e7795d10a4c7215c5fec752334227efdefe"
+    },
+    "Paste:0x100361690": {
+      "path": "decompiled/Paste/part-0275.c",
+      "sha256": "3ff4cc68aad21784997494868f3073207745f90e70ef56584740948eb320dd89"
+    },
+    "Paste:0x100364014": {
+      "path": "decompiled/Paste/part-0275.c",
+      "sha256": "6fe84ffe69ef9ddb9157270c131a10d28808b6292b071080c8e1e20507181a66"
+    },
+    "Paste:0x100364074": {
+      "path": "decompiled/Paste/part-0275.c",
+      "sha256": "f760dcb9375fe52b33d251ae062d4c20bcaf3ebf02fc1efd571253d15694a53f"
+    },
+    "Paste:0x100363004": {
+      "path": "decompiled/Paste/part-0275.c",
+      "sha256": "f047472ac2826762d45bdd8a0f8cc2c543d37515652b6a691992c1eabeceb379"
+    },
+    "Paste:0x1003636b4": {
+      "path": "decompiled/Paste/part-0275.c",
+      "sha256": "814398bd3c2099e585f55df24892175298555ad41ed89f4cfb2f21d96a793be9"
+    },
+    "Paste:0x100328bb4": {
+      "path": "decompiled/Paste/part-0261.c",
+      "sha256": "5cc12233f70bcf1314a2ab83b8c3b53af9c9e9801d0eb7f99d2f567df2ac7299"
+    },
+    "Paste:0x1003293c4": {
+      "path": "decompiled/Paste/part-0261.c",
+      "sha256": "43930c8dec4b02b6745ec5ad56b7260a9f06a902803db6cd6cde0c9eea9d5311"
+    }
+  },
+  "original_fragments_revalidated": 44,
+  "source_proofs": {
+    ".local/p0-p1-parent-review/2026-11-03-restore-safety/contract.json": "e55bd6d6ac9666e747447021ba55a00e0762c6c74dc3120ca2d04e562ca7dc08",
+    ".local/p0-repair/phase-21/data-delete-root-contract.json": "b140e53381b98999288c37a99932b5faa34ac93e00089384a2a49e12adb06d9c"
+  },
+  "current_sources": {
+    "replica/Sources/PastoCore/Pasteboard.swift": "8263f0e4b1f96a126031f44d3371b3fc7a05a123e3333196c6c6e593beeab15c",
+    "replica/Sources/PastoCore/OriginalPasteboard.swift": "139097cb610fc3a43f906414ef1b41d8634eb804f8911bc898bb987967a4208e",
+    "replica/Sources/PastoCore/OriginalPasteboardCaptureState.swift": "37ffe8ec4714bca780d53654ed09cde4a89a1b6362ba3869e56882a30a06689c",
+    "replica/Sources/PastoCore/OriginalPasteboardRestore.swift": "bf309c94b15bb4db46acedc6ba535d1f060aa3a8d74257053a773cf7200dd2c6",
+    "replica/Sources/PastoCore/OriginalPasteboardImageRestore.swift": "03e7d3e0aeac82986226a674708f4817cbf5cf69c20e856738774bbd0f51635a",
+    "replica/Sources/PastoCore/OriginalPasteboardClassification.swift": "120318efac6b9e47b12a415427c830d051338fcbe0257f6f6c6d5bbab6f30614",
+    "replica/Sources/PastoCore/ClipboardRestoreItem.swift": "b896730653c49e72387fd53bc19e2aeea23e5cafabc94ce7fd8fe6b9cf1d7665",
+    "replica/Sources/PastoCore/ClipboardItemDataPersistence.swift": "3abbd2239d3f077bc7fe8a26fab62c8cb34db85895ef2445e213df7e7182d34c",
+    "replica/Sources/PastoCore/ClipboardPersistence.swift": "32c106984cfdcd8f70b9d87200e3538dff5d0b9abd4651dc04de4c88cd575ee2",
+    "replica/Sources/PastoCore/ClipboardStore.swift": "7236a4d8947b7d4587363603a3436c858f406c8776640953416dab9ec58d60e0",
+    "replica/Sources/PastoCore/ClipboardSourcePersistence.swift": "c62ebc61419acf331cc3311878d0bf4af0c6546537a81bd824e7fcc1a5d2e339",
+    "replica/Sources/PastoCore/ClipboardSnapshotReader.swift": "853b835aee118b8fd7994083fa407cd6d7d4ed2967c6bc35f3e5b3b54eef49b5",
+    "replica/Sources/Pasto/UI/ReplicaUIController.swift": "73f70cb992e6baeaf4fa3978f4f68642120e7117d570410ceec9db3299b67d33"
+  },
+  "prior_source_hashes_superseded": [
+    "replica/Sources/PastoCore/ClipboardPersistence.swift",
+    "replica/Sources/PastoCore/ClipboardStore.swift",
+    "replica/Sources/Pasto/UI/ReplicaUIController.swift"
+  ],
+  "tests": {
+    "tests": 46,
+    "failures": [],
+    "errors": [],
+    "modules": [
+      "test_p0_restore_safety_batch",
+      "test_p0_repair_delete_completion",
+      "test_p0_repair_delete_applied_snapshot",
+      "test_p0_repair_ordered_delete_core",
+      "test_p0_repair_neighbor"
+    ],
+    "omitted_historical_checks": {
+      "test_p0_restore_safety_batch.RestoreSafetyBatch.test_original_and_current_source_inputs_fresh": "Historical whole-source hashes predate later Undo repair; fresh native fragments and current source hashes will be bound separately.",
+      "test_p0_restore_safety_batch.RestoreSafetyBatch.test_no_production_or_prior_test_and_report_changes": "Historical project baseline is superseded. This audit preserves all current production sources and old tests."
+    },
+    "source_substitution": false,
+    "compiled": false,
+    "framework_executed": false
+  },
+  "production_count": 249,
+  "production_changed": 0,
+  "old_tests_changed": false,
+  "new_denominator_entries": 0,
+  "new_source_repaired_entries": 0,
+  "newly_confirmed_unfixed_differences": 0,
+  "conclusions": [
+    "复制输入以当前applied native item为准，先准备全部字节再清空pasteboard；实际写入后才读changeCount。",
+    "writeObjects返回false不新增早退；恢复保存错误仍汇合到共享Undo manager清理和didRestore通知。",
+    "成功复制沿write→copiedItemsHandler→hidePanel，不引入新的timer或先隐藏顺序。",
+    "删除先从同一applied快照取得选中条目、顺序和邻项，事务内读取当前分组。",
+    "删除事务错误会被记录，仍执行可选completion；弱collection owner消失/替换时不继续交付。",
+    "完成回调只设置待选邻项；实际collection变更后清掉request，再查新快照，不提前选择或回落错误邻项。",
+    "底层显式删除顺序与重复ID保留；set兼容入口不改变实际array通道。",
+    "近期主context Undo接入并未改变上述函数体；当前源/原始函数检查通过，未实际执行CoreData。"
+  ],
+  "unknown_function_ids": [
+    "Paste:0x1000f733c"
+  ],
+  "full_function_migration_verified": false,
+  "migration_completion_percent": null,
+  "compiled": false,
+  "built": false,
+  "installed": false,
+  "application_executed": false,
+  "framework_executed": false,
+  "network_used": false,
+  "committed": false,
+  "pushed": false,
+  "published": false,
+  "user_data_modified": false,
+  "goal_status": "active",
+  "next_action": "本轮复制/删除实际消费者复核结束；继续P0/P1其余未补强父链，保留唯一Swift setter证据不足项。"
+}

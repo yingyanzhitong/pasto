@@ -1,0 +1,46 @@
+--- a/replica/Sources/PastoCore/OriginalPreviewAttributedText.swift
++++ b/replica/Sources/PastoCore/OriginalPreviewAttributedText.swift
+@@ -19,7 +19,7 @@
+         let descriptor = font.fontDescriptor
+         let cleared = descriptorWithTraits(descriptor, traits: [])
+         let requested = cleared.flatMap { descriptorWithTraits($0, traits: traits) }
+-        return NSFont(descriptor: requested ?? descriptor, size: font.pointSize) ?? font
++        return NSFont(descriptor: requested ?? font.fontDescriptor, size: font.pointSize) ?? font
+     }
+ 
+     // The older build SDK imports this selector as nonnull. The recovered binary
+--- a/replica/Sources/PastoCore/OriginalPreviewTextTraits.swift
++++ b/replica/Sources/PastoCore/OriginalPreviewTextTraits.swift
+@@ -8,9 +8,8 @@
+     public static func f_100207db8(_ attributes: [NSAttributedString.Key: Any]) -> Set<Trait> {
+         var result: Set<Trait> = []
+         if let font = attributes[.font] as? NSFont {
+-            let traits = font.fontDescriptor.symbolicTraits
+-            if traits.contains(.bold) { result.insert(.bold) }
+-            if traits.contains(.italic) { result.insert(.italic) }
++            if font.fontDescriptor.symbolicTraits.contains(.bold) { result.insert(.bold) }
++            if font.fontDescriptor.symbolicTraits.contains(.italic) { result.insert(.italic) }
+         }
+         if let underline = attributes[.underlineStyle] as? Int, underline == 1 { result.insert(.underline) }
+         if let strike = attributes[.strikethroughStyle] as? Int, strike == 1 { result.insert(.strikethrough) }
+@@ -64,12 +63,14 @@
+             else { result[key] = 1 }
+         case .bold, .italic:
+             guard let font = attributes[.font] as? NSFont else { return result }
+-            let descriptor = font.fontDescriptor
+-            let mask: NSFontDescriptor.SymbolicTraits = trait == .bold ? .bold : .italic
+-            let traits = remove ? descriptor.symbolicTraits.subtracting(mask) : descriptor.symbolicTraits.union(mask)
+-            let cleared = OriginalPreviewAttributedText.descriptorWithTraits(descriptor, traits: [])
+-            let changed = cleared.flatMap { OriginalPreviewAttributedText.descriptorWithTraits($0, traits: traits) }
+-            if let changedFont = NSFont(descriptor: changed ?? descriptor, size: font.pointSize) {
++            let originalTraits = font.fontDescriptor.symbolicTraits
++            let cleared = OriginalPreviewAttributedText.descriptorWithTraits(font.fontDescriptor, traits: [])
++            let changed = cleared.flatMap { descriptor in
++                let mask: NSFontDescriptor.SymbolicTraits = trait == .bold ? .bold : .italic
++                let traits = remove ? originalTraits.subtracting(mask) : originalTraits.union(mask)
++                return OriginalPreviewAttributedText.descriptorWithTraits(descriptor, traits: traits)
++            }
++            if let changedFont = NSFont(descriptor: changed ?? font.fontDescriptor, size: font.pointSize) {
+                 result[.font] = changedFont
+             } else { result.removeValue(forKey: .font) }
+         }

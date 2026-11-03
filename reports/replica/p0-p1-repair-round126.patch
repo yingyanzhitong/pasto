@@ -1,0 +1,107 @@
+--- a/replica/Sources/PastoCore/ClipboardPersistence.swift
++++ b/replica/Sources/PastoCore/ClipboardPersistence.swift
+@@ -618,8 +618,10 @@
+             replacedItemDataIDs.insert(target.id)
+         }
+ 
+-        func initializeCapturedDevice(_ target: (id: UUID, object: NSManagedObject), name: String) throws {
+-            try sources.applyDevice(named: name, to: target.object)
++        func initializeCapturedDevice(_ target: (id: UUID, object: NSManagedObject)) -> String {
++            let device = sources.currentDevice()
++            target.object.setValue(device, forKey: "device")
++            return device.value(forKey: "name") as? String ?? ""
+         }
+ 
+         func applyCapturedSources(_ target: (id: UUID, object: NSManagedObject), item: ClipboardItem,
+--- a/replica/Sources/PastoCore/ClipboardSourcePersistence.swift
++++ b/replica/Sources/PastoCore/ClipboardSourcePersistence.swift
+@@ -1,5 +1,8 @@
+ import CoreData
++import CoreFoundation
++import Darwin
+ import Foundation
++import IOKit
+ 
+ /// Native source relationships used by the recovered suggestion queries.
+ /// Legacy value records remain available for archives and local display compatibility.
+@@ -81,6 +84,25 @@
+         return object
+     }
+ 
++    // 312150: current hardware identity is distinct from legacy archive display names.
++    func currentDevice() -> NSManagedObject {
++        let identifier = OriginalLocalDevice.f_1000f35e0()
++        let request = NSFetchRequest<NSManagedObject>(entityName: "DeviceEntity")
++        request.predicate = NSPredicate(format: "identifier == %@", identifier)
++        request.fetchBatchSize = 20
++        request.fetchLimit = 1
++        request.fetchOffset = 0
++        if let existing = (try? context.fetch(request))?.first { return existing }
++        let name = OriginalLocalDevice.f_1000f36ec()
++        let object = NSEntityDescription.insertNewObject(forEntityName: "DeviceEntity", into: context)
++        object.setValue(Int64(2), forKey: "rawType")
++        object.setValue(identifier, forKey: "identifier")
++        object.setValue(name, forKey: "name")
++        // The existing local model requires this creation column.
++        object.setValue(Date(), forKey: "createdAt")
++        return object
++    }
++
+     private func device(named name: String) throws -> NSManagedObject {
+         if let existing = try first("DeviceEntity", key: "name", value: name) { return existing }
+         // Old Pasto records have a device name, but no vendor/device UUID.
+@@ -158,3 +180,43 @@
+         try names(in: "DeviceEntity", matching: query)
+     }
+ }
++
++/// Local device information used by the original DeviceEntity factory.
++enum OriginalLocalDevice {
++    // 0f35e0 reads the registry on each request; failed reads share the original Unknown identity.
++    static func f_1000f35e0() -> String {
++        let service = IOServiceGetMatchingService(kIOMainPortDefault, IOServiceMatching("IOPlatformExpertDevice"))
++        defer { _ = IOObjectRelease(service) }
++        guard service != 0,
++              let value = IORegistryEntryCreateCFProperty(service, "IOPlatformSerialNumber" as CFString,
++                  kCFAllocatorDefault, 0)?.takeRetainedValue() as? String else { return "Unknown" }
++        return value
++    }
++
++    static func f_1000f36ec() -> String {
++        modelName(f_1000f4774("hw.model"))
++    }
++
++    static func modelName(_ model: String) -> String {
++        let trimmed = model.trimmingCharacters(in: CharacterSet.letters.inverted)
++        switch trimmed.lowercased() {
++        case "macbook": return "MacBook"
++        case "macbookpro": return "MacBook Pro"
++        case "macbookair": return "MacBook Air"
++        case "imac": return "iMac"
++        case "macpro": return "Mac Pro"
++        default: return trimmed
++        }
++    }
++
++    // 0f4774 ignores both status codes and decodes the allocated, zero-terminated UTF-8 prefix.
++    static func f_1000f4774(_ key: String) -> String {
++        var size = 0
++        _ = sysctlbyname(key, nil, &size, nil, 0)
++        var bytes = [UInt8](repeating: 0, count: size)
++        bytes.withUnsafeMutableBytes { buffer in
++            _ = sysctlbyname(key, buffer.baseAddress, &size, nil, 0)
++        }
++        return String(bytes: bytes.prefix { $0 != 0 }, encoding: .utf8) ?? ""
++    }
++}
+--- a/replica/Sources/PastoCore/ClipboardStore.swift
++++ b/replica/Sources/PastoCore/ClipboardStore.swift
+@@ -811,7 +811,7 @@
+                     target!.object.setValue(state.items[result.index].nativeIdentifier, forKey: "nativeIdentifier")
+                 }
+                 if capturedTarget == nil {
+-                    try transaction.repository.initializeCapturedDevice(target!, name: state.items[result.index].sourceDevice)
++                    state.items[result.index].sourceDevice = transaction.repository.initializeCapturedDevice(target!)
+                 }
+                 let items = try Self.originalPasteboardItems(from: state.items[result.index].payloads)
+                 let kind = OriginalPasteboardClassification.f_10032362c(items)

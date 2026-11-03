@@ -1,0 +1,167 @@
+--- a/replica/Sources/PastoCore/ClipboardPersistence.swift
++++ b/replica/Sources/PastoCore/ClipboardPersistence.swift
+@@ -696,6 +696,32 @@
+         return try context.performAndWait {
+             try OriginalObjCExceptionBridge.withResult {
+                 HistoryRestoreSelection(transaction: transaction, targets: targets)
++            }
++        }
++    }
++
++    func prepareHistoryRestore(inputs: [ClipboardRestoreItem]) throws -> HistoryRestoreSelection {
++        let nativeTargets: [(id: UUID, object: NSManagedObject)] = inputs.compactMap { input in
++            guard let object = input.nativeObject else { return nil }
++            return (id: input.id, object: object)
++        }
++        if nativeTargets.count == inputs.count {
++            return try prepareHistoryRestore(targets: nativeTargets)
++        }
++        let transaction = Transaction(context: context, nativeHistoryRestoreTargets: nativeTargets)
++        return try context.performAndWait {
++            try OriginalObjCExceptionBridge.withResult {
++                let legacyIDs = inputs.filter { $0.nativeObject == nil }.map(\.id)
++                let legacyTargets: [(id: UUID, object: NSManagedObject)]
++                if legacyIDs.isEmpty { legacyTargets = [] }
++                else { legacyTargets = try transaction.repository.prepareHistoryItems(legacyIDs) }
++                var legacyIndex = 0
++                let targets: [(id: UUID, object: NSManagedObject)] = inputs.map { input in
++                    if let object = input.nativeObject { return (id: input.id, object: object) }
++                    defer { legacyIndex += 1 }
++                    return legacyTargets[legacyIndex]
++                }
++                return HistoryRestoreSelection(transaction: transaction, targets: targets)
+             }
+         }
+     }
+--- a/replica/Sources/PastoCore/ClipboardStore.swift
++++ b/replica/Sources/PastoCore/ClipboardStore.swift
+@@ -442,8 +442,13 @@
+                 state = merge(local, onto: previous)
+                 try validate(state)
+             }
++            let legacy = selected.filter { $0.nativeObject == nil }
++            if !legacy.isEmpty {
++                let available = Set(state.items.filter { !$0.isDeleted }.map(\.id))
++                guard legacy.allSatisfy({ available.contains($0.id) }) else { throw ClipboardStoreError.itemNotFound }
++            }
+             return HistoryRestoreOperation(local: state, previous: previous,
+-                native: try persistence.prepareHistoryRestore(targets: selected.map { (id: $0.id, object: $0.nativeObject!) }))
++                native: try persistence.prepareHistoryRestore(inputs: selected))
+         }
+     }
+ 
+--- a/replica/Sources/PastoCore/Pasteboard.swift
++++ b/replica/Sources/PastoCore/Pasteboard.swift
+@@ -334,10 +334,10 @@
+ 
+     public func dragPasteboardGroups(restoreItems selected: [ClipboardRestoreItem],
+                                      options: OriginalPasteboardRestore.Options) throws -> [[OriginalPasteboardItem]] {
+-        guard selected.allSatisfy({ $0.nativeObject != nil }) else {
++        guard selected.contains(where: { $0.nativeObject != nil }) else {
+             return try dragPasteboardGroups(for: selected.map { $0.resolvedItem() }, options: options)
+         }
+-        return nativeRestoreGroups(selected, options: options)
++        return try nativeRestoreGroups(selected, options: options)
+     }
+ 
+     public func writeToPasteboard(id: UUID, pasteboard: NSPasteboard, plainTextOnly: Bool = false) throws {
+@@ -359,13 +359,13 @@
+     public func writeToPasteboard(restoreItems: [ClipboardRestoreItem], pasteboard: NSPasteboard,
+                                  options: OriginalPasteboardRestore.Options) throws {
+         guard !restoreItems.isEmpty else { return }
+-        guard restoreItems.allSatisfy({ $0.nativeObject != nil }) else {
++        guard restoreItems.contains(where: { $0.nativeObject != nil }) else {
+             let selected = restoreItems.map { $0.resolvedItem() }
+             try writeToPasteboard(ids: restoreItems.map(\.id), pasteboard: pasteboard, options: options,
+                                  recognizedImageData: nil, resolvedSelection: selected)
+             return
+         }
+-        let objects = nativeRestoreObjects(restoreItems, options: options)
++        let objects = try nativeRestoreObjects(restoreItems, options: options)
+         try finishPasteboardWrite(objects, pasteboard: pasteboard) {
+             try prepareHistoryRestore(restoreItems)
+         }
+@@ -383,33 +383,65 @@
+ 
+     // 38222c consumes one entity at a time: data/image preparation, source, flags, then aggregation.
+     private func nativeRestoreObjects(_ inputs: [ClipboardRestoreItem],
+-                                      options: OriginalPasteboardRestore.Options) -> [OriginalPasteboardItem] {
+-        nativeRestoreGroups(inputs, options: options).flatMap { $0 }
++                                      options: OriginalPasteboardRestore.Options) throws -> [OriginalPasteboardItem] {
++        try nativeRestoreGroups(inputs, options: options, legacyCopy: true).flatMap { $0 }
+     }
+ 
+     private func nativeRestoreGroups(_ inputs: [ClipboardRestoreItem],
+-                                     options: OriginalPasteboardRestore.Options) -> [[OriginalPasteboardItem]] {
++                                     options: OriginalPasteboardRestore.Options,
++                                     legacyCopy: Bool = false) throws -> [[OriginalPasteboardItem]] {
+         let multiple = inputs.count > 1
+-        let aggregatesText = inputs.contains { $0.previewRawType() == 5 || $0.previewRawType() == 4 }
++        let aggregatesText = inputs.contains { input in
++            if let rawType = input.previewRawType() { return rawType == 5 || rawType == 4 }
++            let item = input.resolvedItem()
++            return item.kind == .text || item.kind == .richText || item.kind == .link
++        }
+         var groups: [[OriginalPasteboardItem]] = []
+         var contents: [NSAttributedString] = []
+         for input in inputs {
+-            let object = input.nativeObject!
+-            let kind = OriginalPasteboardContentKind(rawValue: UInt8(input.previewRawType()!))!
+-            let plain = OriginalPasteboardRestore.usesPlainProjection(kind: kind, options: options)
++            let kind: OriginalPasteboardContentKind
++            let plain: Bool
+             let representations: [OriginalPasteboardItem]
+-            if !plain, kind == .image {
+-                representations = Self.imageRestore.prepareNative(
+-                    sourceName: (object.value(forKey: "sourceApplication") as? NSManagedObject)?.value(forKey: "name") as? String,
+-                    timestamp: object.value(forKey: "timestamp") as? Date) {
+-                        Self.nativeRestoreRepresentations(for: object)
+-                    }
++            let items: [OriginalPasteboardItem]
++            let sourceBundleID: String?
++            if let object = input.nativeObject {
++                kind = OriginalPasteboardContentKind(rawValue: UInt8(input.previewRawType()!))!
++                plain = OriginalPasteboardRestore.usesPlainProjection(kind: kind, options: options)
++                if !plain, kind == .image {
++                    representations = Self.imageRestore.prepareNative(
++                        sourceName: (object.value(forKey: "sourceApplication") as? NSManagedObject)?.value(forKey: "name") as? String,
++                        timestamp: object.value(forKey: "timestamp") as? Date) {
++                            Self.nativeRestoreRepresentations(for: object)
++                        }
++                } else {
++                    representations = Self.nativeRestoreRepresentations(for: object)
++                }
++                items = plain ? OriginalPasteboardRestore.f_10031bcdc(representations) : representations
++                let application = object.value(forKey: "sourceApplication") as? NSManagedObject
++                sourceBundleID = application?.value(forKey: "bundleIdentifier") as? String
+             } else {
+-                representations = Self.nativeRestoreRepresentations(for: object)
+-            }
+-            let items = plain ? OriginalPasteboardRestore.f_10031bcdc(representations) : representations
+-            let application = object.value(forKey: "sourceApplication") as? NSManagedObject
+-            let sourceBundleID = application?.value(forKey: "bundleIdentifier") as? String
++                let item = input.resolvedItem()
++                let application = sourceApplication(for: item)
++                switch item.kind {
++                case .text, .richText: kind = .text
++                case .link: kind = .link
++                case .image: kind = .image
++                case .files: kind = .files
++                case .color: kind = .color
++                case .unknown: kind = .unknown
++                }
++                plain = OriginalPasteboardRestore.usesPlainProjection(kind: kind, options: options)
++                let read: () throws -> [OriginalPasteboardItem] = {
++                    if legacyCopy { return try Self.ordinaryRestoreRepresentations(for: item, plainTextProjection: plain) }
++                    return try Self.originalPasteboardItems(from: item.payloads)
++                }
++                if !plain, kind == .image {
++                    representations = try Self.imageRestore.prepare(sourceName: application?.name,
++                        timestamp: item.isInHistory ? item.createdAt : nil, loadItems: read)
++                } else { representations = try read() }
++                items = plain ? OriginalPasteboardRestore.f_10031bcdc(representations) : representations
++                sourceBundleID = application?.bundleIdentifier
++            }
+             for item in items {
+                 item.f_100383574(removingTypesContaining: ["com.microsoft.ole.source"])
+                 item.f_10037c4a8(sourceBundleID ?? "", forType: "org.nspasteboard.source")

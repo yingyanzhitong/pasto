@@ -1,0 +1,35 @@
+--- phase-7-before/replica/Sources/Pasto/UI/ReplicaUIController.swift
++++ replica/Sources/Pasto/UI/ReplicaUIController.swift
+@@ -242,6 +242,7 @@
+         selection = Set(ids)
+         primaryID = primary
+         isApplyingSelection = false
++        collectionOwner?.applySelection(state: self)
+     }
+ 
+     func takeCollectionChangedIDs(owner: ReplicaNativeCollectionHost) -> Set<UUID> {
+@@ -284,6 +285,7 @@
+             primaryID = orderedSelectionIDs.last
+             isApplyingSelection = false
+         }
++        collectionOwner?.applySelection(state: self)
+     }
+ 
+     func normalizeSelection() {
+--- phase-7-before/replica/Sources/Pasto/UI/ReplicaNativeCardCollection.swift
++++ replica/Sources/Pasto/UI/ReplicaNativeCardCollection.swift
+@@ -115,6 +115,14 @@
+     func appliedItems(for state: ReplicaUIState) -> [ClipboardItem]? {
+         guard self.state === state, state.collectionOwner === self else { return nil }
+         return items
++    }
++
++    // 0x100228ee8 -> 0x100228f6c: deliver selection to visible cells synchronously.
++    func applySelection(state: ReplicaUIState) {
++        guard self.state === state, state.collectionOwner === self else { return }
++        for (index, cell) in cells where items.indices.contains(index) && cell.itemID == items[index].id {
++            cell.isSelected = state.selection.contains(items[index].id)
++        }
+     }
+ 
+     private func scheduleSnapshotDrain() {

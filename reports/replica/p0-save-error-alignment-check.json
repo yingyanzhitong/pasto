@@ -1,0 +1,31 @@
+{
+  "kind": "unapplied_proposal_static_check",
+  "checks": [
+    "production source matches read-only baseline",
+    "patch exactly matches the one proposed substitution",
+    "git apply --check succeeds; patch not applied",
+    "save error is caught while Undo and DidRestore remain after the catch; earlier reads/writer unchanged",
+    "original error branch releases Swift error then joins the following Undo chain",
+    "218 production files, HEAD and function-map unchanged"
+  ],
+  "passed": true,
+  "executed_static_checks": 6,
+  "patch_applied": false,
+  "production_source_edited": false,
+  "compiled": false,
+  "application_executed": false,
+  "original_error_release_symbol": "_swift_errorRelease",
+  "baseline_source_sha256": "dc14692c74b2aab4edde230c659f58ba3c39a2d8f531b1e3638c2fe5c3c601aa",
+  "proposed_source_sha256": "9b3a0d80d478d425284c048edad3cda437761d48cd8403757b323aac3dc81171",
+  "patch_sha256": "33a5ca7d12f7308a15cfe663e248d1b6895f615e39ee37d03b713f8c7e38c1dc",
+  "source_inputs": {
+    "replica/Sources/PastoCore/Pasteboard.swift": "dc14692c74b2aab4edde230c659f58ba3c39a2d8f531b1e3638c2fe5c3c601aa",
+    ".local/p0-review/p0-save-error-proposed-source.swift": "9b3a0d80d478d425284c048edad3cda437761d48cd8403757b323aac3dc81171",
+    "reports/replica/p0-save-error-alignment.patch": "33a5ca7d12f7308a15cfe663e248d1b6895f615e39ee37d03b713f8c7e38c1dc",
+    ".local/p0-review/check-p0-save-error-proposal.py": "0f64b93a53935c7b0beddbab9fd2d4da89e64a93dafe7a65f75a3441a931c6b8",
+    "reports/replica/p0-p1-review-round27-static-proof.json": "9556057b1b05388a873e8e7f0a66692ccdcac2de8410e79c399103ef8a510756",
+    ".local/paste-arm64-static.bin": "871f00354fbb1c165d858a98e6d19d6f43cb9d3f9f958b3e07c7f07eb5c19afb",
+    "scripts/macho_imports.py": "92abd5616f5f7962e0a7b51bc8330ea624ebe1db07d483a3b9ba8c5f3949574b"
+  },
+  "limitation": "草案检查通过不等于生产修复，未运行Swift或应用；仍待只读→修复的阶段确认。"
+}

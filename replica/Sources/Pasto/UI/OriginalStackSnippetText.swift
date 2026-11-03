@@ -6,21 +6,32 @@ import PastoCore
 enum OriginalStackSnippetText {
     /// Paste 0x100051ec8: derive the Stack label from stored preview metadata.
     static func f_100051ec8(_ item: ClipboardItem) -> String {
-        if let metadata = OriginalImagePreviewMetadataCodec.decodeText(item.rawPreview) {
+        label(rawPreview: item.rawPreview) { count in
+            OriginalPreviewTitles.f_100308f88(item.originalTitle,
+                defaultTitle: defaultTitle(item, fileCount: count))
+        }
+    }
+
+    static func text(for input: ClipboardRestoreItem) -> String {
+        guard input.hasNativeEntity else { return f_100051ec8(input.resolvedItem()) }
+        return label(rawPreview: input.previewMetadataData()) { _ in input.previewTitle()!.title }
+    }
+
+    private static func label(rawPreview: Data?, filesTitle: (Int) -> String) -> String {
+        if let metadata = OriginalImagePreviewMetadataCodec.decodeText(rawPreview) {
             return String(metadata.text.characters)
         }
-        if let metadata = OriginalImagePreviewMetadataCodec.decodeLink(item.rawPreview) {
+        if let metadata = OriginalImagePreviewMetadataCodec.decodeLink(rawPreview) {
             return metadata.url.absoluteString
         }
-        if OriginalImagePreviewMetadataCodec.decode(item.rawPreview) != nil { return "Unknown" }
-        if let metadata = OriginalImagePreviewMetadataCodec.decodeColor(item.rawPreview) {
+        if OriginalImagePreviewMetadataCodec.decode(rawPreview) != nil { return "Unknown" }
+        if let metadata = OriginalImagePreviewMetadataCodec.decodeColor(rawPreview) {
             return OriginalPreviewColorFormatting.f_100206b5c(
                 OriginalColorPreviewMetadataGenerator.color(metadata.code))
         }
-        if let metadata = OriginalImagePreviewMetadataCodec.decodeFiles(item.rawPreview) {
+        if let metadata = OriginalImagePreviewMetadataCodec.decodeFiles(rawPreview) {
             if metadata.paths.count > 1 {
-                return OriginalPreviewTitles.f_100308f88(item.originalTitle,
-                    defaultTitle: defaultTitle(item, fileCount: metadata.paths.count))
+                return filesTitle(metadata.paths.count)
             }
             if let path = metadata.paths.first {
                 return URL(fileURLWithPath: path).lastPathComponent

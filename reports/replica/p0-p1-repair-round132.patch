@@ -1,0 +1,48 @@
+--- before/replica/Sources/PastoCore/ClipboardSearchRecord.swift
++++ after/replica/Sources/PastoCore/ClipboardSearchRecord.swift
+@@ -131,6 +131,7 @@
+     private let coordinator: NSPersistentStoreCoordinator
+     private let objectID: NSManagedObjectID
+     private let kind: OriginalPasteboardContentKind
++    private let contentDiagnostics = OriginalNamedDiagnostic.f_1000d4624(name: "init(_:coordinator:)")
+     private let logger = Logger(subsystem: "com.yingyanzhitong.paste-replica", category: "search-content")
+ 
+     init(coordinator: NSPersistentStoreCoordinator, objectID: NSManagedObjectID, kind: OriginalPasteboardContentKind) {
+@@ -138,14 +139,25 @@
+     }
+ 
+     // 0x100372440/371f2c: a new private context is created on each evaluation.
+-    private func read<T>(_ project: (NSManagedObject, [OriginalPasteboardItem]) throws -> T?) -> T? {
++    private func read<T>(contentDiagnostics: OriginalNamedDiagnostic? = nil,
++                         _ project: (NSManagedObject, [OriginalPasteboardItem]) throws -> T?) -> T? {
+         let context = NSManagedObjectContext(concurrencyType: .privateQueueConcurrencyType)
+         context.persistentStoreCoordinator = coordinator
+         do {
+             return try context.performAndWait {
+                 try OriginalObjCExceptionBridge.withResult {
+-                    let object = try context.existingObject(with: objectID)
+-                    guard object.entity.name == "Item", !object.isDeleted,
++                    let object: NSManagedObject
++                    do { object = try context.existingObject(with: objectID) }
++                    catch {
++                        guard let contentDiagnostics else { throw error }
++                        contentDiagnostics.f_1000d468c().f_1000d4df0("Failed to load item content: \(error.localizedDescription)")
++                        return nil
++                    }
++                    guard object.entity.name == "Item" else {
++                        contentDiagnostics?.f_1000d468c().f_1000d4df0("Failed to load item for content indexing: object not found")
++                        return nil
++                    }
++                    guard !object.isDeleted,
+                           let data = object.value(forKey: "data") as? NSManagedObject else { return nil }
+                     guard let items = ClipboardItemDataPersistence.readRepresentations(from: data, diagnostics: {
+                         // This private context/data object is created once for this deferred read.
+@@ -161,7 +173,7 @@
+     }
+ 
+     func content() -> String? {
+-        read { object, items in
++        read(contentDiagnostics: contentDiagnostics) { object, items in
+             ClipboardSearchRecordContent.nativeText(items, kind: kind,
+                 preview: object.value(forKey: "rawPreview") as? Data)
+         }

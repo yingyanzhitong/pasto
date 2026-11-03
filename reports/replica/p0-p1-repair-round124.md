@@ -1,0 +1,15 @@
+# 第一百二十四轮：新捕获的设备顺序与失败重试
+
+继续P0。原360d9c在identifier之后设置device，再调用360ff8写内容和preview；真实setDevice调用位于360f28，内容更新调用位于360f40。Pasto此前查询miss后先写data/preview，直到source应用阶段才写device。本轮提取并复用原device尾，在原生查询miss的identifier之后、content/preview之前初始化设备；后置source应用对所有capture保留device，只照常更新应用。hit不早写device，其他generic调用默认行为保持。
+
+已核对失败状态的真实生产路径：commit在context队列内先执行业务operation，之后才编码兼容content并保存；operation失败不rollback/reset，Store也尚未publish。新捕获若已写checksum/data/preview，后续source application fetch/apply失败，可留下未保存且content为空的Item。本地SDK15.2的NSFetchRequest头文件明确默认包含pending changes；下一次同checksum查询可能命中它。以上是源码与本地SDK绑定的可达条件，没有执行数据库故障注入。
+
+恢复只在isInserted且content为nil时启用：不存在已写入的兼容元数据，按新内容和同对象原生title、owner、order、device恢复。已保存对象缺内容，或任何非nil内容（包括空Data、坏blob）仍走严格metadata解码，不会吞错清空旧分组。原生关系投影和可选OCR尾保持。失败发生在checksum/data之前、完整事务fault/rollback语义及全库schema适配仍为独立合同，未因这条重试通过而标完成。
+
+3生产文件5个精确增量，另244生产文件不变；2原片段、2实际BL与device selector、13不变方法、7共享源及SDK摘要已绑定。source application分支与generic device尾原文复用。既有低模型只读复核原序、失败生产链及实际patch，未发现明确类型/可选/队列错误；未编译或运行框架。
+
+新增19项检查，合计1958项源码/Python/Mach-O/SDK静态检查通过。首次唯一失败是历史P1来源测试仍要求device逻辑内联；2历史fixture和1逆向工具共8处精确隔离本轮增量后通过。原proof/初日志保存，新检查验证当前源码和尾部等价。补充Python状态示例不冒充Swift/CoreData执行，也没有修改P1生产实现。
+
+v38保持P0 73/73、P1 124/124、总197/197（100%），仅指已确认有限差异，既有360d9c/360ff8额外修复不重计。整个P0仍未验收。下一阶段批量核五个P0模块的实际入口和剩余合同，明确区分源码差异、用户兼容适配及仅运行限制；OCR专用父链按原目标归P1，不将其作为P0无限前置条件。仍按P0修复→P1检查→P1修复执行。
+
+仅保留本地改动。未编译、构建、安装、运行应用/框架、联网、提交、推送、打标签或发布；官网9文件、版本1.0.2、HEAD与function-map保持。

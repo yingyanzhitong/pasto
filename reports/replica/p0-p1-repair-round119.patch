@@ -1,0 +1,45 @@
+--- a/replica/Sources/PastoCore/Pasteboard.swift
++++ b/replica/Sources/PastoCore/Pasteboard.swift
+@@ -764,13 +764,17 @@
+                 return
+             }
+             var totalBytes = 0
+-            var snapshot: [OriginalPasteboardItem] = []
+             recordSynchronization("Start processing pasteboard items")
+             for rawItem in rawItems {
+                 let item = OriginalPasteboardItem()
+                 for type in rawItem.types {
+-                    guard OriginalPasteboardPolicies.permitsRemoteType(type.rawValue, allTypes: allTypes),
+-                          OriginalPasteboardPolicies.f_10037c22c(type: type.rawValue, allTypes: allTypes) else { continue }
++                    guard OriginalPasteboardPolicies.permitsRemoteType(type.rawValue, allTypes: allTypes) else { continue }
++                    if let delegate = captureState.delegate {
++                        let shouldRead = withExtendedLifetime(delegate) {
++                            OriginalPasteboardPolicies.f_10037c22c(type: type.rawValue, allTypes: allTypes)
++                        }
++                        guard shouldRead else { continue }
++                    }
+                     recordSynchronization("Getting data for type \(type.rawValue)")
+                     guard let data = rawItem.data(forType: type) else { continue }
+                     let size = totalBytes.addingReportingOverflow(data.count)
+@@ -784,13 +788,14 @@
+                     totalBytes = size.partialValue
+                     item.f_10037e6b0(data, forType: type.rawValue)
+                 }
+-                if !item.f_10037da6c().isEmpty { snapshot.append(item) }
+-            }
+-            captureState.items = snapshot
+-            defer { captureState.items = [] }
+-            recordSynchronization("Pasteboard sync completed, sending delegate callback")
+-            lastError = nil
+-            if let delegate = captureState.delegate { try delegate.originalPasteboardDidRead(captureState) }
++                if !item.f_10037da6c().isEmpty { captureState.items.append(item) }
++            }
++            do {
++                defer { captureState.items = [] }
++                recordSynchronization("Pasteboard sync completed, sending delegate callback")
++                lastError = nil
++                if let delegate = captureState.delegate { try delegate.originalPasteboardDidRead(captureState) }
++            }
+             recordSynchronization("All done")
+         } catch {
+             lastError = error

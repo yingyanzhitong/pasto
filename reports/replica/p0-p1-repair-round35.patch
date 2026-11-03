@@ -1,0 +1,691 @@
+--- phase-35-before/replica/Sources/PastoCore/ClipboardItemDataPersistence.swift
++++ replica/Sources/PastoCore/ClipboardItemDataPersistence.swift
+@@ -30,9 +30,9 @@
+     }
+ 
+     // 0x100360ff8: type/checksum, delete old data, create/encode replacement,
+-    // assign the inverse relation, then write the already prepared preview.
++    // assign the inverse relation, then generate and write the preview.
+     func replace(on object: NSManagedObject, items: [OriginalPasteboardItem], kind: OriginalPasteboardContentKind, checksum: String?,
+-                 rawPreview: Data?, useBinaryPlist: Bool) {
++                 useBinaryPlist: Bool, preview: () -> Data?) {
+         object.setValue(Int64(kind.rawValue), forKey: "rawType")
+         object.setValue(checksum, forKey: "nativeChecksum")
+         if let old = object.value(forKey: "data") as? NSManagedObject {
+@@ -42,7 +42,7 @@
+         data.setValue(OriginalPasteboardDataCodec.f_10031a8e8(items, useBinaryPlist: useBinaryPlist),
+                       forKey: "rawPasteboardItems")
+         object.setValue(data, forKey: "data")
+-        object.setValue(rawPreview, forKey: "rawPreview")
++        object.setValue(preview(), forKey: "rawPreview")
+     }
+ }
+ 
+@@ -77,8 +77,7 @@
+         let preview = value.rawPreview ?? OriginalImagePreviewMetadataCodec.encode(
+             value.imagePreviewMetadata, binaryPropertyList: binaryPlist!)
+         ClipboardItemDataPersistence(context: manager.destinationContext).replace(on: object, items: items, kind: kind,
+-            checksum: object.value(forKey: "nativeChecksum") as? String,
+-            rawPreview: preview, useBinaryPlist: binaryPlist!)
++            checksum: object.value(forKey: "nativeChecksum") as? String, useBinaryPlist: binaryPlist!) { preview }
+         if let raw = value.payloads[originalItemDataPayloadKey],
+            let data = object.value(forKey: "data") as? NSManagedObject {
+             data.setValue(raw, forKey: "rawPasteboardItems")
+--- phase-35-before/replica/Sources/PastoCore/ClipboardPersistence.swift
++++ replica/Sources/PastoCore/ClipboardPersistence.swift
+@@ -368,6 +368,7 @@
+         private let context: NSManagedObjectContext
+         let lists: ClipboardListPersistence
+         let itemData: ClipboardItemDataPersistence
++        private(set) var replacedItemDataIDs: Set<UUID> = []
+ 
+         init(context: NSManagedObjectContext) {
+             self.context = context
+@@ -404,6 +405,14 @@
+                 updates.append((id: id, timestamp: timestamp))
+             }
+             return updates
++        }
++
++        func replaceCapturedItemData(_ target: (id: UUID, object: NSManagedObject), items: [OriginalPasteboardItem],
++                                     kind: OriginalPasteboardContentKind, checksum: String, useBinaryPlist: Bool,
++                                     preview: () -> Data?) {
++            itemData.replace(on: target.object, items: items, kind: kind, checksum: checksum,
++                             useBinaryPlist: useBinaryPlist, preview: preview)
++            replacedItemDataIDs.insert(target.id)
+         }
+ 
+         func update<T: Equatable>(_ values: [T], previous: [T], entity: String,
+@@ -437,7 +446,7 @@
+                     // 0x100360d9c obtains the new Item's permanent object ID before writing its fields.
+                     if entity == "Item" { try context.obtainPermanentIDs(for: [object]) }
+                 }
+-                object.setValue(id, forKey: "key")
++                if (object.value(forKey: "key") as? String) != id { object.setValue(id, forKey: "key") }
+                 try apply(value, before[id], object)
+             }
+         }
+@@ -472,23 +481,22 @@
+     // 0x1002ff310 -> 0x100302b78: run the business operation inside performAndWait,
+     // then apply its mutations and save only after the operation has returned successfully.
+     func commit<T>(previous: StoreState?, deletingItemIDs: [UUID] = [],
+-                   replacingItemDataIDs: ((T) -> [UUID])? = nil,
+                    operation: (Transaction) throws -> (state: StoreState, result: T)) throws -> (state: StoreState, result: T) {
+         let transaction = Transaction(context: context)
+         return try withExtendedLifetime(transaction) {
+             try context.performAndWait {
+                 let outcome = try operation(transaction)
+                 let state = outcome.state
+-                let replacements = Set(replacingItemDataIDs?(outcome.result) ?? [])
++                let replacements = transaction.repository.replacedItemDataIDs
+                 try transaction.repository.update(state.items, previous: previous?.items ?? [], entity: "Item", key: { $0.id.uuidString },
+                            deletingKeys: deletingItemIDs.map(\.uuidString),
+                            updatingKeys: replacements.map(\.uuidString)) { item, old, object in
+-                    if replacements.contains(item.id) || old?.payloads != item.payloads || object.value(forKey: "data") == nil {
++                    if !replacements.contains(item.id) && (old?.payloads != item.payloads || object.value(forKey: "data") == nil) {
+                         let items = try ClipboardStore.originalPasteboardItems(from: item.payloads)
+                         let kind = OriginalPasteboardClassification.f_10032362c(items)
+                         if let checksum = OriginalPasteboardChecksums.f_1003216bc(items, kind: kind) {
+                             transaction.repository.itemData.replace(on: object, items: items, kind: kind, checksum: checksum,
+-                                rawPreview: item.rawPreview, useBinaryPlist: state.preferences.useBinaryPlist)
++                                useBinaryPlist: state.preferences.useBinaryPlist) { item.rawPreview }
+                         }
+                     }
+                     if (object.value(forKey: "rawPreview") as? Data) != item.rawPreview {
+@@ -505,10 +513,12 @@
+                     if old?.createdAt != item.createdAt { object.setValue(item.createdAt, forKey: "localCreatedAt") }
+                     if old?.updatedAt != item.updatedAt { object.setValue(item.updatedAt, forKey: "updatedAt") }
+                     if old?.isInHistory != item.isInHistory { object.setValue(item.isInHistory, forKey: "inHistory") }
+-                    if old?.nativeIdentifier != item.nativeIdentifier {
++                    if old?.nativeIdentifier != item.nativeIdentifier,
++                       (object.value(forKey: "nativeIdentifier") as? String) != item.nativeIdentifier {
+                         object.setValue(item.nativeIdentifier, forKey: "nativeIdentifier")
+                     }
+-                    if old?.nativeChecksum != item.nativeChecksum {
++                    if old?.nativeChecksum != item.nativeChecksum,
++                       (object.value(forKey: "nativeChecksum") as? String) != item.nativeChecksum {
+                         object.setValue(item.nativeChecksum, forKey: "nativeChecksum")
+                     }
+                     if object.isInserted || old?.pinboardOwnerID != item.pinboardOwnerID {
+--- phase-35-before/replica/Sources/PastoCore/ClipboardStore.swift
++++ replica/Sources/PastoCore/ClipboardStore.swift
+@@ -1,5 +1,6 @@
+ import AppKit
+ import Combine
++import CoreData
+ import Darwin
+ import Foundation
+ 
+@@ -346,17 +347,24 @@
+     }
+ 
+     private func mutate<T>(historyAction: Bool = false, deletingItemIDs: [UUID] = [], restoringItemIDs: [UUID] = [],
+-                           replacingItemDataIDs: ((T) -> [UUID])? = nil,
+                            refreshHistoryAfterChange: (() -> Bool)? = nil,
+                            _ change: (inout StoreState) throws -> T) throws -> T {
++        try mutateInTransaction(historyAction: historyAction, deletingItemIDs: deletingItemIDs,
++                                restoringItemIDs: restoringItemIDs, refreshHistoryAfterChange: refreshHistoryAfterChange) { state, _ in
++            try change(&state)
++        }
++    }
++
++    private func mutateInTransaction<T>(historyAction: Bool = false, deletingItemIDs: [UUID] = [], restoringItemIDs: [UUID] = [],
++                                        refreshHistoryAfterChange: (() -> Bool)? = nil,
++                                        _ change: (inout StoreState, ClipboardPersistence.Transaction) throws -> T) throws -> T {
+         let local = current
+         try validate(local)
+         return try withLock {
+             let remote = try latestState()
+-            let (state, result) = try persistence.commit(previous: remote, deletingItemIDs: deletingItemIDs,
+-                                                       replacingItemDataIDs: replacingItemDataIDs) { transaction in
++            let (state, result) = try persistence.commit(previous: remote, deletingItemIDs: deletingItemIDs) { transaction in
+                 var state = merge(local, onto: remote)
+-                let result = try change(&state)
++                let result = try change(&state, transaction)
+                 if !restoringItemIDs.isEmpty {
+                     let available = Set(state.items.filter { !$0.isDeleted }.map(\.id))
+                     guard restoringItemIDs.allSatisfy({ available.contains($0) }) else {
+@@ -587,24 +595,27 @@
+             item.sourceApplicationBundleID = sourceApplication.bundleIdentifier
+             item.sourceApplicationRelationIsKnown = true
+         }
+-        let checksum: String?
+-        if recordCapture {
+-            checksum = try Self.knownPasteboardChecksum(from: item.payloads)
+-            guard item.nativeIdentifier != nil || checksum != nil else {
+-                throw OriginalPasteboardItemCreationError.unsupportedContent
+-            }
+-            if item.nativeIdentifier == nil { item.nativeIdentifier = checksum }
+-            item.nativeChecksum = checksum
+-        } else {
++        var checksum: String? = nil
++        if !recordCapture {
+             checksum = try? Self.knownPasteboardChecksum(from: item.payloads)
+             if item.nativeIdentifier == nil { item.nativeIdentifier = item.id.uuidString }
+             item.nativeChecksum = checksum
+         }
+-        return try mutate(historyAction: recordCapture || item.isInHistory,
+-                          replacingItemDataIDs: { recordCapture ? [$0.id] : [] }) { state in
+-            item = Self.withPreviewMetadata(item, binaryPropertyList: state.preferences.useBinaryPlist,
+-                preferQuickLookThumbnails: state.preferences.fileQuickLookThumbnailsEnabled,
+-                generateMissingContentPreview: true)
++        return try mutateInTransaction(historyAction: recordCapture || item.isInHistory) { state, transaction in
++            if recordCapture {
++                checksum = try Self.knownPasteboardChecksum(from: item.payloads)
++                guard item.nativeIdentifier != nil || checksum != nil else {
++                    throw OriginalPasteboardItemCreationError.unsupportedContent
++                }
++                if item.nativeIdentifier == nil { item.nativeIdentifier = checksum }
++                item.nativeChecksum = checksum
++                item.rawPreview = nil
++                item.imagePreviewMetadata = nil
++            } else {
++                item = Self.withPreviewMetadata(item, binaryPropertyList: state.preferences.useBinaryPlist,
++                    preferQuickLookThumbnails: state.preferences.fileQuickLookThumbnailsEnabled,
++                    generateMissingContentPreview: true)
++            }
+             if let sourceApplication { Self.upsertSourceApplication(sourceApplication, in: &state) }
+             if let owner = item.pinboardOwnerID,
+                !item.pinboardIDs.contains(owner) || !state.pinboards.contains(where: { $0.id == owner }) {
+@@ -635,7 +646,7 @@
+                 for (type, data) in analysis where state.items[i].payloads[type] == nil {
+                     state.items[i].payloads[type] = data
+                 }
+-                state.items[i].updatedAt = max(Date(), item.updatedAt)
++                if !recordCapture { state.items[i].updatedAt = max(Date(), item.updatedAt) }
+                 state.items[i].sourceName = item.sourceName
+                 state.items[i].sourceBundleID = item.sourceBundleID
+                 state.items[i].sourceApplicationBundleID = item.sourceApplicationBundleID
+@@ -667,6 +678,27 @@
+                 state.items.append(item)
+                 result = (state.items.count - 1, true)
+             }
++            let target: (id: UUID, object: NSManagedObject)?
++            if recordCapture {
++                target = try transaction.repository.prepareHistoryItems([state.items[result.index].id]).first!
++                if target!.object.value(forKey: "nativeIdentifier") == nil {
++                    target!.object.setValue(state.items[result.index].nativeIdentifier, forKey: "nativeIdentifier")
++                }
++                let items = try Self.originalPasteboardItems(from: state.items[result.index].payloads)
++                let kind = OriginalPasteboardClassification.f_10032362c(items)
++                if let checksum = OriginalPasteboardChecksums.f_1003216bc(items, kind: kind) {
++                    var value = state.items[result.index]
++                    let preferences = state.preferences
++                    transaction.repository.replaceCapturedItemData(target!, items: items, kind: kind, checksum: checksum,
++                        useBinaryPlist: preferences.useBinaryPlist) {
++                            value = Self.withPreviewMetadata(value, binaryPropertyList: preferences.useBinaryPlist,
++                                preferQuickLookThumbnails: preferences.fileQuickLookThumbnailsEnabled,
++                                generateMissingContentPreview: true)
++                            return value.rawPreview
++                        }
++                    state.items[result.index] = value
++                }
++            } else { target = nil }
+             if let sourceProvider {
+                 let source = sourceProvider()
+                 state.items[result.index].sourceName = source.name
+@@ -680,7 +712,7 @@
+             if recordCapture {
+                 // 0x10037b034 → 0x100361ec0: stamp history after content/source
+                 // updates, not before preview generation or checksum lookup.
+-                let timestamp = Date()
++                let timestamp = transaction.repository.restoreHistoryItems([target!])[0].timestamp
+                 state.items[result.index].createdAt = timestamp
+                 state.items[result.index].updatedAt = timestamp
+                 state.items[result.index].isInHistory = true
+--- phase-35-before/scripts/tests/test_capture_repository_contracts.py
++++ scripts/tests/test_capture_repository_contracts.py
+@@ -35,7 +35,7 @@
+     def test_actual_capture_stamps_history_after_content_source_and_identity_updates(self):
+         add = body(self.store, "func addWithInsertionResult(")
+         stamp = body(add[add.rindex("if recordCapture"):], "if recordCapture")
+-        self.assertIn("let timestamp = Date()", stamp)
++        self.assertIn("let timestamp = transaction.repository.restoreHistoryItems([target!])[0].timestamp", stamp)
+         self.assertIn("state.items[result.index].createdAt = timestamp", stamp)
+         self.assertIn("state.items[result.index].updatedAt = timestamp", stamp)
+         self.assertIn("state.items[result.index].isInHistory = true", stamp)
+@@ -44,7 +44,7 @@
+                       "result = (state.items.count - 1, true)"]:
+             self.assertLess(add.index(token), add.rindex("if recordCapture"))
+         self.assertLess(add.rindex("if recordCapture"), add.index("return (state.items[result.index].id, result.isNew)"))
+-        self.assertIn("mutate(historyAction: recordCapture || item.isInHistory,", add)
++        self.assertIn("mutateInTransaction(historyAction: recordCapture || item.isInHistory)", add)
+         capture = body(self.pasteboard, "func captureWithInsertionResult(")
+         self.assertIn("sourceApplication: sourceApplication, recordCapture: true", capture)
+ 
+--- phase-35-before/scripts/tests/test_offline_p0_contracts.py
++++ scripts/tests/test_offline_p0_contracts.py
+@@ -184,8 +184,8 @@
+         self.assertIn('for (id, object) in targets.reversed()', native_restore)
+         self.assertLess(native_restore.index('let timestamp = Date()'),
+                         native_restore.index('object.setValue(timestamp, forKey: "timestamp")'))
+-        mutate = body(text, "private func mutate<T>(historyAction: Bool = false,")
+-        self.assertLess(mutate.index("try persistence.commit(previous: remote, deletingItemIDs: deletingItemIDs,"), mutate.index("publish(state)"))
++        mutate = body(text, "private func mutateInTransaction<T>(historyAction: Bool = false,")
++        self.assertLess(mutate.index("try persistence.commit(previous: remote, deletingItemIDs: deletingItemIDs)"), mutate.index("publish(state)"))
+ 
+     def test_copy_feedback_and_panel_close_follow_successful_write(self):
+         text = (ROOT / "replica/Sources/Pasto/UI/ReplicaUIController.swift").read_text()
+@@ -484,7 +484,7 @@
+         self.assertIn("guard capacity > 0 else { return }", expire)
+         self.assertIn("let interval = -capacity * 24 * 60 * 60", expire)
+         self.assertIn("Date(timeIntervalSinceNow: Double(interval))", expire)
+-        mutation = body(source, "private func mutate<T>(historyAction:")
++        mutation = body(source, "private func mutateInTransaction<T>(historyAction:")
+         self.assertIn("if let capacity = lists.historyCapacity(of: history)", mutation)
+         self.assertIn("$0.isInHistory && $0.pinboardIDs.isEmpty && $0.createdAt < cutoff", expire)
+         self.assertNotIn("isInHistory = false", expire, "The original preserves grouped history timestamps")
+@@ -509,9 +509,9 @@
+         self.assertEqual(commit.count("try context.save()"), 1)
+         self.assertIn("try context.save()", body(commit, "if context.hasChanges"))
+         store = (CORE / "ClipboardStore.swift").read_text()
+-        transaction = body(store, "private func mutate<T>(historyAction:")
+-        order = ["try persistence.commit(previous: remote, deletingItemIDs: deletingItemIDs,",
+-                 "let result = try change(&state)", "try validate(state)",
++        transaction = body(store, "private func mutateInTransaction<T>(historyAction:")
++        order = ["try persistence.commit(previous: remote, deletingItemIDs: deletingItemIDs)",
++                 "let result = try change(&state, transaction)", "try validate(state)",
+                  "return (state: state, result: result)", "diskRevision = try revision()", "publish(state)"]
+         positions = [transaction.index(token) for token in order]
+         self.assertEqual(positions, sorted(positions))
+--- phase-35-before/scripts/tests/test_p0_repair_capture_checksum_lookup.py
++++ scripts/tests/test_p0_repair_capture_checksum_lookup.py
+@@ -38,13 +38,15 @@
+         self.assertLess(self.lookup.index('if recordCapture'),self.lookup.index('if let checksum'))
+ 
+     def test_real_capture_computes_new_checksum_throwing_before_lookup_and_overrides_incoming_metadata(self):
+-        preflight=body(self.add[:self.add.index('return try mutate(')],'if recordCapture')
++        operation=self.add[self.add.index('return try mutateInTransaction('):]
++        preflight=body(operation[:operation.index('if let sourceApplication')],'if recordCapture')
+         order=['checksum = try Self.knownPasteboardChecksum(from: item.payloads)',
+                'guard item.nativeIdentifier != nil || checksum != nil','item.nativeChecksum = checksum']
+         indexes=[preflight.index(t)for t in order];self.assertEqual(indexes,sorted(indexes))
+         self.assertNotIn('try?',preflight)
+         self.assertNotIn('checksum = item.nativeChecksum',preflight)
+-        self.assertLess(self.add.index('checksum = try Self.knownPasteboardChecksum'),self.add.index('return try mutate('))
++        self.assertLess(self.add.index('return try mutateInTransaction('),self.add.index('checksum = try Self.knownPasteboardChecksum'))
++        self.assertLess(self.add.index('checksum = try Self.knownPasteboardChecksum'),self.add.index('state.items.firstIndex(where:'))
+         pasteboard=(ROOT/'replica/Sources/PastoCore/Pasteboard.swift').read_text()
+         capture=body(pasteboard,'func captureWithInsertionResult(')
+         self.assertIn('sourceApplication: sourceApplication, recordCapture: true',capture)
+--- phase-35-before/scripts/tests/test_p0_repair_delete_applied_snapshot.py
++++ scripts/tests/test_p0_repair_delete_applied_snapshot.py
+@@ -115,7 +115,7 @@
+         native_restore = body(persistence, 'func restoreHistoryItems(')
+         self.assertIn('for (id, object) in targets.reversed()', native_restore)
+         self.assertIn('let timestamp = Date()', native_restore)
+-        mutate = body(store, 'private func mutate<T>(historyAction: Bool = false,')
++        mutate = body(store, 'private func mutateInTransaction<T>(historyAction: Bool = false,')
+         self.assertIn('if let capacity = lists.historyCapacity(of: history)', mutate)
+         self.assertIn('expireHistory(&state, capacity: capacity)', mutate)
+         lists = (ROOT / 'replica/Sources/PastoCore/ClipboardListPersistence.swift').read_text()
+--- phase-35-before/scripts/tests/test_p0_repair_history_timestamp.py
++++ scripts/tests/test_p0_repair_history_timestamp.py
+@@ -113,7 +113,7 @@
+         restore = body(self.store, 'func recordRestoredItems(_ ids: [UUID])')
+         self.assertIn('try mutate(historyAction: true, restoringItemIDs: ids)', restore)
+         self.assertIn('state.items[index].isInHistory = true',
+-                      body(self.store, 'private func mutate<T>(historyAction: Bool = false,'))
++                      body(self.store, 'private func mutateInTransaction<T>(historyAction: Bool = false,'))
+         pasteboard = (ROOT / 'replica/Sources/PastoCore/Pasteboard.swift').read_text()
+         self.assertEqual(pasteboard.count('timestamp: item.isInHistory ? item.createdAt : nil'), 2)
+ 
+--- phase-35-before/scripts/tests/test_p0_repair_item_data_graph.py
++++ scripts/tests/test_p0_repair_item_data_graph.py
+@@ -19,7 +19,7 @@
+         cls.store=(ROOT/'replica/Sources/PastoCore/ClipboardStore.swift').read_text()
+         cls.pasteboard=(ROOT/'replica/Sources/PastoCore/Pasteboard.swift').read_text()
+         cls.commit=body(cls.persistence,'func commit<T>(previous: StoreState?, deletingItemIDs: [UUID] = [],')
+-        cls.mutate=body(cls.store,'private func mutate<T>(historyAction: Bool = false,')
++        cls.mutate=body(cls.store,'private func mutateInTransaction<T>(historyAction: Bool = false,')
+ 
+     def test_original_fragments_model_resource_and_sdk_policy_declarations_are_bound(self):
+         for r in self.proof['original_fragments']:
+@@ -55,7 +55,7 @@
+         order=['forKey: "rawType"','forKey: "nativeChecksum"','object.value(forKey: "data")',
+                'context.delete(old)','insertNewObject(forEntityName: "ItemDataEntity", into: context)',
+                'OriginalPasteboardDataCodec.f_10031a8e8(','forKey: "rawPasteboardItems"',
+-               'object.setValue(data, forKey: "data")','object.setValue(rawPreview, forKey: "rawPreview")']
++               'object.setValue(data, forKey: "data")','object.setValue(preview(), forKey: "rawPreview")']
+         positions=[replacement.index(t)for t in order];self.assertEqual(positions,sorted(positions))
+         for token in ['forKey: "title"','forKey: "device"','forKey: "list"','forKey: "nativeIdentifier"',
+                       'context.save','context.reset','context.rollback','Task','DispatchQueue']:
+@@ -63,19 +63,19 @@
+ 
+     def test_capture_result_id_forces_replacement_even_for_equal_values(self):
+         add=body(self.store,'func addWithInsertionResult(')
+-        self.assertIn('replacingItemDataIDs: { recordCapture ? [$0.id] : [] }',add)
+-        self.assertIn('replacingItemDataIDs: replacingItemDataIDs',self.mutate)
+-        self.assertIn('let replacements = Set(replacingItemDataIDs?(outcome.result) ?? [])',self.commit)
++        self.assertIn('transaction.repository.replaceCapturedItemData(target!',add)
++        self.assertIn('replacedItemDataIDs.insert(target.id)',self.persistence)
++        self.assertIn('let replacements = transaction.repository.replacedItemDataIDs',self.commit)
+         self.assertIn('updatingKeys: replacements.map(\\.uuidString)',self.commit)
+         update=body(self.persistence,'func update<T: Equatable>(')
+         self.assertIn('let forced = Set(updatingKeys)',update)
+         self.assertIn('let changed = values.filter { before[key($0)] != $0 || forced.contains(key($0)) }',update)
+-        self.assertIn('if replacements.contains(item.id) || old?.payloads != item.payloads || object.value(forKey: "data") == nil',self.commit)
++        self.assertIn('if !replacements.contains(item.id) && (old?.payloads != item.payloads || object.value(forKey: "data") == nil)',self.commit)
+ 
+     def test_native_update_is_guarded_by_checksum_and_uses_same_repository_context(self):
+         repo=body(self.persistence,'final class ManagedRepository')
+         self.assertIn('itemData = ClipboardItemDataPersistence(context: context)',repo)
+-        delta=body(self.commit,'if replacements.contains(item.id)')
++        delta=body(self.commit,'if !replacements.contains(item.id)')
+         guarded=body(delta,'if let checksum = OriginalPasteboardChecksums.f_1003216bc(items, kind: kind)')
+         self.assertIn('transaction.repository.itemData.replace(on: object, items: items, kind: kind, checksum: checksum,',guarded)
+         self.assertIn('useBinaryPlist: state.preferences.useBinaryPlist',guarded)
+@@ -88,8 +88,8 @@
+     def test_timestamp_only_restore_still_skips_payload_and_content_encoding(self):
+         restore=body(self.store,'func recordRestoredItems(')
+         self.assertNotIn('replacingItemDataIDs',restore)
+-        self.assertIn('replacingItemDataIDs: ((T) -> [UUID])? = nil',self.persistence)
+-        gate='replacements.contains(item.id) || old?.payloads != item.payloads || object.value(forKey: "data") == nil'
++        self.assertIn('private(set) var replacedItemDataIDs: Set<UUID> = []',self.persistence)
++        gate='!replacements.contains(item.id) && (old?.payloads != item.payloads || object.value(forKey: "data") == nil)'
+         self.assertIn(gate,self.commit)
+         self.assertIn('if old.map(content) != content(item)',self.commit)
+         content=body(self.persistence,'private func content(')
+@@ -176,7 +176,8 @@
+         self.assertFalse(self.proof['full_function_migration_verified'])
+         self.assertIn('Preview generation still precedes native replacement',self.proof['retained_partial_contracts'][0])
+         before=(self.phase/'before/replica/Sources/PastoCore/ClipboardStore.swift').read_text()
+-        reconstructed=self.store.replace('                           replacingItemDataIDs: ((T) -> [UUID])? = nil,\n','',1)
++        checkpoint=(ROOT/'.local/p0-repair/phase-35/before/replica/Sources/PastoCore/ClipboardStore.swift').read_text()
++        reconstructed=checkpoint.replace('                           replacingItemDataIDs: ((T) -> [UUID])? = nil,\n','',1)
+         reconstructed=reconstructed.replace('try persistence.commit(previous: remote, deletingItemIDs: deletingItemIDs,\n'
+             '                                                       replacingItemDataIDs: replacingItemDataIDs)',
+             'try persistence.commit(previous: remote, deletingItemIDs: deletingItemIDs)',1)
+--- phase-35-before/scripts/tests/test_p0_repair_list_graph.py
++++ scripts/tests/test_p0_repair_list_graph.py
+@@ -164,8 +164,8 @@
+         self.assertIn('Attributes(type: "clipboard", capacity: capacity, colorCode: nil)', encode)
+ 
+     def test_mutation_prepares_native_list_then_reads_its_attributes_without_extra_fetch(self):
+-        mutate = body(self.store, 'private func mutate<T>(historyAction: Bool = false,')
+-        order = ['try change(&state)', 'normalize(&state)', 'let lists = transaction.repository.lists',
++        mutate = body(self.store, 'private func mutateInTransaction<T>(historyAction: Bool = false,')
++        order = ['try change(&state, transaction)', 'normalize(&state)', 'let lists = transaction.repository.lists',
+                  'let history = try lists.synchronize(', 'if let capacity = lists.historyCapacity(of: history)',
+                  'expireHistory(&state, capacity: capacity)', 'lists.refreshHistoryAfterOperation =']
+         positions = [mutate.index(t) for t in order]
+@@ -202,7 +202,7 @@
+         positions = [delete.index(t) for t in order]
+         self.assertEqual(positions, sorted(positions))
+         self.assertNotIn('guard !orderedIDs.isEmpty', delete)
+-        mutate = body(self.store, 'private func mutate<T>(historyAction: Bool = false,')
++        mutate = body(self.store, 'private func mutateInTransaction<T>(historyAction: Bool = false,')
+         self.assertIn('historyAction || (refreshHistoryAfterChange?() ?? false)', mutate)
+ 
+     def test_relation_writes_and_refresh_precede_conditional_save_in_same_transaction(self):
+--- phase-35-before/scripts/tests/test_p0_repair_native_history_restore.py
++++ scripts/tests/test_p0_repair_native_history_restore.py
+@@ -15,7 +15,7 @@
+         cls.proof=json.loads((cls.phase/'native-history-restore-contract.json').read_text())
+         cls.store=(ROOT/'replica/Sources/PastoCore/ClipboardStore.swift').read_text()
+         cls.persistence=(ROOT/'replica/Sources/PastoCore/ClipboardPersistence.swift').read_text()
+-        cls.mutate=body(cls.store,'private func mutate<T>(historyAction: Bool = false,')
++        cls.mutate=body(cls.store,'private func mutateInTransaction<T>(historyAction: Bool = false,')
+         cls.prepare=body(cls.persistence,'func prepareHistoryItems(')
+         cls.restore=body(cls.persistence,'func restoreHistoryItems(')
+         cls.commit=body(cls.persistence,'func commit<T>(previous: StoreState?, deletingItemIDs: [UUID] = [],')
+@@ -51,7 +51,7 @@
+         self.assertNotIn('sorted(',self.restore)
+ 
+     def test_invalid_or_deleted_targets_fail_before_native_changes(self):
+-        order=['let result = try change(&state)','let available = Set(state.items.filter { !$0.isDeleted }.map(\\.id))',
++        order=['let result = try change(&state, transaction)','let available = Set(state.items.filter { !$0.isDeleted }.map(\\.id))',
+                'guard restoringItemIDs.allSatisfy({ available.contains($0) })',
+                'throw ClipboardStoreError.itemNotFound','try validate(state)','try lists.synchronize(',
+                'try transaction.repository.prepareHistoryItems(restoringItemIDs)']
+--- phase-35-before/scripts/tests/test_p0_repair_permanent_ids.py
++++ scripts/tests/test_p0_repair_permanent_ids.py
+@@ -50,7 +50,7 @@
+         self.assertNotIn('rollback',commit)
+         self.assertNotIn('try perform',commit)
+         store=(ROOT/'replica/Sources/PastoCore/ClipboardStore.swift').read_text()
+-        mutation=body(store,'private func mutate<T>(historyAction: Bool = false,')
++        mutation=body(store,'private func mutateInTransaction<T>(historyAction: Bool = false,')
+         self.assertLess(mutation.index('try persistence.commit('),mutation.index('publish(state)'))
+ 
+ if __name__=='__main__':unittest.main()
+--- phase-35-before/scripts/tests/test_p0_repair_source_sampling.py
++++ scripts/tests/test_p0_repair_source_sampling.py
+@@ -72,7 +72,7 @@
+         add = swift_function(store, "    func addWithInsertionResult(_ item:")
+         selected = add.index("result = (state.items.count - 1, true)")
+         sample = add.index("if let sourceProvider {")
+-        timestamp = add.index("let timestamp = Date()")
++        timestamp = add.index("transaction.repository.restoreHistoryItems([target!])")
+         self.assertLess(selected, sample)
+         self.assertLess(sample, timestamp)
+         self.assertIn("sourceProvider()", add)
+--- phase-35-before/scripts/tests/test_p0_repair_transaction_boundary.py
++++ scripts/tests/test_p0_repair_transaction_boundary.py
+@@ -15,7 +15,7 @@
+         cls.persistence=(ROOT/'replica/Sources/PastoCore/ClipboardPersistence.swift').read_text()
+         cls.store=(ROOT/'replica/Sources/PastoCore/ClipboardStore.swift').read_text()
+         cls.commit=body(cls.persistence,'func commit<T>(previous: StoreState?, deletingItemIDs: [UUID] = [],')
+-        cls.mutate=body(cls.store,'private func mutate<T>(historyAction: Bool = false,')
++        cls.mutate=body(cls.store,'private func mutateInTransaction<T>(historyAction: Bool = false,')
+ 
+     def test_original_operation_save_gate_proof_is_bound_to_real_fragments_and_bytes(self):
+         proof=json.loads((ROOT/'.local/p0-repair/phase-4/transaction-original-proof.json').read_text())
+@@ -35,12 +35,12 @@
+         self.assertIn('FUN_1002ff9c8',fragment)
+ 
+     def test_store_business_operation_is_produced_inside_commit_not_before_it(self):
+-        mutation=body(self.mutate,'try persistence.commit(previous: remote, deletingItemIDs: deletingItemIDs,')
+-        for token in ['merge(local, onto: remote)','try change(&state)','try validate(state)',
++        mutation=body(self.mutate,'try persistence.commit(previous: remote, deletingItemIDs: deletingItemIDs)')
++        for token in ['merge(local, onto: remote)','try change(&state, transaction)','try validate(state)',
+                       'normalize(&state)','expireHistory(&state, capacity: capacity)','return (state: state, result: result)']:
+             self.assertIn(token,mutation)
+         outer=self.mutate.replace(mutation,'')
+-        self.assertNotIn('try change(&state)',outer)
++        self.assertNotIn('try change(&state, transaction)',outer)
+         self.assertNotIn('normalize(&state)',outer)
+         self.assertIn('publish(state)',outer)
+         self.assertLess(self.mutate.index('try persistence.commit('),self.mutate.index('publish(state)'))
+@@ -93,10 +93,10 @@
+     def test_all_existing_local_value_mutation_order_is_preserved(self):
+         before=(ROOT/'.local/p0-repair/phase-4/before/replica/Sources/PastoCore/ClipboardStore.swift').read_text()
+         old=body(before,'private func mutate<T>(historyAction: Bool = false,')
+-        new=body(self.mutate,'try persistence.commit(previous: remote, deletingItemIDs: deletingItemIDs,')
++        new=body(self.mutate,'try persistence.commit(previous: remote, deletingItemIDs: deletingItemIDs)')
+         order=['merge(local, onto: remote)','try change(&state)','try validate(state)',
+                'normalize(&state)','expireHistory(&state)','Self.captureCloudKit(&state, previous: remote)']
+-        for source in [old,new.replace('expireHistory(&state, capacity: capacity)', 'expireHistory(&state)')]:
++        for source in [old,new.replace('expireHistory(&state, capacity: capacity)', 'expireHistory(&state)').replace('try change(&state, transaction)', 'try change(&state)')]:
+             positions=[source.index(token) for token in order]
+             self.assertEqual(positions,sorted(positions))
+         self.assertIn('if state.cloudKitJournal != nil { try Self.captureCloudKit(&state, previous: remote) }',new)
+--- phase-35-before/scripts/tests/test_p0_repair_transaction_errors.py
++++ scripts/tests/test_p0_repair_transaction_errors.py
+@@ -77,8 +77,8 @@
+ 
+     def test_real_store_consumer_propagates_before_publishing_value_state(self):
+         store = (ROOT / 'replica/Sources/PastoCore/ClipboardStore.swift').read_text()
+-        mutate = body(store, 'private func mutate<T>(historyAction: Bool = false,')
+-        order = ['try persistence.commit(previous: remote', 'let result = try change(&state)',
++        mutate = body(store, 'private func mutateInTransaction<T>(historyAction: Bool = false,')
++        order = ['try persistence.commit(previous: remote', 'let result = try change(&state, transaction)',
+                  'return (state: state, result: result)', 'diskRevision = try revision()', 'publish(state)']
+         positions = [mutate.index(t) for t in order]
+         self.assertEqual(positions, sorted(positions))
+--- /dev/null
++++ scripts/tests/test_p0_repair_capture_native_flow.py
+@@ -0,0 +1,173 @@
++# coding: utf-8
++"""Capture C/native source ordering. No Swift, Core Data or application execution."""
++import hashlib,json,sys,unittest
++from pathlib import Path
++ROOT=Path(__file__).resolve().parents[2]
++sys.path[:0]=[str(ROOT/'scripts'),str(ROOT/'scripts/tests')]
++from function_ledger import source_fragments
++from test_offline_p0_contracts import body
++from test_p0_repair_checksum_routing import original_fragment
++
++class CaptureNativeFlowContracts(unittest.TestCase):
++    @classmethod
++    def setUpClass(cls):
++        cls.phase=ROOT/'.local/p0-repair/phase-35'
++        cls.proof=json.loads((cls.phase/'capture-native-flow-contract.json').read_text())
++        cls.store=(ROOT/'replica/Sources/PastoCore/ClipboardStore.swift').read_text()
++        cls.persistence=(ROOT/'replica/Sources/PastoCore/ClipboardPersistence.swift').read_text()
++        cls.graph=(ROOT/'replica/Sources/PastoCore/ClipboardItemDataPersistence.swift').read_text()
++        cls.add=body(cls.store,'func addWithInsertionResult(')
++        cls.worker=body(cls.store,'private func mutateInTransaction<T>(')
++        cls.commit=body(cls.persistence,'func commit<T>(previous: StoreState?, deletingItemIDs: [UUID] = [],')
++
++    def test_original_fragments_and_preview_type_metadata_are_bound(self):
++        for r in self.proof['original_fragments']:
++            self.assertEqual(source_fragments(ROOT/r['path'])[r['address']]['sha256'],r['sha256'])
++        b=self.proof['original_binary'];raw=(ROOT/b['path']).read_bytes()
++        self.assertEqual(hashlib.sha256(raw).hexdigest(),b['sha256'])
++        for r in self.proof['original_metadata_blocks']:
++            v=raw[r['file_offset']:r['file_offset']+r['length']]
++            self.assertEqual(v.hex(),r['bytes']);self.assertEqual(hashlib.sha256(v).hexdigest(),r['sha256'])
++        self.assertEqual([t['name']for t in self.proof['preview_types']],['LinkPreview','TextPreview','ItemPreview'])
++
++    def test_real_value_entry_forwards_all_policies_to_single_context_worker(self):
++        forward=body(self.store,'private func mutate<T>(')
++        for token in ['mutateInTransaction(historyAction: historyAction, deletingItemIDs: deletingItemIDs,',
++                      'restoringItemIDs: restoringItemIDs, refreshHistoryAfterChange: refreshHistoryAfterChange)',
++                      'try change(&state)']:
++            self.assertIn(token,forward)
++        self.assertNotIn('persistence.commit',forward);self.assertNotIn('publish(',forward)
++        self.assertEqual(self.worker.count('persistence.commit('),1)
++        self.assertEqual(self.commit.count('try context.performAndWait'),1)
++        self.assertIn('let result = try change(&state, transaction)',self.worker)
++        self.assertIn('return try mutateInTransaction(historyAction: recordCapture || item.isInHistory) { state, transaction in',self.add)
++
++    def test_capture_checksum_and_candidate_matching_happen_inside_worker(self):
++        entry=self.add.index('return try mutateInTransaction(')
++        operation=self.add[entry:];preflight=body(operation[:operation.index('if let sourceApplication')],'if recordCapture')
++        self.assertIn('checksum = try Self.knownPasteboardChecksum(from: item.payloads)',preflight)
++        self.assertIn('item.nativeChecksum = checksum',preflight)
++        self.assertIn('item.rawPreview = nil',preflight)
++        self.assertIn('item.imagePreviewMetadata = nil',preflight)
++        self.assertNotIn('try?',preflight)
++        self.assertLess(entry,self.add.index('checksum = try Self.knownPasteboardChecksum'))
++        self.assertLess(self.add.index('checksum = try Self.knownPasteboardChecksum'),self.add.index('state.items.firstIndex(where:'))
++        lookup=body(body(self.add,'if let i = state.items.firstIndex(where:'),'if recordCapture')
++        self.assertIn('guard let checksum else { return false }',lookup)
++        self.assertIn('return previous.nativeChecksum == checksum',lookup)
++
++    def test_native_content_replacement_occurs_before_capture_preview_generation(self):
++        start=self.add.index('let target: (id: UUID, object: NSManagedObject)?')
++        native=self.add[start:self.add.index('if let sourceProvider',start)]
++        order=['prepareHistoryItems([state.items[result.index].id])','OriginalPasteboardClassification.f_10032362c(items)',
++               'OriginalPasteboardChecksums.f_1003216bc(items, kind: kind)',
++               'transaction.repository.replaceCapturedItemData(target!',
++               'value = Self.withPreviewMetadata(value,','return value.rawPreview','state.items[result.index] = value']
++        positions=[native.index(t)for t in order];self.assertEqual(positions,sorted(positions))
++        replace=body(self.graph,'func replace(')
++        order=['forKey: "rawType"','forKey: "nativeChecksum"','context.delete(old)',
++               'insertNewObject(forEntityName: "ItemDataEntity"','OriginalPasteboardDataCodec.f_10031a8e8(',
++               'object.setValue(data, forKey: "data")','object.setValue(preview(), forKey: "rawPreview")']
++        positions=[replace.index(t)for t in order];self.assertEqual(positions,sorted(positions))
++        self.assertEqual(replace.count('preview()'),1)
++
++    def test_source_sampling_and_native_timestamp_follow_preview(self):
++        order=['transaction.repository.replaceCapturedItemData(target!', 'value = Self.withPreviewMetadata(value,',
++               'if let sourceProvider','let source = sourceProvider()',
++               'state.items[result.index].sourceName = source.name',
++               'transaction.repository.restoreHistoryItems([target!])[0].timestamp',
++               'state.items[result.index].createdAt = timestamp','state.items[result.index].isInHistory = true',
++               'return (state.items[result.index].id, result.isNew)']
++        positions=[self.add.index(t)for t in order];self.assertEqual(positions,sorted(positions))
++        stamp=body(self.add[self.add.rindex('if recordCapture'):],'if recordCapture')
++        self.assertNotIn('Date()',stamp)
++        restore=body(self.persistence,'func restoreHistoryItems(')
++        self.assertLess(restore.index('let timestamp = Date()'),restore.index('object.setValue(timestamp, forKey: "timestamp")'))
++        self.assertIn('if !recordCapture { state.items[i].updatedAt = max(Date(), item.updatedAt) }',self.add)
++
++    def test_replacement_tracker_uses_the_actual_same_managed_target(self):
++        replace=body(self.persistence,'func replaceCapturedItemData(')
++        self.assertIn('itemData.replace(on: target.object,',replace)
++        self.assertIn('useBinaryPlist: useBinaryPlist, preview: preview)',replace)
++        self.assertLess(replace.index('itemData.replace('),replace.index('replacedItemDataIDs.insert(target.id)'))
++        self.assertIn('private(set) var replacedItemDataIDs: Set<UUID> = []',self.persistence)
++        self.assertNotIn('replacingItemDataIDs',self.store+self.persistence)
++        self.assertLess(self.commit.index('let outcome = try operation(transaction)'),self.commit.index('let replacements = transaction.repository.replacedItemDataIDs'))
++        self.assertIn('updatingKeys: replacements.map(\\.uuidString)',self.commit)
++
++    def test_generic_commit_does_not_replace_or_replay_native_fields_twice(self):
++        self.assertIn('if !replacements.contains(item.id) && (old?.payloads != item.payloads || object.value(forKey: "data") == nil)',self.commit)
++        self.assertIn('(object.value(forKey: "timestamp") as? Date) != timestamp',self.commit)
++        self.assertIn('(object.value(forKey: "nativeIdentifier") as? String) != item.nativeIdentifier',self.commit)
++        self.assertIn('(object.value(forKey: "nativeChecksum") as? String) != item.nativeChecksum',self.commit)
++        update=body(self.persistence,'func update<T: Equatable>(')
++        self.assertIn('if (object.value(forKey: "key") as? String) != id { object.setValue(id, forKey: "key") }',update)
++        self.assertIn('before[key($0)] != $0 || forced.contains(key($0))',update)
++
++    def test_new_target_gets_permanent_id_and_identifier_before_content(self):
++        prepare=body(self.persistence,'func prepareHistoryItems(')
++        self.assertLess(prepare.index('try context.obtainPermanentIDs(for: [object])'),prepare.index('object.setValue(id.uuidString, forKey: "key")'))
++        start=self.add.index('let target: (id: UUID, object: NSManagedObject)?')
++        native=self.add[start:]
++        self.assertLess(native.index('if target!.object.value(forKey: "nativeIdentifier") == nil'),native.index('replaceCapturedItemData('))
++        for token in ['state.items[i].id =','state.items[i].title =','state.items[i].sourceDevice =']:
++            self.assertNotIn(token,self.add)
++        self.assertIn('result = (i, false)',self.add);self.assertIn('result = (state.items.count - 1, true)',self.add)
++
++    def test_non_capture_preview_and_input_identity_compatibility_remain(self):
++        header=self.add[:self.add.index('return try mutateInTransaction(')]
++        value=body(header,'if !recordCapture')
++        self.assertIn('checksum = try? Self.knownPasteboardChecksum(from: item.payloads)',value)
++        self.assertIn('if item.nativeIdentifier == nil { item.nativeIdentifier = item.id.uuidString }',value)
++        operation=self.add[self.add.index('return try mutateInTransaction('):]
++        early=operation[:operation.index('if let sourceApplication')]
++        value=early.split('} else {',1)[1]
++        self.assertIn('item = Self.withPreviewMetadata(item,',value)
++        before=(self.phase/'before/replica/Sources/PastoCore/ClipboardStore.swift').read_text()
++        for sig in ['public func createIntentText(', 'private static func withPreviewMetadata(',
++                    'public func updateItem(', 'public func importOriginalArchive(']:
++            if sig in before:self.assertEqual(body(self.store,sig),body(before,sig))
++
++    def test_errors_and_publication_stay_at_original_transaction_boundary(self):
++        self.assertNotIn('catch',self.worker);self.assertNotIn('try?',self.worker)
++        self.assertNotIn('context.reset()',self.commit);self.assertNotIn('context.rollback()',self.commit)
++        self.assertEqual(self.commit.count('try context.save()'),1)
++        self.assertIn('OriginalObjCExceptionBridge.f_1002ff9c8 { try context.save() }',self.commit)
++        self.assertNotIn('publish(',self.commit)
++        order=['try persistence.commit(', 'let result = try change(&state, transaction)',
++               'try validate(state)','expireHistory(&state, capacity: capacity)',
++               'diskRevision = try revision()','publish(state)']
++        positions=[self.worker.index(t)for t in order];self.assertEqual(positions,sorted(positions))
++        self.assertNotIn('Task',self.worker+self.commit)
++
++    def test_prior_network_methods_and_all_other_store_methods_are_exactly_unchanged(self):
++        before=(self.phase/'before/replica/Sources/PastoCore/ClipboardStore.swift').read_text()
++        current=self.store
++        worker=body(current,'private func mutateInTransaction<T>(')
++        start=current.index('    private func mutateInTransaction<T>(');end=current.index(worker,start)+len(worker)
++        current=current[:start]+current[end+2:]
++        for sig in ['private func mutate<T>(', 'func addWithInsertionResult(']:
++            new=body(current,sig);current=current.replace(new,body(before,sig),1)
++        current=current.replace('import CoreData\n','',1)
++        declaration='                           replacingItemDataIDs: ((T) -> [UUID])? = nil,\n'
++        marker='    private func mutate<T>(historyAction: Bool = false, deletingItemIDs: [UUID] = [], restoringItemIDs: [UUID] = [],\n'
++        current=current.replace(marker,marker+declaration,1)
++        self.assertEqual(current,before)
++        # The schema and migration relationship policy retain the phase34 layout.
++        old_graph=(self.phase/'before/replica/Sources/PastoCore/ClipboardItemDataPersistence.swift').read_text()
++        self.assertEqual(body(self.graph,'static func addEntity('),body(old_graph,'static func addEntity('))
++
++    def test_original_immediate_flow_and_excluded_link_provider_are_distinguished(self):
++        original=original_fragment((ROOT/'decompiled/Paste/part-0275.c').read_text(),'100360ff8')
++        order=['setRawType_','setChecksum_','deleteObject_','initWithContext_','FUN_10031a8e8()',
++               'setData_','FUN_100322504(','FUN_10031ed94(']
++        positions=[original.index(t)for t in order];self.assertEqual(positions,sorted(positions))
++        preview=original_fragment((ROOT/'decompiled/Paste/part-0258.c').read_text(),'100322504')
++        self.assertIn('if (uVar1 == 4)',preview);self.assertIn('FUN_100319778(',preview)
++        self.assertIn('FUN_100312ae4()',preview)
++        self.assertEqual(self.proof['preview_types'][0]['name'],'LinkPreview')
++        self.assertEqual(self.proof['source_case']['original_order'],self.proof['source_case']['after_order'])
++        self.assertNotEqual(self.proof['source_case']['original_order'],self.proof['source_case']['before_order'])
++        self.assertFalse(self.proof['full_function_migration_verified'])
++
++if __name__=='__main__':unittest.main()

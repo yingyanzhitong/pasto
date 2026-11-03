@@ -1,0 +1,110 @@
+--- a/replica/Sources/PastoCore/ClipboardPersistence.swift
++++ b/replica/Sources/PastoCore/ClipboardPersistence.swift
+@@ -2,6 +2,14 @@
+ import Combine
+ import Foundation
+ import os
++
++private struct CapturedItemCompatibilityMetadata: Decodable {
++    let title: String
++    let hasExplicitTitle: Bool?
++    let sourceIdentifier: String?
++    let sourceDevice: String
++    let pinboardIDs: Set<UUID>
++}
+ 
+ /// Pasto's model adapter for the original performAndWait / hasChanges / save transaction.
+ /// Entity identities remain the existing UUIDs; this is not the original vendor's store schema.
+@@ -233,6 +241,40 @@
+         return item
+     }
+ 
++    // Capture replaces content, preview, source application and history time; only retain metadata.
++    nonisolated static func capturedItemValue(_ object: NSManagedObject, id: UUID,
++                                             replacingContentWith replacement: ClipboardItem) throws -> ClipboardItem {
++        let metadata = try Self.decode(CapturedItemCompatibilityMetadata.self, object)
++        var item = replacement
++        item.id = id
++        item.title = metadata.title
++        item.hasExplicitTitle = metadata.hasExplicitTitle
++        item.sourceIdentifier = metadata.sourceIdentifier
++        item.sourceDevice = metadata.sourceDevice
++        item.pinboardIDs = metadata.pinboardIDs
++        item.pinboardOwnerID = nil
++        item.nativeIdentifier = object.value(forKey: "nativeIdentifier") as? String
++        ClipboardItemTitlePersistence.project(&item, from: object)
++        if let list = object.value(forKey: "list") as? NSManagedObject,
++           (list.value(forKey: "rawType") as? NSNumber)?.int64Value == 2,
++           let identifier = list.value(forKey: "identifier") as? String,
++           let owner = UUID(uuidString: identifier) {
++            item.pinboardOwnerID = owner
++            item.pinboardIDs.insert(owner)
++        }
++        try ClipboardItemOrderPersistence.project(&item, from: object)
++        // Preserve valid local OCR annotations without making old payload decoding a capture gate.
++        if replacement.kind == .image, let data = object.value(forKey: "content") as? Data,
++           let dictionary = (try? PropertyListSerialization.propertyList(from: data, options: [], format: nil)) as? [String: Any],
++           dictionary["kind"] as? String == ClipboardKind.image.rawValue,
++           let payloads = dictionary["payloads"] as? [String: Data] {
++            for (type, data) in payloads where ClipboardStore.analysisPayloadKeys.contains(type) && item.payloads[type] == nil {
++                item.payloads[type] = data
++            }
++        }
++        return item
++    }
++
+     func searchPinboardNames(matching query: String) throws -> [(identifier: String, name: String)] {
+         try context.performAndWait { try lists.searchPinboardNames(matching: query) }
+     }
+@@ -562,8 +604,8 @@
+         }
+ 
+         func applyCapturedSources(_ target: (id: UUID, object: NSManagedObject), item: ClipboardItem,
+-                                  applications: [SourceApplicationRecord]) throws {
+-            try sources.apply(item, applications: applications, to: target.object)
++                                  applications: [SourceApplicationRecord], preserveDevice: Bool = false) throws {
++            try sources.apply(item, applications: applications, to: target.object, preserveDevice: preserveDevice)
+             sourcedItemIDs.insert(target.id)
+         }
+ 
+--- a/replica/Sources/PastoCore/ClipboardSourcePersistence.swift
++++ b/replica/Sources/PastoCore/ClipboardSourcePersistence.swift
+@@ -91,7 +91,8 @@
+         return object
+     }
+ 
+-    func apply(_ item: ClipboardItem, applications: [SourceApplicationRecord], to object: NSManagedObject) throws {
++    func apply(_ item: ClipboardItem, applications: [SourceApplicationRecord], to object: NSManagedObject,
++               preserveDevice: Bool = false) throws {
+         let source: NSManagedObject?
+         if let identifier = item.sourceApplicationBundleID {
+             guard let value = applications.first(where: { $0.bundleIdentifier == identifier }) else {
+@@ -102,6 +103,7 @@
+         if (object.value(forKey: "sourceApplication") as? NSManagedObject) !== source {
+             object.setValue(source, forKey: "sourceApplication")
+         }
++        guard !preserveDevice else { return }
+         let device = try device(named: item.sourceDevice)
+         if (object.value(forKey: "device") as? NSManagedObject) !== device {
+             object.setValue(device, forKey: "device")
+--- a/replica/Sources/PastoCore/ClipboardStore.swift
++++ b/replica/Sources/PastoCore/ClipboardStore.swift
+@@ -738,7 +738,8 @@
+                     if let index = state.items.firstIndex(where: { $0.id == capturedTarget.id }) {
+                         existingIndex = index
+                     } else {
+-                        state.items.append(try ClipboardPersistence.item(capturedTarget.object))
++                        state.items.append(try ClipboardPersistence.capturedItemValue(capturedTarget.object,
++                            id: capturedTarget.id, replacingContentWith: item))
+                         existingIndex = state.items.count - 1
+                     }
+                 } else { existingIndex = nil }
+@@ -833,7 +834,7 @@
+                 // 0x10037b034 → 0x100361ec0: stamp history after content/source
+                 // updates, not before preview generation or checksum lookup.
+                 try transaction.repository.applyCapturedSources(target!, item: state.items[result.index],
+-                                                                applications: state.sourceApplications)
++                    applications: state.sourceApplications, preserveDevice: capturedTarget != nil)
+                 let timestamp = transaction.repository.restoreHistoryItems([target!])[0].timestamp
+                 state.items[result.index].createdAt = timestamp
+                 state.items[result.index].updatedAt = timestamp

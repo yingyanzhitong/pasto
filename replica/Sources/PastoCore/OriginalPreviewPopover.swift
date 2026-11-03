@@ -11,8 +11,8 @@ public final class OriginalPreviewPopover: NSPopover, NSPopoverDelegate {
     public private(set) var itemIdentity: AnyHashable?
     public private(set) var itemIdentifier: String?
     public var onWillClose: (() -> Void)?
-    public var makeContentView: ((_ itemIdentity: AnyHashable,
-                                  _ itemIdentifier: String) -> OriginalItemPreviewView?)?
+    public var makeContentView: ((_ input: ClipboardRestoreItem) -> OriginalItemPreviewView?)?
+    private var item: ClipboardRestoreItem?
     private let registry: OriginalPreviewWindowRegistry
     private let isScreenSharingContentVisible: () -> Bool
     private var visibilityObservation: AnyCancellable?
@@ -39,14 +39,15 @@ public final class OriginalPreviewPopover: NSPopover, NSPopoverDelegate {
     }
 
     /// The recovered display mechanics in 0x10002964c, after the item-view factory returns.
-    public func show(itemIdentity: AnyHashable, itemIdentifier: String,
+    public func show(itemIdentity: AnyHashable, itemIdentifier: String, input: ClipboardRestoreItem,
                      contentView: NSView, relativeTo anchor: NSView) {
         self.itemIdentity = itemIdentity
         self.itemIdentifier = itemIdentifier
+        item = input
         registry.f_10008747c(itemIdentity: itemIdentity)?.close()
         if let preview = contentView as? OriginalItemPreviewView {
             preview.onBeginEditing = { [weak self] in
-                self?.f_1000298b0(itemIdentity: itemIdentity)
+                self?.f_1000298b0(itemIdentity: input.previewIdentity)
             }
         }
         let controller = NSViewController()
@@ -69,9 +70,13 @@ public final class OriginalPreviewPopover: NSPopover, NSPopoverDelegate {
     public func f_100029e6c() -> Int {
         isDisplayed = true
         f_100029f60()
-        if let itemIdentifier, registry.popoverItemIdentifier != itemIdentifier {
-            registry.popoverItemIdentifier = itemIdentifier
-            registry.f_100087864()
+        if let item {
+            let itemIdentifier = item.previewIdentifier
+            self.itemIdentifier = itemIdentifier
+            if registry.popoverItemIdentifier != itemIdentifier {
+                registry.popoverItemIdentifier = itemIdentifier
+                registry.f_100087864()
+            }
         }
         return 0
     }
@@ -108,22 +113,22 @@ public final class OriginalPreviewPopover: NSPopover, NSPopoverDelegate {
 
     /// Paste 0x100029a80 after the local item-view adapter resolves the content dependency.
     public func f_100029a80(beginEditing: Bool, keepOpenAfterEditing: Bool) -> OriginalPreviewWindow? {
-        guard let itemIdentity, let itemIdentifier else { return nil }
+        guard let item else { return nil }
         let window = OriginalPreviewWindow()
-        guard let preview = makeContentView?(itemIdentity, itemIdentifier) else { return nil }
+        guard let preview = makeContentView?(item) else { return nil }
         preview.onEndEditing = {
             if !keepOpenAfterEditing { window.close() }
         }
         let manager = registry
         preview.onEditingStateChanged = { editing in
-            manager.f_10008727c(isEditing: editing, itemIdentifier: itemIdentifier)
+            manager.f_10008727c(isEditing: editing, itemIdentifier: item.previewIdentifier)
         }
         if beginEditing { preview.f_10007be8c() }
         let controller = NSViewController()
         controller.view = preview
         window.contentViewController = controller
-        manager.f_100086c10(window: window, itemIdentity: itemIdentity,
-                           itemIdentifier: itemIdentifier, isEditing: beginEditing)
+        manager.f_100086c10(window: window, itemIdentity: item.previewIdentity,
+                           itemIdentifier: item.previewIdentifier, isEditing: beginEditing)
         return window
     }
 

@@ -1,0 +1,659 @@
+{
+  "kind": "offline_source_contract_review",
+  "round": 14,
+  "status": "source-checks-passed-goal-active",
+  "generated_at": "2026-10-29T15:26:50.729600+00:00",
+  "previous_goal_turn": "progress",
+  "priority": "P1",
+  "module": "filter_browser_provider_and_ordered_query",
+  "functions": [
+    {
+      "function_id": "Paste:0x100005e1c",
+      "status": "existing_init_adapter_partial",
+      "contract": "原空available/expanded、collapsedLimit8、原query、hideApplied和回调，再Task获取候选；当前View局部状态/静态sections适配，异步DI/错误生命周期不等价。",
+      "original": {
+        "path": "decompiled/Paste/part-0002.c",
+        "sha256": "db74d084f36c83f9af5149f2c365630a88bbc93eaf9aeccd02da4c766c0914e6"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/FilterBrowser.swift",
+          "symbol": "@State private var expanded: Set<UInt8> = []"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/FilterBrowser.swift",
+          "symbol": "Array(choices.prefix(8))"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x100006184",
+      "status": "async_provider_parent_pending",
+      "contract": "原读取DI searchService后调用2e00a0发布availableFilters；当前呈现时同步本地快照，原异步actor/DI边界保留partial，不凭候选对齐宣称父已完成。",
+      "original": {
+        "path": "decompiled/Paste/part-0002.c",
+        "sha256": "fdd6dcd60f38f5afe7346c31b110ac2f1669b765732308e2a7a02f9c516191c9"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/FilterBrowser.swift",
+          "symbol": "func showFilterBrowser(relativeTo button:"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x100006290",
+      "status": "existing_section_order_rechecked",
+      "contract": "原读取5字节全局表1,0,5,3,4，逐分区映射且省略空区；原生值与当前分区序一致，复用。",
+      "original": {
+        "path": "decompiled/Paste/part-0002.c",
+        "sha256": "fd1019410abfb8082c3f8861ea0c06f2c5e9dc8fda697364e148fdbb676a4ed7"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/FilterBrowser.swift",
+          "symbol": "private var visibleSections:"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/FilterBrowser.swift",
+          "symbol": "let sections: [ReplicaFilterBrowser.Section]"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x100006398",
+      "status": "collapse_and_canonical_membership_partial",
+      "contract": "原hideApplied按tag/value过滤，count<11全显否则collapsed取8再追加more/less，expanded保留全量；当前复用阈值，已改按queryNode判断而非独立UI Selection哈希。分区标题/原Published边界partial。",
+      "original": {
+        "path": "decompiled/Paste/part-0002.c",
+        "sha256": "355d7f1695e8a0cf9eba1c2d319e87b01ccda073cd07acc6939ba52563e39293"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/FilterBrowser.swift",
+          "symbol": "private var visibleSections:"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/FilterBrowser.swift",
+          "symbol": "state.hasSearchFilter($0)"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x100006db8",
+      "status": "canonical_membership_adapter_partial",
+      "contract": "原逐过滤节点按tag和精确String相等判断；当前hasSearchFilter按完整queryNode.contains，支持UI可表达的filter，原任意tag/value接口仍partial。",
+      "original": {
+        "path": "decompiled/Paste/part-0002.c",
+        "sha256": "d65524597fa4a7090c0e7389491aff1dd8c81ad30dd2625598907bc87dd9b447"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "func hasSearchFilter("
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x100006e80",
+      "status": "fixed_toggle_node_order_partial",
+      "contract": "原不存在则追加filter，存在则移除全部相同filter而保留text节点及其他筛选，发布后回调；当前新增toggleSearchFilter按原节点处理且一次apply，去掉提前normalizeSelection。原Published/actor与所有非UI tag输入仍partial。",
+      "original": {
+        "path": "decompiled/Paste/part-0002.c",
+        "sha256": "22a8a95e99242d4f339bd743ce09ee735993690c2313bdf8debc66c23ff023d6"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "func toggleSearchFilter("
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/FilterBrowser.swift",
+          "symbol": "state.toggleSearchFilter(selection)"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x100007354",
+      "status": "existing_expansion_toggle_rechecked",
+      "contract": "原按section key切换expandedSet；当前insert/remove复用，选择清除且不关闭，原Set ABI/生命周期不重复包装。",
+      "original": {
+        "path": "decompiled/Paste/part-0002.c",
+        "sha256": "c7396c0b23d3992890832cb915b9829c648c75091b2209d113dd062cf1ffa257"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/FilterBrowser.swift",
+          "symbol": "private func activate("
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x100032094",
+      "status": "activation_command_branch_rechecked",
+      "contract": "原选中filter调用6e80，非Command关闭；展开项不关闭。当前保留同一Command bit语义并转真实节点toggle，键盘全导航另待核对。",
+      "original": {
+        "path": "decompiled/Paste/part-0019.c",
+        "sha256": "d58e3a5e030e00ff36adc73390e8349a174087e49b9f05421d64330e49a865df"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/FilterBrowser.swift",
+          "symbol": "if !NSEvent.modifierFlags.contains(.command) { close() }"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/FilterBrowser.swift",
+          "symbol": "state.toggleSearchFilter(selection)"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1002e00a0",
+      "status": "fixed_filter_provider_inputs_partial",
+      "contract": "原空query调用type/app/device/pinboard providers、日期取五个原范围；当前FilterBrowser复用同一候选源、类型原顺序、组按name而非panel.sortOrder、设备省略空名称。实体fetch/throws/DI生命周期仍partial。",
+      "original": {
+        "path": "decompiled/Paste/part-0238.c",
+        "sha256": "5bb23d1df615646e3abb95294771058de28127a4b11a7b2d58d2351b4bfa014d"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/FilterBrowser.swift",
+          "symbol": "func showFilterBrowser(relativeTo button:"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x10030e6a8",
+      "status": "type_provider_witness_adapter_partial",
+      "contract": "真实CoreDataSuggestionDataSource witness+0x10跳转30f3e0，原空query数组指向fbed58静态对象；当前直接复用同叶子，厂商协议ABI不复制。",
+      "original": {
+        "path": "decompiled/Paste/part-0253.c",
+        "sha256": "3b1dbdd5b452d56c66de5a8abec96dc407f36ec71acc1feb8c0a61189ab34dba"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/FilterBrowser.swift",
+          "symbol": "OriginalSearchSuggestions.f_10030f3e0(\"\")"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x10030f3e0",
+      "status": "existing_leaf_source_rechecked",
+      "contract": "原静态六项Unknown/Image/Color/File/Link/Text；query空原序，非空双方lowercase后prefix。不改已有叶子，新增实际FilterBrowser消费者及原静态数组机器码绑定。",
+      "original": {
+        "path": "decompiled/Paste/part-0253.c",
+        "sha256": "b05214d95be792d5294bd7582e3d28aae0622007fde844f745443aad68e7c776"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchSuggestions.swift",
+          "symbol": "func f_10030f3e0("
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/FilterBrowser.swift",
+          "symbol": "OriginalSearchSuggestions.f_10030f3e0(\"\")"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x10030f380",
+      "status": "app_provider_witness_adapter_partial",
+      "contract": "真实witness+8跳转30e070；当前Provider.app与浏览器应用区同applications，原协议/实体生命周期待证。",
+      "original": {
+        "path": "decompiled/Paste/part-0253.c",
+        "sha256": "fceaf1f9287409c920bacdd75f3317501f7c15494886024e5d9acc13caaeac12"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchSuggestionSource.swift",
+          "symbol": "static func applications("
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/FilterBrowser.swift",
+          "symbol": "ReplicaSearchSuggestionSource.applications(\"\", store: store)"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x10030e070",
+      "status": "existing_application_provider_partial",
+      "contract": "原SourceApplication字典fetch，distinct name、关联items计数/非空名、非空query用MATCHES[cd]有序词正则及name升序；当前使用仍被item引用的source relation，旧捕获名fallback保留兼容。数据库错误/实体快照不同仍partial。",
+      "original": {
+        "path": "decompiled/Paste/part-0253.c",
+        "sha256": "7487d500bc96053f123dc7b0043606e9aa9ae0f3646525792418d0b2d9ad44dd"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchSuggestionSource.swift",
+          "symbol": "static func applicationNames("
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchSuggestionSource.swift",
+          "symbol": "static func applications("
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x10030f3a0",
+      "status": "device_provider_witness_adapter_partial",
+      "contract": "真实witness+0x18跳转30ed6c；当前浏览器与建议同device候选源，原协议ABI待证。",
+      "original": {
+        "path": "decompiled/Paste/part-0253.c",
+        "sha256": "deeac4fa62f2f44e3db5023d5ad8ece71ac8cbb5f4281d22a261b1c45cbfac06"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchSuggestionSource.swift",
+          "symbol": "static func devices("
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x10030ed6c",
+      "status": "existing_device_provider_partial",
+      "contract": "原SourceDevice fetch distinct非空name、items关系、MATCHES[cd]和升序；当前item.sourceDevice是非可选字符串快照投影，未因去空/排序复用声称实体或错误等价。",
+      "original": {
+        "path": "decompiled/Paste/part-0253.c",
+        "sha256": "2cf743797d8801cbc00b12b6212a160e0c24322b8828610499b586e7542d1e6f"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchSuggestionSource.swift",
+          "symbol": "static func devices("
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/FilterBrowser.swift",
+          "symbol": "ReplicaSearchSuggestionSource.devices(\"\", store: store)"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x10030f3c0",
+      "status": "pinboard_provider_witness_adapter_partial",
+      "contract": "真实witness+0x20跳转30e6bc；当前建议/浏览器复用同pinboard方法，不编造第三套provider。",
+      "original": {
+        "path": "decompiled/Paste/part-0253.c",
+        "sha256": "e908d7f052b617334211847b86b8927ba369d8e5e5859d2f2b0d183a8caa0556"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchSuggestionSource.swift",
+          "symbol": "static func pinboards("
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/FilterBrowser.swift",
+          "symbol": "ReplicaSearchSuggestionSource.pinboards(\"\", store: store)"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x10030e6bc",
+      "status": "fixed_pinboard_raw_type_and_order_partial",
+      "contract": "原rawType2并按query正则、name升序，输出identifier/name；当前补rawType过滤并让浏览器按同name顺序。nil rawType为旧Pasto归档明确兼容例外，按2保留。",
+      "original": {
+        "path": "decompiled/Paste/part-0253.c",
+        "sha256": "53ab7309c7b8cde6f6f786a71e70ad33834ac896d8335c1c36255a5632564a69"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchSuggestionSource.swift",
+          "symbol": "($0.rawType ?? 2) == 2 && matches($0.name, query: query)"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/FilterBrowser.swift",
+          "symbol": "choices: pinboards"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x100041e08",
+      "status": "query_callback_forwarder_adapter_partial",
+      "contract": "原转041860弱载入SearchBar后全query回传inputCoordinator；当前FilterBrowser调state原子节点输入并将完整queryNodes传给editor，独立值模型适配。",
+      "original": {
+        "path": "decompiled/Paste/part-0024.c",
+        "sha256": "c2fc1f1fec371194c2edbea4dfd4c28cbfcf57e2c9882515362fad04a71dfa72"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "applySearchInput(nodes: nodes, text: query, filters: filters)"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/PanelViews.swift",
+          "symbol": "queryNodes: state.searchQueryNodes"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x100041860",
+      "status": "fixed_full_query_consumer_partial",
+      "contract": "原保持完整query节点送2f7744而非分离text/filters重新拼接；当前已取消editor把filters前置重建的路径，保留输入节点顺序。弱引用/原协调器DI仍partial。",
+      "original": {
+        "path": "decompiled/Paste/part-0024.c",
+        "sha256": "1dba3ad692ec678e051888ac31a1945e60f0aaae072be5e0d150592e5f6d5189"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/SearchEditor.swift",
+          "symbol": "func updateContents("
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/SearchEditor.swift",
+          "symbol": "OriginalSearchQueryNormalization.f_1002da16c(parent.queryNodes, flag: 0)"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1002f7744",
+      "status": "input_set_normalization_history_partial",
+      "contract": "原先normalize再equal guard，有变化才更新query、render、历史、selection、回调；当前复用normalize/当前节点guard/历史及展示，不计整段原泛型和全部回调生命周期完整。",
+      "original": {
+        "path": "decompiled/Paste/part-0245.c",
+        "sha256": "47207027104c30c94285210efd1cfa0f220eeb446b361d5013908d02f19c8480"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/SearchEditor.swift",
+          "symbol": "func updateContents("
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "func toggleSearchFilter("
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1002df190",
+      "status": "existing_suggestion_parent_rechecked_partial",
+      "contract": "原只text且非whitespace、trim换行，四组独立错误隔离，排除已有过滤后每组前30，日期另追加；当前对应算法已在生产suggestions接入，原provider/DI及错误生命周期仍partial。",
+      "original": {
+        "path": "decompiled/Paste/part-0238.c",
+        "sha256": "97b889d851033b7b0f250fc46b95f42b152b0b53bfc4936c3b0a23412b15d3c2"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchSuggestions.swift",
+          "symbol": "func f_1002df190("
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/SearchEditor.swift",
+          "symbol": "OriginalSearchSuggestions.f_1002df190("
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1002f51d0",
+      "status": "existing_leaf_source_rechecked",
+      "contract": "原maxSplits负值trap、0/empty和omitting标志、Character.isWhitespace循环；当前Swift String.split原参数语义复用，调用者Int.max/true。",
+      "original": {
+        "path": "decompiled/Paste/part-0244.c",
+        "sha256": "ebe7c4a43c54def208283ad1414e509e5a6525475652a5defb091b818eb27092"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchSuggestions.swift",
+          "symbol": "func f_1002f51d0("
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1002f5588",
+      "status": "existing_leaf_source_rechecked",
+      "contract": "原Int.max/true分词，每词escapedPattern并前置word boundary；当前同实现，不重复写正则。",
+      "original": {
+        "path": "decompiled/Paste/part-0244.c",
+        "sha256": "2bf8dc1766aa731a13828ee1390e840fc54965933f4e49a1871aa1787c71eccd"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchSuggestions.swift",
+          "symbol": "func f_1002f5588("
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1002f5100",
+      "status": "existing_leaf_source_rechecked",
+      "contract": "原前后.*与.*有序词join，空词.*.*；当前同实现，source.matches实际使用SELF MATCHES[cd]。",
+      "original": {
+        "path": "decompiled/Paste/part-0244.c",
+        "sha256": "06312408cb79bef3f6e078c8f9f3a0f4eeb16513444e61b692106821c19a69a7"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchSuggestions.swift",
+          "symbol": "func f_1002f5100("
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchSuggestionSource.swift",
+          "symbol": "OriginalSearchSuggestions.f_1002f5100(query)"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1002f5748",
+      "status": "existing_leaf_source_rechecked",
+      "contract": "原每词range options0x401、locale nil、从前一upperBound到end，任词失败空数组；当前同有序匹配，日期候选和标题高亮共用。",
+      "original": {
+        "path": "decompiled/Paste/part-0244.c",
+        "sha256": "ed05d71005a5101d496c666127fb37c1b9c9253d16f039ccc839a6b713e9d2dd"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchSuggestions.swift",
+          "symbol": "func f_1002f5748("
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1002f50fc",
+      "status": "existing_thunk_source_rechecked",
+      "contract": "原导出为共享2f5748代码体的跳板，沿用同真实算法，不另包装/加计；地址去重与原字段绑定保留。",
+      "original": {
+        "path": "decompiled/Paste/part-0244.c",
+        "sha256": "3f92569450c92c3b61f19a3f2151c5d7767a9eddc523f061472016301c7f769f"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchSuggestions.swift",
+          "symbol": "func f_1002f5748("
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1002dcca4",
+      "status": "existing_leaf_source_rechecked",
+      "contract": "原query建议直接返回；filter拒重复，addMode==1 dropLast+append，否则有效index替换，越界不变/负值陷阱；当前同算法，Editor.accept后规范化和历史展示。",
+      "original": {
+        "path": "decompiled/Paste/part-0237.c",
+        "sha256": "a4a52c8b35d03fe3668332019e0cae3a89a9ee4723cfaffb707eda7dec751422"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchSuggestions.swift",
+          "symbol": "func f_1002dcca4("
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/SearchEditor.swift",
+          "symbol": "private func accept("
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x10003f044",
+      "status": "filter_browser_entry_rechecked_partial",
+      "contract": "原isDisplayed则close，否则带inputCoordinator当前query及Option标志创建VM，传onQueryChanged和close回调；当前保留toggle/Option/fullquery行为，原异步VM生命周期待核对。",
+      "original": {
+        "path": "decompiled/Paste/part-0023.c",
+        "sha256": "e1f22388fc56bfeb039372db3e1f95cddbb759e6766fb91c8bae58743690bddb"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/FilterBrowser.swift",
+          "symbol": "func showFilterBrowser(relativeTo button:"
+        }
+      ]
+    }
+  ],
+  "reviewed_count": 28,
+  "current_review_unique_count": 389,
+  "current_review_inventory_percent": 0.4795,
+  "static_bindings": {
+    "original_binary_sha256": "871f00354fbb1c165d858a98e6d19d6f43cb9d3f9f958b3e07c7f07eb5c19afb",
+    "section_order": {
+      "address": "0x100fa6828",
+      "bytes": "0100050304",
+      "order": [
+        1,
+        0,
+        5,
+        3,
+        4
+      ]
+    },
+    "type_static_object": {
+      "address": "0x100fbed58",
+      "bytes": "0000000000000000000000000000000006000000000000000c00000000000000556e6b6e6f776e0000000000000000e7496d61676500000000000000000000e5436f6c6f7200000000000000000000e546696c650000000000000000000000e44c696e6b0000000000000000000000e4546578740000000000000000000000e4",
+      "values": [
+        "Unknown",
+        "Image",
+        "Color",
+        "File",
+        "Link",
+        "Text"
+      ]
+    },
+    "static_object_input_instructions": {
+      "address": "0x10030f420",
+      "bytes": "616500f02160359139b52394",
+      "object": "0x100fbed58"
+    },
+    "provider_conformance": {
+      "address": "0x100c40a90",
+      "bytes": "51982800f4b406002098280000000000",
+      "type_descriptor": "0x100cabf88",
+      "type_name": "CoreDataSuggestionDataSource",
+      "witness_table": "0x100eca2b8"
+    },
+    "provider_slots": [
+      {
+        "slot": "0x100eca2c0",
+        "bytes": "80f3300000001000",
+        "target": "0x10030f380",
+        "pointer_format": 6,
+        "declared_chain_reachable": true
+      },
+      {
+        "slot": "0x100eca2c8",
+        "bytes": "a8e6300000001000",
+        "target": "0x10030e6a8",
+        "pointer_format": 6,
+        "declared_chain_reachable": true
+      },
+      {
+        "slot": "0x100eca2d0",
+        "bytes": "a0f3300000001000",
+        "target": "0x10030f3a0",
+        "pointer_format": 6,
+        "declared_chain_reachable": true
+      },
+      {
+        "slot": "0x100eca2d8",
+        "bytes": "c0f3300000001000",
+        "target": "0x10030f3c0",
+        "pointer_format": 6,
+        "declared_chain_reachable": true
+      }
+    ],
+    "note": "Actual table slots and static array binding proved. DI lifetime and complete provider factory remain partial."
+  },
+  "source_sha256": {
+    "replica/Sources/Pasto/UI/ReplicaUIController.swift": "5862c3cce9784782f4ed388e44eb7e83ec664044227f5b9deb4b0f9b87427f1c",
+    "replica/Sources/Pasto/UI/FilterBrowser.swift": "1144d489fffb7e2e7797e4b4e9d5ad6cf1b570185944e688fad1dc4ea0c9fec0",
+    "replica/Sources/Pasto/UI/ReplicaSearchSuggestionSource.swift": "0fb8e1892a3239c9655496fa0482ea9f4aec48b23e466002d50f28460508b9fc",
+    "replica/Sources/Pasto/UI/SearchEditor.swift": "ff51f1cbdbc8d09c4d42b9fa661ec06aa1089e25b5c02b43f7cb3514e8617d05",
+    "replica/Sources/Pasto/UI/PanelViews.swift": "979a9d44b811fcb4e5f97dda8507d2448f44114c75f6ee87f4a38ff7472e8a68",
+    "replica/Sources/PastoCore/OriginalSearchSuggestions.swift": "b2c9551988e8a65042886a6d731e3c5eb80c8f6ad48af1f076f8c8f9fe90b602",
+    "scripts/tests/test_filter_browser_contracts.py": "bb243c8b8c39e15d0377d58b47173c11af2574c4f5ef1431dfc6d80713720ca0"
+  },
+  "new_partial_bindings": [
+    "Paste:0x100005e1c",
+    "Paste:0x100006184",
+    "Paste:0x100006290",
+    "Paste:0x100006db8",
+    "Paste:0x100006e80",
+    "Paste:0x100007354",
+    "Paste:0x100032094",
+    "Paste:0x1002e00a0",
+    "Paste:0x10030e6a8",
+    "Paste:0x10030f380",
+    "Paste:0x10030e070",
+    "Paste:0x10030f3a0",
+    "Paste:0x10030ed6c",
+    "Paste:0x10030f3c0",
+    "Paste:0x10030e6bc",
+    "Paste:0x100041e08",
+    "Paste:0x100041860"
+  ],
+  "confirmed_differences_fixed": [
+    "浏览器类型使用原固定顺序，分组改共用按名称排序的候选源，设备空名称不显示",
+    "组候选补rawType2条件；nil旧归档为兼容例外，定位入口同步保留旧类型",
+    "筛选激活用完整query节点增删全部精确匹配，再单次normalize/apply，保留text节点原位置",
+    "Editor真实接受state.queryNodes，取消强制filter前置重建；应用态高亮与Option隐藏均按原tag/value身份"
+  ],
+  "existing_implementations_reused": [
+    "八项折叠/11项阈值、展开收起和Command保留弹层",
+    "类型、正则、分词、有序高亮和接受建议叶子；重新核对，不冒用过期整文件摘要为最新构建"
+  ],
+  "tests": {
+    "passed": true,
+    "total": 142,
+    "added_in_round": 8,
+    "scope": "Python source/static-bytes/original-fragments/ledger only; no Swift compile, Core Data query or UI execution"
+  },
+  "new_fully_migrated_function_count": 0,
+  "historical_ledger": {
+    "numerator": 1648,
+    "denominator": 81123,
+    "percent": 2.0315,
+    "stale_evidence": true
+  },
+  "current_partial_count": 467,
+  "compiled": false,
+  "application_executed": false,
+  "original_binary_executed": false,
+  "user_data_modified": false,
+  "network_used": false,
+  "committed": false,
+  "pushed": false,
+  "module_complete": false,
+  "remaining_differences": [
+    "原FilterBrowserViewModel异步availableFilters、DI、Core Data fetch/throws与自有同步快照仍不同",
+    "应用/设备实体关系与nil投影、组legacy rawType及多关系是明确兼容适配；完整原数据库生命周期未闭合",
+    "筛选浏览器全键盘导航、焦点与布局状态尚未完整对照；本轮未执行UI验收",
+    "原搜索索引重建/实体FRC、图片内容闭包和actor错误生命周期仍待核对"
+  ],
+  "next_module": "P1 search_and_filter",
+  "next_work": [
+    "继续FilterBrowser键盘导航与实际原算法消费者，复用已完整的选择网格帮助函数",
+    "继续索引重建及实体事件消费者；只做离线源码和代码测试"
+  ],
+  "inventory_checked": {
+    "mapped_reference_records_checked": 2124,
+    "mapping_states": {
+      "partial": 467,
+      "migrated": 1648,
+      "excluded_by_scope": 9
+    },
+    "reference_issue_counts": {
+      "missing_address_in_evidence": 12
+    },
+    "unchanged_source_review_count": 317,
+    "source_binding_counts": {
+      "current": 322,
+      "not_recorded": 1059,
+      "file_changed_needs_method_review": 267
+    }
+  }
+}

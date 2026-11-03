@@ -110,14 +110,22 @@ public final class OriginalGlobalShortcutMonitor {
         }
     }
 
-    @discardableResult
-    public func f_1001eaa64(shortcut: KeyboardShortcut, action: @escaping () -> Void) -> OSStatus {
+    public func f_1001eaa64(shortcut: KeyboardShortcut, action: @escaping () -> Void) {
         f_1001eaa64(shortcut: OriginalShortcutValue(keyCode: Int(shortcut.keyCode),
             internalModifiers: shortcut.modifierRawValue), action: action)
     }
 
-    @discardableResult
-    public func f_1001eaa64(shortcut: OriginalShortcutValue, action: @escaping () -> Void) -> OSStatus {
+    public func f_1001eaa64(shortcut: OriginalShortcutValue, action: @escaping () -> Void) {
+        _ = registerShortcut(shortcut: shortcut, action: action)
+    }
+
+    /// Pasto reports registration failures to its preferences UI; the original entry returns Void.
+    public func registerShortcut(shortcut: KeyboardShortcut, action: @escaping () -> Void) -> OSStatus {
+        registerShortcut(shortcut: OriginalShortcutValue(keyCode: Int(shortcut.keyCode),
+            internalModifiers: shortcut.modifierRawValue), action: action)
+    }
+
+    private func registerShortcut(shortcut: OriginalShortcutValue, action: @escaping () -> Void) -> OSStatus {
         f_1001eae90(shortcut: shortcut)
         let registration = OriginalShortcutRegistration(keyCode: shortcut.keyCode,
             modifierRawValue: shortcut.internalModifiers, action: action)

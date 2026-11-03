@@ -1,0 +1,216 @@
+{
+  "kind": "offline_source_contract_audit",
+  "round": 19,
+  "status": "source-checks-passed-goal-active",
+  "generated_at": "2026-10-29T16:20:58.046932+00:00",
+  "priority": "P0",
+  "module": "data_and_persistence_identity",
+  "functions": [
+    {
+      "function_id": "Paste:0x10036e3c4",
+      "status": "source_contract_repaired_partial",
+      "contract": "读取coordinator.persistentStores第一项identifier，空列表/identifier为空返回nil。已接入真实数据库身份getter及索引request，保持读取无写入；actor同步适配与完整状态恢复仍不同。",
+      "original": {
+        "path": "decompiled/Paste/part-0278.c",
+        "sha256": "81985a60ec2ffc267c05a6f541ac2523b1e91327cb06e282a714c79e6ad7077c"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/ClipboardPersistence.swift",
+          "symbol": "var searchSourceIdentifier: String?"
+        },
+        {
+          "path": "replica/Sources/PastoCore/ClipboardPersistence.swift",
+          "symbol": "context.persistentStoreCoordinator?.persistentStores.first?.identifier"
+        },
+        {
+          "path": "replica/Sources/PastoCore/ClipboardStore.swift",
+          "symbol": "public var searchSourceIdentifier: String?"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "sourceIdentifier: store?.searchSourceIdentifier"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1002f00dc",
+      "status": "source_contract_repaired_partial",
+      "contract": "原两个身份均非nil且不同才进入身份变化；新非nil身份在后续索引前保存，nil不覆盖已有值。当前补内存比较与reset，持久状态/schema/健康探测及actor事件流仍缺，不标完整。",
+      "original": {
+        "path": "decompiled/Paste/part-0242.c",
+        "sha256": "5459a01c923d25b43f4b6af84b25a4eaaa1d76d50f0126ff7bed6b1612c8f288"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "if let previous = lastSourceIdentifier, let current = request.sourceIdentifier, previous != current"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "if let current = request.sourceIdentifier { lastSourceIdentifier = current }"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x10036e3ac",
+      "status": "original_contract_gap_confirmed",
+      "contract": "原在数据源actor调度e3c4；当前getter同步在MainActor，不存在原actor入口。",
+      "original": {
+        "path": "decompiled/Paste/part-0278.c",
+        "sha256": "e86c8923602c208ede5bf7cd008364cb68d5235b6e66246d29f6be832be948db"
+      },
+      "source_references": []
+    },
+    {
+      "function_id": "Paste:0x10036f634",
+      "status": "original_contract_gap_confirmed",
+      "contract": "原协议async入口保存调用者执行器并await e3ac；当前同步转发无该async调用合同。",
+      "original": {
+        "path": "decompiled/Paste/part-0278.c",
+        "sha256": "2ec50e2e500c465e8347d48ff76e94a5b32fa3c3d5d68d1ef0568bf800abf1b1"
+      },
+      "source_references": []
+    },
+    {
+      "function_id": "Paste:0x10036f680",
+      "status": "original_contract_gap_confirmed",
+      "contract": "原保存身份可选String的两个返回字，释放async帧并切回调用执行器；当前无该异步续体。",
+      "original": {
+        "path": "decompiled/Paste/part-0278.c",
+        "sha256": "15df85c5f3d06fc7c8ae560d0589fe0f78b43cc3f5ac5bbde9313f636184d19f"
+      },
+      "source_references": []
+    },
+    {
+      "function_id": "Paste:0x10036f6e8",
+      "status": "original_contract_gap_confirmed",
+      "contract": "原在调用执行器返回可选身份String；当前只迁移值读取/消费，异步协议返回未实现。",
+      "original": {
+        "path": "decompiled/Paste/part-0278.c",
+        "sha256": "645ac2f43fc2ab25654ea8cbdaf0d29b57c110e8c5a7c73ef4a9a86755a364a8"
+      },
+      "source_references": []
+    },
+    {
+      "function_id": "Paste:0x10036f7b8",
+      "status": "original_contract_gap_confirmed",
+      "contract": "原NSNotificationCenter以coordinator为object、queue=nil监听NSPersistentStoreRemoteChangeNotification，yield AsyncStream并安装termination移除观察；当前无等价持久历史事件流。",
+      "original": {
+        "path": "decompiled/Paste/part-0279.c",
+        "sha256": "3160994082c0d10f104f7517bf805702e2d9150fd8684ba75bc3967922c04e41"
+      },
+      "source_references": []
+    },
+    {
+      "function_id": "Paste:0x10036f968",
+      "status": "original_contract_gap_confirmed",
+      "contract": "本地持久存储变化通知yield continuation；当前无对应stream生产者。",
+      "original": {
+        "path": "decompiled/Paste/part-0279.c",
+        "sha256": "5c3abd50e98e0d94588ed5d1489bed1e466b93ed0679059e31bbbd5f469cda7b"
+      },
+      "source_references": []
+    },
+    {
+      "function_id": "Paste:0x10036f9e8",
+      "status": "original_contract_gap_confirmed",
+      "contract": "AsyncStream termination移除通知观察者；当前缺完整stream，未造孤立observer。",
+      "original": {
+        "path": "decompiled/Paste/part-0279.c",
+        "sha256": "74c9db94b3165fb4190635269bc25de6c6cd17b5fcee20926bc86e0ddda0fb68"
+      },
+      "source_references": []
+    },
+    {
+      "function_id": "Paste:0x100370fc4",
+      "status": "original_contract_gap_confirmed",
+      "contract": "原流构造包装转发到36f7b8；当前缺原流生命周期。",
+      "original": {
+        "path": "decompiled/Paste/part-0279.c",
+        "sha256": "396c35f9b8d77df6a9c173a03c1a2424567f295464c605f7cdc61e1e4a052131"
+      },
+      "source_references": []
+    },
+    {
+      "function_id": "Paste:0x100371030",
+      "status": "original_contract_gap_confirmed",
+      "contract": "通知闭包还原captured continuation并转发36f968，当前缺对应绑定。",
+      "original": {
+        "path": "decompiled/Paste/part-0279.c",
+        "sha256": "a61a285f8fc5c3599d6073c66a804ca01d6ea586beab7082c40e845cdfdd737e"
+      },
+      "source_references": []
+    }
+  ],
+  "reviewed_count": 11,
+  "current_review_unique_count": 471,
+  "current_review_inventory_percent": 0.5806,
+  "new_partial_bindings": [
+    "Paste:0x10036e3c4",
+    "Paste:0x1002f00dc"
+  ],
+  "current_partial_count": 526,
+  "source_sha256": {
+    "replica/Sources/PastoCore/ClipboardPersistence.swift": "b00115bf5d7b80514e5f621c06b7ca34d87bdb2bd6fd0ebdd75b6cc8e5b10067",
+    "replica/Sources/PastoCore/ClipboardStore.swift": "ea514b3d3f9bdcae5cf748ecb487b743c456e21e9de685924530bc3959c3cfed",
+    "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift": "f2527a46433ae8fc3bd4a92525a4ee49b196312a8cafa692334284cdeb04d455",
+    "scripts/tests/test_store_identity_contracts.py": "c084246959d47be2930559d5237e12ebd3d95aa1c659c0ed435dfc6b44ab293e"
+  },
+  "previous_source_sha256": {
+    "replica/Sources/PastoCore/ClipboardPersistence.swift": "31978e6879ac1a0a645cfc0c89ab59d31dc0bccd9ddbe19a080d93273eebecb9",
+    "replica/Sources/PastoCore/ClipboardStore.swift": "116f543df1dc8717e58edf3e0f99eebfe7fc208953e7d3d611cf59a7490b1445",
+    "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift": "343714647dfd6fef03751675c2fbb66116261c29b7a8195df8b10cf4d9165e92"
+  },
+  "tests": {
+    "passed": true,
+    "total": 179,
+    "added_in_round": 6,
+    "scope": "Python source/provenance/ledger assertions only; no Swift or database/Spotlight behavior executed."
+  },
+  "new_fully_migrated_function_count": 0,
+  "historical_ledger": {
+    "numerator": 1648,
+    "denominator": 81123,
+    "percent": 2.0315,
+    "stale_evidence": true
+  },
+  "remaining_differences": [
+    "本轮仅补真实source identifier和内存变化消费，原持久IndexingState/schema/可用性和健康探测仍缺，冷启动仍有needsReset",
+    "原CDSearchIndexerDataSource是actor和async provider，当前读取MainActor同步适配；不计完整等价",
+    "原NSPersistentStoreRemoteChangeNotification+AsyncStream/termination及历史事务token消费仍待闭合，下一批先补完整本地事件链，不能用通知名含Remote就误排为联网",
+    "其它P0/P1/P2任务继续，不缩减目标、不以来源测试通过充当功能迁移完成"
+  ],
+  "next_module": "P0 data_and_persistence",
+  "next_work": [
+    "核对36e4f4/36e5cc、36eb54、36fa2c的本地persistent-history事务token及insert/update/delete合并，再接真实消费",
+    "核对原本地store description history/remote-change选项及错误/Undo事务，已有用户模型与数据兼容保留"
+  ],
+  "compiled": false,
+  "application_executed": false,
+  "original_binary_executed": false,
+  "network_used": false,
+  "user_data_modified": false,
+  "committed": false,
+  "pushed": false,
+  "module_complete": false,
+  "goal_active": true,
+  "production_source_edited": true,
+  "inventory": {
+    "mapping_states": {
+      "partial": 526,
+      "migrated": 1648,
+      "excluded_by_scope": 9
+    },
+    "mapped_reference_records_checked": 2183,
+    "source_binding_counts": {
+      "current": 322,
+      "not_recorded": 1059,
+      "file_changed_needs_method_review": 267
+    },
+    "unchanged_source_review_count": 317,
+    "reference_issue_counts": {
+      "missing_address_in_evidence": 12
+    }
+  }
+}

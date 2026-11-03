@@ -1,0 +1,233 @@
+--- phase-39-before/replica/Sources/Pasto/UI/FilterBrowser.swift
++++ replica/Sources/Pasto/UI/FilterBrowser.swift
+@@ -163,7 +163,6 @@
+ 
+     // f031978 / f0321d4: monitor exists only while the browser is presented.
+     private func installKeyboardMonitor() {
+-        guard keyboardMonitor == nil else { return }
+         keyboardMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
+             MainActor.assumeIsolated { handleMonitoredKey(event) ? nil : event }
+         }
+--- phase-39-before/replica/Sources/PastoCore/OriginalSearchInputHistory.swift
++++ replica/Sources/PastoCore/OriginalSearchInputHistory.swift
+@@ -50,7 +50,8 @@
+     public func f_1002f60fc() {
+         timer?.invalidate()
+         timer = Timer.scheduledTimer(withTimeInterval: interval, repeats: false) { [weak self] _ in
+-            Task { @MainActor [weak self] in self?.f_1002f5fe8() }
++            guard let self else { return }
++            Task { @MainActor [self] in self.f_1002f5fe8() }
+         }
+     }
+ 
+--- phase-39-before/replica/Sources/PastoCore/OriginalSearchTextScroller.swift
++++ replica/Sources/PastoCore/OriginalSearchTextScroller.swift
+@@ -10,7 +10,7 @@
+         hasHorizontalScroller = false
+         hasVerticalScroller = false
+         drawsBackground = false
+-        focusRingType = .none
++        focusRingType = .exterior
+         borderType = .noBorder
+         documentView = textView
+         textView.f_100042fc8()
+--- phase-39-before/replica/Sources/PastoCore/OriginalSearchTextView.swift
++++ replica/Sources/PastoCore/OriginalSearchTextView.swift
+@@ -127,7 +127,7 @@
+         textLayoutManager?.textContainer?.maximumNumberOfLines = 1
+         textLayoutManager?.textContainer?.lineFragmentPadding = 0
+         drawsBackground = false
+-        focusRingType = .none
++        focusRingType = .exterior
+         isAutomaticSpellingCorrectionEnabled = false
+         isAutomaticQuoteSubstitutionEnabled = false
+         isAutomaticDashSubstitutionEnabled = false
+--- phase-39-before/scripts/tests/test_filter_keyboard_contracts.py
++++ scripts/tests/test_filter_keyboard_contracts.py
+@@ -31,11 +31,11 @@
+         cls.keys = (UI / 'OriginalNavigationKey.swift').read_text()
+         cls.report = json.loads((ROOT / 'reports/replica/offline-migration-p0-round15.json').read_text())
+ 
+-    def test_monitor_lifecycle_matches_presentation_and_prevents_duplicate_install(self):
++    def test_monitor_lifecycle_matches_presentation_and_installs_on_each_request(self):
+         self.assertIn('.onAppear { focused = true; installKeyboardMonitor() }', self.source)
+         self.assertIn('.onDisappear { removeKeyboardMonitor() }', self.source)
+         install = body(self.source, 'private func installKeyboardMonitor()')
+-        self.assertIn('guard keyboardMonitor == nil else { return }', install)
++        self.assertNotIn('guard keyboardMonitor == nil', install)
+         self.assertIn('NSEvent.addLocalMonitorForEvents(matching: .keyDown)', install)
+         self.assertIn('MainActor.assumeIsolated { handleMonitoredKey(event) ? nil : event }', install)
+         remove = body(self.source, 'private func removeKeyboardMonitor()')
+--- phase-39-before/scripts/tests/test_p0_p1_review_round14.py
++++ scripts/tests/test_p0_p1_review_round14.py
+@@ -140,7 +140,7 @@
+         self.assertIn('NSFocusRingTypeNone = 1', text)
+         self.assertIn('NSFocusRingTypeExterior = 2', text)
+         self.assertEqual(self.rows['Paste:0x100042edc']['status'], 'difference_confirmed')
+-        current = (ROOT/'replica/Sources/PastoCore/OriginalSearchTextScroller.swift').read_text()
++        current = (ROOT/'.local/p0-repair/phase-39/before/replica/Sources/PastoCore/OriginalSearchTextScroller.swift').read_text()
+         self.assertIn('focusRingType = .none', current)
+         self.assertEqual(self.word(0x1002f5dc0), 0x1e7a1000)  # FMOV d0,-0.25
+         self.assertEqual(self.word(0x1002f5dc4), 0x1e600921)  # FMUL d1,d9,d0
+--- phase-39-before/scripts/tests/test_p0_p1_review_round15.py
++++ scripts/tests/test_p0_p1_review_round15.py
+@@ -116,7 +116,7 @@
+         header=(ROOT/sdk['path']).read_text()
+         self.assertEqual(digest(sdk['path']),sdk['sha256'])
+         self.assertIn('NSFocusRingTypeExterior = 2',header);self.assertIn('NSFocusRingTypeNone = 1',header)
+-        method=body((ROOT/'replica/Sources/PastoCore/OriginalSearchTextView.swift').read_text(),'public func f_100042fc8()')
++        method=body((ROOT/'.local/p0-repair/phase-39/before/replica/Sources/PastoCore/OriginalSearchTextView.swift').read_text(),'public func f_100042fc8()')
+         self.assertIn('focusRingType = .none',method)
+ 
+     def test_history_optional_next_buffering_and_consumption_order_have_real_producers(self):
+--- phase-39-before/scripts/tests/test_p0_p1_review_round2.py
++++ scripts/tests/test_p0_p1_review_round2.py
+@@ -173,10 +173,10 @@
+         owner = self.rows['Paste:0x1002f65e0']
+         self.assertEqual(monitor['status'], 'difference_confirmed')
+         self.assertEqual(owner['status'], 'difference_confirmed')
+-        browser = body((ROOT / 'replica/Sources/Pasto/UI/FilterBrowser.swift').read_text(),
++        browser = body((ROOT / '.local/p0-repair/phase-39/before/replica/Sources/Pasto/UI/FilterBrowser.swift').read_text(),
+                        'private func installKeyboardMonitor()')
+         self.assertLess(browser.index('guard keyboardMonitor == nil'), browser.index('NSEvent.addLocalMonitor'))
+-        history = body((ROOT / 'replica/Sources/PastoCore/OriginalSearchInputHistory.swift').read_text(),
++        history = body((ROOT / '.local/p0-repair/phase-39/before/replica/Sources/PastoCore/OriginalSearchInputHistory.swift').read_text(),
+                        'func f_1002f60fc()')
+         self.assertIn('Task { @MainActor [weak self]', history)
+         original = fragment('0x1002f65e0', owner['original']['path'])
+--- phase-39-before/scripts/tests/test_p0_repair_pointer_applied_input.py
++++ scripts/tests/test_p0_repair_pointer_applied_input.py
+@@ -163,7 +163,11 @@
+         self.assertIn('先修复P0，再检查P1，最后修复P1', plan)
+         active = [l for l in plan.splitlines() if l.startswith('| P') and '| in_progress |' in l]
+         self.assertEqual(len(active), 1)
+-        self.assertIn('P0', active[0])
++        repair = json.loads((ROOT / 'reports/replica/p0-p1-repair-round38.json').read_text())
++        review = json.loads((ROOT / 'reports/replica/p0-p1-review-round29.json').read_text())
++        self.assertEqual(repair['progress']['P0']['repaired'], repair['progress']['P0']['denominator'])
++        self.assertTrue(review['review_complete_for_fixed_P1_difference_list'])
++        self.assertIn('| P1 |', active[0])
+ 
+ 
+ if __name__ == '__main__':
+--- /dev/null
++++ scripts/tests/test_p1_repair_search_input_boundaries.py
+@@ -0,0 +1,118 @@
++"""Source/SDK contracts only. No AppKit, Timer or Task execution."""
++import hashlib
++import json
++import sys
++import unittest
++from pathlib import Path
++
++ROOT = Path(__file__).resolve().parents[2]
++sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'scripts/tests')]
++from function_ledger import source_fragments
++from test_offline_p0_contracts import body
++from test_p0_repair_checksum_routing import original_fragment
++
++
++class SearchInputBoundaryContracts(unittest.TestCase):
++    @classmethod
++    def setUpClass(cls):
++        cls.phase = ROOT / '.local/p0-repair/phase-39'
++        cls.core = ROOT / 'replica/Sources/PastoCore'
++        cls.scroller = (cls.core / 'OriginalSearchTextScroller.swift').read_text()
++        cls.text = (cls.core / 'OriginalSearchTextView.swift').read_text()
++        cls.history = (cls.core / 'OriginalSearchInputHistory.swift').read_text()
++        cls.browser = (ROOT / 'replica/Sources/Pasto/UI/FilterBrowser.swift').read_text()
++        cls.proof = json.loads((cls.phase / 'search-input-boundaries-contract.json').read_text())
++
++    def before(self, relative):
++        return (self.phase / 'before' / relative).read_text()
++
++    def test_original_controls_both_set_exterior_raw_value_two(self):
++        original = (ROOT / 'decompiled/Paste/part-0025.c').read_text()
++        self.assertIn('setFocusRingType_(self,2)', original_fragment(original, '100042edc'))
++        self.assertIn('setFocusRingType_(unaff_x20,2)', original_fragment(original, '100042fc8'))
++        header = Path(self.proof['sdk_focus_ring']['path'])
++        self.assertEqual(hashlib.sha256(header.read_bytes()).hexdigest(), self.proof['sdk_focus_ring']['sha256'])
++        self.assertIn('NSFocusRingTypeExterior = 2', header.read_text())
++        self.assertIn('NSFocusRingTypeNone = 1', header.read_text())
++
++    def test_actual_scroller_and_text_view_use_exterior(self):
++        self.assertIn('focusRingType = .exterior', body(self.scroller, 'public init(textView: OriginalSearchTextView)'))
++        self.assertIn('focusRingType = .exterior', body(self.text, 'public func f_100042fc8()'))
++
++    def test_control_configuration_changes_are_exactly_one_enum_each(self):
++        for name, current in [('OriginalSearchTextScroller.swift', self.scroller), ('OriginalSearchTextView.swift', self.text)]:
++            previous = self.before('replica/Sources/PastoCore/' + name)
++            self.assertEqual(previous.count('focusRingType = .none'), 1)
++            self.assertEqual(current, previous.replace('focusRingType = .none', 'focusRingType = .exterior', 1))
++
++    def test_real_textkit_constructors_and_configuration_consumer_are_retained(self):
++        input_view = (self.core / 'OriginalSearchInputView.swift').read_text()
++        editor = (ROOT / 'replica/Sources/Pasto/UI/SearchEditor.swift').read_text()
++        self.assertIn('OriginalSearchTextView(usingTextLayoutManager: true)', input_view)
++        self.assertIn('SearchTextView(usingTextLayoutManager: true)', editor)
++        self.assertIn('textView.f_100042fc8()', body(self.scroller, 'public init(textView:'))
++        self.assertEqual(input_view, self.before('replica/Sources/PastoCore/OriginalSearchInputView.swift'))
++        self.assertEqual(editor, self.before('replica/Sources/Pasto/UI/SearchEditor.swift'))
++
++    def test_original_keyboard_monitor_always_registers_then_stores_returned_token(self):
++        original = original_fragment((ROOT / 'decompiled/Paste/part-0019.c').read_text(), '100031978')
++        self.assertIn('0x400,aBlock', original)
++        self.assertLess(original.index('addLocalMonitorForEventsMatchingMask_handler_'), original.index('State::set_wrappedValue'))
++        self.assertNotIn('State::get_wrappedValue', original)
++
++    def test_actual_keyboard_install_has_no_old_token_read_or_early_return(self):
++        install = body(self.browser, 'private func installKeyboardMonitor()')
++        self.assertIn('keyboardMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown)', install)
++        prefix = install[:install.index('keyboardMonitor = NSEvent.addLocalMonitorForEvents')]
++        self.assertNotIn('keyboardMonitor', prefix)
++        self.assertNotIn('return', prefix)
++        self.assertIn('MainActor.assumeIsolated { handleMonitoredKey(event) ? nil : event }', install)
++
++    def test_keyboard_only_removes_duplicate_gate_without_changing_filter_behavior(self):
++        before = self.before('replica/Sources/Pasto/UI/FilterBrowser.swift')
++        self.assertEqual(self.browser, before.replace('        guard keyboardMonitor == nil else { return }\n', '', 1))
++        self.assertIn('.onAppear { focused = true; installKeyboardMonitor() }', self.browser)
++        self.assertIn('.onDisappear { removeKeyboardMonitor() }', self.browser)
++        for signature in ['private func removeKeyboardMonitor()', 'private func handleMonitoredKey(', 'private func activate(', 'private func move(']:
++            self.assertEqual(body(self.browser, signature), body(before, signature))
++
++    def test_original_timer_is_weak_and_one_shot_but_its_task_owns_the_owner(self):
++        original = (ROOT / 'decompiled/Paste/part-0244.c').read_text()
++        timer = original_fragment(original, '1002f60fc')
++        task = original_fragment(original, '1002f65e0')
++        thunk = original_fragment(original, '1002f6f0c')
++        self.assertIn('_swift_weakInit(', timer)
++        self.assertIn('local_50 = FUN_1002f6f0c', timer)
++        self.assertIn('uVar3,0,aBlock', timer)
++        self.assertIn('FUN_1002f65e0();', thunk)
++        self.assertLess(task.index('_swift_retain()'), task.index('0x20) = param_2'))
++        self.assertLess(task.index('0x20) = param_2'), task.index('FUN_1002d6558('))
++
++    def test_actual_timer_weakly_loads_before_scheduling_a_strong_mainactor_task(self):
++        timer = body(self.history, 'public func f_1002f60fc()')
++        order = ['timer?.invalidate()', 'Timer.scheduledTimer(withTimeInterval: interval, repeats: false) { [weak self]',
++                 'guard let self else { return }', 'Task { @MainActor [self] in self.f_1002f5fe8() }']
++        self.assertEqual([timer.index(t) for t in order], sorted(timer.index(t) for t in order))
++        self.assertNotIn('Task { @MainActor [weak self]', timer)
++
++    def test_timer_fix_does_not_flush_early_change_history_or_make_timer_own_self(self):
++        before = self.before('replica/Sources/PastoCore/OriginalSearchInputHistory.swift')
++        old = '            Task { @MainActor [weak self] in self?.f_1002f5fe8() }'
++        new = '            guard let self else { return }\n            Task { @MainActor [self] in self.f_1002f5fe8() }'
++        self.assertEqual(self.history, before.replace(old, new, 1))
++        for signature in ['public func f_1002f5e18(', 'public func f_1002f5fe8()', 'public func f_1002f61f0()', 'public func f_1002f63b8()', 'public func f_1002f6550()']:
++            self.assertEqual(body(self.history, signature), body(before, signature))
++        self.assertIn('deinit { timer?.invalidate() }', self.history)
++
++    def test_original_evidence_and_production_sources_match_current_inputs(self):
++        for row in self.proof['original_fragments']:
++            self.assertEqual(source_fragments(ROOT / row['path'])[row['address']]['sha256'], row['sha256'])
++        for path, digest in self.proof['current_sources'].items():
++            self.assertEqual(hashlib.sha256((ROOT / path).read_bytes()).hexdigest(), digest)
++        self.assertEqual(len(self.proof['contracts']), 6)
++        self.assertTrue(all(row['priority'] == 'P1' for row in self.proof['contracts']))
++        self.assertFalse(self.proof['full_function_migration_verified'])
++
++
++if __name__ == '__main__':
++    unittest.main()

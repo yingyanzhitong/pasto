@@ -9,9 +9,7 @@ public final class OriginalShortcutValidatorService: Sendable {
 
     @MainActor
     public func validate(_ shortcut: OriginalShortcutValue) -> Error? {
-        guard let message = OriginalShortcutValidation.f_1001ebce4(shortcut: shortcut, menu: NSApp.mainMenu)
-        else { return nil }
-        return OriginalShortcutRecorderError(message)
+        OriginalShortcutValidation.f_1001ebce4(shortcut: shortcut, menu: NSApp.mainMenu)
     }
 }
 

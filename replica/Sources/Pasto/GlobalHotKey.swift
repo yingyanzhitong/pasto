@@ -17,7 +17,7 @@ final class GlobalHotKey {
         let shortcut = PastoCore.KeyboardShortcut(keyCode: keyCode, modifierRawValue: modifiers.rawValue)
         let monitor = OriginalGlobalShortcutMonitor.shared
         self.monitor = monitor
-        let status = monitor.f_1001eaa64(shortcut: shortcut) { [weak self] in self?.action?() }
+        let status = monitor.registerShortcut(shortcut: shortcut) { [weak self] in self?.action?() }
         if status == noErr { registeredShortcut = shortcut }
         return status
     }

@@ -1,0 +1,418 @@
+{
+  "kind": "offline_source_contract_review",
+  "round": 15,
+  "status": "source-checks-passed-goal-active",
+  "generated_at": "2026-10-29T15:37:09.902777+00:00",
+  "previous_goal_turn": "progress",
+  "priority": "P1",
+  "module": "filter_browser_grid_and_native_keyboard_lifecycle",
+  "functions": [
+    {
+      "function_id": "Paste:0x100059768",
+      "status": "valid_three_column_production_reused_partial",
+      "contract": "原up先解section/row/column；row>0上一行，首行退前区末行并min列，首区首行wrap总末项。当前三列正count真实生产域同式复用；任意columns/负值/全部trap接口未复制，不计完整。",
+      "original": {
+        "path": "decompiled/Paste/part-0031.c",
+        "sha256": "b24d6b3343482f532f1bcdf42170ff5d614b00add373b994cbb88b67f35fea22"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/FilterBrowser.swift",
+          "symbol": "private func move("
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/FilterBrowser.swift",
+          "symbol": "min(column, (previousCount - 1) % 3)"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x100059888",
+      "status": "valid_three_column_production_reused_partial",
+      "contract": "原down下一行保列，不完整末行clamp到区末项；已在区末行则下一分区首行min列，末区wrap0。当前三列正count真实生产域同式复用，泛型输入及trap仍partial。",
+      "original": {
+        "path": "decompiled/Paste/part-0031.c",
+        "sha256": "5f980907d5e64316cd8c1b57d786c3628b4e8e7ef06b0054c70f930272eabf09"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/FilterBrowser.swift",
+          "symbol": "min(current + 3, offset + count - 1)"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/FilterBrowser.swift",
+          "symbol": "offset + count + min(column, counts[section + 1] - 1)"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x100059a30",
+      "status": "valid_three_column_production_reused_partial",
+      "contract": "原(index-1+sum(counts))%sum(counts)，保留Swift有符号余数与溢出trap。当前有效非负选区与正count同式；未宣称所有非法输入已实现。",
+      "original": {
+        "path": "decompiled/Paste/part-0031.c",
+        "sha256": "c8528cbfafb96a69dd083a4f9b7356550f66c5864052980cc881416aeab1e5c0"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/FilterBrowser.swift",
+          "symbol": "(current - 1 + total) % total"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x100059ac0",
+      "status": "valid_three_column_production_reused_partial",
+      "contract": "原(index+1)%sum(counts)，空/0总数trap；UI父先总数<1返回nil。当前同父guard及非空域循环，原任意输入接口仍partial。",
+      "original": {
+        "path": "decompiled/Paste/part-0031.c",
+        "sha256": "f98def77918cd2cd8c6c123866b8ae6073ffdf7f7ced1383af0a25c75521ba69"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/FilterBrowser.swift",
+          "symbol": "(current + 1) % total"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/FilterBrowser.swift",
+          "symbol": "guard total > 0 else { selectedIndex = nil; return }"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x100059b20",
+      "status": "coordinate_consumer_reused_partial",
+      "contract": "真实机器码返回section,row,column三寄存器，越过全表返回(0,0,0)；当前move按offset/local/3和%3求合法域坐标，原无效index/列0与溢出合同未全迁移。",
+      "original": {
+        "path": "decompiled/Paste/part-0031.c",
+        "sha256": "02a375d5be2fb41130414606bac4b40a0bfcbb8bb164b6aeb0b93da18c9ca083"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/FilterBrowser.swift",
+          "symbol": "let local = current - offset"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/FilterBrowser.swift",
+          "symbol": "let column = local % 3"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x100059ba4",
+      "status": "coordinate_consumer_reused_partial",
+      "contract": "原前min(section,count)个区数和+row*columns+column，负section/乘加溢出trap；当前固定3列有效section内反投影同式，泛用/trap接口未补。",
+      "original": {
+        "path": "decompiled/Paste/part-0031.c",
+        "sha256": "23ff76a0e9c8588e858047322bd61b73f88dc1857228349a96435ba7bf1076ec"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/FilterBrowser.swift",
+          "symbol": "((previousCount - 1) / 3) * 3"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/FilterBrowser.swift",
+          "symbol": "offset + count + min(column, counts[section + 1] - 1)"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x100031490",
+      "status": "existing_direction_parent_rechecked_partial",
+      "contract": "原总数<=0清空，未选中置0，当前index至多clamp(total-1)，四方向调用网格函数并写selectedIndex；当前正可见区域相同。SwiftUI状态/诊断及无效raw方向边界保留。",
+      "original": {
+        "path": "decompiled/Paste/part-0019.c",
+        "sha256": "05d9d6a8792ecd328bba8808d5ea978d1cb957dea346174a1996e8cebde5dfea"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/FilterBrowser.swift",
+          "symbol": "private func move("
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/FilterBrowser.swift",
+          "symbol": ".onMoveCommand { move($0) }"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x100031b60",
+      "status": "fixed_keyboard_event_consumer_partial",
+      "contract": "原用物理classifier仅处理Return/Tab；Return从该event读modifierFlags传32094，即使无选中仍消费；Tab读该event flags，以0xa0000(Shift/Option)选左右，其余事件原样返回。当前补原生local monitor入口，移除重复SwiftUI Enter/Tab处理。原State/actor诊断父仍partial。",
+      "original": {
+        "path": "decompiled/Paste/part-0019.c",
+        "sha256": "19dabb8108fce3b2d342f1298c4ee9d4cc92e55a625dd134f564e7312ef7168c"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/FilterBrowser.swift",
+          "symbol": "private func handleMonitoredKey("
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/FilterBrowser.swift",
+          "symbol": "activate(allEntries[index], modifierFlags: event.modifierFlags)"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x100031978",
+      "status": "fixed_local_monitor_install_partial",
+      "contract": "原View出现时创建匹配0x400(keyDown)的本地monitor并保存token；当前onAppear安装并guard重复，非global monitor。不把原existential/block/完整SwiftUI状态布局计全。",
+      "original": {
+        "path": "decompiled/Paste/part-0019.c",
+        "sha256": "af6f4d70e09afd868f0362a75890aa6dfa4f719d159164f74aeee91b0827d9fa"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/FilterBrowser.swift",
+          "symbol": "private func installKeyboardMonitor()"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/FilterBrowser.swift",
+          "symbol": ".onAppear { focused = true; installKeyboardMonitor() }"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1000321d4",
+      "status": "fixed_local_monitor_removal_partial",
+      "contract": "原View消失时若token非nil调用NSEvent.removeMonitor；当前onDisappear移除并清空token。原existential析构/actor诊断边界保持partial。",
+      "original": {
+        "path": "decompiled/Paste/part-0019.c",
+        "sha256": "fd526000b5741b71dd7ea36d6f9e18ba056d6beb5214d8f9cca1c5a204cc3ca5"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/FilterBrowser.swift",
+          "symbol": "private func removeKeyboardMonitor()"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/FilterBrowser.swift",
+          "symbol": ".onDisappear { removeKeyboardMonitor() }"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x100030b04",
+      "status": "existing_flatten_consumer_reused_partial",
+      "contract": "原按当前可见分区顺序拼接所有entries，包括more/less项；当前allEntries flatMap相同，原泛型存储与溢出细节不额外包装。",
+      "original": {
+        "path": "decompiled/Paste/part-0019.c",
+        "sha256": "309fe55b87fe60ca5eb55813059d067174a91be23cbba37f0abc0cde993dc10e"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/FilterBrowser.swift",
+          "symbol": "private var allEntries: [Entry] { visibleSections.flatMap(\\.entries) }"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x100030c70",
+      "status": "existing_count_consumer_reused_partial",
+      "contract": "原由当前可见sections取各entries.count用于导航；当前同visibleSections counts映射，与allEntries同源。原泛型keyPath存储不计完整。",
+      "original": {
+        "path": "decompiled/Paste/part-0019.c",
+        "sha256": "344c9570909317c96d8237c6a2e62f22d65394169c4e05d653a94b4004e4daeb"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/FilterBrowser.swift",
+          "symbol": "let counts = visibleSections.map { $0.entries.count }"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x100034c5c",
+      "status": "monitor_callback_adapter_partial",
+      "contract": "原block捕获View状态并转031b60；当前同local monitor闭包转handleMonitoredKey，生命周期由onAppear/onDisappear约束，原ABI未复制。",
+      "original": {
+        "path": "decompiled/Paste/part-0019.c",
+        "sha256": "9c359eada2d9feea5268e87caeb82c87e08322c679e34a12442111ba8b2257a8"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/FilterBrowser.swift",
+          "symbol": "MainActor.assumeIsolated { handleMonitoredKey(event) ? nil : event }"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x100219ddc",
+      "status": "existing_physical_key_leaf_rechecked",
+      "contract": "原读取一次event.keyCode后转219df4，不读字符或modifiers；当前同实现，新增浏览器真实消费者。",
+      "original": {
+        "path": "decompiled/Paste/part-0183.c",
+        "sha256": "c8e0adf9d97e6806aec9e8ddab78bb568ab239b09bde39588b03f5efb03cb0a3"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/OriginalNavigationKey.swift",
+          "symbol": "static func f_100219ddc("
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/FilterBrowser.swift",
+          "symbol": "OriginalNavigationKey.f_100219ddc(event)"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x100219df4",
+      "status": "existing_physical_key_leaf_rechecked",
+      "contract": "原12个物理键码映射到raw0..11，default12；Return仅36，不把keypad76当Return。当前同枚举/映射复用。",
+      "original": {
+        "path": "decompiled/Paste/part-0183.c",
+        "sha256": "8debdb19d024efc94ab1b2c70391735cea1559dfb8304348be5680a5855ce431"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/OriginalNavigationKey.swift",
+          "symbol": "static func f_100219df4("
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x100032094",
+      "status": "fixed_captured_modifier_activation_partial",
+      "contract": "原激活filter用keyboard event传入flags的Command bit决定关闭；当前传入flags优先，鼠标才读全局flags。展开项继续只切expanded不关闭；原选区索引有效性/SwiftUIABI保留partial。",
+      "original": {
+        "path": "decompiled/Paste/part-0019.c",
+        "sha256": "d58e3a5e030e00ff36adc73390e8349a174087e49b9f05421d64330e49a865df"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/FilterBrowser.swift",
+          "symbol": "private func activate("
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/FilterBrowser.swift",
+          "symbol": "if !modifierFlags.contains(.command) { close() }"
+        }
+      ]
+    }
+  ],
+  "reviewed_count": 16,
+  "current_review_unique_count": 404,
+  "current_review_inventory_percent": 0.498,
+  "static_bindings": {
+    "original_binary_sha256": "871f00354fbb1c165d858a98e6d19d6f43cb9d3f9f958b3e07c7f07eb5c19afb",
+    "instructions": {
+      "physical_classifier_call": {
+        "address": "0x100031cd4",
+        "bytes": "42a00794"
+      },
+      "enter_modifier_then_activation": {
+        "address": "0x100031ce8",
+        "bytes": "e00313aa45542f94f4031caae8000094"
+      },
+      "event_tab_modifier_read": {
+        "address": "0x100031d00",
+        "bytes": "e00313aa3f542f94"
+      },
+      "shift_option_mask": {
+        "address": "0x100031d20",
+        "bytes": "4901a0521f0009ea49018b9a"
+      },
+      "coordinates_tuple_return": {
+        "address": "0x100059b74",
+        "bytes": "000500d1210dc29a22a4029bc0035fd6000080d2010080d2020080d2c0035fd6"
+      },
+      "up_previous_row_column_clamp": {
+        "address": "0x1000597dc",
+        "bytes": "2a0dd49a49a5149b3f0100f18902899a290500f146040054080dd49a010500f1060400543f0102eb22b1829a"
+      },
+      "down_next_section_clamp": {
+        "address": "0x100059978",
+        "bytes": "287960f8080500f1460500541f0116eb02b1969a010080d210000014"
+      },
+      "down_incomplete_row_fallback": {
+        "address": "0x1000599a8",
+        "bytes": "080700f1c60300540900f0d21f0109eb610000547f0600b160030054010dd39a22a0139b"
+      }
+    },
+    "tab_modifier_mask": 655360,
+    "monitor_event_mask": 1024,
+    "generic_helpers_input_boundary": "Only positive visible section counts and columns=3 are bound to production move; generic invalid-input/trap semantics remain partial."
+  },
+  "source_sha256": {
+    "replica/Sources/Pasto/UI/FilterBrowser.swift": "ee0eced2c646f6d6eb3e3f4be327e3b8504fe3321c03d556fc8b58cb0b68069b",
+    "replica/Sources/Pasto/UI/OriginalNavigationKey.swift": "63c828be06065a20f1956fb2c4cb346e81990872ff089a13e5af2ecad2c61ded",
+    "replica/Sources/PastoCore/OriginalFilterBrowserPopover.swift": "f0476a5457e4326cfa241adc063afb2e0031627cb49fe8bdf226634f9731ae7f",
+    "scripts/tests/test_filter_keyboard_contracts.py": "26a391d2e931542c4289089ff2be391d5c807dbbfaf6c1d17c087fbc0b183bf6",
+    "scripts/tests/test_filter_browser_contracts.py": "8a6b903c236c048c2252f3881b530029de282a6af36e30ccb52136e5cb8a4a2d"
+  },
+  "new_partial_bindings": [
+    "Paste:0x100059768",
+    "Paste:0x100059888",
+    "Paste:0x100059a30",
+    "Paste:0x100059ac0",
+    "Paste:0x100059b20",
+    "Paste:0x100059ba4",
+    "Paste:0x100031490",
+    "Paste:0x100031b60",
+    "Paste:0x100031978",
+    "Paste:0x1000321d4",
+    "Paste:0x100030b04",
+    "Paste:0x100030c70",
+    "Paste:0x100034c5c"
+  ],
+  "confirmed_differences_fixed": [
+    "Enter/Tab改为与原版一致的keyDown local monitor，移除SwiftUI重复键处理",
+    "Tab与Return激活使用该次NSEvent.modifierFlags，避免全局状态与当前event不一致",
+    "onAppear安装、onDisappear移除并清token，重复安装guard防多重消费"
+  ],
+  "existing_implementations_reused": [
+    "三列有效分区的四方向导航、首尾循环、不完整末行列裁剪及空选区规则，原码推导与当前公式相同，不重写",
+    "物理键码分类、可见entries扁平化/count、展开项行为和鼠标修饰键路径保留"
+  ],
+  "tests": {
+    "passed": true,
+    "total": 150,
+    "added_in_round": 8,
+    "scope": "Python source/original-fragment/static ARM64 bytes/ledger checks only; no Swift compilation, original executable or UI execution"
+  },
+  "new_fully_migrated_function_count": 0,
+  "historical_ledger": {
+    "numerator": 1648,
+    "denominator": 81123,
+    "percent": 2.0315,
+    "stale_evidence": true
+  },
+  "current_partial_count": 480,
+  "compiled": false,
+  "application_executed": false,
+  "original_binary_executed": false,
+  "user_data_modified": false,
+  "network_used": false,
+  "committed": false,
+  "pushed": false,
+  "module_complete": false,
+  "remaining_differences": [
+    "当前move只证明真实三列正count输入域，原通用columns/越界/负数/溢出trap尚未全部迁移",
+    "原FilterBrowser异步availableFilters、DI/Core Data实体与错误、完整SwiftUI布局/焦点生命周期继续partial",
+    "原搜索索引重建和实体FRC、图片内容闭包及actor事件顺序仍待核对"
+  ],
+  "next_module": "P1 search_and_filter",
+  "next_work": [
+    "沿索引重建、实体FRC与实际索引持久化事件消费者继续核对",
+    "保留通用网格边界、原对象生命周期和完整UI父函数待办，完整已有生产域直接复用"
+  ],
+  "inventory_checked": {
+    "mapped_reference_records_checked": 2137,
+    "mapping_states": {
+      "partial": 480,
+      "migrated": 1648,
+      "excluded_by_scope": 9
+    },
+    "reference_issue_counts": {
+      "missing_address_in_evidence": 12
+    },
+    "source_binding_counts": {
+      "current": 322,
+      "not_recorded": 1059,
+      "file_changed_needs_method_review": 267
+    },
+    "unchanged_source_review_count": 317
+  }
+}

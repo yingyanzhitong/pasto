@@ -1,0 +1,648 @@
+--- phase-43-before/replica/Sources/Pasto/UI/ReplicaSearchIndex.swift
++++ replica/Sources/Pasto/UI/ReplicaSearchIndex.swift
+@@ -6,7 +6,7 @@
+ import os
+ 
+ /// Delegates matching to the same system query engine as the reference.
+-/// The store namespace and multi-board projection adapt the replica's JSON model.
++/// The store namespace isolates Pasto's local index; record content is read at SDK serialization.
+ @MainActor
+ final class ReplicaSearchIndex: NSObject, CSSearchableIndexDelegate {
+     // 0x1002d6274 -> 0x1002e19c8: the production search service caps results at 100.
+@@ -17,50 +17,21 @@
+     private static let deletionBatchSize = 100
+ 
+     private struct Entry: Equatable {
+-        let id: UUID
+-        let nativeIdentifier: String?
+-        let title: String
+-        let text: String
+-        let modified: Date?
+-        let app: String?
+-        let type: String
+-        let device: String
+-        let pinboards: [String]
+-
+-        var searchIdentifier: String { nativeIdentifier ?? id.uuidString }
+-
+-        init(_ item: ClipboardItem, app: String?) {
+-            id = item.id
+-            nativeIdentifier = item.nativeIdentifier
+-            let defaultTitle: String
+-            switch item.kind {
+-            case .image: defaultTitle = "Image"
+-            case .color: defaultTitle = "Color"
+-            case .files: defaultTitle = "File"
+-            case .link: defaultTitle = "Link"
+-            case .text, .richText: defaultTitle = "Text"
+-            case .unknown: defaultTitle = "Unknown"
+-            }
+-            title = item.originalTitle ?? defaultTitle
+-            let recognizedText: String?
+-            if item.kind != .image {
+-                recognizedText = nil
+-            } else if let document = item.recognizedTextDocument {
+-                let words = document.words.map(\.text).joined(separator: " ")
+-                recognizedText = words.isEmpty ? nil : words
+-            } else {
+-                recognizedText = item.recognizedText.flatMap { $0.isEmpty ? nil : $0 }
+-            }
+-            let baseText = item.kind == .image ? "" : (item.plainText ?? "")
+-            let indexedText = recognizedText.map { baseText.isEmpty ? $0 : baseText + "\n" + $0 } ?? baseText
+-            text = String(indexedText.prefix(5000))
+-            // 0x100371998 -> 0x100375200 -> 0x1002e3ce8: optional history timestamp.
+-            modified = item.isInHistory ? item.createdAt : nil
+-            self.app = app
+-            type = item.kind == .files ? "file" : item.kind == .richText ? "text" : item.kind.rawValue
+-            device = item.sourceDevice
+-            pinboards = item.pinboardIDs.map(\.uuidString).sorted()
+-        }
++        let record: ClipboardSearchRecord
++        var id: UUID { record.id }
++        var nativeIdentifier: String? { record.nativeIdentifier }
++        var searchIdentifier: String { record.searchIdentifier }
++        var title: String { record.title }
++        var modified: Date? { record.modified }
++        var app: String? { record.app }
++        var type: String { record.type }
++        var device: String? { record.device }
++        var pinboard: String? { record.pinboard }
++        var content: (() -> String?)? { record.content }
++        var imageData: (() -> Data?)? { record.imageData }
++
++        init(_ record: ClipboardSearchRecord) { self.record = record }
++        init(_ item: ClipboardItem, app: String?) { record = .snapshot(item, app: app) }
+     }
+ 
+     private struct Request: Equatable {
+@@ -80,7 +51,7 @@
+     private let appKey = CSCustomAttributeKey(keyName: "pasteApp", searchable: true, searchableByDefault: true, unique: false, multiValued: false)!
+     private let typeKey = CSCustomAttributeKey(keyName: "pasteType", searchable: true, searchableByDefault: true, unique: false, multiValued: false)!
+     private let deviceKey = CSCustomAttributeKey(keyName: "pasteDevice", searchable: true, searchableByDefault: true, unique: false, multiValued: false)!
+-    private let pinboardKey = CSCustomAttributeKey(keyName: "pastePinboard", searchable: true, searchableByDefault: true, unique: false, multiValued: true)!
++    private let pinboardKey = CSCustomAttributeKey(keyName: "pastePinboard", searchable: true, searchableByDefault: true, unique: false, multiValued: false)!
+     private let storeKey = CSCustomAttributeKey(keyName: "pasteReplicaStore", searchable: true, searchableByDefault: false, unique: false, multiValued: false)!
+     private var sourceItems: [ClipboardItem] = []
+     private var sourceApplications: [SourceApplicationRecord] = []
+@@ -188,9 +159,7 @@
+             guard let identifiers else { return entries }
+             return entries.filter { identifiers.contains($0.searchIdentifier) }
+         }
+-        let items = try store.searchNativeItems(identifiers: identifiers)
+-        let names = ReplicaSearchSuggestionSource.applicationNames(for: items, store: store)
+-        return zip(items, names).map { Entry($0.0, app: $0.1) }
++        return try store.searchIndexRecords(identifiers: identifiers).map { Entry($0) }
+     }
+ 
+     // 0x1002ea78c / 0x1002eaa10 / 0x1002eaea4: advance by input IDs, not fetched rows.
+@@ -309,15 +278,18 @@
+     private func searchableItem(_ entry: Entry, isUpdate: Bool) -> CSSearchableItem {
+         let attributes = CSSearchableItemAttributeSet(contentType: .content)
+         attributes.title = entry.title
+-        attributes.textContent = entry.text
++        // 0x1002e3ce8 invokes the optional content callback before limiting its result.
++        let content = entry.content?()
++        let text = content.map { String($0.prefix(5000)) }
++        attributes.textContent = text
+         if ProcessInfo.processInfo.isOperatingSystemAtLeast(.init(majorVersion: 26, minorVersion: 4, patchVersion: 0)) {
+-            attributes.contentDescription = entry.text
++            attributes.contentDescription = text
+         }
+         attributes.contentModificationDate = entry.modified
+         attributes.setValue(entry.app.map { $0 as NSString }, forCustomKey: appKey)
+         attributes.setValue(entry.type as NSString, forCustomKey: typeKey)
+-        attributes.setValue(entry.device as NSString, forCustomKey: deviceKey)
+-        attributes.setValue(entry.pinboards as NSArray, forCustomKey: pinboardKey)
++        attributes.setValue(entry.device.map { $0 as NSString }, forCustomKey: deviceKey)
++        attributes.setValue((entry.pinboard ?? "") as NSString, forCustomKey: pinboardKey)
+         attributes.setValue(domain as NSString, forCustomKey: storeKey)
+         let item = CSSearchableItem(uniqueIdentifier: domain + ":" + entry.searchIdentifier,
+                                     domainIdentifier: domain, attributeSet: attributes)
+@@ -351,7 +323,7 @@
+                 let resettingIndex = needsReset
+                 let usesSnapshot = resettingIndex || historyTask == nil
+                 let currentEntries: [Entry]
+-                if resettingIndex, store != nil { currentEntries = try liveEntries(identifiers: nil) }
++                if usesSnapshot, store != nil { currentEntries = try liveEntries(identifiers: nil) }
+                 else { currentEntries = request.entries }
+                 if needsReset {
+                     needsReset = false
+--- phase-43-before/replica/Sources/PastoCore/ClipboardPersistence.swift
++++ replica/Sources/PastoCore/ClipboardPersistence.swift
+@@ -221,6 +221,36 @@
+         try context.performAndWait { try sources.deviceNames(matching: query) }
+     }
+ 
++    func searchIndexRecords(identifiers: [String]?) throws -> [ClipboardSearchRecord] {
++        try perform {
++            context.reset()
++            if let identifiers, identifiers.isEmpty { return [] }
++            let request = NSFetchRequest<NSManagedObject>(entityName: "Item")
++            if let identifiers {
++                request.predicate = NSPredicate(
++                    format: "nativeIdentifier IN %@ OR (nativeIdentifier == nil AND key IN %@)", identifiers, identifiers)
++            }
++            guard let coordinator = context.persistentStoreCoordinator else { throw CocoaError(.fileReadCorruptFile) }
++            return try context.fetch(request).map { object in
++                let value = try decode(ClipboardItem.self, object)
++                let rawType = (object.value(forKey: "rawType") as? NSNumber)?.uint8Value ?? 0
++                let kind = OriginalPasteboardContentKind(rawValue: rawType) ?? .unknown
++                let reader = ClipboardSearchRecordReader(coordinator: coordinator, objectID: object.objectID, kind: kind)
++                let application = object.value(forKey: "sourceApplication") as? NSManagedObject
++                let device = object.value(forKey: "device") as? NSManagedObject
++                let list = object.value(forKey: "list") as? NSManagedObject
++                let pinboard = (list?.value(forKey: "rawType") as? NSNumber)?.int64Value == 2
++                    ? list?.value(forKey: "identifier") as? String : nil
++                return ClipboardSearchRecord.make(value, nativeIdentifier: object.value(forKey: "nativeIdentifier") as? String,
++                    kind: kind, modified: object.value(forKey: "timestamp") as? Date,
++                    app: application?.value(forKey: "name") as? String, device: device?.value(forKey: "name") as? String,
++                    pinboard: pinboard, contentVersion: object.value(forKey: "updatedAt") as? Date ?? value.updatedAt,
++                    content: kind == .image ? nil : { reader.content() },
++                    imageData: kind == .image ? { reader.imageData() } : nil)
++            }
++        }
++    }
++
+     func searchItems(identifiers: [String]?) throws -> [ClipboardItem] {
+         try perform {
+             context.reset()
+--- phase-43-before/replica/Sources/PastoCore/ClipboardStore.swift
++++ replica/Sources/PastoCore/ClipboardStore.swift
+@@ -74,6 +74,10 @@
+     }
+     public func searchNativeItems(identifiers: [String]?) throws -> [ClipboardItem] {
+         try persistence.searchNativeItems(identifiers: identifiers)
++    }
++
++    public func searchIndexRecords(identifiers: [String]?) throws -> [ClipboardSearchRecord] {
++        try persistence.searchIndexRecords(identifiers: identifiers)
+     }
+     private var baseline = StoreState()
+     private var diskRevision: UUID?
+--- /dev/null
++++ replica/Sources/PastoCore/ClipboardSearchRecord.swift
+@@ -0,0 +1,135 @@
++import CoreData
++import Foundation
++import os
++
++/// 0x100371998: metadata plus deferred content/image readers, copied without evaluating them.
++public struct ClipboardSearchRecord: Equatable {
++    public let id: UUID
++    public let nativeIdentifier: String?
++    public let type: String
++    public let title: String
++    public let app: String?
++    public let modified: Date?
++    public let device: String?
++    public let pinboard: String?
++    public let content: (() -> String?)?
++    public let imageData: (() -> Data?)?
++    // Pasto's value-cache invalidation metadata; not an original SearchableItemEntity field.
++    public let contentVersion: Date
++
++    public var searchIdentifier: String { nativeIdentifier ?? id.uuidString }
++
++    public static func == (lhs: Self, rhs: Self) -> Bool {
++        lhs.id == rhs.id && lhs.nativeIdentifier == rhs.nativeIdentifier && lhs.type == rhs.type
++            && lhs.title == rhs.title && lhs.app == rhs.app && lhs.modified == rhs.modified
++            && lhs.device == rhs.device && lhs.pinboard == rhs.pinboard && lhs.contentVersion == rhs.contentVersion
++    }
++
++    static func make(_ value: ClipboardItem, nativeIdentifier: String?, kind: OriginalPasteboardContentKind,
++                     modified: Date?, app: String?, device: String?, pinboard: String?, contentVersion: Date,
++                     content: (() -> String?)?, imageData: (() -> Data?)?) -> Self {
++        let name: String
++        switch kind {
++        case .unknown: name = "Unknown"
++        case .image: name = "Image"
++        case .color: name = "Color"
++        case .files: name = "File"
++        case .link: name = "Link"
++        case .text: name = "Text"
++        }
++        return Self(id: value.id, nativeIdentifier: nativeIdentifier, type: name,
++                    title: value.originalTitle ?? name, app: app, modified: modified, device: device,
++                    pinboard: pinboard, content: content, imageData: imageData, contentVersion: contentVersion)
++    }
++
++    // UI request equality and the explicit store-less adapter do not perform native fetches.
++    // Actual SDK writes with a live store always use searchIndexRecords instead.
++    public static func snapshot(_ value: ClipboardItem, app: String?) -> Self {
++        let kind: OriginalPasteboardContentKind
++        switch value.kind {
++        case .unknown: kind = .unknown
++        case .image: kind = .image
++        case .color: kind = .color
++        case .files: kind = .files
++        case .link: kind = .link
++        case .text, .richText: kind = .text
++        }
++        return make(value, nativeIdentifier: value.nativeIdentifier, kind: kind,
++                    modified: value.isInHistory ? value.createdAt : nil, app: app, device: value.sourceDevice,
++                    pinboard: value.pinboardOwnerID?.uuidString, contentVersion: value.updatedAt,
++                    content: kind == .image ? nil : {
++                        let items = (try? ClipboardStore.originalPasteboardItems(from: value.payloads)) ?? []
++                        return ClipboardSearchRecordContent.text(items, kind: kind, preview: value.rawPreview) { value.plainText }
++                    }, imageData: kind == .image ? { value.imageData } : nil)
++    }
++}
++
++enum ClipboardSearchRecordContent {
++    // 0x1003724f0: normal unknown/text content uses all nonnil strings, in input order.
++    static func text(_ items: [OriginalPasteboardItem], kind: OriginalPasteboardContentKind, preview: Data?,
++                     legacyPreviewFallback: () -> String?) -> String? {
++        switch kind {
++        case .unknown, .text:
++            let value = items.compactMap { $0.f_10037c9a8() }.joined(separator: " ")
++            if !value.isEmpty || kind == .unknown { return value }
++            // The complete original typed-preview fallback remains a separate migration boundary.
++            return legacyPreviewFallback() ?? value
++        case .image: return nil
++        case .color: return items.first?.f_10037c9a8()
++        case .files:
++            let value = items.compactMap { $0.f_10037cc6c()?.path }.joined(separator: " ")
++            return value.isEmpty ? legacyPreviewFallback() : value
++        case .link:
++            let url = items.first?.f_10037ce0c()
++            var values = url.map { [$0.absoluteString] } ?? []
++            if let name = OriginalImagePreviewMetadataCodec.decodeLink(preview)?.name { values.append(name) }
++            let value = values.joined(separator: " ")
++            return value.isEmpty ? legacyPreviewFallback() : value
++        }
++    }
++}
++
++/// 0x1003753f8/375458: retain coordinator + object ID, never a materialized item/context.
++final class ClipboardSearchRecordReader {
++    private let coordinator: NSPersistentStoreCoordinator
++    private let objectID: NSManagedObjectID
++    private let kind: OriginalPasteboardContentKind
++    private let logger = Logger(subsystem: "com.yingyanzhitong.paste-replica", category: "search-content")
++
++    init(coordinator: NSPersistentStoreCoordinator, objectID: NSManagedObjectID, kind: OriginalPasteboardContentKind) {
++        self.coordinator = coordinator; self.objectID = objectID; self.kind = kind
++    }
++
++    // 0x100372440/371f2c: a new private context is created on each evaluation.
++    private func read<T>(_ project: (NSManagedObject, [OriginalPasteboardItem]) throws -> T?) -> T? {
++        let context = NSManagedObjectContext(concurrencyType: .privateQueueConcurrencyType)
++        context.persistentStoreCoordinator = coordinator
++        do {
++            return try context.performAndWait {
++                try OriginalObjCExceptionBridge.withResult {
++                    let object = try context.existingObject(with: objectID)
++                    guard object.entity.name == "Item", !object.isDeleted,
++                          let data = object.value(forKey: "data") as? NSManagedObject,
++                          let raw = data.value(forKey: "rawPasteboardItems") as? Data else { return nil }
++                    return try project(object, OriginalPasteboardDataCodec.f_10031aeec(raw))
++                }
++            }
++        } catch {
++            logger.error("Search content read failed: \(error.localizedDescription, privacy: .public)")
++            return nil
++        }
++    }
++
++    func content() -> String? {
++        read { object, items in
++            ClipboardSearchRecordContent.text(items, kind: kind, preview: object.value(forKey: "rawPreview") as? Data) {
++                guard let raw = object.value(forKey: "content") as? Data else { return nil }
++                return (try? PropertyListDecoder().decode(ClipboardItem.self, from: raw))?.plainText
++            }
++        }
++    }
++
++    func imageData() -> Data? {
++        read { _, items in items.compactMap { $0.f_10037d5c4() }.first }
++    }
++}
+--- phase-43-before/scripts/tests/test_p0_repair_identity.py
++++ scripts/tests/test_p0_repair_identity.py
+@@ -189,9 +189,12 @@
+ 
+     def test_search_sdk_keeps_string_ids_and_maps_hits_to_local_uuid(self):
+         entry = method_body(self.index, "private struct Entry: Equatable")
+-        self.assertIn("let id: UUID", entry)
+-        self.assertIn("let nativeIdentifier: String?", entry)
+-        self.assertIn("var searchIdentifier: String { nativeIdentifier ?? id.uuidString }", entry)
++        self.assertIn("let record: ClipboardSearchRecord", entry)
++        record = (ROOT / "replica/Sources/PastoCore/ClipboardSearchRecord.swift").read_text()
++        self.assertIn("public let id: UUID", record)
++        self.assertIn("public let nativeIdentifier: String?", record)
++        self.assertIn("public var searchIdentifier: String { nativeIdentifier ?? id.uuidString }", record)
++        self.assertIn("var searchIdentifier: String { record.searchIdentifier }", entry)
+         query = method_body(self.index, "nonisolated private static func matchingIdentifiers(predicate: String, domain: String, limit: Int) async throws -> Set<String>")
+         self.assertIn("found.insert(String(identifier.dropFirst(domain.count + 1)))", query)
+         self.assertNotIn("UUID(uuidString:", query)
+@@ -203,7 +206,7 @@
+         self.assertNotIn("localIdentifier.isEmpty", rebuild)
+         reindex = method_body(self.index, "private func reindexTargets(_ identifiers: [String]) async throws")
+         self.assertNotIn("filter { !$0.isEmpty }", reindex)
+-        self.assertIn("store.searchNativeItems(identifiers: identifiers)", self.index)
++        self.assertIn("store.searchIndexRecords(identifiers: identifiers)", self.index)
+ 
+     def test_migration_preserves_source_string_and_stable_local_uuid(self):
+         source_id = method_body(self.migration, "private static func sourceIdentifier(_ object: NSManagedObject, kind: String) throws -> String")
+--- phase-43-before/scripts/tests/test_p0_repair_identity_boundaries.py
++++ scripts/tests/test_p0_repair_identity_boundaries.py
+@@ -74,7 +74,7 @@
+         query = method_body(self.index, "private func replaceQuery(with nodes: [OriginalSearchQueryNode])")
+         self.assertIn("store.searchNativeItems(identifiers: Array(found)).map(\\.id)", query)
+         live = method_body(self.index, "private func liveEntries(identifiers: [String]?) throws -> [Entry]")
+-        self.assertIn("store.searchNativeItems(identifiers: identifiers)", live)
++        self.assertIn("store.searchIndexRecords(identifiers: identifiers)", live)
+         self.assertNotIn("store.searchItems(identifiers:", self.index)
+ 
+     def test_targeted_reindex_deletes_replaced_sdk_alias_before_indexing(self):
+--- phase-43-before/scripts/tests/test_p1_repair_index_update_flag.py
++++ scripts/tests/test_p1_repair_index_update_flag.py
+@@ -82,7 +82,8 @@
+         current = body(self.source, 'private func searchableItem(')
+         before = body(self.before, 'private func searchableItem(')
+         addition = '        // 0x1002f2ca8 → 0x1002ea770 → 0x1002e1bac → 0x1002e3ce8.\n        item.isUpdate = isUpdate\n'
+-        self.assertEqual(current.replace(addition, '', 1), before)
++        historical = (ROOT / '.local/p0-repair/phase-43/before' / self.path).read_text()
++        self.assertEqual(body(historical, 'private func searchableItem(').replace(addition, '', 1), before)
+         self.assertLess(current.index('item.expirationDate = .distantFuture'), current.index('item.isUpdate = isUpdate'))
+         self.assertLess(current.index('item.isUpdate = isUpdate'), current.index('return item'))
+         self.assertNotIn('if ', current[current.index('item.expirationDate'):])
+@@ -109,9 +110,10 @@
+         self.assertFalse(self.proof['full_function_migration_verified'])
+         self.assertEqual(self.proof['function_map_markers_upgraded'], 0)
+         self.assertTrue(all(not r['full_function_migration_verified'] for r in self.proof['contracts']))
+-        self.assertIn('text = String(indexedText.prefix(5000))', self.source)
+-        self.assertIn('let pinboards: [String]', self.source)
+-        self.assertIn('let device: String', self.source)
++        historical = (ROOT / '.local/p0-repair/phase-43/before' / self.path).read_text()
++        self.assertIn('text = String(indexedText.prefix(5000))', historical)
++        self.assertIn('let pinboards: [String]', historical)
++        self.assertIn('let device: String', historical)
+ 
+ 
+ if __name__ == '__main__':
+--- /dev/null
++++ scripts/tests/test_p1_repair_lazy_search_records.py
+@@ -0,0 +1,262 @@
++"""Original-bound source contracts only; no Swift, Core Data, OCR or Spotlight execution."""
++import hashlib
++import json
++import re
++import sys
++import unittest
++from pathlib import Path
++
++ROOT = Path(__file__).resolve().parents[2]
++sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'scripts/tests')]
++from function_ledger import source_fragments
++from test_offline_p0_contracts import body
++from test_p0_repair_checksum_routing import original_fragment
++
++
++class LazySearchRecordContracts(unittest.TestCase):
++    @classmethod
++    def setUpClass(cls):
++        cls.phase = ROOT / '.local/p0-repair/phase-43'
++        cls.proof = json.loads((cls.phase / 'lazy-record-contract.json').read_text())
++        cls.record = (ROOT / 'replica/Sources/PastoCore/ClipboardSearchRecord.swift').read_text()
++        cls.persistence = (ROOT / 'replica/Sources/PastoCore/ClipboardPersistence.swift').read_text()
++        cls.store = (ROOT / 'replica/Sources/PastoCore/ClipboardStore.swift').read_text()
++        cls.index = (ROOT / 'replica/Sources/Pasto/UI/ReplicaSearchIndex.swift').read_text()
++        cls.make = body(cls.persistence, 'func searchIndexRecords(')
++        cls.original = {r['address']: original_fragment((ROOT / r['path']).read_text(), r['address'][2:])
++                        for r in cls.proof['original_fragments']}
++
++    def before(self, path):
++        return (self.phase / 'before' / path).read_text()
++
++    def test_original_fragments_and_native_selector_evidence_are_bound(self):
++        for row in self.proof['original_fragments']:
++            self.assertEqual(source_fragments(ROOT / row['path'])[row['address']]['sha256'], row['sha256'])
++        selector, = self.proof['native_selector_bindings']
++        self.assertEqual(selector['selector'], 'existingObjectWithID:error:')
++        self.assertTrue(selector['chain']['declared_chain_reachable'])
++        self.assertEqual(selector['chain']['pointer_format'], 6)
++
++    def test_original_raw_one_means_private_context_not_main_context(self):
++        sdk = self.proof['sdk']
++        raw = Path(sdk['path']).read_bytes()
++        self.assertEqual(hashlib.sha256(raw).hexdigest(), sdk['sha256'])
++        self.assertRegex(raw, rb'NSPrivateQueueConcurrencyType\s*= 0x01')
++        for address in ['0x100372440', '0x100371f2c']:
++            text = self.original[address]
++            self.assertIn('initWithConcurrencyType_((ID)self,1)', text)
++            self.assertIn('setPersistentStoreCoordinator_(self_00,param_1)', text)
++            self.assertIn('NSManagedObjectContext::_performAndWait()', text)
++
++    def test_original_constructor_branches_image_and_content_without_evaluation(self):
++        text = self.original['0x100371998']
++        self.assertIn('param_1[3].str = (char *)0x0', text)
++        self.assertIn('pcVar14 = FUN_100375458', text)
++        self.assertIn('param_1[3].str = (char *)FUN_1003753f8', text)
++        self.assertIn('*(ID *)(puVar13 + 0x18) = IVar5', text)
++        self.assertIn('puVar13[0x30] = uVar16', text)
++        self.assertNotIn('FUN_1003724f0(', text)
++
++    def test_native_constructor_uses_actual_relation_metadata_and_timestamp(self):
++        for token in ['object.value(forKey: "sourceApplication") as? NSManagedObject',
++                      'object.value(forKey: "device") as? NSManagedObject',
++                      'modified: object.value(forKey: "timestamp") as? Date',
++                      'app: application?.value(forKey: "name") as? String',
++                      'device: device?.value(forKey: "name") as? String']:
++            self.assertIn(token, self.make)
++        for forbidden in ['value.sourceName', 'value.sourceDevice', 'sourceApplications', 'applicationNames(for:']:
++            self.assertNotIn(forbidden, self.make)
++
++    def test_single_pinboard_requires_exact_native_raw_type_two(self):
++        self.assertIn('(list?.value(forKey: "rawType") as? NSNumber)?.int64Value == 2', self.make)
++        self.assertIn('? list?.value(forKey: "identifier") as? String : nil', self.make)
++        self.assertNotIn('?? 2', self.make)
++        self.assertNotIn('pinboardIDs', self.make)
++        self.assertIn('FUN_1003250f0()', self.original['0x100371998'])
++
++    def test_native_factory_captures_coordinator_object_id_and_kind_in_deferred_closures(self):
++        self.assertIn('ClipboardSearchRecordReader(coordinator: coordinator, objectID: object.objectID, kind: kind)', self.make)
++        self.assertIn('content: kind == .image ? nil : { reader.content() }', self.make)
++        self.assertIn('imageData: kind == .image ? { reader.imageData() } : nil', self.make)
++        for forbidden in ['rawPasteboardItems', 'f_10031aeec(', 'f_10037c9a8(', '.plainText', '.prefix(5000)']:
++            self.assertNotIn(forbidden, self.make)
++
++    def test_reader_retains_no_materialized_item_or_owner_context(self):
++        reader = body(self.record, 'final class ClipboardSearchRecordReader')
++        fields = re.findall(r'private let (\w+): ([^\n]+)', reader)
++        self.assertEqual(fields, [('coordinator', 'NSPersistentStoreCoordinator'),
++                                  ('objectID', 'NSManagedObjectID'), ('kind', 'OriginalPasteboardContentKind')])
++        self.assertNotIn('private var ', reader)
++        self.assertNotIn('weak ', reader)
++        self.assertNotIn('unowned ', reader)
++
++    def test_each_callback_allocates_context_and_resolves_current_object_before_decoding(self):
++        read = body(self.record, 'private func read<T>(')
++        order = ['NSManagedObjectContext(concurrencyType: .privateQueueConcurrencyType)',
++                 'context.persistentStoreCoordinator = coordinator', 'try context.performAndWait',
++                 'try OriginalObjCExceptionBridge.withResult', 'try context.existingObject(with: objectID)',
++                 'object.value(forKey: "data")', 'data.value(forKey: "rawPasteboardItems")',
++                 'OriginalPasteboardDataCodec.f_10031aeec(raw)']
++        offsets = [read.index(t) for t in order]
++        self.assertEqual(offsets, sorted(offsets))
++        self.assertIn('object.entity.name == "Item", !object.isDeleted', read)
++        self.assertIn('return nil', body(read, 'catch'))
++        for forbidden in ['context.save()', 'context.rollback()', 'context.reset()', 'insertNewObject', 'UserDefaults']:
++            self.assertNotIn(forbidden, read)
++
++    def test_record_to_entry_to_sdk_copies_callbacks_without_running_them(self):
++        live = body(self.index, 'private func liveEntries(')
++        self.assertIn('store.searchIndexRecords(identifiers: identifiers).map { Entry($0) }', live)
++        entry = body(self.index, 'private struct Entry: Equatable')
++        self.assertIn('let record: ClipboardSearchRecord', entry)
++        self.assertIn('init(_ record: ClipboardSearchRecord) { self.record = record }', entry)
++        self.assertIn('var content: (() -> String?)? { record.content }', entry)
++        self.assertIn('var imageData: (() -> Data?)? { record.imageData }', entry)
++        self.assertNotIn('record.content()', entry)
++        self.assertNotIn('record.imageData()', entry)
++        self.assertIn('FUN_1002fc0ec(param_1,puVar5)', self.original['0x1002faafc'])
++        self.assertIn('lVar9 = param_2[6]', self.original['0x10037582c'])
++        self.assertIn('lVar9 = param_2[10]', self.original['0x10037582c'])
++
++    def test_all_actual_store_sdk_paths_use_native_records_including_snapshot_fallback(self):
++        store = body(self.store, 'public func searchIndexRecords(')
++        self.assertIn('try persistence.searchIndexRecords(identifiers: identifiers)', store)
++        self.assertIn('if usesSnapshot, store != nil { currentEntries = try liveEntries(identifiers: nil) }', self.index)
++        self.assertIn('let live = try liveEntries(identifiers: identifiers)', self.index)
++        self.assertIn('try liveEntries(identifiers: Array(input[lowerBound..<upperBound]))', self.index)
++        live = body(self.index, 'private func liveEntries(')
++        self.assertNotIn('applicationNames', live)
++
++    def test_normal_text_getter_matches_original_all_item_space_join(self):
++        original = self.original['0x1003724f0']
++        self.assertIn('if (param_6 == 5) goto LAB_100373188', original)
++        loop = original.split('LAB_100373188:', 1)[1].split('if ((param_6 == 1)', 1)[0]
++        self.assertIn('while (puVar56 != puVar45)', loop)
++        self.assertIn('FUN_10037c9a8()', loop)
++        self.assertIn('separator.str = (char *)0x20', loop)
++        method = body(self.record, 'static func text(')
++        plain = method.split('case .unknown, .text:', 1)[1].split('case .image:', 1)[0]
++        expected = 'items.compactMap { $0.f_10037c9a8() }.joined(separator: " ")'
++        self.assertIn(expected, plain)
++        self.assertNotIn('.first', plain)
++        self.assertNotIn('Set(', plain)
++        before = self.before('replica/Sources/Pasto/UI/ReplicaSearchIndex.swift')
++        self.assertIn('(item.plainText ?? "")', before)
++        # ASCII source-bound cases; this is a Python semantic fixture, not execution of Swift.
++        cases = [(['pasto alpha', 'pasto beta'], 'pasto alpha pasto beta'),
++                 (['alpha', None, 'beta'], 'alpha beta'), (['alpha', '', 'beta'], 'alpha  beta'),
++                 (['same', 'same'], 'same same')]
++        for inputs, wanted in cases:
++            actual = ' '.join(value for value in inputs if value is not None)
++            self.assertEqual(actual, wanted)
++        self.assertNotEqual(cases[0][0][0], cases[0][1])
++
++    def test_color_reads_first_optional_string_and_images_have_no_content(self):
++        text = body(self.record, 'static func text(')
++        self.assertIn('case .image: return nil', text)
++        self.assertIn('case .color: return items.first?.f_10037c9a8()', text)
++        self.assertNotIn('recognizedText', self.record)
++        self.assertNotIn('recognizedText', self.index)
++        self.assertNotIn('ImageTextRecognizer', self.record)
++
++    def test_image_reader_retains_independent_all_items_first_non_nil_capability(self):
++        method = body(self.record, 'func imageData()')
++        self.assertIn('read { _, items in items.compactMap { $0.f_10037d5c4() }.first }', method)
++        original = self.original['0x100371fd4']
++        self.assertIn('FUN_10037d5c4()', original)
++        self.assertIn('if (*(long *)(local_120 + 0x10) == 0)', original)
++        self.assertIn('*param_1 = *(undefined8 *)(local_120 + 0x20)', original)
++        self.assertNotIn('NSImage(', method)
++
++    def test_sdk_invokes_optional_content_before_5000_limit_and_preserves_nil(self):
++        builder = body(self.index, 'private func searchableItem(')
++        order = ['let content = entry.content?()', 'let text = content.map { String($0.prefix(5000)) }',
++                 'attributes.textContent = text', 'attributes.contentDescription = text']
++        offsets = [builder.index(t) for t in order]
++        self.assertEqual(offsets, sorted(offsets))
++        self.assertNotIn('?? ""', builder[:builder.index('attributes.contentModificationDate')])
++        self.assertNotIn('prefix(5000)', self.record)
++        self.assertIn('FUN_1002e3a8c(5000,pcVar9,lVar15)', self.original['0x1002e3ce8'])
++
++    def test_optional_device_bridges_nil_and_single_board_bridges_empty_string(self):
++        builder = body(self.index, 'private func searchableItem(')
++        self.assertIn('attributes.setValue(entry.device.map { $0 as NSString }, forCustomKey: deviceKey)', builder)
++        self.assertIn('attributes.setValue((entry.pinboard ?? "") as NSString, forCustomKey: pinboardKey)', builder)
++        self.assertNotIn('NSArray', builder)
++        self.assertIn('public let device: String?', self.record)
++        self.assertIn('public let pinboard: String?', self.record)
++        self.assertIn('lVar15 = -0x2000000000000000', self.original['0x1002e3ce8'])
++
++    def test_pinboard_custom_attribute_is_single_valued_per_original_factory(self):
++        key = next(line for line in self.index.splitlines() if 'keyName: "pastePinboard"' in line)
++        self.assertIn('multiValued: false', key)
++        self.assertIn('((ID)self,pNVar2,1,1,0,0)', self.original['0x1002e1948'])
++
++    def test_metadata_preserves_explicit_empty_title_and_original_kind_names(self):
++        make = body(self.record, 'static func make(')
++        self.assertIn('title: value.originalTitle ?? name', make)
++        self.assertNotIn('title.isEmpty', make)
++        for kind, title in [('unknown', 'Unknown'), ('image', 'Image'), ('color', 'Color'),
++                            ('files', 'File'), ('link', 'Link'), ('text', 'Text')]:
++            self.assertIn(f'case .{kind}: name = "{title}"', make)
++        self.assertIn('type: name,', make)
++        self.assertNotIn('lowercased()', make)
++
++    def test_file_content_joins_all_decoded_url_paths_with_spaces(self):
++        method = body(self.record, 'static func text(')
++        files = method.split('case .files:', 1)[1].split('case .link:', 1)[0]
++        self.assertIn('items.compactMap { $0.f_10037cc6c()?.path }.joined(separator: " ")', files)
++        self.assertNotIn('\\n', files)
++        original = self.original['0x1003724f0']
++        self.assertIn('UniformTypeIdentifiers::UTType::get_fileURL', original)
++        self.assertIn('Foundation::URL::get_path', original)
++        self.assertIn('separator_00.str = (char *)0x20', original)
++
++    def test_link_content_appends_optional_preview_name_to_first_absolute_url(self):
++        method = body(self.record, 'static func text(')
++        link = method.split('case .link:', 1)[1]
++        self.assertIn('let url = items.first?.f_10037ce0c()', link)
++        self.assertIn('var values = url.map { [$0.absoluteString] } ?? []', link)
++        self.assertIn('OriginalImagePreviewMetadataCodec.decodeLink(preview)?.name', link)
++        self.assertIn('values.append(name)', link)
++        self.assertIn('values.joined(separator: " ")', link)
++        original = self.original['0x1003724f0']
++        link_original = original.split('if (param_6 == 4)', 1)[1].split('LAB_100373784:', 1)[0]
++        self.assertIn('FUN_10037ce0c(', link_original)
++        self.assertIn('Foundation::URL::get_absoluteString', link_original)
++        self.assertIn('if (lVar41 != 0)', link_original)
++        self.assertIn('plVar44[uVar42 * 2 + 5] = lVar41', link_original)
++
++    def test_cache_equality_does_not_run_readers_and_version_is_explicit_adapter(self):
++        equal = body(self.record, 'public static func ==')
++        for field in ['id', 'nativeIdentifier', 'type', 'title', 'app', 'modified', 'device', 'pinboard', 'contentVersion']:
++            self.assertIn(f'lhs.{field} == rhs.{field}', equal)
++        self.assertNotIn('content?', equal)
++        self.assertNotIn('imageData?', equal)
++        self.assertIn('contentVersion: object.value(forKey: "updatedAt") as? Date ?? value.updatedAt', self.make)
++
++    def test_new_record_reads_do_not_alter_old_schemas_transactions_or_capture(self):
++        path = 'replica/Sources/PastoCore/ClipboardPersistence.swift'
++        previous = self.before(path)
++        for marker in ['private static func makeModel(', 'private static func migrateLegacyStoreIfNeeded(',
++                       'func searchNativeItems(', 'func commit<T>(']:
++            self.assertEqual(body(self.persistence, marker), body(previous, marker))
++        self.assertNotIn('context.save()', self.make)
++        self.assertNotIn('context.setValue', self.make)
++        self.assertNotIn('insertNewObject', self.make)
++
++    def test_normal_domain_closures_are_limited_and_preview_branches_stay_explicitly_open(self):
++        self.assertEqual(len(self.proof['contracts']), 8)
++        self.assertFalse(self.proof['full_function_migration_verified'])
++        self.assertEqual(self.proof['function_map_markers_upgraded'], 0)
++        text = body(self.record, 'static func text(')
++        self.assertIn('case .files:', text)
++        self.assertIn('case .link:', text)
++        self.assertIn('return value.isEmpty ? legacyPreviewFallback() : value', text)
++        row, = [r for r in self.proof['contracts'] if r['function_id'] == 'Paste:0x1003724f0']
++        self.assertIn('normal nonempty', row['scope'])
++        self.assertFalse(row['full_function_migration_verified'])
++
++
++if __name__ == '__main__':
++    unittest.main()

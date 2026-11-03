@@ -1,0 +1,221 @@
+--- phase-6-before/replica/Sources/PastoCore/ClipboardPersistence.swift
++++ replica/Sources/PastoCore/ClipboardPersistence.swift
+@@ -1,4 +1,5 @@
+ import CoreData
++import Combine
+ import Foundation
+ 
+ /// Pasto's model adapter for the original performAndWait / hasChanges / save transaction.
+@@ -12,6 +13,8 @@
+     private let context: NSManagedObjectContext
+     private let databaseURL: URL
+     private let searchHistory: OriginalSearchHistory
++    private let itemUpdatesSubject = PassthroughSubject<Set<UUID>, Never>()
++    private var contextChangesObservation: AnyCancellable?
+ 
+     init(directoryURL: URL) throws {
+         databaseURL = directoryURL.appendingPathComponent("clipboard.sqlite")
+@@ -32,6 +35,29 @@
+                 try FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: path)
+             }
+         }
++        contextChangesObservation = NotificationCenter.default
++            .publisher(for: .NSManagedObjectContextObjectsDidChange, object: managedContext)
++            .sink { [weak self] notification in
++                MainActor.assumeIsolated {
++                    self?.publishChangedItemIDs(from: notification)
++                }
++            }
++    }
++
++    var collectionItemUpdates: AnyPublisher<Set<UUID>, Never> {
++        itemUpdatesSubject.eraseToAnyPublisher()
++    }
++
++    private func publishChangedItemIDs(from notification: Notification) {
++        let updated = notification.userInfo?[NSUpdatedObjectsKey] as? Set<NSManagedObject> ?? []
++        let refreshed = notification.userInfo?[NSRefreshedObjectsKey] as? Set<NSManagedObject> ?? []
++        let identifiers = Set(updated.union(refreshed).compactMap { object -> UUID? in
++            guard object.entity.name == "Item",
++                  let key = object.value(forKey: "key") as? String else { return nil }
++            return UUID(uuidString: key)
++        })
++        guard !identifiers.isEmpty else { return }
++        itemUpdatesSubject.send(identifiers)
+     }
+ 
+     private static let storeOptions: [AnyHashable: Any] = [
+--- phase-6-before/replica/Sources/PastoCore/ClipboardStore.swift
++++ replica/Sources/PastoCore/ClipboardStore.swift
+@@ -51,6 +51,7 @@
+     }
+     public let directoryURL: URL
+     public var searchSourceIdentifier: String? { persistence.searchSourceIdentifier }
++    public var collectionItemUpdates: AnyPublisher<Set<UUID>, Never> { persistence.collectionItemUpdates }
+     public func observeSearchChanges(_ consume: @escaping ([OriginalSearchHistoryChange]) async throws -> Void) async {
+         await persistence.observeSearchChanges(consume)
+     }
+--- phase-6-before/replica/Sources/Pasto/AppMain.swift
++++ replica/Sources/Pasto/AppMain.swift
+@@ -104,6 +104,9 @@
+             ui.pasteboard = pasteboard
+             ui.pasteHandler = { [weak self] id, plain in self?.paste(id: id, plain: plain) ?? false }
+             ui.pasteItemsHandler = { [weak self] ids, plain in self?.paste(ids: ids, plain: plain) ?? false }
++            ui.directPasteItemsHandler = { [weak self] ids, plain in
++                self?.paste(ids: ids, plain: plain, forceDirect: true) ?? false
++            }
+             ui.panelWillShow = { [weak self] in self?.rememberPanelApplication() }
+             ui.panelWillClose = { [weak self] restore in self?.restorePanelApplication(restore: restore) }
+             ui.copiedItemsHandler = {
+--- phase-6-before/replica/Sources/Pasto/UI/ReplicaUIController.swift
++++ replica/Sources/Pasto/UI/ReplicaUIController.swift
+@@ -86,6 +86,8 @@
+     private let searchQueryChanges = CurrentValueSubject<[OriginalSearchQueryNode], Never>([])
+     private var searchQueryObservation: AnyCancellable?
+     private var collectionQueryObservation: AnyCancellable?
++    private var collectionItemObservation: AnyCancellable?
++    private var pendingCollectionChangedIDs: Set<UUID> = []
+     private var indexedSearchQueryNodes: [OriginalSearchQueryNode] = []
+     private var collectionSearchQueryNodes: [OriginalSearchQueryNode] = []
+     let itemDragSessionID = UUID()
+@@ -107,6 +109,11 @@
+         }
+         installSearchQueryDelivery()
+         refreshSearch()
++        collectionItemObservation = store.collectionItemUpdates.sink { [weak self] identifiers in
++            guard let self, self.collectionOwner != nil else { return }
++            self.pendingCollectionChangedIDs.formUnion(identifiers)
++            self.objectWillChange.send()
++        }
+         observation = store.objectWillChange.sink { [weak self] _ in
+             self?.objectWillChange.send()
+             DispatchQueue.main.async { [weak self] in
+@@ -235,6 +242,18 @@
+         selection = Set(ids)
+         primaryID = primary
+         isApplyingSelection = false
++    }
++
++    func takeCollectionChangedIDs(owner: ReplicaNativeCollectionHost) -> Set<UUID> {
++        guard collectionOwner === owner else { return [] }
++        let identifiers = pendingCollectionChangedIDs
++        pendingCollectionChangedIDs.removeAll()
++        return identifiers
++    }
++
++    // 0x100228c78 receives an index in the applied collection, without moving first responder.
++    func selectFirstAppliedItem(items: [ClipboardItem]) {
++        selectIndex(0, mode: 0, items: items)
+     }
+ 
+     func collectionSelectionSnapshot() -> CollectionSelectionSnapshot {
+@@ -635,6 +654,7 @@
+     let panel: NSPanel
+     var pasteHandler: ((UUID, Bool) -> Bool)?
+     var pasteItemsHandler: (([UUID], Bool) -> Bool)?
++    var directPasteItemsHandler: (([UUID], Bool) -> Bool)?
+     var copiedItemsHandler: (() -> Void)?
+     var panelWillShow: (() -> Void)?
+     var panelWillClose: ((_ restorePreviousApplication: Bool) -> Void)?
+@@ -1524,6 +1544,12 @@
+         NSApp.activate(ignoringOtherApps: true)
+     }
+ 
++    private func appliedCollectionItems() -> [ClipboardItem]? {
++        guard let collection = (panel as? ReplicaPanel)?.collectionFocusTarget as? ReplicaNativeCollectionHost,
++              collection.window === panel else { return nil }
++        return collection.appliedItems(for: state)
++    }
++
+     private func handleKey(_ event: NSEvent) -> Bool {
+         if state.hasPendingDeletion {
+             if event.keyCode == 53 { cancelPendingDeletion(); return true }
+@@ -1565,11 +1591,11 @@
+             plainTextModifierRawValue: store.preferences.plainTextModifierRawValue)
+ 
+         func performQuickPaste(_ action: OriginalCollectionShortcutActions.QuickPasteAction) {
+-            let items = state.visibleItems
++            guard let items = appliedCollectionItems() else { return }
+             if items.indices.contains(action.index) {
+                 paste(item: items[action.index], plainTextOnly: action.options.contains(.plainTextAndLinks))
+             }
+-            if let first = state.visibleItems.first { state.select(first) }
++            if let appliedItems = appliedCollectionItems() { state.selectFirstAppliedItem(items: appliedItems) }
+         }
+ 
+         if !ownsCollectionFocus {
+@@ -1595,6 +1621,19 @@
+                 return true
+             }
+             copySelection(plainTextOnly: options.contains(.plainTextAndLinks))
++            return true
++        }
++        if !isEditing, signature.keyCode == OriginalShortcutFunctions.f_1001e94d4("v"),
++           signature.modifierRawValue == NSEvent.ModifierFlags.command.rawValue {
++            let appliedIDs = Set((appliedCollectionItems() ?? []).map(\.id))
++            let ids = state.collectionSelectionSnapshot().orderedIDs.filter { appliedIDs.contains($0) }
++            if !ids.isEmpty {
++                if let directPasteItemsHandler { _ = directPasteItemsHandler(ids, false) }
++                else {
++                    presentError(NSError(domain: "Pasto", code: 1,
++                        userInfo: [NSLocalizedDescriptionKey: "粘贴服务尚未就绪，请使用“拷贝”后粘贴。 "]))
++                }
++            }
+             return true
+         }
+         if !isEditing, signature.keyCode == OriginalShortcutFunctions.f_1001e94d4("g"),
+--- phase-6-before/replica/Sources/Pasto/UI/ReplicaNativeCardCollection.swift
++++ replica/Sources/Pasto/UI/ReplicaNativeCardCollection.swift
+@@ -45,6 +45,7 @@
+     private struct PendingSnapshot {
+         let items: [ClipboardItem]
+         let selection: ReplicaUIState.CollectionSelectionSnapshot
++        let changedIDs: Set<UUID>
+     }
+     private var pendingSnapshot: PendingSnapshot?
+     private var snapshotDrainScheduled = false
+@@ -99,13 +100,21 @@
+         state.collectionOwner = self
+         self.cardSide = cardSide
+         let incomingItems = state.visibleItems
++        let changedIDs = state.takeCollectionChangedIDs(owner: self)
+         // f1b912c replaces the pending items; f1b9214 schedules at most one drain.
+         // A selection-only redraw must not replace the guard captured by an earlier snapshot.
+-        if pendingSnapshot?.items != incomingItems {
++        if pendingSnapshot?.items != incomingItems || !changedIDs.isEmpty {
++            let selection = pendingSnapshot?.items == incomingItems ? pendingSnapshot?.selection : nil
+             pendingSnapshot = PendingSnapshot(items: incomingItems,
+-                selection: state.collectionSelectionSnapshot())
++                selection: selection ?? state.collectionSelectionSnapshot(),
++                changedIDs: (pendingSnapshot?.changedIDs ?? []).union(changedIDs))
+         }
+         scheduleSnapshotDrain()
++    }
++
++    func appliedItems(for state: ReplicaUIState) -> [ClipboardItem]? {
++        guard self.state === state, state.collectionOwner === self else { return nil }
++        return items
+     }
+ 
+     private func scheduleSnapshotDrain() {
+@@ -136,6 +145,7 @@
+             let previousIDs = items.map(\.id)
+             let isInitialSnapshot = !hasReceivedCollectionSnapshot
+             let selectionRelevantSnapshotChanged = previousIDs != incomingIDs
++            let hasRelevantChanges = !pending.changedIDs.isDisjoint(with: Set(incomingIDs))
+             let requiresReload = isInitialSnapshot || (selectionRelevantSnapshotChanged
+                 && OriginalCollectionSnapshot.requiresFullReload(from: previousIDs, to: incomingIDs))
+             hasReceivedCollectionSnapshot = true
+@@ -151,6 +161,12 @@
+             layoutCollection()
+             guard collectionOwnerGeneration == ownerGeneration, self.state === state,
+                   state.collectionOwner === self else { continue }
++            if !isInitialSnapshot && !selectionRelevantSnapshotChanged && !hasRelevantChanges {
++                // Selection/layout-only redraws still deliver an explicit focus request.
++                // They do not represent the original applier's data onUpdate callback.
++                if state.pendingListFocus != nil { restorePendingListFocus(state: state) }
++                continue
++            }
+             if requiresReload, state.applyFullCollectionReload(items: items,
+                 ifSelectionUnchangedFrom: pending.selection) {
+                 guard collectionOwnerGeneration == ownerGeneration, self.state === state,

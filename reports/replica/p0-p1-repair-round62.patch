@@ -1,0 +1,430 @@
+--- phase-62-before/replica/Sources/Pasto/UI/ReplicaSearchIndex.swift
++++ replica/Sources/Pasto/UI/ReplicaSearchIndex.swift
+@@ -4,6 +4,12 @@
+ import PastoCore
+ import UniformTypeIdentifiers
+ import os
++
++// The delegate task retains only this weak target; its strong indexer scope ends before SDK acknowledgement.
++private final class ReplicaSearchIndexDelegateTarget: @unchecked Sendable {
++    weak var indexer: ReplicaSearchIndex?
++    init(_ indexer: ReplicaSearchIndex) { self.indexer = indexer }
++}
+ 
+ /// Delegates matching to the same system query engine as the reference.
+ /// Record identifiers cross the SDK unchanged; content is read at SDK serialization.
+@@ -80,6 +86,7 @@
+     private var queryTask: Task<Void, Never>?
+     private var queryNodes: [OriginalSearchQueryNode]?
+     private let logger = Logger(subsystem: "com.yingyanzhitong.paste-replica", category: "search")
++    // Index-work continuation relays; the SDK acknowledgement runs outside the owner scope.
+     private var acknowledgements: [() -> Void] = []
+     private var reindexIdentifiers: [String] = []
+     private(set) var queryString = ""
+@@ -630,23 +637,36 @@
+     }
+ 
+     nonisolated private func rebuild(identifiers: [String]?, _ acknowledge: @escaping () -> Void) {
+-        Task { @MainActor [weak self] in
+-            guard let self else { acknowledge(); return }
+-            // 0x1002e467c/2e48a0: system reindexing does not require an earlier UI update.
+-            let request = requested ?? Request(entries: entries, nodes: queryNodes ?? [],
+-                                                sourceIdentifier: store?.searchSourceIdentifier)
+-            if let identifiers {
+-                // 0x1002e48a0 -> 0x1002f2690: preserve a targeted reindex request.
+-                reindexIdentifiers.append(contentsOf: identifiers)
+-            } else {
+-                needsReset = true
+-                mayRestoreSavedState = false
+-                if isRunning { await stopIndexing() }
+-                pendingMayInitializeIndex = true
+-                pendingResetsIndex = true
+-            }
++        let target = ReplicaSearchIndexDelegateTarget(self)
++        Task {
++            await ReplicaSearchIndex.performDelegateRebuild(target, identifiers: identifiers)
++            acknowledge()
++        }
++    }
++
++    // 0x1002e467c/2e48a0 load the weak indexer; 2e46fc/2e4928 release it before ack.
++    private static func performDelegateRebuild(_ target: ReplicaSearchIndexDelegateTarget,
++                                               identifiers: [String]?) async {
++        guard let indexer = target.indexer else { return }
++        await indexer.enqueueDelegateRebuild(identifiers)
++    }
++
++    private func enqueueDelegateRebuild(_ identifiers: [String]?) async {
++        // System reindexing does not require an earlier UI update.
++        let request = requested ?? Request(entries: entries, nodes: queryNodes ?? [],
++                                            sourceIdentifier: store?.searchSourceIdentifier)
++        if let identifiers {
++            reindexIdentifiers.append(contentsOf: identifiers)
++        } else {
++            needsReset = true
++            mayRestoreSavedState = false
++            if isRunning { await stopIndexing() }
++            pendingMayInitializeIndex = true
++            pendingResetsIndex = true
++        }
++        await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
+             pending = request
+-            acknowledgements.append(acknowledge)
++            acknowledgements.append { continuation.resume() }
+             startWorker()
+         }
+     }
+--- phase-62-before/scripts/tests/test_p1_repair_completed_index_state.py
++++ scripts/tests/test_p1_repair_completed_index_state.py
+@@ -108,7 +108,7 @@
+         self.assertIn('startHistoryObservation()', self.initialization)
+ 
+     def test_explicit_reset_overrides_pending_health_probe_reuse(self):
+-        rebuild = body(self.index, 'nonisolated private func rebuild(')
++        rebuild = body(self.index, 'private func enqueueDelegateRebuild(')
+         full = method_body(rebuild, '} else {')
+         self.assertIn('needsReset = true', full)
+         self.assertIn('mayRestoreSavedState = false', full)
+--- phase-62-before/scripts/tests/test_p1_repair_delegate_no_snapshot.py
++++ scripts/tests/test_p1_repair_delegate_no_snapshot.py
+@@ -19,7 +19,7 @@
+         cls.proof = json.loads((cls.phase / 'delegate-no-snapshot-contract.json').read_text())
+         cls.source = (ROOT / 'replica/Sources/Pasto/UI/ReplicaSearchIndex.swift').read_text()
+         cls.before = (cls.phase / 'before/replica/Sources/Pasto/UI/ReplicaSearchIndex.swift').read_text()
+-        cls.rebuild = body(cls.source, 'nonisolated private func rebuild(')
++        cls.rebuild = body(cls.source, 'private func enqueueDelegateRebuild(')
+         cls.original = {r['address']: original_fragment((ROOT / r['path']).read_text(), r['address'][2:])
+                         for r in cls.proof['original_fragments']}
+ 
+@@ -50,10 +50,13 @@
+         self.assertIn('_swift_task_switch(FUN_1002f2280)', self.original['0x1002f2268'])
+ 
+     def test_missing_owner_still_acknowledges_and_returns_before_request_creation(self):
+-        self.assertIn('Task { @MainActor [weak self] in', self.rebuild)
+-        self.assertIn('guard let self else { acknowledge(); return }', self.rebuild)
+-        self.assertLess(self.rebuild.index('guard let self'), self.rebuild.index('let request = requested ?? Request('))
+-        self.assertEqual(self.rebuild.count('acknowledge(); return'), 1)
++        wrapper = body(self.source, 'nonisolated private func rebuild(')
++        helper = body(self.source, 'private static func performDelegateRebuild(')
++        self.assertIn('guard let indexer = target.indexer else { return }', helper)
++        self.assertIn('await indexer.enqueueDelegateRebuild(identifiers)', helper)
++        self.assertLess(wrapper.index('await ReplicaSearchIndex.performDelegateRebuild('), wrapper.index('acknowledge()'))
++        self.assertNotIn('let request', helper)
++        self.assertNotIn('acknowledge', helper)
+ 
+     def test_no_UI_request_creates_real_pending_work_instead_of_acknowledging_early(self):
+         self.assertIn('guard let requested else { acknowledge(); return }', body(self.before, 'nonisolated private func rebuild('))
+@@ -61,7 +64,7 @@
+         self.assertIn('let request = requested ?? Request(entries: entries, nodes: queryNodes ?? [],', self.rebuild)
+         self.assertIn('sourceIdentifier: store?.searchSourceIdentifier)', self.rebuild)
+         self.assertIn('pending = request', self.rebuild)
+-        order = ['let request = requested ??', 'pending = request', 'acknowledgements.append(acknowledge)', 'startWorker()']
++        order = ['let request = requested ??', 'pending = request', 'acknowledgements.append { continuation.resume() }', 'startWorker()']
+         offsets = [self.rebuild.index(token) for token in order]
+         self.assertEqual(offsets, sorted(offsets))
+         self.assertNotIn('requested =', self.rebuild)
+@@ -111,17 +114,23 @@
+             if marker == 'private func indexInitialSnapshot(':
+                 source = (ROOT / '.local/p0-repair/phase-49/before/replica/Sources/Pasto/UI/ReplicaSearchIndex.swift').read_text()
+             self.assertEqual(body(source, marker), body(self.before, marker))
+-        tail = 'acknowledgements.append(acknowledge)'
+         previous = body(self.before, 'nonisolated private func rebuild(')
+-        self.assertEqual(self.rebuild[self.rebuild.index(tail):], previous[previous.index(tail):])
++        self.assertIn('acknowledgements.append(acknowledge)', previous)
++        self.assertIn('await withCheckedContinuation', self.rebuild)
++        self.assertIn('acknowledgements.append { continuation.resume() }', self.rebuild)
++        self.assertIn('startWorker()', self.rebuild)
+ 
+-    def test_owner_release_before_ack_remains_a_distinct_original_contract(self):
++    def test_original_owner_release_boundary_is_consumed_by_outer_ack_not_drain(self):
+         for address, resume in [('0x1002e46fc', 'FUN_1002e474c'), ('0x1002e4928', 'FUN_1002e4978')]:
+             native = self.original[address]
+             self.assertLess(native.index('_swift_release(uVar1)'), native.index('_swift_task_switch(' + resume))
+         drain = body(self.source, 'private func drain() async')
+         self.assertLess(drain.index('completed.forEach { $0() }'), drain.index('worker = nil'))
+-        self.assertIn('guard let self else { return }', body(self.source, 'private func startWorker()'))
++        self.assertNotIn('acknowledge()', drain)
++        self.assertIn('acknowledgements.append { continuation.resume() }', self.rebuild)
++        wrapper = body(self.source, 'nonisolated private func rebuild(')
++        self.assertLess(wrapper.index('await ReplicaSearchIndex.performDelegateRebuild('), wrapper.index('acknowledge()'))
++        self.assertNotIn('guard let self', wrapper)
+ 
+     def test_gate_decision_fixture_distinguishes_absent_owner_from_absent_UI_request(self):
+         # This truth table expresses the verified gate, not native delegate execution.
+--- phase-62-before/scripts/tests/test_p1_repair_full_index_reset.py
++++ scripts/tests/test_p1_repair_full_index_reset.py
+@@ -25,7 +25,7 @@
+         cls.initialize = body(cls.source, 'private func initializeIndexIfNeeded(')
+         cls.clear = body(cls.source, 'private func clearIndex()')
+         cls.drain = body(cls.source, 'private func drain() async')
+-        cls.rebuild = body(cls.source, 'nonisolated private func rebuild(')
++        cls.rebuild = body(cls.source, 'private func enqueueDelegateRebuild(')
+         cls.original = {r['address']: original_fragment((ROOT / r['path']).read_text(), r['address'][2:])
+                         for r in cls.proof['original_fragments']}
+ 
+--- phase-62-before/scripts/tests/test_p1_repair_index_active_state.py
++++ scripts/tests/test_p1_repair_index_active_state.py
+@@ -26,7 +26,7 @@
+         cls.initialization_gate = body(cls.drain, 'else if mayInitializeIndex')
+         cls.target = body(cls.source, 'private func reindexTargets(')
+         cls.snapshot = body(cls.source, 'private func indexInitialSnapshot(')
+-        cls.rebuild = body(cls.source, 'nonisolated private func rebuild(')
++        cls.rebuild = body(cls.source, 'private func enqueueDelegateRebuild(')
+         cls.original = {r['address']: original_fragment((ROOT / r['path']).read_text(), r['address'][2:])
+                         for r in cls.proof['original_fragments']}
+ 
+--- phase-62-before/scripts/tests/test_p1_repair_index_cursor_resume.py
++++ scripts/tests/test_p1_repair_index_cursor_resume.py
+@@ -77,7 +77,7 @@
+         self.assertIn('state.indexedItems >= state.totalItems, state.totalItems > 0', restore)
+         self.assertIn('return !found.isEmpty', restore)
+         self.assertIn('return true', body(restore, 'catch'))
+-        rebuild = body(self.source, 'nonisolated private func rebuild(')
++        rebuild = body(self.source, 'private func enqueueDelegateRebuild(')
+         full = method_body(rebuild, '} else {')
+         self.assertIn('needsReset = true', full)
+         self.assertIn('mayRestoreSavedState = false', full)
+--- phase-62-before/scripts/tests/test_p1_repair_index_error_observer.py
++++ scripts/tests/test_p1_repair_index_error_observer.py
+@@ -88,7 +88,7 @@
+         self.assertIn('if !journalCompleted { needsReset = true }', previous)
+ 
+     def test_explicit_full_reset_and_source_identity_change_still_request_reset(self):
+-        rebuild = body(self.source, 'nonisolated private func rebuild(')
++        rebuild = body(self.source, 'private func enqueueDelegateRebuild(')
+         full = method_body(rebuild, '} else {')
+         self.assertIn('needsReset = true', full)
+         self.assertIn('mayRestoreSavedState = false', full)
+@@ -199,7 +199,7 @@
+         self.assertEqual(frame, 32)
+         self.assertIn('FUN_1002f2648()', self.original['0x1002f3cdc'])
+         self.assertIn('FUN_1002f1c30()', self.original['0x1002f2648'])
+-        rebuild = body(self.source, 'nonisolated private func rebuild(')
++        rebuild = body(self.source, 'private func enqueueDelegateRebuild(')
+         self.assertNotIn('guard let requested', rebuild)
+         self.assertIn('let request = requested ?? Request(', rebuild)
+ 
+--- phase-62-before/scripts/tests/test_p1_repair_index_ocr_queue.py
++++ scripts/tests/test_p1_repair_index_ocr_queue.py
+@@ -209,7 +209,7 @@
+         initialize = body(self.source, 'private func initializeIndexIfNeeded(')
+         self.assertOrder(initialize, ['if needsReset && isRunning { await stopIndexing() }',
+                                      'guard !isRunning else { return }', 'isRunning = true'])
+-        callback = body(self.source, 'nonisolated private func rebuild(')
++        callback = body(self.source, 'private func enqueueDelegateRebuild(')
+         self.assertOrder(callback, ['if isRunning { await stopIndexing() }', 'pending = request', 'startWorker()'])
+         self.assertEqual(self.source.count('await stopIndexing()'), 3)
+ 
+--- phase-62-before/scripts/tests/test_p1_repair_native_search_identifiers.py
++++ scripts/tests/test_p1_repair_native_search_identifiers.py
+@@ -51,7 +51,7 @@
+         cls.source = (ROOT / cls.path).read_text()
+         cls.before = (cls.phase / 'before' / cls.path).read_text()
+         cls.query = body(cls.source, 'nonisolated private static func matchingIdentifiers(')
+-        cls.rebuild = body(cls.source, 'nonisolated private func rebuild(')
++        cls.rebuild = body(cls.source, 'private func enqueueDelegateRebuild(')
+         cls.builder = body(cls.source, 'private func searchableItem(')
+         cls.delete = body(cls.source, 'private func deleteIdentifiers(')
+         cls.original = {r['address']: original_fragment((ROOT / r['path']).read_text(), r['address'][2:])
+@@ -68,7 +68,7 @@
+             if path == self.path:
+                 frozen = (self.phase / 'after' / path).read_text()
+                 for marker in ['nonisolated private static func matchingIdentifiers(', 'private func searchableItem(',
+-                               'private func deleteIdentifiers(', 'nonisolated private func rebuild(',
++                               'private func deleteIdentifiers(',
+                                'private func clearIndex()', 'init(directoryURL:']:
+                     self.assertEqual(body(self.source, marker), body(frozen, marker))
+             elif path == 'replica/Sources/PastoCore/ClipboardPersistence.swift':
+@@ -198,9 +198,11 @@
+         target = body(self.source, 'private func reindexTargets(')
+         self.assertIn('let input = identifiers.filter { !$0.isEmpty }', target)
+         self.assertIn('guard isRunning, !Task.isCancelled else { break }', target)
+-        marker = 'acknowledgements.append(acknowledge)'
+-        before = body(self.before, 'nonisolated private func rebuild(')
+-        self.assertEqual(self.rebuild[self.rebuild.index(marker):], before[before.index(marker):])
++        self.assertIn('acknowledgements.append(acknowledge)', body(self.before, 'nonisolated private func rebuild('))
++        self.assertIn('acknowledgements.append { continuation.resume() }', self.rebuild)
++        self.assertIn('await withCheckedContinuation', self.rebuild)
++        wrapper = body(self.source, 'nonisolated private func rebuild(')
++        self.assertLess(wrapper.index('await ReplicaSearchIndex.performDelegateRebuild('), wrapper.index('acknowledge()'))
+ 
+     def test_legacy_format_marker_is_per_existing_named_index_and_disables_stale_restore(self):
+         initialize = body(self.source, 'init(directoryURL:')
+--- phase-62-before/scripts/tests/test_p1_repair_suggestion_source_service.py
++++ scripts/tests/test_p1_repair_suggestion_source_service.py
+@@ -34,8 +34,13 @@
+         for row in [self.proof['binary'], self.proof['arm_disassembly']] + self.proof['prior_contracts']:
+             self.assertEqual(hashlib.sha256((ROOT / row['path']).read_bytes()).hexdigest(), row['sha256'])
+         for path, digest in self.proof['current_sources'].items():
+-            self.assertEqual(hashlib.sha256((ROOT / path).read_bytes()).hexdigest(), digest)
+-            self.assertEqual((ROOT / path).read_bytes(), (self.phase / 'after' / path).read_bytes())
++            frozen = (self.phase / 'after' / path).read_text()
++            self.assertEqual(hashlib.sha256((self.phase / 'after' / path).read_bytes()).hexdigest(), digest)
++            if path == self.paths['index']:
++                for marker in ['func setSuggestionDataSource(', 'func availableFilters()']:
++                    self.assertEqual(body((ROOT / path).read_text(), marker), body(frozen, marker))
++            else:
++                self.assertEqual((ROOT / path).read_bytes(), (self.phase / 'after' / path).read_bytes())
+ 
+     def test_native_startup_keypath_registration_witness_and_context_provider_remain_bound(self):
+         prior = json.loads((ROOT / self.proof['prior_contracts'][0]['path']).read_text())
+@@ -159,7 +164,7 @@
+                          (self.phase / 'before/replica/Sources/Pasto/UI/SearchEditor.swift').read_bytes())
+         before = (self.phase / 'before' / self.paths['index']).read_text()
+         for marker in ['private func startWorker()', 'private func drain()', 'private func startHistoryObservation()',
+-                       'private func stopIndexing()', 'private func searchableItem(', 'private func rebuild(']:
++                       'private func stopIndexing()', 'private func searchableItem(']:
+             self.assertEqual(body(self.sources['index'], marker), body(before, marker))
+         old_core = (self.phase / 'before' / self.paths['core']).read_text()
+         for marker in ['public static func f_10030f3e0(', 'public static func f_1002df190(']:
+--- /dev/null
++++ scripts/tests/test_p1_repair_delegate_owner_ack.py
+@@ -0,0 +1,148 @@
++"""Delegate owner scopes and original release/ack ARM; no Swift, ARC or SDK execution."""
++import hashlib
++import json
++import struct
++import sys
++import unittest
++from pathlib import Path
++
++ROOT = Path(__file__).resolve().parents[2]
++sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'scripts/tests')]
++from function_ledger import source_fragments
++from test_offline_p0_contracts import body
++from test_p0_repair_checksum_routing import original_fragment
++
++
++class DelegateOwnerAckContracts(unittest.TestCase):
++    @classmethod
++    def setUpClass(cls):
++        cls.phase = ROOT / '.local/p0-repair/phase-62'
++        cls.proof = json.loads((cls.phase / 'delegate-owner-ack-contract.json').read_text())
++        cls.path = 'replica/Sources/Pasto/UI/ReplicaSearchIndex.swift'
++        cls.source = (ROOT / cls.path).read_text()
++        cls.before = (cls.phase / 'before' / cls.path).read_text()
++        cls.wrapper = body(cls.source, 'nonisolated private func rebuild(')
++        cls.scope = body(cls.source, 'private static func performDelegateRebuild(')
++        cls.enqueue = body(cls.source, 'private func enqueueDelegateRebuild(')
++        cls.drain = body(cls.source, 'private func drain() async')
++        cls.original = {r['address']: original_fragment((ROOT / r['path']).read_text(), r['address'][2:])
++                        for r in cls.proof['original_fragments']}
++
++    def test_original_fragments_binary_disassembly_and_actual_source_are_bound(self):
++        self.assertEqual(len(self.proof['original_fragments']), 11)
++        for row in self.proof['original_fragments']:
++            self.assertEqual(source_fragments(ROOT / row['path'])[row['address']]['sha256'], row['sha256'])
++        for row in [self.proof['binary']] + self.proof['arm_disassemblies']:
++            self.assertEqual(hashlib.sha256((ROOT / row['path']).read_bytes()).hexdigest(), row['sha256'])
++        self.assertEqual(hashlib.sha256((ROOT / self.path).read_bytes()).hexdigest(), self.proof['current_sources'][self.path])
++        self.assertEqual((ROOT / self.path).read_bytes(), (self.phase / 'after' / self.path).read_bytes())
++
++    def test_runtime_imports_are_chained_bindings_not_disassembler_guessed_labels(self):
++        self.assertEqual({r['symbol'] for r in self.proof['swift_runtime_imports']},
++                         {'_swift_weakLoadStrong', '_swift_release', '_swift_task_switch'})
++        for row in self.proof['swift_runtime_imports']:
++            raw = struct.unpack('<Q', bytes.fromhex(row['pointer_bytes']))[0]
++            self.assertEqual(raw >> 63, 1)
++            self.assertEqual(raw & 0xffffff, row['ordinal'])
++            self.assertTrue(row['chain']['declared_chain_reachable'])
++
++    def test_native_release_then_zero_executor_then_ack_continuations(self):
++        words = {r['address']: struct.unpack('<I', bytes.fromhex(r['bytes']))[0] for r in self.proof['ARM_words']}
++        def target(a, width=26, shift=0):
++            value = (words[hex(a)] >> shift) & ((1 << width) - 1)
++            if value & (1 << (width - 1)): value -= 1 << width
++            return a + value * 4
++        for release, hop, zero1, zero2, continuation, invoke in [
++            (0x1002e4728, 0x1002e4748, 0x1002e4734, 0x1002e4738, '0x1002e474c', 0x1002e4764),
++            (0x1002e4954, 0x1002e4974, 0x1002e4960, 0x1002e4964, '0x1002e4978', 0x1002e4990)]:
++            self.assertEqual(target(release), 0x100bfc9c0)
++            self.assertEqual(target(hop), 0x100bfcb10)
++            self.assertLess(release, hop)
++            self.assertEqual(words[hex(zero1)], 0xd2800001)
++            self.assertEqual(words[hex(zero2)], 0xd2800002)
++            self.assertEqual(words[hex(invoke)], 0xd63f0100)
++            self.assertIn('(**(code **)', self.original[continuation])
++        for address, resume in [('0x1002e46fc', 'FUN_1002e474c'), ('0x1002e4928', 'FUN_1002e4978')]:
++            native = self.original[address]
++            self.assertLess(native.index('_swift_release(uVar1)'), native.index('_swift_task_switch(' + resume))
++
++    def test_outer_nonisolated_task_captures_only_weak_target_and_calls_ack_after_scope(self):
++        target = body(self.source, 'private final class ReplicaSearchIndexDelegateTarget:')
++        self.assertIn('weak var indexer: ReplicaSearchIndex?', target)
++        self.assertIn('init(_ indexer: ReplicaSearchIndex) { self.indexer = indexer }', target)
++        task = body(self.wrapper, 'Task ')
++        self.assertIn('let target = ReplicaSearchIndexDelegateTarget(self)', self.wrapper)
++        self.assertLess(task.index('await ReplicaSearchIndex.performDelegateRebuild(target, identifiers: identifiers)'),
++                        task.index('acknowledge()'))
++        self.assertEqual(task.count('acknowledge()'), 1)
++        for token in ['self.', '[self]', 'guard let self', '@MainActor', 'target.indexer', 'let indexer']:
++            self.assertNotIn(token, task)
++
++    def test_strong_owner_exists_only_inside_awaited_helper_and_nil_owner_skips_queue(self):
++        self.assertIn('guard let indexer = target.indexer else { return }', self.scope)
++        self.assertIn('await indexer.enqueueDelegateRebuild(identifiers)', self.scope)
++        self.assertLess(self.scope.index('guard let indexer'), self.scope.index('await indexer.'))
++        for token in ['acknowledge', 'withCheckedContinuation', 'pending =', 'Task ', 'indexSearchableItems']:
++            self.assertNotIn(token, self.scope)
++        self.assertNotIn('guard let requested', self.enqueue)
++        self.assertNotIn('guard let requested', self.scope)
++
++    def test_queue_relay_resumes_waiter_after_index_work_instead_of_calling_SDK_block(self):
++        self.assertIn('await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in', self.enqueue)
++        relay = body(self.enqueue, 'await withCheckedContinuation')
++        order = ['pending = request', 'acknowledgements.append { continuation.resume() }', 'startWorker()']
++        self.assertEqual([relay.index(t) for t in order], sorted(relay.index(t) for t in order))
++        self.assertNotIn('acknowledge', self.enqueue.replace('acknowledgements', 'relays'))
++        self.assertNotIn('acknowledge()', self.drain)
++        self.assertEqual(self.drain, body(self.before, 'private func drain() async'))
++        self.assertLess(self.drain.index('requestAcknowledgements = []'), self.drain.index('completed.forEach { $0() }'))
++        self.assertIn('requestAcknowledgements.forEach { $0() }', self.drain)
++
++    def test_full_target_flags_and_stop_order_are_preserved_in_actual_enqueuer(self):
++        old = body(self.before, 'nonisolated private func rebuild(')
++        for text in [self.enqueue, old]:
++            self.assertIn('reindexIdentifiers.append(contentsOf: identifiers)', text)
++            self.assertIn('needsReset = true', text)
++            self.assertIn('mayRestoreSavedState = false', text)
++            self.assertIn('if isRunning { await stopIndexing() }', text)
++            self.assertIn('pendingMayInitializeIndex = true', text)
++            self.assertIn('pendingResetsIndex = true', text)
++        self.assertLess(self.enqueue.index('await stopIndexing()'), self.enqueue.index('pending = request'))
++        for token in ['compactMap', 'prefix(', 'Set(', 'requested =', 'replaceQuery(', 'Task.isCancelled']:
++            self.assertNotIn(token, self.enqueue)
++        self.assertIn('rebuild(identifiers: nil, acknowledgementHandler)', self.source)
++        self.assertIn('rebuild(identifiers: identifiers, acknowledgementHandler)', self.source)
++
++    def test_index_operation_retry_snapshot_OCR_and_source_models_are_unchanged(self):
++        for marker in ['private func startWorker()', 'private func reindexTargets(', 'private func indexInitialSnapshot(',
++                       'private func applyHistoryChanges(', 'private func retryTransientIndexErrors(',
++                       'private func startHistoryObservation()', 'private func stopIndexing()', 'private func drainOCRQueue()',
++                       'func availableFilters()', 'private func searchableItem(', 'private func initializeIndexIfNeeded(']:
++            self.assertEqual(body(self.source, marker), body(self.before, marker))
++        for path in ['replica/Sources/Pasto/UI/ReplicaUIController.swift',
++                     'replica/Sources/PastoCore/OriginalSearchSuggestions.swift']:
++            self.assertEqual((ROOT / path).read_bytes(), (self.phase / 'before' / path).read_bytes())
++
++    def test_completion_trace_has_one_ack_after_owner_scope_for_nil_success_and_error(self):
++        # Contract trace from the bound callbacks and real source scopes; not Swift ARC execution.
++        for alive, success in [(False, False), (False, True), (True, False), (True, True)]:
++            events = ['weak-load']
++            if alive:
++                events += ['strong-owner-scope', 'enqueue', 'SDK-success' if success else 'SDK-error-caught',
++                           'resume-index-waiter', 'leave-owner-scope']
++            events += ['ack']
++            self.assertEqual(events.count('ack'), 1)
++            if alive:
++                self.assertLess(events.index('leave-owner-scope'), events.index('ack'))
++            else:
++                self.assertNotIn('enqueue', events)
++        self.assertEqual(self.wrapper.count('acknowledge()'), 1)
++
++    def test_write_owner_remains_open_and_no_full_ARC_or_actor_claim_is_made(self):
++        self.assertEqual([r['function_id'] for r in self.proof['contracts']], ['Paste:0x1002e46fc', 'Paste:0x1002e4928'])
++        self.assertFalse(self.proof['full_function_migration_verified'])
++        self.assertEqual(self.proof['function_map_markers_upgraded'], 0)
++        limitations = '\n'.join(self.proof['retained_partial_contracts'])
++        for text in ['2e20b8', 'independently', 'ARC', 'ABI', 'MainActor']:
++            self.assertIn(text, limitations)
++        self.assertIn('guard let self else { return }', body(self.source, 'private func startWorker()'))

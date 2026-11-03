@@ -1,0 +1,41 @@
+--- replica/Sources/Pasto/UI/ReplicaUIController.swift
++++ replica/Sources/Pasto/UI/ReplicaUIController.swift
+@@ -862,8 +862,11 @@
+     var didChangeScreen: (() -> Void)?
+     var closeRequested: (() -> Void)?
+     var copyRequested: (() -> Void)?
++    var undoManagerRequested: (() -> UndoManager?)?
+     func windowDidResignKey(_ notification: Notification) { didResignKey?() }
+     func windowDidChangeScreen(_ notification: Notification) { didChangeScreen?() }
++    // Paste 0x100077fe0: nil without a provider; otherwise return its current value.
++    func windowWillReturnUndoManager(_ window: NSWindow) -> UndoManager? { undoManagerRequested?() }
+     override func performClose(_ sender: Any?) { closeRequested?() }
+     override func validateMenuItem(_ menuItem: NSMenuItem) -> Bool {
+         if menuItem.action == #selector(NSWindow.performClose(_:)) { return true }
+@@ -898,6 +901,14 @@
+            content.tryInterpretSearchKeyEvent(event) { return }
+         super.sendEvent(event)
+     }
++}
++
++@MainActor
++private final class ReplicaMainWindowController: NSWindowController {
++    private let contentUndoManager = OriginalDependency(\OriginalDependencyValues.pasteboardUndoManager)
++
++    // Paste 0x100018680: use the shared dependency instead of a window-local manager.
++    override var undoManager: UndoManager? { contentUndoManager.f_1000da768() }
+ }
+ 
+ @MainActor
+@@ -986,7 +997,10 @@
+                                  styleMask: [.borderless, .nonactivatingPanel],
+                                  backing: .buffered, defer: false)
+         loadedPanel = panel
+-        mainWindowController = NSWindowController(window: panel)
++        let controller = ReplicaMainWindowController(window: panel)
++        mainWindowController = controller
++        // Paste 0x1000187d0 installs 0x10001a78c -> 0x100018f70 with a weak controller.
++        panel.undoManagerRequested = { [weak controller] in controller?.undoManager }
+         panel.identifier = NSUserInterfaceItemIdentifier("paste-replica-panel")
+         panel.title = "Pasto"
+         panel.isOpaque = false

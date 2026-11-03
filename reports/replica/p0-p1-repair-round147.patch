@@ -1,0 +1,45 @@
+--- before/replica/Sources/Pasto/UI/ReplicaUIController.swift
++++ after/replica/Sources/Pasto/UI/ReplicaUIController.swift
+@@ -78,9 +78,7 @@
+         didSet {
+             let retainedIDs = Set(stackIDs)
+             stackRestoreInputs = stackRestoreInputs.filter { retainedIDs.contains($0.key) }
+-            guard oldValue != stackIDs, store.preferences.stackItemIDs != stackIDs else { return }
+-            store.preferences.stackItemIDs = stackIDs
+-            perform { try store.save() }
++            guard oldValue != stackIDs else { return }
+             controller?.stackContentsChanged()
+         }
+     }
+@@ -117,7 +115,6 @@
+         searchService = service
+         searchIndex = ReplicaSearchIndex(service: service, store: store)
+         searchIndex.setSuggestionDataSource(store.makeSearchSuggestionProvider())
+-        stackIDs = store.preferences.stackItemIDs
+         searchIndex.onUpdate = { [weak self] in
+             self?.objectWillChange.send()
+             self?.normalizeSelection()
+@@ -1284,7 +1281,22 @@
+         stackContentsChanged()
+     }
+ 
+-    func hideStack() { stackWindowController?.close(); stackDidChange?() }
++    func hideStack() {
++        guard let closingController = stackWindowController else { return }
++        let closingWindow = stackWindow
++        closingController.close()
++        // 0a86c0/2182a4: release the coordinator owner, then the presented content.
++        stackWindowController = nil
++        closingController.contentViewController = nil
++        closingWindow?.contentView = nil
++        stackWindow = nil
++        stackTableController = nil
++        if let stackCaptureObserver { NotificationCenter.default.removeObserver(stackCaptureObserver) }
++        stackCaptureObserver = nil
++        // 084f14/083d18: each new Stack controller owns a fresh, transient queue.
++        if state.stackIDs.isEmpty { stackDidChange?() }
++        else { state.stackIDs.removeAll() }
++    }
+ 
+     func stackContentsChanged() {
+         if let window = stackWindow {

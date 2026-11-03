@@ -1,0 +1,51 @@
+{
+  "round": 19,
+  "binary_path": ".local/paste-arm64-static.bin",
+  "binary_sha256": "871f00354fbb1c165d858a98e6d19d6f43cb9d3f9f958b3e07c7f07eb5c19afb",
+  "segments": [
+    {
+      "vmaddr": 0,
+      "filesize": 0,
+      "fileoff": 0
+    },
+    {
+      "vmaddr": 4294967296,
+      "filesize": 15351808,
+      "fileoff": 0
+    },
+    {
+      "vmaddr": 4310319104,
+      "filesize": 671744,
+      "fileoff": 15351808
+    },
+    {
+      "vmaddr": 4310990848,
+      "filesize": 1064960,
+      "fileoff": 16023552
+    },
+    {
+      "vmaddr": 4312727552,
+      "filesize": 1956752,
+      "fileoff": 17088512
+    }
+  ],
+  "installed_appkit": {
+    "path": "reports/replica/p0-p1-review-round19-appkit-proof.json",
+    "sha256": "ee6fdf50f0817dc0d75719094fab0c3b6ebd18c7c643ce8c239f44372a90bf95"
+  },
+  "extracted_disassembly_containers": [
+    {
+      "path": ".local/p0-review/AppKit-initUsingTextLayoutManager-round19.macho",
+      "sha256": "61a4e7de28688b535a85ad0c314bd7a03219212be25a499b665f5abba19005a6"
+    },
+    {
+      "path": ".local/p0-review/AppKit-private-frame-init-round19.macho",
+      "sha256": "bfa5a55421dd94b892206ebed9dc53519f63b0332c6002e297d5df900ddfea77"
+    }
+  ],
+  "limits": [
+    "original and installed framework static evidence only",
+    "extracted Mach-O containers are byte wrappers, not compiled app artifacts",
+    "no AppKit or application execution"
+  ]
+}

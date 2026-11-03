@@ -1,0 +1,129 @@
+--- a/replica/Sources/Pasto/UI/SearchEditor.swift
++++ b/replica/Sources/Pasto/UI/SearchEditor.swift
+@@ -88,6 +88,7 @@
+         private var restoringHistory = false
+         private var suggestionTask: Task<Void, Never>?
+         private var suggestionMenu: ReplicaSearchSuggestionsMenu?
++        weak var suggestionOwner: OriginalPanelSearchBar?
+         init(_ parent: ReplicaSearchEditor) { self.parent = parent }
+ 
+         private struct Projection {
+@@ -164,6 +165,10 @@
+         func dismissSuggestions() {
+             suggestionTask?.cancel()
+             suggestionTask = nil
++            dismissSuggestionMenu()
++        }
++
++        private func dismissSuggestionMenu() {
+             suggestionMenu?.dismiss()
+             suggestionMenu = nil
+         }
+@@ -177,38 +182,48 @@
+                 dismissSuggestions()
+                 return
+             }
+-            suggestionTask = Task { @MainActor [weak self, weak field, weak editor] in
+-                guard let self, let field, let editor, !Task.isCancelled else { return }
+-                let store = self.parent.store
+-                let provider = OriginalSearchSuggestions.Provider(
+-                    app: { try ReplicaSearchSuggestionSource.applications($0, store: store) },
+-                    device: { try ReplicaSearchSuggestionSource.devices($0, store: store) },
+-                    pinboard: { try ReplicaSearchSuggestionSource.pinboards($0, store: store) })
+-                let candidates = OriginalSearchSuggestions.f_1002df190(
+-                    contextNode: context.nodes[context.nodeIndex], currentNodes: context.nodes, provider: provider)
+-                guard !Task.isCancelled else { return }
+-                let entries = candidates.compactMap { node -> (OriginalSearchSuggestions.Suggestion, ReplicaSearchFilterChip)? in
+-                    guard case let .filter(tag, value) = node, let chip = self.chip(for: node) else { return nil }
+-                    return (.filter(tag, value), chip)
+-                }
+-                guard !entries.isEmpty, let manager = editor.textLayoutManager else {
+-                    self.dismissSuggestions()
+-                    return
+-                }
+-                manager.textViewportLayoutController.layoutViewport()
+-                let textRect = OriginalSearchSuggestionAnchor.f_100046e28(manager, range: context.anchorRange)
+-                let anchorRect = editor.convert(textRect, to: field)
+-                let menu = self.suggestionMenu ?? ReplicaSearchSuggestionsMenu()
+-                self.suggestionMenu = menu
+-                let applySuggestion = self.parent.onApplySuggestion
+-                let dismissSuggestions = self.parent.onDismissSuggestions
+-                menu.show(rows: entries.map { .init(title: $0.1.title, image: $0.1.image, matchQuery: context.text) },
+-                          anchorRect: anchorRect, in: field,
+-                          onAccept: { index in
+-                    guard entries.indices.contains(index) else { return }
+-                    Self.accept(entries[index].0, context: context, apply: applySuggestion)
+-                }, onEscape: dismissSuggestions)
+-            }
++            // 040ec4 weak-loads the SearchBar;040f44 releases it after the child request.
++            suggestionTask = Task { @MainActor [weak owner = suggestionOwner] in
++                guard let owner else { return }
++                defer { withExtendedLifetime(owner) {} }
++                owner.performSuggestionRequest(context)
++            }
++        }
++
++        func performSuggestionRequest(_ context: OriginalSearchInputContext.Context,
++                                      field: SearchField, editor: SearchTextView) {
++            let store = self.parent.store
++            let provider = OriginalSearchSuggestions.Provider(
++                app: { try ReplicaSearchSuggestionSource.applications($0, store: store) },
++                device: { try ReplicaSearchSuggestionSource.devices($0, store: store) },
++                pinboard: { try ReplicaSearchSuggestionSource.pinboards($0, store: store) })
++            let candidates = OriginalSearchSuggestions.f_1002df190(
++                contextNode: context.nodes[context.nodeIndex], currentNodes: context.nodes, provider: provider)
++            guard !Task.isCancelled, !candidates.isEmpty else {
++                dismissSuggestionMenu()
++                return
++            }
++            let entries = candidates.compactMap { node -> (OriginalSearchSuggestions.Suggestion, ReplicaSearchFilterChip)? in
++                guard case let .filter(tag, value) = node, let chip = self.chip(for: node) else { return nil }
++                return (.filter(tag, value), chip)
++            }
++            guard !entries.isEmpty, let manager = editor.textLayoutManager else {
++                self.dismissSuggestionMenu()
++                return
++            }
++            manager.textViewportLayoutController.layoutViewport()
++            let textRect = OriginalSearchSuggestionAnchor.f_100046e28(manager, range: context.anchorRange)
++            let anchorRect = editor.convert(textRect, to: field)
++            let menu = self.suggestionMenu ?? ReplicaSearchSuggestionsMenu()
++            self.suggestionMenu = menu
++            let applySuggestion = self.parent.onApplySuggestion
++            let dismissSuggestions = self.parent.onDismissSuggestions
++            menu.show(rows: entries.map { .init(title: $0.1.title, image: $0.1.image, matchQuery: context.text) },
++                      anchorRect: anchorRect, in: field,
++                      onAccept: { index in
++                guard entries.indices.contains(index) else { return }
++                Self.accept(entries[index].0, context: context, apply: applySuggestion)
++            }, onEscape: dismissSuggestions)
+         }
+ 
+         // 041de0 -> 04160c merges the captured context, then proposes to the weak SearchBar.
+--- a/replica/Sources/Pasto/UI/OriginalPanelToolbar.swift
++++ b/replica/Sources/Pasto/UI/OriginalPanelToolbar.swift
+@@ -225,9 +225,11 @@
+         specification.onDismissSuggestions = { [weak self] in self?.coordinator?.dismissSuggestions() }
+         self.button.rootView = button
+         if let field, let coordinator {
++            coordinator.suggestionOwner = self
+             specification.updateField(field, coordinator: coordinator)
+         } else {
+             let coordinator = ReplicaSearchEditor.Coordinator(specification)
++            coordinator.suggestionOwner = self
+             let field = specification.makeField(coordinator: coordinator)
+             self.coordinator = coordinator
+             self.field = field
+@@ -294,6 +296,12 @@
+         return coordinator.querySnapshot
+     }
+ 
++    func performSuggestionRequest(_ context: OriginalSearchInputContext.Context) {
++        let (field, coordinator) = inputPair()
++        let editor = field.f_100045c2c().f_100041f9c() as! ReplicaSearchEditor.SearchTextView
++        coordinator.performSuggestionRequest(context, field: field, editor: editor)
++    }
++
+     func applySearchQuery(_ nodes: [OriginalSearchQueryNode]) {
+         let (field, coordinator) = inputPair()
+         let editor = field.f_100045c2c().f_100041f9c() as! ReplicaSearchEditor.SearchTextView

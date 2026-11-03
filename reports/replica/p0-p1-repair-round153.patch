@@ -1,0 +1,94 @@
+--- before/replica/Sources/PastoCore/ClipboardPersistence.swift
++++ after/replica/Sources/PastoCore/ClipboardPersistence.swift
+@@ -100,7 +100,8 @@
+                                   includeItemOrder: Bool = true,
+                                   includeNativeTitle: Bool = true,
+                                   includeTypedLists: Bool = true,
+-                                  includeTypedSources: Bool = true) -> NSManagedObjectModel {
++                                  includeTypedSources: Bool = true,
++                                  includeTypedItemData: Bool = true) -> NSManagedObjectModel {
+         let model = NSManagedObjectModel()
+         func attribute(_ name: String, _ type: NSAttributeType, optional: Bool = false) -> NSAttributeDescription {
+             let value = NSAttributeDescription()
+@@ -157,6 +158,9 @@
+             model.entitiesByName["ListMetadataEntity"]!.managedObjectClassName = NSStringFromClass(PastoListMetadataEntity.self)
+         }
+         if includeNativeItemData { ClipboardItemDataPersistence.addEntity(to: model, item: model.entitiesByName["Item"]!) }
++        if includeNativeItemData && includeTypedItemData {
++            model.entitiesByName["ItemDataEntity"]!.managedObjectClassName = NSStringFromClass(PastoItemDataEntity.self)
++        }
+         if includeNativeSources { ClipboardSourcePersistence.addEntities(to: model, item: model.entitiesByName["Item"]!) }
+         if includeNativeSources && includeTypedSources {
+             model.entitiesByName["ApplicationEntity"]!.managedObjectClassName = NSStringFromClass(PastoApplicationEntity.self)
+@@ -173,17 +177,18 @@
+         guard !destinationModel.isConfiguration(nil, compatibleWithStoreMetadata: metadata) else { return }
+ 
+         let legacyCandidates = [
+-            makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeTypedSources: false),
+-            makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeTypedLists: false, includeTypedSources: false),
+-            makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeNativeTitle: false, includeTypedLists: false, includeTypedSources: false),
+-            makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeItemOrder: false, includeNativeTitle: false, includeTypedLists: false, includeTypedSources: false),
+-            makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeTypedItem: false, includeItemOrder: false, includeNativeTitle: false, includeTypedLists: false, includeTypedSources: false),
+-            makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeNativeSources: false, includeTypedItem: false, includeItemOrder: false, includeNativeTitle: false, includeTypedLists: false, includeTypedSources: false),
+-            makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeNativeItemData: false, includeNativeSources: false, includeTypedItem: false, includeItemOrder: false, includeNativeTitle: false, includeTypedLists: false, includeTypedSources: false),
+-            makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeLists: true, includeOptionalTimestamp: false, includeNativeItemData: false, includeNativeSources: false, includeTypedItem: false, includeItemOrder: false, includeNativeTitle: false, includeTypedLists: false, includeTypedSources: false),
+-            makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeLists: false, includeOptionalTimestamp: false, includeNativeItemData: false, includeNativeSources: false, includeTypedItem: false, includeItemOrder: false, includeNativeTitle: false, includeTypedLists: false, includeTypedSources: false),
+-            makeModel(includeNativeIdentity: false, preserveItemKeyInHistory: true, includeLists: false, includeOptionalTimestamp: false, includeNativeItemData: false, includeNativeSources: false, includeTypedItem: false, includeItemOrder: false, includeNativeTitle: false, includeTypedLists: false, includeTypedSources: false),
+-            makeModel(includeNativeIdentity: false, preserveItemKeyInHistory: false, includeLists: false, includeOptionalTimestamp: false, includeNativeItemData: false, includeNativeSources: false, includeTypedItem: false, includeItemOrder: false, includeNativeTitle: false, includeTypedLists: false, includeTypedSources: false)
++            makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeTypedItemData: false),
++            makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeTypedSources: false, includeTypedItemData: false),
++            makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeTypedLists: false, includeTypedSources: false, includeTypedItemData: false),
++            makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeNativeTitle: false, includeTypedLists: false, includeTypedSources: false, includeTypedItemData: false),
++            makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeItemOrder: false, includeNativeTitle: false, includeTypedLists: false, includeTypedSources: false, includeTypedItemData: false),
++            makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeTypedItem: false, includeItemOrder: false, includeNativeTitle: false, includeTypedLists: false, includeTypedSources: false, includeTypedItemData: false),
++            makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeNativeSources: false, includeTypedItem: false, includeItemOrder: false, includeNativeTitle: false, includeTypedLists: false, includeTypedSources: false, includeTypedItemData: false),
++            makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeNativeItemData: false, includeNativeSources: false, includeTypedItem: false, includeItemOrder: false, includeNativeTitle: false, includeTypedLists: false, includeTypedSources: false, includeTypedItemData: false),
++            makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeLists: true, includeOptionalTimestamp: false, includeNativeItemData: false, includeNativeSources: false, includeTypedItem: false, includeItemOrder: false, includeNativeTitle: false, includeTypedLists: false, includeTypedSources: false, includeTypedItemData: false),
++            makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeLists: false, includeOptionalTimestamp: false, includeNativeItemData: false, includeNativeSources: false, includeTypedItem: false, includeItemOrder: false, includeNativeTitle: false, includeTypedLists: false, includeTypedSources: false, includeTypedItemData: false),
++            makeModel(includeNativeIdentity: false, preserveItemKeyInHistory: true, includeLists: false, includeOptionalTimestamp: false, includeNativeItemData: false, includeNativeSources: false, includeTypedItem: false, includeItemOrder: false, includeNativeTitle: false, includeTypedLists: false, includeTypedSources: false, includeTypedItemData: false),
++            makeModel(includeNativeIdentity: false, preserveItemKeyInHistory: false, includeLists: false, includeOptionalTimestamp: false, includeNativeItemData: false, includeNativeSources: false, includeTypedItem: false, includeItemOrder: false, includeNativeTitle: false, includeTypedLists: false, includeTypedSources: false, includeTypedItemData: false)
+         ]
+         // The older history-retention variants can share a version hash.
+         let sourceModel = legacyCandidates.first {
+--- before/replica/Sources/PastoCore/ClipboardItemDataPersistence.swift
++++ after/replica/Sources/PastoCore/ClipboardItemDataPersistence.swift
+@@ -1,6 +1,13 @@
+ import CoreData
+ import Foundation
+ import ObjectiveC
++
++// 31b494: the local named wrapper is owned from object construction, including fetched faults.
++// ItemData has no Syncable date fields and directly inherits NSManagedObject.
++@objc(PastoItemDataEntity)
++final class PastoItemDataEntity: NSManagedObject {
++    let diagnostics = OriginalNamedDiagnostic.f_1000d4624(name: "ItemDataEntity")
++}
+ 
+ /// Called on the owning managed context's queue, including during store migration.
+ final class ClipboardItemDataPersistence {
+@@ -32,9 +39,9 @@
+ 
+     @MainActor private static var diagnosticsKey: UInt8 = 0
+ 
+-    // Preserve per-object logger ownership without changing the existing managed entity class/model.
+-    // The original constructs the named wrapper at entity creation; this adapter defers it to the error path.
++    // Current models own the wrapper on the actual entity; older plain objects keep their local adapter.
+     @MainActor private static func diagnostics(for data: NSManagedObject) -> OriginalNamedDiagnostic {
++        if let data = data as? PastoItemDataEntity { return data.diagnostics }
+         if let existing = objc_getAssociatedObject(data, &diagnosticsKey) as? OriginalNamedDiagnostic {
+             return existing
+         }
+--- before/replica/Sources/PastoCore/ClipboardSearchRecord.swift
++++ after/replica/Sources/PastoCore/ClipboardSearchRecord.swift
+@@ -167,8 +167,9 @@
+                     guard !object.isDeleted,
+                           let data = object.value(forKey: "data") as? NSManagedObject else { return nil }
+                     guard let items = ClipboardItemDataPersistence.readRepresentations(from: data, diagnostics: {
+-                        // This private context/data object is created once for this deferred read.
+-                        OriginalNamedDiagnostic.f_1000d4624(name: "ItemDataEntity")
++                        if let data = data as? PastoItemDataEntity { return data.diagnostics }
++                        // Older source models can still produce plain managed objects.
++                        return OriginalNamedDiagnostic.f_1000d4624(name: "ItemDataEntity")
+                     }) else { return nil }
+                     return try project(object, items)
+                 }

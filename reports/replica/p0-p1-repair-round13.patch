@@ -1,0 +1,130 @@
+--- phase-13-before/replica/Sources/PastoCore/ClipboardPersistence.swift
++++ replica/Sources/PastoCore/ClipboardPersistence.swift
+@@ -73,7 +73,8 @@
+ 
+     private static func makeModel(includeNativeIdentity: Bool,
+                                   preserveItemKeyInHistory: Bool,
+-                                  includeLists: Bool = true) -> NSManagedObjectModel {
++                                  includeLists: Bool = true,
++                                  includeOptionalTimestamp: Bool = true) -> NSManagedObjectModel {
+         let model = NSManagedObjectModel()
+         func attribute(_ name: String, _ type: NSAttributeType, optional: Bool = false) -> NSAttributeDescription {
+             let value = NSAttributeDescription()
+@@ -99,7 +100,11 @@
+             value.allowsExternalBinaryDataStorage = true
+             return value
+         }
+-        var itemAttributes = [content(), attribute("timestamp", .dateAttributeType)]
++        var itemAttributes = [content(), attribute("timestamp", .dateAttributeType, optional: includeOptionalTimestamp)]
++        if includeOptionalTimestamp {
++            // Preserve Pasto's display date when the original history timestamp becomes nil.
++            itemAttributes.append(attribute("localCreatedAt", .dateAttributeType, optional: true))
++        }
+         if includeNativeIdentity {
+             itemAttributes.append(attribute("nativeIdentifier", .stringAttributeType, optional: true))
+             itemAttributes.append(attribute("nativeChecksum", .stringAttributeType, optional: true))
+@@ -127,9 +132,10 @@
+         guard !destinationModel.isConfiguration(nil, compatibleWithStoreMetadata: metadata) else { return }
+ 
+         let legacyCandidates = [
+-            makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeLists: false),
+-            makeModel(includeNativeIdentity: false, preserveItemKeyInHistory: true, includeLists: false),
+-            makeModel(includeNativeIdentity: false, preserveItemKeyInHistory: false, includeLists: false)
++            makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeLists: true, includeOptionalTimestamp: false),
++            makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeLists: false, includeOptionalTimestamp: false),
++            makeModel(includeNativeIdentity: false, preserveItemKeyInHistory: true, includeLists: false, includeOptionalTimestamp: false),
++            makeModel(includeNativeIdentity: false, preserveItemKeyInHistory: false, includeLists: false, includeOptionalTimestamp: false)
+         ]
+         // The older history-retention variants can share a version hash.
+         let sourceModel = legacyCandidates.first {
+@@ -166,12 +172,12 @@
+ 
+     private func item(_ object: NSManagedObject) throws -> ClipboardItem {
+         var item = try decode(ClipboardItem.self, object)
+-        guard let timestamp = object.value(forKey: "timestamp") as? Date,
+-              let updatedAt = object.value(forKey: "updatedAt") as? Date,
+-              let inHistory = object.value(forKey: "inHistory") as? Bool else {
++        let timestamp = object.value(forKey: "timestamp") as? Date
++        guard let createdAt = timestamp ?? object.value(forKey: "localCreatedAt") as? Date,
++              let updatedAt = object.value(forKey: "updatedAt") as? Date else {
+             throw CocoaError(.fileReadCorruptFile)
+         }
+-        item.createdAt = timestamp; item.updatedAt = updatedAt; item.isInHistory = inHistory
++        item.createdAt = createdAt; item.updatedAt = updatedAt; item.isInHistory = timestamp != nil
+         item.nativeIdentifier = object.value(forKey: "nativeIdentifier") as? String
+         item.nativeChecksum = object.value(forKey: "nativeChecksum") as? String
+         if let list = object.value(forKey: "list") as? NSManagedObject,
+@@ -228,23 +234,39 @@
+     /// Backfill only the new graph; legacy encoded content and memberships remain intact.
+     private func bootstrapListsIfNeeded() throws {
+         try perform {
+-            guard try lists.historyList() == nil, let root = try root() else { return }
+-            let preferences = try decode(AppPreferences.self, root, key: "preferences")
+-            let pinboards = try fetch("Pinboard").map { try decode(Pinboard.self, $0) }
+-            try lists.synchronize(pinboards: pinboards, preferences: preferences, previous: nil)
+-            for object in try fetch("Item") {
+-                let value = try decode(ClipboardItem.self, object)
+-                if let ownerID = value.pinboardOwnerID {
+-                    guard let owner = try lists.list(identifier: ownerID.uuidString) else {
+-                        throw CocoaError(.fileReadCorruptFile)
+-                    }
+-                    object.setValue(owner, forKey: "list")
+-                }
+-            }
++            guard let root = try root() else { return }
++            if try lists.historyList() == nil {
++                let preferences = try decode(AppPreferences.self, root, key: "preferences")
++                let pinboards = try fetch("Pinboard").map { try decode(Pinboard.self, $0) }
++                try lists.synchronize(pinboards: pinboards, preferences: preferences, previous: nil)
++                for object in try fetch("Item") {
++                    let value = try decode(ClipboardItem.self, object)
++                    if let ownerID = value.pinboardOwnerID {
++                        guard let owner = try lists.list(identifier: ownerID.uuidString) else {
++                            throw CocoaError(.fileReadCorruptFile)
++                        }
++                        object.setValue(owner, forKey: "list")
++                    }
++                }
++            }
++            try bootstrapHistoryTimestamps()
+             if context.hasChanges {
+                 root.setValue(UUID(), forKey: "revision")
+                 try context.save()
+             }
++        }
++    }
++
++    private func bootstrapHistoryTimestamps() throws {
++        let request = NSFetchRequest<NSManagedObject>(entityName: "Item")
++        request.predicate = NSPredicate(format: "localCreatedAt == nil")
++        for object in try context.fetch(request) {
++            guard let timestamp = object.value(forKey: "timestamp") as? Date,
++                  let inHistory = object.value(forKey: "inHistory") as? Bool else {
++                throw CocoaError(.fileReadCorruptFile)
++            }
++            object.setValue(timestamp, forKey: "localCreatedAt")
++            if !inHistory { object.setValue(nil, forKey: "timestamp") }
+         }
+     }
+ 
+@@ -410,7 +432,6 @@
+         let transaction = Transaction(context: context)
+         return try withExtendedLifetime(transaction) {
+             try perform {
+-                context.reset()
+                 let outcome = try operation(transaction)
+                 let state = outcome.state
+                 try transaction.repository.update(state.items, previous: previous?.items ?? [], entity: "Item", key: { $0.id.uuidString },
+@@ -418,7 +439,11 @@
+                     if old.map(content) != content(item) {
+                         object.setValue(try encode(content(item)), forKey: "content")
+                     }
+-                    if old?.createdAt != item.createdAt { object.setValue(item.createdAt, forKey: "timestamp") }
++                    let timestamp = item.isInHistory ? item.createdAt : nil
++                    if old.flatMap({ $0.isInHistory ? $0.createdAt : nil }) != timestamp {
++                        object.setValue(timestamp, forKey: "timestamp")
++                    }
++                    if old?.createdAt != item.createdAt { object.setValue(item.createdAt, forKey: "localCreatedAt") }
+                     if old?.updatedAt != item.updatedAt { object.setValue(item.updatedAt, forKey: "updatedAt") }
+                     if old?.isInHistory != item.isInHistory { object.setValue(item.isInHistory, forKey: "inHistory") }
+                     if old?.nativeIdentifier != item.nativeIdentifier {

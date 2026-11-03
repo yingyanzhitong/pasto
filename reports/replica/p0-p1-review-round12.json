@@ -1,0 +1,134 @@
+{
+  "schema_version": 1,
+  "kind": "p0_p1_entrypoint_and_difference_backlog_review",
+  "round": 12,
+  "source_report": {
+    "path": "reports/replica/p0-p1-review-round11.json",
+    "sha256": "9c409dc0c2b64fc7e0b3a83af9989891ccd03176dcaa22539ef2347e6f69b80d"
+  },
+  "snapshot": {
+    "resolved_review_records": 488,
+    "unclosed_review_records": 1,
+    "resolved_comparison_percent": 99.8,
+    "outcomes": {
+      "difference_confirmed": 115,
+      "local_contract_consistent": 365,
+      "user_adaptation_confirmed": 8,
+      "unclosed": 1
+    },
+    "p0_component": {
+      "resolved": 243,
+      "denominator": 243,
+      "percent": 100.0,
+      "unclosed": 0,
+      "not_yet_reviewed": 0
+    },
+    "p1_additional_component": {
+      "resolved": 245,
+      "denominator": 246,
+      "percent": 99.59,
+      "unclosed": 1,
+      "not_yet_reviewed": 0
+    }
+  },
+  "scope_provisional": true,
+  "full_priority_completion_percent": null,
+  "previous_goal_turn": "progress",
+  "round_delta": {
+    "reviewed_function_ids": [
+      "Paste:0x1000f733c"
+    ],
+    "newly_resolved": 0,
+    "status_reclassification": false,
+    "new_difference_backlog": true,
+    "evidence_strengthened_function_ids": [
+      "Paste:0x1000b098c",
+      "Paste:0x1000b11ac"
+    ],
+    "historical_descriptive_references_corrected": 2,
+    "source_callback_aliases_verified": 4
+  },
+  "unresolved_review": {
+    "function_id": "Paste:0x1000f733c",
+    "status": "unclosed",
+    "original": {
+      "path": "decompiled/Paste/part-0084.c",
+      "sha256": "65da2a5b3792d4b39f42164e1d3fe8e2d3726df75c7075269906f31ad57a0709"
+    },
+    "current_references": [
+      {
+        "path": "replica/Sources/PastoCore/OriginalSearchTextValue.swift",
+        "symbol": "func f_1000f733c(_ value: String) -> Int",
+        "present": true,
+        "sha256": "4edef55597ad4d0a131adee7674cb682ec8c34f422fdef61f8e83dc62e8a2d9b"
+      },
+      {
+        "path": "replica/Sources/Pasto/UI/SearchEditor.swift",
+        "symbol": "editor.textStorage?.setAttributedString(value)",
+        "present": true,
+        "sha256": "ff51f1cbdbc8d09c4d42b9fa661ec06aa1089e25b5c02b43f7cb3514e8617d05"
+      },
+      {
+        "path": "replica/Sources/Pasto/UI/ReplicaLinkPreviewContent.swift",
+        "symbol": "textView.string = currentURL()?.absoluteString ?? \"\"",
+        "present": true,
+        "sha256": "6becef98930daa19e63760be5039f4eda502f2a21ae7b91a2f484abb3d7b7947"
+      }
+    ],
+    "contract": "原薄方法桥接Swift String并调用NSTextView.setString:；当前同名extension含相同赋值，但没有已证生产调用。当前search显示用attributed storage，不能据此判该纯String setter已经接线，也不能反推原search必需该setter。",
+    "evidence_note": "本轮ARM核实0f7368实际BL到c0de60，真实selector槽f8a3a0指向setString:；结尾0f737c直接尾跳release，未见Ghidra所写return0的显式机器返回值，故不把反编译Int返回类型视为可靠ABI。对薄binary四个file-backed segment做aligned direct B/BL、rel32及rebased64引用扫描均无命中，C文本也无直接调用；该有界负检索不能排除原内联或其它间接消费者。当前全Sources只有同名extension声明，SearchEditor生产路径仍为textStorage.setAttributedString，URL预览的string setter用途另属P2。保留unclosed，不因声明或无命中升级迁移。 第十一轮补扫ADR与同寄存器12条指令窗口内ADRP/ADD取址仍无命中，LC_SYMTAB也未给此地址提供命名符号；这只是静态定位边界，不证明原方法不可达。当前仍仅独立声明，无已证对应生产消费。 第十二轮独立读取LC_FUNCTION_STARTS，确认本地址属于真实函数起点、下一起点0f7380，范围68字节；导出trie与nlist均无该地址的命名入口。它是原函数并不等于当前存在生产消费者，未闭合状态不变。",
+    "priorities": [
+      "P1"
+    ],
+    "modules": [
+      "搜索与筛选"
+    ],
+    "previous_status": "unclosed",
+    "evidence_source": ".local/p0-review/p0-p1-round11-root.json",
+    "comparison_only": true,
+    "full_function_migration_verified": false,
+    "manual_rereview": true,
+    "coverage_boundaries": {
+      "covered": [
+        "objc_setString_selector_binding",
+        "bounded_binary_reference_scan",
+        "current_no_named_setter_call",
+        "bounded_ADR_and_ADRP_ADD_reference_scan"
+      ],
+      "not_verified": [
+        "original_indirect_or_inlined_consumers",
+        "equivalent_production_consumer",
+        "return_ABI"
+      ]
+    }
+  },
+  "static_proof": {
+    "path": "reports/replica/p0-p1-review-round12-static-proof.json",
+    "sha256": "f0cdfda16e813e9efbae80708f45f2cab03d75922ed024c087a6bb193a64a791"
+  },
+  "difference_backlog": {
+    "path": "reports/replica/p0-p1-difference-backlog-v1.json",
+    "sha256": "4aa1c7779f5663ff48e1922deef13a4066f9f782cbd67e26750081753881f01d"
+  },
+  "execution": {
+    "compiled": false,
+    "application_executed": false,
+    "network_used": false,
+    "production_modified": false,
+    "ledger_modified": false,
+    "submitted": false
+  },
+  "tests": {
+    "passed": true,
+    "total": 238,
+    "scope": "仅Python源码、静态入口及差异清单来源检查；不是功能回归。",
+    "selection": ".local/p0-review/p0-p1-round12-test-selection.json",
+    "log": ".local/p0-review/p0-p1-round12-code-tests.log",
+    "failures": 0,
+    "errors": 0
+  },
+  "structural_reference_audit": {
+    "path": ".local/p0-review/p0-p1-round12-all-reference-audit.json",
+    "sha256": "c2867bf7f54d42551f986dbd4862a2138145aa971fc55c2bddd6d429b4aff3ea"
+  }
+}

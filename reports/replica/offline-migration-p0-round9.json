@@ -1,0 +1,611 @@
+{
+  "kind": "offline_source_contract_review",
+  "round": 9,
+  "status": "source-checks-passed-goal-active",
+  "generated_at": "2026-10-29T14:29:17.620536+00:00",
+  "previous_goal_turn": "progress",
+  "priority": "P0",
+  "module": "panel_lifecycle_and_focus",
+  "functions": [
+    {
+      "function_id": "Paste:0x100037704",
+      "status": "fixed_search_cancel_parent_partial",
+      "contract": "context.search(tag0)清空search nodes并调用SearchBar.onDismiss；其余context performClose。本轮补回非空搜索清除/退出搜索/保面板的分支；自有state/响应链与popover处理仍适配。",
+      "original": {
+        "path": "decompiled/Paste/part-0020.c",
+        "sha256": "0bf3c9584ba513bca862b43decf557965e1df685372031dcd0ab358cdade13f0"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "func cancelSearchOrPanel()"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x100037948",
+      "status": "existing_cancel_dispatch_adapter",
+      "contract": "MainView cancelOperation经MainActor桥和sender转换调用037704；当前原生key handler、搜索编辑器和popover Esc转同一个实际cancel入口；不声称ObjC/Any桥ABI全等。",
+      "original": {
+        "path": "decompiled/Paste/part-0020.c",
+        "sha256": "b8a16da2d5d5e8eab2df74bd5e87cc3cb0a42cb9d6cf21a9731a5e277b51038a"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "private func handleKey(_ event: NSEvent)"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/PanelViews.swift",
+          "symbol": "onCancel: { state.controller?.cancelSearchOrPanel() }"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x10007df7c",
+      "status": "existing_effective_search_context_reused",
+      "contract": "非空有效query才选择searchViewModel，空但可见的search框不等于search context。当前使用isSearchQueryEmpty而非searchVisible决定Esc及关闭超时。完整Combine投影仍partial。",
+      "original": {
+        "path": "decompiled/Paste/part-0041.c",
+        "sha256": "095398ef072d76993a2d9400bb4e7be7d5097dafc50680ceb1fbca452aeb23d3"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "var isSearchQueryEmpty: Bool"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1002ddf4c",
+      "status": "existing_empty_query_constant_reused",
+      "contract": "一次初始化空nodes；当前clear使用空nodes/text/filters，不把删除收藏、清空历史或选择history混入该分支。",
+      "original": {
+        "path": "decompiled/Paste/part-0237.c",
+        "sha256": "3ef9032848cdf02db393e372d763c60784ffbb6f36889c8918cceb3af6d40c41"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "state.applySearchInput(nodes: [], text: \"\", filters: [])"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1002ddf60",
+      "status": "existing_empty_query_accessor_reused",
+      "contract": "取一次初始化的空query数组；当前值模型空数组消费对应行为，不声称全局对象和retain身份相同。",
+      "original": {
+        "path": "decompiled/Paste/part-0237.c",
+        "sha256": "5868dae378697fe0951495300469cd67bef041fd6c171a3c47c5e033053381aa"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "state.applySearchInput(nodes: [], text: \"\", filters: [])"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1000192b0",
+      "status": "existing_show_order_parent_partial",
+      "contract": "screen/content guard后generation加一、closing=false、clear背景/placement、nil responder、取消closed manager、show、记screen/裁剪、负高度起点和0.15/控制点动画；当前复用。激活/onWillShow、自有window controller及animator路径不同。",
+      "original": {
+        "path": "decompiled/Paste/part-0010.c",
+        "sha256": "45041407a17699b649baa34d2d24be89bb9503890fd11c6519d5d9b6328a26fc"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "func showPanel()"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1000196dc",
+      "status": "existing_show_geometry_adapter",
+      "contract": "原show动画块直接content frame原点置零，依赖allowsImplicitAnimation；当前animator.frame置零，结果几何一致但代理路径仍不同，不据静态代码宣称动画全等。",
+      "original": {
+        "path": "decompiled/Paste/part-0010.c",
+        "sha256": "6e8c5681307e032e26775ec42ed769f9eea0a7efe169a47d7ad5f9806a8354cf"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "content.animator().frame = NSRect(origin: .zero, size: content.frame.size)"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x100019790",
+      "status": "existing_show_completion_parent_partial",
+      "contract": "仅generation匹配时旧系统恢复背景、Published visible=true、给活跃search聚焦再调用onDidShow；当前匹配保护/背景/search focus复用，未恢复同一Published/onDidShow对象链。",
+      "original": {
+        "path": "decompiled/Paste/part-0010.c",
+        "sha256": "474a6120c2df7e158f49eb58944d13c1e78aa4d228b1784eddea4b9570e044a2"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "generation == self.panelTransitionGeneration"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "self.state.searchFocus = UUID()"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x100019978",
+      "status": "actor_and_sender_wrapper_pending",
+      "contract": "showWindow包装处理MainActor和Any sender再转0192b0；当前showPanel无同一sender/ObjC包装，不新增空壳充数。",
+      "original": {
+        "path": "decompiled/Paste/part-0010.c",
+        "sha256": "4a696e79ca4e341f4fb54cfa377c697317cadd41bfc2f82b5ba334dec40d1349"
+      },
+      "source_references": []
+    },
+    {
+      "function_id": "Paste:0x100019a84",
+      "status": "existing_close_order_parent_partial",
+      "contract": "visible/closing guard、generation、旧系统clear、nil responder、closed manager、closing、willClose通知/callback、关裁剪、0.2 easeInEaseOut。当前同序子合同复用；确认取消/monitors和自有身份保留。",
+      "original": {
+        "path": "decompiled/Paste/part-0010.c",
+        "sha256": "0f4dbd0361dffc812f278f3a032c73d392ac4b179391dfb2da955b78486fa6dd"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "func hidePanel()"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x100019d44",
+      "status": "existing_close_geometry_reused",
+      "contract": "取content高度，将animator原点设为(0,-height)，现同样消费当前尺寸。原actor诊断仍不等价。",
+      "original": {
+        "path": "decompiled/Paste/part-0010.c",
+        "sha256": "1428f71e604196db5e463f501327547ee3fa270bffc4e56dde6c43c5d9e113ba"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "content.animator().frame = NSRect(origin: NSPoint(x: 0, y: -content.frame.height), size: content.frame.size)"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x100019e2c",
+      "status": "existing_stale_completion_guard_reused",
+      "contract": "关闭completion先核generation，再super close、清originalScreen、closing=false、Published false和恢复裁剪；当前旧completion不能关新面板，Published/controller/捕获生命周期仍partial。",
+      "original": {
+        "path": "decompiled/Paste/part-0010.c",
+        "sha256": "cb9ebced8fb1448155db0380806848b6337c2e6088bd2659c82faac530e00c06"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "self.panel.close()"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "self.originalPanelScreen = nil"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x100019fc4",
+      "status": "actor_wrapper_pending",
+      "contract": "MainActor包装转统一close，当前真实close入口可用但不是NSWindowController close ABI。",
+      "original": {
+        "path": "decompiled/Paste/part-0010.c",
+        "sha256": "d9c199e8b7f73ab7364f6a6e590b0f86131cb92abe8243231b9dd983343c0764"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "func hidePanel()"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x100018de4",
+      "status": "existing_screen_change_geometry_reused",
+      "contract": "screen/content/originalScreen有效且屏幕不同才更新整屏底部位置和宽度，再记新screen；当前对应guard/frame/display=true复用，NSObject equality与Swift identity边界不计全等。",
+      "original": {
+        "path": "decompiled/Paste/part-0010.c",
+        "sha256": "a1ac2e2a9d5d4085ff9cfe8a039e8f2f9ea2cbac56ec49aed014a9672154a722"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "private func panelDidChangeScreen()"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x100018da8",
+      "status": "existing_screen_weak_callback_adapter",
+      "contract": "弱controller存在才转screen变化，当前weak self回调接到同一实际panelDidChangeScreen。",
+      "original": {
+        "path": "decompiled/Paste/part-0010.c",
+        "sha256": "578b84ab4f6580f8e4f374c0a198caeb40901984102ad8019175f49888bc361f"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "panel.didChangeScreen = { [weak self] in self?.panelDidChangeScreen() }"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x10001a784",
+      "status": "existing_screen_thunk_adapter",
+      "contract": "原尾转018da8；当前统一weak screen回调，不新增地址空壳。",
+      "original": {
+        "path": "decompiled/Paste/part-0011.c",
+        "sha256": "cd0b5bfcd8281f4c4171e24a9ea74590e5d0082fe59ddbbab6f25b5e86b2895e"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "panel.didChangeScreen = { [weak self] in self?.panelDidChangeScreen() }"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x100018c84",
+      "status": "confirmed_resign_adapter_difference",
+      "contract": "原同步消耗一次suppression再检查sheets/global modal后close；current有async、menu/key/preview/窗口祖先排除及额外monitor。suppression唯一有效setter来自Handoff排除域，未将其迁入离线流程。",
+      "original": {
+        "path": "decompiled/Paste/part-0010.c",
+        "sha256": "eaac5eab65896c70bf60dbdd8ece91563d0279ac29fb168715fa2b80c5ce0324"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "private func panelDidResignKey()"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "private var canDismissPanelForInteraction: Bool"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x10001a77c",
+      "status": "existing_resign_thunk_adapter",
+      "contract": "原转018c84；当前panel delegate回调真实接线，但异步条件与原不同，保持partial。",
+      "original": {
+        "path": "decompiled/Paste/part-0011.c",
+        "sha256": "8b95e7e605c1ac95c8d1137a7d4834de8b713f656d76cc478d26e6fac1cfc757"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "panel.didResignKey = { [weak self] in self?.panelDidResignKey() }"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x100077e48",
+      "status": "existing_resign_callback_adapter",
+      "contract": "native resignKey转共享通知/actor包装再调用存储回调；当前delegate调用didResignKey，生产有消费；未恢复原Notification参数ABI/诊断。",
+      "original": {
+        "path": "decompiled/Paste/part-0039.c",
+        "sha256": "724d15df3e4e5e680b49b3a22a57d81c61f12a165dfe3758dd7d7cff88320482"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "func windowDidResignKey(_ notification: Notification)"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x100077e58",
+      "status": "existing_screen_callback_adapter",
+      "contract": "screen-change转共享通知/actor包装再调用存储回调；当前delegate桥有真实screen消费者。",
+      "original": {
+        "path": "decompiled/Paste/part-0039.c",
+        "sha256": "5db671b78bbeb63e1d116b41236c2af184ad2ac4960f227e892fcb6c1ed4c60c"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "func windowDidChangeScreen(_ notification: Notification)"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x100077e68",
+      "status": "native_actor_notification_wrapper_pending",
+      "contract": "原共享actor检查、Notification桥和可选callback存储；当前@MainActor及原生delegate不是同一诊断/桥合同，不能按同名声明计满。",
+      "original": {
+        "path": "decompiled/Paste/part-0039.c",
+        "sha256": "22eba4682582dac13fd07a1c7c3018a5d23cb16cf488099d60451b2628795b36"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "final class ReplicaPanel: NSPanel, NSWindowDelegate"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1000778c0",
+      "status": "existing_responder_fallback_reused",
+      "contract": "nonnil直接super，nil取initialFirstResponder再contentView，返回super结果。真实show/hide/search取消共用；历史已计数，不重复增加。",
+      "original": {
+        "path": "decompiled/Paste/part-0039.c",
+        "sha256": "641b1fe3cff8dfc4b80b903c409c5e3e7d9f25a5058be0ea28835bda74febe70"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "override func makeFirstResponder(_ responder: NSResponder?)"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x100021518",
+      "status": "existing_closed_subscriptions_parent_partial",
+      "contract": "关闭时监听DidCreate/DidRestore并安排10秒单次任务。当前真实观察者/任务/重开取消复用；queue.main/自有publisher、DI和模型时序边界仍partial。",
+      "original": {
+        "path": "decompiled/Paste/part-0013.c",
+        "sha256": "0dbedbe7e73eae72dddca25e315555e3b604bd6ff00023f141eab3f63d2deb6d"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "private func beginClosedState()"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "private func cancelClosedState()"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1000217a8",
+      "status": "existing_create_route_reused",
+      "contract": "DidCreate弱owner成功则选history identifier并取消延时work；当前chooseBoard(nil)及取消timer复用，未把capture命中当create。",
+      "original": {
+        "path": "decompiled/Paste/part-0013.c",
+        "sha256": "efe34dd35b661a4d795d721088b11a371872e7fc5c4461f1f00f41efb778297d"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "forName: ClipboardMonitor.didCreateItemNotification"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x100021908",
+      "status": "existing_restore_context_guard_reused",
+      "contract": "DidRestore(0,1)仅history(tag1)时选history并取消timer，search/pinboard不变；当前有效query为空且boardnil guard对应，原Published/DI身份仍partial。",
+      "original": {
+        "path": "decompiled/Paste/part-0013.c",
+        "sha256": "e087167d0569426af3d4de90d27b1ffa6991431cc23fcf29323e2a05889d1b39"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "closedRestoreObservation = store.didRestoreItem.sink"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x100021a34",
+      "status": "existing_restore_actor_weak_adapter",
+      "contract": "MainActor检查后弱owner存在才传(0,1)给021908；当前实际restore sink弱self同步调用，原actor诊断/ABI待证。",
+      "original": {
+        "path": "decompiled/Paste/part-0013.c",
+        "sha256": "37ad50eabc4dd2c725a3b001f997ae9f9b5907efb940cf8ebf0432df39a33551"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "closedRestoreObservation = store.didRestoreItem.sink"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x100021b04",
+      "status": "existing_timeout_query_guard_reused",
+      "contract": "10秒到期只清search(tag0) nodes并onDismiss，不关主窗；当前非空有效query后clear和searchVisible=false复用；原投影/onDismiss对象仍partial。",
+      "original": {
+        "path": "decompiled/Paste/part-0013.c",
+        "sha256": "8c2ba95097495c898bc4e90d6c4df72e4e9559c2a35d7a674a4cfa9f463e266a"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "closedSearchTimer = Timer.scheduledTimer(withTimeInterval: 10, repeats: false)"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x100021e40",
+      "status": "enum_payload_release_boundary_pending",
+      "contract": "释放search关联对象，history/pinboard值不走同一release；据其高两位tag路径和原metadata确认分支，当前Swift ARC不声称同ABI。",
+      "original": {
+        "path": "decompiled/Paste/part-0013.c",
+        "sha256": "d5a2fd364b0c16ca33c48ca3af7483612bc233d989df97d668f45bcaec08c5c1"
+      },
+      "source_references": []
+    },
+    {
+      "function_id": "Paste:0x10021cf38",
+      "status": "existing_timing_curve_reused",
+      "contract": "取得系统easeInEaseOut函数，当前关闭使用同一CAMediaTimingFunction name。",
+      "original": {
+        "path": "decompiled/Paste/part-0184.c",
+        "sha256": "2a138a2bee693bda658627122e99a7285fe5af45da5f472f530291cd9775a0d1"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "CAMediaTimingFunction(name: .easeInEaseOut)"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x10021cadc",
+      "status": "animation_parent_partial",
+      "contract": "animated=false同步animation/completion；true搭建AppKit block并runAnimationGroup。当前面板只用true分支，通用helper其他调用/生命周期未迁全。",
+      "original": {
+        "path": "decompiled/Paste/part-0184.c",
+        "sha256": "3575299714b973afbfb26a4b4eef217c3db3f770d9c5e83e46c2297e8e29d4dc"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "NSAnimationContext.runAnimationGroup"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x100208b84",
+      "status": "existing_animation_capture_wrapper_adapter",
+      "contract": "上下文闭包将duration/optionalflag/timing/animation转21cd10；当前group直接设置值，不造额外ABI包装。",
+      "original": {
+        "path": "decompiled/Paste/part-0171.c",
+        "sha256": "39b9f4cdeb700edd5d7eda7f07ffc319f20c90ea17f0fc3e32b7b50918c62a5e"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "NSAnimationContext.runAnimationGroup"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x10021cd10",
+      "status": "existing_animation_settings_reused",
+      "contract": "optionalflag非1时设duration，总设置timing及allowsImplicitAnimation=true，再同步animation闭包；面板原传0，当前设置顺序复用，原MainActor诊断未等价。",
+      "original": {
+        "path": "decompiled/Paste/part-0184.c",
+        "sha256": "4bba2620ac8d5e927b8f8249e4eb3ac6bd910c4e2766da9a0c49b98bf2a2b720"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "context.allowsImplicitAnimation = true"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x10003e290",
+      "status": "existing_show_search_focus_adapter",
+      "contract": "仅active且filter browser未显示时聚焦searchfield；当前show completion下searchVisible且popover未displayed再searchFocus UUID，原native对象链仍partial。",
+      "original": {
+        "path": "decompiled/Paste/part-0023.c",
+        "sha256": "3bbfe24cb0c4c8ee60034b76cc86743c2243533ba6812fee5cf710360ad9cb63"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "self.state.searchVisible, self.filterBrowserPopover?.isDisplayed != true"
+        }
+      ]
+    }
+  ],
+  "reviewed_count": 33,
+  "current_review_unique_count": 264,
+  "current_review_inventory_percent": 0.3254,
+  "static_bindings": {
+    "original_binary_sha256": "871f00354fbb1c165d858a98e6d19d6f43cb9d3f9f958b3e07c7f07eb5c19afb",
+    "context": {
+      "type_table_entry": "0x100d755f8",
+      "type_table_bytes": "5481f3ff",
+      "descriptor": "0x100cad74c",
+      "descriptor_bytes": "5200000058e3ffffac71f9ff7cb470ff64b809000300000000000000",
+      "field_descriptor": "0x100d48fc0",
+      "field_descriptor_bytes": "ccfafaff0000000003000c0003000000",
+      "field_kind": 3,
+      "record_size": 12,
+      "cases": [
+        {
+          "case": "search",
+          "flags": 0,
+          "record_address": "0x100d48fd0",
+          "record_bytes": "000000005aecfaffedeafdff"
+        },
+        {
+          "case": "history",
+          "flags": 0,
+          "record_address": "0x100d48fdc",
+          "record_bytes": "000000008ae5faffe8eafdff"
+        },
+        {
+          "case": "pinboard",
+          "flags": 0,
+          "record_address": "0x100d48fe8",
+          "record_bytes": "000000007ee5faffe4eafdff"
+        }
+      ]
+    }
+  },
+  "source_sha256": {
+    "replica/Sources/Pasto/UI/ReplicaUIController.swift": "8156e6d71cb70fd57634d86edea0710ca87541422cdbe494efea4f256290e6c4",
+    "replica/Sources/Pasto/UI/PanelViews.swift": "13d62e5ff0790baac339dad3828237ca90e9112918dc2597fd49a91e101ab9e1",
+    "replica/Sources/PastoCore/OriginalSearchQuery.swift": "4c828b16c6342387d375e6b5a3f24d28b37bbffa1c377e4cdb064ad27b5d1b28",
+    "replica/Sources/Pasto/UI/SearchEditor.swift": "fcd850213ccfaf2efc39294c8c5740e9f552bab607512a6552124a83d478f194",
+    "replica/Sources/PastoCore/OriginalSearchCommands.swift": "cf7409e5f4bf47f0e1052ac3ae42c5af43812c37407bfc77eca62ba864ca1bf8",
+    "scripts/tests/test_panel_lifecycle_contracts.py": "b58401584d44113ddcc24f0b69def4fadb3d85a1aaf9e952991f68ef980d43a1"
+  },
+  "new_partial_bindings": [
+    "Paste:0x100037704",
+    "Paste:0x100037948"
+  ],
+  "confirmed_differences_fixed": [
+    "有效搜索按Esc先清query/退出搜索并保持面板；空有效query才关闭面板，保留分组/真实数据"
+  ],
+  "tests": {
+    "passed": true,
+    "total": 89,
+    "scope": "Python source contracts, static enum metadata and ledger/provenance; no AppKit interaction or Swift execution",
+    "added_in_round": 12
+  },
+  "new_fully_migrated_function_count": 0,
+  "historical_ledger": {
+    "numerator": 1648,
+    "denominator": 81123,
+    "percent": 2.0315,
+    "stale_evidence": true
+  },
+  "current_partial_count": 432,
+  "compiled": false,
+  "application_executed": false,
+  "original_binary_executed": false,
+  "user_data_modified": false,
+  "network_used": false,
+  "committed": false,
+  "pushed": false,
+  "module_complete": false,
+  "remaining_differences": [
+    "失焦callback当前异步及menu/key/preview/ancestor排除、额外鼠标/active监视器，不同于原同步sheets/modal关闭",
+    "one-shot suppression有效setter属于Handoff联网域，本轮不迁入本地流程",
+    "原NSWindowController/Published isVisible/onDidShow与自有panelWillShow激活时序差异",
+    "show frame直接隐式动画与当前animator代理、强弱捕获生命周期尚未完整对齐",
+    "SearchViewModel120ms Combine投影、ItemCollectionContext对象、原生onDismiss/响应链仍适配"
+  ],
+  "next_module": "P1 search_and_filter",
+  "next_work": [
+    "P0剩余窗口/actor/DI/异步适配保留pending，继续较高用户价值的搜索/筛选代码合同",
+    "批量复用已有query归一化、条件组合、token、建议和取消等真实实现，优先修确定差异"
+  ],
+  "inventory_checked": {
+    "mappings": 2089,
+    "partial": 432,
+    "migrated_historical": 1648,
+    "reference_issues": {
+      "missing_address_in_evidence": 12
+    },
+    "missing_source_references": 0,
+    "note": "12条为既有证据Schema/地址绑定缺口，未伪造构建或完整迁移证据消除它们。"
+  }
+}

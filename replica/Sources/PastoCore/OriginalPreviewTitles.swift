@@ -14,6 +14,16 @@ public enum OriginalPreviewTitles {
         return String(localized: resource)
     }
 
+    // Compare the displayed title first; re-read the optional field only for an empty trimmed input.
+    public static func f_1003bae08(_ title: String, originalTitle: @autoclosure () -> String?,
+                                  defaultTitle: @autoclosure () -> String,
+                                  update: (String?) throws -> Void) rethrows {
+        let displayedTitle = f_100308f88(originalTitle(), defaultTitle: defaultTitle())
+        guard title != displayedTitle else { return }
+        let normalized = title.trimmingCharacters(in: .whitespacesAndNewlines)
+        try update(normalized.isEmpty && originalTitle() != nil ? nil : normalized)
+    }
+
     public static func f_100308f88(_ title: String?, defaultTitle: @autoclosure () -> String) -> String {
         if let title, !title.isEmpty { return title }
         return defaultTitle()

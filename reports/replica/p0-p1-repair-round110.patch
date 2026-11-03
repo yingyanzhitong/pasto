@@ -1,0 +1,71 @@
+--- a/replica/Sources/Pasto/UI/PanelViews.swift
++++ b/replica/Sources/Pasto/UI/PanelViews.swift
+@@ -617,6 +617,7 @@
+         if item.isDeleted {
+             Button("恢复") { state.perform { try state.store.restore(ids: state.selection) } }
+         } else {
++            let groupItems = state.controller?.contextMenuRestoreItems() ?? []
+             Button("拷贝") { state.controller?.copySelection(plainTextOnly: false) }
+             Button("复制为纯文本") { state.controller?.copySelection(plainTextOnly: true) }
+                 .disabled(!canRestoreSelectionAsPlainText)
+@@ -643,7 +644,6 @@
+                 Button("在 Finder 中显示") { NSWorkspace.shared.activateFileViewerSelecting(itemFileURLs(item)) }
+             }
+             Menu("添加到 Pasto") {
+-                let groupItems = state.controller?.contextMenuRestoreItems() ?? []
+                 ForEach(state.pinboardMenuTargets(), id: \.id) { target in
+                     Button(target.name) { state.assignItems(groupItems, to: target) }
+                 }
+@@ -652,13 +652,13 @@
+                     state.controller?.createPinboard(assignSelection: true, selectionItems: groupItems)
+                 }
+             }
+-            if !item.pinboardIDs.isEmpty {
+-                if let board = state.pinboardID {
+-                    Button("从此 Pasto 移除") {
+-                        state.perform { try state.store.unassign(ids: state.selection, from: board) }
+-                    }
+-                }
+-                Button("从所有 Pasto 移除") { state.assignSelection(to: nil) }
++            if !item.pinboardIDs.isEmpty, let board = state.pinboardID {
++                Button("从此 Pasto 移除") {
++                    state.perform { try state.store.unassign(ids: state.selection, from: board) }
++                }
++            }
++            if state.canUnassignItems(groupItems) {
++                Button("从所有 Pasto 移除") { state.assignItems(groupItems, to: nil) }
+             }
+             Button("添加到 Pasto Stack") {
+                 state.controller?.addSelectionToStack()
+--- a/replica/Sources/Pasto/UI/ReplicaUIController.swift
++++ b/replica/Sources/Pasto/UI/ReplicaUIController.swift
+@@ -719,6 +719,13 @@
+ 
+     func assignItems(_ items: [ClipboardRestoreItem], to target: ClipboardPinboardTarget) {
+         perform { try store.assign(items: items, to: target) }
++    }
++
++    // 3ba2bc: history context, nonempty input, and at least one current type2 owner.
++    // Pasto's local unshared groups satisfy the original writable-owner predicate.
++    func canUnassignItems(_ items: [ClipboardRestoreItem]) -> Bool {
++        let hasPinboardOwner = items.contains { $0.hasNativePinboardOwner() ?? !$0.resolvedItem().pinboardIDs.isEmpty }
++        return pinboardID == nil && !showDeleted && !items.isEmpty && hasPinboardOwner
+     }
+ 
+     // 09ee9c forwards the array captured when the group menu was built.
+--- a/replica/Sources/PastoCore/ClipboardRestoreItem.swift
++++ b/replica/Sources/PastoCore/ClipboardRestoreItem.swift
+@@ -95,6 +95,13 @@
+         return owner.isEqual(target.nativeObject)
+     }
+ 
++    // 3ba390/3250f0: removal eligibility needs only the current native owner type.
++    public func hasNativePinboardOwner() -> Bool? {
++        guard let object = nativeObject else { return nil }
++        guard let owner = object.value(forKey: "list") as? NSManagedObject else { return false }
++        return (owner.value(forKey: "rawType") as? NSNumber)?.int64Value == 2
++    }
++
+     public func previewSharingContent() -> OriginalPreviewSharing.Content? {
+         guard let object = nativeObject else { return nil }
+         let rawType = (object.value(forKey: "rawType") as? NSNumber)?.intValue ?? 0

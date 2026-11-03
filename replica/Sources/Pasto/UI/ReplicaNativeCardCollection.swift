@@ -1,4 +1,5 @@
 import AppKit
+import Combine
 import SwiftUI
 import PastoCore
 
@@ -29,6 +30,8 @@ final class ReplicaNativeCollectionHost: NSView, NSDraggingSource {
     private let document = ReplicaNativeCardDocument(frame: .zero)
     private let scrollAnimator = OriginalCollectionScrollAnimator()
     private weak var state: ReplicaUIState?
+    private var listAttributesSource: ClipboardListAttributesObservation?
+    private var listAttributesSubscription: AnyCancellable?
     private weak var focusPanel: ReplicaPanel?
     private var collectionIsFirstResponder = false
     private var dimmingMode: UInt8 = 0
@@ -39,7 +42,18 @@ final class ReplicaNativeCollectionHost: NSView, NSDraggingSource {
         default: return true
         }
     }
-    private var items: [ClipboardItem] = []
+    private var items: [ClipboardCollectionEntry] = []
+    private var itemReferences: [UUID: ClipboardCollectionItemReference] = [:]
+    private var hasReceivedCollectionSnapshot = false
+    private var collectionOwnerGeneration: UInt64 = 0
+    private struct PendingSnapshot {
+        let items: [ClipboardCollectionEntry]
+        let changedIDs: Set<UUID>
+        let itemReferences: [UUID: ClipboardCollectionItemReference]
+    }
+    private var pendingSnapshot: PendingSnapshot?
+    private var snapshotDrainScheduled = false
+    private var isDrainingSnapshots = false
     private var cardSide: CGFloat = 0
     private var cells: [Int: ReplicaNativeCardCell] = [:]
     private var recycledCells: [ReplicaNativeCardCell] = []
@@ -76,13 +90,205 @@ final class ReplicaNativeCollectionHost: NSView, NSDraggingSource {
     required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
 
     func update(state: ReplicaUIState, cardSide: CGFloat) {
+        let replacesState = self.state !== state
+        if replacesState {
+            if let previousState = self.state {
+                previousState.cancelPendingNeighborSelection()
+                if previousState.collectionOwner === self { previousState.collectionOwner = nil }
+            }
+            hasReceivedCollectionSnapshot = false
+            collectionOwnerGeneration &+= 1
+            pendingSnapshot = nil
+            snapshotDrainScheduled = false
+            items = []
+            itemReferences = [:]
+        }
         self.state = state
-        items = state.visibleItems
+        state.collectionOwner = self
         self.cardSide = cardSide
-        let primary = state.primaryID
-        if primary != lastPrimaryID { needsPrimaryReveal = primary != nil }
-        lastPrimaryID = primary
-        layoutCollection()
+        if replacesState { installListAttributesObservation(state: state) }
+        let incomingItems = state.visibleItems
+        let incomingItemReferences = state.collectionItemReferences
+        let changedIDs = state.takeCollectionChangedIDs(owner: self)
+        // f1b912c replaces the pending items; f1b9214 schedules at most one drain.
+        // Selection-only redraws do not change the pending data or its changed IDs.
+        if pendingSnapshot?.items != incomingItems || !changedIDs.isEmpty
+            || pendingSnapshot?.itemReferences != incomingItemReferences {
+            pendingSnapshot = PendingSnapshot(items: incomingItems,
+                changedIDs: (pendingSnapshot?.changedIDs ?? []).union(changedIDs),
+                itemReferences: incomingItemReferences)
+        }
+        scheduleSnapshotDrain()
+    }
+
+    // 0x100036ee0 -> 0x100067c84 installs a fresh applier even when the
+    // published search model is the same object. Data-only updates use update.
+    func replaceCollectionModel(state: ReplicaUIState) {
+        guard self.state === state, state.collectionOwner === self else { return }
+        collectionOwnerGeneration &+= 1
+        pendingSnapshot = nil
+        snapshotDrainScheduled = false
+        hasReceivedCollectionSnapshot = false
+        items = []
+        itemReferences = [:]
+        installListAttributesObservation(state: state)
+        update(state: state, cardSide: cardSide)
+    }
+
+    private func installListAttributesObservation(state: ReplicaUIState) {
+        listAttributesSubscription = nil
+        listAttributesSource = nil
+        state.listAttributesSource = nil
+        // 3b9264: search collections do not create a list-attributes subject.
+        guard state.isCollectionSearchQueryEmpty, !state.showDeleted,
+              let source = state.store.observeListAttributes(pinboardID: state.pinboardID) else { return }
+        listAttributesSource = source
+        state.listAttributesSource = source
+        // 067c84 -> 07660c -> 0687d4 -> 22c22c: skip initial value, force visible-cell reload.
+        listAttributesSubscription = source.publisher.dropFirst().sink { [weak self] _ in
+            self?.reloadCellsForListAttributes()
+        }
+    }
+
+    private func reloadCellsForListAttributes() {
+        for cell in cells.values {
+            cell.removeFromSuperview()
+            cell.invalidateRendering()
+            recycledCells.append(cell)
+        }
+        cells.removeAll()
+        tileCells()
+    }
+
+    func appliedItems(for state: ReplicaUIState) -> [ClipboardCollectionEntry]? {
+        guard self.state === state, state.collectionOwner === self else { return nil }
+        return items
+    }
+
+    func appliedSelectedItems(for state: ReplicaUIState, orderedIDs: [UUID]) -> [ClipboardItem]? {
+        guard self.state === state, state.collectionOwner === self else { return nil }
+        let positions = Dictionary(uniqueKeysWithValues: items.enumerated().map { ($0.element.id, $0.offset) })
+        return orderedIDs.compactMap { identifier in
+            guard let index = positions[identifier] else { return nil }
+            return items[index].item()
+        }
+    }
+
+    func appliedRestoreItems(for state: ReplicaUIState, orderedIDs: [UUID]) -> [ClipboardRestoreItem]? {
+        guard self.state === state, state.collectionOwner === self else { return nil }
+        let positions = Dictionary(uniqueKeysWithValues: items.enumerated().map { ($0.element.id, $0.offset) })
+        return orderedIDs.compactMap { identifier in
+            guard let index = positions[identifier] else { return nil }
+            return items[index].restoreItem()
+        }
+    }
+
+    // 0x100228ee8 -> 0x100228f6c: deliver selection to visible cells synchronously.
+    func applySelection(state: ReplicaUIState) {
+        guard self.state === state, state.collectionOwner === self else { return }
+        for (index, cell) in cells where items.indices.contains(index) && cell.itemID == items[index].id {
+            cell.isSelected = state.selection.contains(items[index].id)
+        }
+    }
+
+    // 0x100069778: only the last selected visible cell is a rename target.
+    func renameSelection(state: ReplicaUIState) -> Bool {
+        guard self.state === state, state.collectionOwner === self else { return false }
+        guard let id = state.collectionSelectionSnapshot().orderedIDs.last else { return false }
+        guard let index = items.firstIndex(where: { $0.id == id }),
+              let cell = cells[index], cell.itemID == id else { return true }
+        state.selectAppliedItem(at: index, items: items)
+        cell.beginTitleEditing()
+        return true
+    }
+
+    private func scheduleSnapshotDrain() {
+        guard !snapshotDrainScheduled, !isDrainingSnapshots, pendingSnapshot != nil else { return }
+        snapshotDrainScheduled = true
+        let ownerGeneration = collectionOwnerGeneration
+        DispatchQueue.main.async { [weak self] in
+            guard let self, self.collectionOwnerGeneration == ownerGeneration else { return }
+            self.snapshotDrainScheduled = false
+            self.drainCollectionSnapshots()
+        }
+    }
+
+    private func drainCollectionSnapshots() {
+        guard !isDrainingSnapshots, let state, state.collectionOwner === self else { return }
+        isDrainingSnapshots = true
+        let ownerGeneration = collectionOwnerGeneration
+        defer {
+            isDrainingSnapshots = false
+            scheduleSnapshotDrain()
+        }
+        // f1b95bc clears the pair before applying and rereads it after the callback.
+        while collectionOwnerGeneration == ownerGeneration, self.state === state,
+              state.collectionOwner === self, let pending = pendingSnapshot {
+            pendingSnapshot = nil
+            let incomingIDs = pending.items.map(\.id)
+            guard incomingIDs == state.visibleItems.map(\.id) else { continue }
+            let previousIDs = items.map(\.id)
+            let isInitialSnapshot = !hasReceivedCollectionSnapshot
+            let selectionRelevantSnapshotChanged = previousIDs != incomingIDs
+            let hasRelevantChanges = !pending.changedIDs.isDisjoint(with: Set(incomingIDs))
+            let requiresReload = isInitialSnapshot || (selectionRelevantSnapshotChanged
+                && OriginalCollectionSnapshot.requiresFullReload(from: previousIDs, to: incomingIDs))
+            hasReceivedCollectionSnapshot = true
+            // Apply data and selection within the same drain, in original mutation-before-reload order.
+            items = pending.items
+            itemReferences = pending.itemReferences
+            let primary = state.primaryID
+            if primary != lastPrimaryID { needsPrimaryReveal = primary != nil }
+            if let request = state.pendingListFocus, state.isCollectionSearchQueryEmpty,
+               !state.showDeleted, state.pinboardID == request.pinboardID {
+                needsPrimaryReveal = false
+            }
+            lastPrimaryID = primary
+            layoutCollection()
+            guard collectionOwnerGeneration == ownerGeneration, self.state === state,
+                  state.collectionOwner === self else { continue }
+            if !isInitialSnapshot && !selectionRelevantSnapshotChanged && !hasRelevantChanges {
+                // Selection/layout-only redraws still deliver an explicit focus request.
+                // They do not represent the original applier's data onUpdate callback.
+                if state.pendingListFocus != nil { restorePendingListFocus(state: state) }
+                continue
+            }
+            if requiresReload {
+                state.applyFullCollectionReload(items: items)
+                guard collectionOwnerGeneration == ownerGeneration, self.state === state,
+                      state.collectionOwner === self else { continue }
+                scrollView.contentView.bounds.origin = .zero
+                lastPrimaryID = state.primaryID
+                needsPrimaryReveal = false
+                tileCells()
+            } else {
+                state.applyIncrementalCollectionSnapshot(items: items)
+            }
+            // f1b9b78 calls onUpdate only after its mutation/collection callback returns.
+            guard collectionOwnerGeneration == ownerGeneration, self.state === state,
+                  state.collectionOwner === self else { continue }
+            if let neighbor = state.pendingNeighborSelection, incomingIDs != neighbor.beforeIDs {
+                state.consumePendingNeighborSelection(token: neighbor.token, items: items)
+            }
+            if state.pendingListFocus != nil { restorePendingListFocus(state: state) }
+        }
+    }
+
+    private func restorePendingListFocus(state: ReplicaUIState) {
+        guard self.state === state, state.collectionOwner === self else { return }
+        let itemIDs = items.map(\.id)
+        guard itemIDs == state.visibleItems.map(\.id),
+              let pendingFocus = state.consumePendingListFocus(itemIDs: itemIDs) else { return }
+        lastPrimaryID = state.primaryID
+        needsPrimaryReveal = false
+        if let offset = pendingFocus.horizontalOffset {
+            // f22cce0 sets clip bounds directly, without animation or clamping.
+            scrollView.contentView.bounds.origin = CGPoint(
+                x: cardFrame(pendingFocus.index).minX - offset, y: 0)
+        } else {
+            revealPrimaryCard(at: pendingFocus.index, animated: false)
+        }
+        tileCells()
     }
 
     override func layout() {
@@ -92,6 +298,19 @@ final class ReplicaNativeCollectionHost: NSView, NSDraggingSource {
 
     override var acceptsFirstResponder: Bool { true }
     override var canBecomeKeyView: Bool { true }
+
+    override func keyDown(with event: NSEvent) {
+        if let specialKey = event.specialKey {
+            switch specialKey {
+            case .backspace, .delete, .deleteForward:
+                state?.deleteSelection()
+                return
+            default:
+                break
+            }
+        }
+        super.keyDown(with: event)
+    }
 
     override func selectAll(_ sender: Any?) {
         state?.selectAll()
@@ -148,6 +367,17 @@ final class ReplicaNativeCollectionHost: NSView, NSDraggingSource {
     }
 
     func detachObservers() {
+        listAttributesSubscription = nil
+        listAttributesSource = nil
+        collectionOwnerGeneration &+= 1
+        pendingSnapshot = nil
+        snapshotDrainScheduled = false
+        itemReferences = [:]
+        if let state, state.collectionOwner === self {
+            state.listAttributesSource = nil
+            state.cancelPendingNeighborSelection()
+            state.collectionOwner = nil
+        }
         clearFocusTarget()
         if let boundsObserver { NotificationCenter.default.removeObserver(boundsObserver) }
         boundsObserver = nil
@@ -170,9 +400,25 @@ final class ReplicaNativeCollectionHost: NSView, NSDraggingSource {
         }
     }
 
+    // 06bb3c/06be48: keep the requested index across scrolling, then read the applier again.
+    func previewItem(at index: Int, present: @escaping (ClipboardRestoreItem, NSView) -> Void) {
+        guard let state, state.collectionOwner === self, window != nil else { return }
+        if items.indices.contains(index), let input = items[index].restoreItem(),
+           let anchor = visibleSelectionAnchor(at: index, itemID: items[index].id) {
+            present(input, anchor)
+            return
+        }
+        revealPrimaryCard(at: index, animated: true) { [weak self] success in
+            guard success else { return }
+            self?.previewItem(at: index, present: present)
+        }
+    }
+
     func previewAnchor(for itemID: UUID, revealIfNeeded: Bool = true) -> NSView? {
         guard let state, let hostWindow = window, !bounds.isEmpty, cardSide > 0 else { return nil }
         update(state: state, cardSide: cardSide)
+        // Explicit preview/reveal commands run outside the representable update transaction.
+        drainCollectionSnapshots()
         guard let index = items.firstIndex(where: { $0.id == itemID }) else { return nil }
         if cells[index]?.itemID != itemID {
             guard revealIfNeeded else { return nil }
@@ -186,11 +432,11 @@ final class ReplicaNativeCollectionHost: NSView, NSDraggingSource {
 
     func revealSelection(state: ReplicaUIState, itemID: UUID, animated: Bool,
         completion: @escaping (Bool) -> Void) {
+        guard self.state === state, state.collectionOwner === self,
+              let index = items.firstIndex(where: { $0.id == itemID }) else { return }
         // This input selection owns its reveal. Do not also enqueue the primary-ID observer's reveal.
         lastPrimaryID = state.primaryID
         needsPrimaryReveal = false
-        update(state: state, cardSide: cardSide)
-        guard let index = items.firstIndex(where: { $0.id == itemID }) else { return }
         revealPrimaryCard(at: index, animated: animated, completion: completion)
     }
 
@@ -199,6 +445,12 @@ final class ReplicaNativeCollectionHost: NSView, NSDraggingSource {
               let cell = cells[index], cell.itemID == itemID,
               cell.superview === document, let window, cell.window === window else { return nil }
         return cell
+    }
+
+    func horizontalOffsetForVisibleItem(_ itemID: UUID) -> CGFloat? {
+        guard let index = items.firstIndex(where: { $0.id == itemID }),
+              let cell = visibleSelectionAnchor(at: index, itemID: itemID) else { return nil }
+        return cell.frame.minX - scrollView.contentView.bounds.minX
     }
 
     /// f22c9c4: intersecting cards report immediately; offscreen cards use the animator result.
@@ -238,6 +490,10 @@ final class ReplicaNativeCollectionHost: NSView, NSDraggingSource {
         return max(0, min(items.count - 1, first))...max(0, min(items.count - 1, last))
     }
 
+    private func renderedItem(at index: Int) -> ClipboardItem {
+        items[index].requiredItem()
+    }
+
     private func tileCells() {
         guard let state else { return }
         let desired = visibleIndexes().map { Set($0) } ?? []
@@ -248,7 +504,8 @@ final class ReplicaNativeCollectionHost: NSView, NSDraggingSource {
             }
         }
         for index in desired.sorted() {
-            let item = items[index]
+            let input = items[index].requiredRestoreItem()
+            let item = input.resolvedItem()
             let cell: ReplicaNativeCardCell
             let needsInsertion: Bool
             if let existing = cells[index], existing.itemID == item.id {
@@ -260,12 +517,12 @@ final class ReplicaNativeCollectionHost: NSView, NSDraggingSource {
                     recycledCells.append(replaced)
                 }
                 cell = recycledCells.popLast()
-                    ?? ReplicaNativeCardCell(owner: self, state: state, item: item, side: cardSide, index: index)
+                    ?? ReplicaNativeCardCell(owner: self, state: state, item: item, input: input, side: cardSide, index: index)
                 cells[index] = cell
                 needsInsertion = true
             }
             cell.frame = cardFrame(index)
-            cell.update(state: state, item: item, side: cardSide, index: index)
+            cell.update(state: state, item: item, input: input, side: cardSide, index: index)
             if needsInsertion { document.addSubview(cell) }
         }
     }
@@ -273,7 +530,8 @@ final class ReplicaNativeCollectionHost: NSView, NSDraggingSource {
     private func refreshCellRoots() {
         guard let state else { return }
         for (index, cell) in cells where items.indices.contains(index) && cell.itemID == items[index].id {
-            cell.update(state: state, item: items[index], side: cardSide, index: index)
+            let input = items[index].requiredRestoreItem()
+            cell.update(state: state, item: input.resolvedItem(), input: input, side: cardSide, index: index)
         }
     }
 
@@ -287,10 +545,9 @@ final class ReplicaNativeCollectionHost: NSView, NSDraggingSource {
     }
 
     private func select(_ index: Int, modifiers: NSEvent.ModifierFlags = []) {
-        guard let state else { return }
-        let current = state.visibleItems
+        guard let state, let current = appliedItems(for: state) else { return }
         guard current.indices.contains(index) else { return }
-        state.select(current[index], modifiers: modifiers)
+        state.select(renderedItem(at: index), modifiers: modifiers)
     }
 
     override func mouseDown(with event: NSEvent) {
@@ -312,10 +569,10 @@ final class ReplicaNativeCollectionHost: NSView, NSDraggingSource {
             lastPrimaryID = state.primaryID
             needsPrimaryReveal = false
             refreshCellRoots()
-            let current = state.visibleItems
+            let current = appliedItems(for: state) ?? []
             if current.indices.contains(index) {
                 let plain = NSEvent.ModifierFlags(rawValue: state.store.preferences.plainTextModifierRawValue)
-                state.controller?.paste(item: current[index], plainTextOnly: event.modifierFlags.isSuperset(of: plain))
+                state.controller?.paste(itemID: current[index].id, plainTextOnly: event.modifierFlags.isSuperset(of: plain))
             }
             return
         }
@@ -336,26 +593,30 @@ final class ReplicaNativeCollectionHost: NSView, NSDraggingSource {
         dragWaitTimer?.invalidate()
         let point = convert(event.locationInWindow, from: nil)
         guard hypot(point.x - initialDragLocation.x, point.y - initialDragLocation.y) > 3,
-              let state, !state.selectedItems.isEmpty else { return }
+              let state, !state.orderedSelectionIDs.isEmpty else { return }
         beginNativeDrag(event, state: state)
         self.initialDragLocation = nil
     }
 
     private func beginNativeDrag(_ event: NSEvent, state: ReplicaUIState) {
-        items = state.visibleItems
-        tileCells()
-        let positions = Dictionary(uniqueKeysWithValues: items.enumerated().map { ($0.element.id, $0.offset) })
-        let selected = state.selectedItems
-        let indexes = selected.compactMap { positions[$0.id] }
+        guard let applied = appliedItems(for: state) else { return }
+        let positions = Dictionary(uniqueKeysWithValues: applied.enumerated().map { ($0.element.id, $0.offset) })
+        let requestedIndexes = state.orderedSelectionIDs.filter { state.selection.contains($0) }.compactMap { positions[$0] }
+        var indexes: [Int] = []
+        let selected = requestedIndexes.compactMap { index -> ClipboardRestoreItem? in
+            guard let input = applied[index].restoreItem() else { return nil }
+            indexes.append(index)
+            return input
+        }
         let plain = NSEvent.ModifierFlags(rawValue: state.store.preferences.plainTextModifierRawValue)
         let options: OriginalPasteboardRestore.Options = NSEvent.modifierFlags.isSuperset(of: plain) ? .plainText : []
         do {
-            let groups = try state.store.dragPasteboardGroups(for: selected, options: options)
-            let sources: [any OriginalDragItemIdentifierSource] = selected.map { ReplicaNativeDragItemReference($0) }
+            let groups = try state.store.dragPasteboardGroups(restoreItems: selected, options: options)
+            let sources: [any OriginalDragItemIdentifierSource] = selected.map { $0.makeDragIdentifierSource() }
             let writers = OriginalNativeDragPasteboardWriter.writers(sources: sources, groups: groups)
             localMarker = nil
             var markerData: Data?
-            if let boardID = state.pinboardID, state.isSearchQueryEmpty, !state.showDeleted {
+            if let boardID = state.pinboardID, state.isCollectionSearchQueryEmpty, !state.showDeleted {
                 let marker = ReplicaLocalItemDrag(sessionID: state.itemDragSessionID, boardID: boardID,
                                                   ids: selected.map(\.id))
                 markerData = try JSONEncoder().encode(marker)
@@ -383,7 +644,7 @@ final class ReplicaNativeCollectionHost: NSView, NSDraggingSource {
 
     func draggingSession(_ session: NSDraggingSession,
                          sourceOperationMaskFor context: NSDraggingContext) -> NSDragOperation {
-        context == .outsideApplication ? .copy : .move
+        context == .outsideApplication ? .copy : [.copy, .move]
     }
 
     func draggingSession(_ session: NSDraggingSession, willBeginAt screenPoint: NSPoint) {
@@ -413,7 +674,7 @@ final class ReplicaNativeCollectionHost: NSView, NSDraggingSource {
         guard let state, let marker = localMarker, let session = draggingSession,
               (sender.draggingSource as? ReplicaNativeCollectionHost) === self,
               sender.draggingSequenceNumber == session.draggingSequenceNumber,
-              state.pinboardID == marker.boardID, state.isSearchQueryEmpty, !state.showDeleted,
+              state.pinboardID == marker.boardID, state.isCollectionSearchQueryEmpty, !state.showDeleted,
               let data = sender.draggingPasteboard.data(forType: Self.markerType),
               let decoded = try? JSONDecoder().decode(ReplicaLocalItemDrag.self, from: data),
               decoded.sessionID == marker.sessionID, decoded.boardID == marker.boardID,
@@ -505,6 +766,7 @@ private final class ReplicaNativeCardCell: NSView, ReplicaNativeDragPreviewCell 
     weak var owner: ReplicaNativeCollectionHost?
     private weak var state: ReplicaUIState?
     private var item: ClipboardItem
+    private var titleInput: ClipboardRestoreItem
     private var side: CGFloat
     private var absoluteIndex: Int
     private let shortcutIndicator = OriginalCardShortcutIndicatorView(frame: .zero)
@@ -527,10 +789,11 @@ private final class ReplicaNativeCardCell: NSView, ReplicaNativeDragPreviewCell 
         set { renderedSelection = newValue; updateRoot() }
     }
 
-    init(owner: ReplicaNativeCollectionHost, state: ReplicaUIState, item: ClipboardItem, side: CGFloat, index: Int) {
+    init(owner: ReplicaNativeCollectionHost, state: ReplicaUIState, item: ClipboardItem, input: ClipboardRestoreItem, side: CGFloat, index: Int) {
         self.owner = owner
         self.state = state
         self.item = item
+        titleInput = input
         self.side = side
         absoluteIndex = index
         renderedSelection = state.selection.contains(item.id)
@@ -548,16 +811,19 @@ private final class ReplicaNativeCardCell: NSView, ReplicaNativeDragPreviewCell 
 
     required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
 
-    func update(state: ReplicaUIState, item: ClipboardItem, side: CGFloat, index: Int) {
-        if self.state !== state { renderingSignature = nil }
+    func update(state: ReplicaUIState, item: ClipboardItem, input: ClipboardRestoreItem, side: CGFloat, index: Int) {
+        if self.state !== state || !titleInput.hasSameEntity(as: input) { renderingSignature = nil }
         self.state = state
         self.item = item
+        titleInput = input
         self.side = side
         absoluteIndex = index
         renderedSelection = state.selection.contains(item.id)
         hosting.frame = bounds
         updateRoot()
     }
+
+    func invalidateRendering() { renderingSignature = nil }
 
     private func updateRoot() {
         guard let state else { return }
@@ -567,7 +833,7 @@ private final class ReplicaNativeCardCell: NSView, ReplicaNativeDragPreviewCell 
         guard renderingSignature != signature else { return }
         renderingSignature = signature
         hosting.rootView = AnyView(ReplicaClipboardCard(state: state, item: item, sideLength: side,
-            selectionOverride: renderedSelection, dimmingOverride: owner?.isDimmed ?? true, nativeInteractions: true)
+            selectionOverride: renderedSelection, dimmingOverride: owner?.isDimmed ?? true, nativeInteractions: true, titleInput: titleInput)
             .id(item.id)
             .preferredColorScheme(state.preferredScheme)
             .environment(\.controlActiveState, active))
@@ -607,12 +873,24 @@ private final class ReplicaNativeCardCell: NSView, ReplicaNativeDragPreviewCell 
         displayIfNeeded()
     }
 
+    func beginTitleEditing() {
+        var views = hosting.subviews
+        while let view = views.popLast() {
+            if let title = view as? ReplicaCardTitleView, title.itemID == item.id {
+                title.beginEditing()
+                return
+            }
+            views.append(contentsOf: view.subviews)
+        }
+    }
+
     override func hitTest(_ point: NSPoint) -> NSView? {
         guard let result = super.hitTest(point) else { return nil }
         guard let event = NSApp.currentEvent, event.type == .leftMouseDown,
               !event.modifierFlags.contains(.control) else { return result }
         var responder: NSView? = result
         while let view = responder, view !== self {
+            if view is ReplicaCardTitleView { return result }
             if let text = view as? NSTextView, text.isEditable { return result }
             if let field = view as? NSTextField, field.isEditable { return result }
             if view is NSButton { return result }
@@ -621,12 +899,6 @@ private final class ReplicaNativeCardCell: NSView, ReplicaNativeDragPreviewCell 
         if let owner { return owner }
         return result
     }
-}
-
-private final class ReplicaNativeDragItemReference: OriginalDragItemIdentifierSource {
-    private let item: ClipboardItem
-    init(_ item: ClipboardItem) { self.item = item }
-    var pasteboardIdentifier: String { item.id.uuidString }
 }
 
 /// Only the replica's local reorder marker is added; original grouped payload stays intact.

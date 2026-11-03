@@ -1,0 +1,92 @@
+--- before/replica/Sources/PastoCore/ClipboardSearchRecord.swift
++++ after/replica/Sources/PastoCore/ClipboardSearchRecord.swift
+@@ -76,28 +76,35 @@
+ enum ClipboardSearchRecordContent {
+     // 3724f0: native empty content consults typed metadata, never the compatibility value archive.
+     static func nativeText(_ items: [OriginalPasteboardItem], kind: OriginalPasteboardContentKind,
+-                           preview: Data?) -> String? {
++                           preview: Data?, diagnoseEmpty: ((Int, String?) -> Void)? = nil) -> String? {
+         // Reuse primary extraction; this closure supplies no archived fallback.
+         guard let value = text(items, kind: kind, preview: preview, legacyPreviewFallback: { "" }) else { return nil }
+         guard value.isEmpty else { return value }
+         guard kind != .unknown else { return nil }
+         let fallback: String?
++        let previewLength: Int
+         if let metadata = OriginalImagePreviewMetadataCodec.decodeText(preview) {
+             // The stored sample may be truncated. Recover the full first rich/plain representation.
+             guard metadata.length != 0 else { return nil }
++            previewLength = metadata.length
+             fallback = items.first?.f_10037d33c()?.string
+         } else if let metadata = OriginalImagePreviewMetadataCodec.decodeLink(preview) {
+             guard !metadata.url.absoluteString.isEmpty else { return nil }
++            previewLength = metadata.url.absoluteString.count
+             var values = [metadata.url.absoluteString]
+             if let name = metadata.name { values.append(name) }
+             fallback = values.joined(separator: " ")
+         } else if OriginalImagePreviewMetadataCodec.decode(preview) != nil
+                     || OriginalImagePreviewMetadataCodec.decodeColor(preview) != nil {
++            previewLength = -1
+             fallback = nil
+         } else if let metadata = OriginalImagePreviewMetadataCodec.decodeFiles(preview) {
+-            guard !metadata.paths.joined().isEmpty else { return nil }
++            let joinedPaths = metadata.paths.joined()
++            guard !joinedPaths.isEmpty else { return nil }
++            previewLength = joinedPaths.count
+             fallback = metadata.paths.joined(separator: " ")
+         } else { return nil }
++        diagnoseEmpty?(previewLength, fallback)
+         guard let fallback, !fallback.isEmpty else { return value }
+         return fallback
+     }
+@@ -176,7 +183,9 @@
+         read(contentDiagnostics: contentDiagnostics) { object, items in
+             if items.isEmpty { diagnoseEmptyRepresentations(for: object) }
+             return ClipboardSearchRecordContent.nativeText(items, kind: kind,
+-                preview: object.value(forKey: "rawPreview") as? Data)
++                preview: object.value(forKey: "rawPreview") as? Data, diagnoseEmpty: { previewLength, fallback in
++                    self.diagnoseEmptyContent(for: object, items: items, previewLength: previewLength, fallback: fallback)
++                })
+         }
+     }
+ 
+@@ -194,6 +203,40 @@
+             "Item has no pasteboard data for content indexing (type: \(kind), rawSize: \(raw.count), rawPrefix: \(prefix))")
+     }
+ 
++    // 374e84: sample five items and ten ordered types per item, including repeated/missing types.
++    private func diagnoseEmptyContent(for object: NSManagedObject, items: [OriginalPasteboardItem],
++                                      previewLength: Int, fallback: String?) {
++        guard let identifier = (object.value(forKey: "nativeIdentifier") as? String)
++                    ?? (object.value(forKey: "key") as? String),
++              let created = object.value(forKey: "createdAt") as? Date else { return }
++        let application = object.value(forKey: "sourceApplication") as? NSManagedObject
++        let app = application?.value(forKey: "name") as? String ?? "nil"
++        let types = items.prefix(5).enumerated().map { index, item in
++            let values = item.f_10037da6c().prefix(10).map { type in
++                "\(type):\(item.f_10037d810(forType: type)?.count ?? 0)"
++            }.joined(separator: ", ")
++            return "item[\(index)]={\(values)}"
++        }.joined(separator: "; ")
++        let usedPreviewFallback = fallback.map { !$0.isEmpty } ?? false
++        let synced = hasObjectMetadata(for: object)
++        contentDiagnostics.f_1000d468c().f_1000d4df0(
++            "Item content resolved to empty string (id: \(identifier), type: \(kind), app: \(app), synced: \(synced), created: \(created), previewLength: \(previewLength), usedPreviewFallback: \(usedPreviewFallback), types: \(types))")
++    }
++
++    // 38efa8 → 328980 is a local fetch. An offline model without this entity has no such records.
++    private func hasObjectMetadata(for object: NSManagedObject) -> Bool {
++        guard let context = object.managedObjectContext,
++              let entity = context.persistentStoreCoordinator?.managedObjectModel.entitiesByName["ObjectMetadata"] else {
++            return false
++        }
++        let request = NSFetchRequest<NSManagedObject>()
++        request.entity = entity
++        request.predicate = NSPredicate(format: "objectURI == %@", object.objectID.uriRepresentation().absoluteString)
++        request.fetchLimit = 1
++        request.fetchOffset = 0
++        return (try? context.fetch(request).first) != nil
++    }
++
+     func imageData() -> Data? {
+         read { _, items in items.compactMap { $0.f_10037d5c4() }.first }
+     }

@@ -14,7 +14,6 @@ public enum OriginalTextPreviewSubmission {
             }
             isRich = true
             stop.pointee = true
-            return
         }
     }
 

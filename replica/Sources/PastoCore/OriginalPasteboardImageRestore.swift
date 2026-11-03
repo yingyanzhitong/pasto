@@ -1,29 +1,51 @@
 import Foundation
 import UniformTypeIdentifiers
 
-/// The replica supplies a separate temporary root so original Paste files are never touched.
+/// The native path uses FileManager's temporary directory; tests can inject an isolated root.
 public final class OriginalPasteboardImageRestore: @unchecked Sendable {
-    private let temporaryRoot: URL
+    private let temporaryRoot: URL?
     private let diagnostics = OriginalNamedDiagnostic.f_1000d4624(name: "PasteboardItemProcessor")
 
-    public init(temporaryRoot: URL) {
+    public init(temporaryRoot: URL? = nil) {
         self.temporaryRoot = temporaryRoot
     }
 
     public func prepare(_ items: [OriginalPasteboardItem], sourceName: String?, timestamp: Date?) -> [OriginalPasteboardItem] {
-        // Product isolation adapter; the original algorithm starts at its supplied temporary root.
-        do {
-            try FileManager.default.createDirectory(at: temporaryRoot, withIntermediateDirectories: true)
-        } catch {
-            diagnostics.f_1000d468c().f_1000d4e0c("Error while creating temporary images directory: \(error.localizedDescription)")
+        prepare(sourceName: sourceName, timestamp: timestamp) { items }
+    }
+
+    public func prepare(sourceName: String?, timestamp: Date?,
+                        loadItems: () throws -> [OriginalPasteboardItem]) rethrows -> [OriginalPasteboardItem] {
+        if let temporaryRoot {
+            do {
+                try FileManager.default.createDirectory(at: temporaryRoot, withIntermediateDirectories: true)
+            } catch {
+                diagnostics.f_1000d468c().f_1000d4e0c("Error while creating temporary images directory: \(error.localizedDescription)")
+            }
         }
-        return f_100383df4(items, sourceName: sourceName, timestamp: timestamp)
+        return try f_100383df4(sourceName: sourceName, timestamp: timestamp, loadItems: loadItems)
+    }
+
+    // 383df4 reads entity metadata only after directory preparation and ItemData decoding.
+    func prepareNative(sourceName: @autoclosure () -> String?, timestamp: @autoclosure () -> Date?,
+                       loadItems: () throws -> [OriginalPasteboardItem]) rethrows -> [OriginalPasteboardItem] {
+        if let temporaryRoot {
+            do {
+                try FileManager.default.createDirectory(at: temporaryRoot, withIntermediateDirectories: true)
+            } catch {
+                diagnostics.f_1000d468c().f_1000d4e0c("Error while creating temporary images directory: \(error.localizedDescription)")
+            }
+        }
+        let directory = f_100384824()
+        let items = try loadItems()
+        guard let directory else { return items }
+        return f_100383df4(items, sourceName: sourceName(), timestamp: timestamp(), directory: directory)
     }
 
     public func f_100384824() -> URL? {
         // Original 0x1003848f4 calls the one-String URL append, then hasDirectoryPath,
         // not fileExists and not the isDirectory: overload. Preserve that distinction.
-        let directory = temporaryRoot.appendingPathComponent("images")
+        let directory = (temporaryRoot ?? FileManager.default.temporaryDirectory).appendingPathComponent("images")
         if !directory.hasDirectoryPath {
             do {
                 try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: false)
@@ -36,10 +58,22 @@ public final class OriginalPasteboardImageRestore: @unchecked Sendable {
 
     /// Value projection of the original entity-based image preparation branch.
     public func f_100383df4(_ items: [OriginalPasteboardItem], sourceName: String?, timestamp: Date?) -> [OriginalPasteboardItem] {
-        guard let directory = f_100384824() else { return items }
+        f_100383df4(sourceName: sourceName, timestamp: timestamp) { items }
+    }
+
+    public func f_100383df4(sourceName: String?, timestamp: Date?,
+                            loadItems: () throws -> [OriginalPasteboardItem]) rethrows -> [OriginalPasteboardItem] {
+        let directory = f_100384824()
+        let items = try loadItems()
+        guard let directory else { return items }
+        return f_100383df4(items, sourceName: sourceName, timestamp: timestamp, directory: directory)
+    }
+
+    private func f_100383df4(_ items: [OriginalPasteboardItem], sourceName: @autoclosure () -> String?,
+                             timestamp: @autoclosure () -> Date?, directory: URL) -> [OriginalPasteboardItem] {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd HH.mm.ss"
-        let name = (sourceName ?? "Pasto") + " " + formatter.string(from: timestamp ?? Date.now)
+        let name = (sourceName() ?? "Pasto") + " " + formatter.string(from: timestamp() ?? Date.now)
         // Original uses one shared base name: equal-format items can target the same file.
         for item in items {
             for type in [UTType.png, .jpeg, .heic, .tiff] {
@@ -71,7 +105,7 @@ public final class OriginalPasteboardImageRestore: @unchecked Sendable {
         do {
             let files = try FileManager.default.contentsOfDirectory(at: directory, includingPropertiesForKeys: nil, options: [])
             for file in files {
-                let values = try file.resourceValues(forKeys: [.creationDateKey])
+                guard let values = try? file.resourceValues(forKeys: [.creationDateKey]) else { continue }
                 if let created = values.creationDate, created < cutoff {
                     try FileManager.default.removeItem(at: file)
                 }

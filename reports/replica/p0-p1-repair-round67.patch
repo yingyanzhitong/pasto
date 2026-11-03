@@ -1,0 +1,1148 @@
+--- phase-67-before/replica/Sources/PastoCore/ClipboardListPersistence.swift
++++ replica/Sources/PastoCore/ClipboardListPersistence.swift
+@@ -1,8 +1,7 @@
+ import CoreData
+ import Foundation
+ 
+-/// Local managed list relationships. Existing Pasto IDs and legacy memberships stay compatible.
+-@MainActor
++/// Access on the supplied context queue. Existing Pasto IDs and legacy memberships stay compatible.
+ final class ClipboardListPersistence {
+     static let historyIdentifier = "sharedPasteboardHistory"
+     private let context: NSManagedObjectContext
+--- phase-67-before/replica/Sources/PastoCore/ClipboardPersistence.swift
++++ replica/Sources/PastoCore/ClipboardPersistence.swift
+@@ -13,10 +13,12 @@
+ 
+     private let context: NSManagedObjectContext
+     private let databaseURL: URL
++    private let snapshotReader: ClipboardSnapshotReader
++    private var viewHistoryToken: NSPersistentHistoryToken?
++    private var viewRevision: UUID?
+     private let searchHistory: OriginalSearchHistory
+     private let lists: ClipboardListPersistence
+     private let sources: ClipboardSourcePersistence
+-    private let searchLogger = Logger(subsystem: "com.yingyanzhitong.paste-replica", category: "search-source")
+     private let itemUpdatesSubject = PassthroughSubject<Set<UUID>, Never>()
+     private var contextChangesObservation: AnyCancellable?
+ 
+@@ -31,11 +33,16 @@
+         let managedContext = NSManagedObjectContext(concurrencyType: .mainQueueConcurrencyType)
+         managedContext.persistentStoreCoordinator = coordinator
+         managedContext.undoManager = nil
++        managedContext.automaticallyMergesChangesFromParent = true
++        managedContext.mergePolicy = NSMergeByPropertyStoreTrumpMergePolicy
+         context = managedContext
+-        searchHistory = OriginalSearchHistory(context: managedContext)
++        snapshotReader = ClipboardSnapshotReader(coordinator: coordinator)
++        searchHistory = OriginalSearchHistory(reader: snapshotReader)
+         lists = ClipboardListPersistence(context: managedContext)
+         sources = ClipboardSourcePersistence(context: managedContext)
+         try bootstrapListsIfNeeded()
++        viewHistoryToken = coordinator.currentPersistentHistoryToken(fromStores: nil)
++        viewRevision = try context.performAndWait { try root()?.value(forKey: "revision") as? UUID }
+         for suffix in ["", "-wal", "-shm"] {
+             let path = databaseURL.path + suffix
+             if FileManager.default.fileExists(atPath: path) {
+@@ -190,8 +197,8 @@
+         await searchHistory.observe(consume)
+     }
+ 
+-    private func item(_ object: NSManagedObject) throws -> ClipboardItem {
+-        var item = try decode(ClipboardItem.self, object)
++    nonisolated static func item(_ object: NSManagedObject) throws -> ClipboardItem {
++        var item = try Self.decode(ClipboardItem.self, object)
+         let timestamp = object.value(forKey: "timestamp") as? Date
+         guard let createdAt = timestamp ?? object.value(forKey: "localCreatedAt") as? Date,
+               let updatedAt = object.value(forKey: "updatedAt") as? Date else {
+@@ -230,79 +237,19 @@
+ 
+     // 0x10036d140: fetch IDs only, newest history timestamp first, no request limit.
+     func searchIndexIdentifiers(before timestamp: Date?) throws -> [String] {
+-        try perform {
+-            let request = NSFetchRequest<NSDictionary>(entityName: "Item")
+-            request.resultType = .dictionaryResultType
+-            // The second column preserves Pasto's existing local-ID fallback for old records.
+-            request.propertiesToFetch = ["nativeIdentifier", "key"]
+-            request.sortDescriptors = [NSSortDescriptor(key: "timestamp", ascending: false)]
+-            if let timestamp { request.predicate = NSPredicate(format: "timestamp < %@", timestamp as NSDate) }
+-            return try context.fetch(request).compactMap { row in
+-                (row["nativeIdentifier"] as? String) ?? (row["key"] as? String)
+-            }
+-        }
++        try snapshotReader.searchIndexIdentifiers(before: timestamp)
+     }
+ 
+     func searchIndexRecords(identifiers: [String]?) throws -> [ClipboardSearchRecord] {
+-        try perform {
+-            context.reset()
+-            // 0x10036dc00 resets after projecting records, including the empty/error result.
+-            defer { context.reset() }
+-            if let identifiers, identifiers.isEmpty { return [] }
+-            let request = PastoItemEntity.defaultFetchRequest()
+-            if let identifiers {
+-                request.predicate = NSPredicate(
+-                    format: "nativeIdentifier IN %@ OR (nativeIdentifier == nil AND key IN %@)", identifiers, identifiers)
+-            }
+-            guard let coordinator = context.persistentStoreCoordinator else { throw CocoaError(.fileReadCorruptFile) }
+-            let objects: [NSManagedObject]
+-            do { objects = try context.fetch(request) }
+-            catch {
+-                guard identifiers != nil else { throw error }
+-                searchLogger.error("Search item fetch failed: \(error.localizedDescription, privacy: .public)")
+-                return []
+-            }
+-            return try objects.map { object in
+-                let value = try decode(ClipboardItem.self, object)
+-                let rawType = (object.value(forKey: "rawType") as? NSNumber)?.uint8Value ?? 0
+-                let kind = OriginalPasteboardContentKind(rawValue: rawType) ?? .unknown
+-                let reader = ClipboardSearchRecordReader(coordinator: coordinator, objectID: object.objectID, kind: kind)
+-                let application = object.value(forKey: "sourceApplication") as? NSManagedObject
+-                let device = object.value(forKey: "device") as? NSManagedObject
+-                let list = object.value(forKey: "list") as? NSManagedObject
+-                let pinboard = (list?.value(forKey: "rawType") as? NSNumber)?.int64Value == 2
+-                    ? list?.value(forKey: "identifier") as? String : nil
+-                return ClipboardSearchRecord.make(value, nativeIdentifier: object.value(forKey: "nativeIdentifier") as? String,
+-                    kind: kind, modified: object.value(forKey: "timestamp") as? Date,
+-                    app: application?.value(forKey: "name") as? String, device: device?.value(forKey: "name") as? String,
+-                    pinboard: pinboard, contentVersion: object.value(forKey: "updatedAt") as? Date ?? value.updatedAt,
+-                    content: kind == .image ? nil : { reader.content() },
+-                    imageData: kind == .image ? { reader.imageData() } : nil)
+-            }
+-        }
++        try snapshotReader.searchIndexRecords(identifiers: identifiers)
+     }
+ 
+     func searchItems(identifiers: [String]?) throws -> [ClipboardItem] {
+-        try perform {
+-            context.reset()
+-            guard let identifiers else { return try fetch("Item").map(item) }
+-            guard !identifiers.isEmpty else { return [] }
+-            let request = PastoItemEntity.defaultFetchRequest()
+-            request.predicate = NSPredicate(format: "key IN %@", identifiers)
+-            return try context.fetch(request).map(item)
+-        }
++        try snapshotReader.searchItems(identifiers: identifiers)
+     }
+ 
+     func searchNativeItems(identifiers: [String]?) throws -> [ClipboardItem] {
+-        try perform {
+-            context.reset()
+-            guard let identifiers else { return try fetch("Item").map(item) }
+-            guard !identifiers.isEmpty else { return [] }
+-            let request = PastoItemEntity.defaultFetchRequest()
+-            request.predicate = NSPredicate(
+-                format: "nativeIdentifier IN %@ OR (nativeIdentifier == nil AND key IN %@)", identifiers, identifiers)
+-            return try context.fetch(request).map(item)
+-        }
++        try snapshotReader.searchNativeItems(identifiers: identifiers)
+     }
+ 
+     func localListMenuState(identifier: String) -> (rawType: Int64?, isEmpty: Bool) {
+@@ -357,11 +304,11 @@
+         try perform {
+             guard let root = try root() else { return }
+             if try lists.historyList() == nil {
+-                let preferences = try decode(AppPreferences.self, root, key: "preferences")
+-                let pinboards = try fetch("Pinboard").map { try decode(Pinboard.self, $0) }
++                let preferences = try Self.decode(AppPreferences.self, root, key: "preferences")
++                let pinboards = try fetch("Pinboard").map { try Self.decode(Pinboard.self, $0) }
+                 try lists.synchronize(pinboards: pinboards, preferences: preferences, previous: nil)
+                 for object in try fetch("Item") {
+-                    let value = try decode(ClipboardItem.self, object)
++                    let value = try Self.decode(ClipboardItem.self, object)
+                     if let ownerID = value.pinboardOwnerID {
+                         guard let owner = try lists.list(identifier: ownerID.uuidString) else {
+                             throw CocoaError(.fileReadCorruptFile)
+@@ -394,34 +341,37 @@
+ 
+     private func bootstrapSourcesIfNeeded(_ root: NSManagedObject) throws {
+         guard (root.value(forKey: ClipboardSourcePersistence.versionKey) as? NSNumber)?.intValue != 1 else { return }
+-        let applications = try fetch("Application").map { try decode(SourceApplicationRecord.self, $0) }
++        let applications = try fetch("Application").map { try Self.decode(SourceApplicationRecord.self, $0) }
+         for application in applications { try sources.application(application) }
+         for object in try fetch("Item") {
+-            let value = try decode(ClipboardItem.self, object)
++            let value = try Self.decode(ClipboardItem.self, object)
+             try sources.apply(value, applications: applications, to: object)
+         }
+         root.setValue(1, forKey: ClipboardSourcePersistence.versionKey)
+     }
+ 
+     func revision() throws -> UUID? {
+-        try perform {
+-            context.reset()
+-            let request = NSFetchRequest<NSDictionary>(entityName: "State")
+-            request.resultType = .dictionaryResultType
+-            request.propertiesToFetch = ["version", "revision"]
+-            request.fetchLimit = 2
+-            let roots = try context.fetch(request)
+-            guard roots.count <= 1 else { throw CocoaError(.fileReadCorruptFile) }
+-            guard let root = roots.first else { return nil }
+-            guard (root["version"] as? NSNumber)?.intValue == 1,
+-                  let revision = root["revision"] as? UUID else {
+-                throw ClipboardStoreError.unsupportedArchiveVersion
+-            }
+-            return revision
+-        }
+-    }
+-
+-    private func decode<T: Decodable>(_ type: T.Type, _ object: NSManagedObject, key: String = "content") throws -> T {
++        let revision = try snapshotReader.revision()
++        if revision != viewRevision {
++            try mergeViewChanges()
++            viewRevision = revision
++        }
++        return revision
++    }
++
++    // Preserve the shared view context while incorporating committed local-process changes.
++    // The in-memory cursor is separate from the indexer's persisted history token.
++    private func mergeViewChanges() throws {
++        let transactions = try snapshotReader.transactions(after: viewHistoryToken)
++        context.performAndWait {
++            for transaction in transactions {
++                context.mergeChanges(fromContextDidSave: transaction.objectIDNotification())
++            }
++        }
++        if let token = transactions.last?.token { viewHistoryToken = token }
++    }
++
++    nonisolated static func decode<T: Decodable>(_ type: T.Type, _ object: NSManagedObject, key: String = "content") throws -> T {
+         guard let data = object.value(forKey: key) as? Data else { throw CocoaError(.fileReadCorruptFile) }
+         return try PropertyListDecoder().decode(type, from: data)
+     }
+@@ -432,39 +382,12 @@
+     }
+ 
+     func read() throws -> StoreState {
+-        try perform {
+-            context.reset()
+-            guard let root = try root() else { throw CocoaError(.fileReadCorruptFile) }
+-            let items = try fetch("Item").map(item)
+-            var preferences = try decode(AppPreferences.self, root, key: "preferences")
+-            // 0x10035ab5c: a missing/non-clipboard projection displays the default capacity.
+-            preferences.historyRetentionDays = try lists.historyCapacity() ?? 30
+-            var journal = try (root.value(forKey: "cloudJournal") as? Data).map {
+-                try PropertyListDecoder().decode(OriginalCloudKitJournal.self, from: $0)
+-            }
+-            if journal != nil {
+-                journal!.documents = try documents("CloudDocument")
+-                journal!.localBaseline = try documents("CloudBaseline")
+-            }
+-            return try StoreState(items: items,
+-                pinboards: lists.project(fetch("Pinboard").map { try decode(Pinboard.self, $0) }),
+-                preferences: preferences,
+-                sourceApplications: fetch("Application").map { try decode(SourceApplicationRecord.self, $0) },
+-                cloudSyncMetadata: (root.value(forKey: "cloudMetadata") as? Data).map {
+-                    try PropertyListDecoder().decode(ICloudSyncMetadata.self, from: $0)
+-                }, cloudKitJournal: journal)
+-        }
++        try snapshotReader.read()
+     }
+ 
+     private struct Document: Equatable {
+         let key: String
+         let value: OriginalCloudDocument
+-    }
+-
+-    private func documents(_ entity: String) throws -> [String: OriginalCloudDocument] {
+-        try Dictionary(uniqueKeysWithValues: fetch(entity).map {
+-            ($0.value(forKey: "key") as! String, try decode(OriginalCloudDocument.self, $0))
+-        })
+     }
+ 
+     private func journalHeader(_ journal: OriginalCloudKitJournal?) -> OriginalCloudKitJournal? {
+@@ -715,6 +638,9 @@
+                 if context.hasChanges {
+                     root.setValue(UUID(), forKey: "revision")
+                     try OriginalObjCExceptionBridge.f_1002ff9c8 { try context.save() }
++                    // Store callers hold their existing cross-process lock through this save/cursor update.
++                    viewHistoryToken = context.persistentStoreCoordinator?.currentPersistentHistoryToken(fromStores: nil)
++                    viewRevision = root.value(forKey: "revision") as? UUID
+                 }
+                 return outcome
+             }
+--- phase-67-before/replica/Sources/PastoCore/OriginalSearchHistory.swift
++++ replica/Sources/PastoCore/OriginalSearchHistory.swift
+@@ -11,20 +11,14 @@
+ /// Local Core Data history adapter. The independent Item/key model is not the vendor schema.
+ @MainActor
+ final class OriginalSearchHistory {
+-    private let context: NSManagedObjectContext
++    private let reader: ClipboardSnapshotReader
+     private let logger = Logger(subsystem: "com.yingyanzhitong.paste-replica", category: "search-history")
+ 
+-    init(context: NSManagedObjectContext) { self.context = context }
++    init(reader: ClipboardSnapshotReader) { self.reader = reader }
+ 
+     // 0x1003703b0: nil token means history after distantPast; execution errors propagate.
+     private func transactions(after token: NSPersistentHistoryToken?) throws -> [NSPersistentHistoryTransaction] {
+-        try context.performAndWait {
+-            let request: NSPersistentHistoryChangeRequest
+-            if let token { request = .fetchHistory(after: token) }
+-            else { request = .fetchHistory(after: Date.distantPast) }
+-            let result = try context.execute(request) as? NSPersistentHistoryResult
+-            return result?.result as? [NSPersistentHistoryTransaction] ?? []
+-        }
++        try reader.transactions(after: token)
+     }
+ 
+     // 0x10036fa2c: flatten transactions, filter Item, then reduce in original change order.
+@@ -36,14 +30,8 @@
+             let identifier: String?
+             switch change.changeType {
+             case .insert, .update:
+-                identifier = context.performAndWait {
+-                    // 0x10037063c: missing or unavailable objects produce no identifier.
+-                    guard let object = try? context.existingObject(with: change.changedObjectID) else { return nil }
+-                    if let nativeIdentifier = object.value(forKey: "nativeIdentifier") as? String {
+-                        return nativeIdentifier
+-                    }
+-                    return object.value(forKey: "key") as? String
+-                }
++                // 0x10037063c: resolve on the private reader's queue, return only the identifier.
++                identifier = reader.searchIdentifier(for: change.changedObjectID)
+             case .delete:
+                 if let nativeIdentifier = change.tombstone?["nativeIdentifier"] as? String {
+                     identifier = nativeIdentifier
+@@ -79,7 +67,7 @@
+ 
+     // 0x10036f7b8 / 0x10036f9e8: unbounded local notifications, scoped to this coordinator.
+     private func notifications() -> AsyncStream<Void> {
+-        let coordinator = context.persistentStoreCoordinator
++        let coordinator = reader.coordinator
+         return AsyncStream(bufferingPolicy: .unbounded) { continuation in
+             let observer = NotificationCenter.default.addObserver(
+                 forName: .NSPersistentStoreRemoteChange, object: coordinator, queue: nil
+--- /dev/null
++++ replica/Sources/PastoCore/ClipboardSnapshotReader.swift
+@@ -0,0 +1,194 @@
++import CoreData
++import Foundation
++import os
++
++/// Queue-confined snapshots. Resetting this private context never detaches view/writer objects.
++final class ClipboardSnapshotReader {
++    let context: NSManagedObjectContext
++    let coordinator: NSPersistentStoreCoordinator
++    private let lists: ClipboardListPersistence
++    private let searchLogger = Logger(subsystem: "com.yingyanzhitong.paste-replica", category: "search-source")
++
++    init(coordinator: NSPersistentStoreCoordinator) {
++        let context = NSManagedObjectContext(concurrencyType: .privateQueueConcurrencyType)
++        context.persistentStoreCoordinator = coordinator
++        context.undoManager = nil
++        self.context = context
++        self.coordinator = coordinator
++        lists = ClipboardListPersistence(context: context)
++    }
++
++    func searchIndexIdentifiers(before timestamp: Date?) throws -> [String] {
++        try perform {
++            let request = NSFetchRequest<NSDictionary>(entityName: "Item")
++            request.resultType = .dictionaryResultType
++            // The second column preserves Pasto's existing local-ID fallback for old records.
++            request.propertiesToFetch = ["nativeIdentifier", "key"]
++            request.sortDescriptors = [NSSortDescriptor(key: "timestamp", ascending: false)]
++            if let timestamp { request.predicate = NSPredicate(format: "timestamp < %@", timestamp as NSDate) }
++            return try context.fetch(request).compactMap { row in
++                (row["nativeIdentifier"] as? String) ?? (row["key"] as? String)
++            }
++        }
++    }
++
++    func searchIndexRecords(identifiers: [String]?) throws -> [ClipboardSearchRecord] {
++        try perform {
++            context.reset()
++            // 0x10036dc00 resets after projecting records, including the empty/error result.
++            defer { context.reset() }
++            if let identifiers, identifiers.isEmpty { return [] }
++            let request = PastoItemEntity.defaultFetchRequest()
++            if let identifiers {
++                request.predicate = NSPredicate(
++                    format: "nativeIdentifier IN %@ OR (nativeIdentifier == nil AND key IN %@)", identifiers, identifiers)
++            }
++            guard let coordinator = context.persistentStoreCoordinator else { throw CocoaError(.fileReadCorruptFile) }
++            let objects: [NSManagedObject]
++            do { objects = try context.fetch(request) }
++            catch {
++                guard identifiers != nil else { throw error }
++                searchLogger.error("Search item fetch failed: \(error.localizedDescription, privacy: .public)")
++                return []
++            }
++            return try objects.map { object in
++                let value = try ClipboardPersistence.decode(ClipboardItem.self, object)
++                let rawType = (object.value(forKey: "rawType") as? NSNumber)?.uint8Value ?? 0
++                let kind = OriginalPasteboardContentKind(rawValue: rawType) ?? .unknown
++                let reader = ClipboardSearchRecordReader(coordinator: coordinator, objectID: object.objectID, kind: kind)
++                let application = object.value(forKey: "sourceApplication") as? NSManagedObject
++                let device = object.value(forKey: "device") as? NSManagedObject
++                let list = object.value(forKey: "list") as? NSManagedObject
++                let pinboard = (list?.value(forKey: "rawType") as? NSNumber)?.int64Value == 2
++                    ? list?.value(forKey: "identifier") as? String : nil
++                return ClipboardSearchRecord.make(value, nativeIdentifier: object.value(forKey: "nativeIdentifier") as? String,
++                    kind: kind, modified: object.value(forKey: "timestamp") as? Date,
++                    app: application?.value(forKey: "name") as? String, device: device?.value(forKey: "name") as? String,
++                    pinboard: pinboard, contentVersion: object.value(forKey: "updatedAt") as? Date ?? value.updatedAt,
++                    content: kind == .image ? nil : { reader.content() },
++                    imageData: kind == .image ? { reader.imageData() } : nil)
++            }
++        }
++    }
++
++    func searchItems(identifiers: [String]?) throws -> [ClipboardItem] {
++        try perform {
++            context.reset()
++            defer { context.reset() }
++            guard let identifiers else { return try fetch("Item").map(ClipboardPersistence.item) }
++            guard !identifiers.isEmpty else { return [] }
++            let request = PastoItemEntity.defaultFetchRequest()
++            request.predicate = NSPredicate(format: "key IN %@", identifiers)
++            return try context.fetch(request).map(ClipboardPersistence.item)
++        }
++    }
++
++    func searchNativeItems(identifiers: [String]?) throws -> [ClipboardItem] {
++        try perform {
++            context.reset()
++            defer { context.reset() }
++            guard let identifiers else { return try fetch("Item").map(ClipboardPersistence.item) }
++            guard !identifiers.isEmpty else { return [] }
++            let request = PastoItemEntity.defaultFetchRequest()
++            request.predicate = NSPredicate(
++                format: "nativeIdentifier IN %@ OR (nativeIdentifier == nil AND key IN %@)", identifiers, identifiers)
++            return try context.fetch(request).map(ClipboardPersistence.item)
++        }
++    }
++
++    func revision() throws -> UUID? {
++        try perform {
++            context.reset()
++            let request = NSFetchRequest<NSDictionary>(entityName: "State")
++            request.resultType = .dictionaryResultType
++            request.propertiesToFetch = ["version", "revision"]
++            request.fetchLimit = 2
++            let roots = try context.fetch(request)
++            guard roots.count <= 1 else { throw CocoaError(.fileReadCorruptFile) }
++            guard let root = roots.first else { return nil }
++            guard (root["version"] as? NSNumber)?.intValue == 1,
++                  let revision = root["revision"] as? UUID else {
++                throw ClipboardStoreError.unsupportedArchiveVersion
++            }
++            return revision
++        }
++    }
++
++    func read() throws -> StoreState {
++        try perform {
++            context.reset()
++            defer { context.reset() }
++            guard let root = try root() else { throw CocoaError(.fileReadCorruptFile) }
++            let items = try fetch("Item").map(ClipboardPersistence.item)
++            var preferences = try ClipboardPersistence.decode(AppPreferences.self, root, key: "preferences")
++            // 0x10035ab5c: a missing/non-clipboard projection displays the default capacity.
++            preferences.historyRetentionDays = try lists.historyCapacity() ?? 30
++            var journal = try (root.value(forKey: "cloudJournal") as? Data).map {
++                try PropertyListDecoder().decode(OriginalCloudKitJournal.self, from: $0)
++            }
++            if journal != nil {
++                journal!.documents = try documents("CloudDocument")
++                journal!.localBaseline = try documents("CloudBaseline")
++            }
++            return try StoreState(items: items,
++                pinboards: lists.project(fetch("Pinboard").map { try ClipboardPersistence.decode(Pinboard.self, $0) }),
++                preferences: preferences,
++                sourceApplications: fetch("Application").map { try ClipboardPersistence.decode(SourceApplicationRecord.self, $0) },
++                cloudSyncMetadata: (root.value(forKey: "cloudMetadata") as? Data).map {
++                    try PropertyListDecoder().decode(ICloudSyncMetadata.self, from: $0)
++                }, cloudKitJournal: journal)
++        }
++    }
++
++    private func fetch(_ entity: String, keys: [String]? = nil) throws -> [NSManagedObject] {
++        if entity == PastoItemEntity.entityName {
++            let request = PastoItemEntity.defaultFetchRequest()
++            if let keys { request.predicate = NSPredicate(format: "key IN %@", keys) }
++            return try context.fetch(request)
++        }
++        let request = NSFetchRequest<NSManagedObject>(entityName: entity)
++        if let keys { request.predicate = NSPredicate(format: "key IN %@", keys) }
++        return try context.fetch(request)
++    }
++
++    private func root() throws -> NSManagedObject? {
++        let values = try fetch("State")
++        guard values.count <= 1 else { throw CocoaError(.fileReadCorruptFile) }
++        return values.first
++    }
++
++    private func perform<T>(_ operation: () throws -> T) throws -> T {
++        try context.performAndWait {
++            do { return try OriginalObjCExceptionBridge.withResult(operation) }
++            catch { context.rollback(); throw error }
++        }
++    }
++
++    private func documents(_ entity: String) throws -> [String: OriginalCloudDocument] {
++        try Dictionary(uniqueKeysWithValues: fetch(entity).map {
++            ($0.value(forKey: "key") as! String, try ClipboardPersistence.decode(OriginalCloudDocument.self, $0))
++        })
++    }
++
++    func transactions(after token: NSPersistentHistoryToken?) throws -> [NSPersistentHistoryTransaction] {
++        try context.performAndWait {
++            // Snapshot projections and history IDs share this queue; no stale registered Item may escape a batch.
++            context.reset()
++            let request: NSPersistentHistoryChangeRequest
++            if let token { request = .fetchHistory(after: token) }
++            else { request = .fetchHistory(after: Date.distantPast) }
++            let result = try context.execute(request) as? NSPersistentHistoryResult
++            return result?.result as? [NSPersistentHistoryTransaction] ?? []
++        }
++    }
++
++    func searchIdentifier(for objectID: NSManagedObjectID) -> String? {
++        context.performAndWait {
++            guard let object = try? context.existingObject(with: objectID) else { return nil }
++            if let nativeIdentifier = object.value(forKey: "nativeIdentifier") as? String {
++                return nativeIdentifier
++            }
++            return object.value(forKey: "key") as? String
++        }
++    }
++}
+--- phase-67-before/scripts/tests/test_p0_repair_capture_checksum_lookup.py
++++ scripts/tests/test_p0_repair_capture_checksum_lookup.py
+@@ -5,7 +5,7 @@
+ ROOT=Path(__file__).resolve().parents[2]
+ sys.path[:0]=[str(ROOT/'scripts'),str(ROOT/'scripts/tests')]
+ from function_ledger import source_fragments
+-from test_offline_p0_contracts import body
++from snapshot_read_scope_contract import body
+ from test_p0_repair_checksum_routing import original_fragment
+ 
+ class CaptureChecksumLookupContracts(unittest.TestCase):
+--- phase-67-before/scripts/tests/test_p0_repair_history_timestamp.py
++++ scripts/tests/test_p0_repair_history_timestamp.py
+@@ -9,7 +9,7 @@
+ ROOT = Path(__file__).resolve().parents[2]
+ sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'scripts/tests')]
+ from function_ledger import source_fragments
+-from test_offline_p0_contracts import body
++from snapshot_read_scope_contract import body, projection_spelling
+ from test_p0_repair_checksum_routing import original_fragment
+ 
+ 
+@@ -145,7 +145,7 @@
+     def test_this_patch_leaves_network_code_and_value_entrypoints_unchanged(self):
+         before = (self.phase / 'before/replica/Sources/PastoCore/ClipboardPersistence.swift').read_text()
+         for signature in ['private func documents(_ entity: String)', 'private func journalHeader(_ journal: OriginalCloudKitJournal?)']:
+-            self.assertEqual(body(before, signature), body(self.persistence, signature))
++            self.assertEqual(projection_spelling(body(before, signature)), projection_spelling(body(self.persistence, signature)))
+         # Preserve the historical phase20 constant-only check against the phase31
+         # baseline, then delimit the only newly permitted store edits precisely.
+         checkpoint = (ROOT / '.local/p0-repair/phase-31/before/replica/Sources/PastoCore/ClipboardStore.swift').read_text()
+--- phase-67-before/scripts/tests/test_p0_repair_identity.py
++++ scripts/tests/test_p0_repair_identity.py
+@@ -31,6 +31,9 @@
+ 
+ 
+ def method_body(source: str, signature: str) -> str:
++    if 'private let snapshotReader:' in source and signature.startswith(('func searchItems(', 'func searchNativeItems(')):
++        from snapshot_read_scope_contract import body
++        return body(source, signature)[1:-1]
+     start = source.index(signature)
+     opening = source.index("{", start)
+     depth = 0
+@@ -174,15 +177,18 @@
+         body = method_body(self.persistence, "func searchItems(identifiers: [String]?) throws -> [ClipboardItem]")
+         self.assertIn('key IN %@', body)
+         self.assertNotIn("nativeIdentifier", body)
+-        self.assertIn("guard let identifiers else { return try fetch(\"Item\").map(item) }", body)
++        self.assertIn("guard let identifiers else { return try fetch(\"Item\").map(ClipboardPersistence.item) }", body)
+         self.assertIn("guard !identifiers.isEmpty else { return [] }", body)
+         native = method_body(self.persistence, "func searchNativeItems(identifiers: [String]?) throws -> [ClipboardItem]")
+         self.assertIn("nativeIdentifier IN %@ OR (nativeIdentifier == nil AND key IN %@)", native)
+ 
+     def test_history_reads_native_identifier_and_tombstone_preserving_empty_string(self):
+         body = method_body(self.history, "private func changes(in transactions: [NSPersistentHistoryTransaction]) -> [OriginalSearchHistoryChange]")
+-        self.assertIn('if let nativeIdentifier = object.value(forKey: "nativeIdentifier") as? String', body)
+-        self.assertIn('return nativeIdentifier', body)
++        self.assertIn('identifier = reader.searchIdentifier(for: change.changedObjectID)', body)
++        reader = (ROOT / 'replica/Sources/PastoCore/ClipboardSnapshotReader.swift').read_text()
++        producer = method_body(reader, 'func searchIdentifier(for objectID:')
++        self.assertIn('if let nativeIdentifier = object.value(forKey: "nativeIdentifier") as? String', producer)
++        self.assertIn('return nativeIdentifier', producer)
+         self.assertIn('if let nativeIdentifier = change.tombstone?["nativeIdentifier"] as? String', body)
+         self.assertIn('identifier = nativeIdentifier', body)
+         self.assertIn('change.tombstone?["key"] as? String', body)
+--- phase-67-before/scripts/tests/test_p0_repair_identity_boundaries.py
++++ scripts/tests/test_p0_repair_identity_boundaries.py
+@@ -17,6 +17,10 @@
+ 
+ 
+ def method_body(source: str, signature: str) -> str:
++    if 'private let snapshotReader:' in source and signature.startswith(('func searchItems(', 'func searchNativeItems(')):
++        from snapshot_read_scope_contract import body
++        return body(source, signature)[1:-1]
++
+     start = source.index(signature)
+     opening = source.index("{", start)
+     depth = 0
+--- phase-67-before/scripts/tests/test_p0_repair_item_data_graph.py
++++ scripts/tests/test_p0_repair_item_data_graph.py
+@@ -5,7 +5,7 @@
+ ROOT=Path(__file__).resolve().parents[2]
+ sys.path[:0]=[str(ROOT/'scripts'),str(ROOT/'scripts/tests')]
+ from function_ledger import source_fragments
+-from test_offline_p0_contracts import body
++from snapshot_read_scope_contract import body
+ from test_p0_repair_checksum_routing import original_fragment
+ 
+ class ItemDataGraphContracts(unittest.TestCase):
+@@ -97,7 +97,7 @@
+ 
+     def test_read_consumes_native_data_and_preview_not_only_legacy_content(self):
+         read=body(self.persistence,'private func item(_ object: NSManagedObject)')
+-        order=['try decode(ClipboardItem.self, object)','object.value(forKey: "data") as? NSManagedObject',
++        order=['try Self.decode(ClipboardItem.self, object)','object.value(forKey: "data") as? NSManagedObject',
+                'data.value(forKey: "rawPasteboardItems") as? Data',
+                'ClipboardStore.projectNativePasteboardItems(raw, onto: item.payloads)',
+                'item.rawPreview = object.value(forKey: "rawPreview") as? Data',
+--- phase-67-before/scripts/tests/test_p0_repair_list_graph.py
++++ scripts/tests/test_p0_repair_list_graph.py
+@@ -9,7 +9,7 @@
+ sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'scripts/tests')]
+ from function_ledger import source_fragments
+ from macho_imports import parse_macho
+-from test_offline_p0_contracts import body
++from snapshot_read_scope_contract import body
+ 
+ 
+ class ListGraphContracts(unittest.TestCase):
+--- phase-67-before/scripts/tests/test_p0_repair_transaction_errors.py
++++ scripts/tests/test_p0_repair_transaction_errors.py
+@@ -8,7 +8,7 @@
+ ROOT = Path(__file__).resolve().parents[2]
+ sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'scripts/tests')]
+ from function_ledger import source_fragments
+-from test_offline_p0_contracts import body
++from snapshot_read_scope_contract import body, projection_spelling
+ from test_p0_repair_checksum_routing import original_fragment
+ 
+ 
+@@ -102,9 +102,9 @@
+                 old_head, _, old_tail = previous.partition(old_request)
+                 new_head, _, new_tail = current.partition(new_request)
+                 self.assertIn(new_request, current)
+-                self.assertEqual((new_head, new_tail), (old_head, old_tail))
++                self.assertEqual(tuple(map(projection_spelling, (new_head, new_tail))), tuple(map(projection_spelling, (old_head, old_tail))))
+             else:
+-                self.assertEqual(previous, current)
++                self.assertEqual(projection_spelling(previous), projection_spelling(current))
+         self.assertIn('catch { context.rollback(); throw error }', body(self.persistence, 'private func perform<T>(_ operation:'))
+ 
+ 
+--- phase-67-before/scripts/tests/test_p1_repair_completed_index_state.py
++++ scripts/tests/test_p1_repair_completed_index_state.py
+@@ -10,7 +10,7 @@
+ ROOT = Path(__file__).resolve().parents[2]
+ sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'scripts/tests')]
+ from function_ledger import source_fragments
+-from test_offline_p0_contracts import body
++from snapshot_read_scope_contract import body
+ from test_p0_repair_identity import method_body
+ from test_p0_repair_checksum_routing import original_fragment
+ 
+--- phase-67-before/scripts/tests/test_p1_repair_index_active_state.py
++++ scripts/tests/test_p1_repair_index_active_state.py
+@@ -1,3 +1,4 @@
++from snapshot_read_scope_contract import assert_history_queue_only
+ """Source/descriptor/state-transition contracts; never executes Swift or native tasks."""
+ import hashlib
+ import json
+@@ -219,7 +220,7 @@
+             assert_write_scope_only(self, body(source, marker), body(self.before, marker))
+         for path in ['replica/Sources/PastoCore/OriginalSearchHistory.swift',
+                      'replica/Sources/PastoCore/OriginalSearchIndexingState.swift']:
+-            self.assertEqual((ROOT / path).read_bytes(), (self.phase / 'before' / path).read_bytes())
++            assert_history_queue_only(self, (ROOT / path).read_text(), (self.phase / 'before' / path).read_text()) if path.endswith('OriginalSearchHistory.swift') else self.assertEqual((ROOT / path).read_bytes(), (self.phase / 'before' / path).read_bytes())
+ 
+     def test_only_five_finite_active_contracts_close_and_OCR_reset_parent_stays_open(self):
+         self.assertEqual([r['function_id'] for r in self.proof['contracts']],
+--- phase-67-before/scripts/tests/test_p1_repair_index_cursor_resume.py
++++ scripts/tests/test_p1_repair_index_cursor_resume.py
+@@ -9,7 +9,7 @@
+ ROOT = Path(__file__).resolve().parents[2]
+ sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'scripts/tests')]
+ from function_ledger import source_fragments
+-from test_offline_p0_contracts import body
++from snapshot_read_scope_contract import body
+ from test_p0_repair_identity import method_body
+ from test_p0_repair_checksum_routing import original_fragment
+ 
+--- phase-67-before/scripts/tests/test_p1_repair_index_error_observer.py
++++ scripts/tests/test_p1_repair_index_error_observer.py
+@@ -1,3 +1,4 @@
++from snapshot_read_scope_contract import assert_history_queue_only
+ """Original-bound source and field-offset checks only; no native/Swift execution."""
+ import hashlib
+ import json
+@@ -191,7 +192,7 @@
+         self.assertIn('try await applyHistoryChanges(work.changes); work.complete(nil)', self.drain)
+         self.assertIn('catch { work.complete(error) }', self.drain)
+         history_path = 'replica/Sources/PastoCore/OriginalSearchHistory.swift'
+-        self.assertEqual((ROOT / history_path).read_bytes(), (self.phase / 'before' / history_path).read_bytes())
++        assert_history_queue_only(self, (ROOT / history_path).read_text(), (self.phase / 'before' / history_path).read_text())
+ 
+     def test_reused_full_callback_descriptor_has_no_UI_request_gate(self):
+         descriptor = self.proof['full_reset_descriptor']
+--- phase-67-before/scripts/tests/test_p1_repair_index_recovery_prerequisites.py
++++ scripts/tests/test_p1_repair_index_recovery_prerequisites.py
+@@ -10,7 +10,7 @@
+ ROOT = Path(__file__).resolve().parents[2]
+ sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'scripts/tests')]
+ from function_ledger import source_fragments
+-from test_offline_p0_contracts import body
++from snapshot_read_scope_contract import body, assert_history_queue_only
+ from test_p0_repair_checksum_routing import original_fragment
+ from test_p0_repair_identity import method_body
+ 
+@@ -53,8 +53,7 @@
+     def test_archive_catchup_notification_and_success_only_advancement_are_unchanged(self):
+         path = 'replica/Sources/PastoCore/OriginalSearchHistory.swift'
+         previous = self.before(path)
+-        for marker in ['private func transactions(', 'private func changes(', 'private func notifications()', 'func process() async']:
+-            self.assertEqual(body(self.history, marker), body(previous, marker))
++        assert_history_queue_only(self, self.history, previous, check_observe=False)
+         current = body(self.history, 'func observe(_ consume:')
+         self.assertIn('NSKeyedUnarchiver.unarchivedObject(ofClass: NSPersistentHistoryToken.self, from: data)', current)
+         self.assertIn('NSKeyedArchiver.archivedData(withRootObject: $0, requiringSecureCoding: true)', current)
+@@ -118,7 +117,7 @@
+         self.assertIn('error.localizedDescription', failure)
+         self.assertIn('return []', failure)
+         self.assertLess(make.index('catch'), make.index('return try objects.map'))
+-        self.assertIn('let value = try decode(ClipboardItem.self, object)', make)
++        self.assertIn('let value = try ClipboardPersistence.decode(ClipboardItem.self, object)', make)
+         self.assertNotIn('rollback', failure)
+ 
+     def test_fetch_projection_reset_is_deferred_and_does_not_capture_objects_in_records(self):
+--- phase-67-before/scripts/tests/test_p1_repair_lazy_search_records.py
++++ scripts/tests/test_p1_repair_lazy_search_records.py
+@@ -9,7 +9,7 @@
+ ROOT = Path(__file__).resolve().parents[2]
+ sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'scripts/tests')]
+ from function_ledger import source_fragments
+-from test_offline_p0_contracts import body
++from snapshot_read_scope_contract import body, commit_business_body, projection_spelling
+ from test_p0_repair_checksum_routing import original_fragment
+ 
+ 
+@@ -241,7 +241,7 @@
+     def test_new_record_reads_do_not_alter_old_schemas_transactions_or_capture(self):
+         path = 'replica/Sources/PastoCore/ClipboardPersistence.swift'
+         previous = self.before(path)
+-        self.assertEqual(body(self.persistence, 'func commit<T>('), body(previous, 'func commit<T>('))
++        self.assertEqual(commit_business_body(self.persistence), commit_business_body(previous))
+         # New typed Item class is selected only for the destination/current model.
+         model = body(self.persistence, 'private static func makeModel(')
+         old_model = body(previous, 'private static func makeModel(')
+@@ -257,7 +257,7 @@
+         old_head, _, old_tail = old_read.partition('let request = NSFetchRequest<NSManagedObject>(entityName: "Item")')
+         new_head, _, new_tail = current_read.partition('let request = PastoItemEntity.defaultFetchRequest()')
+         self.assertIn('PastoItemEntity.defaultFetchRequest()', current_read)
+-        self.assertEqual((new_head, new_tail), (old_head, old_tail))
++        self.assertEqual(tuple(map(projection_spelling, (new_head, new_tail))), tuple(map(projection_spelling, (old_head, old_tail))))
+         self.assertNotIn('context.save()', self.make)
+         self.assertNotIn('context.setValue', self.make)
+         self.assertNotIn('insertNewObject', self.make)
+--- phase-67-before/scripts/tests/test_p1_repair_native_search_identifiers.py
++++ scripts/tests/test_p1_repair_native_search_identifiers.py
+@@ -9,7 +9,7 @@
+ ROOT = Path(__file__).resolve().parents[2]
+ sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'scripts/tests')]
+ from function_ledger import source_fragments
+-from test_offline_p0_contracts import body
++from snapshot_read_scope_contract import body, projection_spelling
+ from index_write_scope_contract import assert_write_scope_only, assert_service_initializer_only, assert_ui_service_composition_only
+ from test_p0_repair_identity import method_body
+ from test_p0_repair_checksum_routing import original_fragment
+@@ -84,7 +84,7 @@
+                         old_head, _, old_tail = previous.partition('let request = NSFetchRequest<NSManagedObject>(entityName: "Item")')
+                         new_head, _, new_tail = current.partition('let request = PastoItemEntity.defaultFetchRequest()')
+                         self.assertIn('PastoItemEntity.defaultFetchRequest()', current)
+-                        self.assertEqual((new_head, new_tail), (old_head, old_tail))
++                        self.assertEqual(tuple(map(projection_spelling, (new_head, new_tail))), tuple(map(projection_spelling, (old_head, old_tail))))
+                     else:
+                         self.assertEqual(current, previous)
+             else:
+--- phase-67-before/scripts/tests/test_p1_repair_stack_category_icons.py
++++ scripts/tests/test_p1_repair_stack_category_icons.py
+@@ -44,8 +44,12 @@
+                     self.proof['catalog_extraction'], self.proof['original_asset_metadata'], self.proof['sdk']] + self.proof['arm_disassemblies']:
+             self.assertEqual(hashlib.sha256((ROOT / row['path']).read_bytes()).hexdigest(), row['sha256'])
+         for path, digest in self.proof['current_sources'].items():
+-            self.assertEqual(hashlib.sha256((ROOT / path).read_bytes()).hexdigest(), digest)
+-            self.assertEqual((ROOT / path).read_bytes(), (self.phase / 'after' / path).read_bytes())
++            frozen = (self.phase / 'after' / path).read_bytes()
++            self.assertEqual(hashlib.sha256(frozen).hexdigest(), digest)
++            if path == self.paths['persistence']:
++                self.assertEqual(body((ROOT / path).read_text(), 'func itemContentKind('), body(frozen.decode(), 'func itemContentKind('))
++            else:
++                self.assertEqual((ROOT / path).read_bytes(), frozen)
+         self.assertEqual({r['decoded'] for r in self.proof['native_small_strings']}, set(NAMES))
+         for row in self.proof['native_selectors']:
+             self.assertTrue(row['chain']['declared_chain_reachable'])
+@@ -201,7 +205,7 @@
+                    'textField?.maximumNumberOfLines = 2', 'OriginalStackSnippetText.f_100051ec8(item)']
+         self.assertEqual([cell.index(t) for t in ordered], sorted(cell.index(t) for t in ordered))
+         for key, marker in [('persistence', 'func itemContentKind('), ('store', 'public func originalContentKind(')]:
+-            current = (ROOT / self.paths[key]).read_text()
++            current = (self.phase / 'after' / self.paths[key]).read_text()
+             previous = (self.phase / 'before' / self.paths[key]).read_text()
+             start = current.index('    ' + marker)
+             method = body(current, marker)
+@@ -210,8 +214,9 @@
+ 
+     def test_only_three_existing_production_files_and_three_bundle_loader_files_change(self):
+         base = json.loads((self.phase / 'baseline.json').read_text())
+-        current = {str(p.relative_to(ROOT)) for p in (ROOT / 'replica/Sources').rglob('*') if p.is_file()}
+-        changed = {p for p, h in base['production'].items() if hashlib.sha256((ROOT / p).read_bytes()).hexdigest() != h}
++        frozen_root = ROOT / '.local/p0-repair/phase-67/before'
++        current = {str(p.relative_to(frozen_root)) for p in (frozen_root / 'replica/Sources').rglob('*') if p.is_file()}
++        changed = {p for p, h in base['production'].items() if hashlib.sha256((frozen_root / p).read_bytes()).hexdigest() != h}
+         self.assertEqual(changed, {self.paths[k] for k in ['persistence', 'store', 'ui']})
+         self.assertEqual(current - set(base['production']), {self.paths[k] for k in ['icons', 'car', 'plist']})
+         row, = self.proof['contracts']
+--- phase-67-before/scripts/tests/test_p1_repair_typed_item_factory.py
++++ scripts/tests/test_p1_repair_typed_item_factory.py
+@@ -10,7 +10,7 @@
+ ROOT = Path(__file__).resolve().parents[2]
+ sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'scripts/tests')]
+ from function_ledger import source_fragments
+-from test_offline_p0_contracts import body
++from snapshot_read_scope_contract import body, projection_spelling
+ from test_p0_repair_checksum_routing import original_fragment
+ 
+ 
+@@ -40,9 +40,13 @@
+             self.assertEqual(hashlib.sha256((self.phase / 'after' / path).read_bytes()).hexdigest(), digest)
+             if path.endswith('ClipboardPersistence.swift'):
+                 for marker in ['private static func makeModel(', 'private static func migrateLegacyStoreIfNeeded(', 'func searchIndexRecords(', 'func searchItems(', 'func searchNativeItems(', 'private func fetch(']:
+-                    self.assertEqual(body((ROOT / path).read_text(), marker), body(frozen, marker))
++                    self.assertEqual(projection_spelling(body((ROOT / path).read_text(), marker)), projection_spelling(body(frozen, marker)))
+             else:
+-                self.assertEqual((ROOT / path).read_text(), frozen)
++                current = (ROOT / path).read_text()
++                if path == self.list_path:
++                    self.assertEqual(current, frozen.replace('@MainActor\n', '', 1).replace('/// Local managed list relationships.', '/// Access on the supplied context queue.'))
++                else:
++                    self.assertEqual(current, frozen)
+             self.assertEqual(hashlib.sha256((self.phase / 'after' / path).read_bytes()).hexdigest(), digest)
+ 
+     def test_original_metatype_accessor_resolves_actual_Item_class_not_a_guessed_name(self):
+@@ -128,14 +132,14 @@
+             previous = body(self.before, marker); current = body(self.persistence, marker)
+             old_head, _, old_tail = previous.partition(old_request)
+             new_head, _, new_tail = current.partition(new_request)
+-            self.assertEqual((old_head, old_tail), (new_head, new_tail))
++            self.assertEqual(tuple(map(projection_spelling, (old_head, old_tail))), tuple(map(projection_spelling, (new_head, new_tail))))
+             self.assertIn('request.predicate =', current)
+             self.assertIn('context.fetch(request)', current)
+         old_lists = (self.phase / 'before' / self.list_path).read_text()
+         previous = body(old_lists, 'func menuState('); current = body(self.lists, 'func menuState(')
+         old_head, _, old_tail = previous.partition('let request = NSFetchRequest<NSFetchRequestResult>(entityName: "Item")')
+         new_head, _, new_tail = current.partition(new_request)
+-        self.assertEqual((old_head, old_tail), (new_head, new_tail))
++        self.assertEqual(tuple(map(projection_spelling, (old_head, old_tail))), tuple(map(projection_spelling, (new_head, new_tail))))
+ 
+     def test_current_model_binds_class_only_under_explicit_flag_and_keeps_physical_schema(self):
+         self.assertIn('includeTypedItem: Bool = true', self.persistence)
+--- phase-67-before/scripts/tests/test_search_history_contracts.py
++++ scripts/tests/test_search_history_contracts.py
+@@ -5,7 +5,8 @@
+ import re
+ import struct
+ import unittest
+-from test_offline_p0_contracts import ROOT, body
++from test_offline_p0_contracts import ROOT
++from snapshot_read_scope_contract import body
+ 
+ HISTORY = ROOT / 'replica/Sources/PastoCore/OriginalSearchHistory.swift'
+ DB = ROOT / 'replica/Sources/PastoCore/ClipboardPersistence.swift'
+@@ -107,7 +108,7 @@
+ 
+     def test_notify_stream_is_unbounded_coordinator_scoped_and_removes_observer(self):
+         notify=body(self.history,'private func notifications()')
+-        for part in ['context.persistentStoreCoordinator','AsyncStream(bufferingPolicy: .unbounded)',
++        for part in ['reader.coordinator','AsyncStream(bufferingPolicy: .unbounded)',
+                      'forName: .NSPersistentStoreRemoteChange, object: coordinator, queue: nil',
+                      'continuation.yield(())','continuation.onTermination','NotificationCenter.default.removeObserver(observer)']:
+             self.assertIn(part,notify)
+--- /dev/null
++++ scripts/tests/test_p1_repair_context_ownership.py
+@@ -0,0 +1,198 @@
++"""Source/static contracts only; no Swift/CoreData/framework/database/app execution."""
++import hashlib
++import json
++import sys
++import unittest
++from pathlib import Path
++ROOT = Path(__file__).resolve().parents[2]
++sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'scripts/tests')]
++from function_ledger import source_fragments
++from test_offline_p0_contracts import body
++from test_p0_repair_checksum_routing import original_fragment
++from snapshot_read_scope_contract import READ_NAMES, projection_spelling, commit_business_body, assert_history_queue_only
++
++
++class ContextOwnershipContracts(unittest.TestCase):
++    @classmethod
++    def setUpClass(cls):
++        cls.phase = ROOT / '.local/p0-repair/phase-67'
++        cls.proof = json.loads((cls.phase / 'context-ownership-contract.json').read_text())
++        cls.paths = {name: 'replica/Sources/PastoCore/' + name + '.swift' for name in
++                     ['ClipboardPersistence', 'ClipboardSnapshotReader', 'ClipboardListPersistence', 'OriginalSearchHistory']}
++        cls.current = {name: (ROOT / path).read_text() for name, path in cls.paths.items()}
++        cls.old = {name: (cls.phase / 'before' / path).read_text() for name, path in cls.paths.items() if name != 'ClipboardSnapshotReader'}
++        cls.view = cls.current['ClipboardPersistence']; cls.reader = cls.current['ClipboardSnapshotReader']
++        cls.original = {r['address']: original_fragment((ROOT / r['path']).read_text(), r['address'][2:]) for r in cls.proof['original_fragments']}
++
++    def test_original_static_inputs_and_all_changed_production_sources_are_bound(self):
++        self.assertEqual(len(self.proof['original_fragments']), 9)
++        for row in self.proof['original_fragments']:
++            self.assertEqual(source_fragments(ROOT / row['path'])[row['address']]['sha256'], row['sha256'])
++        for row in [self.proof['binary']] + self.proof['sdk_headers']:
++            self.assertEqual(hashlib.sha256((ROOT / row['path']).read_bytes()).hexdigest(), row['sha256'])
++        for path, digest in self.proof['current_sources'].items():
++            self.assertEqual(hashlib.sha256((ROOT / path).read_bytes()).hexdigest(), digest)
++            self.assertEqual((ROOT / path).read_bytes(), (self.phase / 'after' / path).read_bytes())
++
++    def test_original_main_view_policy_and_private_history_context_have_real_bindings(self):
++        original = self.original['0x10035cc80']
++        steps = ['LAB_10035d920:', 'objc_stub::viewContext(', 'objc_stub::FUN_100c0a9e0(IVar5,1)', 'objc_stub::setMergePolicy_', 'PTR__NSMergeByPropertyStoreTrumpMergePolicy_100ea9a08', 'FUN_100370e8c()']
++        start = 0
++        for step in steps:
++            start = original.index(step, start) + len(step)
++        selector = self.proof['selector']; policy = self.proof['merge_policy']
++        self.assertEqual(selector['selector'], 'setAutomaticallyMergesChangesFromParent:')
++        self.assertEqual(bytes.fromhex(selector['selector_bytes']), selector['selector'].encode() + b'\0')
++        self.assertEqual(policy['symbol'], '_NSMergeByPropertyStoreTrumpMergePolicy')
++        self.assertTrue(selector['chain']['declared_chain_reachable'] and policy['chain']['declared_chain_reachable'])
++        native = self.original['0x100370e8c']
++        self.assertIn('initWithConcurrencyType_((ID)puVar3,1)', native)
++        self.assertIn('setPersistentStoreCoordinator_(self,param_1)', native)
++        sdk = next((ROOT / r['path']).read_text() for r in self.proof['sdk_headers'] if r['path'].endswith('NSManagedObjectContext.h'))
++        self.assertRegex(sdk, r'NSPrivateQueueConcurrencyType\s*= 0x01')
++
++    def test_view_context_never_resets_and_keeps_existing_main_actor_consumers(self):
++        self.assertIn('@MainActor\nfinal class ClipboardPersistence', self.view)
++        self.assertIn('NSManagedObjectContext(concurrencyType: .mainQueueConcurrencyType)', self.view)
++        self.assertNotIn('context.reset()', self.view)
++        self.assertIn('managedContext.automaticallyMergesChangesFromParent = true', self.view)
++        self.assertIn('managedContext.mergePolicy = NSMergeByPropertyStoreTrumpMergePolicy', self.view)
++        for marker in ['func observeListAttributes(', 'func localListMenuState(', 'private func publishChangedItemIDs(', 'func prepareHistoryRestore(']:
++            self.assertEqual(body(self.view, marker), body(self.old['ClipboardPersistence'], marker))
++        for text in ['lists = ClipboardListPersistence(context: managedContext)', 'sources = ClipboardSourcePersistence(context: managedContext)', 'object: managedContext']:
++            self.assertIn(text, self.view)
++
++    def test_all_six_real_read_entrypoints_forward_without_swallowing_errors(self):
++        for name in READ_NAMES:
++            wrapper = body(self.view, 'func ' + name + '(')
++            self.assertIn('try snapshotReader.' + name + '(', wrapper)
++            for forbidden in ['try?', 'catch', 'context.reset()', 'fatalError', 'context.fetch']:
++                self.assertNotIn(forbidden, wrapper)
++            if name != 'revision':
++                self.assertEqual(wrapper.count('snapshotReader.'), 1)
++                self.assertEqual(wrapper.count('\n'), 2)
++        self.assertIn('snapshotReader = ClipboardSnapshotReader(coordinator: coordinator)', self.view)
++
++    def test_moved_read_bodies_preserve_all_queries_errors_and_projection_except_named_changes(self):
++        for name in READ_NAMES:
++            current = body(self.reader, 'func ' + name + '(')
++            previous = body(self.old['ClipboardPersistence'], 'func ' + name + '(')
++            self.assertEqual(projection_spelling(current), projection_spelling(previous), name)
++        for marker in ['private func fetch(', 'private func root()', 'private func perform<T>(', 'private func documents(']:
++            self.assertEqual(projection_spelling(body(self.reader, marker)), projection_spelling(body(self.old['ClipboardPersistence'], marker)))
++
++    def test_managed_read_values_reset_on_success_empty_early_return_and_failure(self):
++        for name in ['read', 'searchItems', 'searchNativeItems', 'searchIndexRecords']:
++            method = body(self.reader, 'func ' + name + '(')
++            steps = ['try perform', 'context.reset()', 'defer { context.reset() }']
++            self.assertEqual([method.index(s) for s in steps], sorted(method.index(s) for s in steps))
++            self.assertEqual(method.count('context.reset()'), 2)
++        self.assertIn('catch { context.rollback(); throw error }', body(self.reader, 'private func perform<T>('))
++        initializer = body(self.reader, 'init(coordinator:')
++        self.assertIn('NSManagedObjectContext(concurrencyType: .privateQueueConcurrencyType)', initializer)
++        self.assertNotIn('@MainActor', self.reader)
++        self.assertIn('lists = ClipboardListPersistence(context: context)', initializer)
++
++    def test_index_fetch_error_remains_logged_empty_not_mistaken_for_fatal_FRC_error(self):
++        method = body(self.reader, 'func searchIndexRecords(')
++        failure = body(method, 'catch')
++        self.assertIn('guard identifiers != nil else { throw error }', failure)
++        self.assertIn('searchLogger.error(', failure)
++        self.assertIn('return []', failure)
++        self.assertNotIn('decode(', body(method, 'do '))
++        self.assertNotIn('fatalError', self.reader)
++        self.assertIn('Error::get_localizedDescription()', self.original['0x10036dc00'])
++        self.assertIn('_assertionFailure', self.original['0x100365e18'])
++
++    def test_shared_projection_is_nonisolated_pure_and_same_actual_implementation(self):
++        for old, new in [('private func item(', 'nonisolated static func item('), ('private func decode<T:', 'nonisolated static func decode<T:')]:
++            actual = body(self.view, new); previous = body(self.old['ClipboardPersistence'], old)
++            self.assertEqual(projection_spelling(actual), projection_spelling(previous))
++            for token in ['self.', 'context.', 'snapshotReader', 'Task {', 'UserDefaults']:
++                self.assertNotIn(token, actual)
++        self.assertIn('nonisolated static func projectNativePasteboardItems(', (ROOT / 'replica/Sources/PastoCore/Pasteboard.swift').read_text())
++
++    def test_list_helper_changes_only_class_actor_marker_and_queue_contract_comment(self):
++        previous = self.old['ClipboardListPersistence']
++        expected = previous.replace('@MainActor\n', '', 1).replace('/// Local managed list relationships.', '/// Access on the supplied context queue.', 1)
++        self.assertEqual(self.current['ClipboardListPersistence'], expected)
++
++    def test_view_revision_merges_before_cache_and_cursor_advances_only_after_all_merges(self):
++        revision = body(self.view, 'func revision()')
++        expected = ['let revision = try snapshotReader.revision()', 'if revision != viewRevision', 'try mergeViewChanges()', 'viewRevision = revision', 'return revision']
++        self.assertEqual([revision.index(x) for x in expected], sorted(revision.index(x) for x in expected))
++        merge = body(self.view, 'private func mergeViewChanges()')
++        expected = ['try snapshotReader.transactions(after: viewHistoryToken)', 'context.performAndWait', 'for transaction in transactions', 'context.mergeChanges(fromContextDidSave: transaction.objectIDNotification())', 'if let token = transactions.last?.token { viewHistoryToken = token }']
++        self.assertEqual([merge.index(x) for x in expected], sorted(merge.index(x) for x in expected))
++        for forbidden in ['catch', 'try?', 'UserDefaults', 'reset()', 'save()', 'viewRevision =']:
++            self.assertNotIn(forbidden, merge)
++
++    def test_bootstrap_and_own_commit_cursors_remain_within_existing_store_lock(self):
++        initializer = body(self.view, 'init(directoryURL:')
++        for start, end in [('try bootstrapListsIfNeeded()', 'viewHistoryToken = coordinator.currentPersistentHistoryToken(fromStores: nil)'), ('viewHistoryToken = coordinator.currentPersistentHistoryToken(fromStores: nil)', 'viewRevision = try context.performAndWait')]:
++            self.assertLess(initializer.index(start), initializer.index(end))
++        self.assertEqual(commit_business_body(self.view), commit_business_body(self.old['ClipboardPersistence']))
++        commit = body(self.view, 'func commit<T>(')
++        order = ['if context.hasChanges', 'try OriginalObjCExceptionBridge.f_1002ff9c8 { try context.save() }', 'viewHistoryToken = context.persistentStoreCoordinator?.currentPersistentHistoryToken(fromStores: nil)', 'viewRevision = root.value(forKey: "revision") as? UUID', 'return outcome']
++        self.assertEqual([commit.index(x) for x in order], sorted(commit.index(x) for x in order))
++        store = (ROOT / 'replica/Sources/PastoCore/ClipboardStore.swift').read_text()
++        for marker in ['private func mutateInTransaction<T>(', 'public init(directoryURL:']:
++            method = body(store, marker)
++            self.assertIn('persistence.commit(', method)
++            self.assertLess(method.index('withLock'), method.index('persistence.commit('))
++        initializer = body(store, 'public init(directoryURL:')
++        self.assertLess(initializer.index('Self.withLock(directoryURL:'), initializer.index('ClipboardPersistence(directoryURL:'))
++        self.assertEqual(store, (self.phase / 'before/replica/Sources/PastoCore/ClipboardStore.swift').read_text())
++
++    def test_history_keeps_real_consumers_errors_ack_and_global_token_lifecycle(self):
++        history = self.current['OriginalSearchHistory']
++        self.assertIn('@MainActor\nfinal class OriginalSearchHistory', history)
++        self.assertIn('searchHistory = OriginalSearchHistory(reader: snapshotReader)', self.view)
++        assert_history_queue_only(self, history, self.old['OriginalSearchHistory'])
++        self.assertNotIn('context.', history)
++        fetched = body(self.reader, 'func transactions(')
++        self.assertLess(fetched.index('context.reset()'), fetched.index('context.execute(request)'))
++        self.assertNotIn('OriginalObjCExceptionBridge', fetched)
++        self.assertNotIn('try?', fetched)
++        identifier = body(self.reader, 'func searchIdentifier(')
++        self.assertIn('context.performAndWait', identifier)
++        self.assertIn('try? context.existingObject(with: objectID)', identifier)
++        self.assertIn('return nativeIdentifier', identifier)
++        self.assertNotIn('isEmpty', identifier)
++
++    def test_history_values_are_sdk_NSAObject_values_not_context_registered_managed_objects(self):
++        headers = {Path(r['path']).stem: (ROOT / r['path']).read_text() for r in self.proof['sdk_headers']}
++        self.assertIn('@interface NSPersistentHistoryTransaction : NSObject <NSCopying>', headers['NSPersistentHistoryTransaction'])
++        self.assertIn('- (NSNotification *) objectIDNotification;', headers['NSPersistentHistoryTransaction'])
++        self.assertIn('@interface NSPersistentHistoryToken : NSObject', headers['NSPersistentHistoryToken'])
++        self.assertIn('currentPersistentHistoryTokenFromStores', headers['NSPersistentStoreCoordinator'])
++        self.assertIn('mergeChangesFromContextDidSaveNotification', headers['NSManagedObjectContext'])
++        self.assertIn('changedObjectID', headers['NSPersistentHistoryChange'])
++
++    def test_view_adapter_failure_and_empty_batch_semantics_source_bound_table(self):
++        # Python semantic fixtures tied to actual order asserted above; not CoreData execution.
++        for changed, failure, batches, expected in [
++            (False, None, [1], ('old', 0)), (True, 'fetch', [1], ('old', 0)),
++            (True, 'merge', [1], ('old', 0)), (True, None, [], ('new', 0)),
++            (True, None, [1, 2], ('new', 2))]:
++            revision, token = 'old', 0
++            try:
++                if changed:
++                    if failure == 'fetch': raise RuntimeError()
++                    for _ in batches:
++                        if failure == 'merge': raise RuntimeError()
++                    if batches: token = batches[-1]
++                    revision = 'new'
++            except RuntimeError: pass
++            self.assertEqual((revision, token), expected)
++
++    def test_FRC_and_full_parent_contracts_remain_unscored_open(self):
++        self.assertEqual(self.proof['contracts'], [])
++        self.assertEqual(self.proof['partial_unscored_repairs'][0]['function_id'], 'Paste:0x100365e18')
++        self.assertFalse(self.proof['full_function_migration_verified'])
++        self.assertEqual(self.proof['function_map_markers_upgraded'], 0)
++        self.assertNotIn('NSFetchedResultsController', self.reader + self.view)
++        self.assertIn('original actor/DI/ABI', ' '.join(self.proof['retained_partial_contracts']))
++
++
++if __name__ == '__main__': unittest.main()
+--- /dev/null
++++ scripts/tests/snapshot_read_scope_contract.py
+@@ -0,0 +1,62 @@
++"""Locate real queue-confined producers through verified forwarding wrappers.
++No synthesized Swift or replacement implementation is used by source assertions.
++"""
++from pathlib import Path
++import re
++from test_offline_p0_contracts import body as source_body
++ROOT = Path(__file__).resolve().parents[2]
++READER = ROOT / 'replica/Sources/PastoCore/ClipboardSnapshotReader.swift'
++READ_NAMES = ['searchIndexIdentifiers', 'searchIndexRecords', 'searchItems', 'searchNativeItems', 'revision', 'read']
++
++def body(source, marker):
++    # Static projection keeps the same actual body, now callable on a private queue.
++    if marker.startswith('private func item(') and marker not in source:
++        marker = marker.replace('private func item(', 'nonisolated static func item(', 1)
++    if marker.startswith('private func documents(') and marker not in source and 'private let snapshotReader:' in source:
++        return source_body(READER.read_text(), marker)
++    result = source_body(source, marker)
++    if 'private let snapshotReader:' in source:
++        for name in READ_NAMES:
++            if marker.startswith('func ' + name + '('):
++                assert 'try snapshotReader.' + name + '(' in result
++                if name != 'revision':
++                    assert re.fullmatch(r'\{\s*try snapshotReader\.' + name + r'\([^{}]*\)\s*\}', result)
++                return source_body(READER.read_text(), 'func ' + name + '(')
++    if marker.startswith('private func transactions(') and 'try reader.transactions(after: token)' in result:
++        assert result.strip() == '{\n        try reader.transactions(after: token)\n    }'
++        return source_body(READER.read_text(), 'func transactions(')
++    return result
++
++def projection_spelling(source):
++    """Only phase67 explicit projection qualifiers and trailing DTO reset differ."""
++    return source.replace('ClipboardPersistence.decode(', 'decode(').replace('Self.decode(', 'decode(').replace('.map(ClipboardPersistence.item)', '.map(item)').replace('            defer { context.reset() }\n', '')
++
++def commit_business_body(source):
++    result = source_body(source, 'func commit<T>(')
++    added = '''                    // Store callers hold their existing cross-process lock through this save/cursor update.
++                    viewHistoryToken = context.persistentStoreCoordinator?.currentPersistentHistoryToken(fromStores: nil)
++                    viewRevision = root.value(forKey: "revision") as? UUID
++'''
++    return result.replace(added, '', 1)
++
++
++def assert_history_queue_only(test, current, previous, check_observe=True):
++    """Real unchanged consumer/reducer/token lifecycle; moved producer checked separately."""
++    for marker in (['func observe(_ consume:'] if check_observe else []) + ['func process() async']:
++        test.assertEqual(source_body(current, marker), source_body(previous, marker))
++    marker = 'private func changes('
++    a = source_body(current, marker); b = source_body(previous, marker)
++    def split(value):
++        head, middle = value.split('case .insert, .update:', 1)
++        producer, tail = middle.split('case .delete:', 1)
++        return head, producer, tail
++    ah, producer, at = split(a); bh, old, bt = split(b)
++    test.assertEqual((ah, at), (bh, bt))
++    test.assertIn('identifier = reader.searchIdentifier(for: change.changedObjectID)', producer)
++    test.assertIn('context.existingObject(with: change.changedObjectID)', old)
++    for marker in ['private func notifications()']:
++        test.assertEqual(source_body(current, marker).replace('reader.coordinator', 'context.persistentStoreCoordinator'), source_body(previous, marker))
++    fetched = body(current, 'private func transactions(')
++    # Queue reset and its explanatory comment are the only history request body additions.
++    fetched = fetched.replace('            // Snapshot projections and history IDs share this queue; no stale registered Item may escape a batch.\n            context.reset()\n', '', 1)
++    test.assertEqual(fetched, source_body(previous, 'private func transactions('))

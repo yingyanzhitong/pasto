@@ -1,0 +1,163 @@
+--- phase-82-before/replica/Sources/Pasto/AppMain.swift
++++ replica/Sources/Pasto/AppMain.swift
+@@ -300,7 +300,6 @@
+     private func configureStackPasteShortcut() {
+         let enabled = ui.isStackVisible && !ui.state.stackItems.isEmpty && !isRecordingHotKey
+             && !arguments.contains("--no-global-hotkey") && pasteboard.name == NSPasteboard.general.name
+-            && accessibilityService.f_100ae5e74()
+         guard enabled != stackPasteRegistered else { return }
+         stackPasteHotKey.unregister()
+         stackPasteRegistered = false
+--- phase-82-before/scripts/tests/stack_occurrence_scope_contract.py
++++ scripts/tests/stack_occurrence_scope_contract.py
+@@ -3,6 +3,7 @@
+ Current duplicate insertion and row/consumer behavior is checked in test_p1_repair_stack_occurrences.
+ """
+ from pathlib import Path
++from stack_registration_scope_contract import pre_stack_registration
+ 
+ CHANGES = [('replica/Sources/PastoCore/OriginalStackTableController.swift',
+   '    private var snippetsRevision: UInt = 0\n'
+@@ -108,6 +109,7 @@
+   '        let append = store.preferences.stackReversed\n')]
+ 
+ def pre_stack_occurrences(source):
++    source = pre_stack_registration(source)
+     for path, previous, current in CHANGES:
+         if current in source:
+             assert source.count(current) == 1, path
+--- phase-82-before/scripts/tests/test_p1_repair_stack_occurrences.py
++++ scripts/tests/test_p1_repair_stack_occurrences.py
+@@ -179,7 +179,12 @@
+     def test_only_six_reviewed_hunks_change_three_files_without_schema_or_package(self):
+         self.assertEqual(len(CHANGES),6)
+         for key in self.paths:self.assertEqual(pre_stack_occurrences(self.source[key]),self.before(key))
+-        sha=lambda p:hashlib.sha256((ROOT/p).read_bytes()).hexdigest()
++        from stack_registration_scope_contract import APP_PATH, pre_stack_registration
++        def sha(p):
++            raw=(ROOT/p).read_bytes()
++            if p == APP_PATH:
++                raw=pre_stack_registration(raw.decode()).encode()
++            return hashlib.sha256(raw).hexdigest()
+         self.assertEqual({p for p,h in self.base['production'].items() if sha(p)!=h},set(self.paths.values()))
+         self.assertEqual({str(p.relative_to(ROOT)) for p in (ROOT/'replica/Sources').rglob('*') if p.is_file()},set(self.base['production']))
+         for p in ['replica/Package.swift','package.json']:
+--- /dev/null
++++ scripts/tests/test_p1_repair_stack_registration.py
+@@ -0,0 +1,100 @@
++"""Original Stack registration/restore permission boundary; no framework execution."""
++import hashlib
++import json
++from pathlib import Path
++import sys
++import unittest
++
++ROOT = Path(__file__).resolve().parents[2]
++sys.path[:0] = [str(ROOT/'scripts'), str(ROOT/'scripts/tests')]
++from function_ledger import source_fragments
++from test_offline_p0_contracts import body
++from test_p0_repair_checksum_routing import original_fragment
++from stack_registration_scope_contract import APP_PATH, CURRENT, PREVIOUS, pre_stack_registration
++
++class StackRegistrationContracts(unittest.TestCase):
++    @classmethod
++    def setUpClass(cls):
++        cls.phase=ROOT/'.local/p0-repair/phase-82'
++        cls.proof=json.loads((cls.phase/'stack-registration-contract.json').read_text())
++        cls.current=(ROOT/APP_PATH).read_text()
++        cls.before=(cls.phase/'before'/APP_PATH).read_text()
++
++    def original(self,address):
++        r=next(r for r in self.proof['original_fragments'] if r['address']==address)
++        return original_fragment((ROOT/r['path']).read_text(),address[2:])
++
++    def test_original_fragments_and_actual_call_targets_bound(self):
++        self.assertEqual(len(self.proof['original_fragments']),9)
++        for r in self.proof['original_fragments']:
++            self.assertEqual(source_fragments(ROOT/r['path'])[r['address']]['sha256'],r['sha256'])
++        r=self.proof['binary'];raw=(ROOT/r['path']).read_bytes()
++        self.assertEqual(hashlib.sha256(raw).hexdigest(),r['sha256'])
++        self.assertEqual(len(self.proof['ARM_calls']),8)
++        for r in self.proof['ARM_calls']:
++            pc=int(r['address'],16);b=raw[pc-0x100000000:pc-0x100000000+4]
++            self.assertEqual(b.hex(),r['bytes']);w=int.from_bytes(b,'little')
++            self.assertEqual(w&0xfc000000,0x94000000)
++            d=w&0x3ffffff
++            if d&0x2000000:d-=0x4000000
++            self.assertEqual(pc+d*4,int(r['target'],16))
++
++    def test_original_nonempty_queue_registers_without_ax_probe(self):
++        queue=self.original('0x100082c68')
++        self.assertIn('if (lVar6 == 0)',queue)
++        self.assertLess(queue.index('FUN_1001eae90('),queue.index('FUN_1001eaa64('))
++        self.assertIn('FUN_100086960,puVar8',queue)
++        for address in ['0x100082c68','0x1001eaa64','0x1001eb8d0']:
++            self.assertNotIn('FUN_100ae5e74',self.original(address))
++        self.assertIn('_RegisterEventHotKey(',self.original('0x1001eb8d0'))
++
++    def test_original_callback_routes_to_head_consumer(self):
++        self.assertIn('FUN_100083df8()',self.original('0x100086960'))
++        self.assertIn('FUN_100086968',self.original('0x100083df8'))
++        self.assertIn('FUN_100083e58',self.original('0x100086968'))
++        source=self.original('0x100083e58')
++        self.assertLess(source.index('FUN_10008413c()'),source.index('FUN_100082c68()'))
++        self.assertLess(source.index('FUN_100082c68()'),source.index('FUN_100085a6c('))
++
++    def test_original_permission_probe_is_inside_restorer_before_write(self):
++        source=self.original('0x100085a6c')
++        self.assertLess(source.index('FUN_100ae5e74()'),source.index('FUN_100ae4f8c()'))
++        self.assertLess(source.index('FUN_100ae4f8c()'),source.index('FUN_10037a144('))
++        self.assertIn('!= 2',source)
++
++    def test_only_registration_time_ax_condition_removed(self):
++        self.assertEqual(self.before.count(PREVIOUS),1)
++        self.assertEqual(self.current,self.before.replace(PREVIOUS,CURRENT,1))
++        self.assertEqual(pre_stack_registration(self.current),self.before)
++        self.assertEqual(pre_stack_registration(self.before),self.before)
++        for p,h in self.proof['current_sources'].items():
++            self.assertEqual(hashlib.sha256((ROOT/p).read_bytes()).hexdigest(),h)
++
++    def test_current_register_keeps_queue_visibility_board_and_recorder_gates(self):
++        source=body(self.current,'private func configureStackPasteShortcut()')
++        for t in ['ui.isStackVisible','!ui.state.stackItems.isEmpty','!isRecordingHotKey',
++                  '--no-global-hotkey','NSPasteboard.general.name','enabled != stackPasteRegistered',
++                  'stackPasteHotKey.unregister()', 'keyCode: 9, modifiers: .command, identifier: 3']:
++            self.assertIn(t,source)
++        self.assertNotIn('accessibilityService',source)
++
++    def test_current_permission_path_and_target_writer_remain_byte_identical(self):
++        signature='private func paste(ids: [UUID]'
++        self.assertEqual(body(self.current,signature),body(self.before,signature))
++        source=body(self.current,signature)
++        self.assertLess(source.index('f_100ae5e74()'),source.index('OriginalPasteToOtherAppsModal.run()'))
++        self.assertLess(source.index('OriginalPasteToOtherAppsModal.run()'),source.index('store.writeToPasteboard('))
++        self.assertIn('OriginalEnableAccessibilityModal.run(requestOnShow: true)',source)
++
++    def test_current_head_consumption_callback_and_accessibility_observer_unchanged(self):
++        start='            stackPasteHotKey.action =';end='            refreshTimer ='
++        def section(s):return s[s.index(start):s.index(end,s.index(start))]
++        self.assertEqual(section(self.current),section(self.before))
++        source=section(self.current)
++        self.assertLess(source.index('consumeStackHead()'),source.index('self.paste(ids:'))
++        self.assertIn('configureStackPasteShortcut()',source)
++
++    def test_window_policy_false_is_real_original_return_not_missing_implementation(self):
++        self.assertIn('return 0;',self.original('0x1000114fc'))
++        source=(ROOT/'replica/Sources/PastoCore/OriginalStackFunctions.swift').read_text()
++        self.assertIn('func f_1000114fc() -> Bool { false }',source)
+--- /dev/null
++++ scripts/tests/stack_registration_scope_contract.py
+@@ -0,0 +1,13 @@
++"""Single reviewed registration delta; old frozen contracts retain their original input."""
++from pathlib import Path
++
++APP_PATH = 'replica/Sources/Pasto/AppMain.swift'
++PREVIOUS = ('            && !arguments.contains("--no-global-hotkey") && pasteboard.name == NSPasteboard.general.name\n'
++            '            && accessibilityService.f_100ae5e74()\n')
++CURRENT = '            && !arguments.contains("--no-global-hotkey") && pasteboard.name == NSPasteboard.general.name\n'
++
++def pre_stack_registration(source):
++    if CURRENT in source and PREVIOUS not in source:
++        assert source.count(CURRENT) == 1
++        return source.replace(CURRENT, PREVIOUS, 1)
++    return source

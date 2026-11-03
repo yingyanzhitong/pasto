@@ -1,0 +1,13 @@
+--- replica/Sources/PastoCore/ClipboardSnapshotReader.swift
++++ replica/Sources/PastoCore/ClipboardSnapshotReader.swift
+@@ -57,8 +57,8 @@
+                       let contentVersion = object.value(forKey: "updatedAt") as? Date else {
+                     throw CocoaError(.fileReadCorruptFile)
+                 }
+-                let rawType = (object.value(forKey: "rawType") as? NSNumber)?.uint8Value ?? 0
+-                let kind = OriginalPasteboardContentKind(rawValue: rawType) ?? .unknown
++                let rawType = (object.value(forKey: "rawType") as? NSNumber)?.int64Value ?? 0
++                let kind = UInt8(exactly: rawType).flatMap { OriginalPasteboardContentKind(rawValue: $0) } ?? .unknown
+                 let reader = ClipboardSearchRecordReader(coordinator: coordinator, objectID: object.objectID, kind: kind)
+                 let application = object.value(forKey: "sourceApplication") as? NSManagedObject
+                 let device = object.value(forKey: "device") as? NSManagedObject

@@ -1,0 +1,872 @@
+--- phase-64-before/replica/Sources/Pasto/UI/ReplicaSearchIndex.swift
++++ replica/Sources/Pasto/UI/ReplicaSearchIndex.swift
+@@ -9,6 +9,19 @@
+ private final class ReplicaSearchIndexDelegateTarget: @unchecked Sendable {
+     weak var indexer: ReplicaSearchIndex?
+     init(_ indexer: ReplicaSearchIndex) { self.indexer = indexer }
++}
++
++// The UI composition owns the service; a running indexer must not extend its lifetime.
++@MainActor
++final class ReplicaSpotlightService {
++    let domain: String
++    let index: CSSearchableIndex
++
++    init(directoryURL: URL) {
++        let hash = SHA256.hash(data: Data(directoryURL.standardizedFileURL.path.utf8))
++        domain = "PasteReplica." + hash.map { String(format: "%02x", $0) }.joined()
++        index = CSSearchableIndex(name: domain)
++    }
+ }
+ 
+ /// Delegates matching to the same system query engine as the reference.
+@@ -56,6 +69,7 @@
+     private let domain: String
+     private let nativeIdentifierFormatKey: String
+     private let index: CSSearchableIndex
++    private let resolveWriteIndex: () -> CSSearchableIndex?
+     private weak var store: ClipboardStore?
+     private var suggestionDataSource: OriginalSearchSuggestions.Provider?
+     private let appKey = CSCustomAttributeKey(keyName: "pasteApp", searchable: true, searchableByDefault: true, unique: false, multiValued: false)!
+@@ -94,11 +108,11 @@
+     private(set) var error: Error?
+     var onUpdate: (() -> Void)?
+ 
+-    init(directoryURL: URL, store: ClipboardStore? = nil) {
+-        let hash = SHA256.hash(data: Data(directoryURL.standardizedFileURL.path.utf8))
+-        domain = "PasteReplica." + hash.map { String(format: "%02x", $0) }.joined()
++    init(service: ReplicaSpotlightService, store: ClipboardStore? = nil) {
++        domain = service.domain
+         nativeIdentifierFormatKey = "pasto.search.nativeIdentifiers." + domain
+-        index = CSSearchableIndex(name: domain)
++        index = service.index
++        resolveWriteIndex = { [weak service] in service?.index }
+         self.store = store
+         super.init()
+         lastSourceIdentifier = stateStore.indexedStoreID
+@@ -225,12 +239,7 @@
+                 if !text.isEmpty {
+                     let enriched = Entry(entry.record.appendingRecognizedText(text))
+                     let item = searchableItem(enriched, isUpdate: true)
+-                    try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+-                        index.indexSearchableItems([item]) { error in
+-                            if let error { continuation.resume(throwing: error) }
+-                            else { continuation.resume() }
+-                        }
+-                    }
++                    _ = try await Self.writeSearchableItems([item], index: resolveWriteIndex())
+                 }
+                 try await ContinuousClock().sleep(for: .seconds(2))
+             } catch is CancellationError {
+@@ -296,12 +305,7 @@
+                 }
+                 if !replacedIdentifiers.isEmpty { try await deleteIdentifiers(replacedIdentifiers) }
+                 let changed = live.map { searchableItem($0, isUpdate: true) }
+-                try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+-                    index.indexSearchableItems(changed) { error in
+-                        if let error { continuation.resume(throwing: error) }
+-                        else { continuation.resume() }
+-                    }
+-                }
++                _ = try await Self.writeSearchableItems(changed, index: resolveWriteIndex())
+                 refreshed.append(contentsOf: live)
+             }
+         }
+@@ -339,12 +343,7 @@
+                     return previous.searchIdentifier
+                 }
+                 if !replacedIdentifiers.isEmpty { try await deleteIdentifiers(replacedIdentifiers) }
+-                try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+-                    index.indexSearchableItems(live.map { searchableItem($0, isUpdate: false) }) { error in
+-                        if let error { continuation.resume(throwing: error) }
+-                        else { continuation.resume() }
+-                    }
+-                }
++                _ = try await Self.writeSearchableItems(live.map { searchableItem($0, isUpdate: false) }, index: resolveWriteIndex())
+                 for entry in live { indexed[entry.id] = entry }
+                 startOCRWorker()
+             case .deleted(let identifiers):
+@@ -396,6 +395,20 @@
+             guard let self else { return }
+             await drain()
+         }
++    }
++
++    // 0x1002e20b8: resolve weak service first; retain only the SDK index across its callback.
++    // The optional result distinguishes a vanished service from a successful SDK completion.
++    private static func writeSearchableItems(_ items: [CSSearchableItem],
++                                              index: CSSearchableIndex?) async throws -> Void? {
++        guard let index else { return nil }
++        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
++            index.indexSearchableItems(items) { error in
++                if let error { continuation.resume(throwing: error) }
++                else { continuation.resume() }
++            }
++        }
++        return ()
+     }
+ 
+     private func searchableItem(_ entry: Entry, isUpdate: Bool) -> CSSearchableItem {
+@@ -468,12 +481,7 @@
+                     // 0x1002e8de0 -> c3e850 -> 2ea1d8: retry this fetched batch, not the snapshot.
+                     try await retryTransientIndexErrors {
+                         let changed = live.map { searchableItem($0, isUpdate: false) }
+-                        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+-                            index.indexSearchableItems(changed) { error in
+-                                if let error { continuation.resume(throwing: error) }
+-                                else { continuation.resume() }
+-                            }
+-                        }
++                        _ = try await Self.writeSearchableItems(changed, index: resolveWriteIndex())
+                     }
+                 } catch is CancellationError {
+                     // 0x1002e9d54: cancellation uses normal finalization's active/task gates.
+--- phase-64-before/replica/Sources/Pasto/UI/ReplicaUIController.swift
++++ replica/Sources/Pasto/UI/ReplicaUIController.swift
+@@ -83,6 +83,7 @@
+     @Published var hotKeyStatusMessage = ""
+     @Published var allowsEmptySelection = false
+     private var observation: AnyCancellable?
++    private let searchService: ReplicaSpotlightService
+     private let searchIndex: ReplicaSearchIndex
+     private let searchQueryChanges = CurrentValueSubject<[OriginalSearchQueryNode], Never>([])
+     private var searchQueryObservation: AnyCancellable?
+@@ -104,7 +105,9 @@
+         self.store = store
+         cloudSync = ICloudDriveSyncController(store: store)
+         originalCloudSync = CloudKitSyncController(store: store, drive: cloudSync)
+-        searchIndex = ReplicaSearchIndex(directoryURL: store.directoryURL, store: store)
++        let service = ReplicaSpotlightService(directoryURL: store.directoryURL)
++        searchService = service
++        searchIndex = ReplicaSearchIndex(service: service, store: store)
+         searchIndex.setSuggestionDataSource(store.makeSearchSuggestionProvider())
+         stackIDs = store.preferences.stackItemIDs
+         searchIndex.onUpdate = { [weak self] in
+--- phase-64-before/scripts/tests/test_p0_repair_identity_boundaries.py
++++ scripts/tests/test_p0_repair_identity_boundaries.py
+@@ -81,7 +81,7 @@
+         body = method_body(self.index, "private func reindexTargets(_ identifiers: [String]) async throws")
+         get_previous = body.index("indexed[entry.id]")
+         delete = body.index("deleteIdentifiers(replacedIdentifiers)")
+-        write = body.index("index.indexSearchableItems(changed)")
++        write = body.index("Self.writeSearchableItems(changed, index: resolveWriteIndex())")
+         cache = body.index("for entry in refreshed { indexed[entry.id] = entry }")
+         self.assertLess(get_previous, delete)
+         self.assertLess(delete, write)
+--- phase-64-before/scripts/tests/test_p1_repair_completed_index_state.py
++++ scripts/tests/test_p1_repair_completed_index_state.py
+@@ -99,7 +99,7 @@
+             self.assertEqual(reuse(*inputs), wanted)
+ 
+     def test_real_cold_start_restores_before_delete_and_skips_snapshot_writes_on_health(self):
+-        self.assertIn('lastSourceIdentifier = stateStore.indexedStoreID', body(self.index, 'init(directoryURL:'))
++        self.assertIn('lastSourceIdentifier = stateStore.indexedStoreID', body(self.index, 'init(service:'))
+         check = self.initialization.index('await restoreCompletedStateIfHealthy(')
+         self.assertLess(check, self.initialization.index('try await clearIndex()'))
+         self.assertIn('if restoredCompletedState { needsReset = false }', self.initialization)
+@@ -150,11 +150,11 @@
+     def test_batch_state_is_saved_after_sdk_success_and_counts_live_rows_not_input_ids(self):
+         loop = body(self.initial, 'for lowerBound in stride(')
+         order = ['guard isRunning, !Task.isCancelled else { break }', 'try liveEntries(', 'searchableItem($0, isUpdate: false)',
+-                 'index.indexSearchableItems(changed)', 'state.indexedItems += live.count',
++                 'Self.writeSearchableItems(changed, index: resolveWriteIndex())', 'state.indexedItems += live.count',
+                  'state.oldestTimestamp = live.compactMap(\.modified).min()', 'try stateStore.save(state)']
+         offsets = [loop.index(t) for t in order]
+         self.assertEqual(offsets, sorted(offsets))
+-        self.assertIn('continuation.resume(throwing: error)', loop)
++        self.assertIn('continuation.resume(throwing: error)', body(self.index, 'private static func writeSearchableItems('))
+         self.assertIn('catch is CancellationError', loop)
+         self.assertIn('return false', method_body(loop, '} catch {'))
+         self.assertNotIn('throw error', method_body(loop, '} catch {'))
+--- phase-64-before/scripts/tests/test_p1_repair_delegate_owner_ack.py
++++ scripts/tests/test_p1_repair_delegate_owner_ack.py
+@@ -10,6 +10,7 @@
+ sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'scripts/tests')]
+ from function_ledger import source_fragments
+ from test_offline_p0_contracts import body
++from index_write_scope_contract import assert_write_scope_only, assert_service_initializer_only, assert_ui_service_composition_only
+ from test_p0_repair_checksum_routing import original_fragment
+ 
+ 
+@@ -34,8 +35,9 @@
+             self.assertEqual(source_fragments(ROOT / row['path'])[row['address']]['sha256'], row['sha256'])
+         for row in [self.proof['binary']] + self.proof['arm_disassemblies']:
+             self.assertEqual(hashlib.sha256((ROOT / row['path']).read_bytes()).hexdigest(), row['sha256'])
+-        self.assertEqual(hashlib.sha256((ROOT / self.path).read_bytes()).hexdigest(), self.proof['current_sources'][self.path])
+-        self.assertEqual((ROOT / self.path).read_bytes(), (self.phase / 'after' / self.path).read_bytes())
++        self.assertEqual(hashlib.sha256((self.phase / 'after' / self.path).read_bytes()).hexdigest(), self.proof['current_sources'][self.path])
++        for marker in ['nonisolated private func rebuild(', 'private static func performDelegateRebuild(', 'private func enqueueDelegateRebuild(', 'private func drain() async']:
++            self.assertEqual(body(self.source, marker), body((self.phase / 'after' / self.path).read_text(), marker))
+ 
+     def test_runtime_imports_are_chained_bindings_not_disassembler_guessed_labels(self):
+         self.assertEqual({r['symbol'] for r in self.proof['swift_runtime_imports']},
+@@ -118,10 +120,13 @@
+                        'private func applyHistoryChanges(', 'private func retryTransientIndexErrors(',
+                        'private func startHistoryObservation()', 'private func stopIndexing()', 'private func drainOCRQueue()',
+                        'func availableFilters()', 'private func searchableItem(', 'private func initializeIndexIfNeeded(']:
+-            self.assertEqual(body(self.source, marker), body(self.before, marker))
++            assert_write_scope_only(self, body(self.source, marker), body(self.before, marker))
+         for path in ['replica/Sources/Pasto/UI/ReplicaUIController.swift',
+                      'replica/Sources/PastoCore/OriginalSearchSuggestions.swift']:
+-            self.assertEqual((ROOT / path).read_bytes(), (self.phase / 'before' / path).read_bytes())
++            if path.endswith('ReplicaUIController.swift'):
++                assert_ui_service_composition_only(self, (ROOT / path).read_text(), (self.phase / 'before' / path).read_text())
++            else:
++                self.assertEqual((ROOT / path).read_bytes(), (self.phase / 'before' / path).read_bytes())
+ 
+     def test_completion_trace_has_one_ack_after_owner_scope_for_nil_success_and_error(self):
+         # Contract trace from the bound callbacks and real source scopes; not Swift ARC execution.
+--- phase-64-before/scripts/tests/test_p1_repair_index_active_state.py
++++ scripts/tests/test_p1_repair_index_active_state.py
+@@ -10,6 +10,7 @@
+ sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'scripts/tests')]
+ from function_ledger import source_fragments
+ from test_offline_p0_contracts import body
++from index_write_scope_contract import assert_write_scope_only, assert_service_initializer_only, assert_ui_service_composition_only
+ from test_p0_repair_identity import method_body
+ from test_p0_repair_checksum_routing import original_fragment
+ 
+@@ -87,7 +88,7 @@
+         loop = body(self.target, 'for lowerBound in stride(')
+         self.assertIn('guard isRunning, !Task.isCancelled else { break }', loop)
+         self.assertLess(loop.index('guard isRunning'), loop.index('try liveEntries('))
+-        self.assertLess(loop.index('index.indexSearchableItems(changed)'), loop.index('refreshed.append(contentsOf: live)'))
++        self.assertLess(loop.index('Self.writeSearchableItems(changed, index: resolveWriteIndex())'), loop.index('refreshed.append(contentsOf: live)'))
+         self.assertNotIn('Task.checkCancellation()', self.target)
+         self.assertNotIn('needsReset =', self.target)
+         self.assertNotIn('isRunning =', self.target)
+@@ -121,7 +122,7 @@
+         save = 'state.indexedItems += live.count'
+         self.assertEqual(current[current.index(save):], proven_loop[proven_loop.index(save):])
+         self.assertIn('let changed = live.map { searchableItem($0, isUpdate: false) }', current)
+-        self.assertLess(current.index('index.indexSearchableItems(changed)'), current.index('try stateStore.save(state)'))
++        self.assertLess(current.index('Self.writeSearchableItems(changed, index: resolveWriteIndex())'), current.index('try stateStore.save(state)'))
+         self.assertIn('state.indexedItems += live.count', current)
+ 
+     def test_only_UI_retry_and_full_delegate_can_enable_initialization(self):
+@@ -215,7 +216,7 @@
+         for marker in ['private func replaceQuery(', 'nonisolated private static func matchingIdentifiers(',
+                        'private func savedStateForRestore(', 'private func restoreCompletedStateIfHealthy(']:
+             source = (ROOT / '.local/p0-repair/phase-55/before/replica/Sources/Pasto/UI/ReplicaSearchIndex.swift').read_text() if marker != 'private func savedStateForRestore(' else self.source
+-            self.assertEqual(body(source, marker), body(self.before, marker))
++            assert_write_scope_only(self, body(source, marker), body(self.before, marker))
+         for path in ['replica/Sources/PastoCore/OriginalSearchHistory.swift',
+                      'replica/Sources/PastoCore/OriginalSearchIndexingState.swift']:
+             self.assertEqual((ROOT / path).read_bytes(), (self.phase / 'before' / path).read_bytes())
+--- phase-64-before/scripts/tests/test_p1_repair_index_error_observer.py
++++ scripts/tests/test_p1_repair_index_error_observer.py
+@@ -10,6 +10,7 @@
+ sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'scripts/tests')]
+ from function_ledger import source_fragments
+ from test_offline_p0_contracts import body
++from index_write_scope_contract import assert_write_scope_only, assert_service_initializer_only, assert_ui_service_composition_only
+ from test_p0_repair_identity import method_body
+ from test_p0_repair_checksum_routing import original_fragment
+ 
+@@ -149,8 +150,8 @@
+     def test_successful_target_batch_and_SDK_errors_keep_previous_proven_tail(self):
+         previous = body(self.before, 'private func reindexTargets(')
+         marker = 'let upperBound = min('
+-        self.assertEqual(self.target[self.target.index(marker):].replace('            enqueueOCR(live)\n', '', 1).replace('        startOCRWorker()\n', '', 1), previous[previous.index(marker):])
+-        self.assertIn('continuation.resume(throwing: error)', self.target)
++        assert_write_scope_only(self, self.target[self.target.index(marker):].replace('            enqueueOCR(live)\n', '', 1).replace('        startOCRWorker()\n', '', 1), previous[previous.index(marker):])
++        self.assertIn('continuation.resume(throwing: error)', body(self.source, 'private static func writeSearchableItems('))
+         self.assertIn('refreshed.append(contentsOf: live)', self.target)
+         self.assertIn('for entry in refreshed { indexed[entry.id] = entry }', self.target)
+ 
+@@ -176,7 +177,7 @@
+             current = body(source, marker)
+             if marker == 'func retry()':
+                 current = current.replace('        pendingMayInitializeIndex = true\n', '', 1)
+-            self.assertEqual(current, body(self.before, marker))
++            assert_write_scope_only(self, current, body(self.before, marker))
+ 
+     def test_history_consumer_ack_and_token_advancement_contract_are_unchanged(self):
+         for marker in ['private func startHistoryObservation()', 'private func applyHistoryChanges(']:
+@@ -186,7 +187,7 @@
+                 current = current.replace('guard isRunning, historyTask == nil,', 'guard historyTask == nil,', 1)
+             else:
+                 current = current.replace('                enqueueOCR(live)\n', '', 1).replace('                startOCRWorker()\n', '', 1)
+-            self.assertEqual(current, body(self.before, marker))
++            assert_write_scope_only(self, current, body(self.before, marker))
+         self.assertIn('try await applyHistoryChanges(work.changes); work.complete(nil)', self.drain)
+         self.assertIn('catch { work.complete(error) }', self.drain)
+         history_path = 'replica/Sources/PastoCore/OriginalSearchHistory.swift'
+--- phase-64-before/scripts/tests/test_p1_repair_index_observer_replacement.py
++++ scripts/tests/test_p1_repair_index_observer_replacement.py
+@@ -11,6 +11,7 @@
+ sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'scripts/tests')]
+ from function_ledger import source_fragments
+ from test_offline_p0_contracts import body
++from index_write_scope_contract import assert_write_scope_only, assert_service_initializer_only, assert_ui_service_composition_only
+ from test_p0_repair_identity import method_body
+ from test_p0_repair_checksum_routing import original_fragment
+ 
+@@ -115,7 +116,7 @@
+         self.assertNotIn('isIndexingAvailable', native)
+         current = body(self.source, 'init(directoryURL:')
+         self.assertIn('index = CSSearchableIndex(name: domain)', current)
+-        self.assertIn('index.indexDelegate = self', current)
++        self.assertIn('index.indexDelegate = self', body(self.source, 'init(service:'))
+         self.assertNotIn('isIndexingAvailable', current)
+         self.assertIn('isIndexingAvailable', self.initialize)
+         self.assertEqual(body(self.source, 'private func resetIndex('), body(self.before, 'private func resetIndex('))
+@@ -136,7 +137,7 @@
+         self.assertNotIn('usesSnapshot', self.observer)
+         for marker in ['private func indexInitialSnapshot(', 'private func retryTransientIndexErrors(',
+                        'private func replaceQuery(', 'private func drainOCRQueue()', 'private func clearIndex()']:
+-            self.assertEqual(body(self.source, marker), body(self.before, marker))
++            assert_write_scope_only(self, body(self.source, marker), body(self.before, marker))
+ 
+     def test_only_one_new_finite_record_and_reused_old_gate_close_not_full_observer(self):
+         self.assertEqual(self.proof['new_function_ids'], ['Paste:0x1002f14cc'])
+--- phase-64-before/scripts/tests/test_p1_repair_index_ocr_queue.py
++++ scripts/tests/test_p1_repair_index_ocr_queue.py
+@@ -10,6 +10,7 @@
+ sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'scripts/tests')]
+ from function_ledger import source_fragments
+ from test_offline_p0_contracts import body
++from index_write_scope_contract import assert_write_scope_only, assert_service_initializer_only, assert_ui_service_composition_only
+ from test_p0_repair_checksum_routing import original_fragment
+ 
+ 
+@@ -46,7 +47,7 @@
+             if path == self.path:
+                 for marker in ['private func enqueueOCR(', 'private func startOCRWorker()',
+                                'private func drainOCRQueue()', 'private func stopIndexing()']:
+-                    self.assertEqual(body(self.source, marker), body(frozen.read_text(), marker))
++                    assert_write_scope_only(self, body(self.source, marker), body(frozen.read_text(), marker))
+             else:
+                 self.assertEqual(hashlib.sha256((ROOT / path).read_bytes()).hexdigest(), digest)
+         self.assertEqual(self.proof['binary']['sha256'], '871f00354fbb1c165d858a98e6d19d6f43cb9d3f9f958b3e07c7f07eb5c19afb')
+@@ -163,7 +164,7 @@
+ 
+     def test_recognized_nonempty_text_is_a_direct_update_write_without_clipboard_payload_mutation(self):
+         self.assertOrder(self.consume, ['if !text.isEmpty', 'Entry(entry.record.appendingRecognizedText(text))',
+-                        'searchableItem(enriched, isUpdate: true)', 'index.indexSearchableItems([item])',
++                        'searchableItem(enriched, isUpdate: true)', 'Self.writeSearchableItems([item], index: resolveWriteIndex())',
+                         'try await ContinuousClock().sleep(for: .seconds(2))'])
+         for token in ['retryTransientIndexErrors', 'recognizeImageDocument', 'recognizedTextPayloadKey',
+                       'payloads[', 'stateStore.save', 'recordRestoredItems', 'indexed[']:
+@@ -183,7 +184,7 @@
+ 
+     def test_cancel_check_is_before_image_read_and_sdk_error_propagates_to_queue_catch(self):
+         self.assertEqual(self.consume.count('Task.checkCancellation()'), 1)
+-        self.assertIn('continuation.resume(throwing: error)', self.consume)
++        self.assertIn('continuation.resume(throwing: error)', body(self.source, 'private static func writeSearchableItems('))
+         self.assertNotIn('try?', self.consume)
+         self.assertNotIn('Task.detached', self.consume)
+         # Source-bound transition fixture only: no recognition or sleeping is executed.
+@@ -216,11 +217,11 @@
+     def test_full_target_and_history_producers_enqueue_before_sdk_and_kick_on_correct_tail(self):
+         for marker in ['private func reindexTargets(', 'private func indexInitialSnapshot(', 'private func applyHistoryChanges(']:
+             method = body(self.source, marker)
+-            self.assertOrder(method, ['try liveEntries(', 'enqueueOCR(live)', 'index.indexSearchableItems('])
++            self.assertOrder(method, ['try liveEntries(', 'enqueueOCR(live)', 'Self.writeSearchableItems('])
+             self.assertIn('startOCRWorker()', method)
+         target = body(self.source, 'private func reindexTargets(')
+         self.assertOrder(target, ['guard !input.isEmpty else { return }', 'enqueueOCR(live)',
+-                                 'index.indexSearchableItems(', 'for entry in refreshed', 'startOCRWorker()'])
++                                 'Self.writeSearchableItems(', 'for entry in refreshed', 'startOCRWorker()'])
+         self.assertNotIn('defer', target)
+         snapshot = body(self.source, 'private func indexInitialSnapshot(')
+         self.assertOrder(snapshot, ['guard !allIDs.isEmpty else { return false }', 'defer { startOCRWorker() }', 'enqueueOCR(live)'])
+--- phase-64-before/scripts/tests/test_p1_repair_index_recovery_prerequisites.py
++++ scripts/tests/test_p1_repair_index_recovery_prerequisites.py
+@@ -136,7 +136,7 @@
+         for token in ['lastSourceIdentifier = current', 'try await indexInitialSnapshot(',
+                       'try await clearIndex()', 'startHistoryObservation()']:
+             self.assertLess(check, drain.index(token))
+-        self.assertIn('index.indexSearchableItems(', body(self.index, 'private func indexInitialSnapshot('))
++        self.assertIn('Self.writeSearchableItems(', body(self.index, 'private func indexInitialSnapshot('))
+         self.assertIn('worker = Task { [weak self]', body(self.index, 'private func startWorker()'))
+         row, = self.proof['partial_repairs']
+         self.assertEqual(row['function_id'], 'Paste:0x1002efccc')
+--- phase-64-before/scripts/tests/test_p1_repair_index_snapshot_failure.py
++++ scripts/tests/test_p1_repair_index_snapshot_failure.py
+@@ -11,6 +11,7 @@
+ sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'scripts/tests')]
+ from function_ledger import source_fragments
+ from test_offline_p0_contracts import body
++from index_write_scope_contract import assert_write_scope_only, assert_service_initializer_only, assert_ui_service_composition_only
+ from test_p0_repair_identity import method_body
+ from test_p0_repair_checksum_routing import original_fragment
+ 
+@@ -39,7 +40,7 @@
+             self.assertEqual(hashlib.sha256((ROOT / row['path']).read_bytes()).hexdigest(), row['sha256'])
+         snapshot = self.phase / 'after' / self.path
+         self.assertEqual(hashlib.sha256(snapshot.read_bytes()).hexdigest(), self.proof['current_sources'][self.path])
+-        self.assertEqual(body(snapshot.read_text(), 'private func indexInitialSnapshot('), self.snapshot)
++        assert_write_scope_only(self, body(snapshot.read_text(), 'private func indexInitialSnapshot('), self.snapshot)
+ 
+     def test_native_cast_result_is_returned_and_inverted_only_for_finalize_abort_flag(self):
+         native = self.original['0x1002e9d54']
+@@ -137,8 +138,8 @@
+     def test_retry_body_and_successful_batch_save_are_identical_to_prior_real_source(self):
+         old = body(self.before, 'private func indexInitialSnapshot(')
+         normalize = lambda text: '\n'.join(line.strip() for line in text.splitlines())
+-        self.assertEqual(normalize(body(self.snapshot, 'try await retryTransientIndexErrors')),
+-                         normalize(body(old, 'try await retryTransientIndexErrors')))
++        assert_write_scope_only(self, normalize(body(self.snapshot, 'try await retryTransientIndexErrors')),
++                                normalize(body(old, 'try await retryTransientIndexErrors')))
+         current_loop = body(self.snapshot, 'for lowerBound in stride(')
+         old_loop = body(old, 'for lowerBound in stride(')
+         marker = 'state.indexedItems += live.count'
+@@ -146,7 +147,7 @@
+         for marker in ['private func retryTransientIndexErrors(', 'private func reindexTargets(',
+                        'private func drainOCRQueue()', 'private func stopIndexing()',
+                        'private func resetIndex(', 'private func drain() async']:
+-            self.assertEqual(body(self.source, marker), body(self.before, marker))
++            assert_write_scope_only(self, body(self.source, marker), body(self.before, marker))
+ 
+     def test_previous_initializer_rethrow_path_is_real_and_only_finite_contract_is_closed(self):
+         before_snapshot = body(self.before, 'private func indexInitialSnapshot(')
+--- phase-64-before/scripts/tests/test_p1_repair_index_snapshot_retry.py
++++ scripts/tests/test_p1_repair_index_snapshot_retry.py
+@@ -10,6 +10,7 @@
+ sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'scripts/tests')]
+ from function_ledger import source_fragments
+ from test_offline_p0_contracts import body
++from index_write_scope_contract import assert_write_scope_only, assert_service_initializer_only, assert_ui_service_composition_only
+ from test_p0_repair_identity import method_body
+ from test_p0_repair_checksum_routing import original_fragment
+ 
+@@ -37,7 +38,7 @@
+         self.assertEqual(hashlib.sha256(frozen.read_bytes()).hexdigest(), self.proof['current_sources'][self.path])
+         historical_snapshot = body(frozen.read_text(), 'private func indexInitialSnapshot(')
+         normalize = lambda text: '\n'.join(line.strip() for line in text.splitlines())
+-        self.assertEqual(normalize(self.retry), normalize(body(historical_snapshot, 'try await retryTransientIndexErrors')))
++        assert_write_scope_only(self, normalize(self.retry), normalize(body(historical_snapshot, 'try await retryTransientIndexErrors')))
+         self.assertLess(self.snapshot.index('enqueueOCR(live)'), self.snapshot.index('try await retryTransientIndexErrors'))
+ 
+     def test_retry_descriptor_captures_batch_operation_not_clear_or_whole_reset(self):
+@@ -56,8 +57,8 @@
+ 
+     def test_actual_retry_wraps_only_nonempty_batch_sdk_build_and_write(self):
+         self.assertIn('let changed = live.map { searchableItem($0, isUpdate: false) }', self.retry)
+-        self.assertIn('index.indexSearchableItems(changed)', self.retry)
+-        self.assertIn('continuation.resume(throwing: error)', self.retry)
++        self.assertIn('Self.writeSearchableItems(changed, index: resolveWriteIndex())', self.retry)
++        self.assertIn('continuation.resume(throwing: error)', body(self.source, 'private static func writeSearchableItems('))
+         for token in ['liveEntries(', 'enqueueOCR(', 'stateStore.save(', 'state.indexedItems',
+                       'indexInitialSnapshot(', 'clearIndex()', 'deleteAll', 'startOCRWorker()']:
+             self.assertNotIn(token, self.retry)
+@@ -109,7 +110,7 @@
+             source = historical if marker == 'private func initializeIndexIfNeeded(' else self.source
+             if marker in ['private func clearIndex()', 'private func replaceQuery(']:
+                 source = (ROOT / '.local/p0-repair/phase-55/before/replica/Sources/Pasto/UI/ReplicaSearchIndex.swift').read_text()
+-            self.assertEqual(body(source, marker), body(self.before, marker))
++            assert_write_scope_only(self, body(source, marker), body(self.before, marker))
+         initialize = body(self.source, 'private func initializeIndexIfNeeded(')
+         self.assertIn('if try await indexInitialSnapshot(currentEntries, resuming: resumeState)', method_body(initialize, 'if usesSnapshot {'))
+         self.assertEqual(body(initialize, 'catch'), body(body(historical, 'private func initializeIndexIfNeeded('), 'catch'))
+--- phase-64-before/scripts/tests/test_p1_repair_index_transient_retry.py
++++ scripts/tests/test_p1_repair_index_transient_retry.py
+@@ -10,6 +10,7 @@
+ sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'scripts/tests')]
+ from function_ledger import source_fragments
+ from test_offline_p0_contracts import body
++from index_write_scope_contract import assert_write_scope_only, assert_service_initializer_only, assert_ui_service_composition_only
+ from test_p0_repair_checksum_routing import original_fragment
+ 
+ 
+@@ -129,7 +130,7 @@
+         for marker in ['private func reindexTargets(', 'private func applyHistoryChanges(']:
+             self.assertNotIn('retryTransientIndexErrors', body(self.source, marker))
+         snapshot = body(self.source, 'private func indexInitialSnapshot(')
+-        self.assertIn('index.indexSearchableItems(changed)', body(snapshot, 'try await retryTransientIndexErrors'))
++        self.assertIn('Self.writeSearchableItems(changed, index: resolveWriteIndex())', body(snapshot, 'try await retryTransientIndexErrors'))
+         self.assertEqual(self.source.count('try await retryTransientIndexErrors'), 3)
+         self.assertIn('FUN_1002e7914(', self.original['0x1002f26a8'])
+         self.assertNotIn('FUN_1002e7914(', self.original['0x1002f2ca8'])
+@@ -143,7 +144,7 @@
+                 source = (ROOT / '.local/p0-repair/phase-55/before/replica/Sources/Pasto/UI/ReplicaSearchIndex.swift').read_text()
+             if marker == 'private func startHistoryObservation()':
+                 source = (ROOT / '.local/p0-repair/phase-56/before/replica/Sources/Pasto/UI/ReplicaSearchIndex.swift').read_text()
+-            self.assertEqual(body(source, marker), body(self.before, marker))
++            assert_write_scope_only(self, body(source, marker), body(self.before, marker))
+         self.assertNotIn('isTransientIndexError', self.before)
+         self.assertNotIn('retryTransientIndexErrors', self.before)
+ 
+@@ -155,7 +156,7 @@
+             if marker == 'nonisolated private func rebuild(':
+                 current = current.replace('                pendingResetsIndex = true\n', '', 1)
+                 current = current.replace('if isRunning { await stopIndexing() }', 'stopIndexing()', 1)
+-            self.assertEqual(current, body(self.before, marker))
++            assert_write_scope_only(self, current, body(self.before, marker))
+         drain = body(self.source, 'private func drain() async')
+         initialization = body(drain, 'if mayInitializeIndex')
+         self.assertNotIn('retryTransientIndexErrors', initialization)
+--- phase-64-before/scripts/tests/test_p1_repair_index_update_flag.py
++++ scripts/tests/test_p1_repair_index_update_flag.py
+@@ -11,6 +11,7 @@
+ sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'scripts/tests')]
+ from function_ledger import source_fragments
+ from test_offline_p0_contracts import body
++from index_write_scope_contract import assert_write_scope_only, assert_service_initializer_only, assert_ui_service_composition_only
+ from test_p0_repair_checksum_routing import original_fragment
+ 
+ 
+@@ -69,7 +70,7 @@
+             try:
+                 ordered = ['guard isRunning, !Task.isCancelled else { break }', 'try liveEntries(',
+                            'let changed = live.map { searchableItem($0, isUpdate: true) }',
+-                           'index.indexSearchableItems(changed)']
++                           'Self.writeSearchableItems(changed, index: resolveWriteIndex())']
+                 offsets = [batch.index(t) for t in ordered]
+                 return offsets == sorted(offsets) and 'indexed[$0.id] !=' not in batch
+             except ValueError:
+@@ -109,14 +110,14 @@
+                                  before_delegate[before_delegate.index('acknowledgements.append(acknowledge)'):])
+                 current = before_delegate
+                 current = current.replace('                mayRestoreSavedState = false\n', '', 1)
+-            self.assertEqual(current, body(self.before, marker))
++            assert_write_scope_only(self, current, body(self.before, marker))
+         target = body(self.source, 'private func reindexTargets(')
+         previous = body(self.before, 'private func reindexTargets(')
+         historical = (ROOT / '.local/p0-repair/phase-48/before/replica/Sources/Pasto/UI/ReplicaSearchIndex.swift').read_text()
+         historical_target = body(historical, 'private func reindexTargets(')
+         self.assertEqual(historical_target.replace('live.map { searchableItem($0, isUpdate: true) }', 'live.map(searchableItem)'), previous)
+         suffix = 'let upperBound = min('
+-        self.assertEqual(target[target.index(suffix):].replace('            enqueueOCR(live)\n', '', 1).replace('        startOCRWorker()\n', '', 1), historical_target[historical_target.index(suffix):])
++        assert_write_scope_only(self, target[target.index(suffix):].replace('            enqueueOCR(live)\n', '', 1).replace('        startOCRWorker()\n', '', 1), historical_target[historical_target.index(suffix):])
+         self.assertIn('let forcedIdentifiers = reindexIdentifiers', self.source)
+         self.assertIn('try await reindexTargets(forcedIdentifiers)', self.source)
+ 
+--- phase-64-before/scripts/tests/test_p1_repair_native_search_identifiers.py
++++ scripts/tests/test_p1_repair_native_search_identifiers.py
+@@ -10,6 +10,7 @@
+ sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'scripts/tests')]
+ from function_ledger import source_fragments
+ from test_offline_p0_contracts import body
++from index_write_scope_contract import assert_write_scope_only, assert_service_initializer_only, assert_ui_service_composition_only
+ from test_p0_repair_identity import method_body
+ from test_p0_repair_checksum_routing import original_fragment
+ 
+@@ -70,7 +71,10 @@
+                 for marker in ['nonisolated private static func matchingIdentifiers(', 'private func searchableItem(',
+                                'private func deleteIdentifiers(',
+                                'private func clearIndex()', 'init(directoryURL:']:
+-                    self.assertEqual(body(self.source, marker), body(frozen, marker))
++                    if marker == 'init(directoryURL:':
++                        assert_service_initializer_only(self, self.source, frozen)
++                    else:
++                        assert_write_scope_only(self, body(self.source, marker), body(frozen, marker))
+             elif path == 'replica/Sources/PastoCore/ClipboardPersistence.swift':
+                 frozen = (self.phase / 'after' / path).read_text()
+                 for marker in ['func searchIndexRecords(', 'func searchNativeItems(', 'func searchIndexIdentifiers(']:
+@@ -202,7 +206,7 @@
+ 
+     def test_target_only_active_gate_empty_filter_and_ack_boundary_are_unchanged(self):
+         for marker in ['private func reindexTargets(', 'private func drain() async']:
+-            self.assertEqual(body(self.source, marker), body(self.before, marker))
++            assert_write_scope_only(self, body(self.source, marker), body(self.before, marker))
+         target = body(self.source, 'private func reindexTargets(')
+         self.assertIn('let input = identifiers.filter { !$0.isEmpty }', target)
+         self.assertIn('guard isRunning, !Task.isCancelled else { break }', target)
+@@ -213,9 +217,10 @@
+         self.assertLess(wrapper.index('await ReplicaSearchIndex.performDelegateRebuild('), wrapper.index('acknowledge()'))
+ 
+     def test_legacy_format_marker_is_per_existing_named_index_and_disables_stale_restore(self):
+-        initialize = body(self.source, 'init(directoryURL:')
++        initialize = body(self.source, 'init(service:')
+         self.assertIn('nativeIdentifierFormatKey = "pasto.search.nativeIdentifiers." + domain', initialize)
+-        self.assertIn('index = CSSearchableIndex(name: domain)', initialize)
++        self.assertIn('index = service.index', initialize)
++        self.assertIn('index = CSSearchableIndex(name: domain)', body(self.source, 'init(directoryURL:'))
+         self.assertIn('mayRestoreSavedState = UserDefaults.standard.bool(forKey: nativeIdentifierFormatKey)', initialize)
+         self.assertNotIn('CSSearchableIndex(name: "Pasto.', initialize)
+         self.assertNotIn('stateStore.save(', initialize)
+@@ -257,7 +262,7 @@
+         self.assertNotIn('filterQueries', health)
+         for marker in ['private func savedStateForRestore(', 'private func retryTransientIndexErrors(',
+                        'private func indexInitialSnapshot(', 'private func drainOCRQueue()', 'private func stopIndexing()']:
+-            self.assertEqual(body(self.source, marker), body(self.before, marker))
++            assert_write_scope_only(self, body(self.source, marker), body(self.before, marker))
+ 
+     def test_three_existing_records_close_without_claiming_full_service_or_new_migration_credit(self):
+         self.assertEqual([r['function_id'] for r in self.proof['contracts']],
+--- phase-64-before/scripts/tests/test_p1_repair_suggestion_source_service.py
++++ scripts/tests/test_p1_repair_suggestion_source_service.py
+@@ -10,6 +10,7 @@
+ sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'scripts/tests')]
+ from function_ledger import source_fragments
+ from test_offline_p0_contracts import body
++from index_write_scope_contract import assert_write_scope_only, assert_service_initializer_only, assert_ui_service_composition_only
+ from test_p0_repair_checksum_routing import original_fragment
+ 
+ 
+@@ -39,6 +40,8 @@
+             if path == self.paths['index']:
+                 for marker in ['func setSuggestionDataSource(', 'func availableFilters()']:
+                     self.assertEqual(body((ROOT / path).read_text(), marker), body(frozen, marker))
++            elif path.endswith('ReplicaUIController.swift'):
++                assert_ui_service_composition_only(self, (ROOT / path).read_text(), frozen)
+             else:
+                 self.assertEqual((ROOT / path).read_bytes(), (self.phase / 'after' / path).read_bytes())
+ 
+--- /dev/null
++++ scripts/tests/test_p1_repair_weak_sdk_write_owner.py
+@@ -0,0 +1,179 @@
++"""Source/static evidence checks only. Does not execute Swift, CoreData or Spotlight."""
++import hashlib
++import json
++import re
++import struct
++import sys
++import unittest
++from pathlib import Path
++
++ROOT = Path(__file__).resolve().parents[2]
++sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'scripts/tests')]
++from function_ledger import source_fragments
++from test_offline_p0_contracts import body
++from test_p0_repair_checksum_routing import original_fragment
++from index_write_scope_contract import (write_segments, assert_write_scope_only,
++                                       assert_service_initializer_only, assert_ui_service_composition_only)
++
++
++class WeakSDKWriteOwnerContracts(unittest.TestCase):
++    @classmethod
++    def setUpClass(cls):
++        cls.phase = ROOT / '.local/p0-repair/phase-64'
++        cls.proof = json.loads((cls.phase / 'weak-sdk-write-contract.json').read_text())
++        cls.path = 'replica/Sources/Pasto/UI/ReplicaSearchIndex.swift'
++        cls.ui_path = 'replica/Sources/Pasto/UI/ReplicaUIController.swift'
++        cls.source = (ROOT / cls.path).read_text()
++        cls.before = (cls.phase / 'before' / cls.path).read_text()
++        cls.ui = (ROOT / cls.ui_path).read_text()
++        cls.writer = body(cls.source, 'private static func writeSearchableItems(')
++        cls.original = {r['address']: original_fragment((ROOT / r['path']).read_text(), r['address'][2:])
++                        for r in cls.proof['original_fragments']}
++        cls.words = {int(r['address'], 16): struct.unpack('<I', bytes.fromhex(r['bytes']))[0]
++                     for r in cls.proof['ARM_words']}
++
++    def test_original_binary_fragments_current_snapshots_and_disassemblies_are_bound(self):
++        self.assertEqual(len(self.proof['original_fragments']), 14)
++        for row in self.proof['original_fragments']:
++            self.assertEqual(source_fragments(ROOT / row['path'])[row['address']]['sha256'], row['sha256'])
++        for row in [self.proof['binary']] + self.proof['arm_disassemblies']:
++            self.assertEqual(hashlib.sha256((ROOT / row['path']).read_bytes()).hexdigest(), row['sha256'])
++        for path, digest in self.proof['current_sources'].items():
++            self.assertEqual(hashlib.sha256((ROOT / path).read_bytes()).hexdigest(), digest)
++            self.assertEqual((ROOT / path).read_bytes(), (self.phase / 'after' / path).read_bytes())
++
++    def test_owner_operations_and_SDK_selector_use_real_chained_imports(self):
++        self.assertEqual({r['symbol'] for r in self.proof['runtime_imports']},
++                         {'_swift_weakLoadStrong', '_swift_release', '_objc_retain', '_objc_release'})
++        for row in self.proof['runtime_imports']:
++            self.assertTrue(row['chain']['declared_chain_reachable'])
++            raw, = struct.unpack('<Q', bytes.fromhex(row['pointer_bytes']))
++            self.assertEqual(raw >> 63, 1)
++            self.assertEqual(raw & 0xffffff, row['ordinal'])
++        selector = self.proof['selector_binding']
++        self.assertTrue(selector['chain']['declared_chain_reachable'])
++        self.assertEqual(selector['selector'], 'indexSearchableItems:completionHandler:')
++        self.assertEqual(bytes.fromhex(selector['selector_bytes']), selector['selector'].encode() + b'\0')
++
++    def test_native_weak_load_retains_native_index_then_releases_service_before_bridge(self):
++        def bl(a):
++            w = self.words[a]
++            self.assertEqual(w >> 26, 0b100101)
++            displacement = w & ((1 << 26) - 1)
++            if displacement & (1 << 25): displacement -= 1 << 26
++            return a + 4 * displacement
++        self.assertEqual(bl(0x1002e2124), 0x100bfcc30)
++        self.assertEqual(self.words[0x1002e212c], 0xf9400808)  # SDK field owner+0x10
++        self.assertEqual(bl(0x1002e213c), 0x100bfbf70)
++        self.assertEqual(bl(0x1002e2148), 0x100bfc9c0)
++        self.assertEqual(bl(0x1002e2230), int(self.proof['selector_binding']['stub'], 16))
++        self.assertLess(0x1002e2148, 0x1002e215c)
++        descriptor = self.proof['async_descriptor']
++        rel, = struct.unpack('<i', bytes.fromhex(descriptor['bytes'])[:4])
++        self.assertEqual(int(descriptor['address'], 16) + rel, 0x1002e43a0)
++        self.assertIn('FUN_1002e20b8(', self.original['0x1002e43a0'])
++
++    def test_native_absent_service_returns_tag_one_without_SDK_or_throw(self):
++        a = 0x1002e2128
++        displacement = (self.words[a] >> 5) & ((1 << 19) - 1)
++        if displacement & (1 << 18): displacement -= 1 << 19
++        self.assertEqual(a + 4 * displacement, 0x1002e2264)
++        self.assertEqual(self.words[0x1002e2264], 0x52800028)
++        self.assertEqual(self.words[0x1002e2268], 0x390002a8)
++        self.assertEqual(self.words[0x1002e2278], 0xd2800014)  # no Swift error
++        self.assertEqual(self.words[0x1002e2294], 0xd61f0000)
++        native = self.original['0x1002e20b8']
++        absent = native[native.index('*param_1 = 1;'):]
++        self.assertNotIn('indexSearchableItems', absent)
++        self.assertNotIn('_swift_willThrow', absent)
++
++    def test_native_success_zero_error_propagation_and_outer_result_discard(self):
++        self.assertEqual(self.words[0x1002e2318], 0x3900011f)
++        self.assertIn('_swift_willThrow()', self.original['0x1002e2348'])
++        self.assertIn('if (param_2 == 0)', self.original['0x1002e23a8'])
++        self.assertIn('Swift::CheckedContinuation::resume(&local_28,puVar1)', self.original['0x1002e23a8'])
++        outer = self.original['0x1002e202c']
++        self.assertIn('if (unaff_x20 == 0)', outer)
++        self.assertIn('pcVar3 = FUN_1000e5808', outer)
++        self.assertNotIn('undefined1', outer)
++        self.assertEqual(self.words[0x1002e207c], 0xb4000094)
++
++    def test_domain_defaults_delegate_and_format_marker_are_preserved_across_split(self):
++        assert_service_initializer_only(self, self.source, self.before)
++        self.assertIn('private let index: CSSearchableIndex', self.source)
++        self.assertIn('private let resolveWriteIndex: () -> CSSearchableIndex?', self.source)
++        self.assertIn('resolveWriteIndex = { [weak service] in service?.index }', self.source)
++        indexer = body(self.source, 'final class ReplicaSearchIndex:')
++        self.assertNotRegex(indexer, r'(?:let|var) \w+: ReplicaSpotlightService')
++        self.assertNotIn('service:', self.writer)
++
++    def test_real_UI_owns_service_independently_of_queued_indexer(self):
++        assert_ui_service_composition_only(self, self.ui, (self.phase / 'before' / self.ui_path).read_text())
++        composition = body(body(self.ui, 'final class ReplicaUIState:'), 'init(store: ClipboardStore)')
++        self.assertIn('searchService = service', composition)
++        self.assertIn('searchIndex = ReplicaSearchIndex(service: service, store: store)', composition)
++        self.assertEqual(self.ui.count('ReplicaSearchIndex('), 1)
++        self.assertNotRegex(self.source, r'\[service\]')
++
++    def test_shared_async_scope_contains_only_SDK_index_and_preserves_error_callback(self):
++        self.assertTrue(self.writer.startswith('{\n        guard let index else { return nil }'))
++        tokens = ['guard let index else { return nil }', 'try await withCheckedThrowingContinuation',
++                  'index.indexSearchableItems(items)', 'if let error { continuation.resume(throwing: error) }',
++                  'else { continuation.resume() }', 'return ()']
++        offsets = [self.writer.index(t) for t in tokens]
++        self.assertEqual(offsets, sorted(offsets))
++        self.assertEqual(self.source.count('index.indexSearchableItems('), 1)
++        for forbidden in ['self.', 'service', 'Task.isCancelled', 'isRunning', 'try?', 'catch', '.filter', '.compactMap', 'retry']:
++            self.assertNotIn(forbidden, self.writer)
++
++    def test_four_real_consumers_keep_prepared_items_and_every_nonwrite_segment(self):
++        expected = {'private func reindexTargets(': ['changed'],
++                    'private func applyHistoryChanges(': ['live.map { searchableItem($0, isUpdate: false) }'],
++                    'private func indexInitialSnapshot(': ['changed'],
++                    'private func drainOCRQueue()': ['[item]']}
++        for marker, args in expected.items():
++            current, previous = body(self.source, marker), body(self.before, marker)
++            assert_write_scope_only(self, current, previous)
++            self.assertEqual(write_segments(current)[1], args)
++            self.assertIn('_ = try await Self.writeSearchableItems(', current)
++        self.assertEqual(self.source.count('_ = try await Self.writeSearchableItems('), 4)
++        self.assertNotIn('index.indexSearchableItems(', body(self.source, 'private func startWorker()'))
++
++    def test_queue_delegate_retry_stop_query_and_content_building_remain_identical(self):
++        for marker in ['private func startWorker()', 'private func drain() async',
++                       'private func retryTransientIndexErrors(', 'private static func isTransientIndexError(',
++                       'private func deleteIdentifiers(', 'private func clearIndex()', 'private func stopIndexing()',
++                       'private func startHistoryObservation()', 'private func initializeIndexIfNeeded(',
++                       'private func searchableItem(', 'private func replaceQuery(',
++                       'nonisolated private static func matchingIdentifiers(', 'nonisolated private func rebuild(',
++                       'private static func performDelegateRebuild(', 'private func enqueueDelegateRebuild(']:
++            self.assertEqual(body(self.source, marker), body(self.before, marker))
++        self.assertEqual(self.source.count('try await retryTransientIndexErrors'), 3)
++        self.assertNotIn('retryTransientIndexErrors', body(self.source, 'private func drainOCRQueue()'))
++
++    def test_segment_comparison_rejects_narrowed_inputs_or_hidden_old_callback_logic(self):
++        current = body(self.source, 'private func reindexTargets(')
++        previous = body(self.before, 'private func reindexTargets(')
++        with self.assertRaises(AssertionError):
++            write_segments(current.replace('writeSearchableItems(changed,', 'writeSearchableItems(changed.filter { _ in true },'))
++        with self.assertRaises(AssertionError):
++            write_segments(previous.replace('else { continuation.resume() }', 'else { continuation.resume(); indexed = [:] }'))
++        with self.assertRaises(AssertionError):
++            assert_write_scope_only(self, current.replace('refreshed.append(contentsOf: live)', 'indexed = [:]'), previous)
++
++    def test_finite_record_only_no_FRC_or_entity_context_repair_is_claimed(self):
++        row, = self.proof['contracts']
++        self.assertEqual(row['function_id'], 'Paste:0x1002e20b8')
++        self.assertFalse(row['full_function_migration_verified'])
++        self.assertFalse(self.proof['full_function_migration_verified'])
++        self.assertEqual(self.proof['function_map_markers_upgraded'], 0)
++        self.assertEqual(self.proof['new_difference_records'], 0)
++        base = json.loads((self.phase / 'baseline.json').read_text())
++        changed = {path for path, digest in base['production'].items()
++                   if hashlib.sha256((ROOT / path).read_bytes()).hexdigest() != digest}
++        self.assertEqual(changed, {self.path, self.ui_path})
++        self.assertTrue(any('FRC/' in text for text in self.proof['retained_partial_contracts']))
++
++
++if __name__ == '__main__':
++    unittest.main()
+--- /dev/null
++++ scripts/tests/index_write_scope_contract.py
+@@ -0,0 +1,80 @@
++"""Compare actual method segments outside the explicitly migrated SDK-write boundary.
++
++No synthetic Swift source is built. The removed inline block is restricted to its
++exact callback/error template; call arguments and every outside character match.
++"""
++import re
++
++
++def write_segments(source):
++    result, arguments, end = [], [], 0
++    pattern = re.compile(r'^([ \t]*)(?:try await withCheckedThrowingContinuation|_ = try await Self\.writeSearchableItems)', re.M)
++    for match in pattern.finditer(source):
++        if match.start() < end:
++            continue
++        if source[match.start():].lstrip().startswith('_ ='):
++            finish = source.find('\n', match.start())
++            if finish < 0:
++                finish = len(source)
++            line = source[match.start():finish].strip()
++            prefix = '_ = try await Self.writeSearchableItems('
++            suffix = ', index: resolveWriteIndex())'
++            if not line.endswith(suffix):
++                raise AssertionError('Unexpected SDK write helper arguments')
++            argument = line[len(prefix):-len(suffix)]
++        else:
++            start = source.index('{', match.start())
++            depth, finish = 1, start + 1
++            while depth:
++                if source[finish] == '{': depth += 1
++                if source[finish] == '}': depth -= 1
++                finish += 1
++            block = source[match.start():finish]
++            if 'index.indexSearchableItems(' not in block:
++                continue
++            argument = block.split('index.indexSearchableItems(', 1)[1].split(') { error in', 1)[0]
++            expected = ('try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in '
++                        'index.indexSearchableItems(' + argument + ') { error in '
++                        'if let error { continuation.resume(throwing: error) } else { continuation.resume() } } }')
++            if re.sub(r'\s+', ' ', block.strip()) != expected:
++                raise AssertionError('Removed write block had additional behavior')
++        if argument not in ['changed', '[item]', 'live.map { searchableItem($0, isUpdate: false) }']:
++            raise AssertionError('Unreviewed write input')
++        result.append(source[end:match.start()])
++        arguments.append(argument)
++        end = finish
++    result.append(source[end:])
++    return result, arguments
++
++
++def assert_write_scope_only(test, current, previous):
++    test.assertEqual(write_segments(current), write_segments(previous))
++
++
++def assert_service_initializer_only(test, current_source, previous_source):
++    from test_offline_p0_contracts import body
++    previous = body(previous_source, 'init(directoryURL:')
++    service = body(current_source, 'init(directoryURL:')
++    current = body(current_source, 'init(service:')
++    prefix, separator, old_tail = previous.partition('        nativeIdentifierFormatKey =')
++    test.assertTrue(separator)
++    test.assertEqual(service[:service.index('        index = CSSearchableIndex')], prefix)
++    test.assertEqual(service[service.index('        index = CSSearchableIndex'):], '        index = CSSearchableIndex(name: domain)\n    }')
++    test.assertTrue(current.startswith('{\n        domain = service.domain\n'))
++    old_before, old_separator, old_after = (separator + old_tail).partition('        index = CSSearchableIndex(name: domain)\n')
++    new_before, new_separator, new_after = current[len('{\n        domain = service.domain\n'):].partition('        index = service.index\n        resolveWriteIndex = { [weak service] in service?.index }\n')
++    test.assertTrue(old_separator and new_separator)
++    test.assertEqual((new_before, new_after), (old_before, old_after))
++
++
++def assert_ui_service_composition_only(test, current, previous):
++    old_field = '    private let searchIndex: ReplicaSearchIndex\n'
++    new_field = '    private let searchService: ReplicaSpotlightService\n' + old_field
++    old_call = '        searchIndex = ReplicaSearchIndex(directoryURL: store.directoryURL, store: store)\n'
++    new_call = ('        let service = ReplicaSpotlightService(directoryURL: store.directoryURL)\n'
++                '        searchService = service\n        searchIndex = ReplicaSearchIndex(service: service, store: store)\n')
++    for value, token in [(previous, old_field), (previous, old_call), (current, new_field), (current, new_call)]:
++        test.assertEqual(value.count(token), 1)
++    old_prefix, old_rest = previous.split(old_field)
++    new_prefix, new_rest = current.split(new_field)
++    test.assertEqual((new_prefix, *new_rest.split(new_call)), (old_prefix, *old_rest.split(old_call)))

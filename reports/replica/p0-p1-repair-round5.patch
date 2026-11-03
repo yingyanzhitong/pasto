@@ -1,0 +1,25 @@
+--- phase-5-before/replica/Sources/Pasto/UI/ReplicaUIController.swift
++++ replica/Sources/Pasto/UI/ReplicaUIController.swift
+@@ -1218,6 +1218,8 @@
+         let popover = OriginalPreviewPopover(registry: previewRegistry,
+             isScreenSharingContentVisible: { preferenceStore.preferences.showDuringScreenSharing },
+             visibilityChanges: changes)
++        // 0x10007654c -> 0x10006be90: closing clears the owner's optional popover.
++        popover.onWillClose = { [weak self] in self?.previewPopover = nil }
+         popover.makeContentView = { [weak self] _, identifier in
+             guard let self, let item = self.store.items.first(where: { $0.id.uuidString == identifier }) else { return nil }
+             return makeOriginalReplicaPreview(state: self.state, item: item)
+@@ -1585,6 +1587,13 @@
+         }
+         if !isEditing, let options = OriginalCollectionShortcutActions.copyOptions(for: signature,
+             plainTextModifierRawValue: store.preferences.plainTextModifierRawValue) {
++            if previewPopover != nil {
++                // 0x100069fe0 retains the owner and resolves its current popover at the deadline.
++                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [self] in
++                    previewPopover?.performClose(self)
++                }
++                return true
++            }
+             copySelection(plainTextOnly: options.contains(.plainTextAndLinks))
+             return true
+         }

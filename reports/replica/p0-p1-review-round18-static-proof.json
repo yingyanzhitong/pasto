@@ -1,0 +1,195 @@
+{
+  "round": 18,
+  "binary_path": ".local/paste-arm64-static.bin",
+  "binary_sha256": "871f00354fbb1c165d858a98e6d19d6f43cb9d3f9f958b3e07c7f07eb5c19afb",
+  "segments": [
+    {
+      "vmaddr": 0,
+      "filesize": 0,
+      "fileoff": 0
+    },
+    {
+      "vmaddr": 4294967296,
+      "filesize": 15351808,
+      "fileoff": 0
+    },
+    {
+      "vmaddr": 4310319104,
+      "filesize": 671744,
+      "fileoff": 15351808
+    },
+    {
+      "vmaddr": 4310990848,
+      "filesize": 1064960,
+      "fileoff": 16023552
+    },
+    {
+      "vmaddr": 4312727552,
+      "filesize": 1956752,
+      "fileoff": 17088512
+    }
+  ],
+  "history_actor": {
+    "metadata": "0x100fc1368",
+    "nominal": "0x100cacfa0",
+    "name": "CDSearchIndexerDataSource",
+    "field_descriptor": "0x100d48880",
+    "fields": [
+      {
+        "name": "$defaultActor",
+        "offset": 16
+      },
+      {
+        "name": "coordinator",
+        "offset": 112
+      },
+      {
+        "name": "context",
+        "offset": 120
+      },
+      {
+        "name": "_historyTokenData",
+        "offset": 128
+      },
+      {
+        "name": "historyToken",
+        "offset": 184
+      },
+      {
+        "name": "logger",
+        "offset": 192
+      },
+      {
+        "name": "telemetry",
+        "offset": 200
+      }
+    ]
+  },
+  "history_preference": {
+    "key_path": {
+      "address": "0x100c43258",
+      "file_offset": 12857944,
+      "bytes": "38eb42000000000003510b007b510b00000000000c0000800000000234d572ff1ce172ff00000000"
+    },
+    "getter_slot": {
+      "address": "0x100c43274",
+      "file_offset": 12857972,
+      "bytes": "34d572ff"
+    },
+    "getter": "0x1003707a8",
+    "initializer_slot": {
+      "address": "0x100c43278",
+      "file_offset": 12857976,
+      "bytes": "1ce172ff"
+    },
+    "initializer": "0x100371394",
+    "default_storage_getter_slot": {
+      "address": "0x100c3ce20",
+      "file_offset": 12832288,
+      "bytes": "80d768ff"
+    },
+    "default_storage_getter": "0x1002ca5a0",
+    "key_string": {
+      "address": "0x100da3390",
+      "file_offset": 14300048,
+      "bytes": "696e646578486973746f7279546f6b656e4461746100"
+    },
+    "key": "indexHistoryTokenData"
+  },
+  "multi_text": {
+    "read_each": {
+      "address": "0x1003731cc",
+      "file_offset": 3617228,
+      "bytes": "f40300aaf90300aaf5250094f40300aaf80301aae00319aa798a40f9"
+    },
+    "append_loop": {
+      "address": "0x100373210",
+      "file_offset": 3617296,
+      "bytes": "d70a00f9c812198b146102a9f7031caa798a40f9deffff17"
+    },
+    "join": {
+      "address": "0x100373298",
+      "file_offset": 3617432,
+      "bytes": "f70300aa1a75fe97e30300aa74020591000480520120fcd2e20317aad4112294"
+    },
+    "join_stub": {
+      "address": "0x100bf7a04",
+      "file_offset": 12548612,
+      "container_file_offset": 12548612,
+      "section": "__TEXT,__stubs",
+      "body_size": 12,
+      "body_hex": "b015009010a647f900021fd6",
+      "instruction_words": [
+        "0x900015b0",
+        "0xf947a610",
+        "0xd61f0200"
+      ],
+      "instructions": [
+        "adrp x16, PAGE(symbol_pointer)",
+        "ldr x16, [x16, PAGEOFF(symbol_pointer)]",
+        "br x16"
+      ],
+      "pointer_address": "0x100eabf48",
+      "pointer_section": "__DATA_CONST,__got",
+      "pointer_file_offset": 15384392,
+      "pointer_container_file_offset": 15384392,
+      "pointer_raw_value": "0x8010000000000afd",
+      "dyld_binding": {
+        "import_index": 2813,
+        "import_table_slice_file_offset": 17100076,
+        "symbol": "_$sSKsSS7ElementRtzrlE6joined9separatorS2S_tF",
+        "dylib_ordinal": 45,
+        "dylib": {
+          "install_name": "/usr/lib/swift/libswiftCore.dylib",
+          "load_command": "0xc",
+          "current_version": 0,
+          "current_version_string": "0.0.0",
+          "compatibility_version": 0,
+          "compatibility_version_string": "0.0.0"
+        },
+        "weak_import": false,
+        "import_addend": 0,
+        "mechanism": "LC_DYLD_CHAINED_FIXUPS",
+        "fixups_header_slice_file_offset": 17088512,
+        "pointer_format": 6,
+        "imports_format": 1,
+        "segment_index": 2,
+        "page_index": 1,
+        "page_start": 0,
+        "pointer_slice_file_offset": 15384392,
+        "pointer_raw_value": "0x8010000000000afd",
+        "pointer_addend": 0,
+        "effective_addend": 0
+      },
+      "indirect_symbol_index": 2432,
+      "pointer_indirect_symbol_index": 2432,
+      "symbol": "_$sSKsSS7ElementRtzrlE6joined9separatorS2S_tF",
+      "dylib_ordinal": 45,
+      "n_type": 1,
+      "n_sect": 0,
+      "n_desc": 11520,
+      "weak_import": false,
+      "dylib": {
+        "install_name": "/usr/lib/swift/libswiftCore.dylib",
+        "load_command": "0xc",
+        "current_version": 0,
+        "current_version_string": "0.0.0",
+        "compatibility_version": 0,
+        "compatibility_version_string": "0.0.0"
+      },
+      "cpu_type": "0x100000c",
+      "cpu_subtype": "0x0"
+    },
+    "input_strings": [
+      "pasto alpha",
+      "pasto beta"
+    ],
+    "original_projection": "pasto alpha pasto beta",
+    "current_projection": "pasto alpha"
+  },
+  "limits": [
+    "finite_source_static_comparison",
+    "no_original_binary_or_swift_execution",
+    "not_all_decoder_or_history_lifecycles"
+  ]
+}

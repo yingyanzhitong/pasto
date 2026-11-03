@@ -1,0 +1,329 @@
+--- phase-23-before/replica/Sources/Pasto/UI/ReplicaNativeCardCollection.swift
++++ replica/Sources/Pasto/UI/ReplicaNativeCardCollection.swift
+@@ -191,6 +191,8 @@
+                 lastPrimaryID = state.primaryID
+                 needsPrimaryReveal = false
+                 tileCells()
++            } else {
++                state.applyIncrementalCollectionSnapshot(items: items)
+             }
+             // f1b9b78 calls onUpdate only after its mutation/collection callback returns.
+             guard collectionOwnerGeneration == ownerGeneration, self.state === state,
+--- phase-23-before/replica/Sources/Pasto/UI/ReplicaUIController.swift
++++ replica/Sources/Pasto/UI/ReplicaUIController.swift
+@@ -290,6 +290,15 @@
+         applyOrderedSelection(firstID.map { [$0] } ?? [], anchor: firstID, primary: firstID)
+     }
+ 
++    // 0x1002234e0: preserve the surviving selection order, including an empty
++    // selection, and use its last endpoint after the new collection is applied.
++    func applyIncrementalCollectionSnapshot(items: [ClipboardItem]) {
++        let visible = Set(items.map(\.id))
++        let ids = orderedSelectionIDs.filter { selection.contains($0) && visible.contains($0) }
++        allowsEmptySelection = ids.isEmpty
++        applyOrderedSelection(ids, anchor: ids.last, primary: ids.last)
++    }
++
+     private func reconcileExternalSelection() {
+         let visibleIDs = visibleItems.map(\.id)
+         let visible = Set(visibleIDs)
+@@ -312,11 +321,22 @@
+             pendingPinboardDeletionID = nil
+             pinboardDeletionError = nil
+         }
++        if let pinboardID, !store.pinboards.contains(where: { $0.id == pinboardID }) {
++            self.pinboardID = nil
++        }
++        if let request = pendingItemDeletion,
++           !request.ids.isSubset(of: Set(visibleItems.map(\.id))) {
++            cancelItemDeletion()
++        }
++        // A live collection updates selection with its applied snapshot. Search
++        // and store projections may already describe a later, queued snapshot.
++        guard collectionOwner == nil else { return }
++        normalizeProjectedSelection()
++    }
++
++    private func normalizeProjectedSelection() {
+         let items = visibleItems
+         let visible = Set(items.map(\.id))
+-        if let request = pendingItemDeletion, !request.ids.isSubset(of: visible) {
+-            cancelItemDeletion()
+-        }
+         let hadSelectionBeforeSnapshot = !orderedSelectionIDs.isEmpty
+         var ids = orderedSelectionIDs.filter { selection.contains($0) && visible.contains($0) }
+         let retained = Set(ids)
+@@ -326,9 +346,6 @@
+         let anchor = rangeAnchorID.flatMap { visible.contains($0) ? $0 : nil } ?? ids.last
+         let primary = primaryID.flatMap { ids.contains($0) ? $0 : nil } ?? ids.last
+         applyOrderedSelection(ids, anchor: anchor, primary: primary)
+-        if let pinboardID, !store.pinboards.contains(where: { $0.id == pinboardID }) {
+-            self.pinboardID = nil
+-        }
+     }
+ 
+     private func selectIndex(_ index: Int, mode: UInt8, items: [ClipboardItem], animated: Bool = true) {
+@@ -401,7 +418,7 @@
+         showDeleted = false
+         selection = []
+         primaryID = nil
+-        normalizeSelection()
++        normalizeProjectedSelection()
+     }
+ 
+     // f3b83c4: one resolved item, history first, then its owning pinboard; omit the current list.
+--- phase-23-before/scripts/tests/test_offline_p0_contracts.py
++++ scripts/tests/test_offline_p0_contracts.py
+@@ -407,8 +407,9 @@
+             with self.subTest(signature=signature):
+                 self.assertIn("cancelItemDeletion()", body(source, signature))
+         normalize = body(source, "func normalizeSelection()")
+-        self.assertIn("!request.ids.isSubset(of: visible)", normalize)
++        self.assertIn("!request.ids.isSubset(of: Set(visibleItems.map(\\.id)))", normalize)
+         self.assertIn("cancelItemDeletion()", normalize)
++        self.assertLess(normalize.index("cancelItemDeletion()"), normalize.index("guard collectionOwner == nil"))
+ 
+     def test_pending_confirmation_blocks_background_keys_and_copy_then_esc_cancels_only_request(self):
+         source = (ROOT / "replica/Sources/Pasto/UI/ReplicaUIController.swift").read_text()
+--- phase-23-before/scripts/tests/test_p0_repair_reload_selection_policy.py
++++ scripts/tests/test_p0_repair_reload_selection_policy.py
+@@ -102,7 +102,7 @@
+         self.assertEqual(case['before_selected'], ['B'])
+         self.assertEqual(case['classification'], 'source_contract_case_not_runtime_reproduction')
+ 
+-    def test_changes_are_exactly_the_old_equality_gate_and_its_private_payload(self):
++    def test_phase22_patch_is_bound_and_current_full_reload_remains_unchanged(self):
+         old = (self.phase / 'before' / UI).read_text()
+         old_method = body(old, 'func applyFullCollectionReload(items: [ClipboardItem],')
+         new_method = body(self.ui, 'func applyFullCollectionReload(items: [ClipboardItem])')
+@@ -111,7 +111,14 @@
+         reconstructed = old.replace('    @discardableResult\n    func applyFullCollectionReload(items: [ClipboardItem], ifSelectionUnchangedFrom expected: CollectionSelectionSnapshot) -> Bool',
+                                     '    func applyFullCollectionReload(items: [ClipboardItem])', 1)
+         reconstructed = reconstructed.replace(old_method, new_method, 1)
+-        self.assertEqual(reconstructed, self.ui)
++        checkpoint = ROOT / '.local/p0-repair/phase-23/before'
++        frozen_report = json.loads((ROOT / 'reports/replica/p0-p1-repair-round22.json').read_text())
++        for path in [UI, HOST]:
++            self.assertEqual(hashlib.sha256((checkpoint / path).read_bytes()).hexdigest(),
++                             frozen_report['current_production_hashes'][path])
++        self.assertEqual(reconstructed, (checkpoint / UI).read_text())
++        self.assertEqual(body((checkpoint / UI).read_text(), 'func applyFullCollectionReload(items: [ClipboardItem])'),
++                         new_method)
+         before_host = (self.phase / 'before' / HOST).read_text()
+         expected = before_host.replace('        let selection: ReplicaUIState.CollectionSelectionSnapshot\n', '', 1)
+         expected = expected.replace('// A selection-only redraw must not replace the guard captured by an earlier snapshot.',
+@@ -121,7 +128,7 @@
+         expected = expected.replace('            if requiresReload, state.applyFullCollectionReload(items: items,\n'
+                                     '                ifSelectionUnchangedFrom: pending.selection) {',
+                                     '            if requiresReload {\n                state.applyFullCollectionReload(items: items)', 1)
+-        self.assertEqual(expected, self.host)
++        self.assertEqual(expected, (checkpoint / HOST).read_text())
+ 
+     def test_normalization_and_replacement_boundaries_remain_unclosed(self):
+         self.assertFalse(self.proof['full_function_migration_verified'])
+--- phase-23-before/scripts/tests/test_p0_repair_snapshot.py
++++ scripts/tests/test_p0_repair_snapshot.py
+@@ -143,13 +143,11 @@
+         self.assertIn("struct CollectionSelectionSnapshot: Equatable", self.controller)
+ 
+     def test_incremental_snapshot_drops_deleted_selection_without_fallback(self):
+-        normalize = swift_body(self.controller, "func normalizeSelection()")
+-        lost_selection = normalize.index("if ids.isEmpty, hadSelectionBeforeSnapshot { allowsEmptySelection = true }")
+-        fallback = normalize.index("if ids.isEmpty, !allowsEmptySelection, let first = items.first")
+-        self.assertLess(lost_selection, fallback)
+-        self.assertIn("let hadSelectionBeforeSnapshot = !orderedSelectionIDs.isEmpty", normalize)
++        normalize = swift_body(self.controller, "func applyIncrementalCollectionSnapshot(items: [ClipboardItem])")
+         self.assertIn("orderedSelectionIDs.filter { selection.contains($0) && visible.contains($0) }", normalize)
+-        self.assertIn("applyOrderedSelection(ids, anchor: anchor, primary: primary)", normalize)
++        self.assertIn("allowsEmptySelection = ids.isEmpty", normalize)
++        self.assertIn("applyOrderedSelection(ids, anchor: ids.last, primary: ids.last)", normalize)
++        self.assertNotIn("items.first", normalize)
+         self.assertNotIn("cancelPendingNeighborSelection()", normalize)
+ 
+     def test_report_binds_live_method_references_and_static_check(self):
+--- phase-23-before/scripts/tests/test_p0_repair_visible_selection.py
++++ scripts/tests/test_p0_repair_visible_selection.py
+@@ -46,9 +46,11 @@
+         self.assertLess(reconcile.index('primaryID = orderedSelectionIDs.last'),
+                         reconcile.index('collectionOwner?.applySelection(state: self)'))
+         self.assertIn('didSet { if !isApplyingSelection { reconcileExternalSelection() } }', self.ui)
+-        for signature in ['func selectAll()', 'func deselectAll()', 'func normalizeSelection()',
+-                          'func applyFullCollectionReload(items:']:
++        for signature in ['func selectAll()', 'func deselectAll()', 'private func normalizeProjectedSelection()',
++                          'func applyFullCollectionReload(items:', 'func applyIncrementalCollectionSnapshot(items:']:
+             self.assertIn('applyOrderedSelection(', body(self.ui, signature))
++        normalize = body(self.ui, 'func normalizeSelection()')
++        self.assertLess(normalize.index('guard collectionOwner == nil'), normalize.index('normalizeProjectedSelection()'))
+ 
+     def test_native_refresh_only_touches_visible_matching_cells_without_data_or_layout_mutation(self):
+         refresh = body(self.host, 'func applySelection(state: ReplicaUIState)')
+--- /dev/null
++++ scripts/tests/test_p0_repair_incremental_selection_delivery.py
+@@ -0,0 +1,167 @@
++"""C/ARM and source-contract checks; no Swift/AppKit execution."""
++import hashlib
++import itertools
++import json
++from pathlib import Path
++import sys
++import unittest
++
++ROOT = Path(__file__).resolve().parents[2]
++sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'scripts/tests')]
++from function_ledger import source_fragments
++from test_offline_p0_contracts import body
++from test_p0_repair_checksum_routing import original_fragment
++
++UI = 'replica/Sources/Pasto/UI/ReplicaUIController.swift'
++HOST = 'replica/Sources/Pasto/UI/ReplicaNativeCardCollection.swift'
++
++
++class IncrementalSelectionDelivery(unittest.TestCase):
++    @classmethod
++    def setUpClass(cls):
++        cls.phase = ROOT / '.local/p0-repair/phase-23'
++        cls.proof = json.loads((cls.phase / 'incremental-root-contract.json').read_text())
++        cls.ui = (ROOT / UI).read_text()
++        cls.host = (ROOT / HOST).read_text()
++
++    def original(self, address):
++        r = next(r for r in self.proof['original_fragments'] if r['address'] == address)
++        return original_fragment((ROOT / r['path']).read_text(), address[2:])
++
++    def test_original_fragments_and_manager_write_machine_range_are_bound(self):
++        for r in self.proof['original_fragments']:
++            self.assertEqual(source_fragments(ROOT / r['path'])[r['address']]['sha256'], r['sha256'])
++        raw = (ROOT / self.proof['binary']['path']).read_bytes()
++        self.assertEqual(hashlib.sha256(raw).hexdigest(), self.proof['binary']['sha256'])
++        for r in self.proof['machine_ranges']:
++            data = raw[r['file_offset']:r['file_offset'] + r['length']]
++            self.assertEqual(data.hex(), r['hex'])
++            self.assertEqual(hashlib.sha256(data).hexdigest(), r['sha256'])
++        self.assertEqual(raw[0x22377c:0x223780].hex(), 'aa0000b4')  # empty result, not index0 fallback
++        self.assertEqual(raw[0x2237a8:0x2237ac].hex(), '6a0900f9')  # last transformed index -> manager+16
++
++    def test_original_final_selection_uses_transformed_order_and_last_endpoint(self):
++        incremental = self.original('0x1002234e0')
++        order = ['FUN_1002258ac()', 'FUN_100223f2c()', 'lVar12 = *(long *)(lVar8 + 0x10)',
++                 '*plVar1 = lVar8', 'plVar1[2] = lVar13', 'FUN_100228f6c()']
++        self.assertEqual([incremental.index(t) for t in order], sorted(incremental.index(t) for t in order))
++        self.assertIn('lVar13 = *(long *)(lVar8 + lVar12 * 8 + 0x18)', incremental)
++        self.assertIn('*(bool *)(plVar1 + 3) = lVar12 == 0', incremental)
++        self.assertIn("(char)unaff_x20[3] != '\\x01'", self.original('0x10022df78'))
++        self.assertIn('uVar13 = unaff_x20[2]', self.original('0x10022df78'))
++
++    def test_native_data_application_delivers_incremental_selection_before_neighbor(self):
++        drain = body(self.host, 'private func drainCollectionSnapshots()')
++        order = ['items = pending.items', 'layoutCollection()',
++                 'state.applyFullCollectionReload(items: items)',
++                 'state.applyIncrementalCollectionSnapshot(items: items)',
++                 'state.consumePendingNeighborSelection']
++        self.assertEqual([drain.index(t) for t in order], sorted(drain.index(t) for t in order))
++        self.assertIn('} else {\n                state.applyIncrementalCollectionSnapshot(items: items)', drain)
++        self.assertIn('state.collectionOwner === self else { continue }', drain)
++        self.assertLess(drain.index('if !isInitialSnapshot && !selectionRelevantSnapshotChanged && !hasRelevantChanges'),
++                        drain.index('state.applyIncrementalCollectionSnapshot'))
++
++    def test_live_projection_normalization_keeps_housekeeping_but_defers_selection(self):
++        normalize = body(self.ui, 'func normalizeSelection()')
++        for token in ['pendingPinboardDeletionID = nil', 'self.pinboardID = nil', 'cancelItemDeletion()']:
++            self.assertLess(normalize.index(token), normalize.index('guard collectionOwner == nil'))
++        self.assertLess(normalize.index('guard collectionOwner == nil'), normalize.index('normalizeProjectedSelection()'))
++        self.assertNotIn('applyOrderedSelection(', normalize)
++        self.assertNotIn('selection =', normalize)
++        for signature in ['searchIndex.onUpdate =', 'collectionQueryObservation = searchQueryChanges']:
++            self.assertIn('normalizeSelection()', body(self.ui, signature))
++
++    def test_incremental_has_no_default_selection_and_uses_last_surviving_endpoint(self):
++        method = body(self.ui, 'func applyIncrementalCollectionSnapshot(items: [ClipboardItem])')
++        self.assertIn('let visible = Set(items.map(\\.id))', method)
++        self.assertIn('orderedSelectionIDs.filter { selection.contains($0) && visible.contains($0) }', method)
++        self.assertIn('allowsEmptySelection = ids.isEmpty', method)
++        self.assertIn('applyOrderedSelection(ids, anchor: ids.last, primary: ids.last)', method)
++        for token in ['items.first', 'visibleItems', 'rangeAnchorID', 'selectIndex(', 'cancelPendingNeighborSelection', 'async']:
++            self.assertNotIn(token, method)
++
++    def test_empty_full_then_insert_counterexample_uses_live_before_and_after_consumers(self):
++        before = (self.phase / 'before' / UI).read_text()
++        full = body(before, 'func applyFullCollectionReload(items: [ClipboardItem])')
++        self.assertIn('allowsEmptySelection = false', full)
++        old_normalize = body(before, 'func normalizeSelection()')
++        self.assertIn('if ids.isEmpty, !allowsEmptySelection, let first = items.first', old_normalize)
++        self.assertNotIn('guard collectionOwner == nil', old_normalize)
++        old_drain = body((self.phase / 'before' / HOST).read_text(), 'private func drainCollectionSnapshots()')
++        self.assertNotIn('applyIncrementalCollectionSnapshot', old_drain)
++        case = self.proof['source_gate_counterexample']
++        self.assertEqual(case['initial_full_items'], [])
++        self.assertEqual(case['next_incremental_items'], ['A'])
++        self.assertEqual(case['before_selected'], ['A'])
++        self.assertEqual(case['original_selected'], case['after_selected'])
++        self.assertEqual(case['after_selected'], [])
++
++    def test_unattached_and_explicit_board_projection_keep_the_legacy_policy(self):
++        current = body(self.ui, 'private func normalizeProjectedSelection()')
++        old = body((self.phase / 'before' / UI).read_text(), 'func normalizeSelection()')
++        old_core = old[old.index('        let items = visibleItems'):old.index('        if let pinboardID,')]
++        old_core = old_core.replace('        if let request = pendingItemDeletion, !request.ids.isSubset(of: visible) {\n'
++                                    '            cancelItemDeletion()\n        }\n', '')
++        self.assertEqual('{\n' + old_core + '    }', current)
++        board = body(self.ui, 'func chooseBoard(_ id: UUID?)')
++        old_board = body((self.phase / 'before' / UI).read_text(), 'func chooseBoard(_ id: UUID?)')
++        self.assertEqual(old_board.replace('normalizeSelection()', 'normalizeProjectedSelection()'), board)
++
++    def test_unique_id_no_move_domain_matches_original_delete_insert_index_arithmetic(self):
++        # A pure Python model of 1b2a90 -> 1b2cc0, with no moves/reloads and
++        # unique item identities. This is not execution of the Swift mapper.
++        old = ('A', 'B', 'C')
++        checked = 0
++        for size in range(6):
++            for new in itertools.permutations(old + ('X', 'Y'), size):
++                retained = tuple(v for v in new if v in old)
++                if retained != tuple(v for v in old if v in new):
++                    continue
++                removed = [i for i, value in enumerate(old) if value not in new]
++                inserted = [i for i, value in enumerate(new) if value not in old]
++                for count in range(4):
++                    for selected in itertools.permutations(range(3), count):
++                        transformed = []
++                        for index in selected:
++                            if index in removed:
++                                continue
++                            offset = index - sum(value < index for value in removed)
++                            for insertion in inserted:
++                                if insertion <= offset:
++                                    offset += 1
++                            transformed.append(offset)
++                        reference_ids = [new[i] for i in transformed]
++                        projected_ids = [old[i] for i in selected if old[i] in new]
++                        self.assertEqual(reference_ids, projected_ids)
++                        checked += 1
++        self.assertGreater(checked, 1000)
++        self.assertIn('cVar4 == \'\\x02\'', self.original('0x100223f2c'))
++        self.assertIn('cVar4 == \'\\x01\'', self.original('0x100223f2c'))
++
++    def test_full_reload_and_owner_cancellation_contracts_remain_unchanged(self):
++        before_ui = (self.phase / 'before' / UI).read_text()
++        self.assertEqual(body(before_ui, 'func applyFullCollectionReload(items: [ClipboardItem])'),
++                         body(self.ui, 'func applyFullCollectionReload(items: [ClipboardItem])'))
++        before_host = (self.phase / 'before' / HOST).read_text()
++        for signature in ['func update(state: ReplicaUIState, cardSide: CGFloat)',
++                          'private func scheduleSnapshotDrain()', 'func detachObservers()']:
++            self.assertEqual(body(before_host, signature), body(self.host, signature))
++        self.assertFalse(self.proof['full_function_migration_verified'])
++        self.assertEqual(self.proof['new_fixed_record_count'], 0)
++
++    def test_installation_mapping_uses_correct_closures_and_tuple_fallback(self):
++        self.assertIn('compactMap', self.proof['sdk_imports']['0x100bf55b0']['symbol'])
++        self.assertIn('3map', self.proof['sdk_imports']['0x100bf55d4']['symbol'])
++        raw = (ROOT / self.proof['binary']['path']).read_bytes()
++        self.assertEqual(raw[0x7e89c:0x7e8a0].hex(), '00200291')  # x0 += 0x88 ->7e088 compactMap
++        self.assertEqual(raw[0x7e974:0x7e978].hex(), '00002b91')  # x0 += 0xac0 ->7eac0 map
++        self.assertEqual(raw[0x7ead8:0x7eadc].hex(), '155840a9')  # load tuple first/second words
++        self.assertEqual(raw[0x7eb54:0x7eb58].hex(), '950000b5')  # retain first if nonnil
++        self.assertIn('lVar2 = param_2[1]', self.original('0x10007eac0'))
++        self.assertIn('if (lVar1 == 0)', self.original('0x10007eac0'))
++        self.assertIn('lVar8 = lVar2', self.original('0x10007eac0'))
++
++
++if __name__ == '__main__':
++    unittest.main()

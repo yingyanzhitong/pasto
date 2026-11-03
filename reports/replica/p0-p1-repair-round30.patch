@@ -1,0 +1,379 @@
+--- phase-30-before/replica/Sources/Pasto/UI/ReplicaUIController.swift
++++ replica/Sources/Pasto/UI/ReplicaUIController.swift
+@@ -843,7 +843,9 @@
+         let generation = panelTransitionGeneration
+         isPanelClosing = false
+         panel.backgroundColor = .clear
+-        positionPanel()
++        let screenFrame = screen.frame
++        panel.setFrame(.init(x: screenFrame.minX, y: screenFrame.minY,
++                             width: screenFrame.width, height: content.frame.height), display: false)
+         panel.makeFirstResponder(nil)
+         cancelClosedState()
+         state.normalizeSelection()
+@@ -851,24 +853,23 @@
+         mainWindowController?.showWindow(nil)
+         originalPanelScreen = screen
+         content.superview?.clipsToBounds = true
+-        content.frame = NSRect(origin: NSPoint(x: 0, y: -panel.frame.height), size: panel.frame.size)
+-        NSAnimationContext.runAnimationGroup { context in
+-            context.duration = 0.15
+-            context.timingFunction = CAMediaTimingFunction(controlPoints: 0.2, 0.8, 0.2, 1)
+-            context.allowsImplicitAnimation = true
++        content.frame = panel.frame
++        content.frame.origin = NSPoint(x: 0, y: -content.frame.height)
++        OriginalViewAnimation.f_10021cadc(duration: 0.15,
++            timingFunction: CAMediaTimingFunction(controlPoints: 0.2, 0.8, 0.2, 1),
++            animated: true, animations: {
+             content.animator().frame = NSRect(origin: .zero, size: content.frame.size)
+-        } completionHandler: { [weak self, weak content] in
++        }, completion: { [self, panel] in
+             MainActor.assumeIsolated {
+-                guard let self, let content, generation == self.panelTransitionGeneration else { return }
+-                if #available(macOS 26, *) {} else { self.panel.backgroundColor = .windowBackgroundColor }
++                guard generation == self.panelTransitionGeneration else { return }
++                if #available(macOS 26, *) {} else { panel.backgroundColor = .windowBackgroundColor }
+                 self.isPanelVisible = true
+-                content.superview?.clipsToBounds = true
+                 if self.state.searchVisible, self.filterBrowserPopover?.isDisplayed != true {
+                     self.state.searchFocus = UUID()
+                 }
+                 self.panelDidShow?()
+             }
+-        }
++        })
+     }
+ 
+     private func panelDidChangeScreen() {
+@@ -992,21 +993,19 @@
+         // before the close animation, unless detached previews still own it.
+         panelWillClose?(previewRegistry.windows.isEmpty)
+         content.superview?.clipsToBounds = false
+-        NSAnimationContext.runAnimationGroup { context in
+-            context.duration = 0.2
+-            context.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
+-            context.allowsImplicitAnimation = true
++        OriginalViewAnimation.f_10021cadc(duration: 0.2,
++            timingFunction: OriginalViewAnimation.f_10021cf38(), animated: true, animations: {
+             content.animator().frame = NSRect(origin: NSPoint(x: 0, y: -content.frame.height), size: content.frame.size)
+-        } completionHandler: { [weak self, weak content] in
++        }, completion: { [self, content] in
+             MainActor.assumeIsolated {
+-                guard let self, let content, generation == self.panelTransitionGeneration else { return }
++                guard generation == self.panelTransitionGeneration else { return }
+                 self.mainWindowController?.close()
+                 self.originalPanelScreen = nil
+                 self.isPanelClosing = false
+                 self.isPanelVisible = false
+                 content.superview?.clipsToBounds = true
+             }
+-        }
++        })
+     }
+ 
+     private func beginClosedState() {
+--- phase-30-before/replica/Sources/PastoCore/OriginalViewAnimation.swift
++++ replica/Sources/PastoCore/OriginalViewAnimation.swift
+@@ -5,6 +5,10 @@
+ public enum OriginalViewAnimation {
+     public static func f_10021ccd4() -> CAMediaTimingFunction {
+         CAMediaTimingFunction(name: .easeOut)
++    }
++
++    public static func f_10021cf38() -> CAMediaTimingFunction {
++        CAMediaTimingFunction(name: .easeInEaseOut)
+     }
+ 
+     public static func f_10021cd10(_ context: NSAnimationContext, duration: TimeInterval?,
+--- phase-30-before/scripts/tests/test_offline_p0_contracts.py
++++ scripts/tests/test_offline_p0_contracts.py
+@@ -330,7 +330,7 @@
+         panel = (ROOT / "replica/Sources/Pasto/UI/ReplicaUIController.swift").read_text()
+         close = body(panel, "func hidePanel()")
+         self.assertLess(close.index("panelWillClose?(previewRegistry.windows.isEmpty)"),
+-                        close.index("NSAnimationContext.runAnimationGroup"))
++                        close.index("OriginalViewAnimation.f_10021cadc"))
+         app = (ROOT / "replica/Sources/Pasto/AppMain.swift").read_text()
+         restore = body(app, "private func restorePanelApplication(restore: Bool)")
+         self.assertIn("defer { handoffPreviousApplication = nil }", restore)
+--- phase-30-before/scripts/tests/test_p0_repair_didshow_focus.py
++++ scripts/tests/test_p0_repair_didshow_focus.py
+@@ -50,7 +50,7 @@
+         original = self.original('0x1000192b0')
+         self.assertIn('FUN_10021cadc(0x3fc3333333333333', original)
+         self.assertEqual(struct.unpack('<d', struct.pack('<Q', 0x3fc3333333333333))[0], 0.15)
+-        self.assertIn('context.duration = 0.15', self.show)
++        self.assertIn('OriginalViewAnimation.f_10021cadc(duration: 0.15', self.show)
+ 
+     def test_normal_show_does_not_activate_before_completion(self):
+         modal = body(self.show, 'guard NSApp.modalWindow == nil else')
+@@ -62,14 +62,14 @@
+         self.assertIn('styleMask: [.borderless, .nonactivatingPanel]', self.ui)
+ 
+     def test_didshow_runs_once_only_in_current_generation_completion_after_focus(self):
+-        completion = self.show[self.show.index('completionHandler:'):]
+-        order = ['guard let self, let content, generation == self.panelTransitionGeneration',
+-                 'self.panel.backgroundColor = .windowBackgroundColor',
++        completion = self.show[self.show.index('completion:'):]
++        order = ['guard generation == self.panelTransitionGeneration',
++                 'panel.backgroundColor = .windowBackgroundColor',
+                  'self.state.searchFocus = UUID()', 'self.panelDidShow?()']
+         positions = [completion.index(t) for t in order]
+         self.assertEqual(positions, sorted(positions))
+         self.assertEqual(self.show.count('panelDidShow?()'), 1)
+-        self.assertNotIn('panelDidShow', self.show[:self.show.index('completionHandler:')])
++        self.assertNotIn('panelDidShow', self.show[:self.show.index('completion:')])
+ 
+     def test_actual_consumer_samples_then_activates_without_old_target_fallback(self):
+         self.assertIn('ui.panelDidShow = { [weak self] in self?.rememberPanelApplication() }', self.app)
+--- phase-30-before/scripts/tests/test_p0_repair_lazy_panel_controller.py
++++ scripts/tests/test_p0_repair_lazy_panel_controller.py
+@@ -102,7 +102,7 @@
+     def test_hide_before_load_is_noop_and_completion_uses_parent_close(self):
+         hide = body(self.ui, 'func hidePanel()')
+         self.assertLess(hide.index('guard let panel = loadedPanel'), hide.index('guard panel.isVisible'))
+-        completion = hide.split('completionHandler:', 1)[1]
++        completion = hide.split('completion:', 1)[1]
+         self.assertLess(completion.index('generation == self.panelTransitionGeneration'), completion.index('self.mainWindowController?.close()'))
+         self.assertLess(completion.index('self.mainWindowController?.close()'), completion.index('self.isPanelVisible = false'))
+         self.assertIn('"close"', self.native('0x100019e2c'))
+--- phase-30-before/scripts/tests/test_p0_repair_panel_visibility_shortcut.py
++++ scripts/tests/test_p0_repair_panel_visibility_shortcut.py
+@@ -77,8 +77,8 @@
+         native = self.native('0x1000187d0')
+         self.assertIn('local_61 = 0', native)
+         self.assertIn('Combine::Published::init', native)
+-        completion = body(self.ui, 'func showPanel()').split('completionHandler:', 1)[1]
+-        order = ['generation == self.panelTransitionGeneration', 'self.panel.backgroundColor = .windowBackgroundColor',
++        completion = body(self.ui, 'func showPanel()').split('completion:', 1)[1]
++        order = ['generation == self.panelTransitionGeneration', 'panel.backgroundColor = .windowBackgroundColor',
+                  'self.isPanelVisible = true', 'self.state.searchFocus = UUID()', 'self.panelDidShow?()']
+         self.assertEqual([completion.index(s) for s in order], sorted(completion.index(s) for s in order))
+         original = self.native('0x100019790')
+@@ -88,7 +88,7 @@
+ 
+     def test_close_publishes_false_after_cleanup_only_in_current_generation_completion(self):
+         close = body(self.ui, 'func hidePanel()')
+-        before, completion = close.split('completionHandler:', 1)
++        before, completion = close.split('completion:', 1)
+         self.assertNotIn('isPanelVisible = false', before)
+         order = ['generation == self.panelTransitionGeneration', 'self.mainWindowController?.close()', 'self.originalPanelScreen = nil',
+                  'self.isPanelClosing = false', 'self.isPanelVisible = false', 'content.superview?.clipsToBounds = true']
+--- phase-30-before/scripts/tests/test_p0_repair_resign_key.py
++++ scripts/tests/test_p0_repair_resign_key.py
+@@ -112,7 +112,7 @@
+         close = body(self.ui, 'func hidePanel()')
+         order = ['guard panel.isVisible', 'guard !isPanelClosing', 'panelTransitionGeneration += 1',
+                  'panel.makeFirstResponder(nil)', 'beginClosedState()', 'isPanelClosing = true',
+-                 'panelWillClose?(', 'NSAnimationContext.runAnimationGroup']
++                 'panelWillClose?(', 'OriginalViewAnimation.f_10021cadc']
+         positions = [close.index(token) for token in order]
+         self.assertEqual(positions, sorted(positions))
+         self.assertIn('generation == self.panelTransitionGeneration', close)
+--- phase-30-before/scripts/tests/test_panel_lifecycle_contracts.py
++++ scripts/tests/test_panel_lifecycle_contracts.py
+@@ -74,10 +74,10 @@
+         order = ["panelTransitionGeneration += 1", "let generation = panelTransitionGeneration",
+                  "isPanelClosing = false", "cancelClosedState()", "mainWindowController?.showWindow(nil)"]
+         self.assertEqual([show.index(t) for t in order], sorted(show.index(t) for t in order))
+-        completion = show[show.index("completionHandler:"):]
++        completion = show[show.index("completion:"):]
+         self.assertLess(completion.index("generation == self.panelTransitionGeneration"),
+-                        completion.index("self.panel.backgroundColor = .windowBackgroundColor"))
+-        self.assertIn("context.duration = 0.15", show)
++                        completion.index("panel.backgroundColor = .windowBackgroundColor"))
++        self.assertIn("OriginalViewAnimation.f_10021cadc(duration: 0.15", show)
+         self.assertIn("controlPoints: 0.2, 0.8, 0.2, 1", show)
+         original = self.original("0x1000192b0")
+         self.assertIn("transitionGeneration) + 1", original)
+@@ -88,10 +88,10 @@
+         order = ["guard panel.isVisible", "guard !isPanelClosing", "panelTransitionGeneration += 1",
+                  "panel.makeFirstResponder(nil)", "beginClosedState()", "isPanelClosing = true",
+                  "NotificationCenter.default.post(", "panelWillClose?(",
+-                 "content.superview?.clipsToBounds = false", "NSAnimationContext.runAnimationGroup"]
++                 "content.superview?.clipsToBounds = false", "OriginalViewAnimation.f_10021cadc"]
+         self.assertEqual([close.index(t) for t in order], sorted(close.index(t) for t in order))
+-        self.assertIn("context.duration = 0.2", close)
+-        self.assertIn("CAMediaTimingFunction(name: .easeInEaseOut)", close)
++        self.assertIn("OriginalViewAnimation.f_10021cadc(duration: 0.2", close)
++        self.assertIn("OriginalViewAnimation.f_10021cf38()", close)
+         original = self.original("0x100019a84")
+         self.assertIn("lVar2 = _TtC5Paste20MainWindowController::closing", original)
+         self.assertLess(original.index("FUN_100021518()"), original.index("*(undefined1 *)(unaff_x20 + lVar2) = 1"))
+@@ -100,7 +100,7 @@
+ 
+     def test_stale_close_completion_cannot_close_reopened_panel(self):
+         close = body(self.ui, "func hidePanel()")
+-        completion = close[close.index("completionHandler:"):]
++        completion = close[close.index("completion:"):]
+         order = ["generation == self.panelTransitionGeneration", "self.mainWindowController?.close()",
+                  "self.originalPanelScreen = nil", "self.isPanelClosing = false",
+                  "content.superview?.clipsToBounds = true"]
+--- /dev/null
++++ scripts/tests/test_p0_repair_panel_transition_alignment.py
+@@ -0,0 +1,165 @@
++"""Source/ARM panel geometry, animation wrapper and captured owners; no AppKit run."""
++import hashlib
++import json
++from pathlib import Path
++import struct
++import sys
++import unittest
++
++ROOT = Path(__file__).resolve().parents[2]
++sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'scripts/tests')]
++from function_ledger import source_fragments
++from macho_imports import parse_macho
++from test_offline_p0_contracts import body
++from test_p0_repair_checksum_routing import original_fragment
++
++
++class PanelTransitionAlignment(unittest.TestCase):
++    @classmethod
++    def setUpClass(cls):
++        cls.proof = json.loads((ROOT / '.local/p0-repair/phase-30/panel-transition-contract.json').read_text())
++        cls.ui = (ROOT / 'replica/Sources/Pasto/UI/ReplicaUIController.swift').read_text()
++        cls.animation = (ROOT / 'replica/Sources/PastoCore/OriginalViewAnimation.swift').read_text()
++        cls.raw = (ROOT / cls.proof['binary']['path']).read_bytes()
++
++    def native(self, a):
++        r = next(r for r in self.proof['original_fragments'] if r['address'] == a)
++        return original_fragment((ROOT / r['path']).read_text(), a[2:])
++
++    def offset(self, a):
++        s = next(s for s in self.proof['file_backed_segments'] if s['vmaddr'] <= a < s['vmaddr'] + s['filesize'])
++        return s['fileoff'] + a - s['vmaddr']
++
++    def word(self, a):
++        return struct.unpack_from('<I', self.raw, self.offset(a))[0]
++
++    def branch(self, a):
++        word = self.word(a)
++        self.assertEqual(word & 0xfc000000, 0x94000000)
++        imm = word & 0x3ffffff
++        if imm & (1 << 25):
++            imm -= 1 << 26
++        return a + 4 * imm
++
++    def test_original_sources_and_machine_ranges_are_bound(self):
++        self.assertEqual(hashlib.sha256(self.raw).hexdigest(), self.proof['binary']['sha256'])
++        for r in self.proof['original_fragments']:
++            self.assertEqual(source_fragments(ROOT / r['path'])[r['address']]['sha256'], r['sha256'])
++        for r in self.proof['machine_ranges']:
++            self.assertEqual(self.offset(int(r['start'], 16)), r['file_offset'])
++            raw = self.raw[r['file_offset']:r['file_offset'] + r['length']]
++            self.assertEqual(raw.hex(), r['hex'])
++            self.assertEqual(hashlib.sha256(raw).hexdigest(), r['sha256'])
++            if 'instruction_count' in r:
++                self.assertEqual(r['instruction_count'], r['length'] // 4)
++
++    def test_real_objc_selector_and_zero_display_argument_are_bound(self):
++        selector = self.proof['selector']
++        slot = int(selector['slot'], 16)
++        target = 0x100000000 + (struct.unpack_from('<Q', self.raw, self.offset(slot))[0] & ((1 << 36) - 1))
++        self.assertEqual(target, int(selector['string_address'], 16))
++        p = self.offset(target)
++        self.assertEqual(self.raw[p:self.raw.index(b'\0', p)].decode(), 'setFrame:display:')
++        self.assertEqual(self.word(0x1000193cc), 0x52800002)  # w2 = false
++        self.assertEqual(self.branch(0x1000193d0), int(selector['stub'], 16))
++
++    def test_show_uses_current_content_height_without_preference_or_resize_guard(self):
++        show = body(self.ui, 'func showPanel()')
++        self.assertIn('let screenFrame = screen.frame', show)
++        self.assertIn('width: screenFrame.width, height: content.frame.height), display: false)', show)
++        self.assertNotIn('positionPanel()', show)
++        self.assertNotIn('store.preferences.panelHeight', show)
++        native = self.native('0x1000192b0')
++        self.assertIn('objc_stub::frame(self_00)', native)
++        self.assertIn('setFrame_display_(self,extraout_d0,param_2,uVar5,uVar11,0)', native)
++
++    def test_content_frame_writes_follow_parent_show_and_precede_animation(self):
++        show = body(self.ui, 'func showPanel()')
++        order = ['mainWindowController?.showWindow(nil)', 'originalPanelScreen = screen',
++                 'content.superview?.clipsToBounds = true', 'content.frame = panel.frame',
++                 'content.frame.origin = NSPoint(x: 0, y: -content.frame.height)',
++                 'OriginalViewAnimation.f_10021cadc(duration: 0.15']
++        self.assertEqual([show.index(s) for s in order], sorted(show.index(s) for s in order))
++        self.assertEqual(self.word(0x100019598), 0x6f00e400)  # zero x origin after first frame
++        self.assertEqual(self.word(0x10001958c), 0x1e614008)  # negate current content height
++
++    def test_original_show_and_close_capture_builders_retain_their_owners(self):
++        stubs = parse_macho(ROOT / self.proof['binary']['path'])['stubs']
++        for r in self.proof['sdk_imports']:
++            self.assertEqual(stubs[r['address']], r)
++        self.assertEqual(stubs['0x100bfbf70']['symbol'], '_objc_retain')
++        for a in [0x100019620, 0x100019628, 0x100019ca4, 0x100019cac]:
++            self.assertEqual(self.branch(a), 0x100bfbf70)
++        self.assertIn('*(ID *)(puVar6 + 0x18) = unaff_x20', self.native('0x1000192b0'))
++        self.assertIn('*(ID *)(puVar6 + 0x20) = self', self.native('0x100019a84'))
++
++    def test_show_completion_holds_controller_and_window_not_weak_content(self):
++        show = body(self.ui, 'func showPanel()')
++        completion = show.split('completion:', 1)[1]
++        self.assertIn('[self, panel]', completion)
++        self.assertNotIn('weak', completion)
++        order = ['guard generation == self.panelTransitionGeneration',
++                 'panel.backgroundColor = .windowBackgroundColor', 'self.isPanelVisible = true',
++                 'self.state.searchFocus = UUID()', 'self.panelDidShow?()']
++        self.assertEqual([completion.index(s) for s in order], sorted(completion.index(s) for s in order))
++        self.assertNotIn('clipsToBounds', completion)
++
++    def test_close_completion_holds_controller_and_content_and_preserves_cleanup_order(self):
++        hide = body(self.ui, 'func hidePanel()')
++        completion = hide.split('completion:', 1)[1]
++        self.assertIn('[self, content]', completion)
++        self.assertNotIn('weak', completion)
++        order = ['guard generation == self.panelTransitionGeneration', 'self.mainWindowController?.close()',
++                 'self.originalPanelScreen = nil', 'self.isPanelClosing = false',
++                 'self.isPanelVisible = false', 'content.superview?.clipsToBounds = true']
++        self.assertEqual([completion.index(s) for s in order], sorted(completion.index(s) for s in order))
++
++    def test_real_show_and_close_consumers_use_original_animation_wrapper(self):
++        show = body(self.ui, 'func showPanel()')
++        close = body(self.ui, 'func hidePanel()')
++        self.assertIn('OriginalViewAnimation.f_10021cadc(duration: 0.15', show)
++        self.assertIn('controlPoints: 0.2, 0.8, 0.2, 1', show)
++        self.assertIn('OriginalViewAnimation.f_10021cadc(duration: 0.2', close)
++        self.assertIn('OriginalViewAnimation.f_10021cf38(), animated: true', close)
++        for source in [show, close]:
++            self.assertNotIn('NSAnimationContext.runAnimationGroup', source)
++        self.assertEqual(self.branch(0x100019ce8), 0x10021cadc)
++
++    def test_animation_wrapper_still_delivers_sync_disabled_and_animated_completion(self):
++        wrapper = body(self.animation, 'public static func f_10021cadc(')
++        disabled = body(wrapper, 'if !animated')
++        self.assertLess(disabled.index('animations()'), disabled.index('completion?()'))
++        self.assertIn('f_10021cd10(context, duration: duration, timingFunction: timingFunction, animations: animations)', wrapper)
++        self.assertIn('f_10021ce98(completion)', wrapper)
++        native = self.native('0x10021cadc')
++        self.assertIn('if ((param_4 & 1) == 0)', native)
++        self.assertIn('NSAnimationContext::runAnimationGroup_completionHandler_', native)
++
++    def test_ease_in_out_helper_is_original_support_without_extra_migration_count(self):
++        helper = body(self.animation, 'public static func f_10021cf38()')
++        self.assertIn('CAMediaTimingFunction(name: .easeInEaseOut)', helper)
++        self.assertIn('PTR__kCAMediaTimingFunctionEaseInEaseOut', self.native('0x10021cf38'))
++        self.assertFalse(self.proof['added_support_helper']['new_difference_record'])
++        self.assertEqual(self.proof['added_support_helper']['new_migration_count'], 0)
++
++    def test_existing_closed_state_notifications_and_callback_precede_animation(self):
++        close = body(self.ui, 'func hidePanel()')
++        order = ['guard panel.isVisible', 'guard !isPanelClosing', 'panelTransitionGeneration += 1',
++                 'panel.makeFirstResponder(nil)', 'beginClosedState()', 'isPanelClosing = true',
++                 'NotificationCenter.default.post(', 'panelWillClose?(',
++                 'content.superview?.clipsToBounds = false', 'OriginalViewAnimation.f_10021cadc']
++        self.assertEqual([close.index(s) for s in order], sorted(close.index(s) for s in order))
++
++    def test_source_counterexample_and_remaining_class_contracts_are_explicit(self):
++        case = self.proof['source_case']
++        self.assertNotEqual(case['content_height'], case['preference_height'])
++        self.assertEqual(case['after_show_height'], case['original_show_height'])
++        self.assertEqual(case['after_display_flag'], case['original_display_flag'])
++        self.assertNotEqual(case['before_show_capture'], case['original_show_capture'])
++        self.assertEqual(case['after_show_capture'], case['original_show_capture'])
++        self.assertFalse(self.proof['full_function_migration_verified'])
++        self.assertTrue(self.proof['retained_partial_contracts'])
++
++
++if __name__ == '__main__':
++    unittest.main()

@@ -63,10 +63,18 @@ public enum ImageTextRecognizer {
         }.value
     }
 
+    public static func recognizeWords(imageData: Data, maximumDimension: Int = 1024) async throws -> [RecognizedWord] {
+        try await Task.detached(priority: .utility) {
+            try f_1002d4738(imageData: imageData, maximumDimension: maximumDimension, includeFullText: false).words
+        }.value
+    }
+
     /// REA 0x1002d4738: reject empty Data, execute recognition inside an autorelease pool.
-    public static func f_1002d4738(imageData: Data, maximumDimension: Int) throws -> RecognizedTextDocument {
+    public static func f_1002d4738(imageData: Data, maximumDimension: Int, includeFullText: Bool = true) throws -> RecognizedTextDocument {
         guard !imageData.isEmpty else { throw OCRError.invalidImageData }
-        return try autoreleasepool { try f_1002d4830(imageData: imageData, maximumDimension: maximumDimension) }
+        return try autoreleasepool {
+            try f_1002d4830(imageData: imageData, maximumDimension: maximumDimension, includeFullText: includeFullText)
+        }
     }
 
     /// REA 0x1002d4ba0: reject missing/tiny dimensions; retain bytes below the supplied
@@ -93,7 +101,7 @@ public enum ImageTextRecognizer {
     }
 
     /// REA 0x1002d4830: invalid prepared image returns an empty result; Vision errors throw.
-    public static func f_1002d4830(imageData: Data, maximumDimension: Int) throws -> RecognizedTextDocument {
+    public static func f_1002d4830(imageData: Data, maximumDimension: Int, includeFullText: Bool = true) throws -> RecognizedTextDocument {
         guard let prepared = f_1002d4ba0(imageData: imageData, maximumDimension: maximumDimension) else {
             return RecognizedTextDocument(text: "", words: [])
         }
@@ -104,19 +112,25 @@ public enum ImageTextRecognizer {
         let handler = VNImageRequestHandler(data: prepared, options: [:])
         try handler.perform([request])
         let observations = request.results ?? []
-        return RecognizedTextDocument(text: observations.compactMap { $0.topCandidates(1).first?.string }.joined(separator: "\n"),
-                                      words: f_1002d576c(observations: observations))
+        if includeFullText {
+            var lines: [String] = []
+            let words = f_1002d576c(observations: observations, recognizedText: { lines.append($0) })
+            return RecognizedTextDocument(text: lines.joined(separator: "\n"), words: words)
+        }
+        return RecognizedTextDocument(text: "", words: f_1002d576c(observations: observations))
     }
 
     /// REA 0x1002d576c: first candidate, split on whitespace/newlines plus punctuation,
     /// omit empty components, retain per-token confidence and optional Vision rectangle.
     /// Forward ranges are also compared with the original machine code on synthetic observations.
-    public static func f_1002d576c(observations: [VNRecognizedTextObservation]) -> [RecognizedWord] {
+    public static func f_1002d576c(observations: [VNRecognizedTextObservation],
+                                  recognizedText: ((String) -> Void)? = nil) -> [RecognizedWord] {
         let separators = CharacterSet.whitespacesAndNewlines.union(.punctuationCharacters)
         var words: [RecognizedWord] = []
         for observation in observations {
             guard let candidate = observation.topCandidates(1).first else { continue }
             let text = candidate.string
+            recognizedText?(text)
             var cursor = text.startIndex
             for word in text.components(separatedBy: separators).filter({ !$0.isEmpty }) {
                 guard let range = text.range(of: word, options: [], range: cursor..<text.endIndex, locale: nil) else { break }

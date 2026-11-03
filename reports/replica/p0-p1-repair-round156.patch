@@ -1,0 +1,33 @@
+--- before/replica/Sources/PastoCore/ClipboardSearchRecord.swift
++++ after/replica/Sources/PastoCore/ClipboardSearchRecord.swift
+@@ -147,6 +147,7 @@
+ 
+     // 0x100372440/371f2c: a new private context is created on each evaluation.
+     private func read<T>(contentDiagnostics: OriginalNamedDiagnostic? = nil,
++                         imageDiagnostics: OriginalNamedDiagnostic? = nil,
+                          _ project: (NSManagedObject, [OriginalPasteboardItem]) throws -> T?) -> T? {
+         let context = NSManagedObjectContext(concurrencyType: .privateQueueConcurrencyType)
+         context.persistentStoreCoordinator = coordinator
+@@ -156,7 +157,13 @@
+                     let object: NSManagedObject
+                     do { object = try context.existingObject(with: objectID) }
+                     catch {
+-                        guard let contentDiagnostics else { throw error }
++                        guard let contentDiagnostics else {
++                            if let imageDiagnostics {
++                                imageDiagnostics.f_1000d468c().f_1000d4df0("Failed to load image content: \(error.localizedDescription)")
++                                return nil
++                            }
++                            throw error
++                        }
+                         contentDiagnostics.f_1000d468c().f_1000d4df0("Failed to load item content: \(error.localizedDescription)")
+                         return nil
+                     }
+@@ -239,6 +246,6 @@
+     }
+ 
+     func imageData() -> Data? {
+-        read { _, items in items.compactMap { $0.f_10037d5c4() }.first }
++        read(imageDiagnostics: contentDiagnostics) { _, items in items.compactMap { $0.f_10037d5c4() }.first }
+     }
+ }

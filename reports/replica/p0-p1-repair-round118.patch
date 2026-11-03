@@ -1,0 +1,86 @@
+--- a/replica/Sources/PastoCore/OriginalPasteboard.swift
++++ b/replica/Sources/PastoCore/OriginalPasteboard.swift
+@@ -210,27 +210,16 @@
+ @MainActor
+ public final class OriginalPasteboardWriter {
+     public let pasteboard: NSPasteboard
+-    public private(set) var lastChangeCount: Int
+-    public private(set) var lastWriteSucceeded = false
++    private let state: OriginalPasteboardCaptureState
++    public var lastChangeCount: Int { state.lastChangeCount }
++    public var lastWriteSucceeded: Bool { state.lastWriteSucceeded }
+ 
+     public init(pasteboard: NSPasteboard) {
+         self.pasteboard = pasteboard
+-        self.lastChangeCount = pasteboard.changeCount
++        self.state = OriginalPasteboardCaptureState.f_100378664(changeCount: 0, pasteboard: pasteboard)
+     }
+ 
+     public func f_10037875c(_ items: [OriginalPasteboardItem]) {
+-        let objects = items.map { item -> NSPasteboardItem in
+-            let object = NSPasteboardItem()
+-            for type in item.f_10037da6c() {
+-                if let data = item.f_10037e5e0(forType: type) {
+-                    object.setData(data as Data, forType: NSPasteboard.PasteboardType(type))
+-                }
+-            }
+-            return object
+-        }
+-        pasteboard.clearContents()
+-        lastWriteSucceeded = pasteboard.writeObjects(objects)
+-        lastChangeCount = pasteboard.changeCount
+-        OriginalPasteboardCaptureState.current(for: pasteboard)?.lastChangeCount = lastChangeCount
++        state.f_10037875c(items)
+     }
+ }
+--- a/replica/Sources/PastoCore/OriginalPasteboardCaptureState.swift
++++ b/replica/Sources/PastoCore/OriginalPasteboardCaptureState.swift
+@@ -47,6 +47,7 @@
+     public weak var delegate: (any OriginalPasteboardCaptureDelegate)?
+     public var items: [OriginalPasteboardItem] = []
+     public var lastChangeCount: Int
++    public private(set) var lastWriteSucceeded = false
+     var persistChangeCount: ((Int) -> Void)?
+     public var pollTimer: Timer?
+     public var syncTimer: Timer?
+@@ -63,6 +64,22 @@
+         OriginalPasteboardCaptureState(pasteboard: pasteboard, changeCount: changeCount)
+     }
+ 
++    public func f_10037875c(_ items: [OriginalPasteboardItem]) {
++        let objects = items.map { item -> NSPasteboardItem in
++            let object = NSPasteboardItem()
++            for type in item.f_10037da6c() {
++                if let data = item.f_10037e5e0(forType: type) {
++                    object.setData(data as Data, forType: NSPasteboard.PasteboardType(type))
++                }
++            }
++            return object
++        }
++        pasteboard.clearContents()
++        lastWriteSucceeded = pasteboard.writeObjects(objects)
++        lastChangeCount = pasteboard.changeCount
++        Self.current(for: pasteboard)?.lastChangeCount = lastChangeCount
++    }
++
+     public static func register(_ state: OriginalPasteboardCaptureState) {
+         active[state.pasteboard.name] = WeakState(state)
+     }
+--- a/replica/Sources/PastoCore/Pasteboard.swift
++++ b/replica/Sources/PastoCore/Pasteboard.swift
+@@ -512,8 +512,13 @@
+             first.f_10037d8c8(Data(), forType: replicaGeneratedType.rawValue)
+         }
+         // The original writer clears and writes even when processing produced no representations.
+-        let writer = OriginalPasteboardWriter(pasteboard: pasteboard)
+-        writer.f_10037875c(objects)
++        if let state = OriginalPasteboardCaptureState.current(for: pasteboard),
++           state.pasteboard === pasteboard {
++            state.f_10037875c(objects)
++        } else {
++            let writer = OriginalPasteboardWriter(pasteboard: pasteboard)
++            writer.f_10037875c(objects)
++        }
+         if let state = OriginalPasteboardCaptureState.current(for: pasteboard) {
+             state.persistChangeCount?(state.lastChangeCount)
+         }

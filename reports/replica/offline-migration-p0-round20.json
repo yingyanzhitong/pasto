@@ -1,0 +1,721 @@
+{
+  "kind": "offline_source_contract_audit",
+  "round": 20,
+  "status": "source-checks-passed-goal-active",
+  "generated_at": "2026-10-29T16:34:17.083391+00:00",
+  "previous_goal_turn": "progress",
+  "priority": "P0",
+  "module": "local_persistent_history_and_search_consumer",
+  "functions": [
+    {
+      "function_id": "Paste:0x10035cc80",
+      "status": "source_contract_repaired_partial",
+      "contract": "仅核对本地store description启用两项true选项。Pasto原无history和remote-change开关，现启用并为自有Item.key保留删除值、开启轻量迁移；未迁移本方法其它初始化/DI/实体schema。",
+      "original": {
+        "path": "decompiled/Paste/part-0273.c",
+        "sha256": "b5a4f032453d91c861c393fb36d706eb76611789ccd88eb8e4523485666ab608"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/ClipboardPersistence.swift",
+          "symbol": "NSPersistentHistoryTrackingKey: true"
+        },
+        {
+          "path": "replica/Sources/PastoCore/ClipboardPersistence.swift",
+          "symbol": "NSPersistentStoreRemoteChangeNotificationPostOptionKey: true"
+        },
+        {
+          "path": "replica/Sources/PastoCore/ClipboardPersistence.swift",
+          "symbol": "key.preservesValueInHistoryOnDeletion = true"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x10036cd4c",
+      "status": "source_contract_repaired_partial",
+      "contract": "将token安全归档为Data?，archive失败产生nil。当前requiringSecureCoding=true且try?，原泛用存储wrapper/布局不复用。",
+      "original": {
+        "path": "decompiled/Paste/part-0278.c",
+        "sha256": "cea9a43f62267067ca7b58f0a5593a52b7eae417d3cb493ef2fc9ec6bc6ee6c2"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchHistory.swift",
+          "symbol": "NSKeyedArchiver.archivedData(withRootObject: $0, requiringSecureCoding: true)"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x10036e4f4",
+      "status": "source_contract_repaired_partial",
+      "contract": "原async订阅入口传消费闭包和actor。当前真实observe入口接async throws消费闭包，MainActor同步CoreData适配、原actor执行器仍不同。",
+      "original": {
+        "path": "decompiled/Paste/part-0278.c",
+        "sha256": "b2a4a060f9a2ab2ef899e6f99f7552517aaa2422896a7966f58782d60159be41"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchHistory.swift",
+          "symbol": "func observe(_ consume:"
+        },
+        {
+          "path": "replica/Sources/PastoCore/ClipboardStore.swift",
+          "symbol": "public func observeSearchChanges("
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "await store.observeSearchChanges"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x10036e5cc",
+      "status": "source_contract_repaired_partial",
+      "contract": "恢复安全归档token（失败nil）、重新保存规范化表示，首次执行catch-up后安装通知流。当前同序，使用Pasto按store身份隔离的自有偏好键，非原泛用DI。",
+      "original": {
+        "path": "decompiled/Paste/part-0278.c",
+        "sha256": "03501af21d7526361bddba23a00db5b9d76b69914eba698523a41b10edc38743"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchHistory.swift",
+          "symbol": "NSKeyedUnarchiver.unarchivedObject(ofClass: NSPersistentHistoryToken.self, from: data)"
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchHistory.swift",
+          "symbol": "persistToken()"
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchHistory.swift",
+          "symbol": "await process()"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x10036e808",
+      "status": "source_contract_repaired_partial",
+      "contract": "原catch-up完成后回到数据源actor，再建观察流；当前observe在MainActor await首次process后继续。",
+      "original": {
+        "path": "decompiled/Paste/part-0278.c",
+        "sha256": "5cfd61513dd4749b78a73275e4e0dc123d038b876dc9ef0be59c6d85b648cf45"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchHistory.swift",
+          "symbol": "await process()"
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchHistory.swift",
+          "symbol": "for await _ in notifications()"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x10036e854",
+      "status": "source_contract_repaired_partial",
+      "contract": "原unbounded AsyncStream创建iterator并await next；当前for await消费unbounded stream。",
+      "original": {
+        "path": "decompiled/Paste/part-0278.c",
+        "sha256": "7b48ce39bc6b7407a49b06030a077eccf91d44da8635b6fb27f1d953873cbcd4"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchHistory.swift",
+          "symbol": "AsyncStream(bufferingPolicy: .unbounded)"
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchHistory.swift",
+          "symbol": "for await _ in notifications()"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x10036e91c",
+      "status": "source_contract_repaired_partial",
+      "contract": "原next返回后切数据源actor；当前for await在MainActor恢复，没有原执行器续体。",
+      "original": {
+        "path": "decompiled/Paste/part-0278.c",
+        "sha256": "de4633d62440ceb03d74c6256a63a3ae0f7ba99fa2f61cb77f83275c8f2a54ab"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchHistory.swift",
+          "symbol": "for await _ in notifications()"
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchHistory.swift",
+          "symbol": "await process()"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x10036e968",
+      "status": "source_contract_repaired_partial",
+      "contract": "非stream结束且未取消才处理下一次历史事务；当前loop guard Task.isCancelled，终止退出清理观察。",
+      "original": {
+        "path": "decompiled/Paste/part-0278.c",
+        "sha256": "d6d27c54c6c7cf91e0339f4d595665d2cc29d91b49920b41f4a745856f5c3283"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchHistory.swift",
+          "symbol": "guard !Task.isCancelled else { break }"
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchHistory.swift",
+          "symbol": "await process()"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x10036ea3c",
+      "status": "source_contract_repaired_partial",
+      "contract": "原完成一次处理后再次await通知iterator；当前for await严格await process后再next，无并行Task。",
+      "original": {
+        "path": "decompiled/Paste/part-0278.c",
+        "sha256": "5eeeaeff8f5dfcb99f2248f06e89e6f04df7e8c5956660561cbcd6a7696a52f4"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchHistory.swift",
+          "symbol": "for await _ in notifications()"
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchHistory.swift",
+          "symbol": "await process()"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x10036eaa4",
+      "status": "source_contract_repaired_partial",
+      "contract": "原next续体回actor并重入取消/处理循环；当前MainActor原生for await承担续体，异步ABI未逐一迁移。",
+      "original": {
+        "path": "decompiled/Paste/part-0278.c",
+        "sha256": "63b8f65b849e6bab794ba5878cc9847f0068609d8fab700f54c4d447c8b72848"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchHistory.swift",
+          "symbol": "for await _ in notifications()"
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchHistory.swift",
+          "symbol": "guard !Task.isCancelled else { break }"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x10036eaf0",
+      "status": "source_contract_repaired_partial",
+      "contract": "原准备CancellationError类型后调度历史处理；当前process async catch is CancellationError，SDK错误从消费闭包向上传递。",
+      "original": {
+        "path": "decompiled/Paste/part-0278.c",
+        "sha256": "cd01927d96536d56508612772385b8992c7619a3e3a848120d86ab8e8051ba1a"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchHistory.swift",
+          "symbol": "func process() async"
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchHistory.swift",
+          "symbol": "catch is CancellationError"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x10036eb54",
+      "status": "source_contract_repaired_partial",
+      "contract": "原context.performAndWait获取afterToken事务，空事务直接返回；非空合并变化并await消费。当前相同宏观顺序，非原actor/DI。",
+      "original": {
+        "path": "decompiled/Paste/part-0278.c",
+        "sha256": "2e8449e9c6fc37550339bd7caf9040b0295a05d3d78de3d6c87d9d2805cb0fc2"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchHistory.swift",
+          "symbol": "let batch = try transactions(after: token)"
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchHistory.swift",
+          "symbol": "guard !batch.isEmpty else { return }"
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchHistory.swift",
+          "symbol": "try await consume(changes(in: batch))"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x10036f040",
+      "status": "source_contract_repaired_partial",
+      "contract": "消费成功才取最后事务token安全归档并保存；CancellationError静默，普通错误诊断，均保留旧token。当前已连SDK成功/错误续体，不等查询完成。",
+      "original": {
+        "path": "decompiled/Paste/part-0278.c",
+        "sha256": "8683444e0e315e2e0333195037deb5f20bec183efb0fc341c79e058a7989edaf"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchHistory.swift",
+          "symbol": "if let next = batch.last?.token"
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchHistory.swift",
+          "symbol": "token = next"
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchHistory.swift",
+          "symbol": "catch is CancellationError"
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchHistory.swift",
+          "symbol": "logger.error("
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "work.complete(nil)"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "catch { work.complete(error) }"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x10036fa2c",
+      "status": "source_contract_repaired_partial",
+      "contract": "按事务顺序flatten changes并按原ItemEntity类型名过滤（独立模型适配为Item）；insert清update/delete，update仅非insert时入update并清delete，delete清insert/update。按insert/update/delete三组输出。当前独立Item/key/UUID适配，不是原实体类和泛用set ABI。",
+      "original": {
+        "path": "decompiled/Paste/part-0279.c",
+        "sha256": "e201ab914f62ce9a76997d5cd8cc54a20c84d0d355efc6807d624894b8a445c5"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchHistory.swift",
+          "symbol": "private func changes(in transactions:"
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchHistory.swift",
+          "symbol": "if !inserted.contains(identifier) { updated.insert(identifier) }"
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchHistory.swift",
+          "symbol": "change.tombstone?[\"key\"] as? String"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1003703b0",
+      "status": "source_contract_repaired_partial",
+      "contract": "token非nil fetchHistoryAfterToken；nil用distantPast的date重载；execute错误上抛，结果/transaction cast失败返回空。当前分支已接真实context。",
+      "original": {
+        "path": "decompiled/Paste/part-0279.c",
+        "sha256": "5b1269a77b7a5b6ae7d531ed3c51ab8c25b1dc961ee1075cfb122b92d6e90b30"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchHistory.swift",
+          "symbol": "private func transactions(after token:"
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchHistory.swift",
+          "symbol": "request = .fetchHistory(after: Date.distantPast)"
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchHistory.swift",
+          "symbol": "try context.execute(request)"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x10037063c",
+      "status": "source_contract_repaired_partial",
+      "contract": "对insert/update获取changedObjectID再existingObject，错误/ItemEntity类不匹配无ID；当前独立Item实体预过滤后读取key，缺项try?为nil，原强类型类转换未复用。",
+      "original": {
+        "path": "decompiled/Paste/part-0279.c",
+        "sha256": "c2a4e13499be2d15e88f799556453cb2d9afe3ed3267f52e9b90dae4e62d3223"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchHistory.swift",
+          "symbol": "context.existingObject(with: change.changedObjectID)"
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchHistory.swift",
+          "symbol": "change.changedObjectID.entity.name == \"Item\""
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x100370984",
+      "status": "source_contract_repaired_partial",
+      "contract": "原字符串Set remove包含COW/hash桶，当前使用Swift Set remove完成实际集合删除；泛用内存/ABI边界未证，不标完整。",
+      "original": {
+        "path": "decompiled/Paste/part-0279.c",
+        "sha256": "7d9052791381fcba8c09591df49376dc39449d9c568a4e9f0ddf613c4990803a"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchHistory.swift",
+          "symbol": "updated.remove(identifier)"
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchHistory.swift",
+          "symbol": "deleted.remove(identifier)"
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchHistory.swift",
+          "symbol": "inserted.remove(identifier)"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x10036f7b8",
+      "status": "source_contract_repaired_partial",
+      "contract": "以coordinator为object、queue=nil注册本地NSPersistentStoreRemoteChangeNotification，通知yield continuation；termination移除。当前已有真实生产监听入口，仍为自有MainActor模型。",
+      "original": {
+        "path": "decompiled/Paste/part-0279.c",
+        "sha256": "3160994082c0d10f104f7517bf805702e2d9150fd8684ba75bc3967922c04e41"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchHistory.swift",
+          "symbol": "forName: .NSPersistentStoreRemoteChange, object: coordinator, queue: nil"
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchHistory.swift",
+          "symbol": "continuation.onTermination"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x10036f968",
+      "status": "source_contract_repaired_partial",
+      "contract": "通知到来yield Void continuation；当前闭包真实yield。",
+      "original": {
+        "path": "decompiled/Paste/part-0279.c",
+        "sha256": "5c3abd50e98e0d94588ed5d1489bed1e466b93ed0679059e31bbbd5f469cda7b"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchHistory.swift",
+          "symbol": "continuation.yield(())"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x10036f9e8",
+      "status": "source_contract_repaired_partial",
+      "contract": "流终止移除NSNotificationCenter observer，当前termination绑定真实token。",
+      "original": {
+        "path": "decompiled/Paste/part-0279.c",
+        "sha256": "74c9db94b3165fb4190635269bc25de6c6cd17b5fcee20926bc86e0ddda0fb68"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchHistory.swift",
+          "symbol": "NotificationCenter.default.removeObserver(observer)"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x100370fc4",
+      "status": "source_contract_repaired_partial",
+      "contract": "原流builder转发至36f7b8；当前notifications builder直接注册，不造原ABI空包装。",
+      "original": {
+        "path": "decompiled/Paste/part-0279.c",
+        "sha256": "396c35f9b8d77df6a9c173a03c1a2424567f295464c605f7cdc61e1e4a052131"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchHistory.swift",
+          "symbol": "private func notifications() -> AsyncStream<Void>"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x100371030",
+      "status": "source_contract_repaired_partial",
+      "contract": "原通知闭包还原captured continuation并yield，当前直接closure捕获continuation，generic捕获布局不复用。",
+      "original": {
+        "path": "decompiled/Paste/part-0279.c",
+        "sha256": "a61a285f8fc5c3599d6073c66a804ca01d6ea586beab7082c40e845cdfdd737e"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchHistory.swift",
+          "symbol": "continuation.yield(())"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1003710b8",
+      "status": "source_contract_repaired_partial",
+      "contract": "原onTermination闭包从capture取observer后移除；当前闭包直接capture真实observer。",
+      "original": {
+        "path": "decompiled/Paste/part-0279.c",
+        "sha256": "e6e22100f655af2f79990de56504ec140660e8cc5c379058c9fa9cc6b59415e9"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchHistory.swift",
+          "symbol": "continuation.onTermination = { _ in NotificationCenter.default.removeObserver(observer) }"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1003710c0",
+      "status": "source_contract_repaired_partial",
+      "contract": "原context.performAndWait闭包调3703b0读取历史；当前transactions封装同一context执行读取，线程/DI适配保留。",
+      "original": {
+        "path": "decompiled/Paste/part-0279.c",
+        "sha256": "2b06c9fe679a84068f982148797d18ca4cba6c8dbcffaa98380ef319b4962404"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchHistory.swift",
+          "symbol": "try context.performAndWait"
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchHistory.swift",
+          "symbol": "private func transactions(after token:"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x100371118",
+      "status": "source_contract_repaired_partial",
+      "contract": "原context闭包调37063c解析对象identifier；当前同queue读取existingObject及自有key。",
+      "original": {
+        "path": "decompiled/Paste/part-0279.c",
+        "sha256": "b64b3115e33e6132421c3396c433b7f9be2fdee266c21d2ab892647094db3ead"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchHistory.swift",
+          "symbol": "identifier = context.performAndWait"
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalSearchHistory.swift",
+          "symbol": "context.existingObject(with: change.changedObjectID)"
+        }
+      ]
+    }
+  ],
+  "reviewed_count": 25,
+  "current_review_unique_count": 491,
+  "current_review_inventory_percent": 0.6053,
+  "static_bindings": {
+    "original_binary_sha256": "871f00354fbb1c165d858a98e6d19d6f43cb9d3f9f958b3e07c7f07eb5c19afb",
+    "pointer_format": 6,
+    "objc_selectors": [
+      {
+        "slot": "0x100f86880",
+        "slot_bytes": "b97fde0000001000",
+        "string_address": "0x100de7fb9",
+        "string_bytes": "6368616e676554797065",
+        "selector": "changeType",
+        "declared_chain_reachable": true
+      },
+      {
+        "slot": "0x100f86888",
+        "slot_bytes": "48fbdd0000001000",
+        "string_address": "0x100ddfb48",
+        "string_bytes": "6368616e6765644f626a6563744944",
+        "selector": "changedObjectID",
+        "declared_chain_reachable": true
+      },
+      {
+        "slot": "0x100f86898",
+        "slot_bytes": "fdc3dd0000001000",
+        "string_address": "0x100ddc3fd",
+        "string_bytes": "6368616e676573",
+        "selector": "changes",
+        "declared_chain_reachable": true
+      },
+      {
+        "slot": "0x100f87420",
+        "slot_bytes": "9cbdde0000001000",
+        "string_address": "0x100debd9c",
+        "string_bytes": "65786563757465526571756573743a6572726f723a",
+        "selector": "executeRequest:error:",
+        "declared_chain_reachable": true
+      },
+      {
+        "slot": "0x100f87428",
+        "slot_bytes": "bcbdde0000001000",
+        "string_address": "0x100debdbc",
+        "string_bytes": "6578697374696e674f626a6563745769746849443a6572726f723a",
+        "selector": "existingObjectWithID:error:",
+        "declared_chain_reachable": true
+      }
+    ],
+    "store_flags": {
+      "remote_true": {
+        "address": "0x10035cf2c",
+        "bytes": "20008052"
+      },
+      "history_true": {
+        "address": "0x10035cf58",
+        "bytes": "20008052"
+      }
+    },
+    "event_output": [
+      {
+        "kind": "inserted",
+        "tag": 0,
+        "address": "0x100370180",
+        "bytes": "1fa10039"
+      },
+      {
+        "kind": "updated",
+        "tag": 1,
+        "address": "0x10037023c",
+        "bytes": "2900805209a10039"
+      },
+      {
+        "kind": "deleted",
+        "tag": 2,
+        "address": "0x1003702c0",
+        "bytes": "4900805209a10039"
+      }
+    ],
+    "reducer_set_slots": {
+      "inserted": "fp-0x60",
+      "updated": "fp-0x68",
+      "deleted": "fp-0x70"
+    },
+    "slot_branch_evidence": [
+      {
+        "address": "0x100370080",
+        "bytes": "b48301d1e1031caae2031baae0e6ff97e03740f940312294b4a301d1e0031caae1031baa38020094e00301aa3a312294b4c301d1"
+      },
+      {
+        "address": "0x100370024",
+        "bytes": "b4a301d1e1031caae2031baaf7e6ff97e03740f957312294b4c301d1e0031caae1031baa4f020094"
+      },
+      {
+        "address": "0x10036fe58",
+        "bytes": "b4c301d1e1031caae2031baa6ae7ff97e03740f9ca312294b48301d1e0031caae1031baac2020094e00301aac4312294b4a301d18a000014"
+      }
+    ],
+    "item_entity_class": {
+      "metadata_accessor": "0x1003214a8",
+      "class_address": "0x100f97da8",
+      "class_bytes": "60fafb00000010009086f90000001000451200000000208000000000000000004a7df90000004000",
+      "ro_address": "0x100f97d48",
+      "ro_bytes": "8000000008000000080000000000000000000000000000008064dd00000010001074c10000004000",
+      "name_address": "0x100dd6480",
+      "name_bytes": "5f547443395061737465436f726531304974656d456e74697479",
+      "objc_name": "_TtC9PasteCore10ItemEntity",
+      "swift_type_basename": "ItemEntity",
+      "pasto_entity_mapping": "Item"
+    }
+  },
+  "new_partial_bindings": [
+    "Paste:0x10035cc80",
+    "Paste:0x10036cd4c",
+    "Paste:0x10036e4f4",
+    "Paste:0x10036e5cc",
+    "Paste:0x10036e808",
+    "Paste:0x10036e854",
+    "Paste:0x10036e91c",
+    "Paste:0x10036e968",
+    "Paste:0x10036ea3c",
+    "Paste:0x10036eaa4",
+    "Paste:0x10036eaf0",
+    "Paste:0x10036eb54",
+    "Paste:0x10036f040",
+    "Paste:0x10036fa2c",
+    "Paste:0x1003703b0",
+    "Paste:0x10037063c",
+    "Paste:0x100370984",
+    "Paste:0x10036f7b8",
+    "Paste:0x10036f968",
+    "Paste:0x10036f9e8",
+    "Paste:0x100370fc4",
+    "Paste:0x100371030",
+    "Paste:0x1003710b8",
+    "Paste:0x1003710c0",
+    "Paste:0x100371118"
+  ],
+  "current_partial_count": 551,
+  "source_sha256": {
+    "replica/Sources/PastoCore/OriginalSearchHistory.swift": "75b11383a2a833ab89472090bc7166e33c825d948e1b58b7f9f1fed59dfe5f50",
+    "replica/Sources/PastoCore/ClipboardPersistence.swift": "b4c8182e7bfc0eafb3668feacd3755a293eb5f7a80d2958fd4a09dabb2e2324b",
+    "replica/Sources/PastoCore/ClipboardStore.swift": "da854773434696ad0b710c7bb7aed18b50e2e0dc31e28c021cc212db188b759a",
+    "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift": "db0eb9697ba611fbe96837d2e6a060fea10ae8f2a0ce3e62cbf20c1c13bad77c",
+    "scripts/tests/test_search_history_contracts.py": "0ce232b8304f0199f4f501cf017fc8c62a6b80d68510f3494f4c68651c101cb8",
+    "scripts/tests/test_index_batch_contracts.py": "a465c4de1d35d939e846dace7d32195b4817ba61af8c3dc1d3755b8b8169fbc3",
+    "scripts/tests/test_index_rebuild_contracts.py": "91f3a622cf6af7e09003640107703781d3f7c3084ef7ca80fbd00405d2a28249"
+  },
+  "previous_source_sha256": {
+    "replica/Sources/PastoCore/ClipboardPersistence.swift": "b00115bf5d7b80514e5f621c06b7ca34d87bdb2bd6fd0ebdd75b6cc8e5b10067",
+    "replica/Sources/PastoCore/ClipboardStore.swift": "ea514b3d3f9bdcae5cf748ecb487b743c456e21e9de685924530bc3959c3cfed",
+    "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift": "f2527a46433ae8fc3bd4a92525a4ee49b196312a8cafa692334284cdeb04d455"
+  },
+  "production_source_edited": true,
+  "tests": {
+    "passed": true,
+    "total": 194,
+    "added_in_round": 15,
+    "scope": "Python source projection/provenance/ledger assertions only. Reducer projection interprets a restricted set-operation subset, not Swift execution; no SDK, database, compiled product, or UI regression."
+  },
+  "new_fully_migrated_function_count": 0,
+  "historical_ledger": {
+    "numerator": 1648,
+    "denominator": 81123,
+    "percent": 2.0315,
+    "stale_evidence": true
+  },
+  "remaining_differences": [
+    "原CDSearchIndexerDataSource actor/private context/泛用依赖与当前MainActor/自有Item.key/UUID模型不同；token使用Pasto按store隔离的偏好键",
+    "IndexingState持久化/schema/完整全量启动/健康probe及错误恢复仍待迁移，不能把新history token当全量索引状态",
+    "索引与query仍共享drain，历史消费可能等当前query退出；原任务分离及增量事件batch/active/OCR仍待核对，未用指定ID100上限冒充普通增量合同",
+    "指定ID当前一次fetch全部目标实体，SDK层才100分批；原按输入ID切片逐批fetch和OCR/active细节继续待对齐。",
+    "独立CoreData模型增加key删除保留与轻量迁移选项，只做源码审阅，未执行既有数据库升级；原厂实体schema/关系/undo/applier等P0任务仍缺",
+    "现有UI/store刷新及来源应用关系映射继续保留；其它P0/P1/P2目标不缩减"
+  ],
+  "next_module": "P0 data_and_persistence",
+  "next_work": [
+    "追原indexer对change enum分派/事务消费是否等待完整索引及增量batch规则，再分离query和index任务",
+    "继续原实体/模型和P0事务错误/Undo，再接全量IndexingState恢复；未闭合处不升级完整标记"
+  ],
+  "compiled": false,
+  "application_executed": false,
+  "original_binary_executed": false,
+  "user_data_modified": false,
+  "network_used": false,
+  "committed": false,
+  "pushed": false,
+  "module_complete": false,
+  "goal_active": true,
+  "inventory": {
+    "mapping_states": {
+      "partial": 551,
+      "migrated": 1648,
+      "excluded_by_scope": 9
+    },
+    "mapped_reference_records_checked": 2208,
+    "source_binding_counts": {
+      "current": 322,
+      "not_recorded": 1059,
+      "file_changed_needs_method_review": 267
+    },
+    "unchanged_source_review_count": 317,
+    "reference_issue_counts": {
+      "missing_address_in_evidence": 12
+    }
+  },
+  "model_adaptations": {
+    "original_entity_type": "PasteCore.ItemEntity",
+    "pasto_entity": "Item",
+    "original_identifier_key": "identifier",
+    "pasto_identifier_key": "key",
+    "original_execution": "datasource actor with context.performAndWait",
+    "pasto_execution": "MainActor with context.performAndWait",
+    "token_storage": "Pasto-owned preference key per persistent store identifier; nil identity keeps in-memory observation without persistent checkpoint",
+    "compatibility_validation": "source inspection only; no existing database migration executed"
+  }
+}

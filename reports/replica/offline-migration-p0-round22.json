@@ -1,0 +1,448 @@
+{
+  "kind": "offline_source_contract_audit",
+  "round": 22,
+  "status": "source-checks-passed-goal-active",
+  "generated_at": "2026-10-29T16:50:44.087415+00:00",
+  "previous_goal_turn": "progress",
+  "priority": "P0",
+  "module": "local_index_identifier_batch_fetch",
+  "functions": [
+    {
+      "function_id": "Paste:0x1002ea78c",
+      "status": "source_contract_repaired_partial",
+      "contract": "原去空ID后按输入最多100 fetch，保留顺序/重复，active且未取消才能继续。当前改数组仅去空、逐input片段live fetch；namespace兼容、active/静默取消和isUpdate/OCR仍待迁移。",
+      "original": {
+        "path": "decompiled/Paste/part-0241.c",
+        "sha256": "ed08b135b870ae114210d0d711fd1cfe8a194d7ee977266e25c3c702d140a900"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "private func reindexTargets("
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "let input = identifiers.filter { !$0.isEmpty }"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "to: input.count, by: Self.indexingBatchSize"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1002eaa10",
+      "status": "source_contract_repaired_partial",
+      "contract": "原本批fetch后处理OCR，空实体结果跳SDK但仍按输入推进下一100。当前fetch在loop内、if !live.isEmpty才SDK，无empty early return；原OCR队列与实体协议仍缺。",
+      "original": {
+        "path": "decompiled/Paste/part-0241.c",
+        "sha256": "225ad9c690eeaeb2284b4cf7f0df48ad6fd6644a728c65812c7ecb8c67a7d8bb"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "let live = try liveEntries(identifiers: Array(input[lowerBound..<upperBound]))"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "if !live.isEmpty {"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1002eaea4",
+      "status": "source_contract_repaired_partial",
+      "contract": "原SDK成功推进输入区间100，错误退出，active/cancel在批间检查。当前每批await后继续，错误向外，最后再提交自有内存和ack；取消仍throw/needsReset，不等同原静默stop。",
+      "original": {
+        "path": "decompiled/Paste/part-0241.c",
+        "sha256": "5a103f81e26e0e947b6274ff738c19ec8b40f863f19c1dace27788542c490d5e"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "private func reindexTargets("
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "let changed = live.map(searchableItem)"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "for entry in refreshed { indexed[entry.id] = entry }"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1002eb4d0",
+      "status": "source_contract_repaired_partial",
+      "contract": "原String ID ArraySlice半开区间复制，保留重复与顺序；当前Array(input[lowerBound..<upperBound])，不再Set去重或按实体数重新切片。泛型ABI仍不计完整。",
+      "original": {
+        "path": "decompiled/Paste/part-0241.c",
+        "sha256": "7cb22c61d516cbe33402df0496238fa086ca062ec8a1e349e60ba12982feb15c"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "Array(input[lowerBound..<upperBound])"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1002e1bac",
+      "status": "source_contract_repaired_partial",
+      "contract": "原按本批实体与isUpdate构造SDK项；当前SDK项在本批fetch后生成，强制重建不受元数据相等过滤，原isUpdate/实体虚协议细节仍缺。",
+      "original": {
+        "path": "decompiled/Paste/part-0239.c",
+        "sha256": "bcf322fb2dab37989504f021febb2fd8b8dface82368f011ab7841215be8800b"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "let changed = live.map(searchableItem)"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "private func searchableItem(_ entry: Entry)"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1002e20b8",
+      "status": "source_contract_repaired_partial",
+      "contract": "原弱服务SDK async continuation；当前每批SDK continuation真实等待，不提前获取未来批实体，weak服务/原actorABI仍适配。",
+      "original": {
+        "path": "decompiled/Paste/part-0239.c",
+        "sha256": "523636c790072d43e8f8a88c14f4a4baeae0f5a35d41f1cba12d2c6159badcbd"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "let changed = live.map(searchableItem)"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "CheckedContinuation<Void, Error>"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1002e2298",
+      "status": "source_contract_repaired_partial",
+      "contract": "SDK callback按错误分支恢复成功或throw，当前两条continuation保留。",
+      "original": {
+        "path": "decompiled/Paste/part-0239.c",
+        "sha256": "7c1a9cf8171e62bebb0a776accb368321125d6dbf7981a9816c3ebafcb0e175d"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "if let error { continuation.resume(throwing: error) }"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "else { continuation.resume() }"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1002e22fc",
+      "status": "source_contract_repaired_partial",
+      "contract": "SDK成功结束本批，下一fetch在await后；当前SDK无错误才append refreshed并进入下一输入区间。",
+      "original": {
+        "path": "decompiled/Paste/part-0239.c",
+        "sha256": "65816cfdff88c8bd903eaf6eb846d5a7e70a51d96753b6ac33d9b97a9304d22c"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "refreshed.append(contentsOf: live)"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "private func reindexTargets("
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1002e2348",
+      "status": "source_contract_repaired_partial",
+      "contract": "SDK错误抛给父调用者，当前helper无catch、失败不进入后续区间，不提交整个自有内存快照。",
+      "original": {
+        "path": "decompiled/Paste/part-0239.c",
+        "sha256": "5bfb47ab930f1d6084c421658d4f3e64507d3482e0740a1dfd157c1d03784d50"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "continuation.resume(throwing: error)"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "for entry in refreshed { indexed[entry.id] = entry }"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1002e23a8",
+      "status": "source_contract_repaired_partial",
+      "contract": "原error? callback恢复checked continuation，当前nil/错误两条路径继续复用，SDK公共调用已接逐输入分批。",
+      "original": {
+        "path": "decompiled/Paste/part-0239.c",
+        "sha256": "f5538524bb660eac11c84ce36d820a072ebe5c6f3ea97a6c4fb2906cea5036b4"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "let changed = live.map(searchableItem)"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "if let error { continuation.resume(throwing: error) }"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1002efba0",
+      "status": "source_contract_repaired_partial",
+      "contract": "原全量启动状态机，非本次指定ID100上限路径；当前全量/snapshot保留独立batch策略，目标请求在其后执行，仍缺原完整持久状态。",
+      "original": {
+        "path": "decompiled/Paste/part-0242.c",
+        "sha256": "b7f21c4fe61798a959e0a7708d78d785ef7eb0e052838448364b02903cecf71c"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "if resettingIndex, store != nil { currentEntries = try liveEntries(identifiers: nil) }"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "let batchSize = max(changedEntries.count, 1)"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1002e48a0",
+      "status": "source_contract_repaired_partial",
+      "contract": "原委托保留输入IDs并交给指定ID工作；当前按本store前缀投影后append数组，非空opaque ID保留而非提前UUID校验压缩区间，结束后ack。原独立任务不合并仍待对齐。",
+      "original": {
+        "path": "decompiled/Paste/part-0240.c",
+        "sha256": "dfc330e240474f1593456fc96d61e5b3f952ea12f05a90c835d286a8f69e2acb"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "reindexIdentifiers.append(contentsOf: identifiers.compactMap"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "return localIdentifier.isEmpty ? nil : localIdentifier"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1002f2690",
+      "status": "source_contract_repaired_partial",
+      "contract": "原保存输入IDs数组后调actor工作；当前数组保留重复和顺序，再worker await reindexTargets；自有合并任务和执行器不同。",
+      "original": {
+        "path": "decompiled/Paste/part-0243.c",
+        "sha256": "ecd4f62466e0fa70b96b3c7ee8d92032b986d1703e2a6aff7fa351fce6eac7ed"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "private var reindexIdentifiers: [String] = []"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "try await reindexTargets(forcedIdentifiers)"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1002f26a8",
+      "status": "source_contract_repaired_partial",
+      "contract": "原指定ID请求独立排队，不因元数据相同跳过。当前explicit target helper不检查Entry相等，且全量reset同批时仍随后处理目标请求，原每请求队列/状态待迁移。",
+      "original": {
+        "path": "decompiled/Paste/part-0243.c",
+        "sha256": "b6005f5f16f9bb991b6ca725030e5e0674b5ea05531cd94c5417a8714579ab33"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "if !forcedIdentifiers.isEmpty { try await reindexTargets(forcedIdentifiers) }"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "private func reindexTargets("
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1002f3c8c",
+      "status": "source_contract_repaired_partial",
+      "contract": "原指定ID闭包经2ca8调用ea770，当前原输入数组快照并清pending，新请求留下一轮，未造闭包ABI包装。",
+      "original": {
+        "path": "decompiled/Paste/part-0243.c",
+        "sha256": "8bbd8b2eb5f46fece407eefaece275ac226bf0e06bd349a981441e26bc7283a8"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "let forcedIdentifiers = reindexIdentifiers"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "reindexIdentifiers = []"
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "try await reindexTargets(forcedIdentifiers)"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1002f2ca8",
+      "status": "source_contract_repaired_partial",
+      "contract": "原ea770(ids,1)强制路径；当前无metadata比较强制按批SDK提交，实际isUpdate用于原entity attribute/OCR的消费仍待核对。",
+      "original": {
+        "path": "decompiled/Paste/part-0243.c",
+        "sha256": "8a78c809b652998f9b8ca0de1399ad8f15a67923fdb403781950e137099d6be5"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "private func reindexTargets("
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift",
+          "symbol": "let changed = live.map(searchableItem)"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1002e6d3c",
+      "status": "routing_contract_gap_confirmed",
+      "contract": "此service入口准备async帧并切6dc4，当前历史删除仍直接SDK；需要先闭合真实selector/task work，不能按调用附近函数名认定插入/更新force参数。",
+      "original": {
+        "path": "decompiled/Paste/part-0240.c",
+        "sha256": "08ccd10b1632a9b61e3c160c627c33d1dbb4faa82ec14f3492d6036f80ad52e1"
+      },
+      "source_references": []
+    },
+    {
+      "function_id": "Paste:0x1002e6dc4",
+      "status": "routing_contract_gap_confirmed",
+      "contract": "原服务按输入100个String ID切片，非空片段生成弱服务工作并串行await任务；本轮已读但未将未闭合的work descriptor误当插入/更新路径。",
+      "original": {
+        "path": "decompiled/Paste/part-0241.c",
+        "sha256": "1340574a0a8458cc16d61a46c16ca33ad2191a0e69d7f2adf7fcdc422e559a7d"
+      },
+      "source_references": []
+    },
+    {
+      "function_id": "Paste:0x1002e7034",
+      "status": "routing_contract_gap_confirmed",
+      "contract": "原actor任务链用100c3e910等work descriptor、续接任务并await结果；当前没有原通用串行链模型，下一步需解析真实相对指针并绑定SDK调用。",
+      "original": {
+        "path": "decompiled/Paste/part-0241.c",
+        "sha256": "410b4c60fc4a163832ef97a13b45720eb41b604b9d56a791a8980abdc3fbf92a"
+      },
+      "source_references": []
+    }
+  ],
+  "reviewed_count": 19,
+  "current_review_unique_count": 501,
+  "current_review_inventory_percent": 0.6176,
+  "new_partial_bindings": [],
+  "rebound_partial_bindings": [
+    "Paste:0x1002ea78c",
+    "Paste:0x1002eaa10",
+    "Paste:0x1002eaea4",
+    "Paste:0x1002eb4d0",
+    "Paste:0x1002e1bac",
+    "Paste:0x1002e20b8",
+    "Paste:0x1002e2298",
+    "Paste:0x1002e22fc",
+    "Paste:0x1002e2348",
+    "Paste:0x1002e23a8",
+    "Paste:0x1002efba0",
+    "Paste:0x1002e48a0",
+    "Paste:0x1002f2690",
+    "Paste:0x1002f26a8",
+    "Paste:0x1002f3c8c",
+    "Paste:0x1002f2ca8"
+  ],
+  "current_partial_count": 565,
+  "reused_static_evidence": {
+    "report": "reports/replica/offline-migration-p0-round17.json",
+    "original_binary_sha256": "871f00354fbb1c165d858a98e6d19d6f43cb9d3f9f958b3e07c7f07eb5c19afb",
+    "scope": "The original input-ID 100 limit, min clamp, +100 advance and Task.isCancelled import remain bound; no extension to unproven ordinary incremental paths.",
+    "report_sha256": "1eed1d6ad4392998b36a3309f15f669a4fd2320328f65d9a2861fb30e5dc1ce9"
+  },
+  "source_sha256": {
+    "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift": "473cc7ff912c6cf0b2fe7c691fec307c5fa39623a83fa2a8678314386bbe6f72",
+    "replica/Sources/PastoCore/ClipboardPersistence.swift": "89e88101072cbdc0817c4afec67c49a48988e906bef7ab038f386312fec01a8f",
+    "replica/Sources/PastoCore/ClipboardStore.swift": "502169c424efaa77e81b5786054fd3a9278f293f62e3d55cf1706540fd82a36d",
+    "scripts/tests/test_live_index_batches.py": "46f13bbb5d9b17e24357d877dcff220fcb64a50ef704707564545ff0d2cde919",
+    "scripts/tests/test_index_batch_contracts.py": "872caec2135ef0823efa3572963abc3bbba1d7fe46bd50c1ace061353f86b93c",
+    "scripts/tests/test_index_rebuild_contracts.py": "7c7b70139d4a536ce2bece80e9ee335110d959a7f76eb47ea4f5bcaccfca107c",
+    "scripts/tests/test_search_history_contracts.py": "6b99322d2ad5f5c6e8c0378dcb9343f1e4a0a7cb1c1fdf629163bae5a29a9199"
+  },
+  "previous_source_sha256": {
+    "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift": "602c05f6c3ab3eb169ab8921ade1147c345299003f79f5088c16311b86e8ee91",
+    "replica/Sources/PastoCore/ClipboardPersistence.swift": "b4c8182e7bfc0eafb3668feacd3755a293eb5f7a80d2958fd4a09dabb2e2324b",
+    "replica/Sources/PastoCore/ClipboardStore.swift": "da854773434696ad0b710c7bb7aed18b50e2e0dc31e28c021cc212db188b759a"
+  },
+  "production_source_edited": true,
+  "tests": {
+    "passed": true,
+    "total": 209,
+    "added_in_round": 6,
+    "scope": "Python source/provenance/input-window projection only; no Swift, SDK, database or application execution."
+  },
+  "new_fully_migrated_function_count": 0,
+  "historical_ledger": {
+    "numerator": 1648,
+    "denominator": 81123,
+    "percent": 2.0315,
+    "stale_evidence": true
+  },
+  "remaining_differences": [
+    "原active flag与静默取消、isUpdate在实体/OCR中的消费仍未迁移；当前Task.checkCancellation仍throw后needsReset，未声称全部等价",
+    "原每个指定ID请求独立排队，当前数组合并SDK委托请求后一起ack；进度按输入而非实体数已对齐，但任务链仍不同",
+    "本轮没有把指定ID上限用于普通insert/update/delete；6d3c/6dc4/7034真实work descriptor及change force参数继续待闭合",
+    "IndexingState持久化/schema/可用性/全量恢复/健康probe，以及原actor/DI/ItemEntity/FRC与P0事务Undo/applier等仍缺",
+    "自有UUID值模型以String key查库、namespace和无store快照回退仍为适配；其余P0/P1/P2范围保持"
+  ],
+  "next_module": "P0 data_and_persistence",
+  "next_work": [
+    "解析6dc4/7034的实际work descriptor→SDK调用，并追insert/update事件force/isUpdate，再对齐原逐请求actor队列和active取消",
+    "继续完整IndexingState持久状态及P0模型/事务/Undo，不以现有源码结构或投影测试计全量完成"
+  ],
+  "compiled": false,
+  "application_executed": false,
+  "original_binary_executed": false,
+  "network_used": false,
+  "user_data_modified": false,
+  "committed": false,
+  "pushed": false,
+  "module_complete": false,
+  "goal_active": true,
+  "inventory": {
+    "mapping_states": {
+      "partial": 565,
+      "migrated": 1648,
+      "excluded_by_scope": 9
+    },
+    "mapped_reference_records_checked": 2222,
+    "source_binding_counts": {
+      "current": 322,
+      "not_recorded": 1059,
+      "file_changed_needs_method_review": 267
+    },
+    "unchanged_source_review_count": 317,
+    "reference_issue_counts": {
+      "missing_address_in_evidence": 12
+    }
+  }
+}

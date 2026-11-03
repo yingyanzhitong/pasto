@@ -1,0 +1,78 @@
+--- phase-10-before/replica/Sources/Pasto/AppMain.swift
++++ replica/Sources/Pasto/AppMain.swift
+@@ -107,7 +107,7 @@
+             ui.directPasteItemsHandler = { [weak self] ids, plain in
+                 self?.paste(ids: ids, plain: plain, forceDirect: true) ?? false
+             }
+-            ui.panelWillShow = { [weak self] in self?.rememberPanelApplication() }
++            ui.panelDidShow = { [weak self] in self?.rememberPanelApplication() }
+             ui.panelWillClose = { [weak self] restore in self?.restorePanelApplication(restore: restore) }
+             ui.copiedItemsHandler = {
+                 ReplicaCopiedOSD.showCopied()
+@@ -356,11 +356,12 @@
+         ui.togglePanel()
+     }
+     private func rememberPanelApplication() {
+-        // 0x1000b098c: snapshot the previous application before Pasto activates.
++        // 0x100019790 → 0x1000b098c: after showing, sample before activation.
+         let app = NSWorkspace.shared.frontmostApplication
+         if app?.processIdentifier != ProcessInfo.processInfo.processIdentifier {
+             handoffPreviousApplication = app
+         }
++        NSApp.activate()
+     }
+ 
+     private func restorePanelApplication(restore: Bool) {
+--- phase-10-before/replica/Sources/Pasto/UI/ReplicaUIController.swift
++++ replica/Sources/Pasto/UI/ReplicaUIController.swift
+@@ -668,7 +668,7 @@
+     var pasteItemsHandler: (([UUID], Bool) -> Bool)?
+     var directPasteItemsHandler: (([UUID], Bool) -> Bool)?
+     var copiedItemsHandler: (() -> Void)?
+-    var panelWillShow: (() -> Void)?
++    var panelDidShow: (() -> Void)?
+     var panelWillClose: ((_ restorePreviousApplication: Bool) -> Void)?
+     var pasteboard: NSPasteboard = .general
+     var hotKeyConfigurationChanged: (() -> Void)?
+@@ -782,7 +782,6 @@
+             return
+         }
+         guard let screen = NSScreen.main, let content = panel.contentView else { return }
+-        panelWillShow?()
+         panelTransitionGeneration += 1
+         let generation = panelTransitionGeneration
+         isPanelClosing = false
+@@ -796,7 +795,6 @@
+         originalPanelScreen = screen
+         content.superview?.clipsToBounds = true
+         content.frame = NSRect(origin: NSPoint(x: 0, y: -panel.frame.height), size: panel.frame.size)
+-        NSApp.activate(ignoringOtherApps: true)
+         NSAnimationContext.runAnimationGroup { context in
+             context.duration = 0.15
+             context.timingFunction = CAMediaTimingFunction(controlPoints: 0.2, 0.8, 0.2, 1)
+@@ -810,6 +808,7 @@
+                 if self.state.searchVisible, self.filterBrowserPopover?.isDisplayed != true {
+                     self.state.searchFocus = UUID()
+                 }
++                self.panelDidShow?()
+             }
+         }
+     }
+@@ -824,13 +823,10 @@
+     }
+ 
+     private func panelDidResignKey() {
+-        // AppKit may be transferring key status to an attached popover or sheet.
+-        DispatchQueue.main.async { [weak self] in
+-            guard let self, self.canDismissPanelForInteraction,
+-                  !self.panel.isKeyWindow,
+-                  !self.isPanelInteractionWindow(NSApp.keyWindow) else { return }
+-            self.hidePanel()
+-        }
++        // 0x100018c84 checks these guards in the window notification callback.
++        // Its one-shot suppression setter belongs to the excluded Handoff path.
++        guard panel.sheets.isEmpty, NSApp.modalWindow == nil else { return }
++        hidePanel()
+     }
+ 
+     private var canDismissPanelForInteraction: Bool {

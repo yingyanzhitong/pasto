@@ -1,0 +1,28 @@
+--- before/replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift
++++ after/replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift
+@@ -202,6 +202,25 @@
+     weak var document: ReplicaRichTextDocument?
+     var onSave: (() -> Void)?
+     var onCancel: (() -> Void)?
++
++    // Paste 0x10021540c → 0x100214e78: normalize rich text before one undoable replacement.
++    override func paste(_ sender: Any?) {
++        guard let source = NSPasteboard.general.readObjects(forClasses: [NSAttributedString.self],
++                                                           options: nil)?.first as? NSAttributedString else {
++            super.paste(sender)
++            return
++        }
++        undoManager?.beginUndoGrouping()
++        textStorage?.beginEditing()
++        if let storage = textStorage {
++            let range = selectedRange()
++            // 0x100215840 has the same font/underline/strike rules as 0x1003c1860.
++            let replacement = OriginalPreviewAttributedText.normalizedEditingText(source)
++            storage.replaceCharacters(in: range, with: replacement)
++        }
++        textStorage?.endEditing()
++        undoManager?.endUndoGrouping()
++    }
+ 
+     override func validateUserInterfaceItem(_ item: NSValidatedUserInterfaceItem) -> Bool {
+         if item.action == NSSelectorFromString("changeLayoutOrientation:") { return false }

@@ -1,0 +1,34 @@
+--- before/replica/Sources/PastoCore/OriginalManagedItem.swift
++++ after/replica/Sources/PastoCore/OriginalManagedItem.swift
+@@ -30,6 +30,15 @@
+     override class var entityName: String { "ListEntity" }
+     override class var defaultSortDescriptors: [NSSortDescriptor]? {
+         [NSSortDescriptor(key: "metadata.index", ascending: true)]
++    }
++
++    // 3b4984: local edits advance updatedAt; inserted/syncApply/unchanged objects do not.
++    override func willSave() {
++        let isSyncApply = managedObjectContext?.transactionAuthor == "syncApply"
++        if !isInserted && !isSyncApply && !changedValues().isEmpty {
++            setPrimitiveValue(Date(), forKey: "updatedAt")
++        }
++        super.willSave()
+     }
+ 
+     override func awakeFromInsert() {
+@@ -85,6 +94,15 @@
+         [NSSortDescriptor(key: "index", ascending: true)]
+     }
+ 
++    // 3b4984: local edits advance updatedAt; inserted/syncApply/unchanged objects do not.
++    override func willSave() {
++        let isSyncApply = managedObjectContext?.transactionAuthor == "syncApply"
++        if !isInserted && !isSyncApply && !changedValues().isEmpty {
++            setPrimitiveValue(Date(), forKey: "updatedAt")
++        }
++        super.willSave()
++    }
++
+     override func awakeFromInsert() {
+         super.awakeFromInsert()
+         setPrimitiveValue(Date(), forKey: "createdAt")

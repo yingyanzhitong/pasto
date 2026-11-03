@@ -57,9 +57,9 @@ public enum OriginalShortcutRecorderState: Equatable, Hashable, Sendable {
 }
 
 public struct OriginalShortcutRecorderError: LocalizedError {
-    public let message: String
-    public var errorDescription: String? { message }
-    public init(_ message: String) { self.message = message }
+    public let errorDescription: String?
+    public var message: String { errorDescription ?? "" }
+    public init(_ message: String?) { errorDescription = message }
 }
 
 public enum OriginalShortcutRecorderValidationError: LocalizedError, Hashable, Sendable {

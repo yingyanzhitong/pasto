@@ -1,0 +1,102 @@
+--- a/replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift
++++ b/replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift
+@@ -644,9 +644,9 @@
+         guard let state else { return }
+         if input?.hasNativeEntity == true {
+             state.perform {
+-                let board = try state.store.createPinboard(name: String(localized: OriginalPreviewLocalization.f_1001c6aa4()))
++                let board = try state.store.createPinboardTarget(name: String(localized: OriginalPreviewLocalization.f_1001c6aa4()))
+                 guard let current = self.input else { return }
+-                try state.store.assign(items: [current], to: board.id)
++                try state.store.assign(items: [current], to: board)
+             }
+             return
+         }
+--- a/replica/Sources/Pasto/UI/ReplicaUIController.swift
++++ b/replica/Sources/Pasto/UI/ReplicaUIController.swift
+@@ -1662,10 +1662,10 @@
+         let name = String(localized: OriginalPreviewLocalization.f_1001c6aa4())
+         let ids = selectionItems?.map(\.id) ?? state.visibleItems.filter { state.selection.contains($0.id) }.map(\.id)
+         state.perform {
+-            let board = try store.createPinboard(name: name)
++            let board = try store.createPinboardTarget(name: name)
+             if assignSelection {
+                 if let selectionItems {
+-                    try store.assign(items: selectionItems, to: board.id)
++                    try store.assign(items: selectionItems, to: board)
+                 } else {
+                     try store.assign(orderedIDs: ids, to: board.id)
+                 }
+--- a/replica/Sources/PastoCore/ClipboardListPersistence.swift
++++ b/replica/Sources/PastoCore/ClipboardListPersistence.swift
+@@ -218,7 +218,7 @@
+ 
+     // 0x100368560: insert/name first, attempt permanent ID, then encode attributes and set type.
+     func insertPinboard(identifier: String, name: String, index: Int64,
+-                        encodeAttributes: () throws -> Data?) throws -> Data? {
++                        encodeAttributes: () throws -> Data?) throws -> (object: NSManagedObject, attributes: Data?) {
+         let list = NSEntityDescription.insertNewObject(forEntityName: "ListEntity", into: context)
+         list.setValue(identifier, forKey: "identifier")
+         list.setValue(name, forKey: "name")
+@@ -232,10 +232,10 @@
+         list.setValue(metadata, forKey: "metadata")
+         // ARM 3686b8...3686e8 releases a permanent-ID error and rejoins the encoding path.
+         try? context.obtainPermanentIDs(for: [list])
+-        let attributes = try encodeAttributes()
++        let attributes = try? encodeAttributes()
+         list.setValue(attributes, forKey: "rawAttributes")
+         list.setValue(Int64(2), forKey: "rawType")
+-        return attributes
++        return (list, attributes)
+     }
+ 
+     @discardableResult
+--- a/replica/Sources/PastoCore/ClipboardStore.swift
++++ b/replica/Sources/PastoCore/ClipboardStore.swift
+@@ -1278,17 +1278,23 @@
+     @discardableResult
+     public func createPinboard(name: String, colorHex: String? = nil) throws -> Pinboard {
+         guard !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { throw ClipboardStoreError.invalidPinboardName }
+-        return try insertPinboard(name: name, colorHex: colorHex)
++        return try insertPinboard(name: name, colorHex: colorHex).board
+     }
+ 
+     /// The original AppIntent rejects an empty string without trimming the supplied name.
+     @discardableResult
+     public func createPinboardFromIntent(name: String) throws -> Pinboard {
+         guard !name.isEmpty else { throw ClipboardStoreError.invalidPinboardName }
+-        return try insertPinboard(name: name, colorHex: nil)
+-    }
+-
+-    private func insertPinboard(name: String, colorHex: String?) throws -> Pinboard {
++        return try insertPinboard(name: name, colorHex: nil).board
++    }
++
++    // 367c5c/368560: preserve the created List entity for subsequent group assignment.
++    public func createPinboardTarget(name: String) throws -> ClipboardPinboardTarget {
++        guard !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { throw ClipboardStoreError.invalidPinboardName }
++        return try insertPinboard(name: name, colorHex: nil).target
++    }
++
++    private func insertPinboard(name: String, colorHex: String?) throws -> (board: Pinboard, target: ClipboardPinboardTarget) {
+         return try mutateInTransaction { state, transaction in
+             let code: UInt64?
+             let value: String
+@@ -1311,14 +1317,14 @@
+             }
+             let id = UUID()
+             let sortOrder = (state.pinboards.map(\.sortOrder).max() ?? -1) + 1
+-            let attributes = try transaction.repository.lists.insertPinboard(identifier: id.uuidString,
++            let created = try transaction.repository.lists.insertPinboard(identifier: id.uuidString,
+                 name: name, index: Int64(sortOrder)) {
+                 try code.map { try OriginalPinboardAttributes.encoded(colorCode: $0) }
+             }
+             let board = Pinboard(id: id, name: name, colorHex: value, sortOrder: sortOrder,
+-                                 rawType: 2, rawAttributes: attributes)
++                                 rawType: 2, rawAttributes: created.attributes)
+             state.pinboards.append(board)
+-            return board
++            return (board, ClipboardPinboardTarget(id: id, object: created.object))
+         }
+     }
+     public func renamePinboard(id: UUID, name: String) throws {

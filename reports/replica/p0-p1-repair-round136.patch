@@ -1,0 +1,78 @@
+--- before/replica/Sources/PastoCore/ClipboardRestoreItem.swift
++++ after/replica/Sources/PastoCore/ClipboardRestoreItem.swift
+@@ -31,6 +31,12 @@
+     public func hasSameEntity(as other: ClipboardRestoreItem) -> Bool {
+         if let nativeObject { return nativeObject === other.nativeObject }
+         return other.nativeObject == nil && id == other.id
++    }
++
++    // 3541f4 → URIRepresentation: window lookup/registration use the managed object's URL identity.
++    public var previewIdentity: AnyHashable {
++        if let nativeObject { return AnyHashable(nativeObject.objectID.uriRepresentation()) }
++        return AnyHashable(id)
+     }
+ 
+     public var isDeleted: Bool { nativeObject?.isDeleted ?? false }
+--- before/replica/Sources/Pasto/UI/ReplicaUIController.swift
++++ after/replica/Sources/Pasto/UI/ReplicaUIController.swift
+@@ -1463,7 +1463,7 @@
+                 popover.close()
+                 return
+             }
+-            popover.show(itemIdentity: AnyHashable(input.id), itemIdentifier: input.id.uuidString, input: input,
++            popover.show(itemIdentity: input.previewIdentity, itemIdentifier: input.id.uuidString, input: input,
+                 contentView: self.makePreviewContent(for: input), relativeTo: anchor)
+         }
+         return true
+@@ -1471,12 +1471,12 @@
+ 
+     func showPreview(item: ClipboardItem, input: ClipboardRestoreItem? = nil) {
+         if case nil = input, showCollectionPreview(itemID: item.id) { return }
+-        if let existing = previewRegistry.f_10008747c(itemIdentity: AnyHashable(item.id)) {
++        let input = input ?? appliedRestoreItems(orderedIDs: [item.id]).first
++            ?? state.stackRestoreItem(for: item.id) ?? ClipboardRestoreItem(item: item)
++        if let existing = previewRegistry.f_10008747c(itemIdentity: input.previewIdentity) {
+             show(existing)
+             return
+         }
+-        let input = input ?? appliedRestoreItems(orderedIDs: [item.id]).first
+-            ?? state.stackRestoreItem(for: item.id) ?? ClipboardRestoreItem(item: item)
+         let anchor: NSView?
+         if isPanelOrderedVisible, !isPanelClosing, state.visibleItems.contains(where: { $0.id == item.id }),
+            let replicaPanel = panel as? ReplicaPanel,
+@@ -1494,7 +1494,7 @@
+                 popover.close()
+                 return
+             }
+-            popover.show(itemIdentity: AnyHashable(item.id), itemIdentifier: item.id.uuidString, input: input,
++            popover.show(itemIdentity: input.previewIdentity, itemIdentifier: item.id.uuidString, input: input,
+                 contentView: makePreviewContent(for: input), relativeTo: anchor)
+             return
+         }
+@@ -1510,7 +1510,7 @@
+         window.setContentSize(content.frame.size)
+         sharingPolicy.apply(to: window)
+         window.center()
+-        previewRegistry.f_100086c10(window: window, itemIdentity: AnyHashable(item.id),
++        previewRegistry.f_100086c10(window: window, itemIdentity: input.previewIdentity,
+             itemIdentifier: item.id.uuidString, isEditing: false)
+         show(window)
+     }
+@@ -1559,7 +1559,7 @@
+         sharingPolicy.apply(to: window)
+         let registry = previewRegistry
+         let itemIdentifier = input.id.uuidString
+-        registry.f_100086c10(window: window, itemIdentity: AnyHashable(input.id),
++        registry.f_100086c10(window: window, itemIdentity: input.previewIdentity,
+                            itemIdentifier: itemIdentifier, isEditing: true)
+         let transition = OriginalPreviewWindowTransition(window: window)
+         let windowIdentity = ObjectIdentifier(window)
+@@ -1626,7 +1626,7 @@
+         }
+         let item = items[requestedIndex]
+         if let popover = previewPopover, popover.isDisplayed {
+-            popover.show(itemIdentity: AnyHashable(item.id), itemIdentifier: item.id.uuidString, input: input,
++            popover.show(itemIdentity: input.previewIdentity, itemIdentifier: item.id.uuidString, input: input,
+                 contentView: makePreviewContent(for: input), relativeTo: anchor)
+         }
+     }

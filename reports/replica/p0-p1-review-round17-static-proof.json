@@ -1,0 +1,241 @@
+{
+  "round": 17,
+  "binary_path": ".local/paste-arm64-static.bin",
+  "binary_sha256": "871f00354fbb1c165d858a98e6d19d6f43cb9d3f9f958b3e07c7f07eb5c19afb",
+  "segments": [
+    {
+      "vmaddr": 0,
+      "filesize": 0,
+      "fileoff": 0
+    },
+    {
+      "vmaddr": 4294967296,
+      "filesize": 15351808,
+      "fileoff": 0
+    },
+    {
+      "vmaddr": 4310319104,
+      "filesize": 671744,
+      "fileoff": 15351808
+    },
+    {
+      "vmaddr": 4310990848,
+      "filesize": 1064960,
+      "fileoff": 16023552
+    },
+    {
+      "vmaddr": 4312727552,
+      "filesize": 1956752,
+      "fileoff": 17088512
+    }
+  ],
+  "original_resources": [
+    {
+      "path": "/Applications/Paste.app/Contents/Resources/PastePackages_PasteCore.bundle/Contents/Resources/v5Paste.momd/VersionInfo.plist",
+      "sha256": "ff4962b828d1de8edfab4ddba72b3d024c4356191958b390c913c1d19c2bbf0f",
+      "current_version": "v10"
+    },
+    {
+      "path": "/Applications/Paste.app/Contents/Resources/PastePackages_PasteCore.bundle/Contents/Resources/v5Paste.momd/v10.mom",
+      "sha256": "25ee25cb8d2e5745c2d258e278ea5a64c72e1f1124f07392dcfdc21e39febc95",
+      "archiver": "NSKeyedArchiver",
+      "entities": {
+        "ItemEntity": {
+          "object_index": 37,
+          "class_name": "PasteCore.ItemEntity",
+          "properties": {
+            "updatedAt": {
+              "NSAttributeValueClassName": "NSDate",
+              "NSAttributeType": 900,
+              "NSIsOptional": true
+            },
+            "rawPreview": {
+              "NSAttributeValueClassName": "NSData",
+              "NSAttributeType": 1000,
+              "NSIsOptional": true
+            },
+            "timestamp": {
+              "NSAttributeValueClassName": "NSDate",
+              "NSAttributeType": 900,
+              "NSIsOptional": true
+            },
+            "rawType": {
+              "NSAttributeType": 300,
+              "NSAttributeValueClassName": "NSNumber"
+            },
+            "checksum": {
+              "NSAttributeType": 700,
+              "NSAttributeValueClassName": "NSString"
+            },
+            "title": {
+              "NSAttributeType": 700,
+              "NSAttributeValueClassName": "NSString",
+              "NSIsOptional": true
+            },
+            "identifier": {
+              "NSAttributeType": 700,
+              "NSAttributeValueClassName": "NSString"
+            },
+            "data": {
+              "_NSInverseRelationshipName": "item",
+              "NSMaxCount": 1,
+              "NSMinCount": 0,
+              "_NSDestinationEntityName": "ItemDataEntity"
+            },
+            "sourceApplication": {
+              "_NSInverseRelationshipName": "items",
+              "NSIsOptional": true,
+              "NSMaxCount": 1,
+              "NSMinCount": 0,
+              "_NSDestinationEntityName": "ApplicationEntity"
+            },
+            "displayOrderInPinboard": {
+              "NSAttributeType": 300,
+              "NSAttributeValueClassName": "NSNumber"
+            },
+            "list": {
+              "_NSInverseRelationshipName": "items",
+              "NSIsOptional": true,
+              "NSMaxCount": 1,
+              "NSMinCount": 0,
+              "_NSDestinationEntityName": "ListEntity"
+            },
+            "device": {
+              "_NSInverseRelationshipName": "items",
+              "NSIsOptional": true,
+              "NSMaxCount": 1,
+              "NSMinCount": 0,
+              "_NSDestinationEntityName": "DeviceEntity"
+            },
+            "createdAt": {
+              "NSAttributeType": 900,
+              "NSAttributeValueClassName": "NSDate"
+            }
+          }
+        },
+        "ListEntity": {
+          "object_index": 94,
+          "class_name": "PasteCore.ListEntity",
+          "properties": {
+            "rawAttributes": {
+              "NSAttributeValueClassName": "NSData",
+              "NSAttributeType": 1000,
+              "NSIsOptional": true
+            },
+            "rawShareRecord": {
+              "NSAttributeValueClassName": "NSData",
+              "NSAttributeType": 1000,
+              "NSIsOptional": true
+            },
+            "rawType": {
+              "NSAttributeType": 300,
+              "NSAttributeValueClassName": "NSNumber"
+            },
+            "identifier": {
+              "NSAttributeType": 700,
+              "NSAttributeValueClassName": "NSString"
+            },
+            "updatedAt": {
+              "NSAttributeValueClassName": "NSDate",
+              "NSAttributeType": 900,
+              "NSIsOptional": true
+            },
+            "createdAt": {
+              "NSAttributeType": 900,
+              "NSAttributeValueClassName": "NSDate"
+            },
+            "metadata": {
+              "_NSInverseRelationshipName": "list",
+              "NSMaxCount": 1,
+              "NSMinCount": 0,
+              "_NSDestinationEntityName": "ListMetadataEntity"
+            },
+            "name": {
+              "NSAttributeType": 700,
+              "NSAttributeValueClassName": "NSString"
+            },
+            "items": {
+              "_NSInverseRelationshipName": "list",
+              "NSMaxCount": 0,
+              "NSMinCount": 0,
+              "_NSDestinationEntityName": "ItemEntity"
+            }
+          }
+        }
+      }
+    }
+  ],
+  "item_class": {
+    "class_address": "0x100f97da8",
+    "class_data": {
+      "address": "0x100f97dc8",
+      "file_offset": 16350664,
+      "bytes": "4a7df90000004000"
+    },
+    "class_ro": "0x100f97d48",
+    "name_pointer": {
+      "address": "0x100f97d60",
+      "file_offset": 16350560,
+      "bytes": "8064dd0000001000"
+    },
+    "name": {
+      "address": "0x100dd6480",
+      "file_offset": 14509184,
+      "bytes": "5f547443395061737465436f726531304974656d456e7469747900"
+    }
+  },
+  "value_copy": {
+    "type_descriptor": {
+      "address": "0x100cad06c",
+      "file_offset": 13291628,
+      "bytes": "5100010038eaffffbc63f9ff244e6cff84b809000900000002000000b0443100d4443100c48f6cff"
+    },
+    "metadata_cache": "0x100fc1538",
+    "template_address": "0x100fc1560",
+    "completion": "0x100376054",
+    "template": {
+      "address": "0x100fc1558",
+      "file_offset": 16520536,
+      "bytes": "e014fc000000200000020000000000006cd0ca0000007000"
+    },
+    "witness_table": {
+      "address": "0x100fc14e0",
+      "file_offset": 16520416,
+      "bytes": "c45537000000100064573700000010002c58370000001000a059370000001000"
+    },
+    "dispatch": {
+      "address": "0x1002fc104",
+      "file_offset": 3129604,
+      "bytes": "66d70194e20300aa08805ff8080940f9e00313aae10314aa00013fd6"
+    },
+    "initializing_copy_slot": "0x100fc14f0",
+    "initializing_copy_target": "0x10037582c"
+  },
+  "coordinator_callbacks": {
+    "setup": {
+      "address": "0x10003f650",
+      "file_offset": 259664,
+      "bytes": "e80300aa090000d029012f91e96700a9000000d000802e91020000d042a02e91040000d084c02e91060000d0c6e02e91e9e701b2493393f229fbe7f22001679ee10314aae30316aae50317aae70318aaf40308aaf4de0a94"
+    },
+    "constructor_stores": {
+      "address": "0x1002f72b8",
+      "file_offset": 3109560,
+      "bytes": "9fc20139880201a9810a02a9831203a9851a04a9875605a9937e06a9803e00fd"
+    },
+    "undo_sequence": {
+      "address": "0x1002f7c70",
+      "file_offset": 3112048,
+      "bytes": "68d244a9e00317aa00013fd6f80300aa68d242a9e10316aae20315aa00013fd668d241a9e00317aa00013fd668d243a900e4006fe00301ade013803de083009100013fd6"
+    }
+  },
+  "small_string_tombstone_key": {
+    "word1": "0x696669746e656469",
+    "word2": "0xea00000000007265",
+    "decoded": "identifier"
+  },
+  "limits": [
+    "read_only_resource_and_binary_parsing",
+    "no_compilation_or_application_execution",
+    "no_runtime_metadata_or_final_ui_equivalence"
+  ]
+}

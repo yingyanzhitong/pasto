@@ -1,0 +1,477 @@
+--- phase-45-before/replica/Sources/Pasto/UI/ReplicaSearchIndex.swift
++++ replica/Sources/Pasto/UI/ReplicaSearchIndex.swift
+@@ -61,7 +61,8 @@
+     private var requested: Request?
+     private var pending: Request?
+     private var indexed: [UUID: Entry] = [:]
+-    // In-memory identity only; the original persisted IndexingState remains a separate migration gap.
++    private let stateStore = OriginalSearchIndexStateStore()
++    private var mayRestoreSavedState = true
+     private var lastSourceIdentifier: String?
+     private var needsReset = true
+     private var worker: Task<Void, Never>?
+@@ -83,6 +84,7 @@
+         index = CSSearchableIndex(name: domain)
+         self.store = store
+         super.init()
++        lastSourceIdentifier = stateStore.indexedStoreID
+         index.indexDelegate = self
+     }
+ 
+@@ -301,6 +303,53 @@
+         return item
+     }
+ 
++    // 0x1002f00dc/2f3248/2f32d4: a probe error does not prove that the index is empty.
++    private func restoreCompletedStateIfHealthy(sourceIdentifier: String?) async -> Bool {
++        guard let state = stateStore.savedState,
++              state.schemaVersion == OriginalSearchIndexingState.currentSchemaVersion,
++              state.indexedItems >= state.totalItems, state.totalItems > 0 else { return false }
++        if let previous = stateStore.indexedStoreID, let current = sourceIdentifier, previous != current { return false }
++        do {
++            let found = try await Self.matchingIdentifiers(
++                predicate: "contentModificationDate >= $time.iso(1970-01-01T00:00:00Z)",
++                domain: domain, limit: Self.maximumResultCount)
++            return !found.isEmpty
++        } catch {
++            logger.error("Search index health probe failed: \(error.localizedDescription, privacy: .public)")
++            return true
++        }
++    }
++
++    private func indexInitialSnapshot(_ fallback: [Entry]) async throws {
++        let allIDs = try store?.searchIndexIdentifiers(before: nil) ?? fallback.map(\.searchIdentifier)
++        guard !allIDs.isEmpty else { return }
++        let input = allIDs.filter { !$0.isEmpty }
++        var state = OriginalSearchIndexingState(schemaVersion: OriginalSearchIndexingState.currentSchemaVersion,
++            totalItems: input.count, indexedItems: 0, oldestTimestamp: nil, invalidItems: allIDs.count - input.count)
++        for lowerBound in stride(from: 0, to: input.count, by: Self.indexingBatchSize) {
++            try Task.checkCancellation()
++            let upperBound = min(lowerBound + Self.indexingBatchSize, input.count)
++            let live = try liveEntries(identifiers: Array(input[lowerBound..<upperBound]))
++            if !live.isEmpty {
++                let changed = live.map { searchableItem($0, isUpdate: false) }
++                try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
++                    index.indexSearchableItems(changed) { error in
++                        if let error { continuation.resume(throwing: error) }
++                        else { continuation.resume() }
++                    }
++                }
++            }
++            state.indexedItems += live.count
++            state.oldestTimestamp = live.compactMap(\.modified).min()
++            try stateStore.save(state)
++            for entry in live { indexed[entry.id] = entry }
++        }
++        // 0x1002ea410 marks a non-cancelled finished pass complete, including missing IDs.
++        try Task.checkCancellation()
++        state.indexedItems = state.totalItems
++        try stateStore.save(state)
++    }
++
+     private func drain() async {
+         while pending != nil || !pendingHistory.isEmpty {
+             if !pendingHistory.isEmpty {
+@@ -323,13 +372,23 @@
+                 }
+                 // 0x1002efccc: unavailable indexing must not start a snapshot/write/observer.
+                 if needsReset && !CSSearchableIndex.isIndexingAvailable() { throw IndexingError.unavailable }
+-                if let current = request.sourceIdentifier { lastSourceIdentifier = current }
++                var restoredCompletedState = false
++                if needsReset && mayRestoreSavedState {
++                    let healthy = await restoreCompletedStateIfHealthy(sourceIdentifier: request.sourceIdentifier)
++                    // A full delegate reset received during the probe must remain authoritative.
++                    restoredCompletedState = healthy && mayRestoreSavedState
++                    if restoredCompletedState { needsReset = false }
++                }
++                mayRestoreSavedState = false
++                if let current = request.sourceIdentifier {
++                    lastSourceIdentifier = current
++                    stateStore.indexedStoreID = current
++                }
+                 let resettingIndex = needsReset
+-                let usesSnapshot = resettingIndex || historyTask == nil
+-                let currentEntries: [Entry]
+-                if usesSnapshot, store != nil { currentEntries = try liveEntries(identifiers: nil) }
+-                else { currentEntries = request.entries }
++                let usesSnapshot = !restoredCompletedState && (resettingIndex || historyTask == nil)
++                let currentEntries = request.entries
+                 if needsReset {
++                    try stateStore.save(nil)
+                     needsReset = false
+                     try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+                         index.deleteAllSearchableItems { error in
+@@ -340,33 +399,12 @@
+                     indexed = [:]
+                 }
+                 let current = Dictionary(uniqueKeysWithValues: currentEntries.map { ($0.id, $0) })
+-                let deleted = usesSnapshot ? Set(indexed.keys).subtracting(current.keys) : Set<UUID>()
++                let deleted = usesSnapshot && store == nil ? Set(indexed.keys).subtracting(current.keys) : Set<UUID>()
+                 if !deleted.isEmpty {
+                     try await deleteIdentifiers(deleted.compactMap { indexed[$0]?.searchIdentifier })
+                 }
+-                let changedEntries = currentEntries.filter {
+-                    usesSnapshot && indexed[$0.id] != $0
+-                }
+-                let replacedIdentifiers = changedEntries.compactMap { entry -> String? in
+-                    guard let previous = indexed[entry.id], previous.searchIdentifier != entry.searchIdentifier else { return nil }
+-                    return previous.searchIdentifier
+-                }
+-                if !replacedIdentifiers.isEmpty { try await deleteIdentifiers(replacedIdentifiers) }
+-                // Full/snapshot writes keep their own strategy; the proven ID cap is in reindexTargets.
+-                let batchSize = max(changedEntries.count, 1)
+-                for lowerBound in stride(from: 0, to: changedEntries.count, by: batchSize) {
+-                    try Task.checkCancellation()
+-                    let upperBound = min(lowerBound + batchSize, changedEntries.count)
+-                    let changed = changedEntries[lowerBound..<upperBound].map { searchableItem($0, isUpdate: false) }
+-                    try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+-                        index.indexSearchableItems(changed) { error in
+-                            if let error { continuation.resume(throwing: error) }
+-                            else { continuation.resume() }
+-                        }
+-                    }
+-                }
+-                if usesSnapshot { indexed = current }
+-                else { for entry in changedEntries { indexed[entry.id] = entry } }
++                if usesSnapshot { try await indexInitialSnapshot(currentEntries) }
++                if usesSnapshot && store == nil { indexed = current }
+                 if !forcedIdentifiers.isEmpty { try await reindexTargets(forcedIdentifiers) }
+                 journalCompleted = true
+                 startHistoryObservation()
+@@ -408,6 +446,7 @@
+                 })
+             } else {
+                 needsReset = true
++                mayRestoreSavedState = false
+             }
+             pending = requested
+             acknowledgements.append(acknowledge)
+--- phase-45-before/replica/Sources/PastoCore/ClipboardPersistence.swift
++++ replica/Sources/PastoCore/ClipboardPersistence.swift
+@@ -223,6 +223,21 @@
+         try context.performAndWait { try sources.deviceNames(matching: query) }
+     }
+ 
++    // 0x10036d140: fetch IDs only, newest history timestamp first, no request limit.
++    func searchIndexIdentifiers(before timestamp: Date?) throws -> [String] {
++        try perform {
++            let request = NSFetchRequest<NSDictionary>(entityName: "Item")
++            request.resultType = .dictionaryResultType
++            // The second column preserves Pasto's existing local-ID fallback for old records.
++            request.propertiesToFetch = ["nativeIdentifier", "key"]
++            request.sortDescriptors = [NSSortDescriptor(key: "timestamp", ascending: false)]
++            if let timestamp { request.predicate = NSPredicate(format: "timestamp < %@", timestamp as NSDate) }
++            return try context.fetch(request).compactMap { row in
++                (row["nativeIdentifier"] as? String) ?? (row["key"] as? String)
++            }
++        }
++    }
++
+     func searchIndexRecords(identifiers: [String]?) throws -> [ClipboardSearchRecord] {
+         try perform {
+             context.reset()
+--- phase-45-before/replica/Sources/PastoCore/ClipboardStore.swift
++++ replica/Sources/PastoCore/ClipboardStore.swift
+@@ -78,6 +78,10 @@
+ 
+     public func searchIndexRecords(identifiers: [String]?) throws -> [ClipboardSearchRecord] {
+         try persistence.searchIndexRecords(identifiers: identifiers)
++    }
++
++    public func searchIndexIdentifiers(before timestamp: Date?) throws -> [String] {
++        try persistence.searchIndexIdentifiers(before: timestamp)
+     }
+     private var baseline = StoreState()
+     private var diskRevision: UUID?
+--- /dev/null
++++ replica/Sources/PastoCore/OriginalSearchIndexingState.swift
+@@ -0,0 +1,41 @@
++import Foundation
++
++/// 0x100cab74c: the source identity lives in a separate Config slot.
++public struct OriginalSearchIndexingState: Codable, Equatable {
++    public var schemaVersion: Int
++    public var totalItems: Int
++    public var indexedItems: Int
++    public var oldestTimestamp: Date?
++    public var invalidItems: Int
++
++    public init(schemaVersion: Int, totalItems: Int, indexedItems: Int,
++                oldestTimestamp: Date?, invalidItems: Int) {
++        self.schemaVersion = schemaVersion; self.totalItems = totalItems; self.indexedItems = indexedItems
++        self.oldestTimestamp = oldestTimestamp; self.invalidItems = invalidItems
++    }
++
++    public static var currentSchemaVersion: Int {
++        ProcessInfo.processInfo.isOperatingSystemAtLeast(.init(majorVersion: 26, minorVersion: 4, patchVersion: 0)) ? 6 : 5
++    }
++}
++
++@MainActor
++public final class OriginalSearchIndexStateStore {
++    private let defaults: UserDefaults
++
++    public init(defaults: UserDefaults = .standard) { self.defaults = defaults }
++
++    public var savedState: OriginalSearchIndexingState? {
++        guard let data = defaults.data(forKey: "indexingState") else { return nil }
++        return try? JSONDecoder().decode(OriginalSearchIndexingState.self, from: data)
++    }
++
++    public func save(_ state: OriginalSearchIndexingState?) throws {
++        defaults.set(try JSONEncoder().encode(state), forKey: "indexingState")
++    }
++
++    public var indexedStoreID: String? {
++        get { defaults.string(forKey: "indexedStoreID") }
++        set { defaults.set(newValue, forKey: "indexedStoreID") }
++    }
++}
+--- phase-45-before/scripts/tests/test_p1_repair_index_recovery_prerequisites.py
++++ scripts/tests/test_p1_repair_index_recovery_prerequisites.py
+@@ -131,9 +131,10 @@
+         drain = body(self.index, 'private func drain() async')
+         guard = 'if needsReset && !CSSearchableIndex.isIndexingAvailable() { throw IndexingError.unavailable }'
+         check = drain.index(guard)
+-        for token in ['lastSourceIdentifier = current', 'currentEntries = try liveEntries(',
+-                      'index.deleteAllSearchableItems', 'index.indexSearchableItems(', 'startHistoryObservation()']:
++        for token in ['lastSourceIdentifier = current', 'try await indexInitialSnapshot(',
++                      'index.deleteAllSearchableItems', 'startHistoryObservation()']:
+             self.assertLess(check, drain.index(token))
++        self.assertIn('index.indexSearchableItems(', body(self.index, 'private func indexInitialSnapshot('))
+         self.assertIn('worker = Task { [weak self]', body(self.index, 'private func startWorker()'))
+         row, = self.proof['partial_repairs']
+         self.assertEqual(row['function_id'], 'Paste:0x1002efccc')
+--- phase-45-before/scripts/tests/test_p1_repair_index_update_flag.py
++++ scripts/tests/test_p1_repair_index_update_flag.py
+@@ -98,7 +98,10 @@
+ 
+     def test_delegate_queue_batch_ack_and_errors_are_unchanged(self):
+         for marker in ['nonisolated private func rebuild(', 'private func deleteIdentifiers(']:
+-            self.assertEqual(body(self.source, marker), body(self.before, marker))
++            current = body(self.source, marker)
++            if marker.startswith('nonisolated'):
++                current = current.replace('                mayRestoreSavedState = false\n', '', 1)
++            self.assertEqual(current, body(self.before, marker))
+         target = body(self.source, 'private func reindexTargets(')
+         previous = body(self.before, 'private func reindexTargets(')
+         self.assertEqual(target.replace('live.map { searchableItem($0, isUpdate: true) }', 'live.map(searchableItem)'), previous)
+--- phase-45-before/scripts/tests/test_p1_repair_lazy_search_records.py
++++ scripts/tests/test_p1_repair_lazy_search_records.py
+@@ -121,7 +121,10 @@
+     def test_all_actual_store_sdk_paths_use_native_records_including_snapshot_fallback(self):
+         store = body(self.store, 'public func searchIndexRecords(')
+         self.assertIn('try persistence.searchIndexRecords(identifiers: identifiers)', store)
+-        self.assertIn('if usesSnapshot, store != nil { currentEntries = try liveEntries(identifiers: nil) }', self.index)
++        self.assertIn('if usesSnapshot { try await indexInitialSnapshot(currentEntries) }', self.index)
++        initial = body(self.index, 'private func indexInitialSnapshot(')
++        self.assertIn('try store?.searchIndexIdentifiers(before: nil)', initial)
++        self.assertIn('try liveEntries(identifiers: Array(input[lowerBound..<upperBound]))', initial)
+         self.assertIn('let live = try liveEntries(identifiers: identifiers)', self.index)
+         self.assertIn('try liveEntries(identifiers: Array(input[lowerBound..<upperBound]))', self.index)
+         live = body(self.index, 'private func liveEntries(')
+--- /dev/null
++++ scripts/tests/test_p1_repair_completed_index_state.py
+@@ -0,0 +1,202 @@
++"""Source/Mach-O/JSON fixtures only; never runs Swift, UserDefaults or native indexes."""
++import hashlib
++import json
++import re
++import struct
++import sys
++import unittest
++from pathlib import Path
++
++ROOT = Path(__file__).resolve().parents[2]
++sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'scripts/tests')]
++from function_ledger import source_fragments
++from test_offline_p0_contracts import body
++from test_p0_repair_identity import method_body
++from test_p0_repair_checksum_routing import original_fragment
++
++
++class CompletedIndexStateContracts(unittest.TestCase):
++    @classmethod
++    def setUpClass(cls):
++        cls.phase = ROOT / '.local/p0-repair/phase-45'
++        cls.proof = json.loads((cls.phase / 'completed-state-contract.json').read_text())
++        cls.state = (ROOT / 'replica/Sources/PastoCore/OriginalSearchIndexingState.swift').read_text()
++        cls.persistence = (ROOT / 'replica/Sources/PastoCore/ClipboardPersistence.swift').read_text()
++        cls.store = (ROOT / 'replica/Sources/PastoCore/ClipboardStore.swift').read_text()
++        cls.index = (ROOT / 'replica/Sources/Pasto/UI/ReplicaSearchIndex.swift').read_text()
++        cls.restore = body(cls.index, 'private func restoreCompletedStateIfHealthy(')
++        cls.initial = body(cls.index, 'private func indexInitialSnapshot(')
++        cls.drain = body(cls.index, 'private func drain() async')
++        cls.original = {r['address']: original_fragment((ROOT / r['path']).read_text(), r['address'][2:])
++                        for r in cls.proof['original_fragments']}
++
++    def test_original_fragments_and_prior_binary_state_schema_are_bound(self):
++        for row in self.proof['original_fragments']:
++            self.assertEqual(source_fragments(ROOT / row['path'])[row['address']]['sha256'], row['sha256'])
++        meta = self.proof['prior_state_metadata']
++        self.assertEqual(hashlib.sha256((ROOT / meta['path']).read_bytes()).hexdigest(), meta['sha256'])
++
++    def test_state_has_exact_original_five_codable_fields_with_separate_identity(self):
++        record = body(self.state, 'public struct OriginalSearchIndexingState:')
++        fields = re.findall(r'public var (\w+): ([^\n{]+)\n', record)
++        self.assertEqual(fields, [('schemaVersion', 'Int'), ('totalItems', 'Int'), ('indexedItems', 'Int'),
++                                  ('oldestTimestamp', 'Date?'), ('invalidItems', 'Int')])
++        self.assertIn('Codable, Equatable', self.state)
++        self.assertNotIn('indexedStoreID', record)
++        self.assertEqual([f[0] for f in fields], self.proof['prior_state_metadata']['field_order'])
++
++    def test_schema_version_uses_original_runtime_26_4_boundary(self):
++        version = body(self.state, 'public static var currentSchemaVersion:')
++        self.assertIn('majorVersion: 26, minorVersion: 4, patchVersion: 0', version)
++        self.assertIn('? 6 : 5', version)
++        original = self.original['0x1002e1234']
++        self.assertIn('_stdlib_isOSVersionAtLeast(0x1a,4,0)', original)
++        self.assertIn('DAT_101057930 = 5', original)
++        self.assertIn('DAT_101057930 = 6', original)
++
++    def test_storage_uses_original_json_state_key_and_unencoded_separate_string_key(self):
++        self.assertIn('defaults.data(forKey: "indexingState")', self.state)
++        self.assertIn('JSONDecoder().decode(OriginalSearchIndexingState.self, from: data)', self.state)
++        self.assertIn('defaults.set(try JSONEncoder().encode(state), forKey: "indexingState")', self.state)
++        identity = body(self.state, 'public var indexedStoreID:')
++        self.assertIn('defaults.string(forKey: "indexedStoreID")', identity)
++        self.assertIn('defaults.set(newValue, forKey: "indexedStoreID")', identity)
++        self.assertNotIn('JSONEncoder', identity)
++        self.assertNotIn('domain', self.state)
++
++    def test_completed_restore_requires_schema_completion_and_positive_total(self):
++        for token in ['stateStore.savedState', 'state.schemaVersion == OriginalSearchIndexingState.currentSchemaVersion',
++                      'state.indexedItems >= state.totalItems, state.totalItems > 0 else { return false }']:
++            self.assertIn(token, self.restore)
++        self.assertIn('if let previous = stateStore.indexedStoreID, let current = sourceIdentifier, previous != current', self.restore)
++        self.assertNotIn('invalidItems == 0', self.restore)
++
++    def test_health_query_literal_is_original_and_probe_error_reuses_state(self):
++        predicate = self.proof['health_predicate']
++        self.assertEqual(bytes.fromhex(predicate['bytes']).decode('ascii'), predicate['value'])
++        self.assertIn('predicate: "' + predicate['value'] + '"', self.restore)
++        self.assertIn('return !found.isEmpty', self.restore)
++        failure = body(self.restore, 'catch')
++        self.assertIn('logger.error(', failure)
++        self.assertIn('return true', failure)
++        original = self.original['0x1002f32d4']
++        self.assertIn('bVar3 = lVar7 == 0', original)
++        self.assertIn('bVar3 = false', original)
++
++    def test_restore_branch_table_is_bound_to_source_guards_not_a_runtime_claim(self):
++        # Original-bound normal-domain fixture, not execution of Swift or CoreSpotlight.
++        def reuse(schema, indexed, total, previous, current, probe):
++            valid = schema == 5 and indexed >= total and total > 0
++            mismatch = previous is not None and current is not None and previous != current
++            return valid and not mismatch and (probe == 'error' or bool(probe))
++        rows = [(5, 4, 4, 'A', 'A', ['id'], True), (5, 5, 4, 'A', None, ['id'], True),
++                (5, 4, 4, None, 'B', ['id'], True), (5, 4, 4, 'A', 'B', ['id'], False),
++                (6, 4, 4, 'A', 'A', ['id'], False), (5, 3, 4, 'A', 'A', ['id'], False),
++                (5, 0, 0, 'A', 'A', ['id'], False), (5, 4, 4, 'A', 'A', [], False),
++                (5, 4, 4, 'A', 'A', 'error', True)]
++        for *inputs, wanted in rows:
++            self.assertEqual(reuse(*inputs), wanted)
++
++    def test_real_cold_start_restores_before_delete_and_skips_snapshot_writes_on_health(self):
++        self.assertIn('lastSourceIdentifier = stateStore.indexedStoreID', body(self.index, 'init(directoryURL:'))
++        check = self.drain.index('await restoreCompletedStateIfHealthy(')
++        self.assertLess(check, self.drain.index('index.deleteAllSearchableItems'))
++        self.assertIn('if restoredCompletedState { needsReset = false }', self.drain)
++        self.assertIn('let usesSnapshot = !restoredCompletedState && (resettingIndex || historyTask == nil)', self.drain)
++        self.assertIn('if usesSnapshot { try await indexInitialSnapshot(currentEntries) }', self.drain)
++        self.assertIn('startHistoryObservation()', self.drain)
++
++    def test_explicit_reset_overrides_pending_health_probe_reuse(self):
++        rebuild = body(self.index, 'nonisolated private func rebuild(')
++        full = method_body(rebuild, '} else {')
++        self.assertIn('needsReset = true', full)
++        self.assertIn('mayRestoreSavedState = false', full)
++        self.assertIn('restoredCompletedState = healthy && mayRestoreSavedState', self.drain)
++        self.assertLess(self.drain.index('let healthy = await'), self.drain.index('restoredCompletedState = healthy'))
++
++    def test_reset_clears_persisted_optional_state_before_actual_sdk_clear(self):
++        reset = method_body(self.drain, 'if needsReset {')
++        self.assertLess(reset.index('try stateStore.save(nil)'), reset.index('index.deleteAllSearchableItems'))
++        self.assertLess(reset.index('index.deleteAllSearchableItems'), reset.index('indexed = [:]'))
++
++    def test_ids_query_is_dictionary_only_with_original_timestamp_order_and_strict_before(self):
++        request = body(self.persistence, 'func searchIndexIdentifiers(')
++        for token in ['NSFetchRequest<NSDictionary>(entityName: "Item")', 'request.resultType = .dictionaryResultType',
++                      'request.propertiesToFetch = ["nativeIdentifier", "key"]',
++                      'NSSortDescriptor(key: "timestamp", ascending: false)',
++                      'if let timestamp { request.predicate = NSPredicate(format: "timestamp < %@", timestamp as NSDate) }']:
++            self.assertIn(token, request)
++        self.assertNotIn('fetchLimit', request)
++        self.assertNotIn('decode(', request)
++        self.assertNotIn('rawPasteboardItems', request)
++        self.assertIn('(row["nativeIdentifier"] as? String) ?? (row["key"] as? String)', request)
++        selectors = {r['selector'] for r in self.proof['native_selector_bindings']}
++        self.assertEqual(selectors, {'setResultType:', 'setPropertiesToFetch:', 'setSortDescriptors:', 'initWithKey:ascending:'})
++
++    def test_actual_full_pass_uses_store_id_query_before_independent_100_id_batches(self):
++        facade = body(self.store, 'public func searchIndexIdentifiers(')
++        self.assertIn('try persistence.searchIndexIdentifiers(before: timestamp)', facade)
++        self.assertIn('try store?.searchIndexIdentifiers(before: nil)', self.initial)
++        self.assertIn('let input = allIDs.filter { !$0.isEmpty }', self.initial)
++        self.assertIn('totalItems: input.count, indexedItems: 0, oldestTimestamp: nil, invalidItems: allIDs.count - input.count', self.initial)
++        self.assertIn('stride(from: 0, to: input.count, by: Self.indexingBatchSize)', self.initial)
++        self.assertIn('try liveEntries(identifiers: Array(input[lowerBound..<upperBound]))', self.initial)
++        self.assertNotIn('changedEntries.count', self.initial)
++
++    def test_batch_state_is_saved_after_sdk_success_and_counts_live_rows_not_input_ids(self):
++        loop = body(self.initial, 'for lowerBound in stride(')
++        order = ['try Task.checkCancellation()', 'try liveEntries(', 'searchableItem($0, isUpdate: false)',
++                 'index.indexSearchableItems(changed)', 'state.indexedItems += live.count',
++                 'state.oldestTimestamp = live.compactMap(\.modified).min()', 'try stateStore.save(state)']
++        offsets = [loop.index(t) for t in order]
++        self.assertEqual(offsets, sorted(offsets))
++        self.assertIn('continuation.resume(throwing: error)', loop)
++        self.assertNotIn('catch', loop)
++        self.assertIn('if !live.isEmpty', loop)
++        self.assertNotIn('state.indexedItems += upperBound', loop)
++
++    def test_non_cancelled_finish_marks_complete_using_proven_first_three_state_fields(self):
++        meta = self.proof['prior_state_metadata']
++        self.assertEqual(meta['first_three_int_offsets'], [0, 8, 16])
++        self.assertEqual(meta['field_order'][:3], ['schemaVersion', 'totalItems', 'indexedItems'])
++        final = self.original['0x1002ea410']
++        self.assertIn('if ((param_3 & 1) == 0)', final)
++        self.assertIn('if (!bVar1)', final)
++        self.assertIn('*(undefined8 *)(puVar8 + 0x10) = *(undefined8 *)(param_1 + 8)', final)
++        end = self.initial[self.initial.index('// 0x1002ea410'):]
++        self.assertLess(end.index('try Task.checkCancellation()'), end.index('state.indexedItems = state.totalItems'))
++        self.assertLess(end.index('state.indexedItems = state.totalItems'), end.index('try stateStore.save(state)'))
++
++    def test_per_batch_config_keypath_is_saved_state_not_metrics_dictionary(self):
++        native = self.original['0x1002e96ac']
++        self.assertIn('&DAT_100c3e870', native)
++        self.assertIn('FUN_1002cb5a0(uVar19,uVar14,puVar12)', native)
++        self.assertIn('FUN_1002f36d4()', self.original['0x1002eb87c'])
++        self.assertIn('(lVar1 + 0x128)', self.original['0x1002f36d4'])
++        self.assertIn('FUN_1002ca7e0(param_1)', self.original['0x1002f36d4'])
++        self.assertIn('FUN_1002cb5a0(', self.original['0x1002f37c0'])
++
++    def test_writer_captures_complete_sdk_array_including_empty_text_not_diagnostic_filter(self):
++        rows = {r['label']: r for r in self.proof['sdk_array_capture']}
++        load, = struct.unpack('<I', bytes.fromhex(rows['load_complete_sdk_array_x21']['bytes']))
++        capture, = struct.unpack('<I', bytes.fromhex(rows['capture_complete_array_in_block']['bytes']))
++        self.assertEqual(load, 0xf9400ff5)  # ldr x21,[sp,#0x18]
++        self.assertEqual(capture & 31, 23)
++        self.assertEqual((capture >> 10) & 31, 21)
++        self.assertEqual((capture >> 5) & 31, 0)  # stp x23,x21,[x0,#0x10]
++        self.assertTrue(bytes.fromhex(rows['terminal_continuation_epilogue']['bytes']).endswith(bytes.fromhex('00001fd6')))
++        self.assertNotIn('textContent', self.initial)
++        self.assertNotIn('filter {', self.initial[self.initial.index('let live ='):])
++
++    def test_only_completed_health_record_is_closed_cursor_and_worker_lifecycle_stay_open(self):
++        row, = self.proof['contracts']
++        self.assertEqual(row['function_id'], 'Paste:0x1002f00dc')
++        self.assertFalse(self.proof['full_function_migration_verified'])
++        self.assertFalse(row['full_function_migration_verified'])
++        self.assertIn('before: nil', self.initial)
++        self.assertNotIn('before: state.oldestTimestamp', self.initial)
++        self.assertEqual(self.proof['function_map_markers_upgraded'], 0)
++
++
++if __name__ == '__main__':
++    unittest.main()

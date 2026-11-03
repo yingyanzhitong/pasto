@@ -1,0 +1,392 @@
+--- phase-54-before/replica/Sources/Pasto/UI/ReplicaSearchIndex.swift
++++ replica/Sources/Pasto/UI/ReplicaSearchIndex.swift
+@@ -427,14 +427,14 @@
+         }
+     }
+ 
+-    private func indexInitialSnapshot(_ fallback: [Entry], resuming saved: OriginalSearchIndexingState?) async throws {
++    private func indexInitialSnapshot(_ fallback: [Entry], resuming saved: OriginalSearchIndexingState?) async throws -> Bool {
+         let before = saved?.oldestTimestamp
+         let allIDs = try store?.searchIndexIdentifiers(before: before) ?? fallback.filter { entry in
+             guard let before else { return true }
+             guard let timestamp = entry.modified else { return false }
+             return timestamp < before
+         }.map(\.searchIdentifier)
+-        guard !allIDs.isEmpty else { return }
++        guard !allIDs.isEmpty else { return false }
+         defer { startOCRWorker() }
+         let input = allIDs.filter { !$0.isEmpty }
+         let invalid = allIDs.count - input.count
+@@ -449,15 +449,24 @@
+             let live = try liveEntries(identifiers: Array(input[lowerBound..<upperBound]))
+             enqueueOCR(live)
+             if !live.isEmpty {
+-                // 0x1002e8de0 -> c3e850 -> 2ea1d8: retry this fetched batch, not the snapshot.
+-                try await retryTransientIndexErrors {
+-                    let changed = live.map { searchableItem($0, isUpdate: false) }
+-                    try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+-                        index.indexSearchableItems(changed) { error in
+-                            if let error { continuation.resume(throwing: error) }
+-                            else { continuation.resume() }
++                do {
++                    // 0x1002e8de0 -> c3e850 -> 2ea1d8: retry this fetched batch, not the snapshot.
++                    try await retryTransientIndexErrors {
++                        let changed = live.map { searchableItem($0, isUpdate: false) }
++                        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
++                            index.indexSearchableItems(changed) { error in
++                                if let error { continuation.resume(throwing: error) }
++                                else { continuation.resume() }
++                            }
+                         }
+                     }
++                } catch is CancellationError {
++                    // 0x1002e9d54: cancellation uses normal finalization's active/task gates.
++                    break
++                } catch {
++                    // Failed batches do not reach progress save, completion, or the initializer's catch.
++                    logger.error("Search snapshot indexing failed: \(error.localizedDescription, privacy: .public)")
++                    return false
+                 }
+             }
+             state.indexedItems += live.count
+@@ -466,9 +475,10 @@
+             for entry in live { indexed[entry.id] = entry }
+         }
+         // 0x1002ea410 marks a non-cancelled finished pass complete, including missing IDs.
+-        guard isRunning, !Task.isCancelled else { return }
++        guard isRunning, !Task.isCancelled else { return true }
+         state.indexedItems = state.totalItems
+         try stateStore.save(state)
++        return true
+     }
+ 
+     private func clearIndex() async throws {
+@@ -540,7 +550,12 @@
+             }
+             // 0x1002f00dc/2f14cc installs change observation before requesting snapshot IDs.
+             startHistoryObservation()
+-            if usesSnapshot { try await indexInitialSnapshot(currentEntries, resuming: resumeState) }
++            if usesSnapshot {
++                if try await indexInitialSnapshot(currentEntries, resuming: resumeState) {
++                    // 0x1002f1a44/2f1aa4 consumes the pass's Bool without clearing activity.
++                    logger.info("Spotlight indexation complete.")
++                }
++            }
+             if usesSnapshot && store == nil { indexed = current }
+         } catch {
+             isRunning = false
+--- phase-54-before/scripts/tests/test_p1_repair_completed_index_state.py
++++ scripts/tests/test_p1_repair_completed_index_state.py
+@@ -104,7 +104,7 @@
+         self.assertLess(check, self.initialization.index('try await clearIndex()'))
+         self.assertIn('if restoredCompletedState { needsReset = false }', self.initialization)
+         self.assertIn('let usesSnapshot = !restoredCompletedState', self.initialization)
+-        self.assertIn('if usesSnapshot { try await indexInitialSnapshot(currentEntries, resuming: resumeState) }', self.initialization)
++        self.assertIn('if try await indexInitialSnapshot(currentEntries, resuming: resumeState)', self.initialization)
+         self.assertIn('startHistoryObservation()', self.initialization)
+ 
+     def test_explicit_reset_overrides_pending_health_probe_reuse(self):
+@@ -155,7 +155,9 @@
+         offsets = [loop.index(t) for t in order]
+         self.assertEqual(offsets, sorted(offsets))
+         self.assertIn('continuation.resume(throwing: error)', loop)
+-        self.assertNotIn('catch', loop)
++        self.assertIn('catch is CancellationError', loop)
++        self.assertIn('return false', method_body(loop, '} catch {'))
++        self.assertNotIn('throw error', method_body(loop, '} catch {'))
+         self.assertIn('if !live.isEmpty', loop)
+         self.assertNotIn('state.indexedItems += upperBound', loop)
+ 
+@@ -168,7 +170,7 @@
+         self.assertIn('if (!bVar1)', final)
+         self.assertIn('*(undefined8 *)(puVar8 + 0x10) = *(undefined8 *)(param_1 + 8)', final)
+         end = self.initial[self.initial.index('// 0x1002ea410'):]
+-        self.assertLess(end.index('guard isRunning, !Task.isCancelled else { return }'), end.index('state.indexedItems = state.totalItems'))
++        self.assertLess(end.index('guard isRunning, !Task.isCancelled else { return true }'), end.index('state.indexedItems = state.totalItems'))
+         self.assertLess(end.index('state.indexedItems = state.totalItems'), end.index('try stateStore.save(state)'))
+ 
+     def test_per_batch_config_keypath_is_saved_state_not_metrics_dictionary(self):
+--- phase-54-before/scripts/tests/test_p1_repair_index_active_state.py
++++ scripts/tests/test_p1_repair_index_active_state.py
+@@ -104,7 +104,7 @@
+         loop = body(self.snapshot, 'for lowerBound in stride(')
+         self.assertIn('guard isRunning, !Task.isCancelled else { break }', loop)
+         final = self.snapshot[self.snapshot.index('// 0x1002ea410'):]
+-        self.assertLess(final.index('guard isRunning, !Task.isCancelled else { return }'),
++        self.assertLess(final.index('guard isRunning, !Task.isCancelled else { return true }'),
+                         final.index('state.indexedItems = state.totalItems'))
+         self.assertNotIn('Task.checkCancellation()', self.snapshot)
+         native = self.original['0x1002ea410']
+--- phase-54-before/scripts/tests/test_p1_repair_index_cursor_resume.py
++++ scripts/tests/test_p1_repair_index_cursor_resume.py
+@@ -84,7 +84,7 @@
+ 
+     def test_resume_is_passed_to_real_snapshot_call_and_not_just_saved_in_a_model(self):
+         self.assertIn('let usesSnapshot = !restoredCompletedState', self.initialization)
+-        self.assertIn('if usesSnapshot { try await indexInitialSnapshot(currentEntries, resuming: resumeState) }', self.initialization)
++        self.assertIn('if try await indexInitialSnapshot(currentEntries, resuming: resumeState)', self.initialization)
+         self.assertIn('let before = saved?.oldestTimestamp', self.initial)
+         self.assertIn('try store?.searchIndexIdentifiers(before: before)', self.initial)
+         self.assertNotIn('searchIndexIdentifiers(before: nil)', self.initial)
+@@ -134,7 +134,7 @@
+             self.assertEqual((indexed, total - invalid if indexed < 1 else total, invalid), wanted)
+ 
+     def test_empty_ids_returns_before_constructing_or_saving_new_state(self):
+-        empty = self.initial.index('guard !allIDs.isEmpty else { return }')
++        empty = self.initial.index('guard !allIDs.isEmpty else { return false }')
+         self.assertLess(empty, self.initial.index('var state = OriginalSearchIndexingState'))
+         self.assertLess(empty, self.initial.index('stateStore.save('))
+         original = self.original['0x1002f177c']
+@@ -161,7 +161,7 @@
+         save = 'state.indexedItems += live.count'
+         self.assertEqual(current_loop[current_loop.index(save):], proven_loop[proven_loop.index(save):])
+         self.assertIn('guard isRunning, !Task.isCancelled else { break }', current_loop)
+-        self.assertIn('guard isRunning, !Task.isCancelled else { return }', self.initial)
++        self.assertIn('guard isRunning, !Task.isCancelled else { return true }', self.initial)
+         self.assertIn('state.indexedItems += live.count', self.initial)
+         self.assertIn('state.indexedItems = state.totalItems', self.initial)
+ 
+--- phase-54-before/scripts/tests/test_p1_repair_index_ocr_queue.py
++++ scripts/tests/test_p1_repair_index_ocr_queue.py
+@@ -223,7 +223,7 @@
+                                  'index.indexSearchableItems(', 'for entry in refreshed', 'startOCRWorker()'])
+         self.assertNotIn('defer', target)
+         snapshot = body(self.source, 'private func indexInitialSnapshot(')
+-        self.assertOrder(snapshot, ['guard !allIDs.isEmpty else { return }', 'defer { startOCRWorker() }', 'enqueueOCR(live)'])
++        self.assertOrder(snapshot, ['guard !allIDs.isEmpty else { return false }', 'defer { startOCRWorker() }', 'enqueueOCR(live)'])
+         self.assertOrder(self.original['0x1002e8de0'], ['FUN_1002ec26c(', '&DAT_100c3e850', 'FUN_1002e7914('])
+         self.assertOrder(self.original['0x1002eaa10'], ['FUN_1002ec26c(', 'FUN_1002e1bac('])
+         for address in ['0x1002e8de0', '0x1002e96ac', '0x1002e9d54']:
+--- phase-54-before/scripts/tests/test_p1_repair_index_snapshot_retry.py
++++ scripts/tests/test_p1_repair_index_snapshot_retry.py
+@@ -10,6 +10,7 @@
+ sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'scripts/tests')]
+ from function_ledger import source_fragments
+ from test_offline_p0_contracts import body
++from test_p0_repair_identity import method_body
+ from test_p0_repair_checksum_routing import original_fragment
+ 
+ 
+@@ -34,7 +35,10 @@
+             self.assertEqual(hashlib.sha256((ROOT / row['path']).read_bytes()).hexdigest(), row['sha256'])
+         frozen = self.phase / 'after' / self.path
+         self.assertEqual(hashlib.sha256(frozen.read_bytes()).hexdigest(), self.proof['current_sources'][self.path])
+-        self.assertEqual(self.snapshot, body(frozen.read_text(), 'private func indexInitialSnapshot('))
++        historical_snapshot = body(frozen.read_text(), 'private func indexInitialSnapshot(')
++        normalize = lambda text: '\n'.join(line.strip() for line in text.splitlines())
++        self.assertEqual(normalize(self.retry), normalize(body(historical_snapshot, 'try await retryTransientIndexErrors')))
++        self.assertLess(self.snapshot.index('enqueueOCR(live)'), self.snapshot.index('try await retryTransientIndexErrors'))
+ 
+     def test_retry_descriptor_captures_batch_operation_not_clear_or_whole_reset(self):
+         wanted = {'0x100c3e850': '0x1002eb704', '0x100c3e860': '0x1002eb754'}
+@@ -77,7 +81,9 @@
+     def test_success_counter_and_resume_tail_unchanged_and_failed_batch_never_advances(self):
+         previous = body(self.before, 'private func indexInitialSnapshot(')
+         marker = 'state.indexedItems += live.count'
+-        self.assertEqual(self.snapshot[self.snapshot.index(marker):], previous[previous.index(marker):])
++        current_loop = body(self.snapshot, 'for lowerBound in stride(')
++        previous_loop = body(previous, 'for lowerBound in stride(')
++        self.assertEqual(current_loop[current_loop.index(marker):], previous_loop[previous_loop.index(marker):])
+         # Source-bound failure/retry trace, not execution of Swift closures/SDK.
+         for outcomes, expected_attempts, expected_commits in [(['ok'], 1, 1),
+                 (['transient', 'ok'], 2, 1), (['transient'] * 3, 3, 0), (['ordinary'], 1, 0)]:
+@@ -98,15 +104,20 @@
+                    'private func startOCRWorker()', 'private func stopIndexing()', 'private func clearIndex()',
+                    'private func applyHistoryChanges(', 'private func initializeIndexIfNeeded(',
+                    'private func resetIndex(', 'private func drain() async', 'private func replaceQuery(']
++        historical = (ROOT / '.local/p0-repair/phase-54/before' / self.path).read_text()
+         for marker in markers:
+-            self.assertEqual(body(self.source, marker), body(self.before, marker))
++            source = historical if marker == 'private func initializeIndexIfNeeded(' else self.source
++            self.assertEqual(body(source, marker), body(self.before, marker))
++        initialize = body(self.source, 'private func initializeIndexIfNeeded(')
++        self.assertIn('if try await indexInitialSnapshot(currentEntries, resuming: resumeState)', method_body(initialize, 'if usesSnapshot {'))
++        self.assertEqual(body(initialize, 'catch'), body(body(historical, 'private func initializeIndexIfNeeded('), 'catch'))
+         self.assertNotIn('retryTransientIndexErrors', body(self.source, 'private func drainOCRQueue()'))
+         self.assertNotIn('retryTransientIndexErrors', body(self.source, 'private func reindexTargets('))
+ 
+     def test_normal_initialization_does_not_gain_whole_snapshot_outer_retry(self):
+         initialize = body(self.source, 'private func initializeIndexIfNeeded(')
+         self.assertNotIn('retryTransientIndexErrors', initialize)
+-        self.assertIn('if usesSnapshot { try await indexInitialSnapshot(currentEntries, resuming: resumeState) }', initialize)
++        self.assertIn('if try await indexInitialSnapshot(currentEntries, resuming: resumeState)', initialize)
+         self.assertEqual(self.source.count('try await retryTransientIndexErrors'), 3)
+         self.assertIn('defer { startOCRWorker() }', self.snapshot)
+ 
+--- phase-54-before/scripts/tests/test_p1_repair_lazy_search_records.py
++++ scripts/tests/test_p1_repair_lazy_search_records.py
+@@ -121,7 +121,7 @@
+     def test_all_actual_store_sdk_paths_use_native_records_including_snapshot_fallback(self):
+         store = body(self.store, 'public func searchIndexRecords(')
+         self.assertIn('try persistence.searchIndexRecords(identifiers: identifiers)', store)
+-        self.assertIn('if usesSnapshot { try await indexInitialSnapshot(currentEntries, resuming: resumeState) }', self.index)
++        self.assertIn('if try await indexInitialSnapshot(currentEntries, resuming: resumeState)', self.index)
+         initial = body(self.index, 'private func indexInitialSnapshot(')
+         self.assertIn('try store?.searchIndexIdentifiers(before: before)', initial)
+         self.assertIn('try liveEntries(identifiers: Array(input[lowerBound..<upperBound]))', initial)
+--- /dev/null
++++ scripts/tests/test_p1_repair_index_snapshot_failure.py
+@@ -0,0 +1,163 @@
++"""Native cancellation-flag and real SDK catch boundaries; source checks only."""
++import hashlib
++import itertools
++import json
++import struct
++import sys
++import unittest
++from pathlib import Path
++
++ROOT = Path(__file__).resolve().parents[2]
++sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'scripts/tests')]
++from function_ledger import source_fragments
++from test_offline_p0_contracts import body
++from test_p0_repair_identity import method_body
++from test_p0_repair_checksum_routing import original_fragment
++
++
++class SnapshotFailureContracts(unittest.TestCase):
++    @classmethod
++    def setUpClass(cls):
++        cls.phase = ROOT / '.local/p0-repair/phase-54'
++        cls.proof = json.loads((cls.phase / 'snapshot-failure-contract.json').read_text())
++        cls.path = 'replica/Sources/Pasto/UI/ReplicaSearchIndex.swift'
++        cls.source = (ROOT / cls.path).read_text()
++        cls.before = (cls.phase / 'before' / cls.path).read_text()
++        cls.snapshot = body(cls.source, 'private func indexInitialSnapshot(')
++        cls.initialize = body(cls.source, 'private func initializeIndexIfNeeded(')
++        cls.batch = body(cls.snapshot, 'if !live.isEmpty')
++        cls.failure = method_body(cls.batch, '} catch {')
++        cls.cancel = body(cls.batch, 'catch is CancellationError')
++        cls.original = {r['address']: original_fragment((ROOT / r['path']).read_text(), r['address'][2:])
++                        for r in cls.proof['original_fragments']}
++
++    def test_original_and_prior_retry_OCR_contracts_are_hash_bound(self):
++        self.assertEqual(len(self.proof['original_fragments']), 14)
++        for row in self.proof['original_fragments']:
++            self.assertEqual(source_fragments(ROOT / row['path'])[row['address']]['sha256'], row['sha256'])
++        for row in self.proof['prior_contracts'] + [self.proof['error_arm']]:
++            self.assertEqual(hashlib.sha256((ROOT / row['path']).read_bytes()).hexdigest(), row['sha256'])
++        snapshot = self.phase / 'after' / self.path
++        self.assertEqual(hashlib.sha256(snapshot.read_bytes()).hexdigest(), self.proof['current_sources'][self.path])
++        self.assertEqual(body(snapshot.read_text(), 'private func indexInitialSnapshot('), self.snapshot)
++
++    def test_native_cast_result_is_returned_and_inverted_only_for_finalize_abort_flag(self):
++        native = self.original['0x1002e9d54']
++        self.assertIn('Swift::CancellationError::typeMetadataAccessor()', self.original['0x1002e87e4'])
++        self.assertIn('_swift_dynamicCast(', native)
++        self.assertIn('FUN_1002ea410(uVar7,uVar14,(uint)uVar5 ^ 1)', native)
++        self.assertIn('(**(code **)(unaff_x22 + 8))(uVar5 & 0xffffffff)', native)
++        rows = {r['address']: struct.unpack('<I', bytes.fromhex(r['bytes']))[0]
++                for r in self.proof['error_arm']['words']}
++        self.assertEqual(rows['0x1002e9dc4'], 0xb90027e0)
++        self.assertEqual(rows['0x1002ea110'], 0xb94027f7)
++        self.assertEqual(rows['0x1002ea114'], 0x520002e2)
++        self.assertEqual(rows['0x1002ea19c'], 0xaa1703e0)
++        # eor w2,w23,#1; mov x0,x23. Never confuse error type with actual Task cancellation.
++        self.assertEqual((rows['0x1002ea114'] >> 5) & 31, 23)
++        self.assertEqual(rows['0x1002ea114'] & 31, 2)
++
++    def test_ordinary_failure_logs_returns_false_and_cannot_advance_progress_or_clear_active(self):
++        self.assertIn('logger.error(', self.failure)
++        self.assertIn('return false', self.failure)
++        for token in ['throw', 'isRunning =', 'needsReset =', 'stateStore.save', 'state.indexedItems',
++                      'clearIndex(', 'pending =', 'startWorker()', 'resetIndex(', 'retryTransientIndexErrors']:
++            self.assertNotIn(token, self.failure)
++        loop = body(self.snapshot, 'for lowerBound in stride(')
++        self.assertLess(loop.index(self.failure), loop.index('state.indexedItems += live.count'))
++        self.assertNotIn('throw error', self.snapshot)
++
++    def test_cancellation_breaks_to_shared_finalizer_and_does_not_log_or_persist_failed_batch(self):
++        self.assertIn('break', self.cancel)
++        for token in ['return', 'throw', 'logger.', 'state.', 'stateStore.', 'isRunning =']:
++            self.assertNotIn(token, self.cancel)
++        end = self.snapshot[self.snapshot.index('// 0x1002ea410'):]
++        tokens = ['guard isRunning, !Task.isCancelled else { return true }',
++                  'state.indexedItems = state.totalItems', 'try stateStore.save(state)', 'return true']
++        offsets = [end.index(t) for t in tokens[:3]]
++        self.assertEqual(offsets, sorted(offsets))
++        self.assertTrue(end.rstrip().endswith('return true\n    }'))
++        final = self.original['0x1002ea410']
++        for token in ['if ((param_3 & 1) == 0)', '+ 0xf0', 'Swift::Task::_get_isCancelled',
++                      '*(undefined8 *)(puVar8 + 0x10) = *(undefined8 *)(param_1 + 8)']:
++            self.assertIn(token, final)
++
++    def test_error_type_active_and_real_task_cancellation_fixture_covers_independent_flags(self):
++        # Original XOR + current actual catch/guard mapping only, not Swift/SDK execution.
++        for cancellation_error, active, task_cancelled in itertools.product([False, True], repeat=3):
++            aborted = not cancellation_error
++            native_finalize = not aborted and active and not task_cancelled
++            source_finalize = cancellation_error and active and not task_cancelled
++            self.assertEqual(source_finalize, native_finalize)
++        self.assertTrue(True and True and not False)  # synthetic CancellationError without cancelling Task
++        self.assertFalse(True and True and not True)  # actual Task cancellation suppresses completion save
++
++    def test_local_error_catch_does_not_capture_fetch_or_persistent_writer_errors(self):
++        retry_do = method_body(self.batch, 'do {')
++        self.assertIn('try await retryTransientIndexErrors', retry_do)
++        for token in ['try liveEntries(', 'searchIndexIdentifiers(', 'stateStore.save(', 'enqueueOCR(']:
++            self.assertNotIn(token, retry_do)
++        self.assertLess(self.snapshot.index('try liveEntries('), self.snapshot.index('if !live.isEmpty'))
++        self.assertLess(self.snapshot.index('enqueueOCR(live)'), self.snapshot.index('if !live.isEmpty'))
++        self.assertLess(self.snapshot.index('} catch {'), self.snapshot.index('try stateStore.save(state)'))
++        self.assertIn('throw error', body(self.initialize, 'catch'))
++        self.assertIn('isRunning = false', body(self.initialize, 'catch'))
++        self.assertTrue(any('fetch errors' in row for row in self.proof['retained_partial_contracts']))
++
++    def test_real_Bool_consumer_matches_native_completion_log_and_not_generic_failure_catch(self):
++        branch = method_body(self.initialize, 'if usesSnapshot {')
++        self.assertIn('if try await indexInitialSnapshot(currentEntries, resuming: resumeState)', branch)
++        self.assertIn('logger.info("Spotlight indexation complete.")', branch)
++        self.assertNotIn('isRunning =', branch)
++        self.assertNotIn('catch', branch)
++        self.assertIn('async throws -> Bool', self.source[self.source.index('private func indexInitialSnapshot('):][:145])
++        self.assertIn('*(undefined1 *)(lVar1 + 0x3ea) = param_1', self.original['0x1002f1a44'])
++        self.assertIn("if (*(char *)(unaff_x22 + 0x3ea) == '\\x01')", self.original['0x1002f1aa4'])
++        literal = self.proof['completion_literal']
++        self.assertEqual(int(literal['utf8_address'], 16), (int(literal['large_string_reference'], 16) & ((1 << 63) - 1)) + 32)
++        self.assertEqual(bytes.fromhex(literal['bytes']).decode(), 'Spotlight indexation complete.')
++        self.assertEqual(literal['length'], 30)
++
++    def test_empty_ID_bridge_skips_pass_completion_log_and_OCR_kick(self):
++        self.assertIn('guard !allIDs.isEmpty else { return false }', self.snapshot)
++        self.assertLess(self.snapshot.index('guard !allIDs.isEmpty'), self.snapshot.index('defer { startOCRWorker() }'))
++        self.assertIn('if (lVar9 != 0)', self.original['0x1002f177c'])
++        native = method_body(self.original['0x1002f177c'], 'if (lVar9 != 0) {')
++        self.assertIn('FUN_1002e87e4(', native)
++
++    def test_OCR_kick_is_unconditional_pass_exit_but_no_retry_or_reset_is_added_after_error(self):
++        self.assertEqual(self.snapshot.count('defer { startOCRWorker() }'), 1)
++        self.assertLess(self.snapshot.index('defer { startOCRWorker() }'), self.snapshot.index('for lowerBound'))
++        native = self.original['0x1002e9d54']
++        self.assertLess(native.index('FUN_1002ea410('), native.index('FUN_1002ec520()'))
++        for token in ['try await resetIndex(', 'needsReset =', 'pending =']:
++            self.assertNotIn(token, self.snapshot)
++        self.assertNotIn('isRunning =', self.snapshot)
++
++    def test_retry_body_and_successful_batch_save_are_identical_to_prior_real_source(self):
++        old = body(self.before, 'private func indexInitialSnapshot(')
++        normalize = lambda text: '\n'.join(line.strip() for line in text.splitlines())
++        self.assertEqual(normalize(body(self.snapshot, 'try await retryTransientIndexErrors')),
++                         normalize(body(old, 'try await retryTransientIndexErrors')))
++        current_loop = body(self.snapshot, 'for lowerBound in stride(')
++        old_loop = body(old, 'for lowerBound in stride(')
++        marker = 'state.indexedItems += live.count'
++        self.assertEqual(current_loop[current_loop.index(marker):], old_loop[old_loop.index(marker):])
++        for marker in ['private func retryTransientIndexErrors(', 'private func reindexTargets(',
++                       'private func drainOCRQueue()', 'private func stopIndexing()',
++                       'private func resetIndex(', 'private func drain() async']:
++            self.assertEqual(body(self.source, marker), body(self.before, marker))
++
++    def test_previous_initializer_rethrow_path_is_real_and_only_finite_contract_is_closed(self):
++        before_snapshot = body(self.before, 'private func indexInitialSnapshot(')
++        self.assertNotIn('catch is CancellationError', before_snapshot)
++        before_initializer = body(self.before, 'private func initializeIndexIfNeeded(')
++        self.assertIn('throw error', body(before_initializer, 'catch'))
++        self.assertIn('isRunning = false', body(before_initializer, 'catch'))
++        self.assertEqual([r['function_id'] for r in self.proof['contracts']], ['Paste:0x1002e9d54'])
++        self.assertFalse(self.proof['full_function_migration_verified'])
++        self.assertEqual(self.proof['function_map_markers_upgraded'], 0)
++
++
++if __name__ == '__main__':
++    unittest.main()

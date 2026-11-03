@@ -7,6 +7,10 @@ public enum OriginalViewAnimation {
         CAMediaTimingFunction(name: .easeOut)
     }
 
+    public static func f_10021cf38() -> CAMediaTimingFunction {
+        CAMediaTimingFunction(name: .easeInEaseOut)
+    }
+
     public static func f_10021cd10(_ context: NSAnimationContext, duration: TimeInterval?,
                                   timingFunction: CAMediaTimingFunction?, animations: () -> Void) {
         if let duration { context.duration = duration }

@@ -1,182 +1,21 @@
 import Foundation
 
+/// Uses the same localized-resource / current-locale path as the original generated accessors.
 enum OriginalShortcutMessages {
-    private static let messages: [String: [String: String]] = [
-        "cs": [
-            "general.action.cancel": "Zrušit",
-            "general.action.ok": "OK",
-            "shortcut-recorder.none": "Žádný",
-            "shortcut-recorder.status.recording": "Nahrávání",
-            "shortcut-recorder.action.remove": "Odebrat",
-            "shortcut-recorder.error.used-in-system": "Tuto kombinaci nelze použít, protože ji již používá celosystémová klávesová zkratka.\nPokud opravdu chcete používat tuto kombinaci kláves, většinu zkratek lze změnit na panelu Klávesnice a myš v Nastavení systému.",
-            "shortcut-recorder.error.used-in-menu": "Tuto klávesovou zkratku nelze použít, protože ji již používá položka nabídky '%@'.",
-            "shortcut-recorder.error.option-key": "Klávesu Option lze použít pouze společně s klávesou Command nebo Control.",
-        ],
-        "da": [
-            "general.action.cancel": "Annuller",
-            "general.action.ok": "OK",
-            "shortcut-recorder.none": "Ingen",
-            "shortcut-recorder.status.recording": "Optagelse",
-            "shortcut-recorder.action.remove": "Fjern",
-            "shortcut-recorder.error.used-in-system": "Denne kombination kan ikke bruges, fordi den allerede bruges af en systemomspændende tastaturgenvej.\nHvis du virkelig ønsker at bruge denne tastekombination, kan de fleste genveje ændres i tastatur- og musepanelet i systemindstillingerne.",
-            "shortcut-recorder.error.used-in-menu": "Denne genvej kan ikke bruges, fordi den allerede bruges af menupunktet '%@'.",
-            "shortcut-recorder.error.option-key": "Genveje, der bruger Option-tasten uden Command eller Control, fungerer muligvis ikke korrekt før macOS 15.2. Overvej at opdatere til den nyeste version af macOS.",
-        ],
-        "de": [
-            "general.action.cancel": "Abbrechen",
-            "general.action.ok": "Ok",
-            "shortcut-recorder.none": "Keine",
-            "shortcut-recorder.status.recording": "Aufnahme",
-            "shortcut-recorder.action.remove": "Entfernen",
-            "shortcut-recorder.error.used-in-system": "Diese Kombination kann nicht verwendet werden, weil sie bereits von einem systemweiten Tastaturkürzel verwendet wird.\nWenn du diese Tastenkombination wirklich verwenden willst, kannst du die meisten Tastenkombinationen im Bereich Tastatur & Maus in den Systemeinstellungen ändern.",
-            "shortcut-recorder.error.used-in-menu": "Diese Tastenkombination kann nicht verwendet werden, da sie bereits vom Menüelement '%@' verwendet wird.",
-            "shortcut-recorder.error.option-key": "Die Optionstaste kann nur zusammen mit der Befehls- oder Steuerungstaste verwendet werden.",
-        ],
-        "en": [
-            "general.action.cancel": "Cancel",
-            "general.action.ok": "OK",
-            "shortcut-recorder.none": "None",
-            "shortcut-recorder.status.recording": "Recording",
-            "shortcut-recorder.action.remove": "Remove",
-            "shortcut-recorder.error.used-in-system": "This combination cannot be used because it is already used by a system-wide keyboard shortcut.\nIf you really want to use this key combination, most shortcuts can be changed in the Keyboard & Mouse panel in System Settings.",
-            "shortcut-recorder.error.used-in-menu": "This shortcut cannot be used because it is already used by the menu item ‘%@’.",
-            "shortcut-recorder.error.option-key": "Shortcuts using the Option key without Command or Control may not work correctly before macOS 15.2. Please consider updating to the latest version of macOS.",
-        ],
-        "es": [
-            "general.action.cancel": "Cancelar",
-            "general.action.ok": "Ok",
-            "shortcut-recorder.none": "Ninguno",
-            "shortcut-recorder.status.recording": "Grabando",
-            "shortcut-recorder.action.remove": "Eliminar",
-            "shortcut-recorder.error.used-in-system": "Esta combinación no se puede usar porque ya la utiliza un atajo de teclado de todo el sistema.\nSi realmente quieres usar esta combinación de teclas, la mayoría de los atajos pueden cambiarse en el panel Teclado y Ratón en los Ajustes del Sistema.",
-            "shortcut-recorder.error.used-in-menu": "Este atajo no se puede usar porque ya lo utiliza el elemento de menú ‘%@’.",
-            "shortcut-recorder.error.option-key": "Los atajos que usan la tecla Opción sin Comando o Control pueden no funcionar correctamente antes de macOS 15.2. Por favor considera actualizar a la última versión de macOS.",
-        ],
-        "fr": [
-            "general.action.cancel": "Annuler",
-            "general.action.ok": "OK",
-            "shortcut-recorder.none": "Aucun",
-            "shortcut-recorder.status.recording": "Enregistrement",
-            "shortcut-recorder.action.remove": "Supprimer",
-            "shortcut-recorder.error.used-in-system": "Cette combinaison ne peut pas être utilisée car elle est déjà utilisée par un raccourci clavier à l'échelle du système.\nSi tu veux vraiment utiliser cette combinaison de touches, la plupart des raccourcis peuvent être modifiés dans le panneau Clavier et souris des Paramètres du système.",
-            "shortcut-recorder.error.used-in-menu": "Ce raccourci ne peut pas être utilisé car il est déjà utilisé par l'élément de menu '%@'.",
-            "shortcut-recorder.error.option-key": "Les raccourcis utilisant la touche Option sans Commande ou Contrôle peuvent ne pas fonctionner correctement avant macOS 15.2. Veuillez envisager de mettre à jour vers la dernière version de macOS.",
-        ],
-        "he": [
-            "general.action.cancel": "ביטול",
-            "general.action.ok": "אישור",
-            "shortcut-recorder.none": "ללא",
-            "shortcut-recorder.status.recording": "הקלטה",
-            "shortcut-recorder.action.remove": "הסר",
-            "shortcut-recorder.error.used-in-system": "לא ניתן להשתמש בשילוב זה מכיוון שהוא כבר נמצא בשימוש על ידי קיצור מקשים כלל המערכת. אם אתה באמת רוצה להשתמש בשילוב המקשים הזה, ניתן לשנות את רוב קיצורי הדרך בחלונית מקלדת ועכבר בהגדרות מערכת.",
-            "shortcut-recorder.error.used-in-menu": "לא ניתן להשתמש בקיצור דרך זה מכיוון שהוא כבר נמצא בשימוש על ידי פריט התפריט '%@'.",
-            "shortcut-recorder.error.option-key": "ניתן להשתמש במקש Option רק יחד עם ה-Command או Control.",
-        ],
-        "it": [
-            "general.action.cancel": "Annulla",
-            "general.action.ok": "OK",
-            "shortcut-recorder.none": "Nessuno",
-            "shortcut-recorder.status.recording": "In registrazione",
-            "shortcut-recorder.action.remove": "Rimuovi",
-            "shortcut-recorder.error.used-in-system": "Questa combinazione non può essere utilizzata perché è già utilizzata da una scorciatoia da tastiera a livello di sistema.\nSe vuoi davvero utilizzare questa combinazione di tasti, la maggior parte delle scorciatoie può essere cambiata nel pannello Tastiera e mouse delle Impostazioni di sistema.",
-            "shortcut-recorder.error.used-in-menu": "Questa scorciatoia non può essere utilizzata perché è già utilizzata dalla voce di menu '%@'.",
-            "shortcut-recorder.error.option-key": "Il tasto Opzione può essere utilizzato solo insieme ai tasti Comando o Controllo.",
-        ],
-        "ja": [
-            "general.action.cancel": "キャンセル",
-            "general.action.ok": "OK",
-            "shortcut-recorder.none": "なし",
-            "shortcut-recorder.status.recording": "録音",
-            "shortcut-recorder.action.remove": "削除",
-            "shortcut-recorder.error.used-in-system": "この組み合わせは、システム全体のキーボードショートカットですでに使われているため、使用できない。\nどうしてもこのキーの組み合わせを使いたい場合は、システム設定の「キーボードとマウス」パネルでほとんどのショートカットを変更できる。",
-            "shortcut-recorder.error.used-in-menu": "このショートカットは、メニュー項目「%@」によってすでに使用されているため、使用することはできない。",
-            "shortcut-recorder.error.option-key": "OptionキーはCommandキーまたはControlキーと同時にしか使用できない。",
-        ],
-        "ko": [
-            "general.action.cancel": "취소",
-            "general.action.ok": "확인",
-            "shortcut-recorder.none": "없음",
-            "shortcut-recorder.status.recording": "녹음",
-            "shortcut-recorder.action.remove": "제거",
-            "shortcut-recorder.error.used-in-system": "이 조합은 시스템 전체 키보드 단축키에서 이미 사용 중이므로 사용할 수 없습니다.\n이 키 조합을 꼭 사용하려면 시스템 설정의 키보드 및 마우스 패널에서 대부분의 단축키를 변경할 수 있습니다.",
-            "shortcut-recorder.error.used-in-menu": "이 바로 가기는 메뉴 항목 '%@' 에서 이미 사용하고 있으므로 사용할 수 없습니다.",
-            "shortcut-recorder.error.option-key": "Option 키는 Command 또는 Control 키와 함께만 사용할 수 있습니다.",
-        ],
-        "nl": [
-            "general.action.cancel": "Annuleren",
-            "general.action.ok": "OK",
-            "shortcut-recorder.none": "Geen",
-            "shortcut-recorder.status.recording": "Opname",
-            "shortcut-recorder.action.remove": "Verwijderen",
-            "shortcut-recorder.error.used-in-system": "Deze combinatie kan niet worden gebruikt omdat deze al wordt gebruikt door een systeembrede sneltoets.\nAls je deze toetsencombinatie echt wilt gebruiken, kunnen de meeste sneltoetsen worden gewijzigd in het paneel Toetsenbord & Muis in Systeeminstellingen.",
-            "shortcut-recorder.error.used-in-menu": "Deze snelkoppeling kan niet worden gebruikt omdat deze al wordt gebruikt door het menu-item '%@'.",
-            "shortcut-recorder.error.option-key": "De Option-toets kan alleen samen met Command of Control worden gebruikt.",
-        ],
-        "pl": [
-            "general.action.cancel": "Anuluj",
-            "general.action.ok": "OK",
-            "shortcut-recorder.none": "Brak",
-            "shortcut-recorder.status.recording": "Nagrywanie",
-            "shortcut-recorder.action.remove": "Usuń",
-            "shortcut-recorder.error.used-in-system": "Ta kombinacja nie może być używana, ponieważ jest już używana przez systemowy skrót klawiaturowy.\nJeśli naprawdę chcesz użyć tej kombinacji klawiszy, większość skrótów można zmienić w panelu Klawiatura i mysz w Ustawieniach systemowych.",
-            "shortcut-recorder.error.used-in-menu": "Tego skrótu nie można użyć, ponieważ jest on już używany przez pozycję menu '%@'.",
-            "shortcut-recorder.error.option-key": "Klawisz Option może być używany tylko razem z Command lub Control.",
-        ],
-        "pt-BR": [
-            "general.action.cancel": "Cancelar",
-            "general.action.ok": "OK",
-            "shortcut-recorder.none": "Nenhum",
-            "shortcut-recorder.status.recording": "Gravando",
-            "shortcut-recorder.action.remove": "Remover",
-            "shortcut-recorder.error.used-in-system": "Esta combinação não pode ser usada porque já é utilizada por um atalho de teclado do sistema.\nSe você realmente quiser usar essa combinação de teclas, a maioria dos atalhos pode ser alterada no painel Teclado e Mouse nas Configurações do Sistema.",
-            "shortcut-recorder.error.used-in-menu": "Este atalho não pode ser usado porque já é utilizado pelo item de menu ‘%@’.",
-            "shortcut-recorder.error.option-key": "Atalhos usando a tecla Option sem Command ou Control podem não funcionar corretamente antes do macOS 15.2. Considere atualizar para a versão mais recente do macOS.",
-        ],
-        "pt-PT": [
-            "general.action.cancel": "Cancelar",
-            "general.action.ok": "OK",
-            "shortcut-recorder.none": "Nenhum",
-            "shortcut-recorder.status.recording": "Gravação",
-            "shortcut-recorder.action.remove": "Remover",
-            "shortcut-recorder.error.used-in-system": "Esta combinação não pode ser utilizada porque já é utilizada por um atalho de teclado de todo o sistema.\nSe realmente quiser usar esta combinação de teclas, a maioria dos atalhos pode ser alterada no painel Teclado e Rato nas Configurações do Sistema.",
-            "shortcut-recorder.error.used-in-menu": "Este atalho não pode ser utilizado porque já é utilizado pelo item de menu ‘%@’.",
-            "shortcut-recorder.error.option-key": "Atalhos que utilizam a tecla Option sem Command ou Control podem não funcionar corretamente antes do macOS 15.2. Considere atualizar para a versão mais recente do macOS.",
-        ],
-        "ru": [
-            "general.action.cancel": "Отменить",
-            "general.action.ok": "ОК",
-            "shortcut-recorder.none": "Отсутствует",
-            "shortcut-recorder.status.recording": "Запись",
-            "shortcut-recorder.action.remove": "Удалить",
-            "shortcut-recorder.error.used-in-system": "Эту комбинацию невозможно использовать, поскольку она уже используется общесистемным сочетанием клавиш.\nЕсли вы действительно хотите использовать эту комбинацию клавиш, большинство сочетаний клавиш можно изменить на панели «Клавиатура и мышь» в настройках системы.",
-            "shortcut-recorder.error.used-in-menu": "Это сочетание клавиш нельзя использовать, так как оно уже используется пунктом меню '%@'.",
-            "shortcut-recorder.error.option-key": "Клавишу Option можно использовать только вместе с Command или Control.",
-        ],
-        "zh-Hans": [
-            "general.action.cancel": "取消",
-            "general.action.ok": "确定",
-            "shortcut-recorder.none": "无",
-            "shortcut-recorder.status.recording": "按下快捷键",
-            "shortcut-recorder.action.remove": "删除",
-            "shortcut-recorder.error.used-in-system": "该组合键不能使用，因为它已被系统键盘快捷键使用。\n如果您真的想使用这个组合键，大多数快捷键都可以在系统设置的键盘和鼠标面板中更改。",
-            "shortcut-recorder.error.used-in-menu": "由于菜单项 \"%@\" 已使用该快捷键，因此无法使用。",
-            "shortcut-recorder.error.option-key": "Option 键只能与 Command 或 Control 一起使用。",
-        ],
-        "zh-Hant": [
-            "general.action.cancel": "取消",
-            "general.action.ok": "確定",
-            "shortcut-recorder.none": "沒有",
-            "shortcut-recorder.status.recording": "錄製中",
-            "shortcut-recorder.action.remove": "移除",
-            "shortcut-recorder.error.used-in-system": "此組合鍵無法使用，因為它已被系統範圍的鍵盤快捷鍵使用。\n如果您真的想使用此鍵組合，大多數快捷鍵可以在系統設置的鍵盤和鼠標面板中更改。",
-            "shortcut-recorder.error.used-in-menu": "此快捷鍵無法使用，因為它已被菜單項「%@」使用。",
-            "shortcut-recorder.error.option-key": "快捷鍵使用Option鍵而不使用Command或Control可能無法正常工作，請考慮更新到最新版本的macOS。",
-        ],
-    ]
+    private static let bundle: Bundle = {
+        if let url = Bundle.main.resourceURL?.appendingPathComponent("Pasto_PastoCore.bundle"),
+           let bundle = Bundle(url: url) { return bundle }
+        return Bundle.module
+    }()
 
     static func value(_ key: String) -> String {
-        let language = Bundle.preferredLocalizations(from: Array(messages.keys),
-                                                    forPreferences: Locale.preferredLanguages).first ?? "en"
-        return messages[language]?[key] ?? messages["en"]![key]!
+        String(localized: LocalizedStringResource(String.LocalizationValue(key), table: "Localizable",
+            locale: .current, bundle: .atURL(bundle.bundleURL)))
+    }
+
+    static func menuConflict(_ title: String) -> String {
+        String(localized: LocalizedStringResource("shortcut-recorder.error.used-in-menu",
+            defaultValue: "\(title)", table: "Localizable", locale: .current,
+            bundle: .atURL(bundle.bundleURL)))
     }
 }

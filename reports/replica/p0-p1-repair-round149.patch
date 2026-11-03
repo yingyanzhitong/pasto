@@ -1,0 +1,175 @@
+--- before/replica/Sources/PastoCore/ClipboardPersistence.swift
++++ after/replica/Sources/PastoCore/ClipboardPersistence.swift
+@@ -98,7 +98,8 @@
+                                   includeNativeSources: Bool = true,
+                                   includeTypedItem: Bool = true,
+                                   includeItemOrder: Bool = true,
+-                                  includeNativeTitle: Bool = true) -> NSManagedObjectModel {
++                                  includeNativeTitle: Bool = true,
++                                  includeTypedLists: Bool = true) -> NSManagedObjectModel {
+         let model = NSManagedObjectModel()
+         func attribute(_ name: String, _ type: NSAttributeType, optional: Bool = false) -> NSAttributeDescription {
+             let value = NSAttributeDescription()
+@@ -150,6 +151,10 @@
+         if includeItemOrder { ClipboardItemOrderPersistence.addField(to: model) }
+         if includeNativeTitle { ClipboardItemTitlePersistence.addField(to: model) }
+         if includeLists { ClipboardListPersistence.addEntities(to: model, item: model.entitiesByName["Item"]!) }
++        if includeLists && includeTypedLists {
++            model.entitiesByName["ListEntity"]!.managedObjectClassName = NSStringFromClass(PastoListEntity.self)
++            model.entitiesByName["ListMetadataEntity"]!.managedObjectClassName = NSStringFromClass(PastoListMetadataEntity.self)
++        }
+         if includeNativeItemData { ClipboardItemDataPersistence.addEntity(to: model, item: model.entitiesByName["Item"]!) }
+         if includeNativeSources { ClipboardSourcePersistence.addEntities(to: model, item: model.entitiesByName["Item"]!) }
+         return model
+@@ -163,15 +168,16 @@
+         guard !destinationModel.isConfiguration(nil, compatibleWithStoreMetadata: metadata) else { return }
+ 
+         let legacyCandidates = [
+-            makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeNativeTitle: false),
+-            makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeItemOrder: false, includeNativeTitle: false),
+-            makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeTypedItem: false, includeItemOrder: false, includeNativeTitle: false),
+-            makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeNativeSources: false, includeTypedItem: false, includeItemOrder: false, includeNativeTitle: false),
+-            makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeNativeItemData: false, includeNativeSources: false, includeTypedItem: false, includeItemOrder: false, includeNativeTitle: false),
+-            makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeLists: true, includeOptionalTimestamp: false, includeNativeItemData: false, includeNativeSources: false, includeTypedItem: false, includeItemOrder: false, includeNativeTitle: false),
+-            makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeLists: false, includeOptionalTimestamp: false, includeNativeItemData: false, includeNativeSources: false, includeTypedItem: false, includeItemOrder: false, includeNativeTitle: false),
+-            makeModel(includeNativeIdentity: false, preserveItemKeyInHistory: true, includeLists: false, includeOptionalTimestamp: false, includeNativeItemData: false, includeNativeSources: false, includeTypedItem: false, includeItemOrder: false, includeNativeTitle: false),
+-            makeModel(includeNativeIdentity: false, preserveItemKeyInHistory: false, includeLists: false, includeOptionalTimestamp: false, includeNativeItemData: false, includeNativeSources: false, includeTypedItem: false, includeItemOrder: false, includeNativeTitle: false)
++            makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeTypedLists: false),
++            makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeNativeTitle: false, includeTypedLists: false),
++            makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeItemOrder: false, includeNativeTitle: false, includeTypedLists: false),
++            makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeTypedItem: false, includeItemOrder: false, includeNativeTitle: false, includeTypedLists: false),
++            makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeNativeSources: false, includeTypedItem: false, includeItemOrder: false, includeNativeTitle: false, includeTypedLists: false),
++            makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeNativeItemData: false, includeNativeSources: false, includeTypedItem: false, includeItemOrder: false, includeNativeTitle: false, includeTypedLists: false),
++            makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeLists: true, includeOptionalTimestamp: false, includeNativeItemData: false, includeNativeSources: false, includeTypedItem: false, includeItemOrder: false, includeNativeTitle: false, includeTypedLists: false),
++            makeModel(includeNativeIdentity: true, preserveItemKeyInHistory: true, includeLists: false, includeOptionalTimestamp: false, includeNativeItemData: false, includeNativeSources: false, includeTypedItem: false, includeItemOrder: false, includeNativeTitle: false, includeTypedLists: false),
++            makeModel(includeNativeIdentity: false, preserveItemKeyInHistory: true, includeLists: false, includeOptionalTimestamp: false, includeNativeItemData: false, includeNativeSources: false, includeTypedItem: false, includeItemOrder: false, includeNativeTitle: false, includeTypedLists: false),
++            makeModel(includeNativeIdentity: false, preserveItemKeyInHistory: false, includeLists: false, includeOptionalTimestamp: false, includeNativeItemData: false, includeNativeSources: false, includeTypedItem: false, includeItemOrder: false, includeNativeTitle: false, includeTypedLists: false)
+         ]
+         // The older history-retention variants can share a version hash.
+         let sourceModel = legacyCandidates.first {
+--- before/replica/Sources/PastoCore/OriginalManagedItem.swift
++++ after/replica/Sources/PastoCore/OriginalManagedItem.swift
+@@ -24,6 +24,77 @@
+     }
+ }
+ 
++// 32b0c8/329624: the model's actual List class supplies its own fetch defaults.
++@objc(PastoListEntity)
++class PastoListEntity: PastoManagedObject {
++    override class var entityName: String { "ListEntity" }
++    override class var defaultSortDescriptors: [NSSortDescriptor]? {
++        [NSSortDescriptor(key: "metadata.index", ascending: true)]
++    }
++
++    override func awakeFromInsert() {
++        super.awakeFromInsert()
++        setPrimitiveValue(Date(), forKey: "createdAt")
++    }
++
++    static func listFetchRequest() -> NSFetchRequest<PastoListEntity> {
++        OriginalManagedFetchRequest.make(for: PastoListEntity.self)
++    }
++
++    // 329980/329ec0: repair a missing relationship, then propagate the superclass error.
++    override func validateForInsert() throws {
++        if !isDeleted, value(forKey: "metadata") == nil, let context = managedObjectContext {
++            let identifier = "list:" + String._unconditionallyBridgeFromObjectiveC(
++                value(forKey: "identifier") as? NSString)
++            let request = PastoListMetadataEntity.metadataFetchRequest()
++            request.predicate = NSPredicate(format: "identifier == %@", identifier)
++            request.fetchLimit = 1
++            request.fetchOffset = 0
++            var existing: PastoListMetadataEntity?
++            context.performAndWait { existing = (try? context.fetch(request))?.first }
++            if let existing {
++                setValue(existing, forKey: "metadata")
++            } else {
++                let all = PastoListMetadataEntity.metadataFetchRequest()
++                all.fetchOffset = 0
++                var values: [PastoListMetadataEntity] = []
++                context.performAndWait { values = (try? context.fetch(all)) ?? [] }
++                let lastIndex: Int64
++                if let last = values.last {
++                    lastIndex = (last.value(forKey: "index") as? NSNumber)?.int64Value ?? 0
++                } else {
++                    lastIndex = -1
++                }
++                let nextIndex = lastIndex + 1
++                let metadata = PastoListMetadataEntity(context: context)
++                metadata.setValue(identifier, forKey: "identifier")
++                metadata.setValue(self, forKey: "list")
++                metadata.setValue(nextIndex, forKey: "index")
++                setValue(metadata, forKey: "metadata")
++            }
++        }
++        try super.validateForInsert()
++    }
++}
++
++// 32b6a8/32b4b4: metadata has a separate class and index ordering.
++@objc(PastoListMetadataEntity)
++class PastoListMetadataEntity: PastoManagedObject {
++    override class var entityName: String { "ListMetadataEntity" }
++    override class var defaultSortDescriptors: [NSSortDescriptor]? {
++        [NSSortDescriptor(key: "index", ascending: true)]
++    }
++
++    override func awakeFromInsert() {
++        super.awakeFromInsert()
++        setPrimitiveValue(Date(), forKey: "createdAt")
++    }
++
++    static func metadataFetchRequest() -> NSFetchRequest<PastoListMetadataEntity> {
++        OriginalManagedFetchRequest.make(for: PastoListMetadataEntity.self)
++    }
++}
++
+ enum OriginalManagedFetchRequest {
+     // 0x1003298a0: entity name, class sort/predicate defaults, then batch size.
+     static func make<Entity: PastoManagedObject>(for entity: Entity.Type) -> NSFetchRequest<Entity> {
+--- before/replica/Sources/PastoCore/ClipboardListPersistence.swift
++++ after/replica/Sources/PastoCore/ClipboardListPersistence.swift
+@@ -91,11 +91,9 @@
+     }
+ 
+     // 36c094/329764: the menu's live group collection uses the List class defaults.
+-    func pinboardRequest() -> NSFetchRequest<NSManagedObject> {
+-        let request = NSFetchRequest<NSManagedObject>(entityName: "ListEntity")
+-        request.sortDescriptors = [NSSortDescriptor(key: "metadata.index", ascending: true)]
++    func pinboardRequest() -> NSFetchRequest<PastoListEntity> {
++        let request = PastoListEntity.listFetchRequest()
+         request.predicate = NSPredicate(format: "rawType == %d", 2)
+-        request.fetchBatchSize = 20
+         return request
+     }
+ 
+--- before/replica/Sources/PastoCore/ClipboardSearchCollection.swift
++++ after/replica/Sources/PastoCore/ClipboardSearchCollection.swift
+@@ -152,7 +152,7 @@
+     }
+ 
+     private let context: NSManagedObjectContext
+-    private let controller: NSFetchedResultsController<NSManagedObject>
++    private let controller: NSFetchedResultsController<PastoListEntity>
+     private let subject = CurrentValueSubject<Snapshot, Never>(Snapshot(identifiers: [], updatedIdentifiers: []))
+     private var differenceDelegate: ClipboardSearchDifferenceDelegate?
+     private var objectsObservation: AnyCancellable?
+@@ -160,7 +160,7 @@
+     private var objectIDMembership: Set<NSManagedObjectID> = []
+     private var pending: (ids: [NSManagedObjectID], updated: Set<NSManagedObjectID>)?
+ 
+-    init(context: NSManagedObjectContext, request: NSFetchRequest<NSManagedObject>) {
++    init(context: NSManagedObjectContext, request: NSFetchRequest<PastoListEntity>) {
+         self.context = context
+         controller = NSFetchedResultsController(fetchRequest: request, managedObjectContext: context,
+                                                 sectionNameKeyPath: nil, cacheName: nil)
+@@ -186,8 +186,7 @@
+     // 1b85f0 maps the current ordered IDs using the collection's optional native lookup.
+     public var value: [ClipboardPinboardTarget] {
+         subject.value.identifiers.compactMap { objectID in
+-            guard let object = try? context.existingObject(with: objectID),
+-                  object.entity.name == "ListEntity",
++            guard let object = (try? context.existingObject(with: objectID)) as? PastoListEntity,
+                   let identifier = object.value(forKey: "identifier") as? String,
+                   let id = UUID(uuidString: identifier) else { return nil }
+             return ClipboardPinboardTarget(id: id, object: object)

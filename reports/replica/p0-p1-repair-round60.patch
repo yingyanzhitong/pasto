@@ -1,0 +1,243 @@
+--- phase-60-before/replica/Sources/Pasto/UI/FilterBrowser.swift
++++ replica/Sources/Pasto/UI/FilterBrowser.swift
+@@ -67,6 +67,17 @@
+     }
+ }
+ 
++// 0x100005e1c/006184: publish empty candidates before the MainActor load task.
++@MainActor
++private final class ReplicaFilterBrowserModel: ObservableObject {
++    @Published private(set) var sections: [ReplicaFilterBrowser.Section] = []
++
++    init(load: @escaping @MainActor () -> [ReplicaFilterBrowser.Section]) {
++        // The original task retains its view model until loading/publication finishes.
++        Task { @MainActor [self] in sections = load() }
++    }
++}
++
+ @MainActor
+ private struct ReplicaFilterBrowser: View {
+     struct Section: Identifiable {
+@@ -80,7 +91,8 @@
+         let section: UInt8
+     }
+     @ObservedObject var state: ReplicaUIState
+-    let sections: [Section]
++    @ObservedObject var model: ReplicaFilterBrowserModel
++    private var sections: [Section] { model.sections }
+     let hideApplied: Bool
+     let close: () -> Void
+     @State private var expanded: Set<UInt8> = []
+@@ -297,6 +309,19 @@
+             }
+             field?.f_1000457cc()
+         }
++        let store = self.store
++        let hideApplied = NSEvent.modifierFlags.contains(.option)
++        let model = ReplicaFilterBrowserModel(load: { Self.filterBrowserSections(store: store) })
++        let content = ReplicaFilterBrowser(state: state, model: model,
++            hideApplied: hideApplied, close: { [weak popover] in popover?.close() })
++        let controller = NSHostingController(rootView: content)
++        controller.sizingOptions = [.preferredContentSize]
++        filterBrowserPopover = popover
++        popover.present(controller, relativeTo: button)
++        field?.f_1000457cc()
++    }
++
++    private static func filterBrowserSections(store: ClipboardStore) -> [ReplicaFilterBrowser.Section] {
+         let sources = (try? ReplicaSearchSuggestionSource.applications("", store: store)) ?? []
+         let devices = (try? ReplicaSearchSuggestionSource.devices("", store: store)) ?? []
+         let pinboards = ((try? ReplicaSearchSuggestionSource.pinboards("", store: store)) ?? [])
+@@ -308,7 +333,7 @@
+             guard let kind = ClipboardKind(rawValue: value == "File" ? "files" : value.lowercased()) else { return nil }
+             return .kind(kind)
+         }
+-        let sections: [ReplicaFilterBrowser.Section] = [
++        return [
+             .init(id: 1, title: OriginalSearchLocalization.text("search.filters.section.type"),
+                   choices: types),
+             .init(id: 0, title: OriginalSearchLocalization.text("search.filters.section.app"), choices: sources.map { .source($0) }),
+@@ -317,12 +342,5 @@
+             .init(id: 3, title: OriginalSearchLocalization.text("search.filters.section.date"), choices: OriginalSearchDateRanges.f_1002d8ce0().map { .date($0) }),
+             .init(id: 4, title: OriginalSearchLocalization.text("search.filters.section.device"), choices: devices.map { .device($0) })
+         ]
+-        let content = ReplicaFilterBrowser(state: state, sections: sections,
+-            hideApplied: NSEvent.modifierFlags.contains(.option), close: { [weak popover] in popover?.close() })
+-        let controller = NSHostingController(rootView: content)
+-        controller.sizingOptions = [.preferredContentSize]
+-        filterBrowserPopover = popover
+-        popover.present(controller, relativeTo: button)
+-        field?.f_1000457cc()
+-    }
+-}
++    }
++}
+--- phase-60-before/scripts/tests/test_filter_browser_contracts.py
++++ scripts/tests/test_filter_browser_contracts.py
+@@ -28,7 +28,7 @@
+     def test_section_order_and_type_names_decode_from_original_bytes(self):
+         proof = self.report['static_bindings']
+         self.assertEqual(list(bytes.fromhex(proof['section_order']['bytes'])), [1, 0, 5, 3, 4])
+-        opening = body(self.browser, 'func showFilterBrowser(relativeTo button:')
++        opening = body(self.browser, 'private static func filterBrowserSections(')
+         self.assertEqual([int(v) for v in re.findall(r'\.init\(id: (\d+), title:', opening)], [1, 0, 5, 3, 4])
+         data = bytes.fromhex(proof['type_static_object']['bytes'])
+         count, = struct.unpack_from('<Q', data, 16)
+@@ -60,7 +60,7 @@
+         self.assertEqual(page+(immediate<<12)+((add>>10)&4095), 0x100fbed58)
+ 
+     def test_browser_reuses_actual_provider_and_name_order_not_panel_sort_order(self):
+-        opening = body(self.browser, 'func showFilterBrowser(relativeTo button:')
++        opening = body(self.browser, 'private static func filterBrowserSections(')
+         for group in ['applications', 'devices', 'pinboards']:
+             self.assertIn('ReplicaSearchSuggestionSource.'+group+'("", store: store)', opening)
+         self.assertNotIn('sortOrder', opening)
+@@ -144,6 +144,11 @@
+                     checkpoint = ROOT / '.local/p0-repair/phase-41/before' / ref['path']
+                     self.assertIn(ref['symbol'], checkpoint.read_text())
+                     self.assertIn(ref['symbol'], (ROOT / 'replica/Sources/PastoCore/ClipboardSourcePersistence.swift').read_text())
++                elif ref['symbol'] == 'let sections: [ReplicaFilterBrowser.Section]':
++                    checkpoint = ROOT / '.local/p0-repair/phase-60/before' / ref['path']
++                    self.assertIn(ref['symbol'], checkpoint.read_text())
++                    self.assertIn('@Published private(set) var sections: [ReplicaFilterBrowser.Section] = []', current)
++                    self.assertIn('return [', body(current, 'private static func filterBrowserSections('))
+                 else:
+                     self.assertIn(ref['symbol'], current)
+ 
+--- phase-60-before/scripts/tests/test_p1_repair_search_editor_provider.py
++++ scripts/tests/test_p1_repair_search_editor_provider.py
+@@ -156,7 +156,7 @@
+         self.assertIn('let candidates = try source(query)', candidates)
+         self.assertIn('} catch {\n                continue', candidates)
+         browser = (ROOT / 'replica/Sources/Pasto/UI/FilterBrowser.swift').read_text()
+-        opening = body(browser, 'func showFilterBrowser(relativeTo button: NSButton)')
++        opening = body(browser, 'private static func filterBrowserSections(')
+         self.assertIn('((try? ReplicaSearchSuggestionSource.pinboards("", store: store)) ?? [])', opening)
+ 
+     def test_existing_native_graph_is_reused_and_model_is_not_changed(self):
+--- /dev/null
++++ scripts/tests/test_p1_repair_filter_loading.py
+@@ -0,0 +1,123 @@
++"""Deferred filter browser candidate delivery; source/ARM only, no SwiftUI runtime."""
++import hashlib
++import json
++import struct
++import sys
++import unittest
++from pathlib import Path
++
++ROOT = Path(__file__).resolve().parents[2]
++sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'scripts/tests')]
++from function_ledger import source_fragments
++from test_offline_p0_contracts import body
++from test_p0_repair_checksum_routing import original_fragment
++
++
++class FilterLoadingContracts(unittest.TestCase):
++    @classmethod
++    def setUpClass(cls):
++        cls.phase = ROOT / '.local/p0-repair/phase-60'
++        cls.proof = json.loads((cls.phase / 'filter-loading-contract.json').read_text())
++        cls.path = 'replica/Sources/Pasto/UI/FilterBrowser.swift'
++        cls.source = (ROOT / cls.path).read_text()
++        cls.before = (cls.phase / 'before' / cls.path).read_text()
++        cls.model = body(cls.source, 'private final class ReplicaFilterBrowserModel: ObservableObject')
++        cls.opening = body(cls.source, 'func showFilterBrowser(')
++        cls.builder = body(cls.source, 'private static func filterBrowserSections(')
++        cls.original = {r['address']: original_fragment((ROOT / r['path']).read_text(), r['address'][2:])
++                        for r in cls.proof['original_fragments']}
++
++    def test_native_proof_inputs_and_actual_source_are_bound(self):
++        self.assertEqual(len(self.proof['original_fragments']), 6)
++        for row in self.proof['original_fragments']:
++            self.assertEqual(source_fragments(ROOT / row['path'])[row['address']]['sha256'], row['sha256'])
++        for row in [self.proof['binary']] + self.proof['arm_disassemblies']:
++            self.assertEqual(hashlib.sha256((ROOT / row['path']).read_bytes()).hexdigest(), row['sha256'])
++        self.assertEqual(hashlib.sha256((ROOT / self.path).read_bytes()).hexdigest(), self.proof['current_sources'][self.path])
++        self.assertEqual((ROOT / self.path).read_bytes(), (self.phase / 'after' / self.path).read_bytes())
++
++    def test_descriptor_and_MainActor_hop_bind_real_task_provider_and_publication(self):
++        descriptor = self.proof['async_descriptor']
++        self.assertEqual(int(descriptor['address'], 16) + struct.unpack_from('<i', bytes.fromhex(descriptor['bytes']))[0],
++                         int(descriptor['target'], 16))
++        self.assertIn('FUN_100006104(', self.original['0x100008218'])
++        self.assertIn('_swift_task_switch(FUN_100006184', self.original['0x100006104'])
++        load = self.original['0x100006184']
++        self.assertLess(load.index('FUN_1002e00a0()'), load.index('Combine::Published::_set_subscript('))
++        words = {r['address']: int.from_bytes(bytes.fromhex(r['bytes']), 'little') for r in self.proof['ARM_words']}
++        def call_target(a):
++            value = words[hex(a)] & ((1 << 26) - 1)
++            if value & (1 << 25): value -= 1 << 26
++            return a + value * 4
++        self.assertEqual(call_target(0x1000060d0), 0x1000645b0)
++        self.assertEqual(call_target(0x1000061cc), 0x1002e00a0)
++        self.assertEqual(call_target(0x100006218), 0x100bf558c)
++        self.assertEqual(words['0x100005ffc'], 0x52800109)  # collapsed limit eight
++
++    def test_actual_model_begins_empty_and_defers_provider_until_retained_task(self):
++        self.assertIn('@Published private(set) var sections: [ReplicaFilterBrowser.Section] = []', self.model)
++        self.assertIn('init(load: @escaping @MainActor () -> [ReplicaFilterBrowser.Section])', self.model)
++        self.assertIn('Task { @MainActor [self] in sections = load() }', self.model)
++        self.assertEqual(self.model.count('load()'), 1)
++        for extra in ['[weak self]', 'try?', 'Task.isCancelled', 'deinit', '.cancel()', 'onAppear', 'DispatchQueue']:
++            self.assertNotIn(extra, self.model)
++        native = self.original['0x100005e1c']
++        self.assertLess(native.index('::_availableFilters'), native.index('FUN_1000645b0('))
++        self.assertLess(native.index('::_expandedSections'), native.index('FUN_1000645b0('))
++        self.assertIn('*(MainActor **)(puVar2 + 0x20) = unaff_x20', native)
++
++    def test_opening_passes_deferred_builder_not_materialized_source_arrays(self):
++        self.assertIn('let store = self.store', self.opening)
++        self.assertIn('ReplicaFilterBrowserModel(load: { Self.filterBrowserSections(store: store) })', self.opening)
++        self.assertLess(self.opening.index('let hideApplied = NSEvent.modifierFlags.contains(.option)'),
++                        self.opening.index('let model ='))
++        self.assertLess(self.opening.index('let model ='), self.opening.index('popover.present(controller, relativeTo: button)'))
++        for extra in ['ReplicaSearchSuggestionSource.applications(', 'ReplicaSearchSuggestionSource.devices(',
++                      'ReplicaSearchSuggestionSource.pinboards(', 'let sources =', 'let sections:', 'sections: sections']:
++            self.assertNotIn(extra, self.opening)
++        self.assertIn('let content = ReplicaFilterBrowser(state: state, model: model,', self.opening)
++        self.assertIn('hideApplied: hideApplied', self.opening)
++
++    def test_same_observed_model_drives_visible_sections_after_publication(self):
++        self.assertIn('@ObservedObject var model: ReplicaFilterBrowserModel', self.source)
++        self.assertIn('private var sections: [Section] { model.sections }', self.source)
++        visible = body(self.source, 'private var visibleSections:')
++        self.assertIn('sections.compactMap { section in', visible)
++        self.assertEqual(visible, body(self.before, 'private var visibleSections:'))
++        view = body(self.source, 'private struct ReplicaFilterBrowser: View')
++        self.assertNotIn('ReplicaFilterBrowserModel(load:', view)
++        self.assertNotIn('let sections: [Section]', view)
++
++    def test_builder_reuses_previous_queries_order_and_error_fallback_exactly(self):
++        previous_opening = body(self.before, 'func showFilterBrowser(')
++        previous = previous_opening[previous_opening.index('        let sources ='):previous_opening.index('        let content =')]
++        previous = previous.replace('        let sections: [ReplicaFilterBrowser.Section] = [', '        return [')
++        self.assertEqual(self.builder, '{\n' + previous + '    }')
++        for group in ['applications', 'devices', 'pinboards']:
++            self.assertIn('try? ReplicaSearchSuggestionSource.' + group + '("", store: store)', self.builder)
++        self.assertIn('OriginalSearchDateRanges.f_1002d8ce0()', self.builder)
++        self.assertIn('OriginalSearchSuggestions.f_10030f3e0("")', self.builder)
++        self.assertNotIn('store.items', self.builder)
++
++    def test_existing_query_keyboard_expansion_and_close_consumers_are_unchanged(self):
++        for marker in ['func handleSearchCommand()', 'private func activate(', 'private func move(',
++                       'private func installKeyboardMonitor()', 'private func removeKeyboardMonitor()',
++                       'private func handleMonitoredKey(', '@ViewBuilder private func entryView(']:
++            self.assertEqual(body(self.source, marker), body(self.before, marker))
++        self.assertEqual(body(self.opening, 'popover.onWillClose ='),
++                         body(body(self.before, 'func showFilterBrowser('), 'popover.onWillClose ='))
++        self.assertIn('@State private var expanded: Set<UInt8> = []', self.source)
++        self.assertIn('Array(choices.prefix(8))', self.source)
++
++    def test_source_service_and_model_limitations_stay_explicit(self):
++        self.assertEqual([r['function_id'] for r in self.proof['contracts']],
++                         ['Paste:0x100005e1c', 'Paste:0x100006184'])
++        self.assertFalse(self.proof['full_function_migration_verified'])
++        self.assertEqual(self.proof['function_map_markers_upgraded'], 0)
++        limitations = '\n'.join(self.proof['retained_partial_contracts'])
++        for token in ['2e00a0/07d0e0', 'first-frame', 'ABI', 'try?']:
++            self.assertIn(token, limitations)
++        for path in ['replica/Sources/Pasto/UI/ReplicaSearchIndex.swift',
++                     'replica/Sources/Pasto/UI/ReplicaSearchSuggestionSource.swift',
++                     'replica/Sources/PastoCore/ClipboardSourcePersistence.swift']:
++            self.assertEqual((ROOT / path).read_bytes(), (self.phase / 'before' / path).read_bytes())

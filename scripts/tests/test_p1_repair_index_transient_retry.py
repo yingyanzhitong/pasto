@@ -1,0 +1,218 @@
+"""Mach-O/source/fault-sequence fixtures only; no native errors, sleep or Swift execution."""
+import hashlib
+import json
+import struct
+import sys
+import unittest
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[2]
+sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'scripts/tests')]
+from function_ledger import source_fragments
+from test_offline_p0_contracts import body
+from index_write_scope_contract import assert_write_scope_only, assert_service_initializer_only, assert_ui_service_composition_only
+from test_p0_repair_checksum_routing import original_fragment
+
+
+class IndexTransientRetryContracts(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.phase = ROOT / '.local/p0-repair/phase-50'
+        cls.proof = json.loads((cls.phase / 'transient-retry-contract.json').read_text())
+        cls.source = (ROOT / 'replica/Sources/Pasto/UI/ReplicaSearchIndex.swift').read_text()
+        cls.before = (cls.phase / 'before/replica/Sources/Pasto/UI/ReplicaSearchIndex.swift').read_text()
+        cls.retry = body(cls.source, 'private func retryTransientIndexErrors(')
+        cls.classify = body(cls.source, 'private static func isTransientIndexError(')
+        cls.original = {r['address']: original_fragment((ROOT / r['path']).read_text(), r['address'][2:])
+                        for r in cls.proof['original_fragments']}
+
+    def test_original_fragments_and_prior_actor_metadata_are_hash_bound(self):
+        self.assertEqual(len(self.proof['original_fragments']), 20)
+        for row in self.proof['original_fragments']:
+            self.assertEqual(source_fragments(ROOT / row['path'])[row['address']]['sha256'], row['sha256'])
+        prior = self.proof['prior_actor_metadata']
+        self.assertEqual(hashlib.sha256((ROOT / prior['path']).read_bytes()).hexdigest(), prior['sha256'])
+
+    def test_original_domain_load_reaches_real_CSIndexErrorDomain_import(self):
+        evidence = self.proof['domain_binding']
+        w0, w1, w2 = struct.unpack('<3I', bytes.fromhex(evidence['load_bytes']))
+        self.assertEqual(w0 & 0x9f00001f, 0x90000008)
+        self.assertEqual(w1 & 0xffc003ff, 0xf9400108)
+        self.assertEqual(w2, 0xf9400100)  # dereference the imported NSString constant
+        self.assertEqual(evidence['pointer_address'], '0x100ea68e8')
+        self.assertEqual(evidence['symbol'], '_CSIndexErrorDomain')
+        self.assertTrue(evidence['chain']['declared_chain_reachable'])
+        self.assertEqual(evidence['chain']['pointer_format'], 6)
+
+    def test_original_negative_code_comparisons_are_actual_ARM_immediates(self):
+        self.assertEqual([r['negative_code'] for r in self.proof['negative_code_comparisons']], [-1000, -1003])
+        for row in self.proof['negative_code_comparisons']:
+            word, = struct.unpack('<I', bytes.fromhex(row['bytes']))
+            self.assertEqual(word & 0xffc003ff, 0xb100001f)
+            self.assertEqual(-((word >> 10) & 0xfff), row['negative_code'])
+
+    def test_sdk_error_domain_and_codes_are_bound_to_offline_headers(self):
+        sdk = self.proof['sdk']
+        raw = Path(sdk['path']).read_bytes()
+        self.assertEqual(hashlib.sha256(raw).hexdigest(), sdk['sha256'])
+        for token in [b'NSString * const CSIndexErrorDomain',
+                      b'CSIndexErrorCodeIndexUnavailableError =                   -1000',
+                      b'CSIndexErrorCodeRemoteConnectionError =                   -1003']:
+            self.assertIn(token, raw)
+
+    def test_real_classifier_requires_both_domain_and_one_of_two_codes(self):
+        self.assertIn('let error = error as NSError', self.classify)
+        self.assertIn('return error.domain == CSIndexErrorDomain && (error.code == -1000 || error.code == -1003)', self.classify)
+        self.assertNotIn('userInfo', self.classify)
+        self.assertNotIn('localizedDescription', self.classify)
+        self.assertNotIn('NSURLErrorDomain', self.classify)
+
+    def test_retry_limit_is_three_total_attempts_not_three_extra_retries(self):
+        self.assertIn('var failureCount = 0', self.retry)
+        self.assertIn('while true', self.retry)
+        self.assertLess(self.retry.index('failureCount += 1'), self.retry.index('guard failureCount < 3 else'))
+        self.assertNotIn('failureCount <= 3', self.retry)
+        original = self.original['0x1002e7e4c']
+        self.assertIn('lVar1 = uVar14 + 1', original)
+        self.assertIn('if (lVar1 != 3)', original)
+
+    def test_base_delay_is_one_second_from_DI_and_Swift_attosecond_layout(self):
+        for address in ['0x1002d613c', '0x1002d62d4']:
+            self.assertIn('FUN_1002d6cf4(uVar4,auStack_70,1000000000000000000,0,uVar3)', self.original[address])
+        constructor = self.original['0x1002d6cf4']
+        self.assertIn('*(undefined8 *)(param_5 + 0xe0) = param_3', constructor)
+        self.assertIn('*(undefined8 *)(param_5 + 0xe8) = param_4', constructor)
+        sdk = self.proof['duration_sdk']
+        raw = (ROOT / sdk['path']).read_bytes()
+        self.assertEqual(hashlib.sha256(raw).hexdigest(), sdk['sha256'])
+        self.assertIn(b'low.multipliedFullWidth(by: 1_000_000_000_000_000_000)', raw)
+        self.assertEqual(sdk['one_second_attoseconds'], 10 ** 18)
+
+    def test_actual_backoff_uses_monotonic_clock_with_one_and_two_second_delays(self):
+        self.assertIn('let delay = Duration.seconds(1 << (failureCount - 1))', self.retry)
+        self.assertIn('try await ContinuousClock().sleep(for: delay)', self.retry)
+        self.assertEqual([1 << (failure - 1) for failure in [1, 2]], [1, 2])
+        self.assertNotIn('Task.sleep(nanoseconds:', self.retry)
+        self.assertIn('1L << (uVar14 & 0x3f)', self.original['0x1002e7e4c'])
+
+    def test_nontransient_error_propagates_before_counter_mutation_or_sleep(self):
+        catch = body(self.retry, 'catch')
+        gate = 'guard Self.isTransientIndexError(error) else { throw error }'
+        self.assertLess(catch.index(gate), catch.index('failureCount += 1'))
+        self.assertLess(catch.index(gate), catch.index('sleep(for:'))
+        self.assertNotIn('catch is CancellationError', self.retry)
+
+    def test_success_resets_shared_counter_and_exhaustion_increments_once(self):
+        success = body(self.retry, 'do ')
+        self.assertLess(success.index('try await operation()'), success.index('consecutiveTransientFailures = 0'))
+        self.assertLess(success.index('consecutiveTransientFailures = 0'), success.index('return'))
+        exhausted = body(self.retry, 'guard failureCount < 3 else')
+        self.assertIn('consecutiveTransientFailures += 1', exhausted)
+        self.assertIn('throw error', exhausted)
+        self.assertEqual(self.retry.count('consecutiveTransientFailures += 1'), 1)
+        self.assertIn('+ 0x110) = 0', self.original['0x1002e7a14'])
+        self.assertIn('*(long *)(lVar10 + 0x110) = lVar1', self.original['0x1002e7e4c'])
+
+    def test_sleep_failure_or_cancellation_is_not_caught_as_an_operation_retry(self):
+        catch = body(self.retry, 'catch')
+        sleep = catch.index('try await ContinuousClock().sleep(for: delay)')
+        self.assertNotIn('catch', catch[sleep:])
+        self.assertNotIn('try?', catch)
+        self.assertIn('pcVar1 = FUN_1002e82a4', self.original['0x1002e7d5c'])
+        self.assertIn('_swift_errorRelease(', self.original['0x1002e82a4'])
+
+    def test_production_target_retry_wraps_whole_pass_not_individual_SDK_batches(self):
+        drain = body(self.source, 'private func drain() async')
+        target = body(drain, 'if !forcedIdentifiers.isEmpty')
+        wrapper = body(target, 'try await retryTransientIndexErrors')
+        self.assertIn('try await reindexTargets(forcedIdentifiers)', wrapper)
+        self.assertNotIn('indexSearchableItems', wrapper)
+        for marker in ['private func reindexTargets(', 'private func applyHistoryChanges(']:
+            self.assertNotIn('retryTransientIndexErrors', body(self.source, marker))
+        snapshot = body(self.source, 'private func indexInitialSnapshot(')
+        self.assertIn('Self.writeSearchableItems(changed, index: resolveWriteIndex())', body(snapshot, 'try await retryTransientIndexErrors'))
+        self.assertEqual(self.source.count('try await retryTransientIndexErrors'), 3)
+        self.assertIn('FUN_1002e7914(', self.original['0x1002f26a8'])
+        self.assertNotIn('FUN_1002e7914(', self.original['0x1002f2ca8'])
+
+    def test_existing_target_batch_data_active_and_cache_tail_are_unchanged(self):
+        historical = (ROOT / '.local/p0-repair/phase-52/before/replica/Sources/Pasto/UI/ReplicaSearchIndex.swift').read_text()
+        for marker in ['private func reindexTargets(', 'private func indexInitialSnapshot(',
+                       'private func searchableItem(', 'private func stopIndexing()', 'private func startHistoryObservation()']:
+            source = historical if marker in ['private func reindexTargets(', 'private func indexInitialSnapshot(', 'private func stopIndexing()'] else self.source
+            if marker == 'private func searchableItem(':
+                source = (ROOT / '.local/p0-repair/phase-55/before/replica/Sources/Pasto/UI/ReplicaSearchIndex.swift').read_text()
+            if marker == 'private func startHistoryObservation()':
+                source = (ROOT / '.local/p0-repair/phase-56/before/replica/Sources/Pasto/UI/ReplicaSearchIndex.swift').read_text()
+            assert_write_scope_only(self, body(source, marker), body(self.before, marker))
+        self.assertNotIn('isTransientIndexError', self.before)
+        self.assertNotIn('retryTransientIndexErrors', self.before)
+
+    def test_queries_and_target_only_initialization_gates_are_not_changed_by_retry(self):
+        for marker in ['private func replaceQuery(', 'nonisolated private static func matchingIdentifiers(',
+                       'nonisolated private func rebuild(', 'func retry()']:
+            source = (ROOT / '.local/p0-repair/phase-55/before/replica/Sources/Pasto/UI/ReplicaSearchIndex.swift').read_text() if marker in ['private func replaceQuery(', 'nonisolated private static func matchingIdentifiers(', 'nonisolated private func rebuild('] else self.source
+            current = body(source, marker)
+            if marker == 'nonisolated private func rebuild(':
+                current = current.replace('                pendingResetsIndex = true\n', '', 1)
+                current = current.replace('if isRunning { await stopIndexing() }', 'stopIndexing()', 1)
+            assert_write_scope_only(self, current, body(self.before, marker))
+        drain = body(self.source, 'private func drain() async')
+        initialization = body(drain, 'if mayInitializeIndex')
+        self.assertNotIn('retryTransientIndexErrors', initialization)
+        self.assertIn('pendingMayInitializeIndex = false', drain)
+
+    def test_fault_sequence_fixtures_cover_transient_nontransient_success_and_sleep_cancellation(self):
+        # A trace of the original-bound policy, explicitly not execution of Swift or its closure.
+        def run(outcomes, prior_counter=0, sleep_cancel=False):
+            attempts, delays, failure_count = 0, [], 0
+            for domain, code in outcomes:
+                attempts += 1
+                if domain == 'success':
+                    return attempts, delays, 0, 'success'
+                if domain != 'CSIndexErrorDomain' or code not in [-1000, -1003]:
+                    return attempts, delays, prior_counter, 'operation-error'
+                failure_count += 1
+                if failure_count == 3:
+                    return attempts, delays, prior_counter + 1, 'operation-error'
+                delays.append(1 << (failure_count - 1))
+                if sleep_cancel:
+                    return attempts, delays, prior_counter, 'sleep-cancelled'
+            raise AssertionError('fixture needs a terminal event')
+        transient = ('CSIndexErrorDomain', -1000)
+        self.assertEqual(run([('success', 0)], 4), (1, [], 0, 'success'))
+        self.assertEqual(run([transient, ('success', 0)], 2), (2, [1], 0, 'success'))
+        self.assertEqual(run([transient] * 3, 2), (3, [1, 2], 3, 'operation-error'))
+        self.assertEqual(run([('OtherDomain', -1000)], 2), (1, [], 2, 'operation-error'))
+        self.assertEqual(run([('CSIndexErrorDomain', -1001)], 2), (1, [], 2, 'operation-error'))
+        self.assertEqual(run([transient], 2, sleep_cancel=True), (1, [1], 2, 'sleep-cancelled'))
+
+    def test_new_backlog_admits_two_real_missing_contracts_and_preserves_old_groups(self):
+        meta = self.proof['backlog']
+        self.assertEqual(hashlib.sha256((ROOT / meta['path']).read_bytes()).hexdigest(), meta['sha256'])
+        current = json.loads((ROOT / meta['path']).read_text())
+        previous = json.loads((ROOT / current['predecessor']['path']).read_text())
+        self.assertEqual(current['groups'][:-1], previous['groups'])
+        self.assertEqual(current['counts']['difference_records'], 152)
+        self.assertEqual(current['counts']['p0_records'], 69)
+        self.assertEqual(current['counts']['p1_additional_records'], 83)
+        records = current['groups'][-1]['records']
+        self.assertEqual([r['function_id'] for r in records], ['Paste:0x1002e39b4', 'Paste:0x1002e7914'])
+        for row in records:
+            ref, = row['current_references']
+            self.assertIn(ref['symbol'], (ROOT / ref['before_path']).read_text())
+            self.assertEqual(hashlib.sha256((ROOT / ref['before_path']).read_bytes()).hexdigest(), ref['before_sha256'])
+
+    def test_shared_policy_is_counted_as_finite_contracts_not_whole_actor_migration(self):
+        self.assertEqual([r['function_id'] for r in self.proof['contracts']],
+                         ['Paste:0x1002e39b4', 'Paste:0x1002e7914'])
+        self.assertTrue(all(not r['full_function_migration_verified'] for r in self.proof['contracts']))
+        self.assertFalse(self.proof['full_function_migration_verified'])
+        self.assertEqual(self.proof['function_map_markers_upgraded'], 0)
+        partial = ' '.join(self.proof['retained_partial_contracts'])
+        for token in ['Full delegate reset outer retry remains unconnected', 'OCR audit was read-only', 'telemetry is excluded']:
+            self.assertIn(token, partial)
+
+
+if __name__ == '__main__':
+    unittest.main()

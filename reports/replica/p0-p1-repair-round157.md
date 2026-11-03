@@ -1,0 +1,13 @@
+# 第一百五十七轮：延迟搜索闭包持有与私有上下文复用
+
+本轮核对P1实际内容/图片延迟入口。原371998按是否image创建48/49字节closure环境，捕获coordinator、objectID及logger/telemetry依赖，content额外存kind；3753f8和375458从环境交给对应延迟reader。375410真实机器码在+0x10/+0x18执行objc_release，在+0x20/+0x28执行swift_release，然后dealloc。Ghidra伪码省略前两个ObjC释放，不能据此判断原版未持有coordinator/objectID。
+
+从真实dyld链分别绑定objc_release、swift_release及CoreData泛型performAndWait导入。372440和371f2c每次创建private concurrency type1的context，设置coordinator，同步读取后释放该context。Pasto真实producer构造reader时只交coordinator/objectID/kind，闭包只捕reader；reader没有保存实体或context，read每次新建private context并同步加载原生对象/数据及交付投影。当前两条真实入口分别传content/image命名warning依赖；这些结构可复用，不添加缓存、额外异步任务或手工上下文释放。
+
+绑定10原函数片段、3真实导入/slot、8机器调用与13字段/队列参数指令。新增8项定向静态检查通过。247生产文件与全部旧测试逐字未改，因此复用上一轮2366项完整通过证据；本轮没有宣称重新执行2374项，也没有因复用重复增加函数完成计数。
+
+同时复查两处未知：0f733c仍只有setter副作用和尾部objc_release，没有证明Swift返回ABI；nm未找到相应导出也不能证明它不可达。04430c目前有限defaults/super coder结构可见，原archive实际消费仍缺证据。两项保持unknown，不以其它类的coder/ObjC setter元数据代证。ARC实际析构时点、fault、重入、完整ObjC错误桥/DI/schema父合同仍未运行或完全证明。
+
+台账v64保持219记录197组、11额外合同。有限差异修复P0 79/79、P1 140/140、总219/219（100%）；整体迁移完成率未知。下一批转到P1编辑器实际观察者/保存owner，保留遇到新P0差异优先修复的顺序。
+
+版本1.0.2、HEAD、函数映射和官网/下载九文件保持。只增本地证据与源码测试，不编译、构建、安装、运行应用/系统框架/CoreData、不联网、不提交推送发布。

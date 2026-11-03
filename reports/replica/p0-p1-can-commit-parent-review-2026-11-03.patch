@@ -1,0 +1,34 @@
+--- replica/Sources/PastoCore/OriginalPreviewAttributedText.swift
++++ replica/Sources/PastoCore/OriginalPreviewAttributedText.swift
+@@ -100,10 +100,13 @@
+     }
+ 
+     /// Paste 0x1003c0be0: nonempty changed text, with the original plain/rich baseline choice.
+-    public static func f_1003c0be0(candidate: NSAttributedString, original: NSAttributedString,
+-                                  editing: NSAttributedString) -> Bool {
++    public static func f_1003c0be0(candidate: NSAttributedString,
++                                  original: @autoclosure () -> NSAttributedString,
++                                  editing: @autoclosure () -> NSAttributedString) -> Bool {
+         guard !candidate.string.isEmpty else { return false }
+-        return (f_1003095bc(original) ? editing : original) != candidate
++        let isPlain = f_1003095bc(original())
++        // The model's selected slot is read after attribute enumeration, not before it.
++        return (isPlain ? editing() : original()) != candidate
+     }
+ 
+     /// PastePlatform's NSTextView.attributedText Objective-C getter, 0x1000f6ef8.
+--- replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift
++++ replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift
+@@ -311,10 +311,10 @@
+         documentView = text
+         contentObservation = document.$content.sink { [weak self] content in
+             MainActor.assumeIsolated {
+-                guard let self else { return }
++                guard let self, let onCanCommitEditing = self.onCanCommitEditing else { return }
+                 self.canCommit = OriginalPreviewAttributedText.f_1003c0be0(
+                     candidate: content, original: self.originalText, editing: self.editingText)
+-                self.onCanCommitEditing?(self.canCommit)
++                onCanCommitEditing(self.canCommit)
+             }
+         }
+         if let nativeModel {

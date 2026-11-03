@@ -1,5 +1,6 @@
 import AppKit
 import Combine
+import CoreData
 import Foundation
 
 private let multiItemPayloadKey = "com.pastereplica.internal.items+json"
@@ -43,8 +44,7 @@ private enum RecognizedImageTextCopyError: LocalizedError {
 extension ClipboardStore {
     public nonisolated static let orderedPasteboardTypesPayloadKey = "com.pastereplica.internal.types+json"
     private static let restoreUndoManager = OriginalDependency(\OriginalDependencyValues.pasteboardUndoManager)
-    private static let imageRestore = OriginalPasteboardImageRestore(
-        temporaryRoot: FileManager.default.temporaryDirectory.appendingPathComponent("PasteReplica", isDirectory: true))
+    private static let imageRestore = OriginalPasteboardImageRestore()
 
     public nonisolated static func originalPasteboardItems(from payloads: [String: Data]) throws -> [OriginalPasteboardItem] {
         let items: [OriginalPasteboardItem]
@@ -78,14 +78,43 @@ extension ClipboardStore {
         return items
     }
 
-    /// Archive-based checksums need the original runtime class-name evidence.
-    /// Only branches independent of that archive representation are offered.
+    /// 0x1003214c8 routes every classified kind through 0x1003216bc.
+    /// The archive route is restored; native archive bytes/class identity are not proven equivalent.
     public nonisolated static func knownPasteboardChecksum(from payloads: [String: Data]) throws -> String? {
         let items = try originalPasteboardItems(from: payloads)
         let kind = OriginalPasteboardClassification.f_10032362c(items)
-        guard kind != .unknown else { return nil }
-        if kind == .files, !items.contains(where: { $0.f_10037cc6c() != nil }) { return nil }
         return OriginalPasteboardChecksums.f_1003216bc(items, kind: kind)
+    }
+
+    nonisolated static func projectNativePasteboardItems(_ raw: Data, onto previous: [String: Data]) throws -> [String: Data] {
+        let items = OriginalPasteboardDataCodec.f_10031aeec(raw)
+        var payloads = previous.filter { analysisPayloadKeys.contains($0.key) }
+        if let first = items.first {
+            for type in first.f_10037da6c() {
+                if let data = first.f_10037d810(forType: type) { payloads[type] = data }
+            }
+            if let order = previous[orderedTypesPayloadKey] {
+                payloads[orderedTypesPayloadKey] = (try? JSONDecoder().decode([String].self, from: order)) == first.f_10037da6c()
+                    ? order : try JSONEncoder().encode(first.f_10037da6c())
+            }
+        }
+        if previous[multiItemPayloadKey] != nil {
+            let before = try? originalPasteboardItems(from: previous)
+            if let before, before.count == items.count, zip(before, items).allSatisfy({ old, new in
+                let types = old.f_10037da6c()
+                return types == new.f_10037da6c() && types.allSatisfy {
+                    old.f_10037d810(forType: $0) == new.f_10037d810(forType: $0)
+                }
+            }) {
+                payloads[multiItemPayloadKey] = previous[multiItemPayloadKey]
+            } else {
+                let encoder = JSONEncoder(); encoder.outputFormatting = [.sortedKeys]
+                payloads[multiItemPayloadKey] = try encoder.encode(items)
+            }
+        } else if previous[originalItemDataPayloadKey] != nil || items.count > 1 {
+            payloads[originalItemDataPayloadKey] = raw
+        }
+        return payloads
     }
 
     public nonisolated static func pasteboardImage(from payloads: [String: Data]) -> NSImage? {
@@ -168,7 +197,8 @@ extension ClipboardStore {
 
     func captureWithInsertionResult(pasteboard: NSPasteboard, sourceName: String, sourceBundleID: String?,
                                     snapshot: [OriginalPasteboardItem]? = nil, respectMonitoringPolicy: Bool = true,
-                                    sourceApplication: SourceApplicationRecord? = nil) throws -> (id: UUID, isNew: Bool)? {
+                                    sourceApplication: SourceApplicationRecord? = nil,
+                                    sourceProvider: (() -> (name: String, bundleID: String?, application: SourceApplicationRecord?))? = nil) throws -> (id: UUID, isNew: Bool)? {
         let rawItems = snapshot == nil ? pasteboard.pasteboardItems ?? [] : []
         let types = Set(snapshot?.flatMap { $0.f_10037da6c() } ?? rawItems.flatMap { $0.types.map(\.rawValue) })
         if respectMonitoringPolicy {
@@ -243,7 +273,8 @@ extension ClipboardStore {
         }
         let result = try addWithInsertionResult(ClipboardItem(title: "", kind: kind, plainText: plainText, sourceName: sourceName,
                                        sourceBundleID: sourceBundleID, payloads: payloads),
-                         sourceApplication: sourceApplication)
+                         sourceApplication: sourceApplication, recordCapture: true,
+                         sourceProvider: sourceProvider)
         if kind == .image { startBackgroundTextRecognition(id: result.id) }
         return result
     }
@@ -258,7 +289,6 @@ extension ClipboardStore {
     fileprivate func allowsPasteboardCapture(types: Set<String>, sourceBundleID: String?) throws -> Bool {
         guard !types.isEmpty, !types.contains(replicaGeneratedType.rawValue) else { return false }
         // Check policy before reading promised data, including in the timer path.
-        try save()
         if preferences.ignoreTransientContent && !types.isDisjoint(with: transientTypes) { return false }
         if preferences.ignoreConcealedContent && !types.isDisjoint(with: concealedTypes) { return false }
         if let sourceBundleID, preferences.excludedBundleIDs.contains(sourceBundleID) { return false }
@@ -287,15 +317,27 @@ extension ClipboardStore {
             case .color: kind = .color
             case .unknown: kind = .unknown
             }
-            var representations = try Self.originalPasteboardItems(from: item.payloads)
+            let representations: [OriginalPasteboardItem]
             if !OriginalPasteboardRestore.usesPlainProjection(kind: kind, options: options), kind == .image {
-                representations = Self.imageRestore.prepare(representations, sourceName: application?.name,
-                                                            timestamp: item.isInHistory ? item.createdAt : nil)
+                representations = try Self.imageRestore.prepare(sourceName: application?.name,
+                    timestamp: item.isInHistory ? item.createdAt : nil) {
+                        try Self.originalPasteboardItems(from: item.payloads)
+                    }
+            } else {
+                representations = try Self.originalPasteboardItems(from: item.payloads)
             }
             return .init(kind: kind, items: representations, sourceBundleID: application?.bundleIdentifier)
         }
         return OriginalPasteboardRestore.f_10038222c(selections, options: options,
                                                      removingTypesContaining: ["com.microsoft.ole.source"])
+    }
+
+    public func dragPasteboardGroups(restoreItems selected: [ClipboardRestoreItem],
+                                     options: OriginalPasteboardRestore.Options) throws -> [[OriginalPasteboardItem]] {
+        guard selected.contains(where: { $0.nativeObject != nil }) else {
+            return try dragPasteboardGroups(for: selected.map { $0.resolvedItem() }, options: options)
+        }
+        return try nativeRestoreGroups(selected, options: options)
     }
 
     public func writeToPasteboard(id: UUID, pasteboard: NSPasteboard, plainTextOnly: Bool = false) throws {
@@ -305,6 +347,126 @@ extension ClipboardStore {
     public func writeToPasteboard(ids: [UUID], pasteboard: NSPasteboard, plainTextOnly: Bool = false) throws {
         try writeToPasteboard(ids: ids, pasteboard: pasteboard, options: plainTextOnly ? .plainText : [],
                              recognizedImageData: nil)
+    }
+
+    public func writeToPasteboard(selectedItems: [ClipboardItem], pasteboard: NSPasteboard,
+                                 plainTextOnly: Bool = false) throws {
+        try writeToPasteboard(ids: selectedItems.map(\.id), pasteboard: pasteboard,
+                             options: plainTextOnly ? .plainText : [], recognizedImageData: nil,
+                             resolvedSelection: selectedItems)
+    }
+
+    public func writeToPasteboard(restoreItems: [ClipboardRestoreItem], pasteboard: NSPasteboard,
+                                 options: OriginalPasteboardRestore.Options) throws {
+        guard !restoreItems.isEmpty else { return }
+        guard restoreItems.contains(where: { $0.nativeObject != nil }) else {
+            let selected = restoreItems.map { $0.resolvedItem() }
+            try writeToPasteboard(ids: restoreItems.map(\.id), pasteboard: pasteboard, options: options,
+                                 recognizedImageData: nil, resolvedSelection: selected)
+            return
+        }
+        let objects = try nativeRestoreObjects(restoreItems, options: options)
+        try finishPasteboardWrite(objects, pasteboard: pasteboard) {
+            try prepareHistoryRestore(restoreItems)
+        }
+    }
+
+    private static func nativeRestoreRepresentations(for object: PastoItemEntity) -> [OriginalPasteboardItem] {
+        let representations = ClipboardItemDataPersistence.readItems(from: object) ?? []
+        for item in representations {
+            for type in analysisPayloadKeys.union([multiItemPayloadKey, orderedTypesPayloadKey, originalItemDataPayloadKey]) {
+                item.f_10037dab0(type)
+            }
+        }
+        return representations
+    }
+
+    // 38222c consumes one entity at a time: data/image preparation, source, flags, then aggregation.
+    private func nativeRestoreObjects(_ inputs: [ClipboardRestoreItem],
+                                      options: OriginalPasteboardRestore.Options) throws -> [OriginalPasteboardItem] {
+        try nativeRestoreGroups(inputs, options: options, legacyCopy: true).flatMap { $0 }
+    }
+
+    private func nativeRestoreGroups(_ inputs: [ClipboardRestoreItem],
+                                     options: OriginalPasteboardRestore.Options,
+                                     legacyCopy: Bool = false) throws -> [[OriginalPasteboardItem]] {
+        let multiple = inputs.count > 1
+        let aggregatesText = inputs.contains { input in
+            if let rawType = input.previewRawType() { return rawType == 5 || rawType == 4 }
+            let item = input.resolvedItem()
+            return item.kind == .text || item.kind == .richText || item.kind == .link
+        }
+        var groups: [[OriginalPasteboardItem]] = []
+        var contents: [NSAttributedString] = []
+        for input in inputs {
+            let kind: OriginalPasteboardContentKind
+            let plain: Bool
+            let representations: [OriginalPasteboardItem]
+            let items: [OriginalPasteboardItem]
+            let sourceBundleID: String?
+            if let object = input.nativeObject {
+                kind = OriginalPasteboardContentKind(rawValue: UInt8(input.previewRawType()!))!
+                plain = OriginalPasteboardRestore.usesPlainProjection(kind: kind, options: options)
+                if !plain, kind == .image {
+                    representations = Self.imageRestore.prepareNative(
+                        sourceName: (object.value(forKey: "sourceApplication") as? NSManagedObject)?.value(forKey: "name") as? String,
+                        timestamp: object.value(forKey: "timestamp") as? Date) {
+                            Self.nativeRestoreRepresentations(for: object)
+                        }
+                } else {
+                    representations = Self.nativeRestoreRepresentations(for: object)
+                }
+                items = plain ? OriginalPasteboardRestore.f_10031bcdc(representations) : representations
+                let application = object.value(forKey: "sourceApplication") as? NSManagedObject
+                sourceBundleID = application?.value(forKey: "bundleIdentifier") as? String
+            } else {
+                let item = input.resolvedItem()
+                let application = sourceApplication(for: item)
+                switch item.kind {
+                case .text, .richText: kind = .text
+                case .link: kind = .link
+                case .image: kind = .image
+                case .files: kind = .files
+                case .color: kind = .color
+                case .unknown: kind = .unknown
+                }
+                plain = OriginalPasteboardRestore.usesPlainProjection(kind: kind, options: options)
+                let read: () throws -> [OriginalPasteboardItem] = {
+                    if legacyCopy { return try Self.ordinaryRestoreRepresentations(for: item, plainTextProjection: plain) }
+                    return try Self.originalPasteboardItems(from: item.payloads)
+                }
+                if !plain, kind == .image {
+                    representations = try Self.imageRestore.prepare(sourceName: application?.name,
+                        timestamp: item.isInHistory ? item.createdAt : nil, loadItems: read)
+                } else { representations = try read() }
+                items = plain ? OriginalPasteboardRestore.f_10031bcdc(representations) : representations
+                sourceBundleID = application?.bundleIdentifier
+            }
+            for item in items {
+                item.f_100383574(removingTypesContaining: ["com.microsoft.ole.source"])
+                item.f_10037c4a8(sourceBundleID ?? "", forType: "org.nspasteboard.source")
+                item.f_1003838bc()
+            }
+            if !multiple { return [items] }
+            if aggregatesText {
+                contents.append(contentsOf: items.compactMap { $0.f_10037d33c() })
+                groups.append([])
+            } else {
+                groups.append(items)
+            }
+        }
+        let combined = OriginalPasteboardRestore.f_100383a0c(separator: "\n", contents: contents)
+        if combined.length > 0 {
+            let aggregate = OriginalPasteboardItem()
+            aggregate.f_1003838bc()
+            if !options.contains(.plainTextAndLinks), let data = OriginalPasteboardRestore.f_100381fdc(combined) {
+                aggregate.f_10037d8c8(data, forType: "public.rtf")
+            } else {
+                aggregate.f_10037c4a8(combined.string, forType: "public.utf8-plain-text")
+            }
+            groups.insert([aggregate], at: 0)
+        }
+        return groups
     }
 
     public func writeToPasteboard(ids: [UUID], pasteboard: NSPasteboard,
@@ -340,13 +502,19 @@ extension ClipboardStore {
     }
 
     private func writeToPasteboard(ids: [UUID], pasteboard: NSPasteboard,
-                                   options: OriginalPasteboardRestore.Options, recognizedImageData: Data?) throws {
+                                   options: OriginalPasteboardRestore.Options, recognizedImageData: Data?,
+                                   resolvedSelection: [ClipboardItem]? = nil) throws {
         guard !ids.isEmpty else { return }
-        // Refresh selection inputs without an extra pre-writer save; the restore transaction saves once below.
-        try reload()
-        let selected = try ids.map { id -> ClipboardItem in
-            guard let item = items.first(where: { $0.id == id && !$0.isDeleted }) else { throw ClipboardStoreError.itemNotFound }
-            return item
+        let selected: [ClipboardItem]
+        if let resolvedSelection {
+            selected = resolvedSelection
+        } else {
+            // Identifier-only compatibility callers resolve their inputs before the shared writer.
+            try reload()
+            selected = try ids.map { id -> ClipboardItem in
+                guard let item = items.first(where: { $0.id == id && !$0.isDeleted }) else { throw ClipboardStoreError.itemNotFound }
+                return item
+            }
         }
         let selections = try selected.map { item -> OriginalPasteboardRestore.Selection in
             let application = sourceApplication(for: item)
@@ -365,30 +533,51 @@ extension ClipboardStore {
                 guard kind == .image, item.imageData == recognizedImageData else { throw RecognizedImageTextCopyError.imageChanged }
                 guard let text = item.recognizedText, !text.isEmpty else { throw RecognizedImageTextCopyError.noRecognizedText }
                 representations = [OriginalPasteboardItem.f_10037c6d4(text)]
+            } else if !plain, kind == .image {
+                representations = try Self.imageRestore.prepare(sourceName: application?.name,
+                    timestamp: item.isInHistory ? item.createdAt : nil) {
+                        try Self.ordinaryRestoreRepresentations(for: item, plainTextProjection: plain)
+                    }
             } else {
                 representations = try Self.ordinaryRestoreRepresentations(for: item, plainTextProjection: plain)
-            }
-            if !plain, kind == .image {
-                representations = Self.imageRestore.prepare(representations, sourceName: application?.name,
-                                                            timestamp: item.isInHistory ? item.createdAt : nil)
             }
             return .init(kind: kind, items: representations, sourceBundleID: application?.bundleIdentifier)
         }
         let objects = OriginalPasteboardRestore.f_10038222c(selections, options: options,
             removingTypesContaining: ["com.microsoft.ole.source"]).flatMap { $0 }
+        try finishPasteboardWrite(objects, pasteboard: pasteboard) {
+            try prepareHistoryRestore(selected)
+        }
+    }
+
+    private func finishPasteboardWrite(_ objects: [OriginalPasteboardItem], pasteboard: NSPasteboard,
+                                       prepareRestoration: () throws -> HistoryRestoreOperation) throws {
         if let first = objects.first {
             first.f_10037d8c8(Data(), forType: generatedType.rawValue)
             first.f_10037d8c8(Data(), forType: replicaGeneratedType.rawValue)
         }
         // The original writer clears and writes even when processing produced no representations.
-        let writer = OriginalPasteboardWriter(pasteboard: pasteboard)
-        writer.f_10037875c(objects)
+        if let state = OriginalPasteboardCaptureState.current(for: pasteboard),
+           state.pasteboard === pasteboard {
+            state.f_10037875c(objects)
+        } else {
+            let writer = OriginalPasteboardWriter(pasteboard: pasteboard)
+            writer.f_10037875c(objects)
+        }
         if let state = OriginalPasteboardCaptureState.current(for: pasteboard) {
             state.persistChangeCount?(state.lastChangeCount)
         }
         // 0x10037a144: performAndWait + save, then undo cleanup and DidRestore, before deactivation.
-        try recordRestoredItems(ids)
+        do {
+            let restoration = try prepareRestoration()
+            try recordRestoredSelection(restoration)
+        } catch {
+            // Original 0x10037a144 releases the transaction error and continues below.
+        }
         Self.restoreUndoManager.f_1000da768().removeAllActions()
+        // 37a144 posts process-wide with the restoring manager as object.
+        // Keep the legacy subject for the existing local sound subscriber.
+        NotificationCenter.default.post(name: Self.didRestoreItemNotification, object: self)
         didRestoreItem.send()
     }
 }
@@ -525,7 +714,7 @@ public final class ClipboardMonitor: NSObject, OriginalPasteboardCaptureDelegate
     }
 
     public func originalPasteboardShouldRead(_ types: [String]) throws -> Bool {
-        try store.save()
+        // 0x10037ba14 reads the current policy without refreshing persistent history.
         var ignoredTypes = Set(store.preferences.ignoredPasteboardTypes)
         if store.preferences.ignoreTransientContent { ignoredTypes.formUnion(transientTypes) }
         if store.preferences.ignoreConcealedContent { ignoredTypes.formUnion(concealedTypes) }
@@ -580,11 +769,14 @@ public final class ClipboardMonitor: NSObject, OriginalPasteboardCaptureDelegate
                                                       kind: OriginalPasteboardClassification.f_10032362c(items)) != nil else {
             throw OriginalPasteboardItemCreationError.unsupportedContent
         }
-        let app = NSWorkspace.shared.frontmostApplication
-        guard let captured = try store.captureWithInsertionResult(pasteboard: pasteboard, sourceName: app?.localizedName ?? "未知应用",
-                                               sourceBundleID: app?.bundleIdentifier, snapshot: items,
+        guard let captured = try store.captureWithInsertionResult(pasteboard: pasteboard, sourceName: "未知应用",
+                                               sourceBundleID: nil, snapshot: items,
                                                respectMonitoringPolicy: false,
-                                               sourceApplication: OriginalSourceApplication.snapshot(app)) else {
+                                               sourceProvider: {
+                                                   let app = NSWorkspace.shared.frontmostApplication
+                                                   return (app?.localizedName ?? "未知应用", app?.bundleIdentifier,
+                                                           OriginalSourceApplication.snapshot(app))
+                                               }) else {
             throw OriginalPasteboardItemCreationError.unsupportedContent
         }
         onCapture?(captured.id)
@@ -617,13 +809,17 @@ public final class ClipboardMonitor: NSObject, OriginalPasteboardCaptureDelegate
                 return
             }
             var totalBytes = 0
-            var snapshot: [OriginalPasteboardItem] = []
             recordSynchronization("Start processing pasteboard items")
             for rawItem in rawItems {
                 let item = OriginalPasteboardItem()
                 for type in rawItem.types {
-                    guard OriginalPasteboardPolicies.permitsRemoteType(type.rawValue, allTypes: allTypes),
-                          OriginalPasteboardPolicies.f_10037c22c(type: type.rawValue, allTypes: allTypes) else { continue }
+                    guard OriginalPasteboardPolicies.permitsRemoteType(type.rawValue, allTypes: allTypes) else { continue }
+                    if let delegate = captureState.delegate {
+                        let shouldRead = withExtendedLifetime(delegate) {
+                            OriginalPasteboardPolicies.f_10037c22c(type: type.rawValue, allTypes: allTypes)
+                        }
+                        guard shouldRead else { continue }
+                    }
                     recordSynchronization("Getting data for type \(type.rawValue)")
                     guard let data = rawItem.data(forType: type) else { continue }
                     let size = totalBytes.addingReportingOverflow(data.count)
@@ -637,13 +833,14 @@ public final class ClipboardMonitor: NSObject, OriginalPasteboardCaptureDelegate
                     totalBytes = size.partialValue
                     item.f_10037e6b0(data, forType: type.rawValue)
                 }
-                if !item.f_10037da6c().isEmpty { snapshot.append(item) }
+                if !item.f_10037da6c().isEmpty { captureState.items.append(item) }
             }
-            captureState.items = snapshot
-            defer { captureState.items = [] }
-            recordSynchronization("Pasteboard sync completed, sending delegate callback")
-            lastError = nil
-            if let delegate = captureState.delegate { try delegate.originalPasteboardDidRead(captureState) }
+            do {
+                defer { captureState.items = [] }
+                recordSynchronization("Pasteboard sync completed, sending delegate callback")
+                lastError = nil
+                if let delegate = captureState.delegate { try delegate.originalPasteboardDidRead(captureState) }
+            }
             recordSynchronization("All done")
         } catch {
             lastError = error

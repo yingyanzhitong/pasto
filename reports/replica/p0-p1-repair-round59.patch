@@ -1,0 +1,340 @@
+--- phase-59-before/replica/Sources/Pasto/UI/ReplicaUIController.swift
++++ replica/Sources/Pasto/UI/ReplicaUIController.swift
+@@ -86,6 +86,8 @@
+     private let searchIndex: ReplicaSearchIndex
+     private let searchQueryChanges = CurrentValueSubject<[OriginalSearchQueryNode], Never>([])
+     private var searchQueryObservation: AnyCancellable?
++    private let listIdentifierChanges = CurrentValueSubject<String?, Never>(ClipboardStore.historyListIdentifier)
++    private var listIdentifierObservation: AnyCancellable?
+     private var collectionQueryObservation: AnyCancellable?
+     private var collectionItemObservation: AnyCancellable?
+     private var pendingCollectionChangedIDs: Set<UUID> = []
+@@ -108,6 +110,7 @@
+             self?.objectWillChange.send()
+             self?.normalizeSelection()
+         }
++        installListSelectionDelivery()
+         installSearchQueryDelivery()
+         refreshSearch()
+         collectionItemObservation = store.collectionItemUpdates.sink { [weak self] identifiers in
+@@ -323,8 +326,7 @@
+             pinboardDeletionError = nil
+         }
+         if let pinboardID, !store.pinboards.contains(where: { $0.id == pinboardID }) {
+-            self.pinboardID = nil
+-            collectionOwner?.replaceCollectionModel(state: self)
++            selectListIdentifier(ClipboardStore.historyListIdentifier, force: false)
+         }
+         if let request = pendingItemDeletion,
+            !request.ids.isSubset(of: Set(visibleItems.map(\.id))) {
+@@ -418,6 +420,35 @@
+     }
+ 
+     func chooseBoard(_ id: UUID?) {
++        selectListIdentifier(id?.uuidString ?? ClipboardStore.historyListIdentifier, force: true)
++    }
++
++    // 0x100039c50: same nonnil identifier + force emits nil, then always the target.
++    // Nil is an identifier event, not the history list (whose identifier is nonnil).
++    private func selectListIdentifier(_ identifier: String, force: Bool) {
++        if let current = listIdentifierChanges.value, current == identifier, force {
++            listIdentifierChanges.send(nil)
++        }
++        listIdentifierChanges.send(identifier)
++    }
++
++    // 03a900/03a9fc ignore nil or unresolved identifiers before publishing a list.
++    // A successful resolution still publishes the same list; no removeDuplicates.
++    private func installListSelectionDelivery() {
++        listIdentifierObservation = listIdentifierChanges.sink { [weak self] identifier in
++            guard let self, let identifier else { return }
++            let id: UUID?
++            if identifier == ClipboardStore.historyListIdentifier {
++                id = nil
++            } else {
++                guard let board = self.store.pinboards.first(where: { $0.id.uuidString == identifier }) else { return }
++                id = board.id
++            }
++            self.applySelectedList(id)
++        }
++    }
++
++    private func applySelectedList(_ id: UUID?) {
+         controller?.cancelPendingDeletion()
+         cancelItemDeletion()
+         allowsEmptySelection = false
+--- phase-59-before/replica/Sources/PastoCore/ClipboardStore.swift
++++ replica/Sources/PastoCore/ClipboardStore.swift
+@@ -83,6 +83,8 @@
+     public func searchIndexIdentifiers(before timestamp: Date?) throws -> [String] {
+         try persistence.searchIndexIdentifiers(before: timestamp)
+     }
++
++    public static let historyListIdentifier = ClipboardListPersistence.historyIdentifier
+ 
+     public func localListMenuState(pinboardID: UUID?) -> (rawType: Int64?, isEmpty: Bool) {
+         persistence.localListMenuState(identifier: pinboardID?.uuidString ?? ClipboardListPersistence.historyIdentifier)
+--- phase-59-before/scripts/tests/test_offline_p0_contracts.py
++++ scripts/tests/test_offline_p0_contracts.py
+@@ -404,7 +404,7 @@
+         cancel = body(source, "func cancelItemDeletion()")
+         for forbidden in ["store.", "selection =", "primaryID =", "hidePanel("]:
+             self.assertNotIn(forbidden, cancel)
+-        for signature in ["func applySearchInput(nodes:", "func chooseBoard(_ id:",
++        for signature in ["func applySearchInput(nodes:", "private func applySelectedList(_ id:",
+                           "@Published var query =", "@Published var searchFilters:",
+                           "@Published var pinboardID:", "@Published var showDeleted ="]:
+             with self.subTest(signature=signature):
+--- phase-59-before/scripts/tests/test_p0_repair_collection_model_replacement.py
++++ scripts/tests/test_p0_repair_collection_model_replacement.py
+@@ -78,12 +78,16 @@
+                  'self.collectionSearchQueryNodes = nodes', 'self.normalizeSelection()',
+                  'self.collectionOwner?.replaceCollectionModel(state: self)']
+         self.assertEqual([query.index(t) for t in order], sorted(query.index(t) for t in order))
+-        board = body(self.ui, 'func chooseBoard(_ id: UUID?)')
++        board = body(self.ui, 'private func applySelectedList(_ id: UUID?)')
+         self.assertLess(board.index('normalizeProjectedSelection()'), board.index('replaceCollectionModel(state: self)'))
+         cleanup = body(self.ui, 'func normalizeSelection()')
+         invalid = body(cleanup, 'if let pinboardID, !store.pinboards.contains(where: { $0.id == pinboardID })')
+-        self.assertLess(invalid.index('self.pinboardID = nil'), invalid.index('replaceCollectionModel(state: self)'))
+-        self.assertEqual(self.ui.count('.replaceCollectionModel(state: self)'), 3)
++        self.assertIn('selectListIdentifier(ClipboardStore.historyListIdentifier, force: false)', invalid)
++        choose = body(self.ui, 'func chooseBoard(_ id: UUID?)')
++        self.assertIn('selectListIdentifier(id?.uuidString ?? ClipboardStore.historyListIdentifier, force: true)', choose)
++        delivery = body(self.ui, 'private func installListSelectionDelivery()')
++        self.assertIn('self.applySelectedList(id)', delivery)
++        self.assertEqual(self.ui.count('.replaceCollectionModel(state: self)'), 2)
+ 
+     def test_ordinary_data_and_selection_updates_do_not_reset_the_applier(self):
+         for signature in ['searchIndex.onUpdate =', 'observation = store.objectWillChange.sink',
+--- phase-59-before/scripts/tests/test_p0_repair_delete_completion.py
++++ scripts/tests/test_p0_repair_delete_completion.py
+@@ -88,7 +88,7 @@
+ 
+     def test_context_cancellation_and_user_selection_guards_are_retained(self):
+         ui = UI.read_text()
+-        for signature in ["func applySearchInput(nodes:", "func chooseBoard(_ id:",
++        for signature in ["func applySearchInput(nodes:", "private func applySelectedList(_ id:",
+                           "@Published var query =", "@Published var searchFilters:",
+                           "@Published var pinboardID:", "@Published var showDeleted ="]:
+             self.assertIn("cancelItemDeletion()", body(ui, signature))
+--- phase-59-before/scripts/tests/test_p0_repair_incremental_selection_delivery.py
++++ scripts/tests/test_p0_repair_incremental_selection_delivery.py
+@@ -64,7 +64,7 @@
+ 
+     def test_live_projection_normalization_keeps_housekeeping_but_defers_selection(self):
+         normalize = body(self.ui, 'func normalizeSelection()')
+-        for token in ['pendingPinboardDeletionID = nil', 'self.pinboardID = nil', 'cancelItemDeletion()']:
++        for token in ['pendingPinboardDeletionID = nil', 'selectListIdentifier(ClipboardStore.historyListIdentifier, force: false)', 'cancelItemDeletion()']:
+             self.assertLess(normalize.index(token), normalize.index('guard collectionOwner == nil'))
+         self.assertLess(normalize.index('guard collectionOwner == nil'), normalize.index('normalizeProjectedSelection()'))
+         self.assertNotIn('applyOrderedSelection(', normalize)
+@@ -104,7 +104,7 @@
+         old_core = old_core.replace('        if let request = pendingItemDeletion, !request.ids.isSubset(of: visible) {\n'
+                                     '            cancelItemDeletion()\n        }\n', '')
+         self.assertEqual('{\n' + old_core + '    }', current)
+-        board = body(self.ui, 'func chooseBoard(_ id: UUID?)')
++        board = body(self.ui, 'private func applySelectedList(_ id: UUID?)')
+         old_board = body((self.phase / 'before' / UI).read_text(), 'func chooseBoard(_ id: UUID?)')
+         expected = old_board.replace('normalizeSelection()', 'normalizeProjectedSelection()')
+         expected = expected.replace('        normalizeProjectedSelection()\n',
+--- phase-59-before/scripts/tests/test_p1_repair_local_list_menu.py
++++ scripts/tests/test_p1_repair_local_list_menu.py
+@@ -39,8 +39,17 @@
+         for row in [self.proof['binary']] + self.proof['arm_disassemblies']:
+             self.assertEqual(hashlib.sha256((ROOT / row['path']).read_bytes()).hexdigest(), row['sha256'])
+         for path, digest in self.proof['current_sources'].items():
+-            self.assertEqual(hashlib.sha256((ROOT / path).read_bytes()).hexdigest(), digest)
+-            self.assertEqual((ROOT / path).read_bytes(), (self.phase / 'after' / path).read_bytes())
++            frozen = (self.phase / 'after' / path).read_text()
++            self.assertEqual(hashlib.sha256((self.phase / 'after' / path).read_bytes()).hexdigest(), digest)
++            markers = {
++                'replica/Sources/PastoCore/ClipboardListPersistence.swift': ['func menuState('],
++                'replica/Sources/PastoCore/ClipboardPersistence.swift': ['func localListMenuState('],
++                'replica/Sources/PastoCore/ClipboardStore.swift': ['public func localListMenuState('],
++                'replica/Sources/Pasto/UI/PanelViews.swift': ['private var boardTabs:', 'private func localListMenu('],
++                'replica/Sources/Pasto/UI/ReplicaUIController.swift': ['func clearHistory()', 'func removePinboard('],
++            }[path]
++            for marker in markers:
++                self.assertEqual(body((ROOT / path).read_text(), marker), body(frozen, marker))
+ 
+     def test_native_predicate_constants_decode_to_history_and_owner_not_cached_flags(self):
+         for row in self.proof['predicate_constants']:
+@@ -147,12 +156,14 @@
+         for path, markers in {
+             'replica/Sources/PastoCore/ClipboardStore.swift': ['private func insertPinboard(', 'private func normalize(', 'public func pinboardOwner('],
+             'replica/Sources/PastoCore/ClipboardListPersistence.swift': ['func insertPinboard(', 'func project(', 'func synchronize('],
+-            'replica/Sources/Pasto/UI/ReplicaUIController.swift': ['func chooseBoard('],
++            'replica/Sources/Pasto/UI/ReplicaUIController.swift': [],
+         }.items():
+             current = (ROOT / path).read_text()
+             before = (self.phase / 'before' / path).read_text()
+             for marker in markers:
+                 self.assertEqual(body(current, marker), body(before, marker))
++        before_ui = (self.phase / 'before/replica/Sources/Pasto/UI/ReplicaUIController.swift').read_text()
++        self.assertEqual(body(self.ui, 'private func applySelectedList('), body(before_ui, 'func chooseBoard('))
+         self.assertFalse(self.proof['partial_unscored_repairs'][1]['implemented'])
+         self.assertFalse(self.proof['full_function_migration_verified'])
+         self.assertEqual([r['function_id'] for r in self.proof['contracts']], ['Paste:0x100021f00'])
+--- /dev/null
++++ scripts/tests/test_p1_repair_list_selection.py
+@@ -0,0 +1,159 @@
++"""Optional-list force-selection source/ARM checks; does not execute Combine or Swift."""
++import hashlib
++import json
++import struct
++import sys
++import unittest
++from pathlib import Path
++
++ROOT = Path(__file__).resolve().parents[2]
++sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'scripts/tests')]
++from function_ledger import source_fragments
++from test_offline_p0_contracts import body
++from test_p0_repair_checksum_routing import original_fragment
++
++
++class ListSelectionContracts(unittest.TestCase):
++    @classmethod
++    def setUpClass(cls):
++        cls.phase = ROOT / '.local/p0-repair/phase-59'
++        cls.proof = json.loads((cls.phase / 'list-selection-contract.json').read_text())
++        cls.ui_path = 'replica/Sources/Pasto/UI/ReplicaUIController.swift'
++        cls.store_path = 'replica/Sources/PastoCore/ClipboardStore.swift'
++        cls.ui = (ROOT / cls.ui_path).read_text()
++        cls.choose = body(cls.ui, 'func chooseBoard(')
++        cls.select = body(cls.ui, 'private func selectListIdentifier(')
++        cls.delivery = body(cls.ui, 'private func installListSelectionDelivery()')
++        cls.consumer = body(cls.ui, 'private func applySelectedList(')
++        cls.original = {r['address']: original_fragment((ROOT / r['path']).read_text(), r['address'][2:])
++                        for r in cls.proof['original_fragments']}
++
++    def test_evidence_and_actual_production_inputs_are_bound(self):
++        self.assertEqual(len(self.proof['original_fragments']), 13)
++        for row in self.proof['original_fragments']:
++            self.assertEqual(source_fragments(ROOT / row['path'])[row['address']]['sha256'], row['sha256'])
++        for row in [self.proof['binary']] + self.proof['arm_disassemblies']:
++            self.assertEqual(hashlib.sha256((ROOT / row['path']).read_bytes()).hexdigest(), row['sha256'])
++        for path, digest in self.proof['current_sources'].items():
++            self.assertEqual(hashlib.sha256((ROOT / path).read_bytes()).hexdigest(), digest)
++            self.assertEqual((ROOT / path).read_bytes(), (self.phase / 'after' / path).read_bytes())
++
++    def test_native_conditional_nil_then_unconditional_target_setters_are_distinct(self):
++        words = {r['address']: int.from_bytes(bytes.fromhex(r['bytes']), 'little') for r in self.proof['ARM_words']}
++        def target(address):
++            word = words[hex(address)]
++            if word & 0x7c000000 == 0x14000000:
++                shift, width = 0, 26
++            elif word & 0x7e000000 == 0x36000000:
++                shift, width = 5, 14
++            else:
++                shift, width = 5, 19
++            offset = (word >> shift) & ((1 << width) - 1)
++            if offset & (1 << (width - 1)):
++                offset -= 1 << width
++            return address + 4 * offset
++        self.assertEqual(target(0x100039d38), 0x100039dc8)
++        self.assertEqual(target(0x100039d58), 0x100039d88)
++        for a in [0x100039d80, 0x100039d84]:
++            self.assertEqual(target(a), 0x100039dc8)
++        self.assertEqual(words['0x100039da8'], 0xa9027fff)  # stp xzr,xzr
++        self.assertEqual(words['0x100039de8'], 0xa9024ff6)  # stp target words
++        for a in [0x100039dc4, 0x100039e10]:
++            self.assertEqual(target(a), 0x1002cb5a0)
++        self.assertEqual(target(0x10003a99c), 0x10003a9e0)  # nil consumer skips resolution
++        self.assertEqual(target(0x10003a9b8), 0x10003a9fc)
++        self.assertEqual(target(0x10003aa48), 0x10003ab14)  # unresolved skips publication
++
++    def test_force_gate_reads_real_subject_state_and_always_delivers_target(self):
++        self.assertIn('private let listIdentifierChanges = CurrentValueSubject<String?, Never>(ClipboardStore.historyListIdentifier)', self.ui)
++        self.assertIn('if let current = listIdentifierChanges.value, current == identifier, force', self.select)
++        self.assertEqual(self.select.count('listIdentifierChanges.send(nil)'), 1)
++        self.assertEqual(self.select.count('listIdentifierChanges.send(identifier)'), 1)
++        self.assertLess(self.select.index('send(nil)'), self.select.index('send(identifier)'))
++        self.assertNotIn('pinboardID =', self.select)
++        self.assertNotIn('replaceCollectionModel', self.select)
++        self.assertNotIn('return', self.select)
++        native = self.original['0x100039c50']
++        self.assertIn('if (local_a8.unknown != (undefined *)0x0)', native)
++        self.assertIn('if ((param_3 & 1) != 0)', native)
++        self.assertEqual(native.count('FUN_1002cb5a0(&local_b0)'), 2)
++
++    def test_real_subscription_installed_and_retained_after_dependencies_before_search(self):
++        self.assertIn('private var listIdentifierObservation: AnyCancellable?', self.ui)
++        init = body(body(self.ui, 'final class ReplicaUIState: ObservableObject'), 'init(store: ClipboardStore)')
++        steps = ['searchIndex = ReplicaSearchIndex(', 'installListSelectionDelivery()', 'installSearchQueryDelivery()']
++        self.assertEqual([init.index(t) for t in steps], sorted(init.index(t) for t in steps))
++        self.assertIn('listIdentifierObservation = listIdentifierChanges.sink { [weak self] identifier in', self.delivery)
++        self.assertIn('guard let self, let identifier else { return }', self.delivery)
++        self.assertNotIn('removeDuplicates', self.delivery)
++        self.assertNotIn('Task', self.delivery)
++        self.assertNotIn('DispatchQueue', self.delivery)
++
++    def test_nil_and_unresolved_events_cannot_masquerade_as_history(self):
++        self.assertLess(self.delivery.index('guard let self, let identifier else { return }'),
++                        self.delivery.index('identifier == ClipboardStore.historyListIdentifier'))
++        self.assertIn('self.store.pinboards.first(where: { $0.id.uuidString == identifier }) else { return }', self.delivery)
++        self.assertLess(self.delivery.index('id = board.id'), self.delivery.index('self.applySelectedList(id)'))
++        self.assertEqual(self.delivery.count('self.applySelectedList(id)'), 1)
++        self.assertNotIn('?? nil', self.delivery)
++        self.assertIn('public static let historyListIdentifier = ClipboardListPersistence.historyIdentifier', (ROOT / self.store_path).read_text())
++        self.assertIn('static let historyIdentifier = "sharedPasteboardHistory"',
++                      (ROOT / 'replica/Sources/PastoCore/ClipboardListPersistence.swift').read_text())
++
++    def test_successful_selection_tail_is_reused_exactly_not_run_on_nil(self):
++        previous = (self.phase / 'before' / self.ui_path).read_text()
++        self.assertEqual(self.consumer, body(previous, 'func chooseBoard('))
++        for token in ['cancelItemDeletion()', 'pinboardID = id', 'selection = []',
++                      'normalizeProjectedSelection()', 'collectionOwner?.replaceCollectionModel(state: self)']:
++            self.assertIn(token, self.consumer)
++            self.assertNotIn(token, self.select + self.delivery)
++        self.assertIn('FUN_10003a9fc(param_3,param_4)', self.original['0x10003a900'])
++        self.assertIn('if (local_48 != 0)', self.original['0x10003a9fc'])
++        self.assertIn('Combine::Published::_set_subscript()', self.original['0x10003a9fc'])
++
++    def test_tab_reveal_and_fallback_reach_actual_identifier_entry(self):
++        self.assertIn('selectListIdentifier(id?.uuidString ?? ClipboardStore.historyListIdentifier, force: true)', self.choose)
++        for address in ['0x100099adc', '0x10007d9c8', '0x1000a1cb0']:
++            native = self.original[address]
++            self.assertRegex(native, r'FUN_100039c50\([^;]+,1\)')
++        reveal = body(self.ui, 'func chooseListForItemReveal(')
++        self.assertLess(reveal.index('applySearchInput(nodes: [], text: "", filters: [])'), reveal.index('chooseBoard(id)'))
++        fallback = body(self.ui, 'func normalizeSelection()')
++        self.assertIn('selectListIdentifier(ClipboardStore.historyListIdentifier, force: false)', fallback)
++        self.assertNotIn('self.pinboardID = nil', fallback)
++
++    def test_query_delivery_and_existing_collection_lifecycle_are_unchanged(self):
++        previous = (self.phase / 'before' / self.ui_path).read_text()
++        for marker in ['private func installSearchQueryDelivery()', 'var visibleItems:',
++                       'func consumePendingListFocus(', 'func applyFullCollectionReload(',
++                       'func applyIncrementalCollectionSnapshot(', 'func selectedItemTargetLists()']:
++            self.assertEqual(body(self.ui, marker), body(previous, marker))
++        self.assertEqual((ROOT / 'replica/Sources/Pasto/UI/ReplicaNativeCardCollection.swift').read_bytes(),
++                         (self.phase / 'before/replica/Sources/Pasto/UI/ReplicaNativeCardCollection.swift').read_bytes())
++        for text in [self.choose, self.select, self.delivery, self.consumer]:
++            self.assertNotIn('applySearchInput(', text)
++            self.assertNotIn('searchInputChanged()', text)
++
++    def test_force_transition_fixture_distinguishes_nil_identifier_from_history_view(self):
++        # Original-bound event trace, not execution of the Swift subscriber.
++        def trace(current, target, force, resolved):
++            events = ([None] if current is not None and current == target and force else []) + [target]
++            return events, [e for e in events if e is not None and e in resolved]
++        for current in [None, 'history', 'A', 'B']:
++            for target in ['history', 'A', 'missing']:
++                for force in [False, True]:
++                    events, lists = trace(current, target, force, {'history', 'A', 'B'})
++                    self.assertEqual(events[-1], target)
++                    self.assertEqual(events.count(None), int(current is not None and current == target and force))
++                    self.assertEqual(lists, [] if target == 'missing' else [target])
++        events, lists = trace('A', 'A', True, {'history', 'A'})
++        self.assertEqual(events, [None, 'A'])
++        self.assertEqual(lists, ['A'])  # no intermediate history or empty collection
++
++    def test_finite_contract_is_not_claimed_as_full_storage_provider_migration(self):
++        self.assertEqual([r['function_id'] for r in self.proof['contracts']], ['Paste:0x100039c50'])
++        self.assertFalse(self.proof['full_function_migration_verified'])
++        self.assertEqual(self.proof['function_map_markers_upgraded'], 0)
++        limitations = '\n'.join(self.proof['retained_partial_contracts'])
++        for token in ['persistent wrapper', 'FRC/provider', 'UUID', 'ABI']:
++            self.assertIn(token, limitations)

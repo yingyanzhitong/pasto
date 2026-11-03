@@ -1,0 +1,18 @@
+--- a/replica/Sources/PastoCore/Pasteboard.swift
++++ b/replica/Sources/PastoCore/Pasteboard.swift
+@@ -512,7 +512,6 @@
+             first.f_10037d8c8(Data(), forType: replicaGeneratedType.rawValue)
+         }
+         // The original writer clears and writes even when processing produced no representations.
+-        let restoration = try prepareRestoration()
+         let writer = OriginalPasteboardWriter(pasteboard: pasteboard)
+         writer.f_10037875c(objects)
+         if let state = OriginalPasteboardCaptureState.current(for: pasteboard) {
+@@ -520,6 +519,7 @@
+         }
+         // 0x10037a144: performAndWait + save, then undo cleanup and DidRestore, before deactivation.
+         do {
++            let restoration = try prepareRestoration()
+             try recordRestoredSelection(restoration)
+         } catch {
+             // Original 0x10037a144 releases the transaction error and continues below.

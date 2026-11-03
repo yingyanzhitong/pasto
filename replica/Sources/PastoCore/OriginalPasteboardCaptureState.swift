@@ -47,6 +47,7 @@ public final class OriginalPasteboardCaptureState {
     public weak var delegate: (any OriginalPasteboardCaptureDelegate)?
     public var items: [OriginalPasteboardItem] = []
     public var lastChangeCount: Int
+    public private(set) var lastWriteSucceeded = false
     var persistChangeCount: ((Int) -> Void)?
     public var pollTimer: Timer?
     public var syncTimer: Timer?
@@ -61,6 +62,22 @@ public final class OriginalPasteboardCaptureState {
 
     public static func f_100378664(changeCount: Int, pasteboard: NSPasteboard = .general) -> OriginalPasteboardCaptureState {
         OriginalPasteboardCaptureState(pasteboard: pasteboard, changeCount: changeCount)
+    }
+
+    public func f_10037875c(_ items: [OriginalPasteboardItem]) {
+        let objects = items.map { item -> NSPasteboardItem in
+            let object = NSPasteboardItem()
+            for type in item.f_10037da6c() {
+                if let data = item.f_10037e5e0(forType: type) {
+                    object.setData(data as Data, forType: NSPasteboard.PasteboardType(type))
+                }
+            }
+            return object
+        }
+        pasteboard.clearContents()
+        lastWriteSucceeded = pasteboard.writeObjects(objects)
+        lastChangeCount = pasteboard.changeCount
+        Self.current(for: pasteboard)?.lastChangeCount = lastChangeCount
     }
 
     public static func register(_ state: OriginalPasteboardCaptureState) {

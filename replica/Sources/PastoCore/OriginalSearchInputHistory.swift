@@ -50,7 +50,8 @@ public final class OriginalSearchInputHistory {
     public func f_1002f60fc() {
         timer?.invalidate()
         timer = Timer.scheduledTimer(withTimeInterval: interval, repeats: false) { [weak self] _ in
-            Task { @MainActor [weak self] in self?.f_1002f5fe8() }
+            guard let self else { return }
+            Task { @MainActor [self] in self.f_1002f5fe8() }
         }
     }
 

@@ -1,0 +1,490 @@
+--- phase-61-before/replica/Sources/Pasto/UI/FilterBrowser.swift
++++ replica/Sources/Pasto/UI/FilterBrowser.swift
+@@ -309,9 +309,9 @@
+             }
+             field?.f_1000457cc()
+         }
+-        let store = self.store
++        let state = self.state
+         let hideApplied = NSEvent.modifierFlags.contains(.option)
+-        let model = ReplicaFilterBrowserModel(load: { Self.filterBrowserSections(store: store) })
++        let model = ReplicaFilterBrowserModel(load: { Self.filterBrowserSections(filters: state.availableSearchFilters()) })
+         let content = ReplicaFilterBrowser(state: state, model: model,
+             hideApplied: hideApplied, close: { [weak popover] in popover?.close() })
+         let controller = NSHostingController(rootView: content)
+@@ -321,26 +321,37 @@
+         field?.f_1000457cc()
+     }
+ 
+-    private static func filterBrowserSections(store: ClipboardStore) -> [ReplicaFilterBrowser.Section] {
+-        let sources = (try? ReplicaSearchSuggestionSource.applications("", store: store)) ?? []
+-        let devices = (try? ReplicaSearchSuggestionSource.devices("", store: store)) ?? []
+-        let pinboards = ((try? ReplicaSearchSuggestionSource.pinboards("", store: store)) ?? [])
+-            .compactMap { value -> ReplicaSearchFilterChip.Selection? in
+-                guard let id = UUID(uuidString: value.identifier) else { return nil }
+-                return .pinboard(id)
+-            }
+-        let types = OriginalSearchSuggestions.f_10030f3e0("").compactMap { value -> ReplicaSearchFilterChip.Selection? in
+-            guard let kind = ClipboardKind(rawValue: value == "File" ? "files" : value.lowercased()) else { return nil }
++    private static func filterBrowserSections(filters: [UInt8: [OriginalSearchQueryNode]]) -> [ReplicaFilterBrowser.Section] {
++        let types = (filters[1] ?? []).compactMap { node -> ReplicaSearchFilterChip.Selection? in
++            guard case let .filter(1, value) = node,
++                  let kind = ClipboardKind(rawValue: value == "File" ? "files" : value.lowercased()) else { return nil }
+             return .kind(kind)
+         }
++        let sources = (filters[0] ?? []).compactMap { node -> ReplicaSearchFilterChip.Selection? in
++            guard case let .filter(0, value) = node else { return nil }
++            return .source(value)
++        }
++        let pinboards = (filters[5] ?? []).compactMap { node -> ReplicaSearchFilterChip.Selection? in
++            guard case let .filter(5, value) = node, let id = UUID(uuidString: value) else { return nil }
++            return .pinboard(id)
++        }
++        let dates = (filters[3] ?? []).compactMap { node -> ReplicaSearchFilterChip.Selection? in
++            guard case let .filter(3, value) = node else { return nil }
++            let parts = value.split(separator: " ")
++            guard parts.count == 2, let start = Double(parts[0]), let end = Double(parts[1]), start <= end else { return nil }
++            return .date(.init(title: OriginalSearchDateEncoding.f_1002d8e9c(value) ?? value,
++                range: Date(timeIntervalSince1970: start)..<Date(timeIntervalSince1970: end)))
++        }
++        let devices = (filters[4] ?? []).compactMap { node -> ReplicaSearchFilterChip.Selection? in
++            guard case let .filter(4, value) = node else { return nil }
++            return .device(value)
++        }
+         return [
+-            .init(id: 1, title: OriginalSearchLocalization.text("search.filters.section.type"),
+-                  choices: types),
+-            .init(id: 0, title: OriginalSearchLocalization.text("search.filters.section.app"), choices: sources.map { .source($0) }),
+-            .init(id: 5, title: OriginalSearchLocalization.text("pasto.search.filters.section.group"),
+-                  choices: pinboards),
+-            .init(id: 3, title: OriginalSearchLocalization.text("search.filters.section.date"), choices: OriginalSearchDateRanges.f_1002d8ce0().map { .date($0) }),
+-            .init(id: 4, title: OriginalSearchLocalization.text("search.filters.section.device"), choices: devices.map { .device($0) })
++            .init(id: 1, title: OriginalSearchLocalization.text("search.filters.section.type"), choices: types),
++            .init(id: 0, title: OriginalSearchLocalization.text("search.filters.section.app"), choices: sources),
++            .init(id: 5, title: OriginalSearchLocalization.text("pasto.search.filters.section.group"), choices: pinboards),
++            .init(id: 3, title: OriginalSearchLocalization.text("search.filters.section.date"), choices: dates),
++            .init(id: 4, title: OriginalSearchLocalization.text("search.filters.section.device"), choices: devices)
+         ]
+     }
+ }
+--- phase-61-before/replica/Sources/Pasto/UI/ReplicaSearchIndex.swift
++++ replica/Sources/Pasto/UI/ReplicaSearchIndex.swift
+@@ -51,6 +51,7 @@
+     private let nativeIdentifierFormatKey: String
+     private let index: CSSearchableIndex
+     private weak var store: ClipboardStore?
++    private var suggestionDataSource: OriginalSearchSuggestions.Provider?
+     private let appKey = CSCustomAttributeKey(keyName: "pasteApp", searchable: true, searchableByDefault: true, unique: false, multiValued: false)!
+     private let typeKey = CSCustomAttributeKey(keyName: "pasteType", searchable: true, searchableByDefault: true, unique: false, multiValued: false)!
+     private let deviceKey = CSCustomAttributeKey(keyName: "pasteDevice", searchable: true, searchableByDefault: true, unique: false, multiValued: false)!
+@@ -97,6 +98,15 @@
+         // Pasto compatibility: rebuild the disposable index once before reusing old prefixed IDs.
+         mayRestoreSavedState = UserDefaults.standard.bool(forKey: nativeIdentifierFormatKey)
+         index.indexDelegate = self
++    }
++
++    // 0x1002e1b54: the installed optional source belongs to the search index.
++    func setSuggestionDataSource(_ provider: OriginalSearchSuggestions.Provider?) {
++        suggestionDataSource = provider
++    }
++
++    func availableFilters() -> [UInt8: [OriginalSearchQueryNode]] {
++        OriginalSearchSuggestions.f_1002e00a0(provider: { suggestionDataSource })
+     }
+ 
+     deinit { historyTask?.cancel(); queryTask?.cancel() }
+--- phase-61-before/replica/Sources/Pasto/UI/ReplicaUIController.swift
++++ replica/Sources/Pasto/UI/ReplicaUIController.swift
+@@ -105,6 +105,7 @@
+         cloudSync = ICloudDriveSyncController(store: store)
+         originalCloudSync = CloudKitSyncController(store: store, drive: cloudSync)
+         searchIndex = ReplicaSearchIndex(directoryURL: store.directoryURL, store: store)
++        searchIndex.setSuggestionDataSource(store.makeSearchSuggestionProvider())
+         stackIDs = store.preferences.stackItemIDs
+         searchIndex.onUpdate = { [weak self] in
+             self?.objectWillChange.send()
+@@ -218,6 +219,10 @@
+ 
+     private func refreshSearch() {
+         searchIndex.update(items: store.items, nodes: indexedSearchQueryNodes)
++    }
++
++    func availableSearchFilters() -> [UInt8: [OriginalSearchQueryNode]] {
++        searchIndex.availableFilters()
+     }
+ 
+     var searchFailed: Bool { !isCollectionSearchQueryEmpty && searchIndex.error != nil }
+--- phase-61-before/replica/Sources/PastoCore/ClipboardStore.swift
++++ replica/Sources/PastoCore/ClipboardStore.swift
+@@ -57,6 +57,15 @@
+     public func observeSearchChanges(_ consume: @escaping ([OriginalSearchHistoryChange]) async throws -> Void) async {
+         await persistence.observeSearchChanges(consume)
+     }
++    // Local equivalent of the startup viewContext-backed suggestion-source registration.
++    public func makeSearchSuggestionProvider() -> OriginalSearchSuggestions.Provider {
++        let persistence = self.persistence
++        return OriginalSearchSuggestions.Provider(
++            app: { try persistence.searchApplicationNames(matching: $0) },
++            device: { try persistence.searchDeviceNames(matching: $0) },
++            pinboard: { try persistence.searchPinboardNames(matching: $0) })
++    }
++
+     public func searchPinboardNames(matching query: String) throws -> [(identifier: String, name: String)] {
+         try persistence.searchPinboardNames(matching: query)
+     }
+--- phase-61-before/replica/Sources/PastoCore/OriginalSearchSuggestions.swift
++++ replica/Sources/PastoCore/OriginalSearchSuggestions.swift
+@@ -44,6 +44,27 @@
+             self.device = device
+             self.pinboard = pinboard
+         }
++    }
++
++    // 0x1002e00a0: optional provider, independently suppressed source errors, dates always.
++    public static func f_1002e00a0(provider: () -> Provider?,
++                                  dateFilters: [OriginalSearchDateFilter]? = nil) -> [UInt8: [OriginalSearchQueryNode]] {
++        var filters: [UInt8: [OriginalSearchQueryNode]] = [:]
++        let types = try? (provider()?.type("") ?? [])
++        filters[1] = types.map { $0.map { .filter(1, $0) } }
++        let apps = try? (provider()?.app("") ?? [])
++        filters[0] = apps.map { $0.map { .filter(0, $0) } }
++        let devices = try? (provider()?.device("") ?? [])
++        filters[4] = devices.map { $0.map { .filter(4, $0) } }
++        filters[3] = (dateFilters ?? OriginalSearchDateRanges.f_1002d8ce0()).map { date in
++            // The available-filters builder truncates both endpoints toward zero.
++            let start = Int(date.range.lowerBound.timeIntervalSince1970)
++            let end = Int(date.range.upperBound.timeIntervalSince1970)
++            return .filter(3, "\(start) \(end)")
++        }
++        let pinboards = try? (provider()?.pinboard("") ?? [])
++        filters[5] = pinboards.map { $0.map { .filter(5, $0.identifier) } }
++        return filters
+     }
+ 
+     public static func f_10030f3e0(_ query: String) -> [String] {
+--- phase-61-before/scripts/tests/test_filter_browser_contracts.py
++++ scripts/tests/test_filter_browser_contracts.py
+@@ -34,7 +34,9 @@
+         count, = struct.unpack_from('<Q', data, 16)
+         values = [data[32+i*16:48+i*16][:data[47+i*16]&15].decode() for i in range(count)]
+         self.assertEqual(values, ['Unknown', 'Image', 'Color', 'File', 'Link', 'Text'])
+-        self.assertIn('OriginalSearchSuggestions.f_10030f3e0("")', opening)
++        factory = (ROOT / 'replica/Sources/PastoCore/OriginalSearchSuggestions.swift').read_text()
++        self.assertIn('type: @escaping (String) throws -> [String] = OriginalSearchSuggestions.f_10030f3e0', factory)
++        self.assertIn('filters[1] ?? []', opening)
+         self.assertIn('value == "File" ? "files" : value.lowercased()', opening)
+         self.assertNotIn('[ClipboardKind.text, .link', opening)
+ 
+@@ -61,8 +63,10 @@
+ 
+     def test_browser_reuses_actual_provider_and_name_order_not_panel_sort_order(self):
+         opening = body(self.browser, 'private static func filterBrowserSections(')
+-        for group in ['applications', 'devices', 'pinboards']:
+-            self.assertIn('ReplicaSearchSuggestionSource.'+group+'("", store: store)', opening)
++        self.assertIn('filters: state.availableSearchFilters()', body(self.browser, 'func showFilterBrowser('))
++        factory = body((ROOT / 'replica/Sources/PastoCore/ClipboardStore.swift').read_text(), 'public func makeSearchSuggestionProvider()')
++        for group in ['Application', 'Device', 'Pinboard']:
++            self.assertIn('try persistence.search' + group + 'Names(matching: $0)', factory)
+         self.assertNotIn('sortOrder', opening)
+         self.assertNotIn('Set(store.items.map', opening)
+         boards = body(self.provider, 'static func pinboards(')
+@@ -144,6 +148,14 @@
+                     checkpoint = ROOT / '.local/p0-repair/phase-41/before' / ref['path']
+                     self.assertIn(ref['symbol'], checkpoint.read_text())
+                     self.assertIn(ref['symbol'], (ROOT / 'replica/Sources/PastoCore/ClipboardSourcePersistence.swift').read_text())
++                elif ref['path'].endswith('FilterBrowser.swift') and ref['symbol'] in [
++                    'OriginalSearchSuggestions.f_10030f3e0("")',
++                    'ReplicaSearchSuggestionSource.applications("", store: store)',
++                    'ReplicaSearchSuggestionSource.devices("", store: store)',
++                    'ReplicaSearchSuggestionSource.pinboards("", store: store)']:
++                    frozen = ROOT / '.local/p0-repair/phase-61/before' / ref['path']
++                    self.assertIn(ref['symbol'], frozen.read_text())
++                    self.assertIn('filters: state.availableSearchFilters()', body(current, 'func showFilterBrowser('))
+                 elif ref['symbol'] == 'let sections: [ReplicaFilterBrowser.Section]':
+                     checkpoint = ROOT / '.local/p0-repair/phase-60/before' / ref['path']
+                     self.assertIn(ref['symbol'], checkpoint.read_text())
+--- phase-61-before/scripts/tests/test_p1_repair_filter_loading.py
++++ scripts/tests/test_p1_repair_filter_loading.py
+@@ -33,8 +33,11 @@
+             self.assertEqual(source_fragments(ROOT / row['path'])[row['address']]['sha256'], row['sha256'])
+         for row in [self.proof['binary']] + self.proof['arm_disassemblies']:
+             self.assertEqual(hashlib.sha256((ROOT / row['path']).read_bytes()).hexdigest(), row['sha256'])
+-        self.assertEqual(hashlib.sha256((ROOT / self.path).read_bytes()).hexdigest(), self.proof['current_sources'][self.path])
+-        self.assertEqual((ROOT / self.path).read_bytes(), (self.phase / 'after' / self.path).read_bytes())
++        frozen = (self.phase / 'after' / self.path).read_text()
++        self.assertEqual(hashlib.sha256((self.phase / 'after' / self.path).read_bytes()).hexdigest(), self.proof['current_sources'][self.path])
++        for marker in ['private final class ReplicaFilterBrowserModel: ObservableObject', 'private var visibleSections:',
++                       'private func activate(', 'private func handleMonitoredKey(']:
++            self.assertEqual(body(self.source, marker), body(frozen, marker))
+ 
+     def test_descriptor_and_MainActor_hop_bind_real_task_provider_and_publication(self):
+         descriptor = self.proof['async_descriptor']
+@@ -67,8 +70,8 @@
+         self.assertIn('*(MainActor **)(puVar2 + 0x20) = unaff_x20', native)
+ 
+     def test_opening_passes_deferred_builder_not_materialized_source_arrays(self):
+-        self.assertIn('let store = self.store', self.opening)
+-        self.assertIn('ReplicaFilterBrowserModel(load: { Self.filterBrowserSections(store: store) })', self.opening)
++        self.assertIn('let state = self.state', self.opening)
++        self.assertIn('ReplicaFilterBrowserModel(load: { Self.filterBrowserSections(filters: state.availableSearchFilters()) })', self.opening)
+         self.assertLess(self.opening.index('let hideApplied = NSEvent.modifierFlags.contains(.option)'),
+                         self.opening.index('let model ='))
+         self.assertLess(self.opening.index('let model ='), self.opening.index('popover.present(controller, relativeTo: button)'))
+@@ -88,15 +91,19 @@
+         self.assertNotIn('ReplicaFilterBrowserModel(load:', view)
+         self.assertNotIn('let sections: [Section]', view)
+ 
+-    def test_builder_reuses_previous_queries_order_and_error_fallback_exactly(self):
++    def test_builder_reuses_source_service_and_keeps_frozen_prior_query_evidence(self):
++        frozen = (self.phase / 'after' / self.path).read_text()
+         previous_opening = body(self.before, 'func showFilterBrowser(')
+         previous = previous_opening[previous_opening.index('        let sources ='):previous_opening.index('        let content =')]
+         previous = previous.replace('        let sections: [ReplicaFilterBrowser.Section] = [', '        return [')
+-        self.assertEqual(self.builder, '{\n' + previous + '    }')
+-        for group in ['applications', 'devices', 'pinboards']:
+-            self.assertIn('try? ReplicaSearchSuggestionSource.' + group + '("", store: store)', self.builder)
+-        self.assertIn('OriginalSearchDateRanges.f_1002d8ce0()', self.builder)
+-        self.assertIn('OriginalSearchSuggestions.f_10030f3e0("")', self.builder)
++        self.assertEqual(body(frozen, 'private static func filterBrowserSections('), '{\n' + previous + '    }')
++        self.assertIn('filters: state.availableSearchFilters()', self.opening)
++        for tag in [1, 0, 5, 3, 4]:
++            self.assertIn('filters[' + str(tag) + '] ?? []', self.builder)
++        service = (ROOT / 'replica/Sources/PastoCore/OriginalSearchSuggestions.swift').read_text()
++        load = body(service, 'public static func f_1002e00a0(')
++        for source in ['app', 'type', 'device', 'pinboard']:
++            self.assertIn('try? (provider()?.' + source + '(""', load)
+         self.assertNotIn('store.items', self.builder)
+ 
+     def test_existing_query_keyboard_expansion_and_close_consumers_are_unchanged(self):
+@@ -117,7 +124,6 @@
+         limitations = '\n'.join(self.proof['retained_partial_contracts'])
+         for token in ['2e00a0/07d0e0', 'first-frame', 'ABI', 'try?']:
+             self.assertIn(token, limitations)
+-        for path in ['replica/Sources/Pasto/UI/ReplicaSearchIndex.swift',
+-                     'replica/Sources/Pasto/UI/ReplicaSearchSuggestionSource.swift',
++        for path in ['replica/Sources/Pasto/UI/ReplicaSearchSuggestionSource.swift',
+                      'replica/Sources/PastoCore/ClipboardSourcePersistence.swift']:
+             self.assertEqual((ROOT / path).read_bytes(), (self.phase / 'before' / path).read_bytes())
+--- phase-61-before/scripts/tests/test_p1_repair_list_selection.py
++++ scripts/tests/test_p1_repair_list_selection.py
+@@ -35,8 +35,13 @@
+         for row in [self.proof['binary']] + self.proof['arm_disassemblies']:
+             self.assertEqual(hashlib.sha256((ROOT / row['path']).read_bytes()).hexdigest(), row['sha256'])
+         for path, digest in self.proof['current_sources'].items():
+-            self.assertEqual(hashlib.sha256((ROOT / path).read_bytes()).hexdigest(), digest)
+-            self.assertEqual((ROOT / path).read_bytes(), (self.phase / 'after' / path).read_bytes())
++            frozen = (self.phase / 'after' / path).read_text()
++            self.assertEqual(hashlib.sha256((self.phase / 'after' / path).read_bytes()).hexdigest(), digest)
++            markers = {self.ui_path: ['func chooseBoard(', 'private func selectListIdentifier(',
++                       'private func installListSelectionDelivery()', 'private func applySelectedList('],
++                       self.store_path: ['public func localListMenuState(']}[path]
++            for marker in markers:
++                self.assertEqual(body((ROOT / path).read_text(), marker), body(frozen, marker))
+ 
+     def test_native_conditional_nil_then_unconditional_target_setters_are_distinct(self):
+         words = {r['address']: int.from_bytes(bytes.fromhex(r['bytes']), 'little') for r in self.proof['ARM_words']}
+--- phase-61-before/scripts/tests/test_p1_repair_native_sources.py
++++ scripts/tests/test_p1_repair_native_sources.py
+@@ -201,8 +201,10 @@
+         self.assertIn('app: { try ReplicaSearchSuggestionSource.applications($0, store: store) }', editor)
+         self.assertIn('device: { try ReplicaSearchSuggestionSource.devices($0, store: store) }', editor)
+         browser = (ROOT / 'replica/Sources/Pasto/UI/FilterBrowser.swift').read_text()
+-        self.assertIn('(try? ReplicaSearchSuggestionSource.applications("", store: store)) ?? []', browser)
+-        self.assertIn('(try? ReplicaSearchSuggestionSource.devices("", store: store)) ?? []', browser)
++        self.assertIn('filters: state.availableSearchFilters()', browser)
++        load = body((ROOT / 'replica/Sources/PastoCore/OriginalSearchSuggestions.swift').read_text(), 'public static func f_1002e00a0(')
++        self.assertIn('try? (provider()?.app("") ?? [])', load)
++        self.assertIn('try? (provider()?.device("") ?? [])', load)
+         suggestions = (ROOT / 'replica/Sources/PastoCore/OriginalSearchSuggestions.swift').read_text()
+         self.assertIn('let candidates = try source(query)', suggestions)
+         self.assertIn('} catch {\n                continue', suggestions)
+--- phase-61-before/scripts/tests/test_p1_repair_search_editor_provider.py
++++ scripts/tests/test_p1_repair_search_editor_provider.py
+@@ -156,8 +156,9 @@
+         self.assertIn('let candidates = try source(query)', candidates)
+         self.assertIn('} catch {\n                continue', candidates)
+         browser = (ROOT / 'replica/Sources/Pasto/UI/FilterBrowser.swift').read_text()
+-        opening = body(browser, 'private static func filterBrowserSections(')
+-        self.assertIn('((try? ReplicaSearchSuggestionSource.pinboards("", store: store)) ?? [])', opening)
++        self.assertIn('filters: state.availableSearchFilters()', body(browser, 'func showFilterBrowser('))
++        load = body(suggestions, 'public static func f_1002e00a0(')
++        self.assertIn('try? (provider()?.pinboard("") ?? [])', load)
+ 
+     def test_existing_native_graph_is_reused_and_model_is_not_changed(self):
+         signature = 'static func addEntities(to model:'
+--- /dev/null
++++ scripts/tests/test_p1_repair_suggestion_source_service.py
+@@ -0,0 +1,173 @@
++"""Real optional provider registration and consumers, native error/date branches; source only."""
++import hashlib
++import json
++import struct
++import sys
++import unittest
++from pathlib import Path
++
++ROOT = Path(__file__).resolve().parents[2]
++sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'scripts/tests')]
++from function_ledger import source_fragments
++from test_offline_p0_contracts import body
++from test_p0_repair_checksum_routing import original_fragment
++
++
++class SuggestionSourceServiceContracts(unittest.TestCase):
++    @classmethod
++    def setUpClass(cls):
++        cls.phase = ROOT / '.local/p0-repair/phase-61'
++        cls.proof = json.loads((cls.phase / 'suggestion-source-service-contract.json').read_text())
++        cls.paths = {name: 'replica/Sources/' + path for name, path in {
++            'core': 'PastoCore/OriginalSearchSuggestions.swift', 'store': 'PastoCore/ClipboardStore.swift',
++            'index': 'Pasto/UI/ReplicaSearchIndex.swift', 'state': 'Pasto/UI/ReplicaUIController.swift',
++            'browser': 'Pasto/UI/FilterBrowser.swift'}.items()}
++        cls.sources = {k: (ROOT / p).read_text() for k, p in cls.paths.items()}
++        cls.load = body(cls.sources['core'], 'public static func f_1002e00a0(')
++        cls.original = {r['address']: original_fragment((ROOT / r['path']).read_text(), r['address'][2:])
++                        for r in cls.proof['original_fragments']}
++
++    def test_original_binary_fragments_prior_contracts_and_real_source_hashes(self):
++        self.assertEqual(len(self.proof['original_fragments']), 11)
++        for row in self.proof['original_fragments']:
++            self.assertEqual(source_fragments(ROOT / row['path'])[row['address']]['sha256'], row['sha256'])
++        for row in [self.proof['binary'], self.proof['arm_disassembly']] + self.proof['prior_contracts']:
++            self.assertEqual(hashlib.sha256((ROOT / row['path']).read_bytes()).hexdigest(), row['sha256'])
++        for path, digest in self.proof['current_sources'].items():
++            self.assertEqual(hashlib.sha256((ROOT / path).read_bytes()).hexdigest(), digest)
++            self.assertEqual((ROOT / path).read_bytes(), (self.phase / 'after' / path).read_bytes())
++
++    def test_native_startup_keypath_registration_witness_and_context_provider_remain_bound(self):
++        prior = json.loads((ROOT / self.proof['prior_contracts'][0]['path']).read_text())
++        names = {r['value']: [x['value'] for x in r['fields']] for r in prior['nominal_types']}
++        self.assertEqual(names['SearchService'], ['index', 'logger'])
++        self.assertIn('suggestionDataSource', names['SpotlightIndex'])
++        self.assertEqual(names['CoreDataSuggestionDataSource'], ['managedObjectContext'])
++        witness = prior['suggestion_data_source']['concrete_witness']
++        raw = bytes.fromhex(witness['bytes'])
++        targets = [0x100000000 + (struct.unpack_from('<Q', raw, offset)[0] & ((1 << 36) - 1)) for offset in [8, 16, 24, 32]]
++        self.assertEqual(targets, [0x10030f380, 0x10030e6a8, 0x10030f3a0, 0x10030f3c0])
++        self.assertIn('FUN_1002fd914()', self.original['0x10007d73c'])
++        self.assertIn('FUN_1002fd934(FUN_10030f5a8', self.original['0x1002fd914'])
++        self.assertIn('objc_stub::viewContext(', self.original['0x1002fd99c'])
++        self.assertIn('FUN_1001a7c4c(auStack_38,unaff_x20 + 0x28', self.original['0x1002e1b54'])
++
++    def test_each_native_source_optional_and_error_branch_clears_only_that_result(self):
++        def word(row): return struct.unpack('<I', bytes.fromhex(row['bytes']))[0]
++        for row in self.proof['source_gates']:
++            self.assertEqual(word(row['optional_gate']) & 31, 8)
++            self.assertEqual(word(row['error_check']) & 31, 21)
++            self.assertEqual(word(row['error_empty_result']), 0xd2800016)  # mov x22,0
++            call = word(row['error_release']) & ((1 << 26) - 1)
++            if call & (1 << 25): call -= 1 << 26
++            self.assertEqual(int(row['error_release']['address'], 16) + call * 4, 0x100bfc708)
++            branch = word(row['continue_after_error'])
++            self.assertEqual(branch & 0xfc000000, 0x14000000)
++        self.assertEqual([r['witness_slot'] for r in self.proof['source_gates']], [16, 8, 24, 32])
++
++    def test_core_source_order_and_live_optional_reads_are_not_cached_snapshots(self):
++        self.assertIn('provider: () -> Provider?', self.sources['core'])
++        tokens = ['provider()?.type("")', 'provider()?.app("")', 'provider()?.device("")',
++                  'OriginalSearchDateRanges.f_1002d8ce0()', 'provider()?.pinboard("")']
++        self.assertEqual([self.load.index(t) for t in tokens], sorted(self.load.index(t) for t in tokens))
++        self.assertEqual(self.load.count('provider()?'), 4)
++        for source in ['type', 'app', 'device', 'pinboard']:
++            self.assertIn('try? (provider()?.' + source + '("") ?? [])', self.load)
++        for token in ['prefix(', 'Set(', '.sorted', 'store.items', 'sourceName', 'f_10030f3e0', 'catch', 'return [:]']:
++            self.assertNotIn(token, self.load)
++        self.assertIn('pinboards.map { $0.map { .filter(5, $0.identifier) } }', self.load)
++
++    def test_error_result_omits_key_but_missing_provider_keeps_empty_candidate_array(self):
++        # f2e0a08 removes nil group input; a nonnil empty array remains a value.
++        native = self.original['0x1002e0a08']
++        self.assertIn('if (param_1 == 0)', native)
++        self.assertIn('FUN_1002fa178(param_2,lVar2)', native)
++        for name, tag in [('types', 1), ('apps', 0), ('devices', 4), ('pinboards', 5)]:
++            self.assertIn('filters[' + str(tag) + '] = ' + name + '.map { $0.map', self.load)
++        self.assertNotIn('?? []).map', self.load)
++        # try? covers the coalescing expression: nil source yields [], throw yields nil.
++        self.assertIn('let apps = try? (provider()?.app("") ?? [])', self.load)
++
++    def test_date_endpoints_follow_native_truncation_and_remain_available_without_provider(self):
++        self.assertIn('filters[3] = (dateFilters ?? OriginalSearchDateRanges.f_1002d8ce0()).map', self.load)
++        self.assertIn('Int(date.range.lowerBound.timeIntervalSince1970)', self.load)
++        self.assertIn('Int(date.range.upperBound.timeIntervalSince1970)', self.load)
++        for token in ['rounded(', 'f_1002d9d2c', 'guard let provider', 'if let provider']:
++            self.assertNotIn(token, self.load)
++        words = {r['address']: struct.unpack('<I', bytes.fromhex(r['bytes']))[0] for r in self.proof['ARM_words']}
++        self.assertEqual(words['0x1002e0710'], 0x9e780108)  # fcvtzs x8,d8
++        self.assertEqual(words['0x1002e0714'], 0x9e780016)  # fcvtzs x22,d0
++        cases = [(-1.9, -0.1, '-1 0'), (0.1, 0.9, '0 0'), (-0.9, 1.9, '0 1')]
++        for start, end, expected in cases:
++            self.assertEqual(str(int(start)) + ' ' + str(int(end)), expected)
++
++    def test_factory_captures_real_persistence_and_forwards_errors_without_memory_fallback(self):
++        factory = body(self.sources['store'], 'public func makeSearchSuggestionProvider()')
++        self.assertIn('let persistence = self.persistence', factory)
++        for kind in ['Application', 'Device', 'Pinboard']:
++            self.assertIn('try persistence.search' + kind + 'Names(matching: $0)', factory)
++        for token in ['store.items', 'self.items', 'sourceName', 'try?', 'catch', 'weak', 'Set(']:
++            self.assertNotIn(token, factory)
++        before = (self.phase / 'before' / self.paths['store']).read_text()
++        for marker in ['public func searchApplicationNames(', 'public func searchDeviceNames(', 'public func searchPinboardNames(']:
++            self.assertEqual(body(self.sources['store'], marker), body(before, marker))
++
++    def test_real_index_owner_property_setter_and_startup_registration_precede_consumers(self):
++        self.assertIn('private var suggestionDataSource: OriginalSearchSuggestions.Provider?', self.sources['index'])
++        setter = body(self.sources['index'], 'func setSuggestionDataSource(')
++        self.assertEqual(setter.strip(), '{\n        suggestionDataSource = provider\n    }')
++        service = body(self.sources['index'], 'func availableFilters()')
++        self.assertIn('OriginalSearchSuggestions.f_1002e00a0(provider: { suggestionDataSource })', service)
++        init = body(body(self.sources['state'], 'final class ReplicaUIState: ObservableObject'), 'init(store: ClipboardStore)')
++        tokens = ['searchIndex = ReplicaSearchIndex(', 'searchIndex.setSuggestionDataSource(store.makeSearchSuggestionProvider())',
++                  'installListSelectionDelivery()', 'installSearchQueryDelivery()']
++        self.assertEqual([init.index(t) for t in tokens], sorted(init.index(t) for t in tokens))
++
++    def test_actual_presented_browser_task_reaches_service_then_renders_returned_nodes(self):
++        facade = body(self.sources['state'], 'func availableSearchFilters()')
++        self.assertIn('searchIndex.availableFilters()', facade)
++        opening = body(self.sources['browser'], 'func showFilterBrowser(')
++        self.assertIn('ReplicaFilterBrowserModel(load: { Self.filterBrowserSections(filters: state.availableSearchFilters()) })', opening)
++        model = body(self.sources['browser'], 'private final class ReplicaFilterBrowserModel: ObservableObject')
++        self.assertIn('Task { @MainActor [self] in sections = load() }', model)
++        builder = body(self.sources['browser'], 'private static func filterBrowserSections(')
++        for tag in [1, 0, 5, 3, 4]: self.assertIn('filters[' + str(tag) + '] ?? []', builder)
++        for token in ['ReplicaSearchSuggestionSource.', 'store.items', 'store.pinboards', 'try?', 'f_10030f3e0("")']:
++            self.assertNotIn(token, builder)
++        self.assertIn('UUID(uuidString: value)', builder)
++        self.assertIn('start <= end', builder)  # retain valid sub-second ranges after integer truncation
++
++    def test_group_errors_nil_and_reentrant_replacement_fixture_follows_native_source_reads(self):
++        # Original-bound source projection; does not execute CoreData/Swift callbacks.
++        events = []
++        state = {'provider': {'type': ['Text', 'Text'], 'app': ValueError('fetch'), 'device': ['D'], 'pinboard': ['raw-id']}}
++        def fetch(name):
++            events.append(name)
++            provider = state['provider']
++            if provider is None: return []
++            value = provider[name]
++            if name == 'type': state['provider'] = None
++            if isinstance(value, Exception): return []
++            return value
++        result = {1: fetch('type'), 0: fetch('app'), 4: fetch('device'), 3: ['dates'], 5: fetch('pinboard')}
++        self.assertEqual(events, ['type', 'app', 'device', 'pinboard'])
++        self.assertEqual(result, {1: ['Text', 'Text'], 0: [], 4: [], 3: ['dates'], 5: []})
++        self.assertEqual(self.load.count('provider()?'), 4)
++
++    def test_old_suggestion_editor_and_index_worker_logic_are_reused(self):
++        self.assertEqual((ROOT / 'replica/Sources/Pasto/UI/SearchEditor.swift').read_bytes(),
++                         (self.phase / 'before/replica/Sources/Pasto/UI/SearchEditor.swift').read_bytes())
++        before = (self.phase / 'before' / self.paths['index']).read_text()
++        for marker in ['private func startWorker()', 'private func drain()', 'private func startHistoryObservation()',
++                       'private func stopIndexing()', 'private func searchableItem(', 'private func rebuild(']:
++            self.assertEqual(body(self.sources['index'], marker), body(before, marker))
++        old_core = (self.phase / 'before' / self.paths['core']).read_text()
++        for marker in ['public static func f_10030f3e0(', 'public static func f_1002df190(']:
++            self.assertEqual(body(self.sources['core'], marker), body(old_core, marker))
++
++    def test_finite_data_source_records_do_not_close_native_actor_DI_or_FRC_lifecycle(self):
++        self.assertEqual([r['function_id'] for r in self.proof['contracts']], ['Paste:0x10007d0e0', 'Paste:0x1002e00a0'])
++        self.assertFalse(self.proof['full_function_migration_verified'])
++        self.assertEqual(self.proof['function_map_markers_upgraded'], 0)
++        for word in ['DI', 'ABI', 'FRC', 'SDK owner/ack']:
++            self.assertIn(word, '\n'.join(self.proof['retained_partial_contracts']))

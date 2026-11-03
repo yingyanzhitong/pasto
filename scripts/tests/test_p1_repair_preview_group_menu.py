@@ -1,0 +1,79 @@
+"""Preview group menu input/target/default-create source and real Mach-O bindings only."""
+from pathlib import Path
+import hashlib,json,sys,unittest
+ROOT=Path(__file__).resolve().parents[2];sys.path[:0]=[str(ROOT/'scripts'),str(ROOT/'scripts/tests')]
+from function_ledger import source_fragments
+from native_group_creation_result_scope_contract import pre_native_group_creation_result
+from native_unassign_scope_contract import pre_native_unassign_bytes
+from test_offline_p0_contracts import body
+from preview_group_menu_scope_contract import CHANGES,pre_preview_group_menu,pre_preview_group_menu_bytes
+
+class PreviewGroupMenuContracts(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.phase=ROOT/'.local/p0-repair/phase-108';cls.proof=json.loads((cls.phase/'preview-group-menu-contract.json').read_text());cls.base=json.loads((cls.phase/'baseline.json').read_text());cls.src={Path(p).stem:pre_native_group_creation_result((ROOT/p).read_text())for p in cls.proof['current_sources']};cls.header=cls.src['OriginalReplicaPreviewAdapter'].split('private final class ReplicaInlinePreviewHeader:',1)[1];ns={};exec((ROOT/cls.proof['decoder']['path']).read_text().split("idx={r['address']",1)[0],ns);cls.ns=ns
+    def order(self,s,tokens):
+        cursor=0
+        for t in tokens:cursor=s.index(t,cursor)+len(t)
+    def test_thirty_one_original_fragments_and_shared_input_proofs_bound(self):
+        self.assertEqual(len(self.proof['original_fragments']),31)
+        for r in self.proof['original_fragments']:self.assertEqual(source_fragments(ROOT/r['path'])[r['address']]['sha256'],r['sha256'])
+        for r in [self.proof['binary'],self.proof['decoder']]+self.proof['reused_evidence']:self.assertEqual(hashlib.sha256((ROOT/r['path']).read_bytes()).hexdigest(),r['sha256'])
+    def test_twenty_real_branch_edges_bound(self):
+        self.assertEqual(len(self.proof['ARM_calls']),20)
+        for r in self.proof['ARM_calls']:
+            pc=int(r['address'],16);b=self.ns['read'](pc,4);self.assertEqual(b.hex(),r['bytes']);w=int.from_bytes(b,'little');self.assertEqual(w&0x7c000000,0x14000000);d=w&0x3ffffff
+            if d&0x2000000:d-=0x4000000
+            self.assertEqual(pc+d*4,int(r['target'],16))
+    def test_actual_VM_slots_and_remove_repository_slot_bind_exact_functions(self):
+        self.assertEqual([(r['address'],r['target'])for r in self.proof['pointers']],[('0x100fc2e18','0x1003c2280'),('0x100fc2e48','0x1003c24a8'),('0x100fc2e88','0x1003c2ee0'),('0x100fc2e90','0x1003c36f0'),('0x100fc2e98','0x1003c3894'),('0x100fc2ea0','0x1003c3a40'),('0x100ecca98','0x100364094')])
+        for r in self.proof['pointers']:
+            a=int(r['address'],16);v,chain=self.ns['reachable_pointer'](a);self.assertEqual(chain,r['chain']);self.assertEqual(self.ns['read'](a,8).hex(),r['bytes']);self.assertEqual(self.ns['base']+(v&((1<<36)-1)),int(r['target'],16))
+    def test_build_time_input_gate_and_click_time_Published_read_instructions_bound(self):
+        self.assertEqual(len(self.proof['ARM_words']),12)
+        for r in self.proof['ARM_words']:self.assertEqual(self.ns['read'](int(r['address'],16),4).hex(),r['bytes']);self.assertEqual(int.from_bytes(bytes.fromhex(r['bytes']),'little'),int(r['word'],16))
+    def test_native_menu_dispatch_happens_before_legacy_store_cache_gate(self):
+        s=body(self.header,'private func showPinMenu(');self.order(s,['if let input, input.hasNativeEntity','showNativePinMenu(from: button, input: input)','return','guard let state, let item = state.store.items.first']);self.assertEqual(s.count('showNativePinMenu'),1)
+    def test_native_preview_targets_are_a_fresh_collection_each_invocation(self):
+        s=body(self.header,'private func showNativePinMenu(');self.order(s,['guard let state','let targets = state.store.makePinboardCollection().value','let menu = NSMenu()','for target in targets'])
+        for t in ['pinboardMenuTargets','pinboardMenuCollection','store.pinboards','store.items','resolvedItem()']:self.assertNotIn(t,s)
+    def test_header_keeps_current_observed_handle_before_deletion_or_display(self):
+        self.assertIn('private var input: ClipboardRestoreItem?',self.header);self.assertNotIn('private let input: ClipboardRestoreItem?',self.header);start=self.header.index('let receive: (ClipboardRestoreItem)');end=self.header.index('itemObservation = input?.observeChanges',start);s=self.header[start:end];self.order(s,['guard let self','self.input = current','if current.isDeleted','self.titleLabel.f_100011d28()','self.window?.performClose(nil)','if let title = current.previewTitle()'])
+    def test_current_owner_check_uses_rawType2_and_native_equality(self):
+        s=body(self.src['ClipboardRestoreItem'],'public func isAssigned(');self.order(s,['guard let object = nativeObject else { return nil }','object.value(forKey: "list")','int64Value == 2','return owner.isEqual(target.nativeObject)'])
+        for t in ['pinboardIDs','UUID','resolvedItem','isDeleted']:self.assertNotIn(t,s)
+    def test_menu_checkmark_uses_construction_input_not_action_time_reference(self):
+        s=body(self.header,'private func showNativePinMenu(');self.assertIn('entry.state = input.isAssigned(to: target) == true ? .on : .off',s);self.assertIn('if input.previewPinboard()?.isPinned == true',s)
+    def test_existing_group_action_weak_loads_owner_and_reads_current_handle(self):
+        s=body(self.header,'private func showNativePinMenu(');start=s.index('ReplicaPreviewActionMenuItem(title: target.name)');end=s.index('entry.state',start);s=s[start:end];self.order(s,['[weak self]','guard let self, let state = self.state, let current = self.input','state.perform { try state.store.assign(items: [current], to: target) }'])
+        for t in ['items: [input]','itemID','store.items','selection','Task','DispatchQueue']:self.assertNotIn(t,s)
+    def test_native_target_color_reads_current_attributes_and_retains_original_size(self):
+        s=body(self.src['ClipboardListPersistence'],'public var colorCode:');self.assertIn('OriginalPinboardAttributes.colorCode(from: nativeObject.value(forKey: "rawAttributes") as? Data)',s);s=body(self.header,'private func showNativePinMenu(');self.order(s,['target.colorCode.map','OriginalPinboardColor(canonicalColorCode: $0).color()','?? .clear','NSSize(width: 12, height: 12)','NSBezierPath(ovalIn: bounds).fill()'])
+    def test_new_group_menu_action_preserves_weak_owner_and_native_remove_gate(self):
+        s=body(self.header,'private func showNativePinMenu(');self.order(s,['menu.addItem(.separator())','pasto.action.create-group','[weak self]','self?.createPinboardForCurrentItem()','if input.previewPinboard()?.isPinned == true']);self.assertIn('menu.popUp(positioning: nil, at: NSPoint(x: -10, y: 0), in: button)',s)
+    def test_native_default_group_creation_has_no_name_modal(self):
+        s=body(self.header,'private func createPinboardForCurrentItem()');native=s[s.index('if input?.hasNativeEntity == true'):s.index('let alert = NSAlert()')];self.order(native,['state.perform','state.store.createPinboard(name: String(localized: OriginalPreviewLocalization.f_1001c6aa4()))','guard let current = self.input','try state.store.assign(items: [current], to: board.id)','return'])
+        for t in ['NSAlert','runModal','prompt','selection','primaryItem','resolvedItem()']:self.assertNotIn(t,native)
+    def test_default_creation_reads_current_item_after_creation_not_before(self):
+        s=body(self.header,'private func createPinboardForCurrentItem()');a=s.index('state.store.createPinboard(');b=s.index('let current = self.input');self.assertLess(a,b);self.assertIn('to: board.id',s[a:s.index('let alert = NSAlert()')])
+    def test_legacy_menu_and_legacy_creation_tails_are_byte_preserved(self):
+        p='replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift';old=(self.phase/'before'/p).read_text().split('private final class ReplicaInlinePreviewHeader:',1)[1]
+        for marker,tail in [('private func showPinMenu(','guard let state, let item = state.store.items.first'),('private func createPinboardForCurrentItem()','let alert = NSAlert()')]:
+            a=body(self.header,marker);b=body(old,marker);self.assertEqual(a[a.index(tail):],b[b.index(tail):])
+    def test_remove_still_exposes_legacy_nil_adapter_as_open_work(self):
+        s=body(self.header,'private func showNativePinMenu(');self.assertIn('state.store.assign(items: [current], to: nil)',s);self.assertIn('Store nil-target still uses UUID adaptation',self.proof['remaining'][0]);self.assertNotIn('native_unassign_completed',self.proof)
+    def test_five_other_header_methods_and_six_shared_sources_unchanged(self):
+        self.assertEqual(len(self.proof['unchanged_methods']),5);self.assertEqual(len(self.proof['shared_sources']),6)
+        for r in self.proof['unchanged_methods']:
+            s=body((ROOT/r['path']).read_text(),r['symbol']);self.assertEqual(s,body((self.phase/'before'/r['path']).read_text(),r['symbol']));self.assertEqual(hashlib.sha256(s.encode()).hexdigest(),r['sha256'])
+        for p,h in self.proof['shared_sources'].items():self.assertEqual(hashlib.sha256(pre_native_unassign_bytes(ROOT/p)).hexdigest(),h);self.assertEqual(h,self.base['production'][p])
+    def test_six_hunks_exactly_reverse_to_baseline_without_unrelated_source_changes(self):
+        self.assertEqual(len(CHANGES),6);self.assertEqual({r[0]for r in CHANGES},set(self.proof['current_sources']));files={str(p.relative_to(ROOT))for p in(ROOT/'replica/Sources').rglob('*')if p.is_file()};self.assertEqual(files,set(self.base['production']))
+        for p,h in self.base['production'].items():self.assertEqual(hashlib.sha256(pre_preview_group_menu_bytes(ROOT/p)).hexdigest(),h)
+        for p,h in self.proof['current_sources'].items():self.assertEqual(hashlib.sha256(pre_native_unassign_bytes(ROOT/p)).hexdigest(),h);self.assertEqual(pre_preview_group_menu(pre_preview_group_menu((ROOT/p).read_text())),(self.phase/'before'/p).read_text())
+    def test_only_two_new_finite_contracts_no_full_function_or_runtime_upgrade(self):
+        self.assertEqual(self.proof['new_difference_records'],2);self.assertEqual({r['function_id']for r in self.proof['contracts']},{'Paste:0x10007c378','Paste:0x1003c36f0'});self.assertFalse(self.proof['full_function_migration_verified']);self.assertFalse(self.proof['runtime_executed']);self.assertEqual(len(self.proof['remaining']),4)
+    def test_preview_fresh_source_and_current_item_correction_retained(self):
+        self.assertIn('unlike cached list-menu3b8c94',self.proof['correction']);self.assertIn('Build-time array supplies checkmarks',self.proof['correction']);self.assertIn('current Published item',self.proof['correction'])
+
+if __name__=='__main__':unittest.main()

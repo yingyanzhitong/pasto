@@ -1,0 +1,546 @@
+{
+  "kind": "offline_source_contract_review",
+  "round": 8,
+  "status": "source-checks-passed-goal-active",
+  "generated_at": "2026-10-29T14:16:11.817370+00:00",
+  "previous_goal_turn": "progress",
+  "priority": "P0",
+  "module": "capture_repository_and_stack_consumer",
+  "functions": [
+    {
+      "function_id": "Paste:0x1003611b0",
+      "status": "partial_repository_adapter",
+      "contract": "原空集合抛错；按checksum找已有项，命中更新/未命中创建，x23==nil的isNew布尔已静态确认。当前实际捕获入口保留空/不支持检查与isNew，原CoreData/identifier/unknown归档尚未全等。",
+      "original": {
+        "path": "decompiled/Paste/part-0275.c",
+        "sha256": "b90d0c344d03be5287711e30be2411b4617b18909e0b31f4e937d0b6a60a676e"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/ClipboardStore.swift",
+          "symbol": "func addWithInsertionResult("
+        },
+        {
+          "path": "replica/Sources/PastoCore/Pasteboard.swift",
+          "symbol": "func f_10037b034("
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1003214c8",
+      "status": "partial_checksum_identity_adapter",
+      "contract": "先分类与checksum，nil无匹配，否则按checksum fetch。当前已知digest匹配可复用；unknown/无path归档仍走兼容比较，不冒充相同归档字节。",
+      "original": {
+        "path": "decompiled/Paste/part-0258.c",
+        "sha256": "79fda1ac5cab85a2e23684ad440ba4d2e6bd3ba2a429b9bc7359041c2f511cd7"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/ClipboardStore.swift",
+          "symbol": "func addWithInsertionResult("
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x100360d9c",
+      "status": "partial_entity_creation_adapter",
+      "contract": "原新建managed entity、永久ID、identifier、当前device后更新内容；当前保留自有UUID/CoreData模型和创建device，不新造厂商数据库身份。",
+      "original": {
+        "path": "decompiled/Paste/part-0275.c",
+        "sha256": "ad0fc43d41bfc0f6ae5dedf2732a5b6fcf1894285cc88e8c651b6cb53dfdda88"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/ClipboardStore.swift",
+          "symbol": "state.items.append(item)"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x100360ff8",
+      "status": "partial_entity_update_fixed_device",
+      "contract": "原更新rawType/checksum，删除旧data并重建，生成preview；不覆盖title/device/list。本轮去除命中记录的sourceDevice覆盖；自有payload/OCR/数据实体生命周期仍partial。",
+      "original": {
+        "path": "decompiled/Paste/part-0275.c",
+        "sha256": "5c84dd4bad36c9890200c183ee36013cc85c38aa6f59caa81d424a40144bda6a"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/ClipboardStore.swift",
+          "symbol": "func addWithInsertionResult("
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x100364ab4",
+      "status": "partial_metadata_callback_adapter",
+      "contract": "原捕获可选title/source对象给callback，按相等性仅写实际变化字段；当前具体来源更新可用，但未恢复同一通用callback/实体身份。",
+      "original": {
+        "path": "decompiled/Paste/part-0276.c",
+        "sha256": "41f190a526d848d28485edfe6bf9017af7344b16c00cb2521ba2c9125de6c6e6"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/ClipboardStore.swift",
+          "symbol": "func addWithInsertionResult("
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x10037b204",
+      "status": "partial_source_relation_adapter",
+      "contract": "原解析source仓库并把当前app对象写回可选source；当前snapshot/upsert为独立记录模型，不等同原DI/对象身份。",
+      "original": {
+        "path": "decompiled/Paste/part-0281.c",
+        "sha256": "0636ea17d63475345db6c47ac043dd9fbf5828a65c1e4afb5fdf817e9b2a9b10"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/Pasteboard.swift",
+          "symbol": "sourceApplication: OriginalSourceApplication.snapshot(app)"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x100357e7c",
+      "status": "dependency_boundary_pending",
+      "contract": "原source仓库解析入口，定位实际frontmost provider；无网络调用，本轮不改容器框架。",
+      "original": {
+        "path": "decompiled/Paste/part-0271.c",
+        "sha256": "5b84b752e6001a02a76ae9f7604b6b4943d2caaf105ff199a3cd5805d1b427b2"
+      },
+      "source_references": []
+    },
+    {
+      "function_id": "Paste:0x10035fbcc",
+      "status": "existing_source_query_parent_partial",
+      "contract": "原查询NSWorkspace frontmost app，无app返回nil；有app走311e3c。当前查询时点与nil对象投影可复用，原repo仍partial。",
+      "original": {
+        "path": "decompiled/Paste/part-0274.c",
+        "sha256": "a46d7392de33b84487119e48f77904a091063f2612ea8624f6976d90392d7634"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/Pasteboard.swift",
+          "symbol": "let app = NSWorkspace.shared.frontmostApplication"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x100311e3c",
+      "status": "existing_source_validation_parent_partial",
+      "contract": "原依次要求bundleIdentifier/localizedName/icon，失败nil；当前snapshot使用同样三项guard。",
+      "original": {
+        "path": "decompiled/Paste/part-0254.c",
+        "sha256": "993189242d38b635d1c9530b7ab3ddc2aae5fbcb8c64744aea8e301d19f73cab"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSourceApplication.swift",
+          "symbol": "func snapshot("
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x100310fb8",
+      "status": "existing_source_factory_branches_parent_partial",
+      "contract": "原按bundle找record，保留旧非空name、128点incoming icon、比较PNG后更新icon/color；当前upsert与snapshot复用，本地旧缺color兼容分支和CoreData身份不计原全等。",
+      "original": {
+        "path": "decompiled/Paste/part-0253.c",
+        "sha256": "94126411b0fe1e9c27674e5d0e73db437ef953c3735cf1af9095363ba9de75fa"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalSourceApplication.swift",
+          "symbol": "func snapshot("
+        },
+        {
+          "path": "replica/Sources/PastoCore/ClipboardStore.swift",
+          "symbol": "private static func upsertSourceApplication("
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1003614c0",
+      "status": "partial_local_capture_projection",
+      "contract": "原先处理共享准备再按list类型执行history/board动作；当前只复核普通本地history capture，未将共享父方法整段排除或计满。",
+      "original": {
+        "path": "decompiled/Paste/part-0275.c",
+        "sha256": "b0a338c54e6b7ecba2fc975209724a433a3f0a078f26ee8ee6db9ebac100a1ff"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/ClipboardStore.swift",
+          "symbol": "if recordCapture {"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x100361690",
+      "status": "shared_boundary_read_only",
+      "contract": "无share且输入无shared项时直接保留实体集合；复制新UUID/device的共享准备分支排除，本轮只用边界确认本地命中应保留device。",
+      "original": {
+        "path": "decompiled/Paste/part-0275.c",
+        "sha256": "3ff4cc68aad21784997494868f3073207745f90e70ef56584740948eb320dd89"
+      },
+      "source_references": []
+    },
+    {
+      "function_id": "Paste:0x100361ec0",
+      "status": "local_history_timestamp_order_fixed",
+      "contract": "原倒序实体各自Date/setTimestamp再清理；当前单条真实capture改在内容/来源更新后、同一提交中取Date，普通值add仍保留显式旧日期。",
+      "original": {
+        "path": "decompiled/Paste/part-0275.c",
+        "sha256": "5bfb083d3e5789a39c9852d061483c67f3c8e06de08a737359ae1b5e9eebb518"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/ClipboardStore.swift",
+          "symbol": "if recordCapture {"
+        },
+        {
+          "path": "replica/Sources/PastoCore/Pasteboard.swift",
+          "symbol": "sourceApplication: sourceApplication, recordCapture: true"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x100082f5c",
+      "status": "partial_stack_notification_consumer_fixed",
+      "contract": "原viewDidLoad监听DidCapture，object/queue nil、weak owner并保存observer；当前首次创建Stack后按相同通知/同步actor接线，Root缓存窗口/可见性仍是独立生命周期适配。",
+      "original": {
+        "path": "decompiled/Paste/part-0043.c",
+        "sha256": "002462d12d8d964ecf3afed5481cbe04c26daaf48c3480ca54326b36b044a237"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "func showStack()"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x10008339c",
+      "status": "partial_stack_capture_order_fixed",
+      "contract": "原成功通知后解析history provider、取首项，无项不插入，按方向入队。本轮生产消费者从早期onCapture移到DidCapture；队列重复/可见性/完整动画仍partial。",
+      "original": {
+        "path": "decompiled/Paste/part-0043.c",
+        "sha256": "52a9172278b3270a75df14739436b4c18cf56f0b6585dff3c23ea611b368a17b"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "private func captureLatestItemIntoStack()"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x100083758",
+      "status": "partial_history_provider_fixed_scope",
+      "contract": "默认list witness+0x28解析history rawType1，再经item provider+0x10取按timestamp降序且非nil的序列；当前显式空query history，不读当前panel筛选或原始存储首项。",
+      "original": {
+        "path": "decompiled/Paste/part-0043.c",
+        "sha256": "a3db8cc6851bd42373037b13b9c28303ffb2f6031d4785b9bfdfcfa6c384dfb9"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "private func captureLatestItemIntoStack()"
+        },
+        {
+          "path": "replica/Sources/PastoCore/ClipboardStore.swift",
+          "symbol": "public func search(query:"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x10008333c",
+      "status": "actor_wrapper_boundary",
+      "contract": "通知block经MainActor断言桥转弱owner回调；当前assumeIsolated保同步actor边界，不冒原断言文案/closure ABI。",
+      "original": {
+        "path": "decompiled/Paste/part-0043.c",
+        "sha256": "901a9b019dfb49dee11f2e8aeb5da11d9fa0df6024d1a22d1d5b77f12903367b"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "MainActor.assumeIsolated { self?.captureLatestItemIntoStack() }"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x100086a30",
+      "status": "partial_closure_wrapper_adapter",
+      "contract": "原通知block捕获转08333c；当前weak self closure复用实际通知，不新增ABI空壳。",
+      "original": {
+        "path": "decompiled/Paste/part-0044.c",
+        "sha256": "bd0e339beb2120b6b1bc9c8d9e7c0e5105b68eeca1c29a3fc2afb36b9c0d8eb0"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "stackCaptureObserver = NotificationCenter.default.addObserver("
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x100086a40",
+      "status": "partial_closure_wrapper_adapter",
+      "contract": "原actor桥同步转08339c；当前隔离闭包调用实际history选择方法。",
+      "original": {
+        "path": "decompiled/Paste/part-0044.c",
+        "sha256": "9c0219d386b0cbfb506f04bc3e7e23dd2400f60c272176c19993b6e172044993"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "private func captureLatestItemIntoStack()"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1000582d0",
+      "status": "actor_assertion_boundary",
+      "contract": "原检查是否当前MainActor，非当前断言trap，正常同步调用闭包；本轮没有改为延迟Task或主队列重排。",
+      "original": {
+        "path": "decompiled/Paste/part-0031.c",
+        "sha256": "3ab8b3a0888928e6182e9389dba5d230ffd7d86967e49ac3b8f79d6b35f9cfc8"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "MainActor.assumeIsolated { self?.captureLatestItemIntoStack() }"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1003594c0",
+      "status": "dependency_boundary_pending",
+      "contract": "history item provider解析入口，真实witness槽已由dyld链指针确认；完整原DI容器未实现等价。",
+      "original": {
+        "path": "decompiled/Paste/part-0272.c",
+        "sha256": "9a5f53bf4b38379569c65ddc2abfd2b9988f09c1d5d35b741f94f10110cca403"
+      },
+      "source_references": []
+    },
+    {
+      "function_id": "Paste:0x1003595f8",
+      "status": "dependency_boundary_pending",
+      "contract": "list provider解析入口，真实默认history槽已静态确认；原容器边界保持待证。",
+      "original": {
+        "path": "decompiled/Paste/part-0272.c",
+        "sha256": "54149bcd8149db490b4b47c3cb0d139032fc31e26f8958dfc92f336ac542df80"
+      },
+      "source_references": []
+    },
+    {
+      "function_id": "Paste:0x100368230",
+      "status": "partial_default_history_adapter",
+      "contract": "原默认列表包装转368250；当前history列表由isInHistory兼容字段提供，非同一实体ABI。",
+      "original": {
+        "path": "decompiled/Paste/part-0276.c",
+        "sha256": "4283a9c01529e87e9580d74599def5cd062549e83cad65c1bada1d4dab32bac5"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/ClipboardStore.swift",
+          "symbol": "public func search(query:"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x100368250",
+      "status": "partial_default_history_adapter",
+      "contract": "原取得或创建默认clipboard列表、rawType1及属性；当前没有生成厂商同一list实体，用户默认周及旧偏好兼容不回退原默认值。",
+      "original": {
+        "path": "decompiled/Paste/part-0276.c",
+        "sha256": "1467f6ac2b605fc7d9cd0581bff355376df1cd783b6cfd60f08ede2e697453a0"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/ClipboardStore.swift",
+          "symbol": "public func search(query:"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x100363d58",
+      "status": "partial_history_sequence_adapter",
+      "contract": "原先建list fetch request再建缓存/FRC序列；当前search投影独立值序列，不将排序一致等同FRC生命周期。",
+      "original": {
+        "path": "decompiled/Paste/part-0275.c",
+        "sha256": "1e1588d93ebc1b0c7688f81d584136df84de5fa1d6bd9a026d9c97d84159b8bd"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/ClipboardStore.swift",
+          "symbol": "public func search(query:"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x100329088",
+      "status": "existing_history_predicate_and_sort_reused",
+      "contract": "history分支timestamp!=nil且timestamp降序，board分支按displayOrder升序。当前空query保scope后直接返回匹配，避免不必要的全部payload/OCR文本解码。",
+      "original": {
+        "path": "decompiled/Paste/part-0261.c",
+        "sha256": "0d9224c54d88c21229534b66443a4fc5b89313918b609b39ff3162d21e80dc17"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/ClipboardStore.swift",
+          "symbol": "public func search(query:"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x10037a75c",
+      "status": "existing_notification_identity_reused",
+      "contract": "原一次初始化并返回DidCapture通知标识；当前实际Stack改用对应didCaptureItemNotification，不由create-only通知代替。",
+      "original": {
+        "path": "decompiled/Paste/part-0281.c",
+        "sha256": "8eb5317d69b2df3d3b7114ba8d1e59f4bddaa7aab6266ea5224b05d67ac491f9"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/Pasteboard.swift",
+          "symbol": "public static let didCaptureItemNotification"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x100083bd0",
+      "status": "partial_observer_lifetime_adapter",
+      "contract": "原dealloc注销observer并注销paste shortcut再super；当前新增observer在owner deinit注销，完整原controller/shortcut生命周期继续P1核对。",
+      "original": {
+        "path": "decompiled/Paste/part-0043.c",
+        "sha256": "3d9ebb0907bb3ccca13bf2ffd4c23ad214fe4f9b3496ba871c50b30422a63000"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaUIController.swift",
+          "symbol": "if let stackCaptureObserver { NotificationCenter.default.removeObserver(stackCaptureObserver) }"
+        }
+      ]
+    }
+  ],
+  "reviewed_count": 28,
+  "current_review_unique_count": 232,
+  "current_review_inventory_percent": 0.286,
+  "static_bindings": {
+    "original_binary_sha256": "871f00354fbb1c165d858a98e6d19d6f43cb9d3f9f958b3e07c7f07eb5c19afb",
+    "pointer_format": "DYLD_CHAINED_PTR_64_OFFSET (6); declared __DATA_CONST page chains traversed to both slots",
+    "slots": [
+      {
+        "slot": "0x100eccab0",
+        "segment": "__DATA_CONST",
+        "file_offset": "0xeccab0",
+        "raw": "0x10000000363d58",
+        "bytes": "583d360000001000",
+        "target": "0x100363d58",
+        "pointer_format": 6,
+        "chain_reachability_confirmed": true
+      },
+      {
+        "slot": "0x100eccd98",
+        "segment": "__DATA_CONST",
+        "file_offset": "0xeccd98",
+        "raw": "0x10000000368230",
+        "bytes": "3082360000001000",
+        "target": "0x100368230",
+        "pointer_format": 6,
+        "chain_reachability_confirmed": true
+      }
+    ],
+    "history_query_instructions": [
+      {
+        "address": "0x10032910c",
+        "file_offset": "0x32910c",
+        "bytes": "942e8dd2b4adacf2748ecef234acedf2190e80d21920fdf2",
+        "semantic": "mov wide sequence builds timestamp Swift small string"
+      },
+      {
+        "address": "0x100329140",
+        "file_offset": "0x329140",
+        "bytes": "03008052",
+        "semantic": "w3=0 for descending timestamp sort"
+      },
+      {
+        "address": "0x1003291fc",
+        "file_offset": "0x3291fc",
+        "bytes": "211300d1a06489d20024a4f2a007c4f2c02dedf2e20316aa",
+        "semantic": "Swift small string format %K != nil"
+      }
+    ],
+    "executed": false,
+    "query_constants": {
+      "timestamp": "timestamp",
+      "predicate": "%K != nil",
+      "ascending": false,
+      "derivation": "bounded ARM64 MOVZ/MOVK and small-string immediate materialization; no original function execution"
+    },
+    "binary_sha256_current": "871f00354fbb1c165d858a98e6d19d6f43cb9d3f9f958b3e07c7f07eb5c19afb",
+    "is_new_instructions": {
+      "address": "0x100361200",
+      "file_offset": "0x361200",
+      "bytes": "ff0200f1e8179f1a",
+      "semantic": "cmp x23, #0; cset w8, eq; x23 retains checksum lookup result, nil selects creation"
+    }
+  },
+  "source_sha256": {
+    "replica/Sources/PastoCore/ClipboardStore.swift": "116f543df1dc8717e58edf3e0f99eebfe7fc208953e7d3d611cf59a7490b1445",
+    "replica/Sources/PastoCore/Pasteboard.swift": "dc14692c74b2aab4edde230c659f58ba3c39a2d8f531b1e3638c2fe5c3c601aa",
+    "replica/Sources/Pasto/UI/ReplicaUIController.swift": "1526912844d217269a14b4b82cd98fc2b8bb4f55d3e563f9f6673c3ee6dcf807",
+    "replica/Sources/Pasto/AppMain.swift": "29f2b78c137382f4b9b2d6ca40b4c126d2a2e141cdd8ae047b4d62dd69937322",
+    "replica/Sources/PastoCore/OriginalSourceApplication.swift": "f062fd4c806d1c155e84c80e6ba962500c2f2f195a2fee3b50fe5d864f06478b",
+    "scripts/tests/test_capture_repository_contracts.py": "fa9ce6d2b5e0cd7294f0af0e94f840af6d76738b889d7ae0b1493d1a4fce2d1d",
+    "scripts/tests/test_offline_p0_contracts.py": "0c04453ed08616b1aa23e3d908142a8946265045beeb8da97561bdbd5a4e4e1a"
+  },
+  "new_partial_bindings": [
+    "Paste:0x1003611b0",
+    "Paste:0x100360d9c",
+    "Paste:0x100360ff8",
+    "Paste:0x100082f5c",
+    "Paste:0x10008339c",
+    "Paste:0x100083758"
+  ],
+  "confirmed_differences_fixed": [
+    "普通本地checksum命中不再覆盖creation device",
+    "真实capture在内容/来源更新后再记history时间，通用值add默认不重记",
+    "生产Stack经DidCapture同步监听取得最新history首项，不再在Undo前onCapture入队",
+    "空query在scope过滤后跳过不必要的内容/OCR文本构建"
+  ],
+  "tests": {
+    "passed": true,
+    "total": 77,
+    "scope": "Python source-contract/ledger/provenance and static immediate/pointer decoding only; no Swift/ObjC compilation or application execution"
+  },
+  "new_fully_migrated_function_count": 0,
+  "historical_ledger": {
+    "numerator": 1648,
+    "denominator": 81123,
+    "percent": 2.0315,
+    "stale_evidence": true
+  },
+  "current_partial_count": 430,
+  "compiled": false,
+  "application_executed": false,
+  "original_binary_executed": false,
+  "user_data_modified": false,
+  "network_used": false,
+  "committed": false,
+  "pushed": false,
+  "module_complete": false,
+  "remaining_differences": [
+    "unknown/无path文件NSKeyedArchive类身份及完整checksum fetch",
+    "原ItemData替换/preview/OCR缓存、identifier和永久objectID等模型合同",
+    "onCapture公开兼容钩子仍存在；生产Stack已不使用它，不能宣称整37b034无额外适配",
+    "Stack重复项/可见性/完整controller生命周期与动画",
+    "完整原DI/事务错误/Undo及原默认list属性codec"
+  ],
+  "next_module": "P0 panel_lifecycle_and_focus",
+  "next_work": [
+    "保留采集/仓库剩余差异为pending，覆盖面板开关、外部点击、预览持有和关闭中重开",
+    "使用已有方法/快照复用，不对未修改函数重复重写"
+  ]
+}

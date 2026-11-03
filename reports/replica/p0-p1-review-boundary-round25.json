@@ -1,0 +1,103 @@
+{
+  "round": 25,
+  "records": [
+    {
+      "function_id": "Paste:0x100207db8",
+      "decision": "admit",
+      "status": "local_contract_consistent",
+      "source": ".local/p0-review/p0-p1-round25-traits-review.json",
+      "reason": "当前真实编辑consumer对应的独立trait值/状态分支，有限合同已比较；完整迁移仍false。"
+    },
+    {
+      "function_id": "Paste:0x100208290",
+      "decision": "admit",
+      "status": "local_contract_consistent",
+      "source": ".local/p0-review/p0-p1-round25-traits-review.json",
+      "reason": "当前真实编辑consumer对应的独立trait值/状态分支，有限合同已比较；完整迁移仍false。"
+    },
+    {
+      "function_id": "Paste:0x1002080e0",
+      "decision": "support_only",
+      "reason": "原为Swift Set.formUnion的低层实现，遍历源集合bitmap中的occupied slots并把元素插入目标Set；当前`formUnion`执行相同集合并集。它由208024组合器调用，没有独立UI入口。",
+      "source": ".local/p0-review/p0-p1-round25-traits-review.json"
+    },
+    {
+      "function_id": "Paste:0x100208024",
+      "decision": "support_only",
+      "reason": "原先对attributes调用207db8取得Trait Set，再将结果并入传入accumulator；MainActor检查后返回。当前f_100208024以相同顺序调用f_100207db8和f_1002080e0。",
+      "source": ".local/p0-review/p0-p1-round25-traits-review.json"
+    },
+    {
+      "function_id": "Paste:0x1002085e0",
+      "decision": "support_only",
+      "reason": "原地址只转发调用208024；当前f_1002085e0转发到f_100208024，没有额外分支或状态。原选区枚举block及current selectedContent.enumerateAttributes把它作为每run回调。",
+      "source": ".local/p0-review/p0-p1-round25-traits-review.json"
+    },
+    {
+      "function_id": "Paste:0x100207b54",
+      "decision": "admit",
+      "status": "local_contract_consistent",
+      "source": ".local/p0-review/p0-p1-round25-traits-review.json",
+      "reason": "当前真实编辑consumer对应的独立trait值/状态分支，有限合同已比较；完整迁移仍false。"
+    },
+    {
+      "function_id": "Paste:0x1002083e4",
+      "decision": "admit",
+      "status": "local_contract_consistent",
+      "source": ".local/p0-review/p0-p1-round25-traits-review.json",
+      "reason": "当前真实编辑consumer对应的独立trait值/状态分支，有限合同已比较；完整迁移仍false。"
+    },
+    {
+      "function_id": "Paste:0x100213fe8",
+      "decision": "admit",
+      "status": "local_contract_consistent",
+      "source": ".local/p0-review/p0-p1-round25-traits-review.json",
+      "reason": "当前真实编辑consumer对应的独立trait值/状态分支，有限合同已比较；完整迁移仍false。"
+    },
+    {
+      "function_id": "Paste:0x100214704",
+      "decision": "admit",
+      "status": "local_contract_consistent",
+      "source": ".local/p0-review/p0-p1-round25-traits-review.json",
+      "reason": "当前真实编辑consumer对应的独立trait值/状态分支，有限合同已比较；完整迁移仍false。"
+    },
+    {
+      "function_id": "Paste:0x10021453c",
+      "decision": "support_only",
+      "reason": "原构造MainActor Task并通过weak self闭包调度214704；当前对应`Task { @MainActor [weak self] in self?.f_100214704() }`，仅承担delegate callback异步转发。",
+      "source": ".local/p0-review/p0-p1-round25-traits-review.json"
+    },
+    {
+      "function_id": "Paste:0x100383d90",
+      "decision": "admit",
+      "status": "unclosed",
+      "source": ".local/p0-review/p0-p1-round25-copy-review.json",
+      "reason": "真实P0恢复分支，有独立rawType分派/解码；上游逐值映射未闭合，不因unknown留在分母外。"
+    },
+    {
+      "function_id": "Paste:0x100368080",
+      "decision": "support_only",
+      "source": ".local/p0-review/p0-p1-round25-copy-review.json",
+      "reason": "保持round24支持决定，父368250已有固定History lookup有限合同，不重复纳入。"
+    },
+    {
+      "function_id": "Paste:0x1003b9490",
+      "decision": "exclude",
+      "reason": "实际owner类ItemCollectionViewModel metadata方法槽明确绑定本函数，analytics字段offset38为Injected<PasteAnalytics.Analytics>；函数从38捕获analytics经witness+20上报日期/type/mode。40是context gate，非复制内容消费者；纯统计上报排除。",
+      "source": "reports/replica/p0-p1-review-round25-static-proof.json",
+      "previous_decision": "hold_domain"
+    }
+  ],
+  "counts": {
+    "admit": 7,
+    "support_only": 5,
+    "exclude": 1
+  },
+  "source_inputs": {
+    ".local/p0-review/p0-p1-round25-traits-review.json": "7aa997969ff606f24748070111b2a7dee64e15f7ad951a0dfdf11cd46bb0747c",
+    ".local/p0-review/p0-p1-round25-copy-review.json": "1eaf03d3ffcc260a9a8854502ed73d5b0febacc6eb60984d46f63fcad48189fc",
+    "reports/replica/p0-p1-review-round25-static-proof.json": "457abaa8b87fe2600e36bbbeaf178de050abd5b67c878f4d4daa20ca4425d156"
+  },
+  "full_original_priority_classification_complete": false,
+  "classification_is_not_migration": true
+}

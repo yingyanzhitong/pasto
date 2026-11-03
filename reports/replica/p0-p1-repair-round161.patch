@@ -1,0 +1,13 @@
+--- a/replica/Sources/PastoCore/OriginalSearchTextValue.swift
++++ b/replica/Sources/PastoCore/OriginalSearchTextValue.swift
+@@ -3,9 +3,7 @@
+ public extension NSTextView {
+     @MainActor func f_1000f7254() -> String { string }
+ 
+-    @MainActor @discardableResult
+-    func f_1000f733c(_ value: String) -> Int {
++    @MainActor func f_1000f733c(_ value: String) {
+         string = value
+-        return 0
+     }
+ }

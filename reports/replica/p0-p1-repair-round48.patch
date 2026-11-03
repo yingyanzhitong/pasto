@@ -1,0 +1,342 @@
+--- phase-48-before/replica/Sources/Pasto/UI/ReplicaSearchIndex.swift
++++ replica/Sources/Pasto/UI/ReplicaSearchIndex.swift
+@@ -168,10 +168,11 @@
+ 
+     // 0x1002ea78c / 0x1002eaa10 / 0x1002eaea4: advance by input IDs, not fetched rows.
+     private func reindexTargets(_ identifiers: [String]) async throws {
+-        let input = identifiers
++        // 0x1002ea78c filters empty identifiers before forming the 100-ID batches.
++        let input = identifiers.filter { !$0.isEmpty }
+         var refreshed: [Entry] = []
+         for lowerBound in stride(from: 0, to: input.count, by: Self.indexingBatchSize) {
+-            try Task.checkCancellation()
++            guard !Task.isCancelled else { break }
+             let upperBound = min(lowerBound + Self.indexingBatchSize, input.count)
+             let live = try liveEntries(identifiers: Array(input[lowerBound..<upperBound]))
+             if !live.isEmpty {
+@@ -377,7 +378,6 @@
+             reindexIdentifiers = []
+             var requestAcknowledgements = acknowledgements
+             acknowledgements = []
+-            var journalCompleted = false
+             do {
+                 // 0x1002f00dc: nil is not an identity mismatch; retain the previous nonnil identity.
+                 if let previous = lastSourceIdentifier, let current = request.sourceIdentifier, previous != current {
+@@ -424,19 +424,18 @@
+                 if !deleted.isEmpty {
+                     try await deleteIdentifiers(deleted.compactMap { indexed[$0]?.searchIdentifier })
+                 }
++                // 0x1002f00dc/2f14cc installs change observation before requesting snapshot IDs.
++                startHistoryObservation()
+                 if usesSnapshot { try await indexInitialSnapshot(currentEntries, resuming: resumeState) }
+                 if usesSnapshot && store == nil { indexed = current }
+                 if !forcedIdentifiers.isEmpty { try await reindexTargets(forcedIdentifiers) }
+-                journalCompleted = true
+-                startHistoryObservation()
+                 // Reindex acknowledgements cover this index operation, not a following search.
+                 let completed = requestAcknowledgements
+                 requestAcknowledgements = []
+                 completed.forEach { $0() }
+             } catch {
+                 logger.error("Search index operation failed: \(error.localizedDescription, privacy: .public)")
+-                // A failed journal must not be treated as an up-to-date index.
+-                if !journalCompleted { needsReset = true }
++                // 0x1002f2468/2f2a30 logs and returns without requesting another full reset.
+             }
+             // The original delegate also acknowledges after its indexer catches an operation error.
+             requestAcknowledgements.forEach { $0() }
+--- phase-48-before/scripts/tests/test_index_rebuild_contracts.py
++++ scripts/tests/test_index_rebuild_contracts.py
+@@ -68,16 +68,18 @@
+         self.assertTrue(acknowledges_before_query(self.source))
+         drain = body(self.source, 'private func drain() async')
+         self.assertLess(drain.index('indexed = current'), drain.index('completed.forEach'))
+-        self.assertLess(drain.index('journalCompleted = true'), drain.index('completed.forEach'))
++        self.assertLess(drain.index('try await reindexTargets(forcedIdentifiers)'), drain.index('completed.forEach'))
+         self.assertNotIn('CSSearchQuery(',drain)
+         self.assertNotIn('queryTask',drain)
+         old = self.source.replace('completed.forEach { $0() }', '// old: deferred until worker and search ended')
+         self.assertFalse(acknowledges_before_query(old))
+ 
+-    def test_error_path_acknowledges_once_and_preserves_failed_journal_recovery(self):
++    def test_error_path_acknowledges_once_without_requesting_an_extra_reset(self):
+         drain = body(self.source, 'private func drain() async')
+-        self.assertIn('if !journalCompleted { needsReset = true }', drain)
+-        self.assertLess(drain.index('if !journalCompleted'), drain.index('requestAcknowledgements.forEach'))
++        failure = drain[drain.rindex('} catch {'):drain.index('// The original delegate also acknowledges')]
++        self.assertIn('logger.error(', failure)
++        self.assertNotIn('needsReset =', failure)
++        self.assertLess(drain.index(failure), drain.index('requestAcknowledgements.forEach'))
+         self.assertEqual(drain.count('requestAcknowledgements.forEach { $0() }'), 1)
+         self.assertEqual(drain.count('completed.forEach { $0() }'), 1)
+         self.assertIn('requestAcknowledgements = []', drain)
+--- phase-48-before/scripts/tests/test_p0_repair_identity.py
++++ scripts/tests/test_p0_repair_identity.py
+@@ -205,7 +205,9 @@
+         rebuild = method_body(self.index, "nonisolated private func rebuild(identifiers: [String]?, _ acknowledge: @escaping () -> Void)")
+         self.assertNotIn("localIdentifier.isEmpty", rebuild)
+         reindex = method_body(self.index, "private func reindexTargets(_ identifiers: [String]) async throws")
+-        self.assertNotIn("filter { !$0.isEmpty }", reindex)
++        self.assertIn("let input = identifiers.filter { !$0.isEmpty }", reindex)
++        self.assertNotIn("UUID(uuidString:", reindex)
++        self.assertNotIn("Array(Set(", reindex)
+         self.assertIn("store.searchIndexRecords(identifiers: identifiers)", self.index)
+ 
+     def test_migration_preserves_source_string_and_stable_local_uuid(self):
+--- phase-48-before/scripts/tests/test_p1_repair_delegate_no_snapshot.py
++++ scripts/tests/test_p1_repair_delegate_no_snapshot.py
+@@ -98,7 +98,11 @@
+     def test_index_queue_reset_and_ack_paths_are_unchanged_by_removing_gate(self):
+         for marker in ['private func startWorker()', 'private func drain() async',
+                        'private func indexInitialSnapshot(', 'private func reindexTargets(']:
+-            self.assertEqual(body(self.source, marker), body(self.before, marker))
++            # Historical gate-only patch; error/observation and cancellation change in phase 48.
++            source = self.source
++            if marker in ['private func drain() async', 'private func reindexTargets(']:
++                source = (ROOT / '.local/p0-repair/phase-48/before/replica/Sources/Pasto/UI/ReplicaSearchIndex.swift').read_text()
++            self.assertEqual(body(source, marker), body(self.before, marker))
+         tail = 'acknowledgements.append(acknowledge)'
+         previous = body(self.before, 'nonisolated private func rebuild(')
+         self.assertEqual(self.rebuild[self.rebuild.index(tail):], previous[previous.index(tail):])
+--- phase-48-before/scripts/tests/test_p1_repair_index_cursor_resume.py
++++ scripts/tests/test_p1_repair_index_cursor_resume.py
+@@ -185,7 +185,8 @@
+         self.assertTrue(all(not r['full_function_migration_verified'] for r in self.proof['contracts']))
+         self.assertEqual(self.proof['function_map_markers_upgraded'], 0)
+         self.assertFalse(self.proof['full_function_migration_verified'])
+-        self.assertIn('if !journalCompleted { needsReset = true }', self.drain)
++        historical = (ROOT / '.local/p0-repair/phase-48/before/replica/Sources/Pasto/UI/ReplicaSearchIndex.swift').read_text()
++        self.assertIn('if !journalCompleted { needsReset = true }', body(historical, 'private func drain() async'))
+         limitations = ' '.join(self.proof['retained_partial_contracts'])
+         for token in ['isRunning/stop/wait', 'weak-owner/ack', 'same-process interrupted']:
+             self.assertIn(token, limitations)
+--- phase-48-before/scripts/tests/test_p1_repair_index_update_flag.py
++++ scripts/tests/test_p1_repair_index_update_flag.py
+@@ -67,7 +67,7 @@
+             target = body(text, 'private func reindexTargets(')
+             batch = body(target, 'for lowerBound in stride(')
+             try:
+-                ordered = ['try Task.checkCancellation()', 'try liveEntries(',
++                ordered = ['guard !Task.isCancelled else { break }', 'try liveEntries(',
+                            'let changed = live.map { searchableItem($0, isUpdate: true) }',
+                            'index.indexSearchableItems(changed)']
+                 offsets = [batch.index(t) for t in ordered]
+@@ -111,7 +111,11 @@
+             self.assertEqual(current, body(self.before, marker))
+         target = body(self.source, 'private func reindexTargets(')
+         previous = body(self.before, 'private func reindexTargets(')
+-        self.assertEqual(target.replace('live.map { searchableItem($0, isUpdate: true) }', 'live.map(searchableItem)'), previous)
++        historical = (ROOT / '.local/p0-repair/phase-48/before/replica/Sources/Pasto/UI/ReplicaSearchIndex.swift').read_text()
++        historical_target = body(historical, 'private func reindexTargets(')
++        self.assertEqual(historical_target.replace('live.map { searchableItem($0, isUpdate: true) }', 'live.map(searchableItem)'), previous)
++        suffix = 'let upperBound = min('
++        self.assertEqual(target[target.index(suffix):], historical_target[historical_target.index(suffix):])
+         self.assertIn('let forcedIdentifiers = reindexIdentifiers', self.source)
+         self.assertIn('try await reindexTargets(forcedIdentifiers)', self.source)
+ 
+--- /dev/null
++++ scripts/tests/test_p1_repair_index_error_observer.py
+@@ -0,0 +1,203 @@
++"""Original-bound source and field-offset checks only; no native/Swift execution."""
++import hashlib
++import json
++import struct
++import sys
++import unittest
++from pathlib import Path
++
++ROOT = Path(__file__).resolve().parents[2]
++sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'scripts/tests')]
++from function_ledger import source_fragments
++from test_offline_p0_contracts import body
++from test_p0_repair_identity import method_body
++from test_p0_repair_checksum_routing import original_fragment
++
++
++class IndexErrorObservationContracts(unittest.TestCase):
++    @classmethod
++    def setUpClass(cls):
++        cls.phase = ROOT / '.local/p0-repair/phase-48'
++        cls.proof = json.loads((cls.phase / 'error-observer-contract.json').read_text())
++        cls.source = (ROOT / 'replica/Sources/Pasto/UI/ReplicaSearchIndex.swift').read_text()
++        cls.before = (cls.phase / 'before/replica/Sources/Pasto/UI/ReplicaSearchIndex.swift').read_text()
++        cls.drain = body(cls.source, 'private func drain() async')
++        cls.target = body(cls.source, 'private func reindexTargets(')
++        cls.failure = cls.drain[cls.drain.rindex('} catch {'):cls.drain.index('// The original delegate also acknowledges')]
++        cls.original = {r['address']: original_fragment((ROOT / r['path']).read_text(), r['address'][2:])
++                        for r in cls.proof['original_fragments']}
++
++    def test_original_fragments_and_prior_field_descriptors_are_bound(self):
++        self.assertEqual(len(self.proof['original_fragments']), 30)
++        for row in self.proof['original_fragments']:
++            self.assertEqual(source_fragments(ROOT / row['path'])[row['address']]['sha256'], row['sha256'])
++        meta = self.proof['actor_metadata']['prior_fields']
++        self.assertEqual(hashlib.sha256((ROOT / meta['path']).read_bytes()).hexdigest(), meta['sha256'])
++
++    def test_actual_actor_offset_vector_separates_active_OCR_and_change_observer(self):
++        meta = self.proof['actor_metadata']
++        descriptor = bytes.fromhex(meta['descriptor_bytes'])
++        count, vector_word = struct.unpack_from('<II', descriptor, 36)
++        self.assertEqual((count, vector_word), (20, 10))
++        accessor = int(meta['descriptor'], 16) + 12 + struct.unpack_from('<i', descriptor, 12)[0]
++        self.assertEqual(hex(accessor), '0x1002f2f88')
++        self.assertIn('ZEXT816(0x100fbd748)', self.original['0x1002f2f88'])
++        offsets = struct.unpack('<20Q', bytes.fromhex(meta['field_offset_vector_bytes']))
++        fields = {row['name']: offset for row, offset in zip(meta['fields'], offsets)}
++        self.assertEqual({name: fields[name] for name in ['isRunning', 'ocrTask', 'changeObserverTask']},
++                         dict(isRunning=0xf0, ocrTask=0xf8, changeObserverTask=0x120))
++
++    def test_original_stop_waits_OCR_not_the_old_full_snapshot_worker(self):
++        stop = self.original['0x1002f2d18']
++        order = ['*(undefined1 *)(lVar2 + 0xf0) = 0', '(lVar2 + 0x120)',
++                 '*(undefined8 *)(lVar2 + 0x120) = 0', '(lVar5 + 0xf8)', 'Swift::Task::_get_value']
++        offsets = [stop.index(token) for token in order]
++        self.assertEqual(offsets, sorted(offsets))
++        self.assertEqual(stop.count('Swift::Task::cancel('), 2)
++        self.assertIn('_swift_task_switch(FUN_1002ec6f4', self.original['0x1002f2e30'])
++
++    def test_original_active_survives_success_and_is_cleared_only_on_failed_initialization(self):
++        start = self.original['0x1002f20a0']
++        self.assertIn('*(undefined1 *)(lVar2 + 0xf0) = 1', start)
++        self.assertIn('FUN_1002efba0()', start)
++        success = self.original['0x1002f217c']
++        self.assertNotIn('+ 0xf0)', success)
++        self.assertIn('*(undefined1 *)(*(long *)(unaff_x22 + 0x60) + 0xf0) = 0', self.original['0x1002f2214'])
++        # Current queue handle is explicitly not the missing independent original active state.
++        self.assertNotIn('private var isRunning', self.source)
++
++    def test_original_error_handlers_log_release_and_return_without_reset_side_effect(self):
++        for address in ['0x1002f2468', '0x1002f2a30']:
++            failure = self.original[address]
++            self.assertIn('Swift::Error::get_localizedDescription()', failure)
++            self.assertIn('_swift_errorRelease(uVar7)', failure)
++            self.assertNotIn('FUN_1002f1c30(', failure)
++            self.assertNotIn('FUN_1002efba0(', failure)
++            self.assertNotIn('FUN_1002cb5a0(', failure)
++            self.assertNotIn(' = 1;', failure[failure.index('_swift_errorRelease(uVar7)'):])
++
++    def test_actual_catch_logs_without_resetting_or_scheduling_another_request(self):
++        self.assertIn('logger.error("Search index operation failed:', self.failure)
++        for token in ['needsReset =', 'stateStore.save(', 'pending =', 'startWorker(', 'replaceQuery(', 'queryTask', 'throw ']:
++            self.assertNotIn(token, self.failure)
++        self.assertNotIn('journalCompleted', self.drain)
++        previous = body(self.before, 'private func drain() async')
++        self.assertIn('if !journalCompleted { needsReset = true }', previous)
++
++    def test_explicit_full_reset_and_source_identity_change_still_request_reset(self):
++        rebuild = body(self.source, 'nonisolated private func rebuild(')
++        full = method_body(rebuild, '} else {')
++        self.assertIn('needsReset = true', full)
++        self.assertIn('mayRestoreSavedState = false', full)
++        source_gate = method_body(self.drain, 'if let previous = lastSourceIdentifier, let current = request.sourceIdentifier, previous != current {')
++        self.assertIn('needsReset = true', source_gate)
++        reset = method_body(self.drain, 'if needsReset {')
++        self.assertLess(reset.index('try stateStore.save(nil)'), reset.index('index.deleteAllSearchableItems'))
++
++    def test_observer_is_installed_before_real_snapshot_work_but_after_reset_succeeds(self):
++        order = ['CSSearchableIndex.isIndexingAvailable()', 'let usesSnapshot =',
++                 'index.deleteAllSearchableItems', 'startHistoryObservation()',
++                 'try await indexInitialSnapshot(', 'try await reindexTargets(', 'completed.forEach']
++        offsets = [self.drain.index(token) for token in order]
++        self.assertEqual(offsets, sorted(offsets))
++        self.assertEqual(self.drain.count('startHistoryObservation()'), 1)
++        observer = body(self.source, 'private func startHistoryObservation()')
++        self.assertIn('guard historyTask == nil, let store else { return }', observer)
++
++    def test_original_fresh_and_restored_paths_install_observer_before_ID_fetch(self):
++        for address in ['0x1002f00dc', '0x1002f0c8c', '0x1002f14cc']:
++            original = self.original[address]
++            install = original.index('&DAT_100c3eb68')
++            fetch = original.index('FUN_1002f177c', install)
++            self.assertLess(install, fetch)
++            self.assertIn('+ 0x120) =', original[install:fetch])
++
++    def test_failed_snapshot_with_existing_observer_does_not_implicitly_replay_on_next_UI_request(self):
++        self.assertIn('let usesSnapshot = !restoredCompletedState && (resettingIndex || historyTask == nil || resumeState != nil)', self.drain)
++        # Source-bound ordinary-request fixture: initialization already installed the observer.
++        for requested_reset in [False, True]:
++            reset_after_error = requested_reset  # the catch preserves prior reset state
++            restored_completed, history_missing, resuming = False, False, False
++            uses_snapshot = not restored_completed and (reset_after_error or history_missing or resuming)
++            self.assertEqual(uses_snapshot, requested_reset)
++        self.assertNotIn('needsReset', self.failure)
++
++    def test_target_ids_are_nonempty_filtered_before_batching_without_dedup_or_UUID_gate(self):
++        self.assertIn('let input = identifiers.filter { !$0.isEmpty }', self.target)
++        self.assertLess(self.target.index('filter { !$0.isEmpty }'), self.target.index('for lowerBound in stride('))
++        self.assertNotIn('UUID(uuidString:', self.target)
++        self.assertNotIn('Set(identifiers)', self.target)
++        native = self.original['0x1002ea78c']
++        self.assertIn('} while (uVar1 == 0)', native)
++        self.assertIn('uVar1 = uVar6 >> 0x38 & 0xf', native)
++        ids = ['', 'A', 'A'] + ['B'] * 99 + ['']
++        filtered = [value for value in ids if value]
++        batches = [filtered[i:i + 100] for i in range(0, len(filtered), 100)]
++        self.assertEqual([len(batch) for batch in batches], [100, 1])
++        self.assertEqual(batches[0][:2], ['A', 'A'])
++
++    def test_task_cancellation_is_local_exit_before_fetch_not_a_thrown_reset_error(self):
++        loop = body(self.target, 'for lowerBound in stride(')
++        self.assertIn('guard !Task.isCancelled else { break }', loop)
++        self.assertLess(loop.index('guard !Task.isCancelled'), loop.index('try liveEntries('))
++        self.assertNotIn('Task.checkCancellation()', self.target)
++        self.assertNotIn('catch is CancellationError', self.target)
++        for address in ['0x1002ea78c', '0x1002eaa10', '0x1002eaea4']:
++            self.assertIn('Swift::Task::_get_isCancelled', self.original[address])
++
++    def test_successful_target_batch_and_SDK_errors_keep_previous_proven_tail(self):
++        previous = body(self.before, 'private func reindexTargets(')
++        marker = 'let upperBound = min('
++        self.assertEqual(self.target[self.target.index(marker):], previous[previous.index(marker):])
++        self.assertIn('continuation.resume(throwing: error)', self.target)
++        self.assertIn('refreshed.append(contentsOf: live)', self.target)
++        self.assertIn('for entry in refreshed { indexed[entry.id] = entry }', self.target)
++
++    def test_success_and_failure_still_acknowledge_exactly_once_without_changing_owner_order(self):
++        self.assertEqual(self.drain.count('completed.forEach { $0() }'), 1)
++        self.assertEqual(self.drain.count('requestAcknowledgements.forEach { $0() }'), 1)
++        order = ['let completed = requestAcknowledgements', 'requestAcknowledgements = []', 'completed.forEach { $0() }']
++        start = self.drain.index(order[0])
++        offsets = [self.drain.index(token, start) for token in order]
++        self.assertEqual(offsets, sorted(offsets))
++        self.assertLess(self.drain.index(self.failure), self.drain.index('requestAcknowledgements.forEach'))
++        self.assertLess(self.drain.index('completed.forEach'), self.drain.index('worker = nil'))
++
++    def test_initial_snapshot_state_progress_finalization_and_queries_are_unchanged(self):
++        for marker in ['private func indexInitialSnapshot(', 'private func savedStateForRestore(',
++                       'private func restoreCompletedStateIfHealthy(', 'private func replaceQuery(',
++                       'nonisolated private static func matchingIdentifiers(', 'func retry()']:
++            self.assertEqual(body(self.source, marker), body(self.before, marker))
++
++    def test_history_consumer_ack_and_token_advancement_contract_are_unchanged(self):
++        for marker in ['private func startHistoryObservation()', 'private func applyHistoryChanges(']:
++            self.assertEqual(body(self.source, marker), body(self.before, marker))
++        self.assertIn('try await applyHistoryChanges(work.changes); work.complete(nil)', self.drain)
++        self.assertIn('catch { work.complete(error) }', self.drain)
++        history_path = 'replica/Sources/PastoCore/OriginalSearchHistory.swift'
++        self.assertEqual((ROOT / history_path).read_bytes(), (self.phase / 'before' / history_path).read_bytes())
++
++    def test_reused_full_callback_descriptor_has_no_UI_request_gate(self):
++        descriptor = self.proof['full_reset_descriptor']
++        delta, frame = struct.unpack('<iI', bytes.fromhex(descriptor['bytes']))
++        self.assertEqual(hex(int(descriptor['address'], 16) + delta), '0x1002f3cdc')
++        self.assertEqual(frame, 32)
++        self.assertIn('FUN_1002f2648()', self.original['0x1002f3cdc'])
++        self.assertIn('FUN_1002f1c30()', self.original['0x1002f2648'])
++        rebuild = body(self.source, 'nonisolated private func rebuild(')
++        self.assertNotIn('guard let requested', rebuild)
++        self.assertIn('let request = requested ?? Request(', rebuild)
++
++    def test_only_finite_error_flags_and_forwarding_gate_close_not_active_OR_OCR_lifecycle(self):
++        ids = [row['function_id'] for row in self.proof['contracts']]
++        self.assertEqual(ids, ['Paste:0x1002f2468', 'Paste:0x1002f2a30', 'Paste:0x1002f3cdc'])
++        self.assertFalse(self.proof['full_function_migration_verified'])
++        self.assertEqual(self.proof['function_map_markers_upgraded'], 0)
++        self.assertEqual(len(self.proof['partial_unscored_repairs']), 2)
++        partial = ' '.join(self.proof['retained_partial_contracts'])
++        for token in ['NOT evidence', 'isRunning', 'three target cancellation records are not closed', 'owner-release-before-ack']:
++            self.assertIn(token, partial)
++
++
++if __name__ == '__main__':
++    unittest.main()

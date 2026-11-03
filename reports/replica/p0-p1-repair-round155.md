@@ -1,0 +1,15 @@
+# 第一百五十五轮：Item 原生创建日期与诊断字段
+
+按P0修复→P1检查→P1修复。在检查搜索延迟context时发现已接入的空内容诊断374e84通过真实createdAt selector读取对象日期，但Pasto实际Item模型只有localCreatedAt，缺createdAt；KVC会走未知键异常，诊断不能按原版执行。因此先补P0原生模型和创建回调，不将诊断改成跳过或改读最近使用时间。
+
+原Item真实类直接继承Syncable，3b4888是super.awakeFromInsert之后primitive Date→createdAt；原v10 Item.createdAt为required Date，timestamp为optional Date且承担历史最近使用时间。当前模型新增独立required createdAt，实际PastoItemEntity接入同一原回调体，和已证List回调逐字相同。复制、恢复、编辑及现有DTO显示日期和localCreatedAt策略保留，不用它们覆盖新原生创建日期。现有诊断保持直接读取原createdAt，无未知键替代分支。
+
+新增includeNativeCreationDate，当前model启用；保留12旧source描述为false并加入上一当前model，共13候选。缺data图或缺createdAt任一情况都对Item映射安装既有迁移policy。policy在关系阶段、已有data提前返回之前，通过NSMigrationManager关联取得唯一旧source，优先localCreatedAt，次选timestamp，primitive写入新字段；无唯一关联或无历史日期抛错，避免用当前时间伪造旧记录。已有data不重建，raw字节、ID、关系和原迁移成功后replace的安全边界不改。旧历史未存原厂创建时刻，回填只保留已有本地日期，不能声称还原从未保存的真实原时刻。未执行模型hash/CoreData/数据库迁移。
+
+4原片段、原Item父类/创建回调/诊断证据、required模型及两个本地SDK头绑定。修改3生产文件7处，244文件不变；5方法及4共享源不变。10新增检查直接核当前字段、实际awake、诊断consumer、13候选、关联源/日期优先级/错误及data提前返回顺序；完整2358项静态检查通过，包含上一轮新增8检查的首次整组整合。
+
+首次2358项有5个旧模型数量/摘要约束失败，原日志保留。4旧测试/工具12模式14替换精确隔离本轮source增量；154轮“旧测试未改”历史检查改读155修复前冻结副本，保持历史证据，不冒充当前测试未变化。全部247生产逆增量恢复、4旧文件修改精确重放及当前新增断言通过，未改原业务分支来迁就旧摘要。
+
+v63新增3b4888一个有限差异修复；旧217记录195组与11额外合同保留，现218记录196组。有限清单P0 79/79、P1 139/139、总218/218（100%）；完整schema、updatedAt可选性、DI/生命周期与04430c/0f733c两个unknown仍开，整体完成率未知，目标继续。
+
+版本1.0.2、HEAD、函数映射及官网/下载九文件保持。只留本地改动；不编译、构建、安装、执行应用/框架/CoreData、不联网、不提交推送发布。

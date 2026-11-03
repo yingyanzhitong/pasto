@@ -1,0 +1,122 @@
+--- a/replica/Sources/Pasto/UI/ReplicaNativeCardCollection.swift
++++ b/replica/Sources/Pasto/UI/ReplicaNativeCardCollection.swift
+@@ -601,13 +601,18 @@
+     private func beginNativeDrag(_ event: NSEvent, state: ReplicaUIState) {
+         guard let applied = appliedItems(for: state) else { return }
+         let positions = Dictionary(uniqueKeysWithValues: applied.enumerated().map { ($0.element.id, $0.offset) })
+-        let indexes = state.orderedSelectionIDs.filter { state.selection.contains($0) }.compactMap { positions[$0] }
+-        let selected = indexes.map { renderedItem(at: $0) }
++        let requestedIndexes = state.orderedSelectionIDs.filter { state.selection.contains($0) }.compactMap { positions[$0] }
++        var indexes: [Int] = []
++        let selected = requestedIndexes.compactMap { index -> ClipboardRestoreItem? in
++            guard let input = applied[index].restoreItem() else { return nil }
++            indexes.append(index)
++            return input
++        }
+         let plain = NSEvent.ModifierFlags(rawValue: state.store.preferences.plainTextModifierRawValue)
+         let options: OriginalPasteboardRestore.Options = NSEvent.modifierFlags.isSuperset(of: plain) ? .plainText : []
+         do {
+-            let groups = try state.store.dragPasteboardGroups(for: selected, options: options)
+-            let sources: [any OriginalDragItemIdentifierSource] = selected.map { ReplicaNativeDragItemReference($0) }
++            let groups = try state.store.dragPasteboardGroups(restoreItems: selected, options: options)
++            let sources: [any OriginalDragItemIdentifierSource] = selected.map { $0.makeDragIdentifierSource() }
+             let writers = OriginalNativeDragPasteboardWriter.writers(sources: sources, groups: groups)
+             localMarker = nil
+             var markerData: Data?
+@@ -896,12 +901,6 @@
+     }
+ }
+ 
+-private final class ReplicaNativeDragItemReference: OriginalDragItemIdentifierSource {
+-    private let item: ClipboardItem
+-    init(_ item: ClipboardItem) { self.item = item }
+-    var pasteboardIdentifier: String { item.id.uuidString }
+-}
+-
+ /// Only the replica's local reorder marker is added; original grouped payload stays intact.
+ private final class ReplicaNativeLocalDragWriter: NSObject, NSPasteboardWriting {
+     private let writer: OriginalNativeDragPasteboardWriter
+--- a/replica/Sources/PastoCore/ClipboardRestoreItem.swift
++++ b/replica/Sources/PastoCore/ClipboardRestoreItem.swift
+@@ -35,6 +35,10 @@
+ 
+     public var isDeleted: Bool { nativeObject?.isDeleted ?? false }
+     public var hasNativeEntity: Bool { nativeObject != nil }
++
++    public func makeDragIdentifierSource() -> any OriginalDragItemIdentifierSource {
++        ClipboardDragIdentifierSource(object: nativeObject, fallback: id.uuidString)
++    }
+ 
+     // 3c2780 publishes entity changes including deletion; the preview consumer decides how to react.
+     public func observeChanges(_ consume: @escaping (ClipboardRestoreItem) -> Void) -> AnyCancellable? {
+@@ -151,3 +155,23 @@
+     public func resolvedItem() -> ClipboardItem { resolve() }
+     public func observeItem() -> ClipboardItemObservation? { makeObservation() }
+ }
++
++private final class ClipboardDragIdentifierSource: OriginalDragItemIdentifierSource {
++    private let object: PastoItemEntity?
++    private let context: NSManagedObjectContext?
++    private let fallback: String
++
++    init(object: PastoItemEntity?, fallback: String) {
++        self.object = object
++        context = object?.managedObjectContext
++        self.fallback = fallback
++    }
++
++    var pasteboardIdentifier: String {
++        guard let object else { return fallback }
++        let fallback = self.fallback
++        let read = { (object.value(forKey: "nativeIdentifier") as? String) ?? fallback }
++        if let context { return context.performAndWait(read) }
++        return read()
++    }
++}
+--- a/replica/Sources/PastoCore/Pasteboard.swift
++++ b/replica/Sources/PastoCore/Pasteboard.swift
+@@ -332,6 +332,14 @@
+                                                      removingTypesContaining: ["com.microsoft.ole.source"])
+     }
+ 
++    public func dragPasteboardGroups(restoreItems selected: [ClipboardRestoreItem],
++                                     options: OriginalPasteboardRestore.Options) throws -> [[OriginalPasteboardItem]] {
++        guard selected.allSatisfy({ $0.nativeObject != nil }) else {
++            return try dragPasteboardGroups(for: selected.map { $0.resolvedItem() }, options: options)
++        }
++        return nativeRestoreGroups(selected, options: options)
++    }
++
+     public func writeToPasteboard(id: UUID, pasteboard: NSPasteboard, plainTextOnly: Bool = false) throws {
+         try writeToPasteboard(ids: [id], pasteboard: pasteboard, plainTextOnly: plainTextOnly)
+     }
+@@ -376,6 +384,11 @@
+     // 38222c consumes one entity at a time: data/image preparation, source, flags, then aggregation.
+     private func nativeRestoreObjects(_ inputs: [ClipboardRestoreItem],
+                                       options: OriginalPasteboardRestore.Options) -> [OriginalPasteboardItem] {
++        nativeRestoreGroups(inputs, options: options).flatMap { $0 }
++    }
++
++    private func nativeRestoreGroups(_ inputs: [ClipboardRestoreItem],
++                                     options: OriginalPasteboardRestore.Options) -> [[OriginalPasteboardItem]] {
+         let multiple = inputs.count > 1
+         let aggregatesText = inputs.contains { $0.previewRawType() == 5 || $0.previewRawType() == 4 }
+         var groups: [[OriginalPasteboardItem]] = []
+@@ -402,7 +415,7 @@
+                 item.f_10037c4a8(sourceBundleID ?? "", forType: "org.nspasteboard.source")
+                 item.f_1003838bc()
+             }
+-            if !multiple { return items }
++            if !multiple { return [items] }
+             if aggregatesText {
+                 contents.append(contentsOf: items.compactMap { $0.f_10037d33c() })
+                 groups.append([])
+@@ -421,7 +434,7 @@
+             }
+             groups.insert([aggregate], at: 0)
+         }
+-        return groups.flatMap { $0 }
++        return groups
+     }
+ 
+     public func writeToPasteboard(ids: [UUID], pasteboard: NSPasteboard,

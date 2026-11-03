@@ -1,0 +1,154 @@
+{
+  "round": 15,
+  "binary_path": ".local/paste-arm64-static.bin",
+  "binary_sha256": "871f00354fbb1c165d858a98e6d19d6f43cb9d3f9f958b3e07c7f07eb5c19afb",
+  "segments": [
+    {
+      "vmaddr": 0,
+      "filesize": 0,
+      "fileoff": 0
+    },
+    {
+      "vmaddr": 4294967296,
+      "filesize": 15351808,
+      "fileoff": 0
+    },
+    {
+      "vmaddr": 4310319104,
+      "filesize": 671744,
+      "fileoff": 15351808
+    },
+    {
+      "vmaddr": 4310990848,
+      "filesize": 1064960,
+      "fileoff": 16023552
+    },
+    {
+      "vmaddr": 4312727552,
+      "filesize": 1956752,
+      "fileoff": 17088512
+    }
+  ],
+  "capture_fields": {
+    "metadata": "0x100fc16b8",
+    "nominal": "0x100cad114",
+    "name": "Pasteboard",
+    "field_descriptor": "0x100d489e8",
+    "field_count": 8,
+    "field_record_size": 12,
+    "field_offset_vector": 10,
+    "fields": [
+      {
+        "name": "systemPasteboard",
+        "record": "0x100d489f8",
+        "name_address": "0x100d275e0",
+        "offset_slot": "0x100fc1708",
+        "offset": 16
+      },
+      {
+        "name": "delegate",
+        "record": "0x100d48a04",
+        "name_address": "0x100d275f1",
+        "offset_slot": "0x100fc1710",
+        "offset": 24
+      },
+      {
+        "name": "cachedItems",
+        "record": "0x100d48a10",
+        "name_address": "0x100d275fa",
+        "offset_slot": "0x100fc1718",
+        "offset": 40
+      },
+      {
+        "name": "lastChangeToken",
+        "record": "0x100d48a1c",
+        "name_address": "0x100d27606",
+        "offset_slot": "0x100fc1720",
+        "offset": 48
+      },
+      {
+        "name": "pollTimer",
+        "record": "0x100d48a28",
+        "name_address": "0x100d27616",
+        "offset_slot": "0x100fc1728",
+        "offset": 56
+      },
+      {
+        "name": "syncTimer",
+        "record": "0x100d48a34",
+        "name_address": "0x100d27620",
+        "offset_slot": "0x100fc1730",
+        "offset": 64
+      },
+      {
+        "name": "logger",
+        "record": "0x100d48a40",
+        "name_address": "0x100d2762a",
+        "offset_slot": "0x100fc1738",
+        "offset": 72
+      },
+      {
+        "name": "telemetry",
+        "record": "0x100d48a4c",
+        "name_address": "0x100d27631",
+        "offset_slot": "0x100fc1740",
+        "offset": 80
+      }
+    ]
+  },
+  "history_clear_witness": {
+    "parent_table": "0x100eccd58",
+    "parent_slot": "0x100eccd68",
+    "child_table": "0x100eccda0",
+    "method_slot": "0x100eccdd8",
+    "method": "0x100369308"
+  },
+  "scope": "仅静态字段/分派证据，不执行原程序，不宣称全函数迁移。",
+  "capture_return_flow": [
+    {
+      "address": "0x10037aa1c",
+      "word": "0x94000008",
+      "file_offset": 3648028
+    },
+    {
+      "address": "0x10037aa20",
+      "word": "0xf9401c13",
+      "file_offset": 3648032
+    },
+    {
+      "address": "0x10037aa2c",
+      "word": "0x1a9f07e0",
+      "file_offset": 3648044
+    },
+    {
+      "address": "0x100004b00",
+      "word": "0x940dd7c4",
+      "file_offset": 19200
+    },
+    {
+      "address": "0x100004b04",
+      "word": "0xaa0003f6",
+      "file_offset": 19204
+    },
+    {
+      "address": "0x100004b18",
+      "word": "0x52800028",
+      "file_offset": 19224
+    },
+    {
+      "address": "0x100004b1c",
+      "word": "0xa360108",
+      "file_offset": 19228
+    },
+    {
+      "address": "0x100004b24",
+      "word": "0x52800008",
+      "file_offset": 19236
+    },
+    {
+      "address": "0x100004b28",
+      "word": "0x39000268",
+      "file_offset": 19240
+    }
+  ]
+}

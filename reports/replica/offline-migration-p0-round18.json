@@ -1,0 +1,297 @@
+{
+  "kind": "offline_original_contract_dependency_audit",
+  "round": 18,
+  "status": "evidence-checks-passed-goal-active",
+  "generated_at": "2026-10-29T16:12:57.140933+00:00",
+  "previous_goal_turn": "progress",
+  "priority": "P0",
+  "audited_module": "P1 search_and_filter",
+  "module": "index_state_dependency_on_local_persistence",
+  "functions": [
+    {
+      "function_id": "Paste:0x1002efccc",
+      "status": "original_contract_gap_confirmed",
+      "contract": "全量启动先查isIndexingAvailable，不可用抛本地错误；可用时先读持久状态和provider身份，再继续分支。当前drain无对应启动合同。",
+      "original": {
+        "path": "decompiled/Paste/part-0242.c",
+        "sha256": "7ae26d5864e75843ee54496d1e26c8089494221f611c920c50699d353f72ff66"
+      },
+      "source_references": []
+    },
+    {
+      "function_id": "Paste:0x1002f00dc",
+      "status": "original_contract_gap_confirmed",
+      "contract": "比较两个非nil身份字符串，状态nil/身份变化/schema变化进入fresh分支；同schema未完成按oldestTimestamp恢复；已完成且total>0进入健康探测。当前每次冷启动needsReset，无持久状态分支。",
+      "original": {
+        "path": "decompiled/Paste/part-0242.c",
+        "sha256": "5459a01c923d25b43f4b6af84b25a4eaaa1d76d50f0126ff7bed6b1612c8f288"
+      },
+      "source_references": []
+    },
+    {
+      "function_id": "Paste:0x1002f0c38",
+      "status": "original_contract_gap_confirmed",
+      "contract": "健康探测结果保存后切actor续体0c8c；当前没有启动健康探测续体。",
+      "original": {
+        "path": "decompiled/Paste/part-0242.c",
+        "sha256": "67382bf40a848d5b99aff343cf7197fe5635ed1aa7016b587197f9a8d6855ebe"
+      },
+      "source_references": []
+    },
+    {
+      "function_id": "Paste:0x1002f0c8c",
+      "status": "original_contract_gap_confirmed",
+      "contract": "已保存完成状态却探测为空时清状态并重建；健康结果为false时保留完整状态并进入事件监听/后续增量。当前没有对应状态消费。",
+      "original": {
+        "path": "decompiled/Paste/part-0242.c",
+        "sha256": "ef908f89a09dfe3f862a0aee628c7e37362cba0be07b5d70bed17ed97bfbbfbe"
+      },
+      "source_references": []
+    },
+    {
+      "function_id": "Paste:0x1002e35d4",
+      "status": "original_contract_gap_confirmed",
+      "contract": "实际nominal metadata为IndexingState，五个字段而非单bool；当前模型缺对应状态。",
+      "original": {
+        "path": "decompiled/Paste/part-0240.c",
+        "sha256": "f71c821138ef49dfd7f372007d094ffae997426b77b91ebb6a3326eed4991ea7"
+      },
+      "source_references": []
+    },
+    {
+      "function_id": "Paste:0x1002e1234",
+      "status": "original_contract_gap_confirmed",
+      "contract": "schema全局惰性初始化：系统26.4前为5，达到26.4为6。当前archive/root.version=1用途不同，不能替代此schema。",
+      "original": {
+        "path": "decompiled/Paste/part-0239.c",
+        "sha256": "441ff65d9bd05a735e048778b937c7df647598dde1d74da31a12a41c9f0120b1"
+      },
+      "source_references": []
+    },
+    {
+      "function_id": "Paste:0x1002f3b80",
+      "status": "original_contract_gap_confirmed",
+      "contract": "按IndexingState值见证执行初始化拷贝；原型metadata字段已识别，当前没有该状态类型的消费。",
+      "original": {
+        "path": "decompiled/Paste/part-0243.c",
+        "sha256": "8f210726bd213485655228731831b34d104a3bca84a49f9dd45bfff49a9240c2"
+      },
+      "source_references": []
+    },
+    {
+      "function_id": "Paste:0x1002f39e4",
+      "status": "original_contract_gap_confirmed",
+      "contract": "Optional<IndexingState>的值拷贝，nil需保持nil；不能把当前indexed空字典当作原状态nil。",
+      "original": {
+        "path": "decompiled/Paste/part-0243.c",
+        "sha256": "81e008b76fe4ec7142c51d566668ab11f5ba85ba5ed0bc750753c7b842d3e359"
+      },
+      "source_references": []
+    },
+    {
+      "function_id": "Paste:0x1002e450c",
+      "status": "original_contract_gap_confirmed",
+      "contract": "销毁IndexingState值；需先有真实状态模型/生命周期，未为增加计数造空包装。",
+      "original": {
+        "path": "decompiled/Paste/part-0240.c",
+        "sha256": "8ecd5f69f1799cef0b9f1664bb5ea790b26043ea817cfa349cce5f53f366ec0f"
+      },
+      "source_references": []
+    },
+    {
+      "function_id": "Paste:0x1002eb7dc",
+      "status": "original_contract_gap_confirmed",
+      "contract": "拷贝Optional<Date>；全量恢复从IndexingState第3字段oldestTimestamp读取，对应metadata偏移向量槽0x1c。当前无原恢复游标消费。",
+      "original": {
+        "path": "decompiled/Paste/part-0241.c",
+        "sha256": "fd5f41c7f10c5a0ad42d3aeee3ccdeb9f471fe26e118565334d23ee8bd453bbb"
+      },
+      "source_references": []
+    },
+    {
+      "function_id": "Paste:0x1002f3230",
+      "status": "original_contract_gap_confirmed",
+      "contract": "调度健康探测到原indexer actor；当前没有此启动分支。",
+      "original": {
+        "path": "decompiled/Paste/part-0243.c",
+        "sha256": "c95093b05bbe397eac25dd0265177de2e0315f3e6d5e8975ec0fab02ecc97ea5"
+      },
+      "source_references": []
+    },
+    {
+      "function_id": "Paste:0x1002f3248",
+      "status": "original_contract_gap_confirmed",
+      "contract": "健康探测调用搜索服务，谓词contentModificationDate>=epoch1970，检验已有索引是否至少有结果；当前没有对应probe。",
+      "original": {
+        "path": "decompiled/Paste/part-0243.c",
+        "sha256": "ff04cdf841752f527bfa5d582cc405c20acd675db6eb48bd01f5cbf82cc54af6"
+      },
+      "source_references": []
+    },
+    {
+      "function_id": "Paste:0x1002f32d4",
+      "status": "original_contract_gap_confirmed",
+      "contract": "成功探测返回结果数组是否为空；探测异常返回false并记录本地诊断，不能把查询错误当作已确认空索引。当前未实现该错误区分。",
+      "original": {
+        "path": "decompiled/Paste/part-0243.c",
+        "sha256": "3199a8c87dd717ac3d37a7fafe6bc6f36f0b54a38144c723bd2c33a0107c9637"
+      },
+      "source_references": []
+    }
+  ],
+  "reviewed_count": 13,
+  "current_review_unique_count": 461,
+  "current_review_inventory_percent": 0.5683,
+  "static_bindings": {
+    "original_binary_sha256": "871f00354fbb1c165d858a98e6d19d6f43cb9d3f9f958b3e07c7f07eb5c19afb",
+    "indexing_state": {
+      "descriptor": "0x100cab74c",
+      "name": "IndexingState",
+      "descriptor_bytes": "51000100e0fcffff842ef9ff7c7e63ffd4bb09000500000002000000",
+      "field_descriptor": "0x100d47330",
+      "kind": 0,
+      "record_size": 12,
+      "fields": [
+        {
+          "name": "schemaVersion",
+          "record": "0x100d47340",
+          "bytes": "00000000aee8faffe4f3fdff",
+          "type_ref": "0x100cf5bf2",
+          "type_ref_bytes": "5369000001cd57fbff00536f"
+        },
+        {
+          "name": "totalItems",
+          "record": "0x100d4734c",
+          "bytes": "00000000a2e8faffe6f3fdff",
+          "type_ref": "0x100cf5bf2",
+          "type_ref_bytes": "5369000001cd57fbff00536f"
+        },
+        {
+          "name": "indexedItems",
+          "record": "0x100d47358",
+          "bytes": "0200000096e8faffe5f3fdff",
+          "type_ref": "0x100cf5bf2",
+          "type_ref_bytes": "5369000001cd57fbff00536f"
+        },
+        {
+          "name": "oldestTimestamp",
+          "record": "0x100d47364",
+          "bytes": "020000000ceafaffe6f3fdff",
+          "type_ref": "0x100cf5d74",
+          "type_ref_bytes": "0213171b00536700536e7902"
+        },
+        {
+          "name": "invalidItems",
+          "record": "0x100d47370",
+          "bytes": "020000007ee8faffeaf3fdff",
+          "type_ref": "0x100cf5bf2",
+          "type_ref_bytes": "5369000001cd57fbff00536f"
+        }
+      ],
+      "field_names": [
+        "schemaVersion",
+        "totalItems",
+        "indexedItems",
+        "oldestTimestamp",
+        "invalidItems"
+      ],
+      "oldest_timestamp_type": {
+        "indirect_slot": "0x100ea7488",
+        "slot_bytes": "a601000000001080",
+        "symbol": "_$s10Foundation4DateVMn",
+        "optional_suffix": "Sg",
+        "prior_bound_proof": "reports/replica/offline-migration-p0-round12.json"
+      }
+    },
+    "schema_initializer": {
+      "address": "0x1002e1234",
+      "bytes": "fd7bbfa9fd0300914003805281008052020080d25a6424941f000072a80080520805889aa96b00d0289904f9fd7bc1a8c0035fd6",
+      "old_schema": 5,
+      "macos_26_4_schema": 6
+    },
+    "health_probe": {
+      "address": "0x100da14a0",
+      "bytes": "636f6e74656e744d6f64696669636174696f6e44617465203e3d202474696d652e69736f28313937302d30312d30315430303a30303a30305a29",
+      "query": "contentModificationDate >= $time.iso(1970-01-01T00:00:00Z)"
+    }
+  },
+  "source_sha256": {
+    "replica/Sources/Pasto/UI/ReplicaSearchIndex.swift": "343714647dfd6fef03751675c2fbb66116261c29b7a8195df8b10cf4d9165e92",
+    "replica/Sources/PastoCore/ClipboardPersistence.swift": "31978e6879ac1a0a645cfc0c89ab59d31dc0bccd9ddbe19a080d93273eebecb9",
+    "replica/Sources/PastoCore/ClipboardStore.swift": "116f543df1dc8717e58edf3e0f99eebfe7fc208953e7d3d611cf59a7490b1445",
+    "scripts/tests/test_index_state_provenance.py": "21df297fe6d0e409550eb7c996f964d7449d6eda367184073ea8185df2969356"
+  },
+  "production_source_edited": false,
+  "new_partial_bindings": [],
+  "new_gap_function_ids": [
+    "Paste:0x1002efccc",
+    "Paste:0x1002f00dc",
+    "Paste:0x1002f0c38",
+    "Paste:0x1002f0c8c",
+    "Paste:0x1002e35d4",
+    "Paste:0x1002e1234",
+    "Paste:0x1002f3b80",
+    "Paste:0x1002f39e4",
+    "Paste:0x1002e450c",
+    "Paste:0x1002eb7dc",
+    "Paste:0x1002f3230",
+    "Paste:0x1002f3248",
+    "Paste:0x1002f32d4"
+  ],
+  "confirmed_findings": [
+    "IndexingState实际含schemaVersion/totalItems/indexedItems/oldestTimestamp/invalidItems五字段；Date?字段与实际Date import已绑定",
+    "同schema且未完成会按oldestTimestamp恢复；完成且total>0才运行至少一条历史记录的健康probe，异常不是确认空结果",
+    "当前ClipboardPersistence只存自有Item/Pinboard/Application/State值字段和revision；revision每次save变化，不能当稳定来源身份，root.version=1不是原搜索schema5/6",
+    "全量状态依赖持久层/来源接口，先回到P0模型和实体事件核对；没有造不同快照缓存或将gap写成实现映射"
+  ],
+  "tests": {
+    "passed": true,
+    "total": 173,
+    "added_in_round": 5,
+    "scope": "Python provenance/metadata/ledger assertions only. Known missing Pasto contracts stay gaps; passing is not a feature regression or migration-completion result."
+  },
+  "new_fully_migrated_function_count": 0,
+  "historical_ledger": {
+    "numerator": 1648,
+    "denominator": 81123,
+    "percent": 2.0315,
+    "stale_evidence": true
+  },
+  "current_partial_count": 524,
+  "compiled": false,
+  "application_executed": false,
+  "original_binary_executed": false,
+  "user_data_modified": false,
+  "network_used": false,
+  "committed": false,
+  "pushed": false,
+  "module_complete": false,
+  "goal_active": true,
+  "remaining_differences": [
+    "全量启动可用性检查、IndexingState持久化/schema/身份比较、游标恢复和健康probe均尚未迁移",
+    "来源身份提供者真实协议/实体映射、持久层变更事件及P0模型/事务基础需要继续闭合；不能用revision UUID替代身份",
+    "指定ID和批次原actor取消/active/错误恢复、索引查询分离等旧差异仍保留，全部其它P0/P1/P2目标不缩减"
+  ],
+  "next_module": "P0 data_and_persistence",
+  "next_work": [
+    "从原CDSearchIndexerDataSource(100cacfa0)的本地来源/实体接口与36f7b8变更流核对持久层，区分本地CoreData通知与联网模块",
+    "核对ClipboardPersistence和ItemRepository的模型/事务身份，再回接完整索引状态；继续保留已完成源码修复和用户兼容数据"
+  ],
+  "inventory": {
+    "mapping_states": {
+      "partial": 524,
+      "migrated": 1648,
+      "excluded_by_scope": 9
+    },
+    "mapped_reference_records_checked": 2181,
+    "source_binding_counts": {
+      "current": 322,
+      "not_recorded": 1059,
+      "file_changed_needs_method_review": 267
+    },
+    "unchanged_source_review_count": 317,
+    "reference_issue_counts": {
+      "missing_address_in_evidence": 12
+    }
+  }
+}

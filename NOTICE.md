@@ -10,6 +10,7 @@ Pasto 是依据 Paste 6.6.6（29766850）的静态逆向证据独立编写的 ma
 
 - `decompiled/` 中由原应用机器码恢复的伪代码、汇编及相关原应用片段。
 - 从原应用提取的本地化文字、图片或其他素材。当前 `replica/Sources/PastoCore/Resources/*/Localizable.strings` 中恢复的原版本地化资源属于此类；在独立实现中展示或做品牌适配，不会使原文字变成本项目原创内容。
+- `replica/Sources/PastoCore/OriginalStackIcons.bundle/Contents/Resources/Assets.car` 是从原目录提取的四种 Stack 类别图标及其必需灰度图集，保留原始像素压缩数据；它属于原应用素材，不适用本项目 MIT 授权。提取工具和资源包描述文件为独立编写。
 - 研究报告或元数据文件中包含的原应用代码片段、原符号和其他恢复材料。独立撰写的分析文字可以适用 MIT，其中嵌入的第三方内容仍保留其原有权利。
 - 原应用及工具依赖的二进制、安装包和第三方组件。
 

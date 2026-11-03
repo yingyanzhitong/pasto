@@ -1,0 +1,109 @@
+--- a/replica/Sources/PastoCore/ClipboardSnapshotReader.swift
++++ b/replica/Sources/PastoCore/ClipboardSnapshotReader.swift
+@@ -52,8 +52,11 @@
+                 return []
+             }
+             return try objects.map { object in
+-                var value = try ClipboardPersistence.decode(ClipboardItem.self, object)
+-                ClipboardItemTitlePersistence.project(&value, from: object)
++                // Local cache identity/date columns remain required; content is deferred native data.
++                guard let key = object.value(forKey: "key") as? String, let id = UUID(uuidString: key),
++                      let contentVersion = object.value(forKey: "updatedAt") as? Date else {
++                    throw CocoaError(.fileReadCorruptFile)
++                }
+                 let rawType = (object.value(forKey: "rawType") as? NSNumber)?.uint8Value ?? 0
+                 let kind = OriginalPasteboardContentKind(rawValue: rawType) ?? .unknown
+                 let reader = ClipboardSearchRecordReader(coordinator: coordinator, objectID: object.objectID, kind: kind)
+@@ -62,10 +65,11 @@
+                 let list = object.value(forKey: "list") as? NSManagedObject
+                 let pinboard = (list?.value(forKey: "rawType") as? NSNumber)?.int64Value == 2
+                     ? list?.value(forKey: "identifier") as? String : nil
+-                return ClipboardSearchRecord.make(value, nativeIdentifier: object.value(forKey: "nativeIdentifier") as? String,
++                return ClipboardSearchRecord.make(id: id, originalTitle: object.value(forKey: "title") as? String,
++                    nativeIdentifier: object.value(forKey: "nativeIdentifier") as? String,
+                     kind: kind, modified: object.value(forKey: "timestamp") as? Date,
+                     app: application?.value(forKey: "name") as? String, device: device?.value(forKey: "name") as? String,
+-                    pinboard: pinboard, contentVersion: object.value(forKey: "updatedAt") as? Date ?? value.updatedAt,
++                    pinboard: pinboard, contentVersion: contentVersion,
+                     content: kind == .image ? nil : { reader.content() },
+                     imageData: kind == .image ? { reader.imageData() } : nil)
+             }
+--- a/replica/Sources/PastoCore/ClipboardSearchRecord.swift
++++ b/replica/Sources/PastoCore/ClipboardSearchRecord.swift
+@@ -34,7 +34,7 @@
+             && lhs.device == rhs.device && lhs.pinboard == rhs.pinboard && lhs.contentVersion == rhs.contentVersion
+     }
+ 
+-    static func make(_ value: ClipboardItem, nativeIdentifier: String?, kind: OriginalPasteboardContentKind,
++    static func make(id: UUID, originalTitle: String?, nativeIdentifier: String?, kind: OriginalPasteboardContentKind,
+                      modified: Date?, app: String?, device: String?, pinboard: String?, contentVersion: Date,
+                      content: (() -> String?)?, imageData: (() -> Data?)?) -> Self {
+         let name: String
+@@ -46,8 +46,8 @@
+         case .link: name = "Link"
+         case .text: name = "Text"
+         }
+-        return Self(id: value.id, nativeIdentifier: nativeIdentifier, type: name,
+-                    title: value.originalTitle ?? name, app: app, modified: modified, device: device,
++        return Self(id: id, nativeIdentifier: nativeIdentifier, type: name,
++                    title: originalTitle ?? name, app: app, modified: modified, device: device,
+                     pinboard: pinboard, content: content, imageData: imageData, contentVersion: contentVersion)
+     }
+ 
+@@ -63,7 +63,7 @@
+         case .link: kind = .link
+         case .text, .richText: kind = .text
+         }
+-        return make(value, nativeIdentifier: value.nativeIdentifier, kind: kind,
++        return make(id: value.id, originalTitle: value.originalTitle, nativeIdentifier: value.nativeIdentifier, kind: kind,
+                     modified: value.isInHistory ? value.createdAt : nil, app: app, device: value.sourceDevice,
+                     pinboard: value.pinboardOwnerID?.uuidString, contentVersion: value.updatedAt,
+                     content: kind == .image ? nil : {
+@@ -74,6 +74,34 @@
+ }
+ 
+ enum ClipboardSearchRecordContent {
++    // 3724f0: native empty content consults typed metadata, never the compatibility value archive.
++    static func nativeText(_ items: [OriginalPasteboardItem], kind: OriginalPasteboardContentKind,
++                           preview: Data?) -> String? {
++        // Reuse primary extraction; this closure supplies no archived fallback.
++        guard let value = text(items, kind: kind, preview: preview, legacyPreviewFallback: { "" }) else { return nil }
++        guard value.isEmpty else { return value }
++        guard kind != .unknown else { return nil }
++        let fallback: String?
++        if let metadata = OriginalImagePreviewMetadataCodec.decodeText(preview) {
++            // The stored sample may be truncated. Recover the full first rich/plain representation.
++            guard metadata.length != 0 else { return nil }
++            fallback = items.first?.f_10037d33c()?.string
++        } else if let metadata = OriginalImagePreviewMetadataCodec.decodeLink(preview) {
++            guard !metadata.url.absoluteString.isEmpty else { return nil }
++            var values = [metadata.url.absoluteString]
++            if let name = metadata.name { values.append(name) }
++            fallback = values.joined(separator: " ")
++        } else if OriginalImagePreviewMetadataCodec.decode(preview) != nil
++                    || OriginalImagePreviewMetadataCodec.decodeColor(preview) != nil {
++            fallback = nil
++        } else if let metadata = OriginalImagePreviewMetadataCodec.decodeFiles(preview) {
++            guard !metadata.paths.joined().isEmpty else { return nil }
++            fallback = metadata.paths.joined(separator: " ")
++        } else { return nil }
++        guard let fallback, !fallback.isEmpty else { return value }
++        return fallback
++    }
++
+     // 0x1003724f0: normal unknown/text content uses all nonnil strings, in input order.
+     static func text(_ items: [OriginalPasteboardItem], kind: OriginalPasteboardContentKind, preview: Data?,
+                      legacyPreviewFallback: () -> String?) -> String? {
+@@ -131,10 +159,8 @@
+ 
+     func content() -> String? {
+         read { object, items in
+-            ClipboardSearchRecordContent.text(items, kind: kind, preview: object.value(forKey: "rawPreview") as? Data) {
+-                guard let raw = object.value(forKey: "content") as? Data else { return nil }
+-                return (try? PropertyListDecoder().decode(ClipboardItem.self, from: raw))?.plainText
+-            }
++            ClipboardSearchRecordContent.nativeText(items, kind: kind,
++                preview: object.value(forKey: "rawPreview") as? Data)
+         }
+     }
+ 

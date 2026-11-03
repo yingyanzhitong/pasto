@@ -6,7 +6,6 @@ import PastoCore
 @MainActor
 struct ReplicaPanelView: View {
     @ObservedObject var state: ReplicaUIState
-    @State private var searchFocused = false
 
     var body: some View {
         GeometryReader { geometry in
@@ -29,12 +28,17 @@ struct ReplicaPanelView: View {
                         .frame(maxWidth: .infinity, minHeight: collectionHeight, maxHeight: collectionHeight)
                         .accessibilityLabel(state.searchFailed ? "本地搜索暂不可用" : "无结果")
                     }
-                    if let board = state.store.pinboards.first(where: { $0.id == state.pendingPinboardDeletionID }) {
+                    if state.hasPendingDeletion {
                         Color.black.opacity(0.08)
                             .contentShape(Rectangle())
-                            .onTapGesture { state.controller?.cancelPinboardRemoval() }
-                        pinboardDeletionConfirmation(board)
-                            .frame(width: min(360, max(0, geometry.size.width - 32)))
+                            .onTapGesture { state.controller?.cancelPendingDeletion() }
+                        if let request = state.pendingItemDeletion {
+                            itemDeletionConfirmation(request)
+                                .frame(width: min(360, max(0, geometry.size.width - 32)))
+                        } else if let target = state.pendingPinboardDeletion {
+                            pinboardDeletionConfirmation(target)
+                                .frame(width: min(360, max(0, geometry.size.width - 32)))
+                        }
                     }
                 }
             }
@@ -47,8 +51,6 @@ struct ReplicaPanelView: View {
         .preferredColorScheme(state.preferredScheme)
         .onChange(of: state.query) { _, _ in state.normalizeSelection() }
         .onChange(of: state.searchFilters) { _, _ in state.normalizeSelection() }
-        .onChange(of: state.searchFocus) { _, _ in searchFocused = true }
-        .onChange(of: state.searchVisible) { _, visible in if !visible { searchFocused = false } }
         .accessibilityIdentifier("clipboard-panel")
     }
 
@@ -57,24 +59,44 @@ struct ReplicaPanelView: View {
         return 0
     }
 
-    private func pinboardDeletionConfirmation(_ board: Pinboard) -> some View {
+    private func pinboardDeletionConfirmation(_ target: ClipboardListTarget) -> some View {
+        deletionConfirmation(title: "删除“\(target.name)”？",
+            message: "保留历史和其他分组中的内容，仅属于此分组的内容将被删除。",
+            error: state.pinboardDeletionError, confirmTitle: "删除分组", kind: "group",
+            cancel: { state.controller?.cancelPinboardRemoval() },
+            confirm: { state.controller?.confirmPinboardRemoval() })
+    }
+
+    private func itemDeletionConfirmation(_ request: ReplicaUIState.ItemDeletionRequest) -> some View {
+        let message: String
+        if request.permanently { message = "将从剪贴板历史和所有分组中删除这 \(request.ids.count) 个项目。" }
+        else if request.contextPinboardID != nil { message = "仅移出当前分组，保留历史和其他分组中的内容。" }
+        else { message = "从剪贴板历史中删除，保留分组中的内容。" }
+        return deletionConfirmation(title: "删除选中的项目？", message: message,
+            error: state.itemDeletionError, confirmTitle: "删除", kind: "item",
+            cancel: { state.cancelItemDeletion() }, confirm: { state.confirmItemDeletion() })
+    }
+
+    private func deletionConfirmation(title: String, message: String, error: String?,
+                                      confirmTitle: String, kind: String,
+                                      cancel: @escaping () -> Void, confirm: @escaping () -> Void) -> some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("删除“\(board.name)”？")
+            Text(title)
                 .font(.system(size: 16, weight: .semibold))
                 .lineLimit(2)
-            Text(state.pinboardDeletionError ?? "保留历史和其他分组中的内容，仅属于此分组的内容将被删除。")
+            Text(error ?? message)
                 .font(.system(size: 13))
-                .foregroundStyle(state.pinboardDeletionError == nil ? Color.secondary : Color.red)
+                .foregroundStyle(error == nil ? Color.secondary : Color.red)
                 .fixedSize(horizontal: false, vertical: true)
             HStack {
                 Spacer()
-                Button("取消") { state.controller?.cancelPinboardRemoval() }
+                Button("取消", action: cancel)
                     .buttonStyle(.bordered)
-                    .accessibilityIdentifier("cancel-group-deletion")
-                Button("删除分组", role: .destructive) { state.controller?.confirmPinboardRemoval() }
+                    .accessibilityIdentifier("cancel-\(kind)-deletion")
+                Button(confirmTitle, role: .destructive, action: confirm)
                     .buttonStyle(.borderedProminent)
                     .tint(.red)
-                    .accessibilityIdentifier("confirm-group-deletion")
+                    .accessibilityIdentifier("confirm-\(kind)-deletion")
             }
         }
         .padding(16)
@@ -82,7 +104,7 @@ struct ReplicaPanelView: View {
         .overlay(RoundedRectangle(cornerRadius: 16).strokeBorder(.primary.opacity(0.1)))
         .shadow(color: .black.opacity(0.12), radius: 12, y: 4)
         .accessibilityElement(children: .contain)
-        .accessibilityIdentifier("group-deletion-confirmation")
+        .accessibilityIdentifier("\(kind)-deletion-confirmation")
     }
 
     private var backgroundRadius: CGFloat {
@@ -90,106 +112,98 @@ struct ReplicaPanelView: View {
         return 0
     }
 
-    private var searching: Bool { searchFocused || state.searchVisible || !state.isSearchQueryEmpty }
+    private var searching: Bool { state.searchVisible || !state.isSearchQueryEmpty }
 
     private var header: some View {
-        GeometryReader { geometry in
-            // 0x10000e4c8 / 0x10000d884: centered search, width >= 400 and
-            // >= 1/4 toolbar; collapsed tabs begin 8 points after its edge.
-            let searchWidth = max(400, geometry.size.width * 0.25)
-            let tabsWidth = max(0, (geometry.size.width - searchWidth) / 2 - 80)
-            ZStack {
-                HStack { Spacer(); trailingControls }
-                if searching {
-                    searchField.frame(width: searchWidth)
-                        .overlay(alignment: .trailing) {
-                            ScrollView(.horizontal) { historyControls }
-                                .scrollIndicators(.hidden)
-                                .frame(width: tabsWidth, height: 32)
-                                .clipped()
-                                .alignmentGuide(.trailing) { $0[.leading] - 8 }
-                        }
-                } else {
-                    HStack(spacing: 20) {
-                        OriginalPanelToolbarButton(symbol: "magnifyingglass", label: "搜索剪贴板") {
-                            state.searchVisible = true; searchFocused = true
-                        }
-                        boardTabs
-                    }.fixedSize(horizontal: true, vertical: false)
-                }
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .padding(.horizontal, 24)
-        }
+        OriginalPanelToolbar(state: state, isSearching: searching,
+            searchButton: AnyView(OriginalPanelToolbarButton(symbol: "magnifyingglass", label: "搜索剪贴板") {
+                state.searchVisible = true
+            }), searchField: searchField, tabConfiguration: boardTab,
+            createButton: AnyView(createPinboardButton),
+            menuButton: AnyView(trailingControls), onDismiss: {
+                state.searchVisible = false
+            })
     }
 
-    private var searchField: some View {
-        ReplicaSearchEditor(text: $state.query, focused: $searchFocused, store: state.store,
+    private var searchField: ReplicaSearchEditor {
+        ReplicaSearchEditor(store: state.store,
+            queryNodes: state.searchQueryNodes,
             filters: searchFilterChips,
-            onInputChange: { text, filters, nodes in state.applySearchInput(nodes: nodes, text: text, filters: filters) },
+            onInputChange: { text, filters, nodes in state.publishSearchInputFromEditor(nodes: nodes, text: text, filters: filters) },
+            onLoadSuggestions: { state.searchSuggestions(for: $0) },
             onEnter: { state.controller?.pasteSelection(plainTextOnly: false) },
             onCancel: { state.controller?.cancelSearchOrPanel() },
             onShowFilters: { button in state.controller?.showFilterBrowser(relativeTo: button) },
             onEditingEnded: { field in
                 guard let controller = state.controller, field.window === controller.panel else { return }
-                if state.isSearchQueryEmpty, controller.filterBrowserPopover?.isDisplayed != true {
+                if state.searchVisible, state.isSearchQueryEmpty, controller.filterBrowserPopover?.isDisplayed != true {
                     state.searchVisible = false
                 }
             })
-            .frame(height: 32)
     }
 
     private var searchFilterChips: [ReplicaSearchFilterChip] {
         state.searchFilters.map { ReplicaFilterMatching.chip($0, store: state.store) }
     }
 
-    private var boardTabs: some View {
-        HStack(spacing: 7) {
-            boardButton(state.store.preferences.historyTitle, board: nil)
-                .contextMenu {
-                    Button("重命名") { requestTabRename(nil) }
-                    Button("删除历史…") { state.controller?.clearHistory() }
+    private func boardTab(_ target: ClipboardListTarget) -> OriginalPinboardTab {
+        let board = target.pinboardValue
+        var tab = boardButton(target.name, board: board, target: target)
+        tab.menuProvider = { localListMenu(for: target) }
+        tab.dragString = "paste-pinboard:" + target.identifier
+        // 328f38's nil-share branch is writable for Pasto's local Lists, including history.
+        tab.canDropItems = { true }
+        tab.onDropItemIdentifiers = { [weak state = state] identifiers in
+            state?.dropItems(identifiers: identifiers, to: target)
+        }
+        tab.onDropString = { value in
+            guard value.hasPrefix("paste-pinboard:") else { return false }
+            return state.moveList(identifier: String(value.dropFirst(15)), to: target)
+        }
+        return tab
+    }
+
+    // 0x100021f00: offline rename, typed deletion, then color choices.
+    private func localListMenu(for target: ClipboardListTarget) -> NSMenu {
+        let menu = NSMenu()
+        menu.autoenablesItems = false
+        menu.addItem(OriginalPanelTabMenuItem(title: "重命名") { requestTabRename(target) })
+        // Resolve and count only when the native context menu is requested.
+        let list = state.store.localListMenuState(target)
+        if list.rawType == 1 {
+            if !list.isEmpty {
+                menu.addItem(OriginalPanelTabMenuItem(title: "删除历史…") { state.controller?.clearHistory() })
+            }
+        } else if list.rawType == 2 {
+            menu.addItem(OriginalPanelTabMenuItem(title: list.isEmpty ? "删除" : "删除…") {
+                state.controller?.removePinboard(target)
+            })
+            menu.addItem(.separator())
+            // Keep the requested named color rows and colored dots as the local presentation adapter.
+            let colors = NSMenu()
+            colors.autoenablesItems = false
+            let selectedColor = target.colorCode.map { OriginalPinboardColor(canonicalColorCode: $0) }
+            for color in OriginalPinboardColor.allCases {
+                let item = OriginalPanelTabMenuItem(title: colorName(color)) { [weak menu] in
+                    try? state.store.updateListColor(target, colorCode: color.canonicalColorCode)
+                    menu?.cancelTracking()
                 }
-            ForEach(state.store.pinboards.sorted { $0.sortOrder < $1.sortOrder }) { board in
-                boardButton(board.name, board: board)
-                    .contextMenu {
-                        Button("重命名") { requestTabRename(board.id) }
-                        Menu("颜色") {
-                            ForEach(OriginalPinboardColor.allCases, id: \.rawValue) { color in
-                                Button {
-                                    state.perform {
-                                        try state.store.updatePinboard(id: board.id,
-                                            colorHex: String(format: "%06llX", color.canonicalColorCode))
-                                    }
-                                } label: {
-                                    Label {
-                                        Text(colorName(color))
-                                    } icon: {
-                                        Image(nsImage: colorMenuImage(color)).renderingMode(.original)
-                                    }
-                                }
-                            }
-                        }
-                        Button("向左移动") { state.movePinboard(board, by: -1) }
-                        Button("向右移动") { state.movePinboard(board, by: 1) }
-                        Button(state.store.items.contains(where: { $0.pinboardIDs.contains(board.id) }) ? "删除…" : "删除",
-                               role: .destructive) { state.controller?.removePinboard(board) }
-                    }
-                    .onDrag { NSItemProvider(object: ("paste-pinboard:" + board.id.uuidString) as NSString) }
-                    .onDrop(of: [UTType.text], isTargeted: nil) { providers in
-                        guard let provider = providers.first else { return false }
-                        _ = provider.loadObject(ofClass: String.self) { value, _ in
-                            guard let value, value.hasPrefix("paste-pinboard:"), let id = UUID(uuidString: String(value.dropFirst(15))) else { return }
-                            Task { @MainActor in state.movePinboard(id: id, before: board.id) }
-                        }
-                        return true
-                    }
+                item.image = colorMenuImage(color)
+                item.state = selectedColor == color ? .on : .off
+                colors.addItem(item)
             }
-            OriginalPanelToolbarButton(symbol: "plus", label: OriginalSearchLocalization.text("pasto.action.create-group"),
-                help: OriginalSearchLocalization.text("pasto.action.create-group") + " (⇧⌘N)") {
-                state.controller?.createPinboard()
-            }
-        }.fixedSize()
+            let colorMenu = NSMenuItem(title: "颜色", action: nil, keyEquivalent: "")
+            colorMenu.submenu = colors
+            menu.addItem(colorMenu)
+        }
+        return menu
+    }
+
+    private var createPinboardButton: some View {
+        OriginalPanelToolbarButton(symbol: "plus", label: OriginalSearchLocalization.text("pasto.action.create-group"),
+            help: OriginalSearchLocalization.text("pasto.action.create-group") + " (⇧⌘N)") {
+            state.controller?.createPinboard()
+        }
     }
 
     private func colorMenuImage(_ color: OriginalPinboardColor) -> NSImage {
@@ -223,55 +237,32 @@ struct ReplicaPanelView: View {
         return parseColor(board.colorHex) ?? .red
     }
 
-    private func requestTabRename(_ id: UUID?) {
-        state.tabRenameRequest = (key: id?.uuidString ?? "history", token: UUID())
+    private func requestTabRename(_ target: ClipboardListTarget) {
+        state.beginEditingListSubject.send(target)
     }
 
-    private func boardButton(_ name: String, board: Pinboard?) -> some View {
-        let key = board?.id.uuidString ?? "history"
+    private func boardButton(_ name: String, board: Pinboard?, target: ClipboardListTarget) -> OriginalPinboardTab {
         return OriginalPinboardTab(title: name, iconColor: board.map { NSColor(boardColor($0)) },
-                isSelected: state.pinboardID == board?.id && !state.showDeleted,
-                beginRequest: state.tabRenameRequest?.key == key ? state.tabRenameRequest?.token : nil,
-                onSelect: { state.chooseBoard(board?.id) },
-                onEnd: { if state.tabRenameRequest?.key == key { state.tabRenameRequest = nil } },
+                isSelected: state.selectedTabList?.hasSameObjectID(as: target) == true && !state.showDeleted,
+                beginRequest: nil,
+                onSelect: {
+                    if target.rawType != 2, searching {
+                        state.query = ""; state.chooseList(identifier: target.identifier); state.searchVisible = false
+                        state.controller?.panel.makeFirstResponder(nil)
+                    } else { state.chooseList(identifier: target.identifier) }
+                },
+                onEnd: {},
                 onCommit: { value in
-                    if let board {
-                        state.perform { try state.store.renamePinboardFromTab(id: board.id, rawName: value) }
-                        return state.store.pinboards.first(where: { $0.id == board.id })?.name ?? name
-                    } else {
-                        state.store.preferences.historyTitle = OriginalPinboardTitle.normalizedRename(value)
-                        state.perform { try state.store.save() }
-                        return state.store.preferences.historyTitle
-                    }
+                    try? state.store.renameList(target, rawName: value)
+                    return target.name
                 })
-        .background(Color.clear, in: Capsule())
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel(name)
-        .accessibilityAddTraits(state.pinboardID == board?.id ? .isSelected : [])
-        .accessibilityAction { state.chooseBoard(board?.id) }
     }
 
     private var trailingControls: some View {
         OriginalPanelMoreMenu(state: state)
             .frame(width: 44, height: 44)
-            .padding(.trailing, -6)
     }
 
-    private var historyControls: some View {
-        HStack(spacing: 8) {
-            OriginalPanelToolbarButton(symbol: "clock.arrow.circlepath", label: "返回剪贴板历史",
-                isSelected: state.pinboardID == nil && !state.showDeleted) {
-                state.query = ""; state.chooseBoard(nil); state.searchVisible = false; searchFocused = false
-                state.controller?.panel.makeFirstResponder(nil)
-            }
-            ForEach(state.store.pinboards.sorted { $0.sortOrder < $1.sortOrder }) { board in
-                OriginalPanelToolbarButton(symbol: "circle.fill", label: board.name, iconColor: NSColor(boardColor(board)),
-                    isSelected: state.pinboardID == board.id && !state.showDeleted) {
-                    state.chooseBoard(board.id)
-                }
-            }
-        }.foregroundStyle(Color(nsColor: .labelColor)).fixedSize()
-    }
 
 }
 
@@ -283,6 +274,7 @@ struct ReplicaClipboardCard: View {
     var selectionOverride: Bool? = nil
     var dimmingOverride: Bool? = nil
     var nativeInteractions = false
+    var titleInput: ClipboardRestoreItem? = nil
     private var selected: Bool { state.selection.contains(item.id) }
     private var renderedSelected: Bool { selectionOverride ?? selected }
     @Environment(\.controlActiveState) private var activeState
@@ -343,7 +335,7 @@ struct ReplicaClipboardCard: View {
     private func cardDragProvider() -> NSItemProvider {
         guard !item.isDeleted else { return NSItemProvider() }
         let provider = itemDragProvider(item)
-        guard let boardID = state.pinboardID, state.isSearchQueryEmpty, !state.showDeleted else { return provider }
+        guard let boardID = state.pinboardID, state.isCollectionSearchQueryEmpty, !state.showDeleted else { return provider }
         prepareSelection()
         let marker = ReplicaLocalItemDrag(sessionID: state.itemDragSessionID, boardID: boardID,
                                           ids: state.selectedItems.map(\.id))
@@ -358,13 +350,13 @@ struct ReplicaClipboardCard: View {
     }
 
     private func receiveItemDrop(_ providers: [NSItemProvider], after: Bool) -> Bool {
-        guard let boardID = state.pinboardID, state.isSearchQueryEmpty, !state.showDeleted,
+        guard let boardID = state.pinboardID, state.isCollectionSearchQueryEmpty, !state.showDeleted,
               let provider = providers.first(where: { $0.hasItemConformingToTypeIdentifier(ReplicaLocalItemDrag.typeIdentifier) }) else { return false }
         provider.loadDataRepresentation(forTypeIdentifier: ReplicaLocalItemDrag.typeIdentifier) { data, _ in
             guard let data, let marker = try? JSONDecoder().decode(ReplicaLocalItemDrag.self, from: data) else { return }
             Task { @MainActor in
                 guard marker.sessionID == state.itemDragSessionID, marker.boardID == boardID,
-                      state.pinboardID == boardID, state.isSearchQueryEmpty, !state.showDeleted,
+                      state.pinboardID == boardID, state.isCollectionSearchQueryEmpty, !state.showDeleted,
                       let index = state.store.items(in: boardID).firstIndex(where: { $0.id == item.id }) else { return }
                 state.perform { try state.store.reorderItems(ids: marker.ids, in: boardID, toOffset: index + (after ? 1 : 0)) }
             }
@@ -474,7 +466,7 @@ struct ReplicaClipboardCard: View {
 
     private var pinboardHeaderColor: NSColor? {
         guard let owner = headerOwner,
-              let code = OriginalPinboardAttributes.colorCode(from: owner.rawAttributes) else { return nil }
+              case let .pinboard(code)? = state.listAttributes(for: owner) else { return nil }
         return OriginalPinboardColor(canonicalColorCode: code).color()
     }
 
@@ -485,15 +477,25 @@ struct ReplicaClipboardCard: View {
 
     private var headerLabels: some View {
         Group {
-            Text(cardTitle)
-                .font(Font(NSFont.systemFont(ofSize: NSFont.preferredFont(forTextStyle: sizeClass == 3 ? .headline : .title3, options: [:]).pointSize,
-                                            weight: sizeClass == 3 ? .semibold : .medium)))
-                .lineLimit(1)
-                .foregroundStyle(headerPrimaryColor)
+            if nativeInteractions {
+                ReplicaCardTitle(state: state, itemID: item.id, input: titleInput, title: cardTitle,
+                    font: headerTitleFont, textColor: NSColor(headerPrimaryColor))
+                    .fixedSize(horizontal: false, vertical: true)
+            } else {
+                Text(cardTitle)
+                    .font(Font(headerTitleFont))
+                    .lineLimit(1)
+                    .foregroundStyle(headerPrimaryColor)
+            }
             ReplicaCardDateLabel(date: item.isInHistory ? item.createdAt : nil, isCompact: sizeClass == 3)
                 .font(Font(NSFont.preferredFont(forTextStyle: sizeClass == 3 ? .body : .callout, options: [:])))
                 .foregroundStyle(headerSecondaryColor)
         }
+    }
+
+    private var headerTitleFont: NSFont {
+        NSFont.systemFont(ofSize: NSFont.preferredFont(forTextStyle: sizeClass == 3 ? .headline : .title3, options: [:]).pointSize,
+                          weight: sizeClass == 3 ? .semibold : .medium)
     }
 
     private var compactHeaderStyle: UInt8 { presentation?.preferredCompactHeaderStyle == 1 ? 1 : 0 }
@@ -601,10 +603,24 @@ struct ReplicaClipboardCard: View {
         }
     }
 
+    // 09e8a8 snapshots off/on/mixed; the single writable source keeps each click one batch action.
+    private func pinboardMenuBindings(for target: ClipboardPinboardTarget,
+                                      items: [ClipboardRestoreItem]) -> [Binding<Bool>] {
+        let matched = items.filter { input in
+            input.isAssigned(to: target)
+                ?? (state.store.pinboardOwner(for: input.resolvedItem())?.id == target.id)
+        }.count
+        let assignment = Binding<Bool>(get: { matched == items.count },
+            set: { _ in state.assignItems(items, to: target) })
+        if matched > 0, matched < items.count { return [assignment, .constant(true)] }
+        return [assignment]
+    }
+
     @ViewBuilder private var contextMenu: some View {
         if item.isDeleted {
             Button("恢复") { state.perform { try state.store.restore(ids: state.selection) } }
         } else {
+            let groupItems = state.controller?.contextMenuRestoreItems() ?? []
             Button("拷贝") { state.controller?.copySelection(plainTextOnly: false) }
             Button("复制为纯文本") { state.controller?.copySelection(plainTextOnly: true) }
                 .disabled(!canRestoreSelectionAsPlainText)
@@ -612,7 +628,7 @@ struct ReplicaClipboardCard: View {
             Button("以纯文本粘贴") { state.controller?.pasteSelection(plainTextOnly: true) }
                 .disabled(!canRestoreSelectionAsPlainText)
             Divider()
-            Button("预览") { state.controller?.showPreview(item: item) }
+            Button("预览") { state.controller?.showPreview(item: item, input: titleInput) }
             if item.plainText != nil { Button("编辑…") { state.controller?.showEditor(item: item) } }
             Button("重命名…") { state.controller?.renameItem(item) }
             Button("副本") { state.perform { _ = try state.store.duplicateItem(id: item.id) } }
@@ -631,23 +647,28 @@ struct ReplicaClipboardCard: View {
                 Button("在 Finder 中显示") { NSWorkspace.shared.activateFileViewerSelecting(itemFileURLs(item)) }
             }
             Menu("添加到 Pasto") {
-                ForEach(state.store.pinboards) { board in
-                    Button(board.name) { state.assignSelection(to: board.id) }
-                }
-                Divider()
-                Button(OriginalSearchLocalization.text("pasto.action.create-group") + "…") { state.controller?.createPinboard(assignSelection: true) }
-            }
-            if !item.pinboardIDs.isEmpty {
-                if let board = state.pinboardID {
-                    Button("从此 Pasto 移除") {
-                        state.perform { try state.store.unassign(ids: state.selection, from: board) }
+                ForEach(state.pinboardMenuTargets(), id: \.id) { target in
+                    Toggle(sources: pinboardMenuBindings(for: target, items: groupItems), isOn: \.self) {
+                        Label {
+                            Text(target.name)
+                        } icon: {
+                            let color = target.colorCode.map { OriginalPinboardColor(canonicalColorCode: $0).color() } ?? .clear
+                            Image(nsImage: OriginalPinboardHeaderIcon.image(height: 12, shared: false, color: color))
+                        }
                     }
                 }
-                Button("从所有 Pasto 移除") { state.assignSelection(to: nil) }
+                Divider()
+                Button(OriginalSearchLocalization.text("pasto.action.create-group") + "…") {
+                    state.controller?.createPinboard(assignSelection: true, selectionItems: groupItems)
+                }
+                if state.canUnassignItems(groupItems) {
+                    Button(String(localized: OriginalPreviewLocalization.f_1001c4208())) {
+                        state.assignItems(groupItems, to: nil)
+                    }
+                }
             }
             Button("添加到 Pasto Stack") {
-                for selected in state.selectedItems { state.addToStack(selected) }
-                state.controller?.showStack()
+                state.controller?.addSelectionToStack()
             }
             Button("全选") { state.selectAll() }
             Button("取消全选") { state.deselectAll() }

@@ -1,0 +1,41 @@
+--- a/replica/Sources/PastoCore/ClipboardItemDataPersistence.swift
++++ b/replica/Sources/PastoCore/ClipboardItemDataPersistence.swift
+@@ -1,5 +1,6 @@
+ import CoreData
+ import Foundation
++import ObjectiveC
+ 
+ /// Called on the owning managed context's queue, including during store migration.
+ final class ClipboardItemDataPersistence {
+@@ -29,7 +30,20 @@
+         model.entities.append(data)
+     }
+ 
+-    // 31b218: raw getter exceptions yield no representations; invalid local graphs stay optional.
++    @MainActor private static var diagnosticsKey: UInt8 = 0
++
++    // Preserve per-object logger ownership without changing the existing managed entity class/model.
++    // The original constructs the named wrapper at entity creation; this adapter defers it to the error path.
++    @MainActor private static func diagnostics(for data: NSManagedObject) -> OriginalNamedDiagnostic {
++        if let existing = objc_getAssociatedObject(data, &diagnosticsKey) as? OriginalNamedDiagnostic {
++            return existing
++        }
++        let diagnostics = OriginalNamedDiagnostic.f_1000d4624(name: "ItemDataEntity")
++        objc_setAssociatedObject(data, &diagnosticsKey, diagnostics, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
++        return diagnostics
++    }
++
++    // 31b218: raw getter exceptions log locally and yield no representations; invalid local graphs stay optional.
+     @MainActor static func readItems(from object: PastoItemEntity) -> [OriginalPasteboardItem]? {
+         guard let data = object.value(forKey: "data") as? NSManagedObject else { return nil }
+         let raw: Data
+@@ -40,7 +54,8 @@
+                 }
+                 return raw
+             }
+-        } catch is OriginalObjCExceptionError {
++        } catch let error as OriginalObjCExceptionError {
++            diagnostics(for: data).f_1000d468c().f_1000d4e0c("Unreadable pasteboard items blob: \(error)")
+             return []
+         } catch { return nil }
+         return autoreleasepool { OriginalPasteboardDataCodec.f_10031aeec(raw) }

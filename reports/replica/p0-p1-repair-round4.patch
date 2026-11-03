@@ -1,0 +1,244 @@
+--- phase-4-before/replica/Sources/PastoCore/ClipboardPersistence.swift
++++ replica/Sources/PastoCore/ClipboardPersistence.swift
+@@ -262,87 +262,137 @@
+         return value
+     }
+ 
+-    private func update<T: Equatable>(_ values: [T], previous: [T], entity: String,
+-                                     key: (T) -> String, deletingKeys: [String] = [],
+-                                     apply: (T, T?, NSManagedObject) throws -> Void) throws {
+-        let before = Dictionary(uniqueKeysWithValues: previous.map { (key($0), $0) })
+-        let after = Dictionary(uniqueKeysWithValues: values.map { (key($0), $0) })
+-        let changed = values.filter { before[key($0)] != $0 }
+-        let removed = Set(before.keys).subtracting(after.keys)
+-        // 0x1003646ec consumes the supplied object array in order, including repeated entries.
+-        var orderedRemoved = deletingKeys.filter { removed.contains($0) }
+-        let scheduled = Set(orderedRemoved)
+-        orderedRemoved += previous.map(key).filter { removed.contains($0) && !scheduled.contains($0) }
+-        let keys = changed.map(key) + orderedRemoved
+-        guard !keys.isEmpty else { return }
+-        let objects = Dictionary(uniqueKeysWithValues: try fetch(entity, keys: keys).map {
+-            ($0.value(forKey: "key") as! String, $0)
+-        })
+-        for id in orderedRemoved {
+-            if let object = objects[id] { object.managedObjectContext?.delete(object) }
+-        }
+-        for value in changed {
+-            let id = key(value)
+-            let object = objects[id] ?? NSEntityDescription.insertNewObject(forEntityName: entity, into: context)
+-            object.setValue(id, forKey: "key")
+-            try apply(value, before[id], object)
++    @MainActor
++    final class ManagedRepository {
++        private let context: NSManagedObjectContext
++
++        init(context: NSManagedObjectContext) { self.context = context }
++
++        private func fetchObjects(_ entity: String, keys: [String]) throws -> [NSManagedObject] {
++            let request = NSFetchRequest<NSManagedObject>(entityName: entity)
++            request.predicate = NSPredicate(format: "key IN %@", keys)
++            return try context.fetch(request)
++        }
++
++        func update<T: Equatable>(_ values: [T], previous: [T], entity: String,
++                                         key: (T) -> String, deletingKeys: [String] = [],
++                                         apply: (T, T?, NSManagedObject) throws -> Void) throws {
++            let before = Dictionary(uniqueKeysWithValues: previous.map { (key($0), $0) })
++            let after = Dictionary(uniqueKeysWithValues: values.map { (key($0), $0) })
++            let changed = values.filter { before[key($0)] != $0 }
++            let removed = Set(before.keys).subtracting(after.keys)
++            // 0x1003646ec consumes the supplied object array in order, including repeated entries.
++            var orderedRemoved = deletingKeys.filter { removed.contains($0) }
++            let scheduled = Set(orderedRemoved)
++            orderedRemoved += previous.map(key).filter { removed.contains($0) && !scheduled.contains($0) }
++            let keys = changed.map(key) + orderedRemoved
++            guard !keys.isEmpty else { return }
++            let objects = Dictionary(uniqueKeysWithValues: try fetchObjects(entity, keys: keys).map {
++                ($0.value(forKey: "key") as! String, $0)
++            })
++            for id in orderedRemoved {
++                if let object = objects[id] { object.managedObjectContext?.delete(object) }
++            }
++            for value in changed {
++                let id = key(value)
++                let object: NSManagedObject
++                if let existing = objects[id] {
++                    object = existing
++                } else {
++                    object = NSEntityDescription.insertNewObject(forEntityName: entity, into: context)
++                    // 0x100360d9c obtains the new Item's permanent object ID before writing its fields.
++                    if entity == "Item" { try context.obtainPermanentIDs(for: [object]) }
++                }
++                object.setValue(id, forKey: "key")
++                try apply(value, before[id], object)
++            }
++        }
++    }
++
++    @MainActor
++    final class Transaction {
++        let context: NSManagedObjectContext
++        private var cachedRepository: ManagedRepository?
++
++        init(context: NSManagedObjectContext) { self.context = context }
++
++        // 0x100357cf0 -> 0x1003594e4: cache belongs to this transaction instance.
++        var repository: ManagedRepository {
++            if let cachedRepository { return cachedRepository }
++            let repository = ManagedRepository(context: context)
++            cachedRepository = repository
++            return repository
+         }
+     }
+ 
+     /// Caller holds the process-shared flock across read / merge / transaction / publish.
+     /// A thrown callback or save rolls back every entity and the sync checkpoint together.
+     func commit(_ state: StoreState, previous: StoreState?, deletingItemIDs: [UUID] = []) throws {
+-        try perform {
+-            context.reset()
+-            try update(state.items, previous: previous?.items ?? [], entity: "Item", key: { $0.id.uuidString },
+-                       deletingKeys: deletingItemIDs.map(\.uuidString)) { item, old, object in
+-                if old.map(content) != content(item) {
+-                    object.setValue(try encode(content(item)), forKey: "content")
+-                }
+-                if old?.createdAt != item.createdAt { object.setValue(item.createdAt, forKey: "timestamp") }
+-                if old?.updatedAt != item.updatedAt { object.setValue(item.updatedAt, forKey: "updatedAt") }
+-                if old?.isInHistory != item.isInHistory { object.setValue(item.isInHistory, forKey: "inHistory") }
+-                if old?.nativeIdentifier != item.nativeIdentifier {
+-                    object.setValue(item.nativeIdentifier, forKey: "nativeIdentifier")
+-                }
+-                if old?.nativeChecksum != item.nativeChecksum {
+-                    object.setValue(item.nativeChecksum, forKey: "nativeChecksum")
+-                }
+-            }
+-            try update(state.pinboards, previous: previous?.pinboards ?? [], entity: "Pinboard", key: { $0.id.uuidString }) { value, _, object in
+-                object.setValue(try encode(value), forKey: "content")
+-            }
+-            try update(state.sourceApplications, previous: previous?.sourceApplications ?? [], entity: "Application", key: { $0.bundleIdentifier }) { value, _, object in
+-                object.setValue(try encode(value), forKey: "content")
+-            }
+-            for (entity, values, old) in [
+-                ("CloudDocument", state.cloudKitJournal?.documents ?? [:], previous?.cloudKitJournal?.documents ?? [:]),
+-                ("CloudBaseline", state.cloudKitJournal?.localBaseline ?? [:], previous?.cloudKitJournal?.localBaseline ?? [:])
+-            ] {
+-                try update(values.map { Document(key: $0.key, value: $0.value) },
+-                    previous: old.map { Document(key: $0.key, value: $0.value) }, entity: entity, key: { $0.key }) { value, _, object in
+-                    object.setValue(try encode(value.value), forKey: "content")
+-                }
+-            }
+-            let root = try root() ?? NSEntityDescription.insertNewObject(forEntityName: "State", into: context)
+-            if root.isInserted {
+-                root.setValue("local", forKey: "key")
+-                root.setValue(1, forKey: "version")
+-            }
+-            if previous?.preferences != state.preferences {
+-                root.setValue(try encode(state.preferences), forKey: "preferences")
+-            }
+-            if previous?.cloudSyncMetadata != state.cloudSyncMetadata {
+-                root.setValue(try state.cloudSyncMetadata.map(encode), forKey: "cloudMetadata")
+-            }
+-            if journalHeader(previous?.cloudKitJournal) != journalHeader(state.cloudKitJournal) {
+-                root.setValue(try journalHeader(state.cloudKitJournal).map(encode), forKey: "cloudJournal")
+-            }
+-            if context.hasChanges {
+-                root.setValue(UUID(), forKey: "revision")
+-                try context.save()
+-            }
+-
++        _ = try commit(previous: previous, deletingItemIDs: deletingItemIDs) { _ in
++            (state: state, result: ())
++        }
++    }
++
++    // 0x1002ff310 -> 0x100302b78: run the business operation inside performAndWait,
++    // then apply its mutations and save only after the operation has returned successfully.
++    func commit<T>(previous: StoreState?, deletingItemIDs: [UUID] = [],
++                   operation: (Transaction) throws -> (state: StoreState, result: T)) throws -> (state: StoreState, result: T) {
++        let transaction = Transaction(context: context)
++        return try withExtendedLifetime(transaction) {
++            try perform {
++                context.reset()
++                let outcome = try operation(transaction)
++                let state = outcome.state
++                try transaction.repository.update(state.items, previous: previous?.items ?? [], entity: "Item", key: { $0.id.uuidString },
++                           deletingKeys: deletingItemIDs.map(\.uuidString)) { item, old, object in
++                    if old.map(content) != content(item) {
++                        object.setValue(try encode(content(item)), forKey: "content")
++                    }
++                    if old?.createdAt != item.createdAt { object.setValue(item.createdAt, forKey: "timestamp") }
++                    if old?.updatedAt != item.updatedAt { object.setValue(item.updatedAt, forKey: "updatedAt") }
++                    if old?.isInHistory != item.isInHistory { object.setValue(item.isInHistory, forKey: "inHistory") }
++                    if old?.nativeIdentifier != item.nativeIdentifier {
++                        object.setValue(item.nativeIdentifier, forKey: "nativeIdentifier")
++                    }
++                    if old?.nativeChecksum != item.nativeChecksum {
++                        object.setValue(item.nativeChecksum, forKey: "nativeChecksum")
++                    }
++                }
++                try transaction.repository.update(state.pinboards, previous: previous?.pinboards ?? [], entity: "Pinboard", key: { $0.id.uuidString }) { value, _, object in
++                    object.setValue(try encode(value), forKey: "content")
++                }
++                try transaction.repository.update(state.sourceApplications, previous: previous?.sourceApplications ?? [], entity: "Application", key: { $0.bundleIdentifier }) { value, _, object in
++                    object.setValue(try encode(value), forKey: "content")
++                }
++                for (entity, values, old) in [
++                    ("CloudDocument", state.cloudKitJournal?.documents ?? [:], previous?.cloudKitJournal?.documents ?? [:]),
++                    ("CloudBaseline", state.cloudKitJournal?.localBaseline ?? [:], previous?.cloudKitJournal?.localBaseline ?? [:])
++                ] {
++                    try transaction.repository.update(values.map { Document(key: $0.key, value: $0.value) },
++                        previous: old.map { Document(key: $0.key, value: $0.value) }, entity: entity, key: { $0.key }) { value, _, object in
++                        object.setValue(try encode(value.value), forKey: "content")
++                    }
++                }
++                let root = try root() ?? NSEntityDescription.insertNewObject(forEntityName: "State", into: context)
++                if root.isInserted {
++                    root.setValue("local", forKey: "key")
++                    root.setValue(1, forKey: "version")
++                }
++                if previous?.preferences != state.preferences {
++                    root.setValue(try encode(state.preferences), forKey: "preferences")
++                }
++                if previous?.cloudSyncMetadata != state.cloudSyncMetadata {
++                    root.setValue(try state.cloudSyncMetadata.map(encode), forKey: "cloudMetadata")
++                }
++                if journalHeader(previous?.cloudKitJournal) != journalHeader(state.cloudKitJournal) {
++                    root.setValue(try journalHeader(state.cloudKitJournal).map(encode), forKey: "cloudJournal")
++                }
++                if context.hasChanges {
++                    root.setValue(UUID(), forKey: "revision")
++                    try context.save()
++                }
++                return outcome
++            }
+         }
+     }
+ }
+--- phase-4-before/replica/Sources/PastoCore/ClipboardStore.swift
++++ replica/Sources/PastoCore/ClipboardStore.swift
+@@ -348,15 +348,17 @@
+         try validate(local)
+         return try withLock {
+             let remote = try latestState()
+-            var state = merge(local, onto: remote)
+-            let result = try change(&state)
+-            try validate(state)
+-            normalize(&state)
+-            if historyAction || state.preferences.historyRetentionDays != remote.preferences.historyRetentionDays {
+-                expireHistory(&state)
+-            }
+-            if state.cloudKitJournal != nil { try Self.captureCloudKit(&state, previous: remote) }
+-            try persistence.commit(state, previous: remote, deletingItemIDs: deletingItemIDs)
++            let (state, result) = try persistence.commit(previous: remote, deletingItemIDs: deletingItemIDs) { _ in
++                var state = merge(local, onto: remote)
++                let result = try change(&state)
++                try validate(state)
++                normalize(&state)
++                if historyAction || state.preferences.historyRetentionDays != remote.preferences.historyRetentionDays {
++                    expireHistory(&state)
++                }
++                if state.cloudKitJournal != nil { try Self.captureCloudKit(&state, previous: remote) }
++                return (state: state, result: result)
++            }
+             diskRevision = try revision()
+             publish(state)
+             return result

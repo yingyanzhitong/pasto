@@ -9,8 +9,9 @@ public enum OriginalShortcutFunctions {
 
     /// Original NSEvent shortcut initializer: omit numeric-pad/function/device flags.
     public static func f_1001e7d18(_ event: NSEvent) -> KeyboardShortcut {
-        KeyboardShortcut(keyCode: UInt32(event.keyCode),
-                         modifierRawValue: event.modifierFlags.rawValue & eventModifierMask)
+        let modifiers = event.modifierFlags.rawValue
+        return KeyboardShortcut(keyCode: UInt32(event.keyCode),
+                                modifierRawValue: modifiers & eventModifierMask)
     }
 
     /// Four entries in the original constant dictionary at 0x100fb4fc0.

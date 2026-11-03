@@ -1,0 +1,334 @@
+--- phase-31-before/replica/Sources/PastoCore/ClipboardPersistence.swift
++++ replica/Sources/PastoCore/ClipboardPersistence.swift
+@@ -364,6 +364,31 @@
+             return try context.fetch(request)
+         }
+ 
++        func prepareHistoryItems(_ ids: [UUID]) throws -> [(id: UUID, object: NSManagedObject)] {
++            var objects = Dictionary(uniqueKeysWithValues: try fetchObjects("Item", keys: ids.map(\.uuidString)).map {
++                ($0.value(forKey: "key") as! String, $0)
++            })
++            return try ids.map { id in
++                if let object = objects[id.uuidString] { return (id: id, object: object) }
++                // Preserve value-only, not-yet-saved items accepted by the existing store facade.
++                let object = NSEntityDescription.insertNewObject(forEntityName: "Item", into: context)
++                try context.obtainPermanentIDs(for: [object])
++                object.setValue(id.uuidString, forKey: "key")
++                objects[id.uuidString] = object
++                return (id: id, object: object)
++            }
++        }
++
++        func restoreHistoryItems(_ targets: [(id: UUID, object: NSManagedObject)]) -> [(id: UUID, timestamp: Date)] {
++            var updates: [(id: UUID, timestamp: Date)] = []
++            for (id, object) in targets.reversed() {
++                let timestamp = Date()
++                object.setValue(timestamp, forKey: "timestamp")
++                updates.append((id: id, timestamp: timestamp))
++            }
++            return updates
++        }
++
+         func update<T: Equatable>(_ values: [T], previous: [T], entity: String,
+                                          key: (T) -> String, deletingKeys: [String] = [],
+                                          apply: (T, T?, NSManagedObject) throws -> Void) throws {
+@@ -440,7 +465,8 @@
+                         object.setValue(try encode(content(item)), forKey: "content")
+                     }
+                     let timestamp = item.isInHistory ? item.createdAt : nil
+-                    if old.flatMap({ $0.isInHistory ? $0.createdAt : nil }) != timestamp {
++                    if old.flatMap({ $0.isInHistory ? $0.createdAt : nil }) != timestamp,
++                       (object.value(forKey: "timestamp") as? Date) != timestamp {
+                         object.setValue(timestamp, forKey: "timestamp")
+                     }
+                     if old?.createdAt != item.createdAt { object.setValue(item.createdAt, forKey: "localCreatedAt") }
+--- phase-31-before/replica/Sources/PastoCore/ClipboardStore.swift
++++ replica/Sources/PastoCore/ClipboardStore.swift
+@@ -345,7 +345,7 @@
+         state.items.removeAll { $0.isInHistory && $0.pinboardIDs.isEmpty && $0.createdAt < cutoff }
+     }
+ 
+-    private func mutate<T>(historyAction: Bool = false, deletingItemIDs: [UUID] = [],
++    private func mutate<T>(historyAction: Bool = false, deletingItemIDs: [UUID] = [], restoringItemIDs: [UUID] = [],
+                            refreshHistoryAfterChange: (() -> Bool)? = nil,
+                            _ change: (inout StoreState) throws -> T) throws -> T {
+         let local = current
+@@ -355,10 +355,27 @@
+             let (state, result) = try persistence.commit(previous: remote, deletingItemIDs: deletingItemIDs) { transaction in
+                 var state = merge(local, onto: remote)
+                 let result = try change(&state)
++                if !restoringItemIDs.isEmpty {
++                    let available = Set(state.items.filter { !$0.isDeleted }.map(\.id))
++                    guard restoringItemIDs.allSatisfy({ available.contains($0) }) else {
++                        throw ClipboardStoreError.itemNotFound
++                    }
++                }
+                 try validate(state)
+                 normalize(&state)
+                 let lists = transaction.repository.lists
+                 let history = try lists.synchronize(pinboards: state.pinboards, preferences: state.preferences, previous: remote)
++                if !restoringItemIDs.isEmpty {
++                    let positions = Dictionary(uniqueKeysWithValues: state.items.enumerated().map { ($0.element.id, $0.offset) })
++                    let targets = try transaction.repository.prepareHistoryItems(restoringItemIDs)
++                    for update in transaction.repository.restoreHistoryItems(targets) {
++                        let index = positions[update.id]!
++                        state.items[index].createdAt = update.timestamp
++                        state.items[index].updatedAt = update.timestamp
++                        state.items[index].isInHistory = true
++                    }
++                    normalize(&state)
++                }
+                 if historyAction || state.preferences.historyRetentionDays != remote.preferences.historyRetentionDays {
+                     if let capacity = lists.historyCapacity(of: history) { expireHistory(&state, capacity: capacity) }
+                 }
+@@ -375,17 +392,7 @@
+     /// Restore promotes the selected content in reverse order, as the original history repository does.
+     func recordRestoredItems(_ ids: [UUID]) throws {
+         guard !ids.isEmpty else { return }
+-        try mutate(historyAction: true) { state in
+-            for id in ids.reversed() {
+-                guard let index = state.items.firstIndex(where: { $0.id == id && !$0.isDeleted }) else {
+-                    throw ClipboardStoreError.itemNotFound
+-                }
+-                let timestamp = Date()
+-                state.items[index].createdAt = timestamp
+-                state.items[index].updatedAt = timestamp
+-                state.items[index].isInHistory = true
+-            }
+-        }
++        try mutate(historyAction: true, restoringItemIDs: ids) { _ in }
+     }
+ 
+     public func save() throws { try mutate { _ in } }
+--- phase-31-before/scripts/tests/test_offline_p0_contracts.py
++++ scripts/tests/test_offline_p0_contracts.py
+@@ -179,8 +179,11 @@
+     def test_restore_uses_reverse_order_and_commit_before_publish(self):
+         text = (CORE / "ClipboardStore.swift").read_text()
+         restore = body(text, "func recordRestoredItems(_ ids: [UUID]) throws")
+-        self.assertIn("try mutate(historyAction: true)", restore)
+-        self.assertIn("for id in ids.reversed()", restore)
++        self.assertIn("try mutate(historyAction: true, restoringItemIDs: ids)", restore)
++        native_restore = body((CORE / 'ClipboardPersistence.swift').read_text(), 'func restoreHistoryItems(')
++        self.assertIn('for (id, object) in targets.reversed()', native_restore)
++        self.assertLess(native_restore.index('let timestamp = Date()'),
++                        native_restore.index('object.setValue(timestamp, forKey: "timestamp")'))
+         mutate = body(text, "private func mutate<T>(historyAction: Bool = false,")
+         self.assertLess(mutate.index("try persistence.commit(previous: remote, deletingItemIDs: deletingItemIDs)"), mutate.index("publish(state)"))
+ 
+--- phase-31-before/scripts/tests/test_p0_repair_delete_applied_snapshot.py
++++ scripts/tests/test_p0_repair_delete_applied_snapshot.py
+@@ -103,11 +103,18 @@
+ 
+     def test_history_chain_reuses_existing_store_list_and_transaction_methods(self):
+         for p in self.proof['reused_current_sources']:
+-            self.assertEqual((ROOT / p).read_bytes(), (self.phase / 'before' / p).read_bytes())
++            current = ROOT / p
++            if p in ['replica/Sources/PastoCore/ClipboardStore.swift',
++                     'replica/Sources/PastoCore/ClipboardPersistence.swift']:
++                current = ROOT / '.local/p0-repair/phase-31/before' / p
++            self.assertEqual(current.read_bytes(), (self.phase / 'before' / p).read_bytes())
+         store = (ROOT / 'replica/Sources/PastoCore/ClipboardStore.swift').read_text()
+         restore = body(store, 'func recordRestoredItems(_ ids: [UUID])')
+-        self.assertIn('for id in ids.reversed()', restore)
+-        self.assertIn('let timestamp = Date()', restore)
++        self.assertIn('try mutate(historyAction: true, restoringItemIDs: ids)', restore)
++        persistence = (ROOT / 'replica/Sources/PastoCore/ClipboardPersistence.swift').read_text()
++        native_restore = body(persistence, 'func restoreHistoryItems(')
++        self.assertIn('for (id, object) in targets.reversed()', native_restore)
++        self.assertIn('let timestamp = Date()', native_restore)
+         mutate = body(store, 'private func mutate<T>(historyAction: Bool = false,')
+         self.assertIn('if let capacity = lists.historyCapacity(of: history)', mutate)
+         self.assertIn('expireHistory(&state, capacity: capacity)', mutate)
+--- phase-31-before/scripts/tests/test_p0_repair_history_timestamp.py
++++ scripts/tests/test_p0_repair_history_timestamp.py
+@@ -109,7 +109,9 @@
+         erase = body(self.store, 'public func eraseHistory() throws')
+         self.assertIn('for i in state.items.indices { state.items[i].isInHistory = false }', erase)
+         restore = body(self.store, 'func recordRestoredItems(_ ids: [UUID])')
+-        self.assertIn('state.items[index].isInHistory = true', restore)
++        self.assertIn('try mutate(historyAction: true, restoringItemIDs: ids)', restore)
++        self.assertIn('state.items[index].isInHistory = true',
++                      body(self.store, 'private func mutate<T>(historyAction: Bool = false,'))
+         pasteboard = (ROOT / 'replica/Sources/PastoCore/Pasteboard.swift').read_text()
+         self.assertEqual(pasteboard.count('timestamp: item.isInHistory ? item.createdAt : nil'), 2)
+ 
+@@ -137,12 +139,20 @@
+         before = (self.phase / 'before/replica/Sources/PastoCore/ClipboardPersistence.swift').read_text()
+         for signature in ['private func documents(_ entity: String)', 'private func journalHeader(_ journal: OriginalCloudKitJournal?)']:
+             self.assertEqual(body(before, signature), body(self.persistence, signature))
+-        # Phase20 adds only the recovered process-wide notification constant;
+-        # keep the exact whole-file check for every stored-data/network method.
++        # Preserve the historical phase20 constant-only check against the phase31
++        # baseline, then delimit the only newly permitted store edits precisely.
++        checkpoint = (ROOT / '.local/p0-repair/phase-31/before/replica/Sources/PastoCore/ClipboardStore.swift').read_text()
+         declaration = '    public static let didRestoreItemNotification = Notification.Name("pasteboardHistoryManagerDidRestoreItem")\n'
+         self.assertEqual(self.store.count(declaration), 1)
+         self.assertEqual((self.phase / 'before/replica/Sources/PastoCore/ClipboardStore.swift').read_text(),
+-                         self.store.replace(declaration, '', 1))
++                         checkpoint.replace(declaration, '', 1))
++        restored = self.store
++        for signature in ['private func mutate<T>(historyAction: Bool = false,',
++                          'func recordRestoredItems(_ ids: [UUID])']:
++            current_body = body(restored, signature)
++            restored = restored.replace(current_body, body(checkpoint, signature), 1)
++        restored = restored.replace(', restoringItemIDs: [UUID] = []', '', 1)
++        self.assertEqual(restored, checkpoint)
+ 
+ 
+ if __name__ == '__main__':
+--- phase-31-before/scripts/tests/test_p0_repair_list_graph.py
++++ scripts/tests/test_p0_repair_list_graph.py
+@@ -187,9 +187,11 @@
+ 
+     def test_empty_restore_returns_before_transaction_and_nonempty_preserves_reverse_recency(self):
+         restore = body(self.store, 'func recordRestoredItems(_ ids: [UUID])')
+-        self.assertLess(restore.index('guard !ids.isEmpty else { return }'), restore.index('try mutate(historyAction: true)'))
+-        self.assertIn('for id in ids.reversed()', restore)
+-        self.assertIn('let timestamp = Date()', restore)
++        self.assertLess(restore.index('guard !ids.isEmpty else { return }'),
++                        restore.index('try mutate(historyAction: true, restoringItemIDs: ids)'))
++        native_restore = body(self.persistence, 'func restoreHistoryItems(')
++        self.assertIn('for (id, object) in targets.reversed()', native_restore)
++        self.assertIn('let timestamp = Date()', native_restore)
+ 
+     def test_history_delete_including_empty_reads_context_once_before_marking_refresh(self):
+         delete = body(self.store, 'public func delete(orderedIDs: [UUID], currentPinboardID: () -> UUID?)')
+--- /dev/null
++++ scripts/tests/test_p0_repair_native_history_restore.py
+@@ -0,0 +1,135 @@
++# coding: utf-8
++"""Source/C/Mach-O contracts only; does not execute Swift or Core Data."""
++import hashlib,json,sys,unittest
++from pathlib import Path
++ROOT=Path(__file__).resolve().parents[2]
++sys.path[:0]=[str(ROOT/'scripts'),str(ROOT/'scripts/tests')]
++from function_ledger import source_fragments
++from test_offline_p0_contracts import body
++from test_p0_repair_checksum_routing import original_fragment
++
++class NativeHistoryRestoreContracts(unittest.TestCase):
++    @classmethod
++    def setUpClass(cls):
++        cls.phase=ROOT/'.local/p0-repair/phase-31'
++        cls.proof=json.loads((cls.phase/'native-history-restore-contract.json').read_text())
++        cls.store=(ROOT/'replica/Sources/PastoCore/ClipboardStore.swift').read_text()
++        cls.persistence=(ROOT/'replica/Sources/PastoCore/ClipboardPersistence.swift').read_text()
++        cls.mutate=body(cls.store,'private func mutate<T>(historyAction: Bool = false,')
++        cls.prepare=body(cls.persistence,'func prepareHistoryItems(')
++        cls.restore=body(cls.persistence,'func restoreHistoryItems(')
++        cls.commit=body(cls.persistence,'func commit<T>(previous: StoreState?, deletingItemIDs: [UUID] = [],')
++        cls.original=original_fragment((ROOT/'decompiled/Paste/part-0275.c').read_text(),'100361ec0')
++
++    def test_original_fragments_and_binary_are_bound(self):
++        for r in self.proof['original_fragments']:
++            self.assertEqual(source_fragments(ROOT/r['path'])[r['address']]['sha256'],r['sha256'])
++        binary=self.proof['binary'];raw=(ROOT/binary['path']).read_bytes()
++        self.assertEqual(hashlib.sha256(raw).hexdigest(),binary['sha256'])
++        for r in self.proof['machine_ranges']:
++            chunk=raw[r['file_offset']:r['file_offset']+r['length']]
++            self.assertEqual(chunk.hex(),r['hex'])
++            self.assertEqual(hashlib.sha256(chunk).hexdigest(),r['sha256'])
++
++    def test_original_loop_interleaves_date_and_native_setter_before_cleanup(self):
++        order=['FUN_100364108()','Date::init()','Date::_bridgeToObjectiveC','objc_stub::setTimestamp_(self,pNVar5)',
++               'while (IVar11 != IVar12)','FUN_1003293c4()','FUN_100363810()','FUN_1003646ec()',
++               'FUN_100328bb4(ppuVar8,0,IVar11)','objc_stub::FUN_100c08be0(IVar11,ppuVar8,1)']
++        indexes=[self.original.index(s)for s in order];self.assertEqual(indexes,sorted(indexes))
++        self.assertEqual([r['symbol']for r in self.proof['sdk_imports']],
++                         ['_$s10Foundation4DateVACycfC','_$s10Foundation4DateV19_bridgeToObjectiveCSo6NSDateCyF'])
++        self.assertEqual(self.proof['selector']['name'],'setTimestamp:')
++
++    def test_original_reverse_swaps_both_ends_without_deduplication(self):
++        reverse=original_fragment((ROOT/'decompiled/Paste/part-0275.c').read_text(),'100364108')
++        for token in ['uVar10 >> 1','uVar10 - (lVar11 + -3)',
++                      '*(ulong *)(uVar12 + lVar11 * 8) = uVar9','*(ulong *)(uVar12 + uVar1 * 8 + 0x20) = uVar3']:
++            self.assertIn(token,reverse)
++        self.assertIn('return try ids.map { id in',self.prepare)
++        self.assertNotIn('Set(',self.prepare)
++        self.assertNotIn('Set(',self.restore)
++        self.assertNotIn('sorted(',self.restore)
++
++    def test_invalid_or_deleted_targets_fail_before_native_changes(self):
++        order=['let result = try change(&state)','let available = Set(state.items.filter { !$0.isDeleted }.map(\\.id))',
++               'guard restoringItemIDs.allSatisfy({ available.contains($0) })',
++               'throw ClipboardStoreError.itemNotFound','try validate(state)','try lists.synchronize(',
++               'try transaction.repository.prepareHistoryItems(restoringItemIDs)']
++        positions=[self.mutate.index(t)for t in order];self.assertEqual(positions,sorted(positions))
++
++    def test_existing_targets_reuse_handles_and_unsaved_duplicate_uses_one_handle(self):
++        self.assertIn('try fetchObjects("Item", keys: ids.map(\\.uuidString))',self.prepare)
++        order=['if let object = objects[id.uuidString] { return (id: id, object: object) }',
++               'NSEntityDescription.insertNewObject(forEntityName: "Item", into: context)',
++               'try context.obtainPermanentIDs(for: [object])','object.setValue(id.uuidString, forKey: "key")',
++               'objects[id.uuidString] = object','return (id: id, object: object)']
++        positions=[self.prepare.index(t)if n!=5 else self.prepare.rindex(t)for n,t in enumerate(order)]
++        self.assertEqual(positions,sorted(positions))
++        self.assertNotIn('NSManagedObjectContext(',self.prepare)
++
++    def test_reverse_date_setter_occurs_inside_single_loop_not_after_materialization(self):
++        order=['for (id, object) in targets.reversed()','let timestamp = Date()',
++               'object.setValue(timestamp, forKey: "timestamp")','updates.append((id: id, timestamp: timestamp))']
++        positions=[self.restore.index(t)for t in order];self.assertEqual(positions,sorted(positions))
++        self.assertEqual(self.restore.count('Date()'),1)
++        self.assertNotIn('Date()',body(self.store,'func recordRestoredItems(_ ids: [UUID])'))
++        self.assertNotIn('Date()',self.mutate)
++        for token in ['.async','context.save','context.reset','performAndWait','try?']:
++            self.assertNotIn(token,self.restore+self.prepare)
++
++    def test_native_timestamp_consumes_same_transaction_before_cleanup_and_save(self):
++        order=['let targets = try transaction.repository.prepareHistoryItems(restoringItemIDs)',
++               'for update in transaction.repository.restoreHistoryItems(targets)',
++               'state.items[index].createdAt = update.timestamp','state.items[index].updatedAt = update.timestamp',
++               'state.items[index].isInHistory = true','expireHistory(&state, capacity: capacity)',
++               'lists.refreshHistoryAfterOperation =','return (state: state, result: result)','publish(state)']
++        positions=[self.mutate.index(t)for t in order];self.assertEqual(positions,sorted(positions))
++        order=['let transaction = Transaction(context: context)','try context.performAndWait',
++               'let outcome = try operation(transaction)','try transaction.repository.update(state.items',
++               'try transaction.repository.lists.refreshHistoryIfNeeded()','if context.hasChanges','try context.save()']
++        positions=[self.commit.index(t)for t in order];self.assertEqual(positions,sorted(positions))
++
++    def test_generic_commit_skips_same_timestamp_but_keeps_nil_history_removal(self):
++        self.assertIn('let timestamp = item.isInHistory ? item.createdAt : nil',self.commit)
++        self.assertIn('if old.flatMap({ $0.isInHistory ? $0.createdAt : nil }) != timestamp,\n'
++                      '                       (object.value(forKey: "timestamp") as? Date) != timestamp {',self.commit)
++        setter=body(self.commit,'(object.value(forKey: "timestamp") as? Date) != timestamp')
++        self.assertIn('object.setValue(timestamp, forKey: "timestamp")',setter)
++        self.assertNotIn('Date()',setter)
++        old=body((self.phase/'before/replica/Sources/PastoCore/ClipboardPersistence.swift').read_text(),
++                 'func commit<T>(previous: StoreState?, deletingItemIDs: [UUID] = [],')
++        reconstructed=self.commit.replace(',\n                       (object.value(forKey: "timestamp") as? Date) != timestamp','',1)
++        self.assertEqual(reconstructed,old)
++        checkpoint=(self.phase/'before/replica/Sources/PastoCore/ClipboardPersistence.swift').read_text()
++        reconstructed=self.persistence
++        for signature in ['func prepareHistoryItems(', 'func restoreHistoryItems(']:
++            method=body(reconstructed,signature)
++            start=reconstructed.index('        '+signature)
++            end=reconstructed.index(method,start)+len(method)
++            reconstructed=reconstructed[:start]+reconstructed[end+2:]
++        reconstructed=reconstructed.replace(',\n                       (object.value(forKey: "timestamp") as? Date) != timestamp','',1)
++        self.assertEqual(reconstructed,checkpoint)
++
++    def test_empty_input_returns_before_transaction_and_current_facade_is_explicit(self):
++        restore=body(self.store,'func recordRestoredItems(_ ids: [UUID])')
++        self.assertLess(restore.index('guard !ids.isEmpty else { return }'),
++                        restore.index('try mutate(historyAction: true, restoringItemIDs: ids)'))
++        self.assertFalse(self.proof['full_function_migration_verified'])
++        self.assertGreater(len(self.proof['retained_partial_contracts']),1)
++        before=self.phase/'before/replica/Sources/PastoCore'
++        for name in ['ClipboardListPersistence.swift','Pasteboard.swift']:
++            self.assertEqual((ROOT/'replica/Sources/PastoCore'/name).read_bytes(),(before/name).read_bytes())
++
++    def test_source_case_exposes_old_interleaving_difference(self):
++        case=self.proof['source_case'];self.assertEqual(case['kind'],'source_contract_case_not_runtime_reproduction')
++        self.assertEqual(case['original_events'],case['after_events'])
++        self.assertNotEqual(case['original_events'],case['before_events'])
++        self.assertLess(case['before_events'].index('cleanup'),case['before_events'].index('set A'))
++        self.assertLess(case['after_events'].index('set A'),case['after_events'].index('cleanup'))
++        # Source-only finite domain: repeated targets share the native object and
++        # the last reversed occurrence supplies the final timestamp, without Set.
++        writes=[(target,n)for n,target in enumerate(reversed(['A','B','A']),1)]
++        self.assertEqual(writes,[('A',1),('B',2),('A',3)])
++        self.assertEqual(dict(writes),{'A':3,'B':2})
++
++if __name__=='__main__':unittest.main()

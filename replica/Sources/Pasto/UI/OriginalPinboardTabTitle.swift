@@ -1,10 +1,10 @@
 import AppKit
-import SwiftUI
 import PastoCore
 
-/// One native cell owns the icon, label and padding hit area, as Paste's TabBarCell does.
+/// Stable tab configuration consumed by the native stack; actions stay in the
+/// panel's existing state/store layer.
 @MainActor
-struct OriginalPinboardTab: NSViewRepresentable {
+struct OriginalPinboardTab {
     let title: String
     let iconColor: NSColor?
     var isSelected = false
@@ -12,33 +12,49 @@ struct OriginalPinboardTab: NSViewRepresentable {
     let onSelect: () -> Void
     let onEnd: () -> Void
     let onCommit: (String) -> String
+    var menuProvider: (() -> NSMenu)?
+    var dragString: String?
+    var onDropString: ((String) -> Bool)?
+    var onDropItemIdentifiers: (([String]) -> Void)?
+    var canDropItems: (() -> Bool)?
 
-    func makeNSView(context: Context) -> OriginalPinboardTabView {
-        let view = OriginalPinboardTabView()
-        updateNSView(view, context: context)
-        return view
-    }
-
-    func updateNSView(_ view: OriginalPinboardTabView, context: Context) {
+    func configure(_ view: OriginalPinboardTabView) {
         view.configure(title: title, iconColor: iconColor, isSelected: isSelected, beginRequest: beginRequest,
                        onSelect: onSelect, onEnd: onEnd, onCommit: onCommit)
-    }
-
-    func sizeThatFits(_ proposal: ProposedViewSize, nsView: OriginalPinboardTabView, context: Context) -> CGSize? {
-        nsView.measuredSize
+        view.menuProvider = menuProvider
+        view.dragString = dragString
+        view.onDropString = onDropString
+        view.onDropItemIdentifiers = onDropItemIdentifiers
+        view.canDropItems = canDropItems
+        view.setAccessibilityElement(true)
+        view.setAccessibilityRole(.button)
+        view.setAccessibilityLabel(title)
+        view.setAccessibilityValue(isSelected)
     }
 }
 
 @MainActor
-final class OriginalPinboardTabView: NSView {
+final class OriginalPinboardTabView: NSView, NSDraggingSource {
     let titleView = OriginalPinboardTabTitleView()
     private let historyIconView = NSImageView()
     private var iconColor: NSColor?
-    private var isSelected = false
+    private(set) var isSelected = false
+    private(set) var isCollapsed = false
     private var isHovered = false
     private var isPressed = false
     private var hoverArea: NSTrackingArea?
     private var onSelect: (() -> Void)?
+    var menuProvider: (() -> NSMenu)?
+    var dragString: String?
+    var onDropString: ((String) -> Bool)?
+    var onDropItemIdentifiers: (([String]) -> Void)?
+    var canDropItems: (() -> Bool)?
+    private var isDragging = false
+    private var isDragDestination = false
+    private lazy var labelTrailingConstraint = titleView.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -8)
+    private lazy var compactWidthConstraint = widthAnchor.constraint(equalTo: heightAnchor, multiplier: 1)
+    private lazy var iconWidthConstraint = historyIconView.widthAnchor.constraint(equalToConstant: iconSize)
+    private lazy var iconHeightConstraint = historyIconView.heightAnchor.constraint(equalToConstant: iconSize)
     private let historyIcon = NSImage(systemSymbolName: "clock.arrow.circlepath", accessibilityDescription: nil)?
         .withSymbolConfiguration(.init(pointSize: 15, weight: .regular))
 
@@ -51,14 +67,39 @@ final class OriginalPinboardTabView: NSView {
         historyIconView.imageScaling = .scaleProportionallyUpOrDown
         addSubview(historyIconView)
         addSubview(titleView)
+        historyIconView.translatesAutoresizingMaskIntoConstraints = false
+        titleView.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            historyIconView.centerYAnchor.constraint(equalTo: centerYAnchor),
+            historyIconView.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 8),
+            historyIconView.trailingAnchor.constraint(lessThanOrEqualTo: trailingAnchor, constant: -8),
+            iconWidthConstraint, iconHeightConstraint,
+            titleView.topAnchor.constraint(equalTo: topAnchor, constant: 6),
+            titleView.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -6),
+            titleView.widthAnchor.constraint(lessThanOrEqualToConstant: 200),
+            titleView.leadingAnchor.constraint(equalTo: historyIconView.trailingAnchor, constant: 4),
+            labelTrailingConstraint
+        ])
+        // Native item IDs are distinct from the retained local group-reorder adapter.
+        registerForDraggedTypes([OriginalNativeDragPasteboardWriter.itemIdentifierType, .string])
     }
 
     required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
 
+    func setSelected(_ selected: Bool) {
+        isSelected = selected
+        setAccessibilityValue(selected)
+        needsDisplay = true
+    }
+
     private var iconSize: CGFloat { iconColor == nil ? 15 : 12 }
     var measuredSize: NSSize {
-        NSSize(width: ceil(min(titleView.measuredSize.width, 200) + iconSize + 6 + 20),
-               height: ceil(max(titleView.measuredSize.height, iconSize) + 12))
+        let height = ceil(max(titleView.measuredSize.height, iconSize) + 12)
+        if isCollapsed {
+            if #available(macOS 26, *) { return NSSize(width: height, height: height) }
+            return NSSize(width: iconSize + 16, height: height)
+        }
+        return NSSize(width: ceil(min(titleView.measuredSize.width, 200) + iconSize + 20), height: height)
     }
 
     override var intrinsicContentSize: NSSize { measuredSize }
@@ -68,7 +109,21 @@ final class OriginalPinboardTabView: NSView {
         let previousSize = measuredSize
         self.iconColor = iconColor
         self.isSelected = isSelected
-        historyIconView.isHidden = iconColor != nil
+        if let iconColor {
+            let image = NSImage(size: NSSize(width: 12, height: 12), flipped: false) { bounds in
+                iconColor.setFill()
+                NSBezierPath(ovalIn: bounds).fill()
+                return true
+            }
+            image.isTemplate = false
+            historyIconView.image = image
+            historyIconView.contentTintColor = nil
+        } else {
+            historyIconView.image = historyIcon
+            historyIconView.contentTintColor = .labelColor
+        }
+        iconWidthConstraint.constant = iconSize
+        iconHeightConstraint.constant = iconSize
         self.onSelect = onSelect
         titleView.configure(title: title, beginRequest: beginRequest, onSelect: { [weak self] in
             self?.isPressed = false; self?.needsDisplay = true; onSelect()
@@ -79,13 +134,16 @@ final class OriginalPinboardTabView: NSView {
         needsDisplay = true
     }
 
-    override func layout() {
-        super.layout()
-        historyIconView.frame = NSRect(x: 10, y: (bounds.height - iconSize) / 2,
-                                       width: iconSize, height: iconSize)
-        let x = 10 + iconSize + 6
-        titleView.frame = NSRect(x: x, y: 6, width: max(0, bounds.width - x - 10),
-                                 height: max(0, bounds.height - 12))
+    // 0785e0 / inlined 095228: keep the same cell and label while collapsing.
+    func setCollapsed(_ collapsed: Bool) {
+        isCollapsed = collapsed
+        if #available(macOS 26, *) { compactWidthConstraint.isActive = collapsed }
+        else { compactWidthConstraint.isActive = false }
+        labelTrailingConstraint.isActive = !collapsed
+        titleView.alphaValue = collapsed ? 0 : 1
+        invalidateIntrinsicContentSize()
+        needsLayout = true
+        needsDisplay = true
     }
 
     override func draw(_ dirtyRect: NSRect) {
@@ -94,18 +152,13 @@ final class OriginalPinboardTabView: NSView {
         let background: NSColor?
         if titleView.isEditing { background = OriginalToolbarAppearance.borderAndHover() }
         else if isPressed { background = OriginalSearchSurfaceAppearance.f_1001ff0d0().pointee?.withAlphaComponent(0.15) }
-        else if isSelected { background = OriginalSearchSurfaceAppearance.f_1001ff0d0().pointee }
+        else if (isSelected && !isCollapsed) || isDragDestination { background = OriginalSearchSurfaceAppearance.f_1001ff0d0().pointee }
         else { background = isHovered ? OriginalToolbarAppearance.borderAndHover() : nil }
         background?.setFill()
         if background != nil {
             let radius: CGFloat
             if #available(macOS 26, *) { radius = bounds.height / 2 } else { radius = 6 }
             NSBezierPath(roundedRect: bounds, xRadius: radius, yRadius: radius).fill()
-        }
-        let iconFrame = NSRect(x: 10, y: (bounds.height - iconSize) / 2, width: iconSize, height: iconSize)
-        if let iconColor {
-            iconColor.setFill()
-            NSBezierPath(ovalIn: iconFrame).fill()
         }
     }
 
@@ -137,16 +190,93 @@ final class OriginalPinboardTabView: NSView {
         // Keep the press in the tab instead of starting the panel's background-window drag.
         if event.modifierFlags.contains(.control) { super.rightMouseDown(with: event); return }
         isPressed = true
+        isDragging = false
         needsDisplay = true
     }
 
     // Paste 0x100079e98: select on release inside the whole cell, not on mouse-down.
     override func mouseUp(with event: NSEvent) {
-        guard !titleView.isEditing, !event.modifierFlags.contains(.control) else { return }
+        guard !titleView.isEditing else { return }
         isPressed = false
         needsDisplay = true
         if bounds.contains(convert(event.locationInWindow, from: nil)) { onSelect?() }
         else { super.mouseUp(with: event) }
+    }
+
+    override func menu(for event: NSEvent) -> NSMenu? { menuProvider?() ?? super.menu(for: event) }
+
+    override func accessibilityPerformPress() -> Bool { onSelect?(); return true }
+
+    override func mouseDragged(with event: NSEvent) {
+        guard !titleView.isEditing, !isDragging, let dragString else { return }
+        let writer = NSPasteboardItem()
+        writer.setString(dragString, forType: .string)
+        let item = NSDraggingItem(pasteboardWriter: writer)
+        let image = NSImage(size: bounds.size)
+        if let bitmap = bitmapImageRepForCachingDisplay(in: bounds) {
+            cacheDisplay(in: bounds, to: bitmap)
+            image.addRepresentation(bitmap)
+        }
+        item.setDraggingFrame(bounds, contents: image)
+        isDragging = true
+        isPressed = false
+        needsDisplay = true
+        beginDraggingSession(with: [item], event: event, source: self)
+    }
+
+    func draggingSession(_ session: NSDraggingSession, sourceOperationMaskFor context: NSDraggingContext) -> NSDragOperation { .move }
+    func draggingSession(_ session: NSDraggingSession, endedAt screenPoint: NSPoint, operation: NSDragOperation) {
+        isDragging = false
+        isPressed = false
+        needsDisplay = true
+    }
+
+    private func draggedGroup(_ sender: NSDraggingInfo) -> String? {
+        guard onDropString != nil, let value = sender.draggingPasteboard.string(forType: .string),
+              value.hasPrefix("paste-pinboard:") else { return nil }
+        return value
+    }
+
+    private func isItemDrag(_ sender: NSDraggingInfo) -> Bool {
+        sender.draggingPasteboard.types?.contains(OriginalNativeDragPasteboardWriter.itemIdentifierType) == true
+    }
+
+    override func draggingEntered(_ sender: NSDraggingInfo) -> NSDragOperation {
+        if isItemDrag(sender) {
+            // 0792a8/07a4f8 returns the predicate's Bool as operation raw value 0/1 (copy).
+            isDragDestination = canDropItems?() ?? false
+            needsDisplay = true
+            return isDragDestination ? .copy : []
+        }
+        isDragDestination = draggedGroup(sender) != nil
+        needsDisplay = true
+        return isDragDestination ? .move : []
+    }
+    override func draggingUpdated(_ sender: NSDraggingInfo) -> NSDragOperation { draggingEntered(sender) }
+    override func prepareForDragOperation(_ sender: NSDraggingInfo) -> Bool {
+        if isItemDrag(sender) { return true }
+        return draggedGroup(sender) != nil
+    }
+    override func draggingExited(_ sender: NSDraggingInfo?) { isDragDestination = false; needsDisplay = true }
+    override func draggingEnded(_ sender: NSDraggingInfo) { isDragDestination = false; needsDisplay = true }
+    override func performDragOperation(_ sender: NSDraggingInfo) -> Bool {
+        if performItemDrop(sender) { return true }
+        if isItemDrag(sender) { return false }
+        isDragDestination = false
+        needsDisplay = true
+        guard let value = draggedGroup(sender) else { return false }
+        return onDropString?(value) ?? false
+    }
+
+    // 079430: preserve item order/duplicates, skip nil strings, report acceptance independently of the write.
+    private func performItemDrop(_ sender: NSDraggingInfo) -> Bool {
+        guard let onDropItemIdentifiers else { return false }
+        let identifiers = (sender.draggingPasteboard.pasteboardItems ?? []).compactMap {
+            $0.string(forType: OriginalNativeDragPasteboardWriter.itemIdentifierType)
+        }
+        guard !identifiers.isEmpty else { return false }
+        onDropItemIdentifiers(identifiers)
+        return true
     }
 }
 
@@ -234,6 +364,8 @@ final class OriginalPinboardTabTitleView: NSView, NSTextFieldDelegate {
         editingPanel = nil
     }
 
+    func beginEditingFromListRequest() { beginEditing() }
+
     private func beginEditing() {
         guard !field.isEditable else { return }
         originalString = field.stringValue
@@ -276,8 +408,17 @@ final class OriginalPinboardTabTitleView: NSView, NSTextFieldDelegate {
     }
 
     override func hitTest(_ point: NSPoint) -> NSView? {
-        guard let hit = super.hitTest(point) else { return nil }
+        guard alphaValue > 0, let hit = super.hitTest(point) else { return nil }
         return field.isEditable ? hit : self
+    }
+
+    override func menu(for event: NSEvent) -> NSMenu? {
+        field.isEditable ? super.menu(for: event) : superview?.menu(for: event)
+    }
+
+    override func mouseDragged(with event: NSEvent) {
+        if field.isEditable { super.mouseDragged(with: event) }
+        else { superview?.mouseDragged(with: event) }
     }
 
     override func mouseDown(with event: NSEvent) {
@@ -317,6 +458,7 @@ private final class OriginalTabTitleTextField: NSTextField {
         let rect = focusRingMaskBounds
         let radius: CGFloat
         if #available(macOS 26, *) { radius = rect.height / 2 } else { radius = 6 }
+        NSColor.black.setFill()
         NSBezierPath(roundedRect: rect, xRadius: radius, yRadius: radius).fill()
     }
 }

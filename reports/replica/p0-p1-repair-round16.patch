@@ -1,0 +1,67 @@
+--- phase-16-before/replica/Sources/Pasto/UI/ReplicaUIController.swift
++++ replica/Sources/Pasto/UI/ReplicaUIController.swift
+@@ -1779,7 +1779,8 @@
+             switch key {
+             case "n": shift ? createPinboard() : newTextItem(); return true
+             case ",": showSettings(); return true
+-            case "a" where !isEditing: shift ? state.deselectAll() : state.selectAll(); return true
++            case "a" where !isEditing && !modifiers.contains(.control) && !modifiers.contains(.option):
++                shift ? state.deselectAll() : state.selectAll(); return true
+             default: break
+             }
+         }
+@@ -1796,19 +1797,18 @@
+             }
+         }
+         guard !isEditing else { return false }
+-        let control = modifiers.contains(.control)
+-        let specialKey = event.specialKey
+-        let navigation: Int
+-        if (control && key == "f") || specialKey == .rightArrow { navigation = 0 }
+-        else if (control && key == "b") || specialKey == .leftArrow { navigation = 1 }
+-        else if (control && key == "e") || (command && specialKey == .downArrow) { navigation = 3 }
+-        else if (control && key == "a") || (command && specialKey == .upArrow) { navigation = 2 }
+-        else { return false }
+-        if navigation == 0 || navigation == 1 {
+-            guard !command || shift else { return false }
+-            state.moveSelection(navigation == 0 ? 1 : -1, extending: shift)
+-        } else {
+-            state.moveSelectionToBoundary(last: navigation == 3, extending: shift)
++        let navigation = OriginalCollectionNavigation.f_1002348a8(event)
++        switch navigation {
++        case .forward, .backward:
++            let mode = OriginalOrderedSelection.mode(modifierFlags: event.modifierFlags.rawValue)
++            guard mode != 1 else { return false }
++            state.moveSelection(navigation == .forward ? 1 : -1, extending: mode == 2)
++        case .first:
++            state.moveSelectionToBoundary(last: false, extending: shift)
++        case .last:
++            state.moveSelectionToBoundary(last: true, extending: shift)
++        case .unhandled:
++            return false
+         }
+         return true
+     }
+--- /dev/null
++++ replica/Sources/Pasto/UI/OriginalCollectionNavigation.swift
+@@ -0,0 +1,20 @@
++import AppKit
++
++enum OriginalCollectionNavigation: UInt8 {
++    case forward = 0, backward = 1, first = 2, last = 3, unhandled = 4
++
++    /// 0x1002348a8: Control letters and the collection's supported arrow aliases.
++    @MainActor
++    static func f_1002348a8(_ event: NSEvent) -> Self {
++        let modifiers = event.modifierFlags
++        let key = event.charactersIgnoringModifiers?.lowercased()
++        let specialKey = event.specialKey
++        if (modifiers.contains(.control) && key == "f") || specialKey == .rightArrow { return .forward }
++        if (modifiers.contains(.control) && key == "b") || specialKey == .leftArrow { return .backward }
++        if (modifiers.contains(.control) && key == "e") ||
++            (modifiers.contains(.command) && specialKey == .downArrow) { return .last }
++        if (modifiers.contains(.control) && key == "a") ||
++            (modifiers.contains(.command) && specialKey == .upArrow) { return .first }
++        return .unhandled
++    }
++}

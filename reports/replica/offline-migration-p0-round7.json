@@ -1,0 +1,1607 @@
+{
+  "kind": "offline_source_contract_review",
+  "round": 7,
+  "status": "source-checks-passed-goal-active",
+  "generated_at": "2026-10-29T13:50:24.242613+00:00",
+  "previous_goal_turn": "progress",
+  "priority": "P0",
+  "module": "clipboard_capture_and_format_fidelity",
+  "functions": [
+    {
+      "function_id": "Paste:0x100378664",
+      "status": "partial_state_adapter",
+      "contract": "构造弱delegate、空items、token0取系统值、双timer为空及延迟日志依赖，当前分离state和monitor保持投影，原对象layout不计。",
+      "original": {
+        "path": "decompiled/Paste/part-0281.c",
+        "sha256": "646f123bfab602ee8da4001054f29dcfa3faf9c46a232a8ccbcce32ede8bde91"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPasteboardCaptureState.swift",
+          "symbol": "func f_100378664("
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x100378ac0",
+      "status": "existing_local_contract_reused",
+      "contract": "先日志再guard timer nil；更新changeCount，0.25秒重复timer及0.025容差，弱proxy属生命周期适配。",
+      "original": {
+        "path": "decompiled/Paste/part-0281.c",
+        "sha256": "fb5e3f8cf5ecee1a282744638732b3b9d4e90aed135bc53c114dae757860ece7"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/Pasteboard.swift",
+          "symbol": "func f_100378ac0()"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x100378bc8",
+      "status": "existing_local_contract_reused",
+      "contract": "先日志，依次invalidate并清poll/sync双timer，重复停止仍记录日志。",
+      "original": {
+        "path": "decompiled/Paste/part-0281.c",
+        "sha256": "95bfd2d73412eaa6483b063117a1a99b13df55056edef5cce8815e0b5cf2108a"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/Pasteboard.swift",
+          "symbol": "func f_100378bc8()"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x10037a028",
+      "status": "existing_local_contract_reused",
+      "contract": "相同changeCount不操作，变化时再读count，撤旧sync timer后安排0.3秒一次性读取。",
+      "original": {
+        "path": "decompiled/Paste/part-0281.c",
+        "sha256": "282e5b4c6879f31a8d9801161407099a9c3535f1af1ff5589b300d995aecfd35"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/Pasteboard.swift",
+          "symbol": "func f_10037a028()"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x100378c90",
+      "status": "partial_objc_adapter",
+      "contract": "ObjC timer选择器转poll，当前弱TimerTarget再转实际monitor；不宣称receiver ABI相同。",
+      "original": {
+        "path": "decompiled/Paste/part-0281.c",
+        "sha256": "f3a84f044faf9504d3d1f263c4eaddb7a4075cfd8f2866c93a018ffe9685039b"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/Pasteboard.swift",
+          "symbol": "@objc func handlePollTimer("
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x100378cd0",
+      "status": "partial_objc_adapter",
+      "contract": "sync timer回调先日志再读取，保留target proxy和日志适配边界。",
+      "original": {
+        "path": "decompiled/Paste/part-0281.c",
+        "sha256": "f20030d0542013d227932888770c0c456caa4e6ec35b7f5d05cb320a04ccce6f"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/Pasteboard.swift",
+          "symbol": "@objc private func handleSyncTimer("
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x100378d80",
+      "status": "partial_lifetime_adapter",
+      "contract": "原释放捕获项及依赖；当前ARC管理state、weak delegate及timer proxy，完整析构/执行器仍非原布局。",
+      "original": {
+        "path": "decompiled/Paste/part-0281.c",
+        "sha256": "ad7f6249c18ac5a9db9d9383c0425ca8bc7ff9c17a066e4160392fb9567008da"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPasteboardCaptureState.swift",
+          "symbol": "final class OriginalPasteboardCaptureState"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x100378dd4",
+      "status": "runtime_metadata_boundary",
+      "contract": "原函数直接返回0x100fc16b8的元数据地址；当前未为生成ABI增加空壳实现。",
+      "original": {
+        "path": "decompiled/Paste/part-0281.c",
+        "sha256": "59979c2b467d45aba28ddd3800322d9e47a2dffc5774e82793440e653e5f2f69"
+      },
+      "source_references": []
+    },
+    {
+      "function_id": "Paste:0x100378df4",
+      "status": "partial_capture_driver_with_policy_fix",
+      "contract": "先保存count清items并读types，再检查访问权限；delegate许可先于data读取；按item/type顺序累计1GiB、跳过超限表示、仅非空items入快照、回调后清空。修复调用前无条件save，改只读reload适配。",
+      "original": {
+        "path": "decompiled/Paste/part-0281.c",
+        "sha256": "4945c535a179d9e321f830d130a9ec308132343f526e98b618d7d4ed79b2450d"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/Pasteboard.swift",
+          "symbol": "private func synchronizePasteboard()"
+        },
+        {
+          "path": "replica/Sources/PastoCore/Pasteboard.swift",
+          "symbol": "func originalPasteboardShouldRead("
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x100379fe4",
+      "status": "runtime_metadata_boundary",
+      "contract": "原NSPasteboardItem类元数据首次解析缓存；由原生类型系统替代，生成缓存ABI不计。",
+      "original": {
+        "path": "decompiled/Paste/part-0281.c",
+        "sha256": "9d95c0fa85e96d656adcad0c049e2ecf80163eac7b00fa35040e77836e36cb1e"
+      },
+      "source_references": []
+    },
+    {
+      "function_id": "Paste:0x10037b428",
+      "status": "existing_outer_contract_parent_partial",
+      "contract": "先存token/计数溢出检查、postSync，再区分empty与处理；父事务保持partial。",
+      "original": {
+        "path": "decompiled/Paste/part-0281.c",
+        "sha256": "11c1eb4d62e0142301be4b6dbdffe290e142bcf34a513feef695563be7aa4776"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/Pasteboard.swift",
+          "symbol": "func f_10037b428("
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x10037ae9c",
+      "status": "existing_outer_contract_parent_partial",
+      "contract": "创建失败只记录并返回；成功清Undo，isNew时postCreate，所有成功postCapture。原repo/错误父未完整等价。",
+      "original": {
+        "path": "decompiled/Paste/part-0281.c",
+        "sha256": "240d39e9c97a088ce5bf256b48d758a9927fef77aab55d3d54b8dab283db58e0"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/Pasteboard.swift",
+          "symbol": "func f_10037ae9c("
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x10037b034",
+      "status": "partial_repository_adapter",
+      "contract": "原repo取得新旧项、更新来源、执行单条capture；当前自有UUID/CoreData仓库、已知checksum及onCapture仍非完整原repo。",
+      "original": {
+        "path": "decompiled/Paste/part-0281.c",
+        "sha256": "472bd2bc3fbc094ebeb47207e9491cd0d15c33c599a6043b074552125a0a26cf"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/Pasteboard.swift",
+          "symbol": "func f_10037b034("
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x10037ba14",
+      "status": "existing_policy_contract_reused",
+      "contract": "来源nil拒绝；Firefox开发版精确排除，其他来源按子串；类型双向子串过滤。原仅读配置，无当前旧版额外save。",
+      "original": {
+        "path": "decompiled/Paste/part-0281.c",
+        "sha256": "4156d45fda6a2decc654995eb759651c25fc1c3169d71f15a086b5516a040a13"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPasteboardPolicies.swift",
+          "symbol": "func f_10037ba14("
+        },
+        {
+          "path": "replica/Sources/PastoCore/Pasteboard.swift",
+          "symbol": "func originalPasteboardShouldRead("
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x10037c22c",
+      "status": "existing_policy_contract_reused",
+      "contract": "每type查询前台来源；Excel只收UTF16/8文本；file-url+png精确Set拒file-url，过滤原三种微软链接类型。",
+      "original": {
+        "path": "decompiled/Paste/part-0282.c",
+        "sha256": "e0ded7a3361f2c3a4fc2060bd4d365deb51bc9550605e226b646b4e1e893a752"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPasteboardPolicies.swift",
+          "symbol": "func f_10037c22c("
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x10037c47c",
+      "status": "partial_capture_closure_adapter",
+      "contract": "原捕获闭包转37b034，当前do/try直接调用，真实原捕获ABI不计。",
+      "original": {
+        "path": "decompiled/Paste/part-0282.c",
+        "sha256": "b8f348bd25063bf7f2ae9d57cd8ff909735dc811a2a7876a08d8d66259acf70c"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/Pasteboard.swift",
+          "symbol": "func f_10037ae9c("
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x10037c494",
+      "status": "partial_source_relation_adapter",
+      "contract": "来源更新闭包转37b204，当前sourceApplication快照入同一仓库事务。",
+      "original": {
+        "path": "decompiled/Paste/part-0282.c",
+        "sha256": "3e14c2d8da9365f1e8f0e2a22cd8e609389c21d90bb9ce4795e10d041df6e8ec"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/Pasteboard.swift",
+          "symbol": "sourceApplication: OriginalSourceApplication.snapshot(app)"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x10037b204",
+      "status": "partial_source_relation_adapter",
+      "contract": "原经app仓库更新source关系；当前关系UUID/持久化record为独立适配，不合并计满。",
+      "original": {
+        "path": "decompiled/Paste/part-0281.c",
+        "sha256": "0636ea17d63475345db6c47ac043dd9fbf5828a65c1e4afb5fdf817e9b2a9b10"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/Pasteboard.swift",
+          "symbol": "sourceApplication: OriginalSourceApplication.snapshot(app)"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x10032362c",
+      "status": "existing_classification_contract_reused",
+      "contract": "汇总全部ordered types按原11项优先表；只看首item提URL/颜色；link trim后用完整UTF16匹配区间判定。",
+      "original": {
+        "path": "decompiled/Paste/part-0258.c",
+        "sha256": "86db7990ef7cc05cc10c8bdf3b33072f49e05ec15dcd2e8237006fa3b7a0f32f"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPasteboardClassification.swift",
+          "symbol": "func f_10032362c("
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x100322124",
+      "status": "existing_priority_contract_reused",
+      "contract": "原fileURL/rtf/png/jpeg/heic/tiff/icns/url/utf8PlainText/plainText/text优先序与源码直接交叉解析一致。",
+      "original": {
+        "path": "decompiled/Paste/part-0258.c",
+        "sha256": "f1edbdb853b7d84d6454303a144d4ccf73eb0c037cc42e507299b2be0ea07fd6"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPasteboardClassification.swift",
+          "symbol": "priorityTypes: [UTType]"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x100322224",
+      "status": "existing_kind_table_contract_reused",
+      "contract": "原11项UTType到raw kind字节表与Swift枚举/字典交叉解析一致。",
+      "original": {
+        "path": "decompiled/Paste/part-0258.c",
+        "sha256": "aca2856dd3a334e282f440ab11b7c27519e9743f9807c1853c16bc77a5a1c055"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPasteboardClassification.swift",
+          "symbol": "typeMap: [UTType: OriginalPasteboardContentKind]"
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x1003216bc",
+      "status": "partial_checksum_archive_identity",
+      "contract": "text/color/link取首项文本；image取首可用图像；files按有序path+FileSnippet:计算；unknown归档身份仍未闭合。",
+      "original": {
+        "path": "decompiled/Paste/part-0258.c",
+        "sha256": "ba0fcc0a1800199881dd1af0f5adaa30b4fe5243fed61e1635490c061affe4e3"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPasteboardChecksums.swift",
+          "symbol": "func f_1003216bc("
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x100322d94",
+      "status": "existing_md5_contract_reused",
+      "contract": "UTF8无损编码、MD5、小写两位hex拼接，编码失败返回空串。",
+      "original": {
+        "path": "decompiled/Paste/part-0258.c",
+        "sha256": "c4d7a1cace1c06a5f0b5a0b0b83a41a73e65936b9d5136a8a093b7f6d6af2940"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPasteboardChecksums.swift",
+          "symbol": "func f_100322d94("
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x100322ae4",
+      "status": "partial_checksum_archive_identity",
+      "contract": "原NSKeyedArchiver nonsecure数组归档后MD5；当前不同类身份不能冒作unknown checksum相等。",
+      "original": {
+        "path": "decompiled/Paste/part-0258.c",
+        "sha256": "847a4714d2837febc019403a8a0d67c5d2bb1188864c82ce67640f6191eafd96"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPasteboardChecksums.swift",
+          "symbol": "func f_100322ae4("
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x10031a8e8",
+      "status": "partial_entity_setter_adapter",
+      "contract": "binary plist+LZFSE或JSON+ZLIB；含可读图像则不压缩，失败压缩回退原编码。实体setter/DI及完整编码失败仍partial。",
+      "original": {
+        "path": "decompiled/Paste/part-0256.c",
+        "sha256": "4fb578eb9c63ba86b7322afebf6ab4efdcb8dbbdc7424c752c19db6da47d4dd3"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPasteboardDataCodec.swift",
+          "symbol": "func f_10031a8e8("
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x10031aeec",
+      "status": "existing_value_decode_contract_reused",
+      "contract": "bvx→LZFSE，bplist或JSON首字符直读，否则ZLIB；解压失败回原data、plist失败再JSON，全失败返回空数组。",
+      "original": {
+        "path": "decompiled/Paste/part-0256.c",
+        "sha256": "07806e868f4eefbf4f73570998cdd39ced48b80b720ce044ca92456c0e440472"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPasteboardDataCodec.swift",
+          "symbol": "func decodeIfValid("
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalPasteboardDataCodec.swift",
+          "symbol": "func f_10031aeec("
+        }
+      ]
+    },
+    {
+      "function_id": "Paste:0x10037d8c8",
+      "status": "existing_item_contract_reused",
+      "contract": "每次写追加types包括重复；nil移除字典值但保留types顺序。",
+      "original": {
+        "path": "decompiled/Paste/part-0282.c",
+        "sha256": "61bdd968cfb1e5fbee849ce4d14ddb56ed15af60bda8eaf6a83e0d7ce2d9fe74"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPasteboard.swift",
+          "symbol": "func f_10037d8c8("
+        }
+      ],
+      "unchanged_leaf_evidence": {
+        "function_id": "Paste:0x10037d8c8",
+        "status": "unchanged_item_leaf_parent_still_partial",
+        "contract": "每次调用向 types 追加给定类型，不去重；非 nil Data 覆盖字典值，nil 删除字典值但不移除 types 项。",
+        "original": {
+          "path": "decompiled/Paste/part-0282.c",
+          "sha256": "61bdd968cfb1e5fbee849ce4d14ddb56ed15af60bda8eaf6a83e0d7ce2d9fe74"
+        },
+        "prior_review": {
+          "path": "reports/function-migration/Paste-0x10037d8c8.json",
+          "sha256": "6ed5fb494d5289163d45ec6e1c4fc5282bd09cbb8a7bfdfd1618f7ba50d0623f"
+        },
+        "source_references": [
+          {
+            "path": "replica/Sources/PastoCore/OriginalPasteboard.swift",
+            "symbol": "f_10037d8c8"
+          },
+          {
+            "path": "replica/Sources/PastoCore/Pasteboard.swift",
+            "symbol": "capture"
+          }
+        ],
+        "unchanged_item_source_delta_proof": "source_delta_proof",
+        "prior_state_unchanged": "migrated",
+        "bound_source_deltas": {
+          "replica/Sources/PastoCore/OriginalPasteboard.swift": "changed_not_whole_input_reused",
+          "replica/Sources/PastoCore/Pasteboard.swift": "changed_not_whole_input_reused"
+        },
+        "remaining": "仅复用字节未变的Item已有方法；变化的上游采集/仓库/模型不据此认定等价。"
+      }
+    },
+    {
+      "function_id": "Paste:0x10037e6b0",
+      "status": "existing_item_contract_reused",
+      "contract": "依序Data/String/NSAttributedString/URL/NSImage投影；不支持类型无副作用，图片编码nil仍保留类型项。",
+      "original": {
+        "path": "decompiled/Paste/part-0282.c",
+        "sha256": "49e9d0781213cfe6e10f9fa98158794d7ab656d5708fa6bf9a56d7c0209d2bf2"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPasteboard.swift",
+          "symbol": "func f_10037e6b0("
+        }
+      ],
+      "unchanged_leaf_evidence": {
+        "function_id": "Paste:0x10037e6b0",
+        "status": "unchanged_item_leaf_parent_still_partial",
+        "contract": "Any写入器依次尝试Data/String/NSAttributedString/URL/NSImage：Data原样、String UTF8、富文本.string UTF8、URL.absoluteString UTF8、图像经原版PNG转换；支持分支始终追加type，nil转换删data；其他对象无动作。",
+        "original": {
+          "path": "decompiled/Paste/part-0282.c",
+          "sha256": "49e9d0781213cfe6e10f9fa98158794d7ab656d5708fa6bf9a56d7c0209d2bf2"
+        },
+        "prior_review": {
+          "path": "reports/function-migration/Paste-0x10037e6b0.json",
+          "sha256": "b34fde47b6af22f5ab5ef0b6961a6645bfaa25b193e1b26e6425c3b072c9861c"
+        },
+        "source_references": [
+          {
+            "path": "replica/Sources/PastoCore/OriginalPasteboard.swift",
+            "symbol": "f_10037e6b0"
+          },
+          {
+            "path": "replica/Sources/PastoCore/Pasteboard.swift",
+            "symbol": "capture"
+          }
+        ],
+        "unchanged_item_source_delta_proof": "source_delta_proof",
+        "prior_state_unchanged": "migrated",
+        "bound_source_deltas": {
+          "replica/Sources/PastoCore/OriginalPasteboard.swift": "changed_not_whole_input_reused",
+          "replica/Sources/PastoCore/Pasteboard.swift": "changed_not_whole_input_reused"
+        },
+        "remaining": "仅复用字节未变的Item已有方法；变化的上游采集/仓库/模型不据此认定等价。"
+      }
+    },
+    {
+      "function_id": "Paste:0x10037d5c4",
+      "status": "existing_item_contract_reused",
+      "contract": "按png/jpeg/heic/tiff/icns取首个有值Data，空Data不误判nil。",
+      "original": {
+        "path": "decompiled/Paste/part-0282.c",
+        "sha256": "2259f3a30c278d4604b6b63af52f74603210c70fccaf3cad64052f5bd7e21851"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPasteboard.swift",
+          "symbol": "func f_10037d5c4("
+        }
+      ],
+      "unchanged_leaf_evidence": {
+        "function_id": "Paste:0x10037d5c4",
+        "status": "unchanged_item_leaf_parent_still_partial",
+        "contract": "依 png、jpeg、heic、tiff、icns 固定优先级返回 dataByType 中首个存在的 Data（包含空 Data），均缺失时返回 nil。",
+        "original": {
+          "path": "decompiled/Paste/part-0282.c",
+          "sha256": "2259f3a30c278d4604b6b63af52f74603210c70fccaf3cad64052f5bd7e21851"
+        },
+        "prior_review": {
+          "path": "reports/function-migration/Paste-0x10037d5c4.json",
+          "sha256": "628e6e205c94982e6950062ebab3ab5cc677a3abd9c9f4a6369a7a18d1fca7b2"
+        },
+        "source_references": [
+          {
+            "path": "replica/Sources/PastoCore/OriginalPasteboard.swift",
+            "symbol": "f_10037d5c4"
+          },
+          {
+            "path": "replica/Sources/PastoCore/Pasteboard.swift",
+            "symbol": "capture"
+          }
+        ],
+        "unchanged_item_source_delta_proof": "source_delta_proof",
+        "prior_state_unchanged": "migrated",
+        "bound_source_deltas": {
+          "replica/Sources/PastoCore/OriginalPasteboard.swift": "changed_not_whole_input_reused",
+          "replica/Sources/PastoCore/Pasteboard.swift": "changed_not_whole_input_reused"
+        },
+        "remaining": "仅复用字节未变的Item已有方法；变化的上游采集/仓库/模型不据此认定等价。"
+      }
+    },
+    {
+      "function_id": "Paste:0x10037da6c",
+      "status": "existing_item_contract_reused",
+      "contract": "返回保留重复项的有序types，不由dictionary keys重建。",
+      "original": {
+        "path": "decompiled/Paste/part-0282.c",
+        "sha256": "7274d0eb4d4ffa37f2fff3127d4fa8ed21e5cd75690741b71b5f73f68234f02b"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPasteboard.swift",
+          "symbol": "func f_10037da6c()"
+        }
+      ],
+      "unchanged_leaf_evidence": {
+        "function_id": "Paste:0x10037da6c",
+        "status": "unchanged_item_leaf_parent_still_partial",
+        "contract": "返回有序 types 的 Swift 数组值，保留顺序及重复，调用者修改结果不改变对象内部列表。",
+        "original": {
+          "path": "decompiled/Paste/part-0282.c",
+          "sha256": "7274d0eb4d4ffa37f2fff3127d4fa8ed21e5cd75690741b71b5f73f68234f02b"
+        },
+        "prior_review": {
+          "path": "reports/function-migration/Paste-0x10037da6c.json",
+          "sha256": "0091aa1c4038e563bb19f3e123fbdfc4465f8ceba306135186b3fd361dc734e8"
+        },
+        "source_references": [
+          {
+            "path": "replica/Sources/PastoCore/OriginalPasteboard.swift",
+            "symbol": "f_10037da6c"
+          },
+          {
+            "path": "replica/Sources/PastoCore/Pasteboard.swift",
+            "symbol": "capture"
+          }
+        ],
+        "unchanged_item_source_delta_proof": "source_delta_proof",
+        "prior_state_unchanged": "migrated",
+        "bound_source_deltas": {
+          "replica/Sources/PastoCore/OriginalPasteboard.swift": "changed_not_whole_input_reused",
+          "replica/Sources/PastoCore/Pasteboard.swift": "changed_not_whole_input_reused"
+        },
+        "remaining": "仅复用字节未变的Item已有方法；变化的上游采集/仓库/模型不据此认定等价。"
+      }
+    },
+    {
+      "function_id": "Paste:0x10037dab0",
+      "status": "existing_item_contract_reused",
+      "contract": "按原类型字符串移除types全部命中与字典值；保留其他项次序。",
+      "original": {
+        "path": "decompiled/Paste/part-0282.c",
+        "sha256": "d0ec3629375ab0211e9368db30e4245a31915c57ba9dc8500fa003db1ebc509c"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPasteboard.swift",
+          "symbol": "func f_10037dab0("
+        }
+      ],
+      "unchanged_leaf_evidence": {
+        "function_id": "Paste:0x10037dab0",
+        "status": "unchanged_item_leaf_parent_still_partial",
+        "contract": "从 types 稳定删除所有等于给定类型的条目，同时删除 dataByType 对应键；不存在时不改变内容。",
+        "original": {
+          "path": "decompiled/Paste/part-0282.c",
+          "sha256": "d0ec3629375ab0211e9368db30e4245a31915c57ba9dc8500fa003db1ebc509c"
+        },
+        "prior_review": {
+          "path": "reports/function-migration/Paste-0x10037dab0.json",
+          "sha256": "e873d46d72a758b00dedcfc6cfc4b550700432ae9cf9b4c98d1ad73d0940cc83"
+        },
+        "source_references": [
+          {
+            "path": "replica/Sources/PastoCore/OriginalPasteboard.swift",
+            "symbol": "f_10037dab0"
+          },
+          {
+            "path": "replica/Sources/PastoCore/Pasteboard.swift",
+            "symbol": "capture"
+          }
+        ],
+        "unchanged_item_source_delta_proof": "source_delta_proof",
+        "prior_state_unchanged": "migrated",
+        "bound_source_deltas": {
+          "replica/Sources/PastoCore/OriginalPasteboard.swift": "changed_not_whole_input_reused",
+          "replica/Sources/PastoCore/Pasteboard.swift": "changed_not_whole_input_reused"
+        },
+        "remaining": "仅复用字节未变的Item已有方法；变化的上游采集/仓库/模型不据此认定等价。"
+      }
+    },
+    {
+      "function_id": "Paste:0x10037c9a8",
+      "status": "existing_item_contract_reused",
+      "contract": "plainText/utf8PlainText/text/url严格UTF8依序读取；非法数据继续下一项、空串有效。",
+      "original": {
+        "path": "decompiled/Paste/part-0282.c",
+        "sha256": "e9d65806599a62e3596ac8e89b10cd04870da0243ccc2fb307ad98d7d080c28d"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPasteboard.swift",
+          "symbol": "func f_10037c9a8()"
+        }
+      ],
+      "unchanged_leaf_evidence": {
+        "function_id": "Paste:0x10037c9a8",
+        "status": "unchanged_item_leaf_parent_still_partial",
+        "contract": "依次按 UTType.plainText、utf8PlainText、text、url 查询 Data 并严格 UTF-8 解码；缺失或非法编码继续下一项；空字符串为有效结果；全失败返回 nil。",
+        "original": {
+          "path": "decompiled/Paste/part-0282.c",
+          "sha256": "e9d65806599a62e3596ac8e89b10cd04870da0243ccc2fb307ad98d7d080c28d"
+        },
+        "prior_review": {
+          "path": "reports/function-migration/Paste-0x10037c9a8.json",
+          "sha256": "e7e554582776d8279fc9685e47108059ba9566cd2ab5d77def08aa9065e3a850"
+        },
+        "source_references": [
+          {
+            "path": "replica/Sources/PastoCore/OriginalPasteboard.swift",
+            "symbol": "f_10037c9a8"
+          },
+          {
+            "path": "replica/Sources/PastoCore/Pasteboard.swift",
+            "symbol": "capture"
+          }
+        ],
+        "unchanged_item_source_delta_proof": "source_delta_proof",
+        "prior_state_unchanged": "migrated",
+        "bound_source_deltas": {
+          "replica/Sources/PastoCore/OriginalPasteboard.swift": "changed_not_whole_input_reused",
+          "replica/Sources/PastoCore/Pasteboard.swift": "changed_not_whole_input_reused"
+        },
+        "remaining": "仅复用字节未变的Item已有方法；变化的上游采集/仓库/模型不据此认定等价。"
+      }
+    },
+    {
+      "function_id": "Paste:0x10037d810",
+      "status": "existing_item_contract_reused",
+      "contract": "从dataByType按字符串键返回可选Data，无值与空值区分。",
+      "original": {
+        "path": "decompiled/Paste/part-0282.c",
+        "sha256": "ec6d4dea131d114d4b0c0c4998068224d69830c75ca3b41a23a82d26c53255c8"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPasteboard.swift",
+          "symbol": "func f_10037d810("
+        }
+      ],
+      "unchanged_leaf_evidence": {
+        "function_id": "Paste:0x10037d810",
+        "status": "unchanged_item_leaf_parent_still_partial",
+        "contract": "以给定原始类型字符串查询 dataByType，存在返回对应 Data（含空 Data），不存在返回 nil。",
+        "original": {
+          "path": "decompiled/Paste/part-0282.c",
+          "sha256": "ec6d4dea131d114d4b0c0c4998068224d69830c75ca3b41a23a82d26c53255c8"
+        },
+        "prior_review": {
+          "path": "reports/function-migration/Paste-0x10037d810.json",
+          "sha256": "f451449bf9e7a96e02cb39f600d9ead0fd860584815ca06472e1ea1d794846ca"
+        },
+        "source_references": [
+          {
+            "path": "replica/Sources/PastoCore/OriginalPasteboard.swift",
+            "symbol": "f_10037d810"
+          },
+          {
+            "path": "replica/Sources/PastoCore/Pasteboard.swift",
+            "symbol": "capture"
+          }
+        ],
+        "unchanged_item_source_delta_proof": "source_delta_proof",
+        "prior_state_unchanged": "migrated",
+        "bound_source_deltas": {
+          "replica/Sources/PastoCore/OriginalPasteboard.swift": "changed_not_whole_input_reused",
+          "replica/Sources/PastoCore/Pasteboard.swift": "changed_not_whole_input_reused"
+        },
+        "remaining": "仅复用字节未变的Item已有方法；变化的上游采集/仓库/模型不据此认定等价。"
+      }
+    },
+    {
+      "function_id": "Paste:0x10037875c",
+      "status": "unchanged_item_leaf_parent_still_partial",
+      "contract": "按输入项顺序建立 NSPasteboardItem；按每项有序 types 遍历，仅对 dataByType 存在的 Data 调用 setData；保留空项和空输入，统一 clearContents 后 writeObjects，最后更新接收者 lastChangeCount。原版不检查写入返回值；复刻只将返回值另存供既有上层错误策略读取。",
+      "original": {
+        "path": "decompiled/Paste/part-0281.c",
+        "sha256": "871169f701273dd0bbd5c728079fb8722566e9c9de95e89f81c8ea3eb81bb12f"
+      },
+      "prior_review": {
+        "path": "reports/function-migration/Paste-0x10037875c.json",
+        "sha256": "ef9f48d6ad303c59db18f1fc4bb050faec86dad2f5bb0cf3f2cace248192de2c"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPasteboard.swift",
+          "symbol": "f_10037875c"
+        },
+        {
+          "path": "replica/Sources/PastoCore/Pasteboard.swift",
+          "symbol": "writeToPasteboard"
+        }
+      ],
+      "unchanged_item_source_delta_proof": "source_delta_proof",
+      "prior_state_unchanged": "migrated",
+      "bound_source_deltas": {
+        "replica/Sources/PastoCore/OriginalPasteboard.swift": "changed_not_whole_input_reused",
+        "replica/Sources/PastoCore/Pasteboard.swift": "changed_not_whole_input_reused"
+      },
+      "remaining": "仅复用字节未变的Item已有方法；变化的上游采集/仓库/模型不据此认定等价。"
+    },
+    {
+      "function_id": "Paste:0x10037c4a8",
+      "status": "unchanged_item_leaf_parent_still_partial",
+      "contract": "将字符串以 UTF-8 且不允许有损转换编码，始终向 types 追加类型（允许重复），编码成功覆盖 dataByType，编码失败删除该键。",
+      "original": {
+        "path": "decompiled/Paste/part-0282.c",
+        "sha256": "cbe2c224c5280fbad6763b1c5745f7ba0c338dfc22102f218ac33072b0912d40"
+      },
+      "prior_review": {
+        "path": "reports/function-migration/Paste-0x10037c4a8.json",
+        "sha256": "d901301e7bc9260f02a0d816b8bfaf22b500674e9a7fd0c7cea41b8d6286f532"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPasteboard.swift",
+          "symbol": "f_10037c4a8"
+        },
+        {
+          "path": "replica/Sources/PastoCore/Pasteboard.swift",
+          "symbol": "capture"
+        }
+      ],
+      "unchanged_item_source_delta_proof": "source_delta_proof",
+      "prior_state_unchanged": "migrated",
+      "bound_source_deltas": {
+        "replica/Sources/PastoCore/OriginalPasteboard.swift": "changed_not_whole_input_reused",
+        "replica/Sources/PastoCore/Pasteboard.swift": "changed_not_whole_input_reused"
+      },
+      "remaining": "仅复用字节未变的Item已有方法；变化的上游采集/仓库/模型不据此认定等价。"
+    },
+    {
+      "function_id": "Paste:0x10037c6d4",
+      "status": "unchanged_item_leaf_parent_still_partial",
+      "contract": "构造空 PasteboardItem，通过字符串设置路径添加 UTType.utf8PlainText 表示，返回该对象。",
+      "original": {
+        "path": "decompiled/Paste/part-0282.c",
+        "sha256": "6c7326804cb9bc11c6dc75f9c8988219f6fe8e995038c47ef4d276b7883fe5f1"
+      },
+      "prior_review": {
+        "path": "reports/function-migration/Paste-0x10037c6d4.json",
+        "sha256": "31a9f9fe268642958fd6384419b4b084c429454533de93975bbbef8cac2e3e3f"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPasteboard.swift",
+          "symbol": "f_10037c6d4"
+        },
+        {
+          "path": "replica/Sources/PastoCore/Pasteboard.swift",
+          "symbol": "writeToPasteboard"
+        }
+      ],
+      "unchanged_item_source_delta_proof": "source_delta_proof",
+      "prior_state_unchanged": "migrated",
+      "bound_source_deltas": {
+        "replica/Sources/PastoCore/OriginalPasteboard.swift": "changed_not_whole_input_reused",
+        "replica/Sources/PastoCore/Pasteboard.swift": "changed_not_whole_input_reused"
+      },
+      "remaining": "仅复用字节未变的Item已有方法；变化的上游采集/仓库/模型不据此认定等价。"
+    },
+    {
+      "function_id": "Paste:0x10037cc6c",
+      "status": "unchanged_item_leaf_parent_still_partial",
+      "contract": "读取 public.file-url 的 UTF-8 字符串，缺失或非法编码返回 nil，否则以 Foundation URL(string:) 解析并保留其可选失败结果。",
+      "original": {
+        "path": "decompiled/Paste/part-0282.c",
+        "sha256": "4070ae87c05aa1a87b0be6510f883140d4ba9e9897ee9e140027fad946ce7241"
+      },
+      "prior_review": {
+        "path": "reports/function-migration/Paste-0x10037cc6c.json",
+        "sha256": "34cd343bfc480222975acc249a8d0cd96e14279b99b2bbfb9a6715f6e674db27"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPasteboard.swift",
+          "symbol": "f_10037cc6c"
+        },
+        {
+          "path": "replica/Sources/PastoCore/Pasteboard.swift",
+          "symbol": "capture"
+        }
+      ],
+      "unchanged_item_source_delta_proof": "source_delta_proof",
+      "prior_state_unchanged": "migrated",
+      "bound_source_deltas": {
+        "replica/Sources/PastoCore/OriginalPasteboard.swift": "changed_not_whole_input_reused",
+        "replica/Sources/PastoCore/Pasteboard.swift": "changed_not_whole_input_reused"
+      },
+      "remaining": "仅复用字节未变的Item已有方法；变化的上游采集/仓库/模型不据此认定等价。"
+    },
+    {
+      "function_id": "Paste:0x10037e4b8",
+      "status": "unchanged_item_leaf_parent_still_partial",
+      "contract": "查询指定类型的 Data，存在则严格 UTF-8 解码，缺失或非法 UTF-8 返回 nil，空 Data 得到空字符串。",
+      "original": {
+        "path": "decompiled/Paste/part-0282.c",
+        "sha256": "f574da57b20883ca876f32964b3730759cd69a90bf0da01d4e738487ebe87c01"
+      },
+      "prior_review": {
+        "path": "reports/function-migration/Paste-0x10037e4b8.json",
+        "sha256": "7ed57f216f12239117898e4421e6e27fd747b0409b2ca7d019a280e407ea8f0e"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPasteboard.swift",
+          "symbol": "f_10037e4b8"
+        },
+        {
+          "path": "replica/Sources/PastoCore/Pasteboard.swift",
+          "symbol": "capture"
+        }
+      ],
+      "unchanged_item_source_delta_proof": "source_delta_proof",
+      "prior_state_unchanged": "migrated",
+      "bound_source_deltas": {
+        "replica/Sources/PastoCore/OriginalPasteboard.swift": "changed_not_whole_input_reused",
+        "replica/Sources/PastoCore/Pasteboard.swift": "changed_not_whole_input_reused"
+      },
+      "remaining": "仅复用字节未变的Item已有方法；变化的上游采集/仓库/模型不据此认定等价。"
+    },
+    {
+      "function_id": "Paste:0x10037e5e0",
+      "status": "unchanged_item_leaf_parent_still_partial",
+      "contract": "查询指定类型的 Data 并桥接为 NSData；缺失返回 nil，保留零长度 Data。",
+      "original": {
+        "path": "decompiled/Paste/part-0282.c",
+        "sha256": "0a07d50d252feb23a284c6b299545b557ba42f43396f6ddd9619ac32d05e4100"
+      },
+      "prior_review": {
+        "path": "reports/function-migration/Paste-0x10037e5e0.json",
+        "sha256": "eefaf6f551b9ee0c925fb3499e2c4035c52df5df0f53827dc23fba2ac9aaaacc"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPasteboard.swift",
+          "symbol": "f_10037e5e0"
+        },
+        {
+          "path": "replica/Sources/PastoCore/Pasteboard.swift",
+          "symbol": "writeToPasteboard"
+        }
+      ],
+      "unchanged_item_source_delta_proof": "source_delta_proof",
+      "prior_state_unchanged": "migrated",
+      "bound_source_deltas": {
+        "replica/Sources/PastoCore/OriginalPasteboard.swift": "changed_not_whole_input_reused",
+        "replica/Sources/PastoCore/Pasteboard.swift": "changed_not_whole_input_reused"
+      },
+      "remaining": "仅复用字节未变的Item已有方法；变化的上游采集/仓库/模型不据此认定等价。"
+    },
+    {
+      "function_id": "Paste:0x10037ebdc",
+      "status": "unchanged_item_leaf_parent_still_partial",
+      "contract": "按传入 UTType 列表顺序查询 Data，每项依次尝试 NSAttributedString(rtfd:)、NSAttributedString(rtf:)、通用 NSAttributedString(data:options:[:])；第一个成功结果即返回，失败继续下一项；全部失败返回 nil。",
+      "original": {
+        "path": "decompiled/Paste/part-0282.c",
+        "sha256": "44d559dded6936605d9f72c8757d5c829771de318f191216547cbf8d3a38bafc"
+      },
+      "prior_review": {
+        "path": "reports/function-migration/Paste-0x10037ebdc.json",
+        "sha256": "c99f362239a171dc604332047642a0380164f8f290bbfa1b482ca50f8a0f6af1"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPasteboard.swift",
+          "symbol": "f_10037ebdc"
+        }
+      ],
+      "unchanged_item_source_delta_proof": "source_delta_proof",
+      "prior_state_unchanged": "migrated",
+      "bound_source_deltas": {
+        "replica/Sources/PastoCore/OriginalPasteboard.swift": "changed_not_whole_input_reused"
+      },
+      "remaining": "仅复用字节未变的Item已有方法；变化的上游采集/仓库/模型不据此认定等价。"
+    },
+    {
+      "function_id": "Paste:0x10037d33c",
+      "status": "unchanged_item_leaf_parent_still_partial",
+      "contract": "先按 flatRTFD、rtfd、rtf 优先级恢复富文本；成功则构造 NSMutableAttributedString，枚举整个 UTF-16 范围的属性，将每个 paragraphStyle 的 textBlocks 清空；富文本均失败则取原版文本优先级结果构造 NSAttributedString，无文本返回 nil。",
+      "original": {
+        "path": "decompiled/Paste/part-0282.c",
+        "sha256": "e6c647662aa3d6d9d6eb32df20a7adfff3e94e03f20de5a240344e08a9b1f93e"
+      },
+      "prior_review": {
+        "path": "reports/function-migration/Paste-0x10037d33c.json",
+        "sha256": "58204083939a9795134cca48b04cb15a138bbdc271548ed9291930c79842b239"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPasteboard.swift",
+          "symbol": "f_10037d33c"
+        }
+      ],
+      "unchanged_item_source_delta_proof": "source_delta_proof",
+      "prior_state_unchanged": "migrated",
+      "bound_source_deltas": {
+        "replica/Sources/PastoCore/OriginalPasteboard.swift": "changed_not_whole_input_reused"
+      },
+      "remaining": "仅复用字节未变的Item已有方法；变化的上游采集/仓库/模型不据此认定等价。"
+    },
+    {
+      "function_id": "Paste:0x10037df78",
+      "status": "unchanged_item_leaf_parent_still_partial",
+      "contract": "Codable编码：取得带types/dataByType键的容器；先编码有序允许重复的[String] types，成功后编码[String:Data] dataByType；任一编码错误抛出，不伪造值。",
+      "original": {
+        "path": "decompiled/Paste/part-0282.c",
+        "sha256": "65ac9788d056e179be386acbb18eecfd354deccee482d34477de0d69d69f1b94"
+      },
+      "prior_review": {
+        "path": "reports/function-migration/Paste-0x10037df78.json",
+        "sha256": "0bfdbe3fbed8dbcfb2e74f9a7e0b00a13903b2ad93255e5e3fbb9320b8316cf8"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPasteboard.swift",
+          "symbol": "f_10037df78"
+        }
+      ],
+      "unchanged_item_source_delta_proof": "source_delta_proof",
+      "prior_state_unchanged": "migrated",
+      "bound_source_deltas": {
+        "replica/Sources/PastoCore/OriginalPasteboard.swift": "changed_not_whole_input_reused"
+      },
+      "remaining": "仅复用字节未变的Item已有方法；变化的上游采集/仓库/模型不据此认定等价。"
+    },
+    {
+      "function_id": "Paste:0x10037e198",
+      "status": "unchanged_item_leaf_parent_still_partial",
+      "contract": "Codable解码构造：初始空集合，严格必需types:[String]与dataByType:[String:Data]，按顺序解码；成功再完成NSObject初始化；错误抛出且不返回半成品。",
+      "original": {
+        "path": "decompiled/Paste/part-0282.c",
+        "sha256": "c441b6c27d64076f444740946e2867f208216cbf475f018a7d8882146bd14da6"
+      },
+      "prior_review": {
+        "path": "reports/function-migration/Paste-0x10037e198.json",
+        "sha256": "e79c2d7b647a7b9dc2f28210ad0a3fb3f4c5bb6a5004193ea07b4c7052af68f4"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPasteboard.swift",
+          "symbol": "init(from decoder: Decoder)"
+        }
+      ],
+      "unchanged_item_source_delta_proof": "source_delta_proof",
+      "prior_state_unchanged": "migrated",
+      "bound_source_deltas": {
+        "replica/Sources/PastoCore/OriginalPasteboard.swift": "changed_not_whole_input_reused"
+      },
+      "remaining": "仅复用字节未变的Item已有方法；变化的上游采集/仓库/模型不据此认定等价。"
+    },
+    {
+      "function_id": "Paste:0x10037e498",
+      "status": "unchanged_item_leaf_parent_still_partial",
+      "contract": "Encodable协议入口完整转发到原版编码实现，并传播编码错误。",
+      "original": {
+        "path": "decompiled/Paste/part-0282.c",
+        "sha256": "c3f84846399063dffa105fa57488a7bf9c5a48c1cfaedc3f1f7d12b68d65cea1"
+      },
+      "prior_review": {
+        "path": "reports/function-migration/Paste-0x10037e498.json",
+        "sha256": "16dfaac552e1cdff05e4051c169a02fb42e0ba6496753c5acf9f812df46f0455"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPasteboard.swift",
+          "symbol": "encode(to encoder: Encoder)"
+        }
+      ],
+      "unchanged_item_source_delta_proof": "source_delta_proof",
+      "prior_state_unchanged": "migrated",
+      "bound_source_deltas": {
+        "replica/Sources/PastoCore/OriginalPasteboard.swift": "changed_not_whole_input_reused"
+      },
+      "remaining": "仅复用字节未变的Item已有方法；变化的上游采集/仓库/模型不据此认定等价。"
+    },
+    {
+      "function_id": "Paste:0x10037f314",
+      "status": "unchanged_item_leaf_parent_still_partial",
+      "contract": "在实现完整NSSecureCoding的PasteboardItem类上，supportsSecureCoding类方法返回true。",
+      "original": {
+        "path": "decompiled/Paste/part-0282.c",
+        "sha256": "330d5639d0094ab5d058ec3cef0a7048bdd21f51511c4675666a8b4bf2114408"
+      },
+      "prior_review": {
+        "path": "reports/function-migration/Paste-0x10037f314.json",
+        "sha256": "eb309bf170a5444e9513314b23968a59b063fa155d50051abcd8779cece70851"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPasteboard.swift",
+          "symbol": "f_10037f314"
+        }
+      ],
+      "unchanged_item_source_delta_proof": "source_delta_proof",
+      "prior_state_unchanged": "migrated",
+      "bound_source_deltas": {
+        "replica/Sources/PastoCore/OriginalPasteboard.swift": "changed_not_whole_input_reused"
+      },
+      "remaining": "仅复用字节未变的Item已有方法；变化的上游采集/仓库/模型不据此认定等价。"
+    },
+    {
+      "function_id": "Paste:0x10037f31c",
+      "status": "unchanged_item_leaf_parent_still_partial",
+      "contract": "先完成空NSObject初始化；用NSString类解码types数组并转[String]，成功后用NSString键/NSData值严格解码dataByType；任一缺失或类型转换失败返回nil，全部成功赋值并返回对象。",
+      "original": {
+        "path": "decompiled/Paste/part-0282.c",
+        "sha256": "810f9618b242d23312c9aab0dd1847d99df43a637d521ba4693c809c24da53d4"
+      },
+      "prior_review": {
+        "path": "reports/function-migration/Paste-0x10037f31c.json",
+        "sha256": "95eda3ecfe68b8d1e5f2b2c956fac8c2d1b34575f561c50c8a7d7c1ab09c1f78"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPasteboard.swift",
+          "symbol": "init?(coder: NSCoder)"
+        }
+      ],
+      "unchanged_item_source_delta_proof": "source_delta_proof",
+      "prior_state_unchanged": "partial",
+      "bound_source_deltas": {
+        "replica/Sources/PastoCore/OriginalPasteboard.swift": "changed_not_whole_input_reused"
+      },
+      "remaining": "仅复用字节未变的Item已有方法；变化的上游采集/仓库/模型不据此认定等价。"
+    },
+    {
+      "function_id": "Paste:0x10037f4f8",
+      "status": "unchanged_item_leaf_parent_still_partial",
+      "contract": "ObjC initWithCoder:入口转发同一Swift可失败coder构造，ARC保持接收者生命期，返回成功对象或nil。",
+      "original": {
+        "path": "decompiled/Paste/part-0282.c",
+        "sha256": "0fe8b9f20d3b73667569925f7d30a9465100680bb21feb955450e4addd2254ff"
+      },
+      "prior_review": {
+        "path": "reports/function-migration/Paste-0x10037f4f8.json",
+        "sha256": "9a060f3c09a97204a90a4c2d2368412c6210285092b79526400fdcec7db387e7"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPasteboard.swift",
+          "symbol": "init?(coder: NSCoder)"
+        }
+      ],
+      "unchanged_item_source_delta_proof": "source_delta_proof",
+      "prior_state_unchanged": "migrated",
+      "bound_source_deltas": {
+        "replica/Sources/PastoCore/OriginalPasteboard.swift": "changed_not_whole_input_reused"
+      },
+      "remaining": "仅复用字节未变的Item已有方法；变化的上游采集/仓库/模型不据此认定等价。"
+    },
+    {
+      "function_id": "Paste:0x10037ddd8",
+      "status": "unchanged_item_leaf_parent_still_partial",
+      "contract": "CodingKeys有效case的字符串值：types返回types，dataByType返回dataByType。",
+      "original": {
+        "path": "decompiled/Paste/part-0282.c",
+        "sha256": "c15fbd9660eeee0c435628faa6696529a6e48f5aac0f657031f00c10c05eb6c1"
+      },
+      "prior_review": {
+        "path": "reports/function-migration/Paste-0x10037ddd8.json",
+        "sha256": "c13c66b22656395ac676c3b4663d58094cf09ba014d7b224352dd0e7ae0609e9"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPasteboard.swift",
+          "symbol": "enum CodingKeys: String, CodingKey"
+        }
+      ],
+      "unchanged_item_source_delta_proof": "source_delta_proof",
+      "prior_state_unchanged": "migrated",
+      "bound_source_deltas": {
+        "replica/Sources/PastoCore/OriginalPasteboard.swift": "changed_not_whole_input_reused"
+      },
+      "remaining": "仅复用字节未变的Item已有方法；变化的上游采集/仓库/模型不据此认定等价。"
+    },
+    {
+      "function_id": "Paste:0x10037de14",
+      "status": "unchanged_item_leaf_parent_still_partial",
+      "contract": "CodingKeys字符串构造：types成功为第一case，dataByType成功为第二case，任何其他字符串失败nil。",
+      "original": {
+        "path": "decompiled/Paste/part-0282.c",
+        "sha256": "7fe5944563c060b8c99c0e0f5d95f8f9c3834bcc14ebb5874d8124eb25cc0b31"
+      },
+      "prior_review": {
+        "path": "reports/function-migration/Paste-0x10037de14.json",
+        "sha256": "c9554efb75d016336655e78a304158b69566037ac5e93deff459c021117aa5f1"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPasteboard.swift",
+          "symbol": "enum CodingKeys: String, CodingKey"
+        }
+      ],
+      "unchanged_item_source_delta_proof": "source_delta_proof",
+      "prior_state_unchanged": "migrated",
+      "bound_source_deltas": {
+        "replica/Sources/PastoCore/OriginalPasteboard.swift": "changed_not_whole_input_reused"
+      },
+      "remaining": "仅复用字节未变的Item已有方法；变化的上游采集/仓库/模型不据此认定等价。"
+    },
+    {
+      "function_id": "Paste:0x10037dd00",
+      "status": "unchanged_item_leaf_parent_still_partial",
+      "contract": "PasteboardItem普通Swift初始化：types=[]、dataByType=[:]，然后完成NSObject super.init。",
+      "original": {
+        "path": "decompiled/Paste/part-0282.c",
+        "sha256": "d5fae43325f0891e1e4d4aa01a509069c1bcc88c9d9bf4729b049c4d1584d92f"
+      },
+      "prior_review": {
+        "path": "reports/function-migration/Paste-0x10037dd00.json",
+        "sha256": "27bcd48c36c2460b302fa3e3b9256676b18689ae67b316b691480593ca4eb70d"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPasteboard.swift",
+          "symbol": "override init()"
+        }
+      ],
+      "unchanged_item_source_delta_proof": "source_delta_proof",
+      "prior_state_unchanged": "migrated",
+      "bound_source_deltas": {
+        "replica/Sources/PastoCore/OriginalPasteboard.swift": "changed_not_whole_input_reused"
+      },
+      "remaining": "仅复用字节未变的Item已有方法；变化的上游采集/仓库/模型不据此认定等价。"
+    },
+    {
+      "function_id": "Paste:0x10037f650",
+      "status": "unchanged_item_leaf_parent_still_partial",
+      "contract": "ObjC encodeWithCoder: 协议入口转发同一 NSCoding 编码实现。",
+      "original": {
+        "path": "decompiled/Paste/part-0282.c",
+        "sha256": "82196563fe3adac3d76cbcf70a28c9165a08044c691c5a68cb072dd518ee2f9c"
+      },
+      "prior_review": {
+        "path": "reports/function-migration/Paste-0x10037f650.json",
+        "sha256": "16d53e659f85e59fc7f3c6b58689532d7bce3a4a02011c70e027b88dea9b504d"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPasteboard.swift",
+          "symbol": "encode(with coder: NSCoder)"
+        }
+      ],
+      "unchanged_item_source_delta_proof": "source_delta_proof",
+      "prior_state_unchanged": "migrated",
+      "bound_source_deltas": {
+        "replica/Sources/PastoCore/OriginalPasteboard.swift": "changed_not_whole_input_reused"
+      },
+      "remaining": "仅复用字节未变的Item已有方法；变化的上游采集/仓库/模型不据此认定等价。"
+    },
+    {
+      "function_id": "Paste:0x10037c7bc",
+      "status": "unchanged_item_leaf_parent_still_partial",
+      "contract": "URL对象构造：新建空PasteboardItem；依次写UTF8 plainText和public.url为url.absoluteString；title非nil时追加public.url-name，含空字符串有效。",
+      "original": {
+        "path": "decompiled/Paste/part-0282.c",
+        "sha256": "d4b00b7fe9a0b4bc1ef879e08a51a93aeee36d2b7036eefa996c055c06b70b53"
+      },
+      "prior_review": {
+        "path": "reports/function-migration/Paste-0x10037c7bc.json",
+        "sha256": "792b901f8f6de00bf9a789500d3049350b1f913810d6ef47e0ccdae8ea400e8b"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPasteboard.swift",
+          "symbol": "f_10037c7bc"
+        }
+      ],
+      "unchanged_item_source_delta_proof": "source_delta_proof",
+      "prior_state_unchanged": "migrated",
+      "bound_source_deltas": {
+        "replica/Sources/PastoCore/OriginalPasteboard.swift": "changed_not_whole_input_reused"
+      },
+      "remaining": "仅复用字节未变的Item已有方法；变化的上游采集/仓库/模型不据此认定等价。"
+    },
+    {
+      "function_id": "Paste:0x10037ce0c",
+      "status": "unchanged_item_leaf_parent_still_partial",
+      "contract": "优先public.url严格UTF8→URL(string:)直接返回；失败再取普通文本，按#、urlQueryAllowed、urlFragmentAllowed并集百分号编码；只有URL初始化成功且scheme/host均非nil返回，否则nil。",
+      "original": {
+        "path": "decompiled/Paste/part-0282.c",
+        "sha256": "6794c7f1aaf46868d9946c48a4a88699bdf5e4775a3c8a4e6d4d11a81a063a5d"
+      },
+      "prior_review": {
+        "path": "reports/function-migration/Paste-0x10037ce0c.json",
+        "sha256": "f90214914f4cd7324b3a951f6a076b490fa18bf1e1473bdb7939b8d671df7f2b"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPasteboard.swift",
+          "symbol": "f_10037ce0c"
+        },
+        {
+          "path": "replica/Sources/PastoCore/Pasteboard.swift",
+          "symbol": "capture"
+        }
+      ],
+      "unchanged_item_source_delta_proof": "source_delta_proof",
+      "prior_state_unchanged": "migrated",
+      "bound_source_deltas": {
+        "replica/Sources/PastoCore/OriginalPasteboard.swift": "changed_not_whole_input_reused",
+        "replica/Sources/PastoCore/Pasteboard.swift": "changed_not_whole_input_reused"
+      },
+      "remaining": "仅复用字节未变的Item已有方法；变化的上游采集/仓库/模型不据此认定等价。"
+    },
+    {
+      "function_id": "Paste:0x10037d210",
+      "status": "unchanged_item_leaf_parent_still_partial",
+      "contract": "public.url-name对应Data严格UTF8解码；缺失/无效UTF8为nil，空Data为空串。",
+      "original": {
+        "path": "decompiled/Paste/part-0282.c",
+        "sha256": "e1ba16b5ffc6d54062251a4ba6f2bd4c087560d34bf553e649f34e2491e24d5f"
+      },
+      "prior_review": {
+        "path": "reports/function-migration/Paste-0x10037d210.json",
+        "sha256": "b66cd403b5e0ccc8a8273b1f9e487bc9b3115ed6394e6ca193fd750a0450e5c4"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPasteboard.swift",
+          "symbol": "f_10037d210"
+        },
+        {
+          "path": "replica/Sources/PastoCore/Pasteboard.swift",
+          "symbol": "capture"
+        }
+      ],
+      "unchanged_item_source_delta_proof": "source_delta_proof",
+      "prior_state_unchanged": "migrated",
+      "bound_source_deltas": {
+        "replica/Sources/PastoCore/OriginalPasteboard.swift": "changed_not_whole_input_reused",
+        "replica/Sources/PastoCore/Pasteboard.swift": "changed_not_whole_input_reused"
+      },
+      "remaining": "仅复用字节未变的Item已有方法；变化的上游采集/仓库/模型不据此认定等价。"
+    },
+    {
+      "function_id": "Paste:0x10037cd68",
+      "status": "unchanged_item_leaf_parent_still_partial",
+      "contract": "按原版图像Data getter优先级取首个存在Data，然后仅对该Data尝试NSImage(data:)，返回图像或nil；不在同一项失败后尝试后续图像格式。",
+      "original": {
+        "path": "decompiled/Paste/part-0282.c",
+        "sha256": "9dee98a376350b76b2152514d74e3a216e9b080a7a6388e99d8f7a6689177b72"
+      },
+      "prior_review": {
+        "path": "reports/function-migration/Paste-0x10037cd68.json",
+        "sha256": "370fc134c07842f1177a6eaf6f425ea0c7d1014bd26905fb6c30fb46c3b6eeaa"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPasteboard.swift",
+          "symbol": "f_10037cd68"
+        },
+        {
+          "path": "replica/Sources/PastoCore/Pasteboard.swift",
+          "symbol": "pasteboardImage"
+        }
+      ],
+      "unchanged_item_source_delta_proof": "source_delta_proof",
+      "prior_state_unchanged": "migrated",
+      "bound_source_deltas": {
+        "replica/Sources/PastoCore/OriginalPasteboard.swift": "changed_not_whole_input_reused",
+        "replica/Sources/PastoCore/Pasteboard.swift": "changed_not_whole_input_reused"
+      },
+      "remaining": "仅复用字节未变的Item已有方法；变化的上游采集/仓库/模型不据此认定等价。"
+    },
+    {
+      "function_id": "Paste:0x1003c89c8",
+      "status": "unchanged_item_leaf_parent_still_partial",
+      "contract": "取CGImage，缺失nil；构造NSBitmapImageRep，以rep.size.width/image.size.width为scale，把rep宽高都除该scale；representation PNG(raw4)、空properties，失败nil。",
+      "original": {
+        "path": "decompiled/Paste/part-0300.c",
+        "sha256": "aecb29d7c4b2530b0124d6853961a8ef434241dd5f83ea05f71e2d6067330b01"
+      },
+      "prior_review": {
+        "path": "reports/function-migration/Paste-0x1003c89c8.json",
+        "sha256": "8bdf72a6b5936b9c95a98154d4120791f1c35c9eb5c9ec3d6f4f2c5b0b4093cd"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPasteboardImageEncoding.swift",
+          "symbol": "public static func f_1003c89c8(",
+          "line": 5
+        },
+        {
+          "path": "replica/Sources/PastoCore/OriginalPasteboard.swift",
+          "symbol": "f_10037d8c8(OriginalPasteboardImageEncoding.f_1003c89c8(image), forType: type)",
+          "line": 90
+        },
+        {
+          "path": "replica/Sources/Pasto/UI/ReplicaImagePreviewContent.swift",
+          "symbol": "OriginalPasteboardImageEncoding.f_1003c89c8(image)",
+          "line": 198
+        }
+      ],
+      "unchanged_item_source_delta_proof": "source_delta_proof",
+      "prior_state_unchanged": "migrated",
+      "bound_source_deltas": {
+        "replica/Sources/PastoCore/OriginalPasteboardImageEncoding.swift": "unchanged",
+        "replica/Sources/PastoCore/OriginalPasteboard.swift": "changed_not_whole_input_reused",
+        "replica/Sources/Pasto/UI/ReplicaImagePreviewContent.swift": "changed_not_whole_input_reused"
+      },
+      "remaining": "仅复用字节未变的Item已有方法；变化的上游采集/仓库/模型不据此认定等价。"
+    },
+    {
+      "function_id": "Paste:0x10037dd6c",
+      "status": "unchanged_item_leaf_parent_still_partial",
+      "contract": "ObjC init入口：初始化types=[]、dataByType=[:]，调用NSObject super.init并返回同一个接收者。",
+      "original": {
+        "path": "decompiled/Paste/part-0282.c",
+        "sha256": "85782abb91f99e478fc48813ae4a839c6750c658f77b533f2148941e2da4f100"
+      },
+      "prior_review": {
+        "path": "reports/function-migration/Paste-0x10037dd6c.json",
+        "sha256": "0de03df2d734527ac80d29864f6125de99ec393d290b5bce03457e92296b9391"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPasteboard.swift",
+          "symbol": "override init()"
+        }
+      ],
+      "unchanged_item_source_delta_proof": "source_delta_proof",
+      "prior_state_unchanged": "migrated",
+      "bound_source_deltas": {
+        "replica/Sources/PastoCore/OriginalPasteboard.swift": "changed_not_whole_input_reused"
+      },
+      "remaining": "仅复用字节未变的Item已有方法；变化的上游采集/仓库/模型不据此认定等价。"
+    },
+    {
+      "function_id": "Paste:0x10037df40",
+      "status": "unchanged_item_leaf_parent_still_partial",
+      "contract": "ObjC ivar析构：释放types数组与dataByType字典的Swift桥接对象，无其他状态写入。",
+      "original": {
+        "path": "decompiled/Paste/part-0282.c",
+        "sha256": "28e6579600dc28d17371a1c1ab110745b167775aad201efc3690143bc6063d45"
+      },
+      "prior_review": {
+        "path": "reports/function-migration/Paste-0x10037df40.json",
+        "sha256": "b64fb99ec1fd1d7063d0d1586419ebe0f034818870545bf606f65ece73a7a6ed"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPasteboard.swift",
+          "symbol": "class OriginalPasteboardItem"
+        }
+      ],
+      "unchanged_item_source_delta_proof": "source_delta_proof",
+      "prior_state_unchanged": "migrated",
+      "bound_source_deltas": {
+        "replica/Sources/PastoCore/OriginalPasteboard.swift": "changed_not_whole_input_reused"
+      },
+      "remaining": "仅复用字节未变的Item已有方法；变化的上游采集/仓库/模型不据此认定等价。"
+    },
+    {
+      "function_id": "Paste:0x10037e158",
+      "status": "unchanged_item_leaf_parent_still_partial",
+      "contract": "分配PasteboardItem实例，调用同一严格可抛错Decoder初始化，保留错误返回寄存器语义。",
+      "original": {
+        "path": "decompiled/Paste/part-0282.c",
+        "sha256": "e223de639c7658450e5a9f4aaca0778640f0cc93362a56323cc2e9bcb9f958f2"
+      },
+      "prior_review": {
+        "path": "reports/function-migration/Paste-0x10037e158.json",
+        "sha256": "154f2d5856407cb369970d453700085f9186f0c9ce194f752370d03a173e332e"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPasteboard.swift",
+          "symbol": "init(from decoder: Decoder)"
+        }
+      ],
+      "unchanged_item_source_delta_proof": "source_delta_proof",
+      "prior_state_unchanged": "migrated",
+      "bound_source_deltas": {
+        "replica/Sources/PastoCore/OriginalPasteboard.swift": "changed_not_whole_input_reused"
+      },
+      "remaining": "仅复用字节未变的Item已有方法；变化的上游采集/仓库/模型不据此认定等价。"
+    },
+    {
+      "function_id": "Paste:0x10037e44c",
+      "status": "unchanged_item_leaf_parent_still_partial",
+      "contract": "Decodable协议构造witness：分配对象并调用Decoder初始化，成功才向返回缓冲写实例，错误时不写。",
+      "original": {
+        "path": "decompiled/Paste/part-0282.c",
+        "sha256": "82352b41c44b47702db2b2d393b1c5cea5eff62840c102576c453b4c88777500"
+      },
+      "prior_review": {
+        "path": "reports/function-migration/Paste-0x10037e44c.json",
+        "sha256": "3eb559e9e8c3da5a6d842a3a6e39cce9989fae75aff7e2ab5948ec8d11ec728e"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPasteboard.swift",
+          "symbol": "init(from decoder: Decoder)"
+        }
+      ],
+      "unchanged_item_source_delta_proof": "source_delta_proof",
+      "prior_state_unchanged": "migrated",
+      "bound_source_deltas": {
+        "replica/Sources/PastoCore/OriginalPasteboard.swift": "changed_not_whole_input_reused"
+      },
+      "remaining": "仅复用字节未变的Item已有方法；变化的上游采集/仓库/模型不据此认定等价。"
+    },
+    {
+      "function_id": "Paste:0x10037def0",
+      "status": "unchanged_item_leaf_parent_still_partial",
+      "contract": "CodingKeys的debugDescription协议入口使用本类型CodingKey witness并转发Swift.CodingKey默认debugDescription。",
+      "original": {
+        "path": "decompiled/Paste/part-0282.c",
+        "sha256": "2af2e345e64be394acd52768aaf5e208fc03ae125c7f42459f4c2984ea74cd59"
+      },
+      "prior_review": {
+        "path": "reports/function-migration/Paste-0x10037def0.json",
+        "sha256": "57c87b9c95145a25761aa2206c41c3f58bf066601a4148798a488ccf8dba6ec5"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPasteboard.swift",
+          "symbol": "enum CodingKeys: String, CodingKey"
+        }
+      ],
+      "unchanged_item_source_delta_proof": "source_delta_proof",
+      "prior_state_unchanged": "migrated",
+      "bound_source_deltas": {
+        "replica/Sources/PastoCore/OriginalPasteboard.swift": "changed_not_whole_input_reused"
+      },
+      "remaining": "仅复用字节未变的Item已有方法；变化的上游采集/仓库/模型不据此认定等价。"
+    },
+    {
+      "function_id": "Paste:0x10037df18",
+      "status": "unchanged_item_leaf_parent_still_partial",
+      "contract": "CodingKeys的description协议入口使用本类型CodingKey witness并转发Swift.CodingKey默认description。",
+      "original": {
+        "path": "decompiled/Paste/part-0282.c",
+        "sha256": "1a90c618554faa768d8e216ed6e322d3e2efa07dfd3cf70b767e328cbb06905e"
+      },
+      "prior_review": {
+        "path": "reports/function-migration/Paste-0x10037df18.json",
+        "sha256": "836d52ed95f6a2c7219ceeb8ab39d5e03f981f4ff0e0ecc3f90f48d6ecabfdee"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPasteboard.swift",
+          "symbol": "enum CodingKeys: String, CodingKey"
+        }
+      ],
+      "unchanged_item_source_delta_proof": "source_delta_proof",
+      "prior_state_unchanged": "migrated",
+      "bound_source_deltas": {
+        "replica/Sources/PastoCore/OriginalPasteboard.swift": "changed_not_whole_input_reused"
+      },
+      "remaining": "仅复用字节未变的Item已有方法；变化的上游采集/仓库/模型不据此认定等价。"
+    },
+    {
+      "function_id": "Paste:0x100383574",
+      "status": "unchanged_item_leaf_parent_still_partial",
+      "contract": "遍历原orderedTypes快照；type包含任一patterns子串时，稳定删除全部同名types及其data键；未命中保留原顺序，空pattern按String.contains语义。",
+      "original": {
+        "path": "decompiled/Paste/part-0283.c",
+        "sha256": "c5dd3d91d590e3e5b1fd4f7bea35a39606a2d55fab0cb45c4ee58f32b819c5de"
+      },
+      "prior_review": {
+        "path": "reports/function-migration/Paste-0x100383574.json",
+        "sha256": "2916949272a9bff69ef1a6d3134a606432ae83cd618e410a5f5ccaa4da37ca8f"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPasteboard.swift",
+          "symbol": "f_100383574"
+        }
+      ],
+      "unchanged_item_source_delta_proof": "source_delta_proof",
+      "prior_state_unchanged": "migrated",
+      "bound_source_deltas": {
+        "replica/Sources/PastoCore/OriginalPasteboard.swift": "changed_not_whole_input_reused"
+      },
+      "remaining": "仅复用字节未变的Item已有方法；变化的上游采集/仓库/模型不据此认定等价。"
+    },
+    {
+      "function_id": "Paste:0x1003838bc",
+      "status": "unchanged_item_leaf_parent_still_partial",
+      "contract": "向types追加com.wiheads.paste，并将其data设为空Data；重复调用仍追加同名type，不删除其他格式。",
+      "original": {
+        "path": "decompiled/Paste/part-0283.c",
+        "sha256": "fa857e3ad22e80dd2b9b27b03a67222f8287b18971ac48c8d2134eaef55da8a7"
+      },
+      "prior_review": {
+        "path": "reports/function-migration/Paste-0x1003838bc.json",
+        "sha256": "22e12fde837236725a79c6cbf0a0bb2de8a719c3492edca9096a0f3b9c79e8ff"
+      },
+      "source_references": [
+        {
+          "path": "replica/Sources/PastoCore/OriginalPasteboard.swift",
+          "symbol": "f_1003838bc"
+        }
+      ],
+      "unchanged_item_source_delta_proof": "source_delta_proof",
+      "prior_state_unchanged": "migrated",
+      "bound_source_deltas": {
+        "replica/Sources/PastoCore/OriginalPasteboard.swift": "changed_not_whole_input_reused"
+      },
+      "remaining": "仅复用字节未变的Item已有方法；变化的上游采集/仓库/模型不据此认定等价。"
+    }
+  ],
+  "reviewed_count": 64,
+  "direct_original_review_count": 33,
+  "unchanged_item_leaf_review_count": 38,
+  "current_review_unique_count": 207,
+  "current_review_inventory_percent": 0.2552,
+  "source_delta_proof": {
+    "path": "replica/Sources/PastoCore/OriginalPasteboard.swift",
+    "current_sha256": "bda6fc26104af712cbf89c0e974c5d84a17b99b89f15def8b2b8c422fc0b3674",
+    "prior_sha256": "60f862d0779d4f580e89be5eafef96239c75287facd4602ba02b10ce232c7b61",
+    "prior_git_revision": "9dbf6170",
+    "only_added_source_block": "\n    init(types: [String], dataByType: [String: Data]) {\n        orderedTypes = types\n        self.dataByType = dataByType\n        super.init()\n    }\n",
+    "removal_recovers_prior_bytes": true,
+    "scope": "existing Item methods only; no unchanged-consumer claim"
+  },
+  "source_sha256": {
+    "replica/Sources/PastoCore/Pasteboard.swift": "2afeada8d42d4d9d34e1f096b9a2508f939ef4cbe1c1c0d38e1c935bb3ca5c1a",
+    "replica/Sources/PastoCore/OriginalPasteboard.swift": "bda6fc26104af712cbf89c0e974c5d84a17b99b89f15def8b2b8c422fc0b3674",
+    "replica/Sources/PastoCore/OriginalPasteboardPolicies.swift": "b85860e5fdc4be03afd7f4f69651f3ed1fc15c2c48d4a765fdcae5fdc8787dc7",
+    "replica/Sources/PastoCore/OriginalPasteboardClassification.swift": "120318efac6b9e47b12a415427c830d051338fcbe0257f6f6c6d5bbab6f30614",
+    "replica/Sources/PastoCore/OriginalPasteboardDataCodec.swift": "3994f19683c261c6137c9a97f66f89d69b111e8731cc09acb42f6727980a786c",
+    "replica/Sources/PastoCore/OriginalPasteboardChecksums.swift": "91b10577b3103f2b5e4ad0879dce27b6ed53648531a0265d93d7d9f636fc611f",
+    "replica/Sources/PastoCore/ClipboardStore.swift": "99856fa91a53529f5f9aa359665069316d6f4d5f98890015ee98d4ec69c378a0",
+    "replica/Sources/PastoCore/OriginalPasteboardCaptureState.swift": "91f582575946ec8e4238d539ac477be694bb0adc1ce4f9a184747e43ba670f5f",
+    "scripts/tests/test_offline_p0_contracts.py": "0c04453ed08616b1aa23e3d908142a8946265045beeb8da97561bdbd5a4e4e1a"
+  },
+  "confirmed_difference_fixed": "读前许可路径两次无条件save改为只读reload，实际暂停到期仍保存，拒绝项目不再触发额外历史写事务。",
+  "tests": {
+    "passed": true,
+    "total": 67,
+    "scope": "Python ledger/provenance and source-contract checks only"
+  },
+  "new_fully_migrated_function_count": 0,
+  "historical_ledger": {
+    "numerator": 1648,
+    "denominator": 81123,
+    "percent": 2.0315,
+    "stale_evidence": true
+  },
+  "current_partial_count": 424,
+  "compiled": false,
+  "application_executed": false,
+  "user_data_modified": false,
+  "network_used": false,
+  "committed": false,
+  "pushed": false,
+  "module_complete": false,
+  "remaining_differences": [
+    "原完整item创建/去重/来源关系仓库与独立UUID模型",
+    "unknown及无path文件分支NSKeyedArchive类身份",
+    "完整编码异常、实体setter/DI、析构与事件provider",
+    "onCapture/Stack消费者时点与原didCapture通知关联仍待追踪"
+  ],
+  "next_work": [
+    "追踪原repo 0x1003611b0/0x1003214c8的创建/命中更新副作用",
+    "核对onCapture与原Stack didCapture消费者，继续P0面板生命周期"
+  ]
+}

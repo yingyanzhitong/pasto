@@ -1,0 +1,134 @@
+{
+  "kind": "fixed_p0_p1_commit_eligibility_parent_repair",
+  "date": "2026-11-03",
+  "previous_report": "reports/replica/p0-p1-text-model-parent-review-2026-11-03.json",
+  "scope": {
+    "path": "reports/replica/p0-p1-review-scope-v6.json",
+    "denominator": 959,
+    "P0": 353,
+    "P1": 606,
+    "expanded": false
+  },
+  "current_round_repaired_function_ids": [
+    "Paste:0x1003c0be0"
+  ],
+  "current_round_repaired_count": 1,
+  "support_not_added_to_denominator": [
+    "Paste:0x1003eb64c"
+  ],
+  "changes": [
+    "Lazily read baseline only after nonempty candidate gate; after original-attribute enumeration reload the selected model original/editing slot.",
+    "Snapshot nonnil onCanCommitEditing before comparison, then invoke the same callback even if the slot changes during comparison."
+  ],
+  "evidence_summary": {
+    "native_functions": 15,
+    "complete_machine_ranges": 15,
+    "direct_branches": 268,
+    "selectors": 28,
+    "import_calls": 178,
+    "callback_pointer": "0x1003eb2b8 -> 0x1003ec380 -> 0x1003eb64c -> 0x1003c0be0"
+  },
+  "transaction_reused": [
+    "Actual text transaction callback 304108 bound, including hasChanges, inserted/updated/deleted snapshots, validateForInsert/Update and rollback selectors.",
+    "Existing source preserves business-operation/save error boundaries, diagnostics/validation before rollback/rethrow, then text wrapper consumes error and reloads model. No additional transaction repair scored."
+  ],
+  "counts": {
+    "finite_contract_consistent": 692,
+    "source_repaired": 257,
+    "user_adaptation": 9,
+    "evidence_insufficient": 1
+  },
+  "by_priority": {
+    "P0": {
+      "finite_contract_consistent": 267,
+      "source_repaired": 82,
+      "user_adaptation": 4
+    },
+    "P1": {
+      "finite_contract_consistent": 425,
+      "source_repaired": 175,
+      "user_adaptation": 5,
+      "evidence_insufficient": 1
+    }
+  },
+  "finite_comparison_progress": {
+    "numerator": 958,
+    "denominator": 959,
+    "percent": 99.9
+  },
+  "confirmed_unfixed_finite_differences": 0,
+  "evidence_insufficient_count": 1,
+  "unknown_function_ids": [
+    "Paste:0x1000f733c"
+  ],
+  "exact_total_outstanding": null,
+  "full_function_migration_verified": false,
+  "migration_completion_percent": null,
+  "tests": {
+    "current_source_checks": 124,
+    "new_checks": 17,
+    "failures": 0,
+    "errors": 0,
+    "source_substitution": false,
+    "omitted_historical_snapshot_checks": {
+      "test_p1_repair_preview_commit_error.PreviewCommitError.test_eight_neighbors_and_seven_shared_writer_observer_and_parent_callback_sources_unchanged": "Phase158 exact neighbor/source snapshot predates later model and baseline changes; current patch preservation checks every baseline file.",
+      "test_p1_repair_preview_commit_error.PreviewCommitError.test_four_exact_method_changes_reverse247_sources_and_do_not_claim_full_parent_migration": "Phase158 historical 247-file scope does not describe current 248-file state.",
+      "test_p1_text_model_parent_contract.TextModelParentContracts.test_only_one_existing_production_changed_one_added_and_old_tests_preserved": "Previous batch scope snapshot predates current patch; current baseline independently validates 248 production files and all previous tests.",
+      "test_p1_text_model_parent_contract.TextModelParentContracts.test_original_fragments_binary_and_current_sources_fresh": "Previous source hash bindings predate this exact two-source patch; new tests bind current sources and unchanged model directly.",
+      "test_fixed_p0_p1_review.FixedPriorityReview.test_all_original_fragments_and_current_source_bindings_match": "Previous review binds the before-model adapter hash; retained as historical evidence.",
+      "test_fixed_p0_p1_review.FixedPriorityReview.test_only_five_production_files_changed_and_recorded_diffs_are_exact": "Previous five-file snapshot predates this recorded native model repair.",
+      "test_p1_repair_text_edit_mode.TextEditModeContracts.test12_neighbors12_shared_sources_unchanged": "Three previously frozen methods intentionally changed; new test checks the exact three and preserves the other nine. All baseline shared files are checked independently.",
+      "test_p1_repair_text_edit_mode.TextEditModeContracts.test_commit_reload_and_observer_updates_unchanged": "New model changes commit input and native observer routing; new current-source contracts replace this historical invariant.",
+      "test_p1_repair_text_edit_mode.TextEditModeContracts.test_two_exact_hunks_one_file247_inverse_and366_historical_python_preserved": "Historical phase187 scope snapshot predates model addition; not a current behavior check."
+    },
+    "trace_models": "Six new Python callable traces describe intended lazy reads and callback replacement; not Swift or Foundation execution.",
+    "initial_expanded_test_error": "New transaction assertion used historical let outcome spelling; inspected current var outcome and corrected test only. Original failing log retained."
+  },
+  "boundaries": [
+    "Only listed finite source contracts; private Swift ABI, optimized ARC, all framework fault/reentry behavior and product acceptance remain unverified.",
+    "3eb64c footer/layout tail is P2 and unchanged; only its P1 editing eligibility callback slice is migrated.",
+    "0f733c actual declaration/consumer still insufficient; no guess, no forced call or unreachable claim.",
+    "Previous reports remain historical snapshots; this exact two-source patch and current bindings supersede their full-file hashes."
+  ],
+  "production_changes": {
+    "replica/Sources/PastoCore/OriginalPreviewAttributedText.swift": {
+      "before_sha256": "b9719a12a97407e0856376d26bc7d4ad178538bcaab4a501b90eaf0d2d9044a0",
+      "after_sha256": "d73b2ca4f8239394e3a88ef57279ec98f139112ae1d29e2118f18cfacbcb6daf",
+      "diff": "--- replica/Sources/PastoCore/OriginalPreviewAttributedText.swift\n+++ replica/Sources/PastoCore/OriginalPreviewAttributedText.swift\n@@ -100,10 +100,13 @@\n     }\n \n     /// Paste 0x1003c0be0: nonempty changed text, with the original plain/rich baseline choice.\n-    public static func f_1003c0be0(candidate: NSAttributedString, original: NSAttributedString,\n-                                  editing: NSAttributedString) -> Bool {\n+    public static func f_1003c0be0(candidate: NSAttributedString,\n+                                  original: @autoclosure () -> NSAttributedString,\n+                                  editing: @autoclosure () -> NSAttributedString) -> Bool {\n         guard !candidate.string.isEmpty else { return false }\n-        return (f_1003095bc(original) ? editing : original) != candidate\n+        let isPlain = f_1003095bc(original())\n+        // The model's selected slot is read after attribute enumeration, not before it.\n+        return (isPlain ? editing() : original()) != candidate\n     }\n \n     /// PastePlatform's NSTextView.attributedText Objective-C getter, 0x1000f6ef8.\n"
+    },
+    "replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift": {
+      "before_sha256": "358beb5a0f91f0b0285f536ef31dbe0fc1072061a0219e95e6f88861de9f1c28",
+      "after_sha256": "1cf2716db958c79f7a7b924768b0497068c6a7f077ffbd306268086b966dad0a",
+      "diff": "--- replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift\n+++ replica/Sources/Pasto/UI/OriginalReplicaPreviewAdapter.swift\n@@ -311,10 +311,10 @@\n         documentView = text\n         contentObservation = document.$content.sink { [weak self] content in\n             MainActor.assumeIsolated {\n-                guard let self else { return }\n+                guard let self, let onCanCommitEditing = self.onCanCommitEditing else { return }\n                 self.canCommit = OriginalPreviewAttributedText.f_1003c0be0(\n                     candidate: content, original: self.originalText, editing: self.editingText)\n-                self.onCanCommitEditing?(self.canCommit)\n+                onCanCommitEditing(self.canCommit)\n             }\n         }\n         if let nativeModel {\n"
+    }
+  },
+  "existing_production_unchanged": 246,
+  "production_added": 0,
+  "old_test_files_modified": 0,
+  "patch": "reports/replica/p0-p1-can-commit-parent-review-2026-11-03.patch",
+  "source_inputs": {
+    "reports/replica/p0-p1-text-model-parent-review-2026-11-03.json": "3e596f0491ba9e3efd7f3272da09028f7df9a50695972af164a3e9ccd124fa03",
+    ".local/p0-p1-parent-review/2026-11-03-can-commit/baseline.json": "d92fdd6dbed0540f55eed4be2240d0626abaec24fe6b81fdd1a340330ecdfabb",
+    ".local/p0-p1-parent-review/2026-11-03-can-commit/contract.json": "68be9815138f1cdac57c5fda27ead43e3a613c44dcac12dbd40de95a762f9c67",
+    ".local/p0-p1-parent-review/2026-11-03-can-commit/source-delta.json": "cdbccbffc429fc560783b6bf75d922c5375d8f4ae6571b8d2047f84e33a5fc88",
+    ".local/p0-p1-parent-review/2026-11-03-can-commit/test-summary.json": "86670395529a8eda049603a64661ae4ca84e504e0d785b1cbd552ce43887b459",
+    ".local/p0-p1-parent-review/2026-11-03-can-commit/expanded-first-test-summary.json": "594e4c116bddb0ca2e836008c66e2bea12200a21a6754468b12f7b07d9678669",
+    ".local/p0-p1-parent-review/2026-11-03-can-commit/proof.py": "78e7b1b4857e02a49784caf69d899a83355aecda02f339295afcfbc35885931c",
+    ".local/p0-p1-parent-review/2026-11-03-can-commit/run-tests.py": "0d69b36a14bd56ad155b5e361a8f8ac281e66b34ffd7192ac4e637e571d04808",
+    "scripts/tests/test_p1_can_commit_live_baseline.py": "017a98193c5dc990fa0db49e742c78e1e133bf04608d0675a2ac94199764eb21"
+  },
+  "head_unchanged": "050e6878a5a52f96fe33aa40f48bb8a056cd0f05",
+  "version_unchanged": "1.0.2",
+  "function_map_unchanged": "ea781c82f93e580a940f0804fa120e01e9030357d10aee157fe4a135143b8985",
+  "compiled": false,
+  "built": false,
+  "installed": false,
+  "application_executed": false,
+  "framework_executed": false,
+  "network_used": false,
+  "committed": false,
+  "pushed": false,
+  "published": false,
+  "user_data_modified": false,
+  "goal_should_remain_active": true
+}

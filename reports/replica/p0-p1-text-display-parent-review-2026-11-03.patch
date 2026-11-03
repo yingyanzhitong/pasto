@@ -1,0 +1,17 @@
+--- replica/Sources/PastoCore/OriginalPreviewAttributedText.swift
++++ replica/Sources/PastoCore/OriginalPreviewAttributedText.swift
+@@ -153,10 +153,11 @@
+ 
+     /// Paste 0x1003eb330: the two actual isEditable reads select content and plain styling.
+     @discardableResult
+-    public static func f_1003eb330(original: NSAttributedString, editing: NSAttributedString,
++    public static func f_1003eb330(original: @autoclosure () -> NSAttributedString,
++                                  editing: @autoclosure () -> NSAttributedString,
+                                   editor: NSTextView) -> Int {
+-        var displayed = editor.isEditable ? editing : original
+-        if !editor.isEditable, f_1003095bc(original) {
++        var displayed = editor.isEditable ? editing() : original()
++        if !editor.isEditable, f_1003095bc(original()) {
+             let plain = NSMutableAttributedString(attributedString: displayed)
+             let range = f_100309700(plain)
+             plain.removeAttribute(.foregroundColor, range: range)

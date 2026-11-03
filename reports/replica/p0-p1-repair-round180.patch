@@ -1,0 +1,69 @@
+--- a/replica/Sources/Pasto/UI/ReplicaUIController.swift
++++ b/replica/Sources/Pasto/UI/ReplicaUIController.swift
+@@ -245,6 +245,10 @@
+ 
+     private func refreshSearch() {
+         searchIndex.update(items: store.items, nodes: indexedSearchQueryNodes)
++    }
++
++    func searchSuggestions(for context: OriginalSearchInputContext.Context) -> [OriginalSearchQueryNode] {
++        searchIndex.suggestions(contextNode: context.nodes[context.nodeIndex], currentNodes: context.nodes)
+     }
+ 
+     func availableSearchFilters() -> [UInt8: [OriginalSearchQueryNode]] {
+--- a/replica/Sources/Pasto/UI/PanelViews.swift
++++ b/replica/Sources/Pasto/UI/PanelViews.swift
+@@ -130,6 +130,7 @@
+             queryNodes: state.searchQueryNodes,
+             filters: searchFilterChips,
+             onInputChange: { text, filters, nodes in state.publishSearchInputFromEditor(nodes: nodes, text: text, filters: filters) },
++            onLoadSuggestions: { state.searchSuggestions(for: $0) },
+             onEnter: { state.controller?.pasteSelection(plainTextOnly: false) },
+             onCancel: { state.controller?.cancelSearchOrPanel() },
+             onShowFilters: { button in state.controller?.showFilterBrowser(relativeTo: button) },
+--- a/replica/Sources/Pasto/UI/SearchEditor.swift
++++ b/replica/Sources/Pasto/UI/SearchEditor.swift
+@@ -20,6 +20,7 @@
+     var queryNodes: [OriginalSearchQueryNode]
+     var filters: [ReplicaSearchFilterChip]
+     var onInputChange: (String, [ReplicaSearchFilterChip.Selection], [OriginalSearchQueryNode]) -> Void
++    var onLoadSuggestions: (OriginalSearchInputContext.Context) -> [OriginalSearchQueryNode]
+     var onEnter: () -> Void
+     var onCancel: () -> Void
+     var onShowFilters: (NSButton) -> Void
+@@ -192,13 +193,7 @@
+ 
+         func performSuggestionRequest(_ context: OriginalSearchInputContext.Context,
+                                       field: SearchField, editor: SearchTextView) {
+-            let store = self.parent.store
+-            let provider = OriginalSearchSuggestions.Provider(
+-                app: { try ReplicaSearchSuggestionSource.applications($0, store: store) },
+-                device: { try ReplicaSearchSuggestionSource.devices($0, store: store) },
+-                pinboard: { try ReplicaSearchSuggestionSource.pinboards($0, store: store) })
+-            let candidates = OriginalSearchSuggestions.f_1002df190(
+-                contextNode: context.nodes[context.nodeIndex], currentNodes: context.nodes, provider: provider)
++            let candidates = parent.onLoadSuggestions(context)
+             guard !Task.isCancelled, !candidates.isEmpty else {
+                 dismissSuggestionMenu()
+                 return
+--- a/replica/Sources/Pasto/UI/ReplicaSearchIndex.swift
++++ b/replica/Sources/Pasto/UI/ReplicaSearchIndex.swift
+@@ -132,6 +132,18 @@
+         suggestionDataSource = provider
+     }
+ 
++    // 2dfb18/2dfc64/2dfd4c/2dfe58 read the installed optional source at each group call.
++    func suggestions(contextNode: OriginalSearchQueryNode,
++                     currentNodes: [OriginalSearchQueryNode]) -> [OriginalSearchQueryNode] {
++        let provider = OriginalSearchSuggestions.Provider(
++            app: { try self.suggestionDataSource?.app($0) ?? [] },
++            type: { try self.suggestionDataSource?.type($0) ?? [] },
++            device: { try self.suggestionDataSource?.device($0) ?? [] },
++            pinboard: { try self.suggestionDataSource?.pinboard($0) ?? [] })
++        return OriginalSearchSuggestions.f_1002df190(
++            contextNode: contextNode, currentNodes: currentNodes, provider: provider)
++    }
++
+     func availableFilters() -> [UInt8: [OriginalSearchQueryNode]] {
+         OriginalSearchSuggestions.f_1002e00a0(provider: { suggestionDataSource })
+     }

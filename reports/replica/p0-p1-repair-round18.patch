@@ -1,0 +1,880 @@
+--- phase-18-before/replica/Sources/Pasto/UI/PanelViews.swift
++++ replica/Sources/Pasto/UI/PanelViews.swift
+@@ -121,8 +121,8 @@
+         OriginalPanelToolbar(state: state, isSearching: searching,
+             searchButton: AnyView(OriginalPanelToolbarButton(symbol: "magnifyingglass", label: "搜索剪贴板") {
+                 state.searchVisible = true; searchFocused = true
+-            }), searchField: AnyView(searchField), expandedTabs: AnyView(boardTabs),
+-            collapsedTabs: AnyView(historyControls), createButton: AnyView(createPinboardButton),
++            }), searchField: AnyView(searchField), tabs: boardTabs,
++            createButton: AnyView(createPinboardButton),
+             menuButton: AnyView(trailingControls), onDismiss: {
+                 state.searchVisible = false
+                 searchFocused = false
+@@ -151,49 +151,54 @@
+         state.searchFilters.map { ReplicaFilterMatching.chip($0, store: state.store) }
+     }
+ 
+-    private var boardTabs: some View {
+-        HStack(spacing: 7) {
+-            boardButton(state.store.preferences.historyTitle, board: nil)
+-                .contextMenu {
+-                    Button("重命名") { requestTabRename(nil) }
+-                    Button("删除历史…") { state.controller?.clearHistory() }
+-                }
+-            ForEach(state.store.pinboards.sorted { $0.sortOrder < $1.sortOrder }) { board in
+-                boardButton(board.name, board: board)
+-                    .contextMenu {
+-                        Button("重命名") { requestTabRename(board.id) }
+-                        Menu("颜色") {
+-                            ForEach(OriginalPinboardColor.allCases, id: \.rawValue) { color in
+-                                Button {
+-                                    state.perform {
+-                                        try state.store.updatePinboard(id: board.id,
+-                                            colorHex: String(format: "%06llX", color.canonicalColorCode))
+-                                    }
+-                                } label: {
+-                                    Label {
+-                                        Text(colorName(color))
+-                                    } icon: {
+-                                        Image(nsImage: colorMenuImage(color)).renderingMode(.original)
+-                                    }
+-                                }
+-                            }
++    private var boardTabs: [OriginalPinboardTab] {
++        var history = boardButton(state.store.preferences.historyTitle, board: nil)
++        history.menuProvider = {
++            let menu = NSMenu()
++            menu.autoenablesItems = false
++            menu.addItem(OriginalPanelTabMenuItem(title: "重命名") { requestTabRename(nil) })
++            menu.addItem(OriginalPanelTabMenuItem(title: "删除历史…") { state.controller?.clearHistory() })
++            return menu
++        }
++        var tabs = [history]
++        for board in state.store.pinboards.sorted(by: { $0.sortOrder < $1.sortOrder }) {
++            var tab = boardButton(board.name, board: board)
++            tab.menuProvider = {
++                let menu = NSMenu()
++                menu.autoenablesItems = false
++                menu.addItem(OriginalPanelTabMenuItem(title: "重命名") { requestTabRename(board.id) })
++                let colors = NSMenu()
++                colors.autoenablesItems = false
++                for color in OriginalPinboardColor.allCases {
++                    let item = OriginalPanelTabMenuItem(title: colorName(color)) {
++                        state.perform {
++                            try state.store.updatePinboard(id: board.id,
++                                colorHex: String(format: "%06llX", color.canonicalColorCode))
+                         }
+-                        Button("向左移动") { state.movePinboard(board, by: -1) }
+-                        Button("向右移动") { state.movePinboard(board, by: 1) }
+-                        Button(state.store.items.contains(where: { $0.pinboardIDs.contains(board.id) }) ? "删除…" : "删除",
+-                               role: .destructive) { state.controller?.removePinboard(board) }
+                     }
+-                    .onDrag { NSItemProvider(object: ("paste-pinboard:" + board.id.uuidString) as NSString) }
+-                    .onDrop(of: [UTType.text], isTargeted: nil) { providers in
+-                        guard let provider = providers.first else { return false }
+-                        _ = provider.loadObject(ofClass: String.self) { value, _ in
+-                            guard let value, value.hasPrefix("paste-pinboard:"), let id = UUID(uuidString: String(value.dropFirst(15))) else { return }
+-                            Task { @MainActor in state.movePinboard(id: id, before: board.id) }
+-                        }
+-                        return true
+-                    }
+-            }
+-        }.fixedSize()
++                    item.image = colorMenuImage(color)
++                    colors.addItem(item)
++                }
++                let colorMenu = NSMenuItem(title: "颜色", action: nil, keyEquivalent: "")
++                colorMenu.submenu = colors
++                menu.addItem(colorMenu)
++                menu.addItem(OriginalPanelTabMenuItem(title: "向左移动") { state.movePinboard(board, by: -1) })
++                menu.addItem(OriginalPanelTabMenuItem(title: "向右移动") { state.movePinboard(board, by: 1) })
++                menu.addItem(OriginalPanelTabMenuItem(title:
++                    state.store.items.contains(where: { $0.pinboardIDs.contains(board.id) }) ? "删除…" : "删除") {
++                    state.controller?.removePinboard(board)
++                })
++                return menu
++            }
++            tab.dragString = "paste-pinboard:" + board.id.uuidString
++            tab.onDropString = { value in
++                guard value.hasPrefix("paste-pinboard:"), let id = UUID(uuidString: String(value.dropFirst(15))) else { return false }
++                state.movePinboard(id: id, before: board.id)
++                return true
++            }
++            tabs.append(tab)
++        }
++        return tabs
+     }
+ 
+     private var createPinboardButton: some View {
+@@ -238,12 +243,17 @@
+         state.tabRenameRequest = (key: id?.uuidString ?? "history", token: UUID())
+     }
+ 
+-    private func boardButton(_ name: String, board: Pinboard?) -> some View {
++    private func boardButton(_ name: String, board: Pinboard?) -> OriginalPinboardTab {
+         let key = board?.id.uuidString ?? "history"
+-        return OriginalPinboardTab(title: name, iconColor: board.map { NSColor(boardColor($0)) },
++        return OriginalPinboardTab(key: key, title: name, iconColor: board.map { NSColor(boardColor($0)) },
+                 isSelected: state.pinboardID == board?.id && !state.showDeleted,
+                 beginRequest: state.tabRenameRequest?.key == key ? state.tabRenameRequest?.token : nil,
+-                onSelect: { state.chooseBoard(board?.id) },
++                onSelect: {
++                    if board?.id == nil, searching {
++                        state.query = ""; state.chooseBoard(nil); state.searchVisible = false; searchFocused = false
++                        state.controller?.panel.makeFirstResponder(nil)
++                    } else { state.chooseBoard(board?.id) }
++                },
+                 onEnd: { if state.tabRenameRequest?.key == key { state.tabRenameRequest = nil } },
+                 onCommit: { value in
+                     if let board {
+@@ -255,11 +265,6 @@
+                         return state.store.preferences.historyTitle
+                     }
+                 })
+-        .background(Color.clear, in: Capsule())
+-        .accessibilityElement(children: .combine)
+-        .accessibilityLabel(name)
+-        .accessibilityAddTraits(state.pinboardID == board?.id ? .isSelected : [])
+-        .accessibilityAction { state.chooseBoard(board?.id) }
+     }
+ 
+     private var trailingControls: some View {
+@@ -267,21 +272,6 @@
+             .frame(width: 44, height: 44)
+     }
+ 
+-    private var historyControls: some View {
+-        HStack(spacing: 8) {
+-            OriginalPanelToolbarButton(symbol: "clock.arrow.circlepath", label: "返回剪贴板历史",
+-                isSelected: state.pinboardID == nil && !state.showDeleted) {
+-                state.query = ""; state.chooseBoard(nil); state.searchVisible = false; searchFocused = false
+-                state.controller?.panel.makeFirstResponder(nil)
+-            }
+-            ForEach(state.store.pinboards.sorted { $0.sortOrder < $1.sortOrder }) { board in
+-                OriginalPanelToolbarButton(symbol: "circle.fill", label: board.name, iconColor: NSColor(boardColor(board)),
+-                    isSelected: state.pinboardID == board.id && !state.showDeleted) {
+-                    state.chooseBoard(board.id)
+-                }
+-            }
+-        }.foregroundStyle(Color(nsColor: .labelColor)).fixedSize()
+-    }
+ 
+ }
+ 
+--- phase-18-before/replica/Sources/Pasto/UI/OriginalPanelToolbar.swift
++++ replica/Sources/Pasto/UI/OriginalPanelToolbar.swift
+@@ -3,16 +3,15 @@
+ import PastoCore
+ 
+ /// Native constraint/animation owner for the recovered Toolbar search transition.
+-/// The tab contents still use the existing SwiftUI adapter; this is not a
+-/// migration claim for TabBar's complete per-cell collapse and scroll contract.
++/// The native tab stack retains its cells across search transitions. This does
++/// not claim the complete original toolbar's data source and coordinator chain.
+ @MainActor
+ struct OriginalPanelToolbar: NSViewRepresentable {
+     let state: ReplicaUIState
+     let isSearching: Bool
+     let searchButton: AnyView
+     let searchField: AnyView
+-    let expandedTabs: AnyView
+-    let collapsedTabs: AnyView
++    let tabs: [OriginalPinboardTab]
+     let createButton: AnyView
+     let menuButton: AnyView
+     let onDismiss: () -> Void
+@@ -34,7 +33,7 @@
+     func updateNSView(_ view: OriginalPanelToolbarView, context: Context) {
+         view.onDismiss = onDismiss
+         view.configure(searchButton: searchButton, searchField: searchField,
+-                       expandedTabs: expandedTabs, collapsedTabs: collapsedTabs,
++                       tabs: tabs,
+                        createButton: createButton, menuButton: menuButton, active: isSearching)
+     }
+ 
+@@ -47,7 +46,7 @@
+ @MainActor
+ final class OriginalPanelToolbarView: NSView {
+     let searchBar = OriginalPanelSearchBar()
+-    private let tabBar = OriginalPanelTabBarAdapter()
++    private let tabBar = OriginalPanelTabBar()
+     private let createButton = NSHostingView(rootView: AnyView(EmptyView()))
+     private let menuButton = NSHostingView(rootView: AnyView(EmptyView()))
+     private var activeSearchConstraints: [NSLayoutConstraint] = []
+@@ -75,7 +74,7 @@
+             searchBar.centerYAnchor.constraint(equalTo: centerYAnchor),
+             tabBar.leadingAnchor.constraint(equalTo: searchBar.trailingAnchor, constant: 8),
+             tabBar.centerYAnchor.constraint(equalTo: centerYAnchor),
+-            tabBar.heightAnchor.constraint(equalToConstant: 44), centeredTabs,
++            tabBar.heightAnchor.constraint(equalToConstant: 40), centeredTabs,
+             createButton.centerYAnchor.constraint(equalTo: centerYAnchor), createLeading,
+             createButton.trailingAnchor.constraint(lessThanOrEqualTo: menuButton.leadingAnchor, constant: -menuGap),
+             menuButton.centerYAnchor.constraint(equalTo: centerYAnchor),
+@@ -87,10 +86,10 @@
+ 
+     required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
+ 
+-    func configure(searchButton: AnyView, searchField: AnyView, expandedTabs: AnyView,
+-                   collapsedTabs: AnyView, createButton: AnyView, menuButton: AnyView, active: Bool) {
++    func configure(searchButton: AnyView, searchField: AnyView, tabs: [OriginalPinboardTab],
++                   createButton: AnyView, menuButton: AnyView, active: Bool) {
+         searchBar.configure(button: searchButton, field: searchField)
+-        tabBar.configure(expanded: expandedTabs, collapsed: collapsedTabs)
++        tabBar.configure(tabs)
+         self.createButton.rootView = createButton
+         self.menuButton.rootView = menuButton
+         if !configured {
+@@ -190,47 +189,3 @@
+     }
+ }
+ 
+-/// Keeps the current tab/menu/drag actions while the native per-cell TabBar
+-/// migration is pending. This adapter is intentionally not labeled 095228.
+-@MainActor
+-private final class OriginalPanelTabBarAdapter: NSScrollView {
+-    private let content = NSHostingView(rootView: AnyView(EmptyView()))
+-    private var expanded = AnyView(EmptyView())
+-    private var collapsed = AnyView(EmptyView())
+-    private var isCollapsed = false
+-
+-    override init(frame frameRect: NSRect) {
+-        super.init(frame: frameRect)
+-        drawsBackground = false
+-        hasHorizontalScroller = false
+-        hasVerticalScroller = false
+-        horizontalScrollElasticity = .allowed
+-        verticalScrollElasticity = .none
+-        documentView = content
+-        setContentCompressionResistancePriority(NSLayoutConstraint.Priority(249), for: .horizontal)
+-    }
+-
+-    required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
+-
+-    override var intrinsicContentSize: NSSize { NSSize(width: content.fittingSize.width, height: 44) }
+-
+-    func configure(expanded: AnyView, collapsed: AnyView) {
+-        self.expanded = expanded
+-        self.collapsed = collapsed
+-        content.rootView = isCollapsed ? collapsed : expanded
+-        invalidateIntrinsicContentSize()
+-        needsLayout = true
+-    }
+-
+-    func setCollapsed(_ collapsed: Bool) {
+-        isCollapsed = collapsed
+-        content.rootView = collapsed ? self.collapsed : expanded
+-        invalidateIntrinsicContentSize()
+-        needsLayout = true
+-    }
+-
+-    override func layout() {
+-        super.layout()
+-        content.frame = NSRect(origin: .zero, size: NSSize(width: content.fittingSize.width, height: contentSize.height))
+-    }
+-}
+--- phase-18-before/replica/Sources/Pasto/UI/OriginalPinboardTabTitle.swift
++++ replica/Sources/Pasto/UI/OriginalPinboardTabTitle.swift
+@@ -1,10 +1,11 @@
+ import AppKit
+-import SwiftUI
+ import PastoCore
+ 
+-/// One native cell owns the icon, label and padding hit area, as Paste's TabBarCell does.
++/// Stable tab configuration consumed by the native stack; actions stay in the
++/// panel's existing state/store layer.
+ @MainActor
+-struct OriginalPinboardTab: NSViewRepresentable {
++struct OriginalPinboardTab {
++    let key: String
+     let title: String
+     let iconColor: NSColor?
+     var isSelected = false
+@@ -12,33 +13,43 @@
+     let onSelect: () -> Void
+     let onEnd: () -> Void
+     let onCommit: (String) -> String
+-
+-    func makeNSView(context: Context) -> OriginalPinboardTabView {
+-        let view = OriginalPinboardTabView()
+-        updateNSView(view, context: context)
+-        return view
+-    }
+-
+-    func updateNSView(_ view: OriginalPinboardTabView, context: Context) {
++    var menuProvider: (() -> NSMenu)?
++    var dragString: String?
++    var onDropString: ((String) -> Bool)?
++
++    func configure(_ view: OriginalPinboardTabView) {
+         view.configure(title: title, iconColor: iconColor, isSelected: isSelected, beginRequest: beginRequest,
+                        onSelect: onSelect, onEnd: onEnd, onCommit: onCommit)
+-    }
+-
+-    func sizeThatFits(_ proposal: ProposedViewSize, nsView: OriginalPinboardTabView, context: Context) -> CGSize? {
+-        nsView.measuredSize
++        view.menuProvider = menuProvider
++        view.dragString = dragString
++        view.onDropString = onDropString
++        view.setAccessibilityElement(true)
++        view.setAccessibilityRole(.button)
++        view.setAccessibilityLabel(title)
++        view.setAccessibilityValue(isSelected)
+     }
+ }
+ 
+ @MainActor
+-final class OriginalPinboardTabView: NSView {
++final class OriginalPinboardTabView: NSView, NSDraggingSource {
+     let titleView = OriginalPinboardTabTitleView()
+     private let historyIconView = NSImageView()
+     private var iconColor: NSColor?
+-    private var isSelected = false
++    private(set) var isSelected = false
++    private(set) var isCollapsed = false
+     private var isHovered = false
+     private var isPressed = false
+     private var hoverArea: NSTrackingArea?
+     private var onSelect: (() -> Void)?
++    var menuProvider: (() -> NSMenu)?
++    var dragString: String?
++    var onDropString: ((String) -> Bool)?
++    private var isDragging = false
++    private var isDragDestination = false
++    private lazy var labelTrailingConstraint = titleView.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -8)
++    private lazy var compactWidthConstraint = widthAnchor.constraint(equalTo: heightAnchor, multiplier: 1)
++    private lazy var iconWidthConstraint = historyIconView.widthAnchor.constraint(equalToConstant: iconSize)
++    private lazy var iconHeightConstraint = historyIconView.heightAnchor.constraint(equalToConstant: iconSize)
+     private let historyIcon = NSImage(systemSymbolName: "clock.arrow.circlepath", accessibilityDescription: nil)?
+         .withSymbolConfiguration(.init(pointSize: 15, weight: .regular))
+ 
+@@ -51,14 +62,32 @@
+         historyIconView.imageScaling = .scaleProportionallyUpOrDown
+         addSubview(historyIconView)
+         addSubview(titleView)
++        historyIconView.translatesAutoresizingMaskIntoConstraints = false
++        titleView.translatesAutoresizingMaskIntoConstraints = false
++        NSLayoutConstraint.activate([
++            historyIconView.centerYAnchor.constraint(equalTo: centerYAnchor),
++            historyIconView.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 8),
++            historyIconView.trailingAnchor.constraint(lessThanOrEqualTo: trailingAnchor, constant: -8),
++            iconWidthConstraint, iconHeightConstraint,
++            titleView.topAnchor.constraint(equalTo: topAnchor, constant: 6),
++            titleView.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -6),
++            titleView.widthAnchor.constraint(lessThanOrEqualToConstant: 200),
++            titleView.leadingAnchor.constraint(equalTo: historyIconView.trailingAnchor, constant: 4),
++            labelTrailingConstraint
++        ])
++        registerForDraggedTypes([.string])
+     }
+ 
+     required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
+ 
+     private var iconSize: CGFloat { iconColor == nil ? 15 : 12 }
+     var measuredSize: NSSize {
+-        NSSize(width: ceil(min(titleView.measuredSize.width, 200) + iconSize + 6 + 20),
+-               height: ceil(max(titleView.measuredSize.height, iconSize) + 12))
++        let height = ceil(max(titleView.measuredSize.height, iconSize) + 12)
++        if isCollapsed {
++            if #available(macOS 26, *) { return NSSize(width: height, height: height) }
++            return NSSize(width: iconSize + 16, height: height)
++        }
++        return NSSize(width: ceil(min(titleView.measuredSize.width, 200) + iconSize + 20), height: height)
+     }
+ 
+     override var intrinsicContentSize: NSSize { measuredSize }
+@@ -69,6 +98,8 @@
+         self.iconColor = iconColor
+         self.isSelected = isSelected
+         historyIconView.isHidden = iconColor != nil
++        iconWidthConstraint.constant = iconSize
++        iconHeightConstraint.constant = iconSize
+         self.onSelect = onSelect
+         titleView.configure(title: title, beginRequest: beginRequest, onSelect: { [weak self] in
+             self?.isPressed = false; self?.needsDisplay = true; onSelect()
+@@ -79,13 +110,16 @@
+         needsDisplay = true
+     }
+ 
+-    override func layout() {
+-        super.layout()
+-        historyIconView.frame = NSRect(x: 10, y: (bounds.height - iconSize) / 2,
+-                                       width: iconSize, height: iconSize)
+-        let x = 10 + iconSize + 6
+-        titleView.frame = NSRect(x: x, y: 6, width: max(0, bounds.width - x - 10),
+-                                 height: max(0, bounds.height - 12))
++    // 0785e0 / inlined 095228: keep the same cell and label while collapsing.
++    func setCollapsed(_ collapsed: Bool) {
++        isCollapsed = collapsed
++        if #available(macOS 26, *) { compactWidthConstraint.isActive = collapsed }
++        else { compactWidthConstraint.isActive = false }
++        labelTrailingConstraint.isActive = !collapsed
++        titleView.alphaValue = collapsed ? 0 : 1
++        invalidateIntrinsicContentSize()
++        needsLayout = true
++        needsDisplay = true
+     }
+ 
+     override func draw(_ dirtyRect: NSRect) {
+@@ -94,7 +128,7 @@
+         let background: NSColor?
+         if titleView.isEditing { background = OriginalToolbarAppearance.borderAndHover() }
+         else if isPressed { background = OriginalSearchSurfaceAppearance.f_1001ff0d0().pointee?.withAlphaComponent(0.15) }
+-        else if isSelected { background = OriginalSearchSurfaceAppearance.f_1001ff0d0().pointee }
++        else if (isSelected && !isCollapsed) || isDragDestination { background = OriginalSearchSurfaceAppearance.f_1001ff0d0().pointee }
+         else { background = isHovered ? OriginalToolbarAppearance.borderAndHover() : nil }
+         background?.setFill()
+         if background != nil {
+@@ -102,7 +136,7 @@
+             if #available(macOS 26, *) { radius = bounds.height / 2 } else { radius = 6 }
+             NSBezierPath(roundedRect: bounds, xRadius: radius, yRadius: radius).fill()
+         }
+-        let iconFrame = NSRect(x: 10, y: (bounds.height - iconSize) / 2, width: iconSize, height: iconSize)
++        let iconFrame = historyIconView.frame
+         if let iconColor {
+             iconColor.setFill()
+             NSBezierPath(ovalIn: iconFrame).fill()
+@@ -137,16 +171,67 @@
+         // Keep the press in the tab instead of starting the panel's background-window drag.
+         if event.modifierFlags.contains(.control) { super.rightMouseDown(with: event); return }
+         isPressed = true
++        isDragging = false
+         needsDisplay = true
+     }
+ 
+     // Paste 0x100079e98: select on release inside the whole cell, not on mouse-down.
+     override func mouseUp(with event: NSEvent) {
+-        guard !titleView.isEditing, !event.modifierFlags.contains(.control) else { return }
++        guard !titleView.isEditing, !isDragging, !event.modifierFlags.contains(.control) else { return }
+         isPressed = false
+         needsDisplay = true
+         if bounds.contains(convert(event.locationInWindow, from: nil)) { onSelect?() }
+         else { super.mouseUp(with: event) }
++    }
++
++    override func menu(for event: NSEvent) -> NSMenu? { menuProvider?() ?? super.menu(for: event) }
++
++    override func accessibilityPerformPress() -> Bool { onSelect?(); return true }
++
++    override func mouseDragged(with event: NSEvent) {
++        guard !titleView.isEditing, !isDragging, let dragString else { return }
++        let writer = NSPasteboardItem()
++        writer.setString(dragString, forType: .string)
++        let item = NSDraggingItem(pasteboardWriter: writer)
++        let image = NSImage(size: bounds.size)
++        if let bitmap = bitmapImageRepForCachingDisplay(in: bounds) {
++            cacheDisplay(in: bounds, to: bitmap)
++            image.addRepresentation(bitmap)
++        }
++        item.setDraggingFrame(bounds, contents: image)
++        isDragging = true
++        isPressed = false
++        needsDisplay = true
++        beginDraggingSession(with: [item], event: event, source: self)
++    }
++
++    func draggingSession(_ session: NSDraggingSession, sourceOperationMaskFor context: NSDraggingContext) -> NSDragOperation { .move }
++    func draggingSession(_ session: NSDraggingSession, endedAt screenPoint: NSPoint, operation: NSDragOperation) {
++        isDragging = false
++        isPressed = false
++        needsDisplay = true
++    }
++
++    private func draggedGroup(_ sender: NSDraggingInfo) -> String? {
++        guard onDropString != nil, let value = sender.draggingPasteboard.string(forType: .string),
++              value.hasPrefix("paste-pinboard:"), UUID(uuidString: String(value.dropFirst(15))) != nil else { return nil }
++        return value
++    }
++
++    override func draggingEntered(_ sender: NSDraggingInfo) -> NSDragOperation {
++        isDragDestination = draggedGroup(sender) != nil
++        needsDisplay = true
++        return isDragDestination ? .move : []
++    }
++    override func draggingUpdated(_ sender: NSDraggingInfo) -> NSDragOperation { draggingEntered(sender) }
++    override func prepareForDragOperation(_ sender: NSDraggingInfo) -> Bool { draggedGroup(sender) != nil }
++    override func draggingExited(_ sender: NSDraggingInfo?) { isDragDestination = false; needsDisplay = true }
++    override func draggingEnded(_ sender: NSDraggingInfo) { isDragDestination = false; needsDisplay = true }
++    override func performDragOperation(_ sender: NSDraggingInfo) -> Bool {
++        isDragDestination = false
++        needsDisplay = true
++        guard let value = draggedGroup(sender) else { return false }
++        return onDropString?(value) ?? false
+     }
+ }
+ 
+@@ -276,8 +361,17 @@
+     }
+ 
+     override func hitTest(_ point: NSPoint) -> NSView? {
+-        guard let hit = super.hitTest(point) else { return nil }
++        guard alphaValue > 0, let hit = super.hitTest(point) else { return nil }
+         return field.isEditable ? hit : self
++    }
++
++    override func menu(for event: NSEvent) -> NSMenu? {
++        field.isEditable ? super.menu(for: event) : superview?.menu(for: event)
++    }
++
++    override func mouseDragged(with event: NSEvent) {
++        if field.isEditable { super.mouseDragged(with: event) }
++        else { superview?.mouseDragged(with: event) }
+     }
+ 
+     override func mouseDown(with event: NSEvent) {
+--- /dev/null
++++ replica/Sources/Pasto/UI/OriginalPanelTabBar.swift
+@@ -0,0 +1,119 @@
++import AppKit
++import PastoCore
++
++/// The same native cells remain in the stack for expanded and collapsed states.
++@MainActor
++final class OriginalPanelTabBar: NSView {
++    private let scrollView = NSScrollView()
++    private let documentContainer = NSView()
++    private let stack = NSStackView()
++    private var cells: [String: OriginalPinboardTabView] = [:]
++    private var keys: [String] = []
++    private var isCollapsed = false
++
++    override init(frame frameRect: NSRect) {
++        super.init(frame: frameRect)
++        stack.orientation = .horizontal
++        stack.spacing = 8
++        stack.alignment = .centerY
++        stack.distribution = .fill
++        stack.detachesHiddenViews = false
++        scrollView.drawsBackground = false
++        scrollView.hasHorizontalScroller = false
++        scrollView.hasVerticalScroller = false
++        scrollView.horizontalScrollElasticity = .allowed
++        scrollView.verticalScrollElasticity = .none
++        scrollView.contentView.drawsBackground = false
++        scrollView.documentView = documentContainer
++        documentContainer.addSubview(stack)
++        addSubview(scrollView)
++        setContentCompressionResistancePriority(NSLayoutConstraint.Priority(250), for: .horizontal)
++    }
++
++    required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
++
++    override var intrinsicContentSize: NSSize {
++        // TabBarScrollView's recovered content inset is (6,7,6,7), height 40.
++        // Its shadow-overlay drawing is still a separate incomplete contract.
++        NSSize(width: stack.fittingSize.width + 14, height: 40)
++    }
++
++    func configure(_ tabs: [OriginalPinboardTab]) {
++        let newKeys = tabs.map(\.key)
++        let retainedKeys = Set(newKeys)
++        for key in keys where !retainedKeys.contains(key) {
++            cells[key]?.removeFromSuperview()
++            cells.removeValue(forKey: key)
++        }
++        for tab in tabs {
++            let cell = cells[tab.key] ?? OriginalPinboardTabView()
++            cells[tab.key] = cell
++            tab.configure(cell)
++            cell.setCollapsed(isCollapsed)
++        }
++        if keys != newKeys {
++            stack.setViews(newKeys.compactMap { cells[$0] }, in: .leading)
++            keys = newKeys
++        }
++        invalidateIntrinsicContentSize()
++        needsLayout = true
++    }
++
++    func setCollapsed(_ collapsed: Bool) {
++        isCollapsed = collapsed
++        f_100095228()
++    }
++
++    private func f_100095228() {
++        let tabs = stack.arrangedSubviews.compactMap { $0 as? OriginalPinboardTabView }
++        for tab in tabs { tab.setCollapsed(isCollapsed) }
++        invalidateIntrinsicContentSize()
++        needsLayout = true
++        if isCollapsed {
++            _ = scrollRectToVisible(.zero)
++            return
++        }
++        guard let selected = tabs.first(where: { $0.isSelected }) else { return }
++        // 095228 retains the selected cell but captures the TabBar owner weakly.
++        // Do not add a new generation/collapsed-state cancellation gate here.
++        DispatchQueue.main.async { [weak self, selected] in
++            MainActor.assumeIsolated { self?.f_100095ae8(selected) }
++        }
++    }
++
++    private func f_100095ae8(_ cell: OriginalPinboardTabView) {
++        // ARM 095ba0/095ba4: CGRectInset(frame, -17, 0).
++        let rect = cell.frame.insetBy(dx: -17, dy: 0)
++        OriginalViewAnimation.f_10021cadc(duration: 0.15,
++            timingFunction: OriginalViewAnimation.f_10021ccd4(), animated: true,
++            animations: { self.f_10009ac24(rect) })
++    }
++
++    private func f_10009ac24(_ rect: NSRect) { _ = scrollRectToVisible(rect) }
++
++    override func scrollRectToVisible(_ rect: NSRect) -> Bool {
++        // 051068 forwards to the underlying scroll view's contentView.
++        scrollView.contentView.scrollRectToVisible(rect)
++    }
++
++    override func layout() {
++        super.layout()
++        scrollView.frame = bounds
++        let size = stack.fittingSize
++        documentContainer.frame = NSRect(origin: .zero,
++            size: NSSize(width: size.width + 14, height: max(scrollView.contentSize.height, size.height + 12)))
++        stack.frame = NSRect(x: 7, y: 6, width: size.width, height: size.height)
++    }
++}
++
++@MainActor
++final class OriginalPanelTabMenuItem: NSMenuItem {
++    private let invoke: () -> Void
++    init(title: String, invoke: @escaping () -> Void) {
++        self.invoke = invoke
++        super.init(title: title, action: #selector(performMenuAction), keyEquivalent: "")
++        target = self
++    }
++    required init(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
++    @objc private func performMenuAction() { invoke() }
++}
+--- phase-18-before/scripts/tests/test_p0_repair_toolbar_transition.py
++++ scripts/tests/test_p0_repair_toolbar_transition.py
+@@ -179,25 +179,32 @@
+         self.assertNotIn('if searching', header)
+         self.assertNotIn('GeometryReader', header)
+         self.assertNotIn('let tabsWidth', header)
+-        for token in ['expandedTabs: AnyView(boardTabs)', 'collapsedTabs: AnyView(historyControls)',
++        for token in ['tabs: boardTabs',
+                       'createButton: AnyView(createPinboardButton)', 'menuButton: AnyView(trailingControls)']:
+             self.assertIn(token, header)
+         before = (self.phase / 'before/replica/Sources/Pasto/UI/PanelViews.swift').read_text()
+-        for signature in ['private func boardButton(', 'private var historyControls: some View']:
++        # Phase18 retains native cells instead of swapping two SwiftUI roots.
++        # Preserve the business callbacks while verifying the new live consumer.
++        old_button = body(before, 'private func boardButton(')
++        new_button = body(self.panel, 'private func boardButton(')
++        for signature in ['onCommit:', 'onEnd:']:
++            self.assertEqual(body(new_button, signature), body(old_button, signature))
++        for signature in ['private func colorName(', 'private func colorMenuImage(', 'private func requestTabRename(']:
+             self.assertEqual(body(self.panel, signature), body(before, signature))
+-        old_tabs = body(before, 'private var boardTabs: some View')
+-        new_tabs = body(self.panel, 'private var boardTabs: some View')
+-        plus_start = old_tabs.index('            OriginalPanelToolbarButton(symbol: "plus"')
+-        plus_end = old_tabs.index('\n        }.fixedSize()', plus_start)
+-        self.assertEqual(new_tabs, old_tabs[:plus_start] + old_tabs[plus_end + 1:])
++        new_tabs = body(self.panel, 'private var boardTabs:')
++        for token in ['state.controller?.clearHistory()', 'requestTabRename(board.id)',
++                      'state.store.updatePinboard(id: board.id,', 'state.movePinboard(board, by: -1)',
++                      'state.movePinboard(board, by: 1)', 'state.controller?.removePinboard(board)',
++                      'state.movePinboard(id: id, before: board.id)']:
++            self.assertIn(token, new_tabs)
+ 
+     def test_tab_cell_and_query_reset_contracts_are_not_falsely_marked_complete(self):
+-        self.assertIn('not a\n/// migration claim for TabBar', self.native)
+-        self.assertIn('not labeled 095228', self.native)
+-        self.assertNotIn('func f_100095228', self.native)
+-        baseline = json.loads((self.phase / 'baseline.json').read_text())
+-        p = 'replica/Sources/Pasto/UI/OriginalPinboardTabTitle.swift'
+-        self.assertEqual(hashlib.sha256((ROOT / p).read_bytes()).hexdigest(), baseline['production'][p])
++        self.assertIn('not claim the complete original toolbar', self.native)
++        tabs = (ROOT / 'replica/Sources/Pasto/UI/OriginalPanelTabBar.swift').read_text()
++        self.assertIn('shadow-overlay drawing is still a separate incomplete contract', tabs)
++        proof = json.loads((ROOT / '.local/p0-repair/phase-18/tab-layout-root-contract.json').read_text())
++        self.assertFalse(proof['full_function_migration_verified'])
++        self.assertIn('Paste:0x100040054', [r['function_id'] for r in proof['retained_partial_contracts']])
+ 
+ 
+ if __name__ == '__main__':
+--- /dev/null
++++ scripts/tests/test_p0_repair_native_tabs.py
+@@ -0,0 +1,183 @@
++"""Native tab/collapse contracts from original C and ARM, not UI execution."""
++import hashlib
++import json
++from pathlib import Path
++import sys
++import unittest
++
++ROOT = Path(__file__).resolve().parents[2]
++sys.path[:0] = [str(ROOT/'scripts'), str(ROOT/'scripts/tests')]
++from function_ledger import source_fragments
++from test_offline_p0_contracts import body
++from test_p0_repair_checksum_routing import original_fragment
++
++
++class NativeTabsContracts(unittest.TestCase):
++    @classmethod
++    def setUpClass(cls):
++        cls.phase = ROOT/'.local/p0-repair/phase-18'
++        cls.proof = json.loads((cls.phase/'tab-layout-root-contract.json').read_text())
++        cls.tabs = (ROOT/'replica/Sources/Pasto/UI/OriginalPanelTabBar.swift').read_text()
++        cls.cell = (ROOT/'replica/Sources/Pasto/UI/OriginalPinboardTabTitle.swift').read_text()
++        cls.toolbar = (ROOT/'replica/Sources/Pasto/UI/OriginalPanelToolbar.swift').read_text()
++        cls.panel = (ROOT/'replica/Sources/Pasto/UI/PanelViews.swift').read_text()
++
++    def original(self, a):
++        r = next(r for r in self.proof['original_fragments'] if r['address'] == a)
++        return original_fragment((ROOT/r['path']).read_text(), a[2:])
++
++    def test_canonical_fragments_and_inset_machine_range_are_bound(self):
++        for r in self.proof['original_fragments']:
++            self.assertEqual(source_fragments(ROOT/r['path'])[r['address']]['sha256'], r['sha256'])
++        raw = (ROOT/self.proof['binary']['path']).read_bytes()
++        self.assertEqual(hashlib.sha256(raw).hexdigest(), self.proof['binary']['sha256'])
++        for r in self.proof['machine_ranges']:
++            data = raw[r['file_offset']:r['file_offset']+r['length']]
++            self.assertEqual(hashlib.sha256(data).hexdigest(), r['sha256'])
++        # fmov d4,#-17 ; movi v5.2d,#0 immediately before CGRectInset.
++        self.assertEqual(raw[0x95ba0:0x95ba8].hex(), '0430761e05e4006f')
++
++    def test_original_per_cell_state_sequence_matches_native_constraints(self):
++        original = self.original('0x100095228')
++        order = ['TabBarCell::isCollapsed', 'FUN_100078aa4()', 'Swift::_stdlib_isOSVersionAtLeast(0x1a,0,0)',
++                 'FUN_1000789dc()', 'FUN_100078734()', 'objc_stub::setAlphaValue_']
++        positions = [original.index(t) for t in order]
++        self.assertEqual(positions, sorted(positions))
++        collapse = body(self.cell, 'func setCollapsed(_ collapsed: Bool)')
++        order = ['isCollapsed = collapsed', 'compactWidthConstraint.isActive = collapsed',
++                 'labelTrailingConstraint.isActive = !collapsed', 'titleView.alphaValue = collapsed ? 0 : 1']
++        positions = [collapse.index(t) for t in order]
++        self.assertEqual(positions, sorted(positions))
++        self.assertIn('if #available(macOS 26, *)', collapse)
++        self.assertIn('else { compactWidthConstraint.isActive = false }', collapse)
++
++    def test_constraints_target_real_cell_and_label_not_host_box(self):
++        compact = self.original('0x100078aa4')
++        self.assertIn('widthAnchor', compact)
++        self.assertIn('heightAnchor', compact)
++        self.assertIn('0x3ff0000000000000', compact)
++        trailing = self.original('0x1000789dc')
++        self.assertIn('0xc020000000000000', trailing)  # -8
++        self.assertIn('widthAnchor.constraint(equalTo: heightAnchor, multiplier: 1)', self.cell)
++        self.assertIn('titleView.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -8)', self.cell)
++        self.assertIn('titleView.widthAnchor.constraint(lessThanOrEqualToConstant: 200)', self.cell)
++        self.assertNotIn('historyIconView.frame =', self.cell)
++        self.assertNotIn('titleView.frame =', self.cell)
++
++    def test_same_key_keeps_native_cell_and_only_membership_reorders_stack(self):
++        configure = body(self.tabs, 'func configure(_ tabs: [OriginalPinboardTab])')
++        self.assertIn('cells[tab.key] ?? OriginalPinboardTabView()', configure)
++        self.assertIn('tab.configure(cell)', configure)
++        self.assertIn('cell.setCollapsed(isCollapsed)', configure)
++        self.assertIn('if keys != newKeys', configure)
++        self.assertIn('stack.setViews(newKeys.compactMap { cells[$0] }, in: .leading)', configure)
++        collapse = body(self.tabs, 'private func f_100095228()')
++        self.assertIn('stack.arrangedSubviews.compactMap { $0 as? OriginalPinboardTabView }', collapse)
++        self.assertNotIn('OriginalPinboardTabView()', collapse)
++        self.assertNotIn('rootView', self.tabs)
++
++    def test_collapsed_path_scrolls_zero_and_returns_before_selection_dispatch(self):
++        original = self.original('0x100095228')
++        branch = original[original.index('LAB_1000956c0:'):]
++        self.assertLess(branch.index('scrollRectToVisible_'), branch.index('TabBarCell::isSelected'))
++        collapse = body(self.tabs, 'private func f_100095228()')
++        branch = body(collapse, 'if isCollapsed')
++        self.assertIn('_ = scrollRectToVisible(.zero)', branch)
++        self.assertIn('return', branch)
++        self.assertLess(collapse.index('if isCollapsed'), collapse.index('tabs.first(where:'))
++
++    def test_expanded_dispatch_uses_weak_owner_strong_cell_and_no_extra_state_gate(self):
++        collapse = body(self.tabs, 'private func f_100095228()')
++        self.assertIn('guard let selected = tabs.first(where: { $0.isSelected }) else { return }', collapse)
++        self.assertIn('DispatchQueue.main.async { [weak self, selected] in', collapse)
++        self.assertIn('self?.f_100095ae8(selected)', collapse)
++        async_body = collapse[collapse.index('DispatchQueue.main.async'):]
++        self.assertNotIn('weak selected', async_body)
++        self.assertNotIn('isCollapsed', async_body)
++        self.assertNotIn('generation', async_body)
++        self.assertNotIn('Task {', async_body)
++
++    def test_expanded_inset_frame_read_at_execution_and_exact_animation(self):
++        action = body(self.tabs, 'private func f_100095ae8(')
++        order = ['cell.frame.insetBy(dx: -17, dy: 0)',
++                 'OriginalViewAnimation.f_10021cadc(duration: 0.15',
++                 'timingFunction: OriginalViewAnimation.f_10021ccd4()',
++                 'animated: true', 'animations: { self.f_10009ac24(rect) }']
++        positions = [action.index(t) for t in order]
++        self.assertEqual(positions, sorted(positions))
++        self.assertNotIn('completion:', action)
++        self.assertIn('0x3fc3333333333333,0', self.original('0x100095ae8'))
++        forwarding = body(self.tabs, 'override func scrollRectToVisible(')
++        self.assertIn('scrollView.contentView.scrollRectToVisible(rect)', forwarding)
++        self.assertIn('objc_stub::contentView', self.original('0x100051068'))
++
++    def test_original_horizontal_spacing_content_inset_and_height(self):
++        original = self.original('0x1000959e4')
++        self.assertIn('setOrientation_(self,0)', original)
++        self.assertIn('setSpacing_(self,0x4020000000000000)', original)
++        self.assertIn('stack.orientation = .horizontal', self.tabs)
++        self.assertIn('stack.spacing = 8', self.tabs)
++        self.assertIn('height: 40', self.tabs)
++        self.assertIn('field1_0x8 = 40.0', self.original('0x1000500d4'))
++        self.assertIn('0x4018000000000000,0x401c000000000000,0x4018000000000000,0x401c000000000000',
++                      self.original('0x100050f3c'))
++        self.assertIn('NSRect(x: 7, y: 6', self.tabs)
++
++    def test_selected_highlight_is_suppressed_during_collapse_but_hover_and_drag_remain(self):
++        original = self.original('0x10007a078')
++        self.assertIn('TabBarCell::isCollapsed', original)
++        self.assertIn('TabBarCell::isDragDestination', original)
++        draw = body(self.cell, 'override func draw(_ dirtyRect: NSRect)')
++        self.assertIn('(isSelected && !isCollapsed) || isDragDestination', draw)
++        self.assertIn('isHovered ? OriginalToolbarAppearance.borderAndHover()', draw)
++
++    def test_existing_rename_and_color_actions_keep_their_state_store_consumers(self):
++        before = (self.phase/'before/replica/Sources/Pasto/UI/PanelViews.swift').read_text()
++        old = body(before, 'private func boardButton(')
++        current = body(self.panel, 'private func boardButton(')
++        for signature in ['onCommit:', 'onEnd:']:
++            self.assertEqual(body(current, signature), body(old, signature))
++        title_before = (self.phase/'before/replica/Sources/Pasto/UI/OriginalPinboardTabTitle.swift').read_text()
++        label = self.cell[self.cell.index('final class OriginalPinboardTabTitleView:'):]
++        label_before = title_before[title_before.index('final class OriginalPinboardTabTitleView:'):]
++        for signature in ['private func beginEditing()', 'private func cancelEditing()',
++                          'private func commitEditing()', 'private func restoreInitialResponder()',
++                          'func configure(title:', 'func controlTextDidChange(']:
++            self.assertEqual(body(label, signature), body(label_before, signature))
++        self.assertIn('view.setAccessibilityValue(isSelected)', self.cell)
++        self.assertIn('override func accessibilityPerformPress()', self.cell)
++
++    def test_native_menus_and_drag_do_not_remove_existing_local_group_operations(self):
++        config = body(self.panel, 'private var boardTabs:')
++        for token in ['history.menuProvider', 'tab.menuProvider', 'colorMenu.submenu = colors',
++                      'item.image = colorMenuImage(color)', 'state.controller?.clearHistory()',
++                      'state.controller?.removePinboard(board)', 'state.movePinboard(id: id, before: board.id)']:
++            self.assertIn(token, config)
++        self.assertIn('tab.dragString = "paste-pinboard:" + board.id.uuidString', config)
++        self.assertIn('override func menu(for event: NSEvent)', self.cell)
++        self.assertIn('override func prepareForDragOperation', self.cell)
++        self.assertIn('return onDropString?(value) ?? false', self.cell)
++        self.assertIn('guard !titleView.isEditing, !isDragging, let dragString', self.cell)
++        self.assertIn('NSDraggingItem(pasteboardWriter: writer)', self.cell)
++        label = self.cell[self.cell.index('final class OriginalPinboardTabTitleView:'):]
++        menu = body(label, 'override func menu(for event: NSEvent)')
++        self.assertIn('field.isEditable ? super.menu(for: event) : superview?.menu(for: event)', menu)
++        drag = body(label, 'override func mouseDragged(with event: NSEvent)')
++        self.assertIn('if field.isEditable { super.mouseDragged(with: event) }', drag)
++        self.assertIn('else { superview?.mouseDragged(with: event) }', drag)
++        hit = body(label, 'override func hitTest(')
++        self.assertIn('guard alphaValue > 0', hit)
++
++    def test_live_toolbar_uses_native_stack_and_remaining_parent_contracts_stay_partial(self):
++        self.assertIn('private let tabBar = OriginalPanelTabBar()', self.toolbar)
++        self.assertIn('tabBar.configure(tabs)', self.toolbar)
++        self.assertIn('tabBar.setCollapsed(active)', self.toolbar)
++        self.assertNotIn('OriginalPanelTabBarAdapter', self.toolbar)
++        self.assertNotIn('historyControls', self.panel)
++        self.assertFalse(self.proof['full_function_migration_verified'])
++        self.assertEqual(self.proof['new_counted_records'], [])
++        self.assertIn('Paste:0x10000e74c', [r['function_id'] for r in self.proof['retained_partial_contracts']])
++
++
++if __name__ == '__main__':
++    unittest.main()

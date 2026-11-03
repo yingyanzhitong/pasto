@@ -1,0 +1,71 @@
+--- a/replica/Sources/PastoCore/ClipboardPersistence.swift
++++ b/replica/Sources/PastoCore/ClipboardPersistence.swift
+@@ -477,6 +477,19 @@
+             let request = NSFetchRequest<NSManagedObject>(entityName: entity)
+             request.predicate = NSPredicate(format: "key IN %@", keys)
+             return try context.fetch(request)
++        }
++
++        // 3214c8/328bc8: lookup by native checksum; fetch failure is an empty result.
++        func capturedItem(checksum: String?) throws -> (id: UUID, object: NSManagedObject)? {
++            guard let checksum else { return nil }
++            let request = PastoItemEntity.defaultFetchRequest()
++            request.predicate = NSPredicate(format: "nativeChecksum == %@", checksum)
++            request.fetchLimit = 1
++            request.fetchOffset = 0
++            guard let object = (try? context.fetch(request))?.first else { return nil }
++            guard let key = object.value(forKey: "key") as? String,
++                  let id = UUID(uuidString: key) else { throw CocoaError(.fileReadCorruptFile) }
++            return (id: id, object: object)
+         }
+ 
+         func prepareHistoryItems(_ ids: [UUID]) throws -> [(id: UUID, object: NSManagedObject)] {
+--- a/replica/Sources/PastoCore/ClipboardStore.swift
++++ b/replica/Sources/PastoCore/ClipboardStore.swift
+@@ -731,12 +731,19 @@
+                !item.pinboardIDs.contains(owner) || !state.pinboards.contains(where: { $0.id == owner }) {
+                 throw ClipboardStoreError.pinboardNotFound
+             }
+-            let result: (index: Int, isNew: Bool)
+-            if let i = state.items.firstIndex(where: { previous in
+-                if recordCapture {
+-                    guard let checksum else { return false }
+-                    return previous.nativeChecksum == checksum
+-                }
++            let capturedTarget = recordCapture ? try transaction.repository.capturedItem(checksum: checksum) : nil
++            let existingIndex: Int?
++            if recordCapture {
++                if let capturedTarget {
++                    if let index = state.items.firstIndex(where: { $0.id == capturedTarget.id }) {
++                        existingIndex = index
++                    } else {
++                        state.items.append(try ClipboardPersistence.item(capturedTarget.object))
++                        existingIndex = state.items.count - 1
++                    }
++                } else { existingIndex = nil }
++            } else {
++                existingIndex = state.items.firstIndex(where: { previous in
+                 if let checksum {
+                     let previousChecksum = try? Self.knownPasteboardChecksum(from: previous.payloads)
+                     if let previousChecksum { return checksum == previousChecksum }
+@@ -745,7 +752,10 @@
+                     && Self.hasValidExplicitPasteboardRepresentations(item.payloads)
+                 return (explicitIdentity || previous.kind == item.kind && previous.plainText == item.plainText)
+                     && Self.hasSamePasteboardRepresentations(previous.payloads, item.payloads)
+-            }) {
++                })
++            }
++            let result: (index: Int, isNew: Bool)
++            if let i = existingIndex {
+                 let analysis = state.items[i].kind == .image && item.kind == .image
+                     ? state.items[i].payloads.filter { Self.analysisPayloadKeys.contains($0.key) } : [:]
+                 state.items[i].kind = item.kind
+@@ -790,7 +800,7 @@
+             }
+             let target: (id: UUID, object: NSManagedObject)?
+             if recordCapture {
+-                target = try transaction.repository.prepareHistoryItems([state.items[result.index].id]).first!
++                target = try capturedTarget ?? transaction.repository.prepareHistoryItems([state.items[result.index].id]).first!
+                 if target!.object.value(forKey: "nativeIdentifier") == nil {
+                     target!.object.setValue(state.items[result.index].nativeIdentifier, forKey: "nativeIdentifier")
+                 }

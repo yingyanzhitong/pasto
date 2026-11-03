@@ -1,0 +1,87 @@
+{
+  "kind": "P0_P1_worklist_denominator_locked",
+  "date": "2026-11-02",
+  "authorization": "只执行分母范围归类/引用重绑，不恢复源码修复",
+  "fixed_worklist": {
+    "path": "reports/replica/p0-p1-review-scope-v6.json",
+    "sha256": "2e2d7775de5912f4b0a6b060b4795b59f1bba9ac6277f1af8d2b14cb125db9aa",
+    "denominator": 959,
+    "P0": 353,
+    "P1": 606
+  },
+  "scope_work_completed": {
+    "pending_candidates": 341,
+    "reference_rebindings": 49,
+    "prior_support_decisions": 7
+  },
+  "initial_candidate_count": 1088,
+  "counts": {
+    "retained_historical_scope": 740,
+    "new_pending_candidate_admissions": 213,
+    "new_prior_support_admissions": 5,
+    "explicit_instruction_owner_admission": 1,
+    "worklist": 959,
+    "P0": 353,
+    "P1": 606,
+    "deferred_P2": 122,
+    "excluded_network": 6,
+    "other_binary": 2,
+    "current_bindings_rebound": 49
+  },
+  "reference_bindings": {
+    "path": "reports/replica/p0-p1-reference-bindings-2026-11-02.json",
+    "sha256": "a54bf4e6c985474840ffcef8c9ad5ba42c8367eb5f7b2667a977a554a1939c65"
+  },
+  "unknown_implementation_contracts": [
+    "Paste:0x1000f733c"
+  ],
+  "new_function_admission": {
+    "function_id": "Paste:0x100213978",
+    "from_marker": "Paste:0x100213cb0",
+    "reason": "指令地址归并实际TextEditor构造函数，显式新增合同一项，不重复计算指令点"
+  },
+  "checks": {
+    "pending_341_all_classified": true,
+    "prior_support_7_all_decided": true,
+    "old_49_references_all_rebound": true,
+    "all_959_function_ids_unique": true,
+    "all_959_have_actual_native_function_start": true,
+    "all_959_have_original_fragment_binding": true,
+    "Helper_address_namespace_separated": true,
+    "nonentry_21_markers_resolved": true,
+    "initial_1088_population_reconciled": true,
+    "explicit_new_owner_count": 1,
+    "application_sources_unchanged": true,
+    "prior_reports_unchanged": true,
+    "head_unchanged": true
+  },
+  "implementation_completion_percent": null,
+  "global_function_denominator": null,
+  "application_source_changed": false,
+  "tests_changed": false,
+  "prior_reports_changed": false,
+  "compiled": false,
+  "application_executed": false,
+  "network_used": false,
+  "committed": false,
+  "pushed": false,
+  "published": false,
+  "old_repair_goal_should_remain_paused": true,
+  "repair_decision": "本次未进行功能差异确认，不能据范围纳入或引用重绑自动修复。下一步按v6复用现有证据，只核未覆盖/已变化合同，确认实际差异后再列修复清单。",
+  "historical_repaired_difference_records": 250,
+  "historical_repair_count_role": "历史差异修复数，不能直接算250/959整体完成率",
+  "progress_policy": [
+    "959为本阶段固定工作清单分母；P0/P1按353/606分项，不再用已发现问题数作分母",
+    "已等价、已修并核验、待核对、证据不足分开；符号存在和范围分类不算实现完成",
+    "新候选另列，不静默扩大959；旧报告保留而不回写历史结论",
+    "本地未共享输入域与原网络/协作分支分开，P2不进入本阶段实现修复"
+  ],
+  "source_inputs": {
+    "reports/replica/p0-p1-review-scope-v6.json": "2e2d7775de5912f4b0a6b060b4795b59f1bba9ac6277f1af8d2b14cb125db9aa",
+    "reports/replica/p0-p1-reference-bindings-2026-11-02.json": "a54bf4e6c985474840ffcef8c9ad5ba42c8367eb5f7b2667a977a554a1939c65",
+    ".local/denominator-audit/2026-11-02/lock/finalize.py": "3860ec41c1c926afb5c31b314ed4ab9994aa8e3ac84f18d84489ef454e9ea95c",
+    ".local/denominator-audit/2026-11-02/lock/decisions.py": "3e571f6e9d07831a885d7139381da62a0c7a6230d068efdda2b513b51f59fc86",
+    ".local/denominator-audit/2026-11-02/lock/rebind.py": "c148390d18413b2c04db87528a77356e948f2ed2e69cbf8b67e5a85443dc7c0e",
+    ".local/denominator-audit/2026-11-02/lock/native-entry-check.json": "1ad122bda9701f7ad010be457d2816680bc7c9308105ae5fb4f49f8993dbb5ed"
+  }
+}
