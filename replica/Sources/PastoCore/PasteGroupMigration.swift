@@ -29,7 +29,7 @@ public enum PasteGroupMigration {
             case .originalAppNotFound:
                 return "未找到 Paste 的数据模型。请保留已安装的 Paste 后重试。"
             case .incompatibleStore:
-                return "无法读取这个版本的 Paste 数据库。请使用与数据库对应的 Paste 版本后重试。"
+                return "无法读取这个版本的 Paste 数据库。请先用新版 Paste 打开并升级数据，再重试迁移。"
             case .invalidIdentifier:
                 return "Paste 数据中的分组或项目标识无效，未写入任何迁移数据。"
             }
@@ -48,24 +48,40 @@ public enum PasteGroupMigration {
             .first { FileManager.default.fileExists(atPath: $0.path) }
     }
 
-    private static func originalModel(metadata: [String: Any]) throws -> NSManagedObjectModel {
-        let applications = [URL(fileURLWithPath: "/Applications"),
-                            FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("Applications")]
-        for applicationsURL in applications {
-            let url = applicationsURL.appendingPathComponent(
-                "Paste.app/Contents/Resources/PastePackages_PasteCore.bundle")
+    private static func originalModel(metadata: [String: Any], applicationURL: URL?) throws -> NSManagedObjectModel {
+        let applications: [URL]
+        if let applicationURL {
+            applications = [applicationURL]
+        } else {
+            applications = [URL(fileURLWithPath: "/Applications/Paste.app"),
+                FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("Applications/Paste.app")]
+                + [NSWorkspace.shared.urlForApplication(withBundleIdentifier: "com.wiheads.paste")].compactMap { $0 }
+        }
+        let installed = applications.filter { FileManager.default.fileExists(atPath: $0.path) }
+        for application in installed {
+            let resources = application.appendingPathComponent("Contents/Resources")
+            let url = resources.appendingPathComponent("PastePackages_PasteCore.bundle")
             if let bundle = Bundle(url: url),
                let model = NSManagedObjectModel.mergedModel(from: [bundle], forStoreMetadata: metadata) {
                 return model
             }
+            // Match the store's model version even when the app or resource bundle was renamed.
+            if let files = FileManager.default.enumerator(at: resources, includingPropertiesForKeys: nil,
+                                                          options: [.skipsHiddenFiles]) {
+                for case let url as URL in files where url.pathExtension == "mom" {
+                    if let model = NSManagedObjectModel(contentsOf: url),
+                       model.isConfiguration(withName: nil, compatibleWithStoreMetadata: metadata) {
+                        return model
+                    }
+                }
+            }
         }
-        if applications.contains(where: {
-            FileManager.default.fileExists(atPath: $0.appendingPathComponent("Paste.app").path)
-        }) { throw MigrationError.incompatibleStore }
+        if !installed.isEmpty { throw MigrationError.incompatibleStore }
         throw MigrationError.originalAppNotFound
     }
 
-    public static func read(from databaseURL: URL, model suppliedModel: NSManagedObjectModel? = nil) throws -> Snapshot {
+    public static func read(from databaseURL: URL, model suppliedModel: NSManagedObjectModel? = nil,
+                            originalApplicationURL: URL? = nil) throws -> Snapshot {
         let options: [AnyHashable: Any] = [
             NSReadOnlyPersistentStoreOption: true,
             NSMigratePersistentStoresAutomaticallyOption: false,
@@ -73,7 +89,7 @@ public enum PasteGroupMigration {
         ]
         let metadata = try NSPersistentStoreCoordinator.metadataForPersistentStore(
             ofType: NSSQLiteStoreType, at: databaseURL, options: options)
-        let original = try suppliedModel ?? originalModel(metadata: metadata)
+        let original = try suppliedModel ?? originalModel(metadata: metadata, applicationURL: originalApplicationURL)
         guard original.isConfiguration(withName: nil, compatibleWithStoreMetadata: metadata),
               let model = original.copy() as? NSManagedObjectModel else { throw MigrationError.incompatibleStore }
         // Use generic objects: no original app classes or their side effects are loaded.

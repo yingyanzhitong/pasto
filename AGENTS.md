@@ -1,5 +1,15 @@
 # Pasto 项目规则
 
+
+## 更新、文档与发布同步
+
+- 每次应用功能、修复或兼容性更新，都要同步检查并更新 `README.md`、`README.en.md`、官网 `website/index.html` 及中英文 `website/i18n.js`，覆盖更新说明、功能对比、使用步骤、兼容范围和验证边界。
+- 修改使用方式或构建默认值时，同步更新对应构建和安装说明。确认已经支持的功能不会继续被旧文案标为未提供，待验证内容要如实说明。
+- 用户明确授权提交后，按全局规则递增版本并更新中文 `CHANGELOG.md`，提交、推送及推送对应版本标签。文档同步要求本身不构成提交、发布或安装授权。
+- README 和官网的安装包链接与正式版标记由 `scripts/sync-release-downloads.py` 根据已成功发布的正式 Release 统一生成，保留 Actions 中的自动同步及 Pages 部署。发布完成后核对中英文 README、官网版本与实际 DMG 一致。
+- 发布前运行官网资源、链接和 i18n 检查，以及下载链接同步和打包契约测试。功能验收与构建、签名、安装验收分别记录。
+- 2026-11-04 用户授权提交本轮设置、迁移和兼容性修复并更新软件，版本递增为 1.0.5，同步中英文 README 和官网，允许必要构建、发布与本机更新。此前阶段的只读限制按本次明确授权调整，全函数持续迁移目标仍按其独立状态管理。
+
 ## 2026-10-30 最新授权：恢复 P0 → P1 源码修复
 
 - 2026-11-01：第188轮P1字体读序：207db8 bold/italic分别descriptor/traits；207648先traits→新descriptor clear→成功才requested，失败再descriptor→pointSize→font，nil删font；0f3f6c失败新descriptor→pointSize，nil返原font。真实selectors静态读点2/3/2，删旧cache回退；不冒标准字体可见bug/性能改善。2072a0 saved-range/weak Undo、207b54 union/范围重复读、2083e4变换及实际2160c4→213674 current-range/toolbar recovered/3c1860消费者核复用，无P2样式改。2源3增量/245保，15片段10机器范围273分支29selector4import，15方法8共享保，12要求/新增18/48定向/2804覆盖绿，247逆恢复368历史Python保。v92增修3条2组，4复用不计修复分母：250记录218组/17额外，P0 81/81 P1 169/169 总250/250有限100%；unknown0f733c及其他编辑/OCR实际父合同继续。P1唯一进行，新P0先修；P2网络排除，官网9文件/版本/HEAD/map保，无编译运行安装提交发布。见reports/replica/p0-p1-repair-round188.json。

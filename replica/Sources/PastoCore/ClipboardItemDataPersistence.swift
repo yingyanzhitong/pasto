@@ -75,14 +75,14 @@ final class ClipboardItemDataPersistence {
     // 0x100360ff8: type/checksum, delete old data, create/encode replacement,
     // assign the inverse relation, then generate and write the preview.
     func replace(on object: NSManagedObject, items: [OriginalPasteboardItem], kind: OriginalPasteboardContentKind, checksum: String?,
-                 useBinaryPlist: Bool, preview: () -> Data?) {
+                 useBinaryPlist: Bool, rawPasteboardItems: Data? = nil, preview: () -> Data?) {
         object.setValue(Int64(kind.rawValue), forKey: "rawType")
         object.setValue(checksum, forKey: "nativeChecksum")
         if let old = object.value(forKey: "data") as? NSManagedObject {
             context.delete(old)
         }
         let data = NSEntityDescription.insertNewObject(forEntityName: "ItemDataEntity", into: context)
-        data.setValue(OriginalPasteboardDataCodec.f_10031a8e8(items, useBinaryPlist: useBinaryPlist),
+        data.setValue(rawPasteboardItems ?? OriginalPasteboardDataCodec.f_10031a8e8(items, useBinaryPlist: useBinaryPlist),
                       forKey: "rawPasteboardItems")
         object.setValue(data, forKey: "data")
         object.setValue(preview(), forKey: "rawPreview")

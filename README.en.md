@@ -8,13 +8,19 @@
 
 **A free, local clipboard manager for macOS.** Save what you copy, browse it as cards, and search and organize content you use often.
 
-Pasto supports **macOS 14+, Intel (x86_64), and Apple silicon (arm64)**. It is built with Swift, AppKit, and SwiftUI and needs no account from the original vendor. Version 1.0.0 runs locally only. The current source offers optional [iCloud Drive file sync](docs/ICLOUD_SYNC.md) and retains [CloudKit migration code](docs/CLOUDKIT_MIGRATION.md) requiring signing configuration. Check each installer's release notes for its features. Both linked guides are in Chinese.
+Pasto supports **macOS 14+, Intel (x86_64), and Apple silicon (arm64)**. It is built with Swift, AppKit, and SwiftUI and needs no account from the original vendor. Optional [iCloud Drive file sync](docs/ICLOUD_SYNC.md) is off by default. The source also retains [CloudKit migration code](docs/CLOUDKIT_MIGRATION.md) requiring signing configuration. Check each installer’s release notes for its features. Both linked guides are in Chinese.
 
 [![Build and release](https://github.com/yingyanzhitong/pasto/actions/workflows/release.yml/badge.svg)](https://github.com/yingyanzhitong/pasto/actions/workflows/release.yml)
 
 [Website](https://yingyanzhitong.github.io/pasto/) · [Download latest](https://github.com/yingyanzhitong/pasto/releases/latest) · [Feature comparison](#paste-vs-pasto) · [Build from source](#build-from-source) · [Contribute](CONTRIBUTING.md) · [License scope](NOTICE.md)
 
 The website and download information below are updated by GitHub Actions after a stable Release is published.
+
+## Version 1.0.5
+
+Fixes resource-loading crashes when opening Settings after installation and failures importing some Paste collections. Updates resource lookup, older-system appearance branches, and universal packaging while preserving existing local history and collections.
+
+Targeted arm64 and Rosetta x86_64 tests passed. Older macOS releases and native Intel hardware still need testing. Upgrade legacy v4/v5-old databases with a current Paste version before importing. See the [compatibility migration report](reports/replica/paste-compatibility-migration-2026-11-04.md) (Chinese).
 
 ## Screenshots
 
@@ -54,19 +60,20 @@ Settings:
 | Custom keyboard shortcuts | ✅ | ✅ |
 | AI tool integration (MCP) | ✅ | ✅ |
 | Apple Shortcuts | ✅ | ❌ |
-| iCloud sync and mobile apps | ✅ | ❌ |
+| iCloud sync between Macs | ✅ | ✅ |
+| iPhone / iPad apps | ✅ | ❌ |
 | Shared collections and collaboration | ✅ | ❌ |
 | Online link previews | ✅ | ❌ |
 
-Pasto also supports [importing local collections from Paste](replica/README.md#从-paste-迁移分组). ✅ means implemented; full interactions and cross-app paste still need comprehensive verification. See the [feature and testing scope](replica/TESTING.md) (Chinese). This comparison covers Paste 6.6.6 and Pasto 1.0.0. For Paste's sync and collaboration features, see the [Paste website](https://pasteapp.io/).
+Pasto also supports [importing local collections from Paste](replica/README.md#从-paste-迁移分组). ✅ means implemented; full interactions and cross-app paste still need comprehensive verification. See the [feature and testing scope](replica/TESTING.md) (Chinese). This comparison covers Paste 6.6.6 and Pasto 1.0.5. For Paste's sync and collaboration features, see the [Paste website](https://pasteapp.io/).
 
-## iCloud sync (current source)
+## iCloud sync
 
 The primary option is **iCloud Drive file sync**, which does not require a paid developer membership. Turn on **iCloud sync** in **Settings → General**. Pasto automatically uses `iCloud Drive/Pasto`, with no folder picker or setup dialog. Use the same Apple ID and enable the switch on another Mac. It merges clipboard history, original content, and collections, including additions, edits, and deletions. It is off by default. See the [usage and verification guide](docs/ICLOUD_SYNC.md) (Chinese).
 
 Properly signed builds can also show an advanced option migrated from the original CloudKit flow, using Pasto's own container and disabled by default. Valid Apple signing credentials and container configuration are currently missing, and live CloudKit testing is incomplete. It does not connect to the original vendor's cloud data or provide mobile apps or shared collaboration.
 
-CloudKit remains an advanced option for properly signed builds and cannot run alongside file sync. File upload results do not verify CloudKit behavior. See the [CloudKit notes](docs/CLOUDKIT_MIGRATION.md) (Chinese) for migration evidence, isolated tests, and outstanding work. The 1.0.0 installer and the table above still describe that published version.
+CloudKit remains an advanced option for properly signed builds and cannot run alongside file sync. File upload results do not verify CloudKit behavior. See the [CloudKit notes](docs/CLOUDKIT_MIGRATION.md) (Chinese) for migration evidence, isolated tests, and outstanding work. Pasto uses iCloud Drive file sync. End-to-end sync across real devices still needs full validation.
 
 ## Download and use
 
@@ -97,7 +104,7 @@ bash replica/scripts/build-app.sh
 open replica/dist/Pasto.app
 ```
 
-By default, the build targets the architecture of your current Mac. The script creates `replica/dist/Pasto.app` with resources, a login helper, and the MCP executable, and checks local signatures.
+By default, the build creates a Universal app with Intel and Apple silicon architectures. Use `bash replica/scripts/build-app.sh debug native` to build a debug app for the current Mac only. The script creates `replica/dist/Pasto.app` with resources, a login helper, and the MCP executable, and checks local signatures.
 
 Build one Universal DMG for both Apple silicon and Intel:
 

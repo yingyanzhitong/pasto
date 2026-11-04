@@ -1,11 +1,7 @@
 import Foundation
 
 public enum OriginalSettingsLocalization {
-    private static let resourceBundle: Bundle = {
-        if let url = Bundle.main.resourceURL?.appendingPathComponent("Pasto_PastoCore.bundle"),
-           let bundle = Bundle(url: url) { return bundle }
-        return Bundle.module
-    }()
+    private static let resourceBundle = OriginalResourceBundle.bundle
 
     private static func resource(_ key: String) -> LocalizedStringResource {
         LocalizedStringResource(String.LocalizationValue(stringLiteral: key),

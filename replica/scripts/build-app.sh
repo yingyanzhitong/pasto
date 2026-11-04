@@ -2,10 +2,10 @@
 set -euo pipefail
 replica_root="$(cd "$(dirname "$0")/.." && pwd)"
 configuration="${1:-release}"
-architecture="${2:-native}"
+architecture="${2:-universal}"
 build_sdk_version="$(xcrun --sdk macosx --show-sdk-version)"
 if (( ${build_sdk_version%%.*} < 26 )); then
-  printf '%s\n' "当前 macOS SDK 为 $build_sdk_version；要匹配 macOS 26 的原生控件外观，请使用 Xcode 26 或更新版本构建。" >&2
+  printf '%s\n' "当前 macOS SDK 为 ${build_sdk_version}；要匹配 macOS 26 的原生控件外观，请使用 Xcode 26 或更新版本构建。" >&2
 fi
 case "$configuration" in release|debug) ;; *) printf '%s\n' '配置必须为 release 或 debug。' >&2; exit 1 ;; esac
 case "$architecture" in native|arm64|x86_64|universal) ;; *) printf '%s\n' '架构必须为 native、arm64、x86_64 或 universal。' >&2; exit 1 ;; esac
@@ -47,6 +47,7 @@ install_executable() {
   else
     cp "$binary_root/$1" "$2"
   fi
+  install_name_tool -add_rpath "${3:-@executable_path/../Frameworks}" "$2"
 }
 mkdir -p "$replica_root/dist"
 staging="$(mktemp -d "$replica_root/dist/.pasto-build.XXXXXX")"
@@ -60,7 +61,7 @@ cp "$replica_root/Assets/PastoAppIcon.icns" "$bundle/Contents/Resources/PastoApp
 ditto "$binary_root/Pasto_PastoCore.bundle" "$bundle/Contents/Resources/Pasto_PastoCore.bundle"
 helper="$bundle/Contents/Library/LoginItems/Pasto Helper.app"
 mkdir -p "$helper/Contents/MacOS"
-install_executable PastoHelper "$helper/Contents/MacOS/PastoHelper"
+install_executable PastoHelper "$helper/Contents/MacOS/PastoHelper" '@executable_path/../../../../../Frameworks'
 cat > "$helper/Contents/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -100,6 +101,10 @@ cat > "$bundle/Contents/Info.plist" <<PLIST
 </dict></plist>
 PLIST
 plutil -lint "$bundle/Contents/Info.plist"
+# Use the selected compiler's back-deployment libraries for all bundled executables.
+mkdir -p "$bundle/Contents/Frameworks"
+xcrun swift-stdlib-tool --copy --scan-folder "$bundle/Contents" --platform macosx \
+  --destination "$bundle/Contents/Frameworks" --sign "${PASTO_SIGNING_IDENTITY:--}"
 if [[ -n "${PASTO_CLOUDKIT_PROFILE:-}${PASTO_CLOUDKIT_CONTAINER:-}${PASTO_SIGNING_IDENTITY:-}" ]]; then
   : "${PASTO_CLOUDKIT_PROFILE:?需要自有描述文件路径}"
   : "${PASTO_CLOUDKIT_CONTAINER:?需要自有 CloudKit 容器标识}"

@@ -3,9 +3,10 @@
 prepare_native_test_core() {
   test_build_root="${PASTO_TEST_SCRATCH_PATH:-$replica_root/.build/native-regression}"
   test_configuration="${PASTO_TEST_CONFIGURATION:-debug}"
+  test_architecture="${PASTO_TEST_ARCHITECTURE:-$(uname -m)}"
   swift build --package-path "$replica_root" --scratch-path "$test_build_root" \
-    -c "$test_configuration" --target PastoCore -j 4 >&2
-  binary_root="$(swift build --package-path "$replica_root" --scratch-path "$test_build_root" -c "$test_configuration" --show-bin-path)"
+    -c "$test_configuration" --arch "$test_architecture" --target PastoCore -j 4 >&2
+  binary_root="$(swift build --package-path "$replica_root" --scratch-path "$test_build_root" -c "$test_configuration" --arch "$test_architecture" --show-bin-path)"
 }
 
 compile_native_test_harness() {
@@ -21,7 +22,7 @@ PLIST
   cp -R "$binary_root/Pasto_PastoCore.bundle" "$app/Contents/Resources/"
   local optimization=-Onone
   if [[ "${PASTO_TEST_CONFIGURATION:-debug}" == release ]]; then optimization=-O; fi
-  xcrun swiftc -parse-as-library -swift-version 5 -target "$(uname -m)-apple-macosx14.0" \
+  xcrun swiftc -parse-as-library -swift-version 5 -target "$test_architecture-apple-macosx14.0" \
     "$optimization" \
     -I "$binary_root/Modules" -I "$binary_root/PastoObjC.build" \
     -Xcc "-fmodule-map-file=$replica_root/Sources/PastoObjC/include/module.modulemap" \

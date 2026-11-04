@@ -42,6 +42,7 @@ struct PasteGroupMigrationHarness {
             attribute("createdAt", .dateAttributeType), attribute("timestamp", .dateAttributeType),
             attribute("updatedAt", .dateAttributeType), attribute("rawPreview", .binaryDataAttributeType),
             attribute("displayOrderInPinboard", .integer64AttributeType)])
+        item.properties.append(attribute("checksum", .stringAttributeType))
         relation(list, "metadata", metadata)
         relation(item, "list", list); relation(item, "data", data)
         relation(item, "sourceApplication", application); relation(item, "device", device)
@@ -111,6 +112,7 @@ struct PasteGroupMigrationHarness {
         }
         let textItem = item(group, rawText, "文字", 20)
         textItem.setValue("legacy-Paste-item-key", forKey: "identifier")
+        textItem.setValue("fixture-checksum", forKey: "checksum")
         _ = item(group, rawBinary, "多表示附件", 10)
         _ = item(group, nil, "尚未下载", 30)
         _ = item(history, rawText, "不得迁移历史", 0)
@@ -130,6 +132,40 @@ struct PasteGroupMigrationHarness {
         try check(before.keys.contains { $0.contains("_EXTERNAL_DATA/") }, "Fixture did not exercise Core Data external binary storage")
         try check(before.keys.contains { $0.hasSuffix("-wal") }, "Fixture did not exercise a live WAL store")
         let snapshot = try PasteGroupMigration.read(from: source, model: model)
+        let originalApp = root.appendingPathComponent("Setapp/Paste Renamed.app")
+        let models = originalApp.appendingPathComponent("Contents/Resources/RenamedCore.bundle/History.momd")
+        try FileManager.default.createDirectory(at: models, withIntermediateDirectories: true)
+        let incompatible = model.copy() as! NSManagedObjectModel
+        incompatible.entitiesByName["ItemEntity"]!.versionHashModifier = "incompatible-fixture"
+        try NSKeyedArchiver.archivedData(withRootObject: incompatible, requiringSecureCoding: false)
+            .write(to: models.appendingPathComponent("v2.mom"))
+        let matchingModel = models.appendingPathComponent("v1.mom")
+        try NSKeyedArchiver.archivedData(withRootObject: model, requiringSecureCoding: false)
+            .write(to: matchingModel)
+        let discovered = try PasteGroupMigration.read(from: source, originalApplicationURL: originalApp)
+        try check(discovered.pinboards.map(\.id) == snapshot.pinboards.map(\.id)
+            && discovered.items.map(\.id) == snapshot.items.map(\.id),
+            "Renamed app, resource bundle or historical model discovery failed")
+        try FileManager.default.removeItem(at: matchingModel)
+        do {
+            _ = try PasteGroupMigration.read(from: source, originalApplicationURL: originalApp)
+            throw Failure(message: "Incompatible model was accepted")
+        } catch PasteGroupMigration.MigrationError.incompatibleStore { }
+        do {
+            _ = try PasteGroupMigration.read(from: source, originalApplicationURL: root.appendingPathComponent("Missing.app"))
+            throw Failure(message: "Missing original app was accepted")
+        } catch PasteGroupMigration.MigrationError.originalAppNotFound { }
+        let legacyModel = model.copy() as! NSManagedObjectModel
+        legacyModel.entitiesByName["ListEntity"]!.properties.removeAll { $0.name == "metadata" }
+        let legacyCoordinator = NSPersistentStoreCoordinator(managedObjectModel: legacyModel)
+        let legacyURL = root.appendingPathComponent("legacy.sqlite")
+        let legacyStore = try legacyCoordinator.addPersistentStore(ofType: NSSQLiteStoreType,
+            configurationName: nil, at: legacyURL)
+        defer { try? legacyCoordinator.remove(legacyStore) }
+        do {
+            _ = try PasteGroupMigration.read(from: legacyURL, model: legacyModel)
+            throw Failure(message: "Unsupported legacy schema was accepted")
+        } catch PasteGroupMigration.MigrationError.incompatibleStore { }
         try check(try hashes() == before, "Reader modified source database, WAL or external data")
         try check(snapshot.pinboards.map(\.name) == ["工作 📋", "空分组"], "Group order or empty group lost")
         try check(snapshot.pinboards.first?.rawAttributes == attributes && snapshot.pinboards.first?.colorHex == "#F0554D", "Group color changed")
@@ -138,6 +174,10 @@ struct PasteGroupMigrationHarness {
         encoder.outputFormatting = .sortedKeys
         try check(try encoder.encode(ClipboardStore.originalPasteboardItems(from: snapshot.items[0].payloads)) == encoder.encode([opaque, OriginalPasteboardItem.f_10037c6d4("附件")]), "Ordered multi-item payload changed")
         try check(snapshot.items[1].plainText == "中文 😀\nsecond line" && snapshot.items[1].kind == .richText, "Unicode or rich-text kind changed")
+        try check(snapshot.items[1].nativeChecksum == "fixture-checksum", "Source checksum changed")
+        try check(OriginalPasteboardChecksums.f_1003216bc([opaque, OriginalPasteboardItem.f_10037c6d4("附件")],
+            kind: OriginalPasteboardClassification.f_10032362c([opaque, OriginalPasteboardItem.f_10037c6d4("附件")])) == nil,
+            "Fixture must cover imported content without a canonical checksum")
         let destination = root.appendingPathComponent("destination")
         let store = try ClipboardStore(directoryURL: destination)
         let existing = try store.createPinboard(name: "工作 📋", colorHex: "#00FF00")
@@ -153,6 +193,11 @@ struct PasteGroupMigrationHarness {
         try check(store.preferences == preferences, "Migration changed preferences")
         try check(store.items(in: snapshot.pinboards[0].id).map(\.title) == ["多表示附件", "文字"], "Pasto group order differs")
         try check(store.items(in: snapshot.pinboards[1].id).isEmpty, "Empty group was lost")
+        let importedIDs = Set(snapshot.items.map(\.id))
+        let initiallyReopened = try ClipboardStore(directoryURL: destination)
+        try check(encoder.encode(initiallyReopened.items.filter { importedIDs.contains($0.id) })
+            == encoder.encode(store.items.filter { importedIDs.contains($0.id) }),
+            "Imported fields or timestamps changed after reopen")
         let board = NSPasteboard(name: .init("PastoMigrationTests-\(UUID().uuidString)"))
         defer { board.releaseGlobally() }
         try store.writeToPasteboard(id: snapshot.items[0].id, pasteboard: board)
@@ -172,18 +217,20 @@ struct PasteGroupMigrationHarness {
         let reopened = try ClipboardStore(directoryURL: destination)
         try check(reopened.pinboards == store.pinboards, "Groups did not survive reopen")
         try check(reopened.preferences == preferences, "Preferences changed after reopen")
-        if reopened.items != store.items {
-            for item in store.items {
-                guard let restored = reopened.items.first(where: { $0.id == item.id }) else {
-                    throw Failure(message: "Migrated item missing after reopen")
-                }
-                let a = try JSONSerialization.jsonObject(with: JSONEncoder().encode(item)) as! NSDictionary
-                let b = try JSONSerialization.jsonObject(with: JSONEncoder().encode(restored)) as! NSDictionary
-                let fields = a.allKeys.compactMap { $0 as? String }.filter { !(a[$0] as AnyObject).isEqual(b[$0]) }
-                if !fields.isEmpty { throw Failure(message: "Reopened item fields differ: \(fields)") }
+        try check(reopened.items.map(\.id) == store.items.map(\.id), "Reopened item order differs")
+        for item in store.items {
+            guard let restored = reopened.items.first(where: { $0.id == item.id }) else {
+                throw Failure(message: "Migrated item missing after reopen")
             }
-            throw Failure(message: "Reopened item order differs")
+            let a = try JSONSerialization.jsonObject(with: JSONEncoder().encode(item)) as! NSDictionary
+            var b = try JSONSerialization.jsonObject(with: JSONEncoder().encode(restored)) as! [String: Any]
+            // Copy and local edits advance native updatedAt during willSave. The
+            // initial reopen above separately requires exact imported timestamps.
+            try check(restored.updatedAt >= item.updatedAt, "Local timestamp moved backwards")
+            b["updatedAt"] = a["updatedAt"]
+            let fields = a.allKeys.compactMap { $0 as? String }.filter { !(a[$0] as AnyObject).isEqual(b[$0]) }
+            if !fields.isEmpty { throw Failure(message: "Reopened item fields differ: \(fields)") }
         }
-        print("{\"passed\":true,\"checks\":[\"read-only live WAL and external blobs\",\"group name/color/order and empty groups\",\"ordered Unicode/rich-text/binary payload restore\",\"unavailable items reported\",\"existing/concurrent data and preferences preserved\",\"repeat import preserves local edits\",\"atomic rejection and reopen\"]}")
+        print("{\"passed\":true,\"checks\":[\"read-only live WAL and external blobs\",\"relocated app and renamed resource bundle model discovery\",\"historical model matching and incompatible/missing model rejection\",\"group name/color/order and empty groups\",\"ordered Unicode/rich-text/binary payload restore\",\"unavailable items reported\",\"existing/concurrent data and preferences preserved\",\"repeat import preserves local edits\",\"atomic rejection and reopen\"]}")
     }
 }

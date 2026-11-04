@@ -970,10 +970,12 @@ final class ClipboardPersistence {
                     if !replacements.contains(item.id) && (old?.payloads != item.payloads || object.value(forKey: "data") == nil) {
                         let items = try ClipboardStore.originalPasteboardItems(from: item.payloads)
                         let kind = OriginalPasteboardClassification.f_10032362c(items)
-                        if let checksum = OriginalPasteboardChecksums.f_1003216bc(items, kind: kind) {
-                            transaction.repository.itemData.replace(on: object, items: items, kind: kind, checksum: checksum,
-                                useBinaryPlist: state.preferences.useBinaryPlist) { item.rawPreview }
-                        }
+                        let checksum = OriginalPasteboardChecksums.f_1003216bc(items, kind: kind)
+                        // Imported representations can have no canonical checksum. Their
+                        // required data relationship must still preserve every representation.
+                        transaction.repository.itemData.replace(on: object, items: items, kind: kind, checksum: checksum,
+                            useBinaryPlist: state.preferences.useBinaryPlist,
+                            rawPasteboardItems: item.payloads[originalItemDataPayloadKey]) { item.rawPreview }
                     }
                     if (object.value(forKey: "rawPreview") as? Data) != item.rawPreview {
                         object.setValue(item.rawPreview, forKey: "rawPreview")

@@ -13,7 +13,7 @@ public enum OriginalStackCategoryIcons {
     }
 
     @MainActor private static let resources: Bundle = {
-        guard let url = Bundle.module.url(forResource: "OriginalStackIcons", withExtension: "bundle"),
+        guard let url = OriginalResourceBundle.bundle.url(forResource: "OriginalStackIcons", withExtension: "bundle"),
               let bundle = Bundle(url: url) else { preconditionFailure("Missing Stack icon resource bundle") }
         return bundle
     }()
@@ -23,6 +23,7 @@ public enum OriginalStackCategoryIcons {
         guard let image = resources.image(forResource: NSImage.Name(assetName)) else {
             preconditionFailure("Missing Stack category image: \(assetName)")
         }
+        image.isTemplate = true
         return image
     }
 }

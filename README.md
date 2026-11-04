@@ -8,13 +8,19 @@
 
 **免费的本地 macOS 剪贴板工具。** 保存拷贝记录，用卡片浏览、搜索和整理常用内容。
 
-Pasto 面向 **macOS 14+，支持 Intel（x86_64）和 Apple 芯片（arm64）**，使用 Swift、AppKit 和 SwiftUI。无需原厂账号。1.0.0 仅在本地运行；最新源码提供可选的 [iCloud Drive 文件同步](docs/ICLOUD_SYNC.md)，并保留需配置签名的 [CloudKit 迁移代码](docs/CLOUDKIT_MIGRATION.md)。各安装包的实际功能以对应发布说明为准。
+Pasto 面向 **macOS 14+，支持 Intel（x86_64）和 Apple 芯片（arm64）**，使用 Swift、AppKit 和 SwiftUI。无需原厂账号。提供默认关闭的 [iCloud Drive 文件同步](docs/ICLOUD_SYNC.md)，并保留需配置签名的 [CloudKit 迁移代码](docs/CLOUDKIT_MIGRATION.md)。各安装包的实际功能以对应发布说明为准。
 
 [![构建与发布](https://github.com/yingyanzhitong/pasto/actions/workflows/release.yml/badge.svg)](https://github.com/yingyanzhitong/pasto/actions/workflows/release.yml)
 
 [官网](https://yingyanzhitong.github.io/pasto/) · [下载最新版](https://github.com/yingyanzhitong/pasto/releases/latest) · [功能对比](#paste-与-pasto-功能对比) · [源码构建](#源码构建) · [参与贡献](CONTRIBUTING.md) · [许可范围](NOTICE.md)
 
 官网与下方下载信息会在正式 Release 发布成功后由 GitHub Actions 自动更新。
+
+## 本次更新 · 1.0.5
+
+修复安装后打开设置时的资源加载闪退，以及部分 Paste 分组导入失败。补齐资源、旧系统外观和双架构打包兼容处理，保留本机已有历史及分组。
+
+arm64 与 Rosetta x86_64 定向测试已通过，旧系统及 Intel 真机仍待复测。旧版 v4/v5-old 数据库请先用新版 Paste 升级。[查看兼容迁移报告](reports/replica/paste-compatibility-migration-2026-11-04.md)。
 
 ## 界面
 
@@ -32,7 +38,7 @@ Pasto 面向 **macOS 14+，支持 Intel（x86_64）和 Apple 芯片（arm64）**
 
 - 剪贴板历史与多格式内容保留，支持文本、图片、文件、链接和颜色。
 - 横向卡片面板、搜索筛选、多选、预览和本地编辑。
-- Pinboard 整理、Pasto Stack 队列、归档导入和导出。
+- 收藏分组整理、Pasto Stack 队列、归档导入和导出。
 - 从 Paste 迁移本地分组与组内内容，保留颜色和顺序；重复迁移不覆盖已有编辑。入口：更多 → 从 Paste 迁移分组…，详见[迁移说明](replica/README.md#从-paste-迁移分组)。
 - 全局快捷键、可配置的纯文本操作、暂停采集与本地设置。
 - 本地 Vision OCR，以及独立的 `pasto-mcp` stdio 服务。
@@ -54,19 +60,20 @@ Pasto 面向 **macOS 14+，支持 Intel（x86_64）和 Apple 芯片（arm64）**
 | 自定义快捷键 | ✅ | ✅ |
 | AI 工具接入（MCP） | ✅ | ✅ |
 | 系统“快捷指令” | ✅ | ❌ |
-| iCloud 同步与手机端 | ✅ | ❌ |
+| Mac 间 iCloud 同步 | ✅ | ✅ |
+| iPhone / iPad 应用 | ✅ | ❌ |
 | 分组共享与协作 | ✅ | ❌ |
 | 联网链接预览 | ✅ | ❌ |
 
-Pasto 另支持[从 Paste 迁移本地分组](replica/README.md#从-paste-迁移分组)。✅ 表示已有实现，完整交互及跨应用粘贴仍待全面验证，详见[功能与验证范围](replica/TESTING.md)。对照基于 Paste 6.6.6 及 Pasto 1.0.0；同步与协作介绍见 [Paste 官网](https://pasteapp.io/)。
+Pasto 另支持[从 Paste 迁移本地分组](replica/README.md#从-paste-迁移分组)。✅ 表示已有实现，完整交互及跨应用粘贴仍待全面验证，详见[功能与验证范围](replica/TESTING.md)。对照基于 Paste 6.6.6 及 Pasto 1.0.5；同步与协作介绍见 [Paste 官网](https://pasteapp.io/)。
 
-## iCloud 同步（当前源码）
+## iCloud 同步
 
 首选方式为 **iCloud Drive 文件同步**，无需付费开发者会员。在 **设置 → 通用** 打开 **iCloud 同步** 开关即可，自动使用 `iCloud Drive/Pasto`，无需选择目录或设置弹窗；其他 Mac 使用同一 Apple ID 并开启相同开关。支持历史、原始内容与收藏分组的合并、新增、编辑和删除。默认关闭，具体范围与验证记录见 [使用说明](docs/ICLOUD_SYNC.md)。
 
 有效签名构建另可显示按原版 CloudKit 路径迁移的高级选项，使用 Pasto 自有容器，默认关闭。目前缺少有效 Apple 签名与容器配置，真实 CloudKit 云端测试尚未完成。它不连接 Paste 原厂云数据，也不提供手机端或共享协作。
 
-CloudKit 作为已配置签名构建的高级选项，与文件同步不能同时开启；文件上传记录不计作 CloudKit 验收。当前迁移证据、隔离测试与未完成项见 [CloudKit 说明](docs/CLOUDKIT_MIGRATION.md)。当前 1.0.0 安装包及上表仍按该已发布版本描述。
+CloudKit 作为已配置签名构建的高级选项，与文件同步不能同时开启；文件上传记录不计作 CloudKit 验收。当前迁移证据、隔离测试与未完成项见 [CloudKit 说明](docs/CLOUDKIT_MIGRATION.md)。Pasto 使用 iCloud Drive 文件同步，跨设备真实同步仍待完整验收。
 
 ## 下载与使用
 
@@ -97,7 +104,7 @@ bash replica/scripts/build-app.sh
 open replica/dist/Pasto.app
 ```
 
-默认按当前 Mac 的本机架构构建。构建脚本生成 `replica/dist/Pasto.app`，包含资源、登录项辅助程序及 MCP 可执行文件，并进行本地签名检查。
+默认构建同时包含 Intel 与 Apple 芯片架构的 Universal 应用。可用 `bash replica/scripts/build-app.sh debug native` 仅构建当前 Mac 的调试应用。构建脚本生成 `replica/dist/Pasto.app`，包含资源、登录项辅助程序及 MCP 可执行文件，并进行本地签名检查。
 
 一次构建同时兼容 Apple 芯片与 Intel 的 Universal DMG：
 

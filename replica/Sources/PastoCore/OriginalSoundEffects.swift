@@ -6,11 +6,7 @@ import Combine
 /// Original Copy/Paste audio is not distributed; Pop remains a distinct fallback.
 @MainActor
 public final class OriginalSoundEffects {
-    private static let resourceBundle: Bundle = {
-        if let url = Bundle.main.resourceURL?.appendingPathComponent("Pasto_PastoCore.bundle"),
-           let bundle = Bundle(url: url) { return bundle }
-        return Bundle.module
-    }()
+    private static let resourceBundle = OriginalResourceBundle.bundle
     private let copySound: SystemSoundID?
     private let pasteSound: SystemSoundID?
     private var observations = Set<AnyCancellable>()

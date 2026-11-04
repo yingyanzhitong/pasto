@@ -64,6 +64,7 @@ if run('build', ['bash', str(replica / 'scripts/build-app.sh')], timeout=300) ==
             ('ui', ['bash', str(replica / 'scripts/test-ui-interaction.sh')]),
             ('copy-restore', ['bash', str(replica / 'scripts/test-copy-restore.sh')]),
             ('accessibility-modal', ['bash', str(replica / 'scripts/test-accessibility-modal.sh')]),
+            ('packaged-resources', ['bash', str(replica / 'scripts/test-packaged-resources.sh')]),
             ('paste-group-migration', ['bash', str(replica / 'scripts/test-paste-group-migration.sh')]),
             ('icloud-sync', ['bash', str(replica / 'scripts/test-icloud-sync.sh')]),
             ('icloud-drive-controller', ['bash', str(replica / 'scripts/test-icloud-drive-controller.sh')]),

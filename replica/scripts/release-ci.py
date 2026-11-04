@@ -104,7 +104,8 @@ def verify_app(app, version, architectures):
     short_version, expected_build = bundle_version(version)
     if (info.get("CFBundleExecutable") != "Pasto" or info.get("CFBundleDisplayName") != "Pasto"
             or info.get("CFBundleShortVersionString") != short_version
-            or info.get("CFBundleVersion") != expected_build or info.get("PastoSourceVersion") != version):
+            or info.get("CFBundleVersion") != expected_build or info.get("PastoSourceVersion") != version
+            or info.get("LSMinimumSystemVersion") != "14.0"):
         raise ValueError("Application bundle version/name mismatch")
     run(["codesign", "--verify", "--deep", "--strict", str(app)])
     executables = [app / "Contents/MacOS/Pasto", app / "Contents/MacOS/pasto-mcp",
@@ -113,6 +114,22 @@ def verify_app(app, version, architectures):
         actual = run(["lipo", "-archs", str(executable)], capture_output=True, text=True).stdout.split()
         if len(actual) != len(architectures) or set(actual) != set(architectures):
             raise ValueError("Unexpected executable architectures: " + str(executable) + " " + str(actual))
+        for architecture in architectures:
+            commands = run(["otool", "-arch", architecture, "-l", str(executable)],
+                           capture_output=True, text=True).stdout
+            if re.search(r"\bminos\s+14\.0(?:\.0)?(?:\s|$)", commands) is None:
+                raise ValueError("Unexpected minimum macOS version: " + str(executable))
+            framework_path = ("@executable_path/../../../../../Frameworks" if executable.name == "PastoHelper"
+                              else "@executable_path/../Frameworks")
+            if framework_path not in re.findall(r"\bpath\s+(\S+)\s+\(offset", commands):
+                raise ValueError("Missing bundled Frameworks search path: " + str(executable))
+            for library in re.findall(r"name @rpath/(libswiftCompatibility[^\s/]+\.dylib)", commands):
+                if not (app / "Contents/Frameworks" / library).is_file():
+                    raise ValueError("Missing Swift compatibility library: " + library)
+    for library in (app / "Contents/Frameworks").glob("*.dylib"):
+        actual = run(["lipo", "-archs", str(library)], capture_output=True, text=True).stdout.split()
+        if not set(architectures).issubset(actual):
+            raise ValueError("Unexpected library architectures: " + str(library) + " " + str(actual))
 
 
 def verify_intel(version):

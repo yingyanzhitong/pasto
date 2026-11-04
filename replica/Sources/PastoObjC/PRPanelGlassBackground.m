@@ -20,7 +20,8 @@
         }
         if (!_effect) {
             NSVisualEffectView *visualEffect = [[NSVisualEffectView alloc] initWithFrame:self.bounds];
-            visualEffect.material = NSVisualEffectMaterialHUDWindow;
+            // Paste 0x100036164 passes material 5 to 0x100220ffc on older systems.
+            visualEffect.material = NSVisualEffectMaterialMenu;
             visualEffect.blendingMode = NSVisualEffectBlendingModeBehindWindow;
             visualEffect.state = NSVisualEffectStateActive;
             _effect = visualEffect;

@@ -307,7 +307,7 @@ struct ReplicaClipboardCard: View {
                     .padding(-4)
             }
         }
-        .shadow(color: .black.opacity(0.10), radius: 3, y: 2)
+        .shadow(color: .black.opacity(cardShadowOpacity), radius: 2, y: cardShadowOffset)
         .contentShape(RoundedRectangle(cornerRadius: cardCornerRadius, style: cardCornerStyle))
         .modifier(ReplicaCardTapHandlers(enabled: !nativeInteractions,
             single: { state.select(item, modifiers: NSEvent.modifierFlags) },
@@ -424,6 +424,17 @@ struct ReplicaClipboardCard: View {
     private var cardCornerRadius: CGFloat {
         if #available(macOS 26, *) { return 16 }
         return 10
+    }
+
+    // Paste 0x1003f26c4. SwiftUI's downward Y maps the native NSShadow height -1 to 1.
+    private var cardShadowOpacity: Double {
+        if #available(macOS 26, *) { return 0.08 }
+        return 0.10
+    }
+
+    private var cardShadowOffset: CGFloat {
+        if #available(macOS 26, *) { return 0 }
+        return 1
     }
 
     private var selectionCornerRadius: CGFloat {
