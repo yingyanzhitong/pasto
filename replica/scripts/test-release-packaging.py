@@ -15,9 +15,16 @@ spec.loader.exec_module(release)
 
 
 class UniversalReleaseTests(unittest.TestCase):
+    def update_config(self):
+        return {
+            "SUFeedURL": "https://github.com/yingyanzhitong/pasto/releases/latest/download/appcast.xml",
+            "SUPublicEDKey": (release.ROOT / "replica/Assets/UpdatePublicKey.txt").read_text().strip(),
+            "SURequireSignedFeed": True, "SUVerifyUpdateBeforeExtraction": True,
+            "SUEnableAutomaticChecks": False, "SUAutomaticallyUpdate": False, "SUSendProfileInfo": False}
+
     def test_exactly_one_installer(self):
         self.assertEqual(release.asset_names("1.0.0"), [
-            "Pasto-1.0.0-macos-universal.dmg", "SHA256SUMS.txt", "release-manifest.json"])
+            "Pasto-1.0.0-macos-universal.dmg", "SHA256SUMS.txt", "release-manifest.json", "appcast.xml"])
 
     def test_package_is_universal_and_records_both_architectures(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -28,13 +35,15 @@ class UniversalReleaseTests(unittest.TestCase):
                 commands.append(args)
                 if args[1].endswith("build-dmg.sh"):
                     Path(args[3]).write_bytes(b"fixture-dmg")
+                if args[1].endswith("create-update-feed.py"):
+                    (root / "replica/dist/release/appcast.xml").write_text("fixture-feed")
 
             with patch.object(release, "ROOT", root), patch.object(release.platform, "system", return_value="Darwin"), \
                     patch.object(release, "run", side_effect=run), \
                     patch.object(release, "verify_app") as app_check, patch.object(release, "verify_dmg") as dmg_check:
                 release.package("1.0.0", "v1.0.0", "fixture-commit")
                 self.assertEqual(commands[0], ["bash", "replica/scripts/build-app.sh", "release", "universal"])
-                self.assertEqual(len(commands), 2)
+                self.assertEqual(len(commands), 3)
                 self.assertEqual(commands[1][-1], "universal")
                 self.assertEqual(app_check.call_args.args[2], ["arm64", "x86_64"])
                 self.assertEqual(dmg_check.call_args.args[2], ["arm64", "x86_64"])
@@ -51,8 +60,8 @@ class UniversalReleaseTests(unittest.TestCase):
             (app / "Contents/Info.plist").write_bytes(plistlib.dumps({
                 "CFBundleExecutable": "Pasto", "CFBundleDisplayName": "Pasto",
                 "CFBundleShortVersionString": "1.0.0", "CFBundleVersion": "1.0.0", "PastoSourceVersion": "1.0.0",
-                "LSMinimumSystemVersion": "14.0"}))
-            for thin_binary in [None, "Pasto", "pasto-mcp", "PastoHelper"]:
+                "LSMinimumSystemVersion": "14.0", **self.update_config()}))
+            for thin_binary in [None, "Pasto", "pasto-mcp", "PastoHelper", "Sparkle"]:
                 with self.subTest(thin_binary=thin_binary):
                     def run(args, **kwargs):
                         if args[0] == "otool":
@@ -76,7 +85,7 @@ class UniversalReleaseTests(unittest.TestCase):
             (app / "Contents/Info.plist").write_bytes(plistlib.dumps({
                 "CFBundleExecutable": "Pasto", "CFBundleDisplayName": "Pasto",
                 "CFBundleShortVersionString": "1.0.0", "CFBundleVersion": "1.0.0", "PastoSourceVersion": "1.0.0",
-                "LSMinimumSystemVersion": "14.0"}))
+                "LSMinimumSystemVersion": "14.0", **self.update_config()}))
             library = frameworks / "libswiftCompatibilitySpan.dylib"
             minimum, dependency, library_architectures = "14.0", "", "arm64 x86_64"
             rpaths = ("path @executable_path/../Frameworks (offset 12)\n"

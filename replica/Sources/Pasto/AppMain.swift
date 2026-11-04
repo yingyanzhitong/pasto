@@ -20,6 +20,10 @@ enum PastoMain {
 final class ReplicaAppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
     private var store: ClipboardStore!
     private var ui: ReplicaUIController!
+    private lazy var inAppUpdater = PastoInAppUpdater()
+    private lazy var aboutController = PastoAboutWindowController(checker: PastoUpdateChecker()) { [unowned self] in
+        try inAppUpdater.checkForUpdates()
+    }
     private var monitor: ClipboardMonitor?
     private var soundEffects: OriginalSoundEffects?
     private var diagnostics: OriginalDiagnosticsManager?
@@ -413,9 +417,8 @@ final class ReplicaAppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValid
     @objc private func exportArchive(_ sender: Any?) { ui.exportArchive() }
     @objc private func quit(_ sender: Any?) { NSApp.terminate(nil) }
     @objc private func about(_ sender: Any?) {
-        NSApp.orderFrontStandardAboutPanel(options: [.applicationName: "Pasto",
-                                                     .applicationVersion: Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "开发版本",
-                                                     .credits: NSAttributedString(string: "原生剪贴板历史与 Pasto 工具")])
+        ui?.hidePanel()
+        aboutController.showWindow(sender)
     }
     private func configurePauseMonitoring() {
         let paused = store.preferences.isMonitoringPaused

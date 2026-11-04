@@ -65,6 +65,8 @@ if run('build', ['bash', str(replica / 'scripts/build-app.sh')], timeout=300) ==
             ('copy-restore', ['bash', str(replica / 'scripts/test-copy-restore.sh')]),
             ('accessibility-modal', ['bash', str(replica / 'scripts/test-accessibility-modal.sh')]),
             ('packaged-resources', ['bash', str(replica / 'scripts/test-packaged-resources.sh')]),
+            ('app-updates', ['bash', str(replica / 'scripts/test-app-updates.sh')]),
+            ('sparkle-startup', ['bash', str(replica / 'scripts/test-sparkle-startup.sh')]),
             ('paste-group-migration', ['bash', str(replica / 'scripts/test-paste-group-migration.sh')]),
             ('icloud-sync', ['bash', str(replica / 'scripts/test-icloud-sync.sh')]),
             ('icloud-drive-controller', ['bash', str(replica / 'scripts/test-icloud-drive-controller.sh')]),

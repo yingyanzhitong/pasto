@@ -16,7 +16,15 @@ Pasto 面向 **macOS 14+，支持 Intel（x86_64）和 Apple 芯片（arm64）**
 
 官网与下方下载信息会在正式 Release 发布成功后由 GitHub Actions 自动更新。
 
-## 本次更新 · 1.0.5
+## 本次更新 · 1.0.6
+
+1.0.6 在 **关于 Pasto** 中提供“检查更新”和“下载并安装”。打开关于窗口后异步比较 GitHub 最新正式 Release，六小时内复用结果，也可手动重新检查。确认更新后，Sparkle 在应用内下载完整的 Universal DMG，验证更新源和安装包的 Ed25519 签名，安装后重启应用。安装前会通过已有退出流程保存本地数据。临时签名版本更新后仍可能需要重新开启 macOS 辅助功能授权。
+
+检查仅请求公开版本信息。离线或请求失败时可重试，剪贴板功能可继续使用。**1.0.5 及更早的已发布安装包尚无此入口，需要先手动安装 1.0.6。**
+
+本机隔离应用已完成实际 Sparkle 下载、安装和重启，但更新后辅助功能授权丢失。[查看实测记录](reports/replica/in-app-update-accessibility-test-2026-11-04.md)。
+
+## 1.0.5 兼容性修复
 
 修复安装后打开设置时的资源加载闪退，以及部分 Paste 分组导入失败。补齐资源、旧系统外观和双架构打包兼容处理，保留本机已有历史及分组。
 
@@ -95,7 +103,7 @@ Pasto 在本机保存剪贴板内容。截图、日志和归档可能包含个�
 
 ## 源码构建
 
-需要 macOS 14+、Intel 或 Apple 芯片 Mac、Xcode Command Line Tools（Swift 工具链）和 Python 3。为获得 macOS 26 的原生控件新外观，请使用 Xcode 26 或更新的 Command Line Tools 构建；运行最低版本仍为 macOS 14。构建使用系统框架，**无需下载第三方 Swift 包**。
+需要 macOS 14+、Intel 或 Apple 芯片 Mac、Xcode Command Line Tools（Swift 工具链）和 Python 3。为获得 macOS 26 的原生控件新外观，请使用 Xcode 26 或更新的 Command Line Tools 构建；运行最低版本仍为 macOS 14。首次构建通过 SwiftPM 下载校验固定版本的 Sparkle 二进制框架，用于应用内更新。
 
 ```sh
 git clone https://github.com/yingyanzhitong/pasto.git
@@ -132,7 +140,7 @@ swift build --package-path replica -c release
 
 修改根目录 `package.json` 的 `version` 并推送到 `main`，GitHub Actions 会在版本变化时自动构建和发布。也支持推送对应的 `v<版本号>` 标签，或在 Actions 页面手动运行。
 
-工作流保留 Intel 原生构建检查，再校验 Universal 安装包的版本、三项可执行文件的双架构及签名，发布三个附件：`Pasto-<版本号>-macos-universal.dmg`、`SHA256SUMS.txt` 和 `release-manifest.json`。上传校验成功后才公开 Release；`-dev.N` 版本标记为预发布，正式版本标为最新版本。同一版本不覆盖其他提交的产物，失败不会发布正式 Release。
+工作流保留 Intel 原生构建检查，再校验 Universal 安装包的版本、三项可执行文件的双架构及签名，正式版发布四个附件，包含 `Pasto-<版本号>-macos-universal.dmg`、`SHA256SUMS.txt`、`release-manifest.json` 和签名更新源 `appcast.xml`。正式发布需配置 `PASTO_UPDATE_PRIVATE_KEY` Actions Secret，详见 [应用内更新](docs/APP_UPDATES.md)。上传校验成功后才公开 Release；`-dev.N` 版本标记为预发布，正式版本标为最新版本。同一版本不覆盖其他提交的产物，失败不会发布正式 Release。
 
 Release 页面中的 `Source code (zip)` 和 `Source code (tar.gz)` 是 GitHub 自动提供的标签源码下载链接，不是安装包，也不是此发布流程额外上传的附件。
 

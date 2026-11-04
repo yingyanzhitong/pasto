@@ -68,7 +68,10 @@ def remote_state(repo, tag, commit):
 
 
 def asset_names(version):
-    return ["Pasto-" + version + "-macos-universal.dmg", "SHA256SUMS.txt", "release-manifest.json"]
+    names = ["Pasto-" + version + "-macos-universal.dmg", "SHA256SUMS.txt", "release-manifest.json"]
+    if "-dev." not in version:
+        names.append("appcast.xml")
+    return names
 
 
 def changelog_entry(version):
@@ -107,7 +110,18 @@ def verify_app(app, version, architectures):
             or info.get("CFBundleVersion") != expected_build or info.get("PastoSourceVersion") != version
             or info.get("LSMinimumSystemVersion") != "14.0"):
         raise ValueError("Application bundle version/name mismatch")
+    update_config = {
+        "SUFeedURL": "https://github.com/yingyanzhitong/pasto/releases/latest/download/appcast.xml",
+        "SUPublicEDKey": (ROOT / "replica/Assets/UpdatePublicKey.txt").read_text().strip(),
+        "SURequireSignedFeed": True, "SUVerifyUpdateBeforeExtraction": True,
+        "SUEnableAutomaticChecks": False, "SUAutomaticallyUpdate": False, "SUSendProfileInfo": False}
+    if any(info.get(key) != value for key, value in update_config.items()):
+        raise ValueError("Invalid signed in-app update configuration")
     run(["codesign", "--verify", "--deep", "--strict", str(app)])
+    framework = app / "Contents/Frameworks/Sparkle.framework/Versions/B/Sparkle"
+    framework_architectures = run(["lipo", "-archs", str(framework)], capture_output=True, text=True).stdout.split()
+    if not set(architectures).issubset(framework_architectures):
+        raise ValueError("Unexpected executable architectures in Sparkle")
     executables = [app / "Contents/MacOS/Pasto", app / "Contents/MacOS/pasto-mcp",
                    app / "Contents/Library/LoginItems/Pasto Helper.app/Contents/MacOS/PastoHelper"]
     for executable in executables:
@@ -163,13 +177,15 @@ def package(version, tag, commit):
     archive = output / name
     run(["bash", "replica/scripts/build-dmg.sh", str(app), str(archive), "universal"])
     verify_dmg(archive, version, RELEASE_ARCHITECTURES)
+    if "-dev." not in version:
+        run(["python3", "replica/scripts/create-update-feed.py", "--archive", str(archive), "--version", version])
     archives = [{"archive": name, "architectures": RELEASE_ARCHITECTURES, "sha256": sha(archive)}]
     manifest = {"version": version, "tag": tag, "commit": commit, "archives": archives, "container": "dmg",
                 "codesign_verified": True, "notarized": False,
                 "functional_tests_executed": False, "application_executed": False}
     (output / "release-manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
     (output / "SHA256SUMS.txt").write_text("".join(
-        sha(output / name) + "  " + name + "\n" for name in asset_names(version)[:1] + ["release-manifest.json"]))
+        sha(output / name) + "  " + name + "\n" for name in asset_names(version) if name != "SHA256SUMS.txt"))
 
 
 def publish(repo, version, tag, commit):
@@ -181,7 +197,7 @@ def publish(repo, version, tag, commit):
     manifest = json.loads((output / "release-manifest.json").read_text())
     expected_archives = [{"archive": names[0], "architectures": RELEASE_ARCHITECTURES, "sha256": sha(output / names[0])}]
     expected_sums = "".join(sha(output / name) + "  " + name + "\n"
-                            for name in names[:1] + ["release-manifest.json"])
+                            for name in names if name != "SHA256SUMS.txt")
     if (manifest.get("commit") != commit or manifest.get("version") != version or manifest.get("tag") != tag
             or manifest.get("container") != "dmg" or manifest.get("archives") != expected_archives
             or manifest.get("codesign_verified") is not True
@@ -201,7 +217,9 @@ def publish(repo, version, tag, commit):
                      "应用采用临时签名，未经 Apple 公证。\n"
                      "本次 Actions 发布任务验证编译、架构、版本、签名及安装镜像，没有在构建节点执行应用或功能回归；本机定向验证范围见上方变更日志。\n"
                      "主程序、Helper 与 MCP 可执行文件均包含 arm64 和 x86_64 架构。\n"
-                     "本流程仅上传一个 DMG、校验文件及清单；页面中的 Source code (zip/tar.gz) 链接由 GitHub 自动生成，没有主动上传源码包。\n\n"
+                     "正式版还提供带 Ed25519 签名的 appcast.xml，供已接入 Sparkle 的 Pasto 在应用内下载、安装及重启。\n"
+                     "临时签名更新仍可能需要重新开启辅助功能授权。\n"
+                     "本流程仅上传一个 DMG、校验文件、清单及正式版更新源；页面中的 Source code (zip/tar.gz) 链接由 GitHub 自动生成，没有主动上传源码包。\n\n"
                      "Commit: " + commit + "\n")
     args = ["gh", "release", "create", tag, *[str(output / name) for name in names],
             "--repo", repo, "--draft", "--verify-tag", "--target", commit,

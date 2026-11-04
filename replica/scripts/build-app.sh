@@ -54,9 +54,13 @@ staging="$(mktemp -d "$replica_root/dist/.pasto-build.XXXXXX")"
 trap 'rm -rf "$staging"' EXIT
 bundle="$staging/Pasto.app"
 mkdir -p "$bundle/Contents/MacOS" "$bundle/Contents/Resources"
+mkdir -p "$bundle/Contents/Frameworks"
+# Preserve Sparkle's symlinks, signed helpers, and both architecture slices.
+ditto "$binary_root/Sparkle.framework" "$bundle/Contents/Frameworks/Sparkle.framework"
 install_executable Pasto "$bundle/Contents/MacOS/Pasto"
 install_executable pasto-mcp "$bundle/Contents/MacOS/pasto-mcp"
 codesign --force --sign - "$bundle/Contents/MacOS/pasto-mcp"
+cp "$replica_root/Assets/Sparkle-LICENSE.txt" "$bundle/Contents/Resources/Sparkle-LICENSE.txt"
 cp "$replica_root/Assets/PastoAppIcon.icns" "$bundle/Contents/Resources/PastoAppIcon.icns"
 ditto "$binary_root/Pasto_PastoCore.bundle" "$bundle/Contents/Resources/Pasto_PastoCore.bundle"
 helper="$bundle/Contents/Library/LoginItems/Pasto Helper.app"
@@ -101,6 +105,13 @@ cat > "$bundle/Contents/Info.plist" <<PLIST
 </dict></plist>
 PLIST
 plutil -lint "$bundle/Contents/Info.plist"
+plutil -insert SUFeedURL -string 'https://github.com/yingyanzhitong/pasto/releases/latest/download/appcast.xml' "$bundle/Contents/Info.plist"
+plutil -insert SUPublicEDKey -string "$(tr -d '\r\n' < "$replica_root/Assets/UpdatePublicKey.txt")" "$bundle/Contents/Info.plist"
+plutil -insert SURequireSignedFeed -bool YES "$bundle/Contents/Info.plist"
+plutil -insert SUVerifyUpdateBeforeExtraction -bool YES "$bundle/Contents/Info.plist"
+plutil -insert SUEnableAutomaticChecks -bool NO "$bundle/Contents/Info.plist"
+plutil -insert SUAutomaticallyUpdate -bool NO "$bundle/Contents/Info.plist"
+plutil -insert SUSendProfileInfo -bool NO "$bundle/Contents/Info.plist"
 # Use the selected compiler's back-deployment libraries for all bundled executables.
 mkdir -p "$bundle/Contents/Frameworks"
 xcrun swift-stdlib-tool --copy --scan-folder "$bundle/Contents" --platform macosx \
