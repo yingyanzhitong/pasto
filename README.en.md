@@ -16,11 +16,15 @@ Pasto supports **macOS 14+, Intel (x86_64), and Apple silicon (arm64)**. It is b
 
 The website and download information below are updated by GitHub Actions after a stable Release is published.
 
-## Version 1.0.6
+## Version 1.0.7
+
+This release gives 1.0.6 users a newer version to test in-app updates. Open **About Pasto → Check for Updates → Download and Install** to upgrade to 1.0.7. Accessibility access may still need to be enabled again after updating.
+
+## Version 1.0.6 in-app updates
 
 Version 1.0.6 adds **Check for Updates** and **Download and Install** to **About Pasto**. Opening About checks the latest stable GitHub Release asynchronously and reuses results for six hours. After confirmation, Sparkle downloads the complete Universal DMG, verifies Ed25519 signatures on the update feed and archive, installs it, and relaunches Pasto. The existing quit flow saves local data before installation. Ad-hoc signed updates may still require macOS Accessibility access to be enabled again.
 
-The request contains only public release information. Offline and failed checks can be retried while clipboard features remain available. **Published installers through 1.0.5 do not contain this entry. Install 1.0.6 manually first.**
+The request contains only public release information. Offline and failed checks can be retried while clipboard features remain available. **Published installers through 1.0.5 do not contain this entry. Install 1.0.6 or a newer version manually first.**
 
 A local isolated app completed a real Sparkle download, installation, and relaunch, but lost Accessibility authorization after the update. See the [test record](reports/replica/in-app-update-accessibility-test-2026-11-04.md) (Chinese).
 

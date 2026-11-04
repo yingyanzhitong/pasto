@@ -14,7 +14,7 @@
   <link rel="canonical" href="https://yingyanzhitong.github.io/pasto/">
   <link rel="icon" type="image/png" href="./assets/pasto-icon.png">
   <link rel="stylesheet" href="./styles.css?v=20261029-color-accents">
-  <script src="./i18n.js?v=20261104-release-106" defer></script>
+  <script src="./i18n.js?v=20261104-release-107" defer></script>
   <script src="./site.js?v=20261029-language-menu" defer></script>
   <title data-i18n="meta.title">Pasto — 复制过的，都值得留住。</title>
 </head>
@@ -59,7 +59,7 @@
   <main id="main">
     <section class="hero section-wrap" aria-labelledby="hero-title">
       <a class="release-pill" href="https://github.com/yingyanzhitong/pasto/releases/tag/v1.0.6"><span class="live-dot"></span><span data-i18n="hero.release">Pasto 1.0.6 现已发布</span> <span aria-hidden="true">↗</span></a>
-      <p class="system-note" data-i18n="release.note">1.0.6 更新说明：新增应用内下载、签名验证、安装与重启。临时签名更新仍需重新开启辅助功能授权。</p>
+      <p class="system-note" data-i18n="release.note">1.0.7 更新说明：供 1.0.6 用户测试应用内更新。临时签名更新仍可能需要重新开启辅助功能授权。</p>
       <h1 id="hero-title"><span data-i18n="hero.title.one">复制过的，</span><br><span data-i18n="hero.title.two">都值得</span><span class="title-mark" data-i18n="hero.title.mark">留住。</span></h1>
       <p class="hero-description"><span data-i18n="hero.description.one">一句灵感、一张图片、一段常用文字。</span><br><span data-i18n="hero.description.two">让复制记录留在手边，下一次需要，轻松找回。</span></p>
       <div class="hero-actions"><a class="button" href="https://github.com/yingyanzhitong/pasto/releases/download/v1.0.6/Pasto-1.0.6-macos-universal.dmg"><svg class="icon" aria-hidden="true"><use href="#i-download"/></svg><span data-i18n="download.mac">免费下载 Mac 版</span></a><a class="button button-outline" href="#experience"><span data-i18n="hero.try">看看怎么用</span> <svg class="icon" aria-hidden="true"><use href="#i-arrow"/></svg></a></div>
@@ -127,7 +127,7 @@
     <section id="faq" class="faq section-wrap" aria-labelledby="faq-title"><div class="section-heading"><span class="eyebrow" data-i18n="faq.eyebrow">开始之前</span><h2 id="faq-title" data-i18n="faq.title">你可能想知道。</h2></div><div class="faq-list">
       <details><summary data-i18n="faq.free.question">Pasto 是免费的吗？</summary><p data-i18n="faq.free.answer">是。Pasto 的独立实现按 MIT 许可开源，无需订阅或原厂账号。原版研究材料的权利范围单独说明，详见仓库中的 NOTICE。</p></details>
       <details><summary data-i18n="faq.mac.question">我的 Mac 可以使用吗？</summary><p data-i18n="faq.mac.answer">支持 macOS 14 及以上。一个 Universal DMG 同时包含 Intel 与 Apple 芯片架构，无需区分下载。构建通过不代表两个架构的所有功能均已完成回归。</p></details>
-      <details><summary data-i18n="faq.updates.question">软件如何检查更新？</summary><p data-i18n="faq.updates.answer">1.0.6 起可在“关于 Pasto”中检查更新和下载并安装。确认后，Sparkle 验证签名并下载完整通用安装包、安装和重启。当前临时签名构建在实测更新后丢失辅助功能授权，仍需重新开启。1.0.5 及更早版本需先手动安装 1.0.6。</p></details>
+      <details><summary data-i18n="faq.updates.question">软件如何检查更新？</summary><p data-i18n="faq.updates.answer">1.0.6 起可在“关于 Pasto”中检查更新和下载并安装。确认后，Sparkle 验证签名并下载完整通用安装包、安装和重启。当前临时签名构建在实测更新后丢失辅助功能授权，仍需重新开启。1.0.5 及更早版本需先手动安装 1.0.6 或更新版本。</p></details>
       <details><summary data-i18n="faq.install.question">怎么安装？为什么需要辅助功能权限？</summary><p data-i18n="faq.install.answer">下载并打开 DMG，将 Pasto.app 拖入 Applications，从应用程序目录启动，再推出安装镜像。直接粘贴到其他应用需要 macOS 辅助功能权限；仅保存和复制内容无需通过此权限发送按键。当前安装包采用临时签名，尚未经过 Apple 公证，请先阅读 Release 中的安装说明。</p></details>
       <details><summary data-i18n="faq.cloud.question">会把我的剪贴板上传到云端吗？</summary><p data-i18n="faq.cloud.answer">默认保存在本机。在设置 → 通用开启 iCloud 同步后，历史和分组会通过你的 iCloud Drive 文件合并，需要同一 Apple ID 并开启 iCloud Drive。真实多设备同步仍待完整验收。MCP 是可选的本地接口，第三方 AI 客户端如何使用所读取的内容取决于它自己的设置。</p></details>
       <details><summary data-i18n="faq.parity.question">和 Paste 完全一样吗？</summary><p data-i18n="faq.parity.answer">Pasto 依据 Paste 6.6.6 的 REA / Ghidra 逆向证据独立实现，全部原函数和交互的一比一验收仍在进行。提供可选 iCloud Drive 文件同步，手机端、共享协作、联网预览和系统“快捷指令”尚未提供。直接粘贴等交互的完整兼容性仍在完善。</p></details>
