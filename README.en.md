@@ -98,9 +98,9 @@ CloudKit remains an advanced option for properly signed builds and cannot run al
 Download from the [latest stable Release](https://github.com/yingyanzhitong/pasto/releases/latest) and read its limitations. The installer is ad-hoc signed and has not been notarized by Apple.
 
 <!-- pasto-download:start -->
-Current stable version: **1.0.7**. One installer supports Intel and Apple silicon:
+Current stable version: **1.0.8**. One installer supports Intel and Apple silicon:
 
-[Download Pasto-1.0.7-macos-universal.dmg](https://github.com/yingyanzhitong/pasto/releases/download/v1.0.7/Pasto-1.0.7-macos-universal.dmg)
+[Download Pasto-1.0.8-macos-universal.dmg](https://github.com/yingyanzhitong/pasto/releases/download/v1.0.8/Pasto-1.0.8-macos-universal.dmg)
 <!-- pasto-download:end -->
 
 The main app, Helper, and MCP executable all include both architectures. There is no need to choose a chip-specific download. Check each older release's notes for its package format and supported architectures.
