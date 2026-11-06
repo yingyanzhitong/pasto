@@ -117,7 +117,8 @@ struct ReplicaPanelView: View {
     private var header: some View {
         OriginalPanelToolbar(state: state, isSearching: searching,
             searchButton: AnyView(OriginalPanelToolbarButton(symbol: "magnifyingglass", label: "搜索剪贴板") {
-                state.searchVisible = true
+                state.toolbarOwner?.searchBar.f_10003e658()
+                state.searchVisible = state.toolbarOwner?.searchBar.isActive ?? true
             }), searchField: searchField, tabConfiguration: boardTab,
             createButton: AnyView(createPinboardButton),
             menuButton: AnyView(trailingControls), onDismiss: {

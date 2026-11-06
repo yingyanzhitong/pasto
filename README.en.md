@@ -16,6 +16,12 @@ Pasto supports **macOS 14+, Intel (x86_64), and Apple silicon (arm64)**. It is b
 
 The website and download information below are updated by GitHub Actions after a stable Release is published.
 
+## Version 1.0.8 search interaction fixes
+
+Fixes a transparent input layer intercepting clicks on the panel's search icon. The button follows the original native action path, activating search and input focus during the click action. Click the icon or press ⌘F inside the panel to search.
+
+Targeted checks use isolated synthetic data on Apple silicon with macOS 26.2 and SDK 26.5. They cover 27 hit points, three mouse and keyboard cycles, filtering, and repeated transitions. Clicking and typing in the installed app also passed. Native Intel hardware and older macOS versions remain untested. Ad-hoc signed updates may still need Accessibility access enabled again.
+
 ## Version 1.0.7
 
 This release gives 1.0.6 users a newer version to test in-app updates. Open **About Pasto → Check for Updates → Download and Install** to upgrade to 1.0.7. Accessibility access may still need to be enabled again after updating.

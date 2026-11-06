@@ -100,7 +100,7 @@ class FixedPriorityReview(unittest.TestCase):
         native = self.native('03e658')
         self.assertIn('SearchBar::onActivate', native)
         self.assertIn('(*pcVar5)();', native)
-        bridge = body(self.toolbar, 'private func f_10003e658()')
+        bridge = body(self.toolbar, 'func f_10003e658()')
         self.assertIn('guard isActive else { onActivate?(); return }', bridge)
         self.assertIn('if coordinator.isQueryEmpty { onDismiss?() }', bridge)
         self.assertIn('else { requestFocus() }', bridge)

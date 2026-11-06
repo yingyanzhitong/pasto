@@ -181,7 +181,7 @@ class SearchCoordinatorContracts(unittest.TestCase):
         self.assertNotIn('debounce',observe)
         synchronize=body(self.editor,'func synchronizeQuery(')
         self.assertIn('suggestionsEnabled: true',synchronize)
-        bridge=body(self.native,'private func f_10003e658()')
+        bridge=body(self.native,'func f_10003e658()')
         self.assertIn('guard isActive else { onActivate?(); return }',bridge)
         self.assertIn('if coordinator.isQueryEmpty { onDismiss?() }',bridge)
         self.assertIn('else { requestFocus() }',bridge)

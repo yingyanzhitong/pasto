@@ -221,6 +221,13 @@ final class OriginalPanelSearchBar: NSView {
     // only the active-search constraints expand its width.
     override var intrinsicContentSize: NSSize { button.fittingSize }
 
+    override func hitTest(_ point: NSPoint) -> NSView? {
+        guard super.hitTest(point) != nil else { return nil }
+        // Alpha-zero AppKit views still receive hits during the search transition.
+        let target = isActive ? fieldHost : button
+        return target.hitTest(convert(point, from: superview))
+    }
+
     func configure(button: AnyView, field specification: ReplicaSearchEditor) {
         var specification = specification
         specification.onApplySuggestion = { [weak self] nodes in self?.applySearchQuery(nodes) }
@@ -333,7 +340,8 @@ final class OriginalPanelSearchBar: NSView {
             }
     }
 
-    private func f_10003e658() {
+    // 041b98 -> 03e61c: the native button action enters this dispatcher directly.
+    func f_10003e658() {
         guard isActive else { onActivate?(); return }
         let (_, coordinator) = inputPair()
         if coordinator.isQueryEmpty { onDismiss?() }
